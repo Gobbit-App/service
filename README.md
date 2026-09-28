@@ -128,7 +128,7 @@ Tests poll `/health` on startup to verify migrations are complete.
 
 ### Container image (any Docker host, e.g. Dokploy)
 
-- **Image:** `ghcr.io/<owner>/<repo>/api`
+- **Image:** `ghcr.io/<owner>/<repo>/api` (lowercased, e.g. `ghcr.io/gobbit-app/service/api`), tagged `latest` and the full commit SHA
 - **Base image:** `node:22-slim`
 - **Health check:** `GET /health` endpoint
 - **Migrations:** Automatic on container startup via `docker-entrypoint.sh`
