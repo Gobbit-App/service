@@ -20,8 +20,8 @@ export function resolveE2eEnv(env: EnvSource = process.env): E2eEnv {
 
   if (!rawBaseURL && read(env, 'CI')) {
     throw new Error(
-      'BASE_URL is not set. In CI, configure the API_BASE_URL repository variable ' +
-        '(and DEV_API_TOKEN / DEV_USER secrets) to point the smoke tests at a deployed API.',
+      'BASE_URL is not set. In CI it must point at the API under test ' +
+        '(the smoke job uses the compose stack built from the commit: http://localhost:3000).',
     );
   }
 

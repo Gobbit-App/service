@@ -29,7 +29,7 @@ describe('resolveE2eEnv', () => {
   });
 
   it('fails fast in CI when BASE_URL is missing', () => {
-    expect(() => resolveE2eEnv({ CI: 'true', BASE_URL: '' })).toThrow(/API_BASE_URL/);
+    expect(() => resolveE2eEnv({ CI: 'true', BASE_URL: '' })).toThrow(/BASE_URL is not set/);
   });
 
   it('allows CI when BASE_URL is set', () => {

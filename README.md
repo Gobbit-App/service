@@ -145,21 +145,21 @@ Set these in your deployment platform:
 
 ### GitHub Actions
 
-`.github/workflows/smoke.yml` runs:
+`.github/workflows/ci.yml` runs on every push and pull request:
 
-```yaml
-- name: Run e2e smoke tests
-  env:
-    BASE_URL: ${{ vars.API_BASE_URL }}
-    DEV_API_TOKEN: ${{ secrets.DEV_API_TOKEN }}
-    DEV_USER: ${{ secrets.DEV_USER }}
-  run: pnpm test:e2e --grep @smoke
+- **`test`** — lint, format check, typecheck, unit, integration, coverage, `drizzle-kit check`.
+- **`smoke`** — builds the API image from the commit, starts it with a fresh Postgres via `infra/docker-compose.yml` (the entrypoint applies migrations), seeds it, and runs `pnpm test:e2e --grep @smoke` against `http://localhost:3000`. The dev token is generated per run, so no repository secrets or variables are needed. Container logs are printed on failure, and the Playwright report is uploaded as an artifact.
+- **`image`** — on pushes to `main` only, after `test` and `smoke` pass, pushes the image to GHCR.
+
+To reproduce the smoke job locally:
+
+```bash
+export DEV_AUTH_ENABLED=true DEV_API_TOKEN=$(openssl rand -hex 32)
+docker compose -f infra/docker-compose.yml up -d --build --wait
+DATABASE_URL=postgres://pb:pb@localhost:5432/pb pnpm db:seed
+pnpm test:e2e --grep @smoke
+docker compose -f infra/docker-compose.yml down -v
 ```
-
-Required secrets: `DEV_API_TOKEN`, `DEV_USER`.  
-Required variables: `API_BASE_URL`. Optional: `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
-
-The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, blank `BASE_URL` / `DEV_*` values fall back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` is missing.
 
 CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks never execute on private machines. Workflows take the pnpm version from `packageManager` in `package.json` and the Node version from `.nvmrc`.
 

@@ -27,6 +27,16 @@ services:
       NODE_ENV: production
       DEV_AUTH_ENABLED: ${DEV_AUTH_ENABLED:-false}
       DEV_API_TOKEN: ${DEV_API_TOKEN:-}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      retries: 24
     depends_on:
       db:
         condition: service_healthy

@@ -16,7 +16,7 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
 - [ ] **5. Public HTTPS** — the `/health` call above works from your phone on mobile data, and `curl -I` shows a valid certificate.
   - skipped — needs Cloudflare Tunnel + domain.
 - [ ] **6. CI/CD** — change the `/health` response text, push, watch the change appear on the phone within a few minutes without touching Dokploy.
-  - partial — `.github/workflows/ci.yml` + `smoke.yml` written; self-hosted runner, GHCR and Dokploy wiring not done.
+  - partial — `.github/workflows/ci.yml` runs tests, `@smoke` against a compose stack built from the commit, and pushes the GHCR image from `main`; Dokploy wiring not done.
 - [ ] **7. Backups, minimal** — restore last night's dump into a throwaway database and select the health row.
   - skipped — needs box + off-box storage.
 ## Phase 1 — Core data model and API
