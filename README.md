@@ -159,7 +159,9 @@ Set these in your deployment platform:
 Required secrets: `DEV_API_TOKEN`, `DEV_USER`.  
 Required variables: `API_BASE_URL`. Optional: `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
 
-CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks never execute on private machines.
+The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, blank `BASE_URL` / `DEV_*` values fall back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` is missing.
+
+CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks never execute on private machines. Workflows take the pnpm version from `packageManager` in `package.json` and the Node version from `.nvmrc`.
 
 **Note:** Database tunneling and backups (Phase 0 steps 5–7) are not yet implemented.
 

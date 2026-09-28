@@ -1,8 +1,7 @@
 import { defineConfig } from '@playwright/test';
+import { resolveE2eEnv } from './lib/env';
 
-const token = process.env.DEV_API_TOKEN ?? '';
-const user = process.env.DEV_USER ?? 'dev@example.test';
-const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
+const { baseURL, token, user } = resolveE2eEnv();
 
 export default defineConfig({
   testDir: './tests',
