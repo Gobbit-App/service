@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { resolveE2eEnv } from './lib/env';
 
 interface JournalEntry {
   idx: number;
@@ -18,7 +19,7 @@ interface HealthResponse {
 }
 
 export default async function globalSetup(): Promise<void> {
-  const baseUrl = process.env.BASE_URL ?? 'http://localhost:3000';
+  const { baseURL: baseUrl } = resolveE2eEnv();
 
   // Read the latest migration tag from journal
   const journalPath = fileURLToPath(

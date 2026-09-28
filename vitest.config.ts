@@ -11,7 +11,7 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
-          include: ['{apps,packages}/**/*.test.ts'],
+          include: ['{apps,packages,e2e}/**/*.test.ts'],
           exclude: ['**/*.int.test.ts', '**/node_modules/**'],
           environment: 'node',
         },
