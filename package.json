@@ -1,0 +1,45 @@
+{
+  "name": "community-pocketbook",
+  "private": true,
+  "license": "MPL-2.0",
+  "type": "module",
+  "packageManager": "pnpm@11.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "build": "pnpm -r --if-present build",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:int": "vitest run --project integration",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "pnpm --filter e2e test",
+    "db:generate": "pnpm --filter @pb/db db:generate",
+    "db:migrate": "pnpm --filter @pb/db db:migrate",
+    "db:rollback": "pnpm --filter @pb/db db:rollback",
+    "db:seed": "pnpm --filter @pb/db db:seed",
+    "dev": "pnpm --filter @pb/api dev",
+    "compose:up": "docker compose -f infra/docker-compose.yml up -d --build",
+    "compose:down": "docker compose -f infra/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@testcontainers/postgresql": "^11.14.0",
+    "@types/node": "^22.18.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "drizzle-orm": "^0.45.3",
+    "eslint": "^9.39.0",
+    "globals": "^16.0.0",
+    "pg": "^8.23.0",
+    "prettier": "^3.6.0",
+    "testcontainers": "^11.14.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^3.2.4"
+  }
+}

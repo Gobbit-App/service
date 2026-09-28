@@ -1,0 +1,73 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+interface JournalEntry {
+  idx: number;
+  when: number;
+  tag: string;
+}
+
+interface Journal {
+  entries: JournalEntry[];
+}
+
+interface HealthResponse {
+  ok: boolean;
+  db_ms: number | null;
+  migration: string | null;
+}
+
+export default async function globalSetup(): Promise<void> {
+  const baseUrl = process.env.BASE_URL ?? 'http://localhost:3000';
+
+  // Read the latest migration tag from journal
+  const journalPath = fileURLToPath(
+    new URL('../packages/db/migrations/meta/_journal.json', import.meta.url),
+  );
+  let latestTag: string | null = null;
+
+  try {
+    const journalContent = readFileSync(journalPath, 'utf-8');
+    const journal: Journal = JSON.parse(journalContent);
+    if (journal.entries.length > 0) {
+      latestTag = journal.entries[journal.entries.length - 1].tag;
+    }
+  } catch (err) {
+    console.error(`Failed to read migration journal at ${journalPath}`, err);
+    throw err;
+  }
+
+  const maxAttempts = 60; // 120 seconds / 2 seconds per attempt
+  const delayMs = 2000;
+  let lastResponse: HealthResponse | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(`${baseUrl}/health`);
+      const body: HealthResponse = await response.json();
+      lastResponse = body;
+
+      console.log(
+        `[${attempt}/${maxAttempts}] Health check: ok=${body.ok}, migration=${body.migration}, latest=${latestTag}`,
+      );
+
+      if (body.ok && body.migration === latestTag) {
+        console.log('✓ API is ready');
+        return;
+      }
+    } catch (err) {
+      console.log(
+        `[${attempt}/${maxAttempts}] Health check failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    if (attempt < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  // Timeout - throw with last response
+  throw new Error(
+    `API did not become ready within ${(maxAttempts * delayMs) / 1000} seconds. Last response: ${JSON.stringify(lastResponse)}`,
+  );
+}

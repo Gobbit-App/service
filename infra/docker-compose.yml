@@ -1,0 +1,38 @@
+name: pocketbook
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: pb
+      POSTGRES_PASSWORD: pb
+      POSTGRES_DB: pb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pb -d pb']
+      interval: 5s
+    ports:
+      - 127.0.0.1:${DB_PORT:-5432}:5432
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgres://pb:pb@db:5432/pb
+      PORT: 3000
+      NODE_ENV: production
+      DEV_AUTH_ENABLED: ${DEV_AUTH_ENABLED:-false}
+      DEV_API_TOKEN: ${DEV_API_TOKEN:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:${API_PORT:-3000}:3000
+    restart: unless-stopped
+
+volumes:
+  pgdata:

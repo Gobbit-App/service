@@ -1,0 +1,127 @@
+@baseUrl = http://localhost:3000
+@token = {{$dotenv DEV_API_TOKEN}}
+@user = dev@example.test
+
+### Health check
+GET {{baseUrl}}/health
+
+### OpenAPI schema
+GET {{baseUrl}}/openapi.json
+
+### List pocketbooks
+GET {{baseUrl}}/pocketbooks
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### Get family pocketbook
+GET {{baseUrl}}/pocketbooks/family
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### List family categories
+GET {{baseUrl}}/pocketbooks/family/categories
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### List family items with food category (page 1)
+# @name foodPage1
+GET {{baseUrl}}/pocketbooks/family/items?category=food&status=published&limit=10
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### List family items with food category (page 2)
+GET {{baseUrl}}/pocketbooks/family/items?category=food&status=published&limit=10&cursor={{foodPage1.response.body.nextCursor}}
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### Create a new pocketbook
+POST {{baseUrl}}/pocketbooks
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+Content-Type: application/json
+
+{
+  "name": "Test Pocketbook",
+  "slug": "test-pocketbook",
+  "kind": "personal",
+  "isPublic": false
+}
+
+### Create a category in smoke pocketbook
+POST {{baseUrl}}/pocketbooks/smoke/categories
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+Content-Type: application/json
+
+{
+  "name": "Test Category",
+  "slug": "test-category",
+  "visibility": "shared",
+  "position": 0
+}
+
+### Create a text item in smoke pocketbook
+# @name created
+POST {{baseUrl}}/pocketbooks/smoke/items
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+Content-Type: application/json
+
+{
+  "type": "text",
+  "title": "Test Item",
+  "body": "This is a test text item.",
+  "payload": {},
+  "categoryIds": []
+}
+
+### Get the created item
+GET {{baseUrl}}/items/{{created.response.body.id}}
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### Update the created item
+PATCH {{baseUrl}}/items/{{created.response.body.id}}
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+Content-Type: application/json
+
+{
+  "title": "Updated Test Item",
+  "body": "Updated body"
+}
+
+### Archive the created item
+POST {{baseUrl}}/items/{{created.response.body.id}}/archive
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### Add the item to favorites
+POST {{baseUrl}}/items/{{created.response.body.id}}/favorite
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### Remove the item from favorites
+DELETE {{baseUrl}}/items/{{created.response.body.id}}/favorite
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### Delete the created item
+DELETE {{baseUrl}}/items/{{created.response.body.id}}
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+
+### Negative test: body exceeds CARD_BODY_MAX (600 characters)
+# Expects 422 Unprocessable Content (body is 601 'a' characters)
+POST {{baseUrl}}/pocketbooks/smoke/items
+Authorization: Bearer {{token}}
+X-Dev-User: {{user}}
+Content-Type: application/json
+
+{
+  "type": "text",
+  "title": "Oversized Body Test",
+  "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "payload": {},
+  "categoryIds": []
+}
