@@ -82,7 +82,7 @@ describe('pg-error-map', () => {
         cause: {
           code: '23505',
           message: 'dup',
-          constraint: 'pocketbooks_slug_active_uq',
+          constraint: 'decks_slug_active_uq',
         },
       });
 

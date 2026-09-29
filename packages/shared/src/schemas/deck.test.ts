@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { pocketbookCreateSchema, pocketbookPatchSchema } from './pocketbook';
+import { deckCreateSchema, deckPatchSchema } from './deck';
 
-describe('pocketbookCreateSchema', () => {
+describe('deckCreateSchema', () => {
   it('accepts {name:"Family"}', () => {
-    const result = pocketbookCreateSchema.safeParse({ name: 'Family' });
+    const result = deckCreateSchema.safeParse({ name: 'Family' });
     expect(result.success).toBe(true);
   });
 
   it('accepts {name:"משפחה", slug:"family-he", kind:"shared", isPublic:true}', () => {
-    const result = pocketbookCreateSchema.safeParse({
+    const result = deckCreateSchema.safeParse({
       name: 'משפחה',
       slug: 'family-he',
       kind: 'shared',
@@ -18,7 +18,7 @@ describe('pocketbookCreateSchema', () => {
   });
 
   it('rejects unknown key', () => {
-    const result = pocketbookCreateSchema.safeParse({
+    const result = deckCreateSchema.safeParse({
       name: 'Family',
       unknownKey: 'value',
     });
@@ -26,7 +26,7 @@ describe('pocketbookCreateSchema', () => {
   });
 
   it('rejects bad kind', () => {
-    const result = pocketbookCreateSchema.safeParse({
+    const result = deckCreateSchema.safeParse({
       name: 'Family',
       kind: 'invalid',
     });
@@ -34,21 +34,21 @@ describe('pocketbookCreateSchema', () => {
   });
 });
 
-describe('pocketbookPatchSchema', () => {
+describe('deckPatchSchema', () => {
   it('rejects {}', () => {
-    const result = pocketbookPatchSchema.safeParse({});
+    const result = deckPatchSchema.safeParse({});
     expect(result.success).toBe(false);
   });
 
   it('rejects {ownerAccountId:"x"}', () => {
-    const result = pocketbookPatchSchema.safeParse({
+    const result = deckPatchSchema.safeParse({
       ownerAccountId: 'x',
     });
     expect(result.success).toBe(false);
   });
 
   it('accepts {isPublic:true}', () => {
-    const result = pocketbookPatchSchema.safeParse({
+    const result = deckPatchSchema.safeParse({
       isPublic: true,
     });
     expect(result.success).toBe(true);

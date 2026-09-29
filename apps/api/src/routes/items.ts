@@ -14,7 +14,7 @@ import { getUser } from '../lib/current-user';
 export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
   const listRoute = createRoute({
     method: 'get',
-    path: '/pocketbooks/{id}/items',
+    path: '/decks/{id}/items',
     tags: ['items'],
     security: [{ DevToken: [], DevUser: [] }],
     request: {
@@ -67,7 +67,7 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
 
   const createItemRoute = createRoute({
     method: 'post',
-    path: '/pocketbooks/{id}/items',
+    path: '/decks/{id}/items',
     tags: ['items'],
     security: [{ DevToken: [], DevUser: [] }],
     request: {

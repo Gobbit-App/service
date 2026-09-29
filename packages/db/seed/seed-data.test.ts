@@ -103,18 +103,18 @@ describe('Seed Data', () => {
   });
 
   describe('buildSeedData', () => {
-    it('should lowercase email and yield correct pocketbook slugs', () => {
+    it('should lowercase email and yield correct deck slugs', () => {
       const seedData = buildSeedData('DEV@Example.test');
-      const slugs = seedData.pocketbooks.map((p) => p.slug);
+      const slugs = seedData.decks.map((p) => p.slug);
       expect(slugs).toEqual(['dev-personal', 'family', 'smoke', 'other-personal']);
 
       const devUser = seedData.users.find((u) => u.email === 'dev@example.test');
       expect(devUser).toBeDefined();
     });
 
-    it('should have exactly 4 pocketbooks', () => {
+    it('should have exactly 4 decks', () => {
       const seedData = buildSeedData('dev@example.test');
-      expect(seedData.pocketbooks).toHaveLength(4);
+      expect(seedData.decks).toHaveLength(4);
     });
 
     it('should have exactly 2 accounts', () => {
@@ -127,12 +127,12 @@ describe('Seed Data', () => {
       expect(seedData.users).toHaveLength(2);
     });
 
-    it('should have categories only for family pocketbook', () => {
+    it('should have categories only for family deck', () => {
       const seedData = buildSeedData('dev@example.test');
-      const familyPocketbookId = seedData.pocketbooks.find((p) => p.slug === 'family')?.id;
-      expect(familyPocketbookId).toBeDefined();
+      const familyDeckId = seedData.decks.find((p) => p.slug === 'family')?.id;
+      expect(familyDeckId).toBeDefined();
       for (const category of seedData.categories) {
-        expect(category.pocketbookId).toBe(familyPocketbookId);
+        expect(category.deckId).toBe(familyDeckId);
       }
     });
   });

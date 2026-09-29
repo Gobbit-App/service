@@ -19,4 +19,4 @@ export const test = base.extend<{
 });
 
 export { expect };
-export const SMOKE_POCKETBOOK = 'smoke';
+export const SMOKE_DECK = 'smoke';

@@ -1,10 +1,10 @@
 import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
 import {
-  pocketbookCreateSchema,
-  pocketbookListSchema,
-  pocketbookPatchSchema,
-  pocketbookSchema,
-  pocketbookWithCategoriesSchema,
+  deckCreateSchema,
+  deckListSchema,
+  deckPatchSchema,
+  deckSchema,
+  deckWithCategoriesSchema,
   problemSchema,
 } from '@pb/shared';
 import type { AppEnv } from '../types';
@@ -60,17 +60,17 @@ function problems(
   return result;
 }
 
-export function registerPocketbooksRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
-  // GET /pocketbooks
+export function registerDecksRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
+  // GET /decks
   const listRoute = createRoute({
     method: 'get',
-    path: '/pocketbooks',
-    tags: ['pocketbooks'],
+    path: '/decks',
+    tags: ['decks'],
     security,
     responses: {
       200: {
-        content: { 'application/json': { schema: pocketbookListSchema } },
-        description: 'List of pocketbooks',
+        content: { 'application/json': { schema: deckListSchema } },
+        description: 'List of decks',
       },
       ...problems('unauthorized'),
     },
@@ -78,51 +78,51 @@ export function registerPocketbooksRoutes(app: OpenAPIHono<AppEnv>, services: Se
 
   app.openapi(listRoute, async (c) => {
     const user = getUser(c);
-    const pocketbooks = await services.pocketbooks.list(user);
-    return c.json({ data: pocketbooks }, 200);
+    const decks = await services.decks.list(user);
+    return c.json({ data: decks }, 200);
   });
 
-  // POST /pocketbooks
-  const createPocketbookRoute = createRoute({
+  // POST /decks
+  const createDeckRoute = createRoute({
     method: 'post',
-    path: '/pocketbooks',
-    tags: ['pocketbooks'],
+    path: '/decks',
+    tags: ['decks'],
     security,
     request: {
       body: {
-        content: { 'application/json': { schema: pocketbookCreateSchema } },
+        content: { 'application/json': { schema: deckCreateSchema } },
         required: true,
       },
     },
     responses: {
       201: {
-        content: { 'application/json': { schema: pocketbookWithCategoriesSchema } },
-        description: 'Pocketbook created',
+        content: { 'application/json': { schema: deckWithCategoriesSchema } },
+        description: 'Deck created',
       },
       ...problems('bad-request', 'validation', 'unauthorized', 'conflict'),
     },
   });
 
-  app.openapi(createPocketbookRoute, async (c) => {
+  app.openapi(createDeckRoute, async (c) => {
     const user = getUser(c);
     const input = c.req.valid('json');
-    const pocketbook = await services.pocketbooks.create(user, input);
-    return c.json(pocketbook, 201);
+    const deck = await services.decks.create(user, input);
+    return c.json(deck, 201);
   });
 
-  // GET /pocketbooks/{id}
+  // GET /decks/{id}
   const getRoute = createRoute({
     method: 'get',
-    path: '/pocketbooks/{id}',
-    tags: ['pocketbooks'],
+    path: '/decks/{id}',
+    tags: ['decks'],
     security,
     request: {
       params: z.object({ id: z.string().min(1) }),
     },
     responses: {
       200: {
-        content: { 'application/json': { schema: pocketbookSchema } },
-        description: 'Pocketbook details',
+        content: { 'application/json': { schema: deckSchema } },
+        description: 'Deck details',
       },
       ...problems('unauthorized', 'not-found'),
     },
@@ -131,27 +131,27 @@ export function registerPocketbooksRoutes(app: OpenAPIHono<AppEnv>, services: Se
   app.openapi(getRoute, async (c) => {
     const user = getUser(c);
     const { id } = c.req.valid('param');
-    const pocketbook = await services.pocketbooks.get(user, id);
-    return c.json(pocketbook, 200);
+    const deck = await services.decks.get(user, id);
+    return c.json(deck, 200);
   });
 
-  // PATCH /pocketbooks/{id}
+  // PATCH /decks/{id}
   const updateRoute = createRoute({
     method: 'patch',
-    path: '/pocketbooks/{id}',
-    tags: ['pocketbooks'],
+    path: '/decks/{id}',
+    tags: ['decks'],
     security,
     request: {
       params: z.object({ id: z.string().min(1) }),
       body: {
-        content: { 'application/json': { schema: pocketbookPatchSchema } },
+        content: { 'application/json': { schema: deckPatchSchema } },
         required: true,
       },
     },
     responses: {
       200: {
-        content: { 'application/json': { schema: pocketbookSchema } },
-        description: 'Pocketbook updated',
+        content: { 'application/json': { schema: deckSchema } },
+        description: 'Deck updated',
       },
       ...problems('bad-request', 'validation', 'unauthorized', 'not-found', 'conflict'),
     },
@@ -161,7 +161,7 @@ export function registerPocketbooksRoutes(app: OpenAPIHono<AppEnv>, services: Se
     const user = getUser(c);
     const { id } = c.req.valid('param');
     const patch = c.req.valid('json');
-    const pocketbook = await services.pocketbooks.update(user, id, patch);
-    return c.json(pocketbook, 200);
+    const deck = await services.decks.update(user, id, patch);
+    return c.json(deck, 200);
   });
 }

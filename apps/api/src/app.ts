@@ -10,7 +10,7 @@ import { devAuth } from './middleware/dev-auth';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { problemFromZodError, problemResponse } from './errors/http-errors';
 import { registerHealthRoutes } from './routes/health';
-import { registerPocketbooksRoutes } from './routes/pocketbooks';
+import { registerDecksRoutes } from './routes/decks';
 import { registerCategoriesRoutes } from './routes/categories';
 import { registerItemsRoutes } from './routes/items';
 import { registerFavoritesRoutes } from './routes/favorites';
@@ -43,7 +43,7 @@ export function createApp(deps: {
   }
 
   registerHealthRoutes(app, { pool: deps.pool });
-  registerPocketbooksRoutes(app, services);
+  registerDecksRoutes(app, services);
   registerCategoriesRoutes(app, services);
   registerItemsRoutes(app, services);
   registerFavoritesRoutes(app, services);

@@ -4,7 +4,7 @@ import { runSeed, seedId } from '../seed/run-seed';
 import {
   accounts,
   users,
-  pocketbooks,
+  decks,
   categories,
   items,
   itemCategories,
@@ -23,9 +23,7 @@ describe('seed', () => {
     // Count rows in each table
     const [accountsRow] = await t.db.select({ count: sql<number>`count(*)::int` }).from(accounts);
     const [usersRow] = await t.db.select({ count: sql<number>`count(*)::int` }).from(users);
-    const [pocketbooksRow] = await t.db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(pocketbooks);
+    const [decksRow] = await t.db.select({ count: sql<number>`count(*)::int` }).from(decks);
     await t.db.select({ count: sql<number>`count(*)::int` }).from(categories);
     const [itemsRow] = await t.db.select({ count: sql<number>`count(*)::int` }).from(items);
     const [itemCategoriesRow] = await t.db
@@ -35,17 +33,17 @@ describe('seed', () => {
 
     expect(accountsRow.count).toBe(2);
     expect(usersRow.count).toBe(2);
-    expect(pocketbooksRow.count).toBe(4);
+    expect(decksRow.count).toBe(4);
     expect(itemsRow.count).toBe(25);
     expect(itemCategoriesRow.count).toBeGreaterThanOrEqual(25);
     expect(favoritesRow.count).toBe(1);
 
-    // Count categories in family pocketbook
-    const familyId = seedId('pocketbook/family');
+    // Count categories in family deck
+    const familyId = seedId('deck/family');
     const [familyCatRow] = await t.db
       .select({ count: sql<number>`count(*)::int` })
       .from(categories)
-      .where(eq(categories.pocketbookId, familyId));
+      .where(eq(categories.deckId, familyId));
     expect(familyCatRow.count).toBe(7);
   });
 
@@ -57,9 +55,7 @@ describe('seed', () => {
       const [usrStats] = await t.db
         .select({ maxUpdatedAt: sql<Date>`max(updated_at)` })
         .from(users);
-      const [pbStats] = await t.db
-        .select({ maxUpdatedAt: sql<Date>`max(updated_at)` })
-        .from(pocketbooks);
+      const [pbStats] = await t.db.select({ maxUpdatedAt: sql<Date>`max(updated_at)` }).from(decks);
       const [catStats] = await t.db
         .select({ maxUpdatedAt: sql<Date>`max(updated_at)` })
         .from(categories);
@@ -69,19 +65,19 @@ describe('seed', () => {
 
       const [accCount] = await t.db.select({ count: sql<number>`count(*)::int` }).from(accounts);
       const [usrCount] = await t.db.select({ count: sql<number>`count(*)::int` }).from(users);
-      const [pbCount] = await t.db.select({ count: sql<number>`count(*)::int` }).from(pocketbooks);
+      const [pbCount] = await t.db.select({ count: sql<number>`count(*)::int` }).from(decks);
       const [catCount] = await t.db.select({ count: sql<number>`count(*)::int` }).from(categories);
       const [itmCount] = await t.db.select({ count: sql<number>`count(*)::int` }).from(items);
 
       return {
         accountsMaxUpdatedAt: accStats.maxUpdatedAt,
         usersMaxUpdatedAt: usrStats.maxUpdatedAt,
-        pocketbooksMaxUpdatedAt: pbStats.maxUpdatedAt,
+        decksMaxUpdatedAt: pbStats.maxUpdatedAt,
         categoriesMaxUpdatedAt: catStats.maxUpdatedAt,
         itemsMaxUpdatedAt: itmStats.maxUpdatedAt,
         accountsCount: accCount.count,
         usersCount: usrCount.count,
-        pocketbooksCount: pbCount.count,
+        decksCount: pbCount.count,
         categoriesCount: catCount.count,
         itemsCount: itmCount.count,
       };
@@ -101,14 +97,14 @@ describe('seed', () => {
     // Verify counts identical
     expect(statsAfter.accountsCount).toBe(statsBefore.accountsCount);
     expect(statsAfter.usersCount).toBe(statsBefore.usersCount);
-    expect(statsAfter.pocketbooksCount).toBe(statsBefore.pocketbooksCount);
+    expect(statsAfter.decksCount).toBe(statsBefore.decksCount);
     expect(statsAfter.categoriesCount).toBe(statsBefore.categoriesCount);
     expect(statsAfter.itemsCount).toBe(statsBefore.itemsCount);
 
     // Verify max(updated_at) identical
     expect(statsAfter.accountsMaxUpdatedAt).toEqual(statsBefore.accountsMaxUpdatedAt);
     expect(statsAfter.usersMaxUpdatedAt).toEqual(statsBefore.usersMaxUpdatedAt);
-    expect(statsAfter.pocketbooksMaxUpdatedAt).toEqual(statsBefore.pocketbooksMaxUpdatedAt);
+    expect(statsAfter.decksMaxUpdatedAt).toEqual(statsBefore.decksMaxUpdatedAt);
     expect(statsAfter.categoriesMaxUpdatedAt).toEqual(statsBefore.categoriesMaxUpdatedAt);
     expect(statsAfter.itemsMaxUpdatedAt).toEqual(statsBefore.itemsMaxUpdatedAt);
   });

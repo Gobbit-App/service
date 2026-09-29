@@ -5,21 +5,21 @@ import type { CategoryVisibility } from '@pb/shared';
 
 export function createCategoriesRepo(db: Db) {
   return {
-    async listByPocketbook(pocketbookId: string): Promise<CategoryRow[]> {
+    async listByDeck(deckId: string): Promise<CategoryRow[]> {
       return db
         .select()
         .from(categories)
-        .where(and(eq(categories.pocketbookId, pocketbookId), isNull(categories.deletedAt)))
+        .where(and(eq(categories.deckId, deckId), isNull(categories.deletedAt)))
         .orderBy(asc(categories.position), asc(categories.name));
     },
 
-    async findBySlug(pocketbookId: string, slug: string): Promise<CategoryRow | null> {
+    async findBySlug(deckId: string, slug: string): Promise<CategoryRow | null> {
       const result = await db
         .select()
         .from(categories)
         .where(
           and(
-            eq(categories.pocketbookId, pocketbookId),
+            eq(categories.deckId, deckId),
             eq(categories.slug, slug),
             isNull(categories.deletedAt),
           ),
@@ -28,13 +28,13 @@ export function createCategoriesRepo(db: Db) {
       return result[0] ?? null;
     },
 
-    async findDefault(pocketbookId: string): Promise<CategoryRow | null> {
+    async findDefault(deckId: string): Promise<CategoryRow | null> {
       const result = await db
         .select()
         .from(categories)
         .where(
           and(
-            eq(categories.pocketbookId, pocketbookId),
+            eq(categories.deckId, deckId),
             eq(categories.isDefault, true),
             isNull(categories.deletedAt),
           ),
@@ -43,7 +43,7 @@ export function createCategoriesRepo(db: Db) {
       return result[0] ?? null;
     },
 
-    async findExistingIds(pocketbookId: string, ids: string[]): Promise<string[]> {
+    async findExistingIds(deckId: string, ids: string[]): Promise<string[]> {
       if (ids.length === 0) return [];
 
       const result = await db
@@ -51,7 +51,7 @@ export function createCategoriesRepo(db: Db) {
         .from(categories)
         .where(
           and(
-            eq(categories.pocketbookId, pocketbookId),
+            eq(categories.deckId, deckId),
             inArray(categories.id, ids),
             isNull(categories.deletedAt),
           ),
@@ -59,18 +59,18 @@ export function createCategoriesRepo(db: Db) {
       return result.map((r) => r.id);
     },
 
-    async maxPosition(pocketbookId: string): Promise<number> {
+    async maxPosition(deckId: string): Promise<number> {
       const result = await db
         .select({
           max: sql<number>`coalesce(max(${categories.position}), -1)`,
         })
         .from(categories)
-        .where(and(eq(categories.pocketbookId, pocketbookId), isNull(categories.deletedAt)));
+        .where(and(eq(categories.deckId, deckId), isNull(categories.deletedAt)));
       return Number(result[0]?.max ?? -1);
     },
 
     async create(v: {
-      pocketbookId: string;
+      deckId: string;
       slug: string;
       name: string;
       visibility: CategoryVisibility;
@@ -79,7 +79,7 @@ export function createCategoriesRepo(db: Db) {
       const result = await db
         .insert(categories)
         .values({
-          pocketbookId: v.pocketbookId,
+          deckId: v.deckId,
           slug: v.slug,
           name: v.name,
           visibility: v.visibility,

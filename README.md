@@ -172,17 +172,17 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/health` | System health & latest migration tag |
-| **Pocketbooks** |
-| `GET` | `/pocketbooks` | List user's pocketbooks |
-| `POST` | `/pocketbooks` | Create pocketbook |
-| `GET` | `/pocketbooks/{id}` | Get pocketbook (by id or slug) |
-| `PATCH` | `/pocketbooks/{id}` | Update pocketbook |
+| **Decks** |
+| `GET` | `/decks` | List user's decks |
+| `POST` | `/decks` | Create deck |
+| `GET` | `/decks/{id}` | Get deck (by id or slug) |
+| `PATCH` | `/decks/{id}` | Update deck |
 | **Categories** |
-| `GET` | `/pocketbooks/{id}/categories` | List categories |
-| `POST` | `/pocketbooks/{id}/categories` | Create category |
+| `GET` | `/decks/{id}/categories` | List categories |
+| `POST` | `/decks/{id}/categories` | Create category |
 | **Items** |
-| `GET` | `/pocketbooks/{id}/items` | List items (with cursor pagination) |
-| `POST` | `/pocketbooks/{id}/items` | Create item |
+| `GET` | `/decks/{id}/items` | List items (with cursor pagination) |
+| `POST` | `/decks/{id}/items` | Create item |
 | `GET` | `/items/{id}` | Get item |
 | `PATCH` | `/items/{id}` | Update item |
 | `DELETE` | `/items/{id}` | Soft-delete item |

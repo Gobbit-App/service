@@ -1,16 +1,16 @@
 import { notFound } from '../errors/http-errors';
-import { assertPocketbookAccess } from '../access/assert-pocketbook-access';
+import { assertDeckAccess } from '../access/assert-deck-access';
 import type { CurrentUser } from '../types';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
-import type { PocketbooksRepo } from '../repositories/pocketbooks.repo';
+import type { DecksRepo } from '../repositories/decks.repo';
 
 export function createFavoritesService(deps: {
-  pocketbooks: PocketbooksRepo;
+  decks: DecksRepo;
   items: ItemsRepo;
   favorites: FavoritesRepo;
 }) {
-  const { pocketbooks, items, favorites } = deps;
+  const { decks, items, favorites } = deps;
 
   return {
     async add(user: CurrentUser, itemId: string): Promise<void> {
@@ -19,12 +19,12 @@ export function createFavoritesService(deps: {
         throw notFound('Item not found');
       }
 
-      const pocketbook = await pocketbooks.findById(item.pocketbookId);
-      if (!pocketbook) {
+      const deck = await decks.findById(item.deckId);
+      if (!deck) {
         throw notFound('Item not found');
       }
 
-      assertPocketbookAccess(user, pocketbook, 'write');
+      assertDeckAccess(user, deck, 'write');
 
       await favorites.add(user.id, itemId);
     },
@@ -35,12 +35,12 @@ export function createFavoritesService(deps: {
         throw notFound('Item not found');
       }
 
-      const pocketbook = await pocketbooks.findById(item.pocketbookId);
-      if (!pocketbook) {
+      const deck = await decks.findById(item.deckId);
+      if (!deck) {
         throw notFound('Item not found');
       }
 
-      assertPocketbookAccess(user, pocketbook, 'write');
+      assertDeckAccess(user, deck, 'write');
 
       await favorites.remove(user.id, itemId);
     },

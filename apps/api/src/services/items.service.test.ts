@@ -4,7 +4,7 @@ import type { CurrentUser } from '../types';
 
 type ItemsRepo = any;
 type CategoriesRepo = any;
-type PocketbooksRepo = any;
+type DecksRepo = any;
 type FavoritesRepo = any;
 
 const USER: CurrentUser = {
@@ -33,7 +33,7 @@ const KNOWN_CATS = new Set([DEFAULT_CAT, 'cat-2']);
 function createItemRow(overrides = {}) {
   return {
     id: '550e8400-e29b-41d4-a716-446655440002',
-    pocketbookId: PB_ID,
+    deckId: PB_ID,
     type: 'table',
     status: 'published',
     title: 'Test Item',
@@ -52,16 +52,16 @@ function createItemRow(overrides = {}) {
 
 describe('createItemsService', () => {
   let service: any;
-  let pocketbooks: any;
+  let decks: any;
   let categories: any;
   let items: any;
   let favorites: any;
 
   beforeEach(() => {
-    pocketbooks = {
+    decks = {
       findBySlug: vi.fn().mockResolvedValue(PB_ROW),
       findById: vi.fn().mockResolvedValue(PB_ROW),
-    } as unknown as PocketbooksRepo;
+    } as unknown as DecksRepo;
 
     categories = {
       findDefault: vi.fn().mockResolvedValue({ id: DEFAULT_CAT }),
@@ -82,7 +82,7 @@ describe('createItemsService', () => {
     } as unknown as FavoritesRepo;
 
     service = createItemsService({
-      pocketbooks,
+      decks,
       categories,
       items,
       favorites,
@@ -102,7 +102,7 @@ describe('createItemsService', () => {
 
       expect(items.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          pocketbookId: PB_ID,
+          deckId: PB_ID,
         }),
         [DEFAULT_CAT],
       );
@@ -220,9 +220,9 @@ describe('createItemsService', () => {
 
     it('returns 404 for item owned by different account', async () => {
       const itemId = '550e8400-e29b-41d4-a716-446655440002';
-      const otherItem = createItemRow({ pocketbookId: 'other-pb' });
+      const otherItem = createItemRow({ deckId: 'other-pb' });
       items.findById.mockResolvedValue(otherItem);
-      pocketbooks.findById.mockResolvedValue({
+      decks.findById.mockResolvedValue({
         ...PB_ROW,
         ownerAccountId: 'other-account',
       });

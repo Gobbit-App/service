@@ -11,9 +11,9 @@ describe('schema', () => {
     return result.rows[0].id;
   };
 
-  const mkPocketbook = async (slug: string, accountId: string) => {
+  const mkDeck = async (slug: string, accountId: string) => {
     const result = await t.pool.query(
-      'INSERT INTO pocketbooks (kind, slug, name, owner_account_id, is_public) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+      'INSERT INTO decks (kind, slug, name, owner_account_id, is_public) VALUES ($1, $2, $3, $4, $5) RETURNING id',
       ['shared', slug, slug, accountId, false],
     );
     return result.rows[0].id;
@@ -48,6 +48,12 @@ describe('schema', () => {
         datetime_precision: null,
       },
       {
+        column_name: 'deck_id',
+        data_type: 'uuid',
+        is_nullable: 'NO',
+        datetime_precision: null,
+      },
+      {
         column_name: 'deleted_at',
         data_type: 'timestamp with time zone',
         is_nullable: 'YES',
@@ -62,12 +68,6 @@ describe('schema', () => {
       {
         column_name: 'payload',
         data_type: 'jsonb',
-        is_nullable: 'NO',
-        datetime_precision: null,
-      },
-      {
-        column_name: 'pocketbook_id',
-        data_type: 'uuid',
         is_nullable: 'NO',
         datetime_precision: null,
       },
@@ -116,47 +116,47 @@ describe('schema', () => {
     ]);
   });
 
-  it('enforces partial unique slug on pocketbooks', async () => {
+  it('enforces partial unique slug on decks', async () => {
     const accountId = await mkAccount();
 
     // First insert succeeds
-    await mkPocketbook('dup', accountId);
+    await mkDeck('dup', accountId);
 
     // Second insert fails with 23505
-    await expect(mkPocketbook('dup', accountId)).rejects.toMatchObject({
+    await expect(mkDeck('dup', accountId)).rejects.toMatchObject({
       code: '23505',
     });
 
     // Soft-delete first
-    await t.pool.query('UPDATE pocketbooks SET deleted_at = NOW() WHERE slug = $1', ['dup']);
+    await t.pool.query('UPDATE decks SET deleted_at = NOW() WHERE slug = $1', ['dup']);
 
     // Insert again succeeds
-    await expect(mkPocketbook('dup', accountId)).resolves.toBeDefined();
+    await expect(mkDeck('dup', accountId)).resolves.toBeDefined();
   });
 
   it('enforces composite FK on item_categories', async () => {
     const accountA = await mkAccount();
     const accountB = await mkAccount();
 
-    const pbA = await mkPocketbook('pbA', accountA);
-    const pbB = await mkPocketbook('pbB', accountB);
+    const pbA = await mkDeck('pbA', accountA);
+    const pbB = await mkDeck('pbB', accountB);
 
     // Get default categories
     const catAResult = await t.pool.query(
-      'SELECT id FROM categories WHERE pocketbook_id = $1 AND is_default = true',
+      'SELECT id FROM categories WHERE deck_id = $1 AND is_default = true',
       [pbA],
     );
     expect(catAResult.rows[0].id).toBeDefined();
 
     const catBResult = await t.pool.query(
-      'SELECT id FROM categories WHERE pocketbook_id = $1 AND is_default = true',
+      'SELECT id FROM categories WHERE deck_id = $1 AND is_default = true',
       [pbB],
     );
     const catB = catBResult.rows[0].id;
 
-    // Insert item into pocketbook A
+    // Insert item into deck A
     const itemResult = await t.pool.query(
-      'INSERT INTO items (pocketbook_id, type, status, title, body, payload) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+      'INSERT INTO items (deck_id, type, status, title, body, payload) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
       [pbA, 'text', 'published', 't', '', '{}'],
     );
     const itemId = itemResult.rows[0].id;
@@ -164,7 +164,7 @@ describe('schema', () => {
     // Try to insert item_categories with item from A but category from B
     await expect(
       t.pool.query(
-        'INSERT INTO item_categories (item_id, category_id, pocketbook_id) VALUES ($1, $2, $3)',
+        'INSERT INTO item_categories (item_id, category_id, deck_id) VALUES ($1, $2, $3)',
         [itemId, catB, pbA],
       ),
     ).rejects.toMatchObject({ code: '23503' });

@@ -31,9 +31,9 @@ TypeScript is held at 6.0 (not 7.x) because typescript-eslint supports `typescri
 ```mermaid
 erDiagram
   ACCOUNTS ||--o{ USERS : ""
-  ACCOUNTS ||--o{ POCKETBOOKS : "owner"
-  POCKETBOOKS ||--o{ CATEGORIES : ""
-  POCKETBOOKS ||--o{ ITEMS : ""
+  ACCOUNTS ||--o{ DECKS : "owner"
+  DECKS ||--o{ CATEGORIES : ""
+  DECKS ||--o{ ITEMS : ""
   CATEGORIES ||--o{ ITEM_CATEGORIES : ""
   ITEMS ||--o{ ITEM_CATEGORIES : ""
   ITEMS ||--o{ FAVORITES : ""
@@ -58,9 +58,9 @@ erDiagram
     timestamptz deleted_at
   }
 
-  POCKETBOOKS {
+  DECKS {
     uuid id PK
-    pocketbook_kind kind
+    deck_kind kind
     string slug
     string name
     uuid owner_account_id FK
@@ -72,7 +72,7 @@ erDiagram
 
   CATEGORIES {
     uuid id PK
-    uuid pocketbook_id FK
+    uuid deck_id FK
     string slug
     string name
     category_visibility visibility
@@ -85,7 +85,7 @@ erDiagram
 
   ITEMS {
     uuid id PK
-    uuid pocketbook_id FK
+    uuid deck_id FK
     item_type type
     item_status status
     varchar title
@@ -103,7 +103,7 @@ erDiagram
   ITEM_CATEGORIES {
     uuid item_id FK
     uuid category_id FK
-    uuid pocketbook_id FK
+    uuid deck_id FK
     timestamptz created_at
   }
 
@@ -123,8 +123,8 @@ erDiagram
 ### Key design patterns
 
 - **Soft deletes**: All user-facing tables have `deleted_at` timestamp. Queries always filter `WHERE deleted_at IS NULL` unless explicitly archiving.
-- **Denormalization**: `item_categories` includes `pocketbook_id` to enable composite FK constraints without a separate join.
-- **Unique constraints on slugs**: Partial unique indexes on slug + pocketbook where `deleted_at IS NULL` prevent collisions among active records.
+- **Denormalization**: `item_categories` includes `deck_id` to enable composite FK constraints without a separate join.
+- **Unique constraints on slugs**: Partial unique indexes on slug + deck where `deleted_at IS NULL` prevent collisions among active records.
 - **Timestamps with millisecond precision**: All `timestamptz` columns use `precision: 3` (JavaScript Date compatibility required for keyset cursors).
 - **Invariant triggers**: Database enforces cross-table rules (default category protection, auto-creation, timestamps).
 
@@ -136,20 +136,20 @@ erDiagram
 |-----------|-------------|------------|
 | **D3: Published item → ≥1 category** | An item with status='published' must have at least one category. | Service `items.create()`, `items.update()` superRefine; service `update()` rejects if result would be published with no categories. |
 | **D5: item_categories dual FK** | Each item_category row references both item and category via composite FK, ensuring consistency. | Drizzle schema composite FK with ON DELETE CASCADE. |
-| **D6: Empty categoryIds → default** | If item created with no categoryIds, automatically assign default category of pocketbook. | Service `items.create()` after fetching default. |
-| **D7: Default category auto-create + protect** | Every pocketbook gets a 'general' default category on insert. Cannot be deleted or have is_default=false. | DB trigger `pocketbooks_create_default_category` (INSERT) + `categories_protect_default` (DELETE/UPDATE); unique index `categories_one_default_uq` ensures ≤1 default per pocketbook. |
+| **D6: Empty categoryIds → default** | If item created with no categoryIds, automatically assign default category of deck. | Service `items.create()` after fetching default. |
+| **D7: Default category auto-create + protect** | Every deck gets a 'general' default category on insert. Cannot be deleted or have is_default=false. | DB trigger `decks_create_default_category` (INSERT) + `categories_protect_default` (DELETE/UPDATE); unique index `categories_one_default_uq` ensures ≤1 default per deck. |
 | **D8: Soft delete for archival** | Deletion sets `deleted_at`, not removing rows. Queries exclude soft-deleted. | All repository `.find*()`, `.list()` include `WHERE isNull(t.deletedAt)`. Service `items.softDelete()`. |
-| **D9: Updated-at triggers** | Every update to accounts, users, pocketbooks, categories, items sets `updated_at = now()`. | DB trigger `<table>_set_updated_at` BEFORE UPDATE on each table. |
+| **D9: Updated-at triggers** | Every update to accounts, users, decks, categories, items sets `updated_at = now()`. | DB trigger `<table>_set_updated_at` BEFORE UPDATE on each table. |
 | **D10: Payload schema per type** | Each item type (text, link, image, table, calc) validates payload against strict Zod schema. Payload byte size ≤ 8192 UTF-8; DB enforces ≤ 9216 with check constraint. | `payloadSchemaFor(type)` in `@pb/shared`; service calls `parse()` on PATCH; repository checks bytes; DB check constraint `items_payload_size_chk`. |
 | **D12: Item type immutable** | Cannot PATCH an item's type. | Service `items.update()` rejects `'type' in patch` with 400. |
 | **D13: Status default published** | Item created with status=null defaults to 'published' and `verified_at = now()`. | `itemCreateSchema` defaults status; service sets verifiedAt. |
 | **D14: Pagination keyset cursor** | Cursor encodes (createdAt, id) tuple, limiting result sets. Limit default 20, max 50; >50 rejects. | `limitSchema` in @pb/shared; `itemListQuerySchema`; service `items.list()` decodes, queries with SQL keyset filter. |
 | **D15: Favorite idempotence** | Adding/removing favorite twice is safe (no error). | Repository `favorites.add()` uses `onConflictDoNothing`; `favorites.remove()` does not error if missing. |
 | **D16: Dev auth gate** | Dev token + X-Dev-User header required for all routes except /health, /openapi.json. Removed Phase 2. | Middleware `devAuth()` uses constant-time comparison, validates email. `DEV_AUTH_ENABLED` environment flag. |
-| **D17: Access control (Phase 1)** | Routes only expose user's own pocketbooks (owned by their account). 404 for foreign pocketbooks. | Service methods call `assertPocketbookAccess()`, which checks `pocketbook.ownerAccountId === user.accountId`. |
+| **D17: Access control (Phase 1)** | Routes only expose user's own decks (owned by their account). 404 for foreign decks. | Service methods call `assertDeckAccess()`, which checks `deck.ownerAccountId === user.accountId`. |
 | **D18: Problem schema** | All errors returned as RFC 9457 problem+json with type URL, status, title, detail, and optional field errors. | `Problem`, `ProblemFieldError` schemas in @pb/shared; error handlers in middleware convert Zod, pg, and app errors. |
 | **D19: Migration rollback** | `db:rollback` reverses the latest applied migration by running its `.down.sql` and deleting the journal entry. | `rollbackLatest()` in `src/migrations.ts` executes down file in transaction, maps tag from __drizzle_migrations. |
-| **D21: E2E smoke tests** | Tagged tests `@smoke` write into 'smoke' pocketbook, all read /health before starting. | Playwright config `testDir: ./tests`, global-setup waits for health + latest migration tag match. |
+| **D21: E2E smoke tests** | Tagged tests `@smoke` write into 'smoke' deck, all read /health before starting. | Playwright config `testDir: ./tests`, global-setup waits for health + latest migration tag match. |
 
 ---
 
@@ -173,7 +173,7 @@ HTTP Response (JSON, status code, problem+json on error)
 
 All DTOs, constraints, and enums live in @pb/shared:
 - **Limits** (CARD_TITLE_MAX=120, CARD_BODY_MAX=600, PAGE_LIMIT_MAX=50, PAYLOAD_MAX_BYTES=8192, etc.)
-- **Enums** (pocketbookKinds, categoryVisibilities, itemTypes, itemStatuses, sourceKinds)
+- **Enums** (deckKinds, categoryVisibilities, itemTypes, itemStatuses, sourceKinds)
 - **Validation** (Zod schemas for create/patch inputs, payloads, pagination, problems)
 - **Utilities** (UTF-8 byte counting, cursor encoding/decoding, calc expression validation)
 
@@ -191,7 +191,7 @@ Example pattern:
 ```ts
 const route = createRoute({
   method: 'post',
-  path: '/pocketbooks/{id}/items',
+  path: '/decks/{id}/items',
   request: { 
     params: z.object({ id: z.string().min(1) }),
     body: { content: { 'application/json': { schema: itemCreateSchema } }, required: true }
@@ -215,9 +215,9 @@ app.openapi(route, async (c) => {
 ### Service layer
 
 Services encapsulate business rules:
-- **Access control**: `assertPocketbookAccess(user, pocketbook, action)` ensures ownership
+- **Access control**: `assertDeckAccess(user, deck, action)` ensures ownership
 - **Validation**: call Zod `parse()` on structured inputs (e.g., payload by type)
-- **Cascades**: when creating a pocketbook, fetch the default category; when updating an item, maybe recompute isFavorite
+- **Cascades**: when creating a deck, fetch the default category; when updating an item, maybe recompute isFavorite
 - **Soft delete**: use repository methods; service owns the semantics (e.g., `archive()` is idempotent)
 
 ### Repository layer
@@ -265,7 +265,7 @@ All errors (except 5xx) follow the Problem schema:
 | Cursor invalid base64 | 400 | /problems/invalid-cursor | Invalid cursor | "Invalid cursor" |
 | Invalid calc expression | 400 | /problems/validation | Validation failed | "Invalid expression: ..." |
 | Missing Authorization | 401 | /problems/unauthorized | Unauthorized | "Authentication required" |
-| Pocketbook not found | 404 | /problems/not-found | Not Found | "Pocketbook not found" |
+| Deck not found | 404 | /problems/not-found | Not Found | "Deck not found" |
 | Item not found | 404 | /problems/not-found | Not Found | "Item not found" |
 | Route not found | 404 | /problems/not-found | Not Found | "Route not found" |
 | Slug already exists (pg 23505) | 409 | /problems/conflict | Conflict | "Resource already exists" |
@@ -295,7 +295,7 @@ Instead of offset, use the last row's sort key to fetch the next batch:
 
 ```ts
 // First request: no cursor
-GET /pocketbooks/{id}/items?limit=20
+GET /decks/{id}/items?limit=20
 
 // Response
 {
@@ -304,7 +304,7 @@ GET /pocketbooks/{id}/items?limit=20
 }
 
 // Next request
-GET /pocketbooks/{id}/items?cursor=eyJjIjoiMjAyNC0wMS0xNVQxMDozMDowMCswMDowMDAiLCJpIjoiYWJjZC4uLiJ9&limit=20
+GET /decks/{id}/items?cursor=eyJjIjoiMjAyNC0wMS0xNVQxMDozMDowMCswMDowMDAiLCJpIjoiYWJjZC4uLiJ9&limit=20
 ```
 
 ### Cursor encoding/decoding
@@ -380,12 +380,12 @@ Dev auth is a Phase 1 scaffold. Phase 2 replaces it with:
 ### Custom migrations: 0002_invariants
 
 - Function `set_updated_at()`: sets `NEW.updated_at = now(); RETURN NEW;`
-- Trigger `<table>_set_updated_at`: runs before UPDATE on accounts, users, pocketbooks, categories, items
+- Trigger `<table>_set_updated_at`: runs before UPDATE on accounts, users, decks, categories, items
 - Function `create_default_category()`: inserts 'general' category
-- Trigger `pocketbooks_create_default_category`: runs after INSERT on pocketbooks
+- Trigger `decks_create_default_category`: runs after INSERT on decks
 - Function `protect_default_category()`: prevents deletion/modification of default category (raises P0001)
 - Trigger `categories_protect_default`: runs before DELETE or UPDATE on categories
-- Unique index `categories_one_default_uq`: max one default per pocketbook
+- Unique index `categories_one_default_uq`: max one default per deck
 
 ### Card limits: 0003_card_limits
 
@@ -435,8 +435,8 @@ Seeding the same database always produces the same IDs, making tests predictable
 **buildSeedData(devEmail)**:
 - Accounts: `seedId('account/dev')` (Dev Household), `seedId('account/other')` (Other Household)
 - Users: `seedId('user/dev')` (dev@example.test, Dev User), `seedId('user/other')` (other@example.test, Other User)
-- Pocketbooks: `seedId('pocketbook/<slug>')` for dev-personal, family, smoke, other-personal (all isPublic false)
-- Categories: `seedId('family/<slug>')` for school, health, food, admin, home, fun (only in family pocketbook)
+- Decks: `seedId('deck/<slug>')` for dev-personal, family, smoke, other-personal (all isPublic false)
+- Categories: `seedId('family/<slug>')` for school, health, food, admin, home, fun (only in family deck)
 - **Never manually inserts 'general'** — the DB trigger creates it
 
 ### Card seed
@@ -533,16 +533,16 @@ Tagging: every test title includes `@smoke`
 
 ---
 
-### ADR-004: 404 for foreign pocketbooks, not 403
+### ADR-004: 404 for foreign decks, not 403
 
-**Decision**: When a user accesses a pocketbook they don't own, return 404 (not found), not 403 (forbidden).
+**Decision**: When a user accesses a deck they don't own, return 404 (not found), not 403 (forbidden).
 
 **Rationale**:
 - Doesn't leak information about which resources exist
 - Consistent with "access control as query filter" pattern (repository only sees user's own data)
-- Phase 2 can refine to shared/public pocketbooks; 404 still applies to truly private ones
+- Phase 2 can refine to shared/public decks; 404 still applies to truly private ones
 
-**Implementation**: `assertPocketbookAccess()` throws `notFound()` on mismatch.
+**Implementation**: `assertDeckAccess()` throws `notFound()` on mismatch.
 
 ---
 
@@ -560,27 +560,27 @@ Tagging: every test title includes `@smoke`
 
 ---
 
-### ADR-006: Denormalized pocketbook_id in item_categories
+### ADR-006: Denormalized deck_id in item_categories
 
-**Decision**: `item_categories` table includes `pocketbook_id` even though it's redundant (reachable via itemId → items → pocketbookId).
+**Decision**: `item_categories` table includes `deck_id` even though it's redundant (reachable via itemId → items → deckId).
 
 **Rationale**:
-- Enables composite foreign key: `FK(itemId, pocketbookId) → items(id, pocketbookId)`
-- Prevents a bug where an item_category references an item in a different pocketbook
+- Enables composite foreign key: `FK(itemId, deckId) → items(id, deckId)`
+- Prevents a bug where an item_category references an item in a different deck
 - Marginal storage cost, significant constraint benefit
 
 ---
 
 ### ADR-007: Default category auto-created and protected
 
-**Decision**: Every pocketbook gets an automatic 'general' category on insert. Cannot be deleted or modified to `is_default=false`.
+**Decision**: Every deck gets an automatic 'general' category on insert. Cannot be deleted or modified to `is_default=false`.
 
 **Rationale**:
 - UX: users always have at least one category to tag items
 - Safety: avoids "item with no categories and status=published" edge case
 - Database enforces via trigger + unique index, not app logic
 
-**Cascade exception**: When pocketbook is deleted, the trigger cleanup is allowed (pg_trigger_depth > 1 check).
+**Cascade exception**: When deck is deleted, the trigger cleanup is allowed (pg_trigger_depth > 1 check).
 
 ---
 
@@ -636,7 +636,7 @@ Tagging: every test title includes `@smoke`
 
 **Rationale**:
 - Reproducible: same seed produces same IDs every run
-- Testable: e2e can assert on hardcoded IDs like `seedId('pocketbook/family')`
+- Testable: e2e can assert on hardcoded IDs like `seedId('deck/family')`
 - No collisions: different keys hash to different IDs
 - Never in production: seed only used in dev/test (guarded by env check)
 
@@ -693,12 +693,12 @@ Tagging: every test title includes `@smoke`
 
 ### ADR-017: Access control in service layer
 
-**Decision**: `assertPocketbookAccess(user, pocketbook, action)` checks ownership. Called by every service method that touches a pocketbook.
+**Decision**: `assertDeckAccess(user, deck, action)` checks ownership. Called by every service method that touches a deck.
 
 **Rationale**:
 - Centralized: consistent policy across routes
 - Fail-safe: throws 404 not found (doesn't expose existence)
-- Extensible: Phase 2 can add `can()` granularity (read vs write, shared pocketbooks)
+- Extensible: Phase 2 can add `can()` granularity (read vs write, shared decks)
 
 ---
 
@@ -739,10 +739,10 @@ Tagging: every test title includes `@smoke`
 
 ### ADR-021: Smoke tests with @smoke tag and health wait
 
-**Decision**: E2E tests tagged `@smoke` write only to 'smoke' pocketbook. Global setup waits for `/health` ok=true + migration tag match.
+**Decision**: E2E tests tagged `@smoke` write only to 'smoke' deck. Global setup waits for `/health` ok=true + migration tag match.
 
 **Rationale**:
-- Isolation: smoke tests use dedicated pocketbook (don't interfere with other tests)
+- Isolation: smoke tests use dedicated deck (don't interfere with other tests)
 - Readiness: wait for health ensures DB migrations are done before tests start
 - Reproducible: tag makes `pnpm test:e2e --grep @smoke` work
 
@@ -775,4 +775,4 @@ Tagging: every test title includes `@smoke`
 
 ## Summary
 
-Community Pocketbook Phase 1 is a layered REST API with OpenAPI documentation, dev authentication, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. Seeding is deterministic and idempotent. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 2 will replace dev auth with magic links, add shared/public pocketbooks and granular `can()` checks, and introduce the web frontend.
+Community Pocketbook Phase 1 is a layered REST API with OpenAPI documentation, dev authentication, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. Seeding is deterministic and idempotent. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 2 will replace dev auth with magic links, add shared/public decks and granular `can()` checks, and introduce the web frontend.

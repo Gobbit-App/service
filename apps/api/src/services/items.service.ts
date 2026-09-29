@@ -2,7 +2,7 @@ import type { ItemRow } from '@pb/db';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
-import type { PocketbooksRepo } from '../repositories/pocketbooks.repo';
+import type { DecksRepo } from '../repositories/decks.repo';
 import {
   decodeCursor,
   encodeCursor,
@@ -13,19 +13,19 @@ import {
   type ItemPatch,
   payloadSchemaFor,
 } from '@pb/shared';
-import { assertPocketbookAccess } from '../access/assert-pocketbook-access';
+import { assertDeckAccess } from '../access/assert-deck-access';
 import { badRequest, notFound, unprocessable } from '../errors/http-errors';
-import { resolvePocketbook } from '../lib/resolve-pocketbook';
+import { resolveDeck } from '../lib/resolve-deck';
 import { toItemDto } from '../lib/mappers';
 import { type CurrentUser } from '../types';
 
 export function createItemsService(deps: {
-  pocketbooks: PocketbooksRepo;
+  decks: DecksRepo;
   categories: CategoriesRepo;
   items: ItemsRepo;
   favorites: FavoritesRepo;
 }) {
-  const { pocketbooks, categories, items, favorites } = deps;
+  const { decks, categories, items, favorites } = deps;
 
   // Private helpers
 
@@ -33,22 +33,22 @@ export function createItemsService(deps: {
     const item = await items.findById(itemId);
     if (!item) throw notFound('Item not found');
 
-    const pocketbook = await pocketbooks.findById(item.pocketbookId);
-    if (!pocketbook) throw notFound('Item not found');
+    const deck = await decks.findById(item.deckId);
+    if (!deck) throw notFound('Item not found');
 
-    assertPocketbookAccess(user, pocketbook, 'read');
+    assertDeckAccess(user, deck, 'read');
     return item;
   }
 
-  async function validateCategoryIds(pocketbookId: string, ids: string[]): Promise<string[]> {
+  async function validateCategoryIds(deckId: string, ids: string[]): Promise<string[]> {
     const unique = [...new Set(ids)];
-    const existing = await categories.findExistingIds(pocketbookId, unique);
+    const existing = await categories.findExistingIds(deckId, unique);
     const existingSet = new Set(existing);
     const missing = unique.filter((id) => !existingSet.has(id));
 
     if (missing.length > 0) {
       throw badRequest(
-        'Unknown categories for this pocketbook',
+        'Unknown categories for this deck',
         missing.map((id) => ({ path: 'categoryIds', message: id })),
       );
     }
@@ -72,12 +72,12 @@ export function createItemsService(deps: {
 
   return {
     async list(user: CurrentUser, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
-      const pocketbook = await resolvePocketbook(pocketbooks, idOrSlug);
-      assertPocketbookAccess(user, pocketbook, 'read');
+      const deck = await resolveDeck(decks, idOrSlug);
+      assertDeckAccess(user, deck, 'read');
 
       let categoryId: string | undefined;
       if (q.category) {
-        const cat = await categories.findBySlug(pocketbook.id, q.category);
+        const cat = await categories.findBySlug(deck.id, q.category);
         if (!cat) throw notFound('Category not found');
         categoryId = cat.id;
       }
@@ -86,7 +86,7 @@ export function createItemsService(deps: {
 
       // Fetch limit+1 to check if there are more
       const rows = await items.list({
-        pocketbookId: pocketbook.id,
+        deckId: deck.id,
         status: q.status,
         type: q.type,
         categoryId,
@@ -112,18 +112,18 @@ export function createItemsService(deps: {
     },
 
     async create(user: CurrentUser, idOrSlug: string, input: ItemCreate): Promise<Item> {
-      const pocketbook = await resolvePocketbook(pocketbooks, idOrSlug);
-      assertPocketbookAccess(user, pocketbook, 'write');
+      const deck = await resolveDeck(decks, idOrSlug);
+      assertDeckAccess(user, deck, 'write');
 
       // Determine category IDs (D6)
       let categoryIds = input.categoryIds ?? [];
       if (categoryIds.length === 0) {
-        const defaultCat = await categories.findDefault(pocketbook.id);
+        const defaultCat = await categories.findDefault(deck.id);
         if (defaultCat) {
           categoryIds = [defaultCat.id];
         }
       } else {
-        categoryIds = await validateCategoryIds(pocketbook.id, categoryIds);
+        categoryIds = await validateCategoryIds(deck.id, categoryIds);
       }
 
       // Status default (D13)
@@ -133,7 +133,7 @@ export function createItemsService(deps: {
 
       const createdItem = await items.create(
         {
-          pocketbookId: pocketbook.id,
+          deckId: deck.id,
           type: input.type,
           status,
           title: input.title,
@@ -177,7 +177,7 @@ export function createItemsService(deps: {
       const currentCategoryIds = categoryIdsMap.get(item.id) ?? [];
       const resultingCategoryIds =
         patch.categoryIds !== undefined
-          ? await validateCategoryIds(item.pocketbookId, patch.categoryIds)
+          ? await validateCategoryIds(item.deckId, patch.categoryIds)
           : currentCategoryIds;
 
       // D6: published item needs at least one category

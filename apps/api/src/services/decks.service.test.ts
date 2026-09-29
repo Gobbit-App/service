@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { CurrentUser } from '../types';
-import { createPocketbooksService } from './pocketbooks.service';
+import { createDecksService } from './decks.service';
 
 vi.mock('../lib/slug', async () => {
   const { default: slugify } = await import('@sindresorhus/slugify');
@@ -17,14 +17,14 @@ vi.mock('../lib/slug', async () => {
   return { toSlug: vi.fn(implementation) };
 });
 
-describe('createPocketbooksService', () => {
-  let service: ReturnType<typeof createPocketbooksService>;
-  let pocketbooksRepo: any;
+describe('createDecksService', () => {
+  let service: ReturnType<typeof createDecksService>;
+  let decksRepo: any;
   let categoriesRepo: any;
   let user: CurrentUser;
 
   beforeEach(() => {
-    pocketbooksRepo = {
+    decksRepo = {
       listByOwner: vi.fn(),
       findById: vi.fn(),
       findBySlug: vi.fn(),
@@ -33,7 +33,7 @@ describe('createPocketbooksService', () => {
     };
 
     categoriesRepo = {
-      listByPocketbook: vi.fn(),
+      listByDeck: vi.fn(),
       findBySlug: vi.fn(),
       findDefault: vi.fn(),
       findExistingIds: vi.fn(),
@@ -41,8 +41,8 @@ describe('createPocketbooksService', () => {
       create: vi.fn(),
     };
 
-    service = createPocketbooksService({
-      pocketbooks: pocketbooksRepo,
+    service = createDecksService({
+      decks: decksRepo,
       categories: categoriesRepo,
     });
 
@@ -56,8 +56,8 @@ describe('createPocketbooksService', () => {
   });
 
   describe('create', () => {
-    it('derives slug from name and creates pocketbook with correct defaults', async () => {
-      const mockPocketbook = {
+    it('derives slug from name and creates deck with correct defaults', async () => {
+      const mockDeck = {
         id: 'pb-1',
         kind: 'personal' as const,
         slug: 'my-family',
@@ -71,7 +71,7 @@ describe('createPocketbooksService', () => {
 
       const mockCategory = {
         id: 'cat-1',
-        pocketbookId: 'pb-1',
+        deckId: 'pb-1',
         slug: 'general',
         name: 'General',
         visibility: 'shared' as const,
@@ -82,12 +82,12 @@ describe('createPocketbooksService', () => {
         deletedAt: null,
       };
 
-      pocketbooksRepo.create.mockResolvedValue(mockPocketbook);
-      categoriesRepo.listByPocketbook.mockResolvedValue([mockCategory]);
+      decksRepo.create.mockResolvedValue(mockDeck);
+      categoriesRepo.listByDeck.mockResolvedValue([mockCategory]);
 
       const result = await service.create(user, { name: 'My Family' });
 
-      expect(pocketbooksRepo.create).toHaveBeenCalledWith({
+      expect(decksRepo.create).toHaveBeenCalledWith({
         name: 'My Family',
         slug: 'my-family',
         kind: 'personal',
@@ -95,7 +95,7 @@ describe('createPocketbooksService', () => {
         ownerAccountId: user.accountId,
       });
 
-      expect(categoriesRepo.listByPocketbook).toHaveBeenCalledWith('pb-1');
+      expect(categoriesRepo.listByDeck).toHaveBeenCalledWith('pb-1');
 
       expect(result.categories).toHaveLength(1);
       expect(result.categories[0].slug).toBe('general');
@@ -114,13 +114,13 @@ describe('createPocketbooksService', () => {
         ]),
       });
 
-      expect(pocketbooksRepo.create).not.toHaveBeenCalled();
+      expect(decksRepo.create).not.toHaveBeenCalled();
     });
   });
 
   describe('get', () => {
-    it('returns 404 when pocketbook is owned by another account', async () => {
-      const otherUserPocketbook = {
+    it('returns 404 when deck is owned by another account', async () => {
+      const otherUserDeck = {
         id: 'pb-3',
         kind: 'personal' as const,
         slug: 'other-family',
@@ -132,7 +132,7 @@ describe('createPocketbooksService', () => {
         deletedAt: null,
       };
 
-      pocketbooksRepo.findBySlug.mockResolvedValue(otherUserPocketbook);
+      decksRepo.findBySlug.mockResolvedValue(otherUserDeck);
 
       await expect(service.get(user, 'other-family')).rejects.toMatchObject({
         status: 404,

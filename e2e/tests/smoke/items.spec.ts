@@ -1,10 +1,10 @@
-import { test, expect, SMOKE_POCKETBOOK } from '../../fixtures/api';
+import { test, expect, SMOKE_DECK } from '../../fixtures/api';
 
 test('items lifecycle @smoke', async ({ api, scratch }) => {
   const title = `smoke ${Date.now()}`;
 
   // Create item
-  const createRes = await api.post(`/pocketbooks/${SMOKE_POCKETBOOK}/items`, {
+  const createRes = await api.post(`/decks/${SMOKE_DECK}/items`, {
     data: {
       type: 'text',
       title,
@@ -37,7 +37,7 @@ test('items lifecycle @smoke', async ({ api, scratch }) => {
   expect(archived.status).toBe('archived');
 
   // List items (default status=published, so archived item not included)
-  const listRes = await api.get(`/pocketbooks/${SMOKE_POCKETBOOK}/items`);
+  const listRes = await api.get(`/decks/${SMOKE_DECK}/items`);
   expect(listRes.status()).toBe(200);
   const page = await listRes.json();
   expect(page.data.map((i: { id: string }) => i.id)).not.toContain(itemId);
@@ -60,7 +60,7 @@ test('items lifecycle @smoke', async ({ api, scratch }) => {
 });
 
 test('items validation @smoke', async ({ api }) => {
-  const res = await api.post(`/pocketbooks/${SMOKE_POCKETBOOK}/items`, {
+  const res = await api.post(`/decks/${SMOKE_DECK}/items`, {
     data: {
       type: 'text',
       title: 'test',

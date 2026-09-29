@@ -179,8 +179,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.pocketbooks": {
-      "name": "pocketbooks",
+    "public.decks": {
+      "name": "decks",
       "schema": "",
       "columns": {
         "id": {
@@ -192,7 +192,7 @@
         },
         "kind": {
           "name": "kind",
-          "type": "pocketbook_kind",
+          "type": "deck_kind",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -244,8 +244,8 @@
         }
       },
       "indexes": {
-        "pocketbooks_slug_active_uq": {
-          "name": "pocketbooks_slug_active_uq",
+        "decks_slug_active_uq": {
+          "name": "decks_slug_active_uq",
           "columns": [
             {
               "expression": "slug",
@@ -262,9 +262,9 @@
         }
       },
       "foreignKeys": {
-        "pocketbooks_owner_account_id_accounts_id_fk": {
-          "name": "pocketbooks_owner_account_id_accounts_id_fk",
-          "tableFrom": "pocketbooks",
+        "decks_owner_account_id_accounts_id_fk": {
+          "name": "decks_owner_account_id_accounts_id_fk",
+          "tableFrom": "decks",
           "tableTo": "accounts",
           "columnsFrom": [
             "owner_account_id"
@@ -293,8 +293,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "pocketbook_id": {
-          "name": "pocketbook_id",
+        "deck_id": {
+          "name": "deck_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -355,11 +355,11 @@
         }
       },
       "indexes": {
-        "categories_pocketbook_slug_active_uq": {
-          "name": "categories_pocketbook_slug_active_uq",
+        "categories_deck_slug_active_uq": {
+          "name": "categories_deck_slug_active_uq",
           "columns": [
             {
-              "expression": "pocketbook_id",
+              "expression": "deck_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -379,12 +379,12 @@
         }
       },
       "foreignKeys": {
-        "categories_pocketbook_id_pocketbooks_id_fk": {
-          "name": "categories_pocketbook_id_pocketbooks_id_fk",
+        "categories_deck_id_decks_id_fk": {
+          "name": "categories_deck_id_decks_id_fk",
           "tableFrom": "categories",
-          "tableTo": "pocketbooks",
+          "tableTo": "decks",
           "columnsFrom": [
-            "pocketbook_id"
+            "deck_id"
           ],
           "columnsTo": [
             "id"
@@ -395,12 +395,12 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "categories_id_pocketbook_uq": {
-          "name": "categories_id_pocketbook_uq",
+        "categories_id_deck_uq": {
+          "name": "categories_id_deck_uq",
           "nullsNotDistinct": false,
           "columns": [
             "id",
-            "pocketbook_id"
+            "deck_id"
           ]
         }
       },
@@ -419,8 +419,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "pocketbook_id": {
-          "name": "pocketbook_id",
+        "deck_id": {
+          "name": "deck_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -512,7 +512,7 @@
           "name": "items_list_idx",
           "columns": [
             {
-              "expression": "pocketbook_id",
+              "expression": "deck_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -543,12 +543,12 @@
         }
       },
       "foreignKeys": {
-        "items_pocketbook_id_pocketbooks_id_fk": {
-          "name": "items_pocketbook_id_pocketbooks_id_fk",
+        "items_deck_id_decks_id_fk": {
+          "name": "items_deck_id_decks_id_fk",
           "tableFrom": "items",
-          "tableTo": "pocketbooks",
+          "tableTo": "decks",
           "columnsFrom": [
-            "pocketbook_id"
+            "deck_id"
           ],
           "columnsTo": [
             "id"
@@ -572,12 +572,12 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "items_id_pocketbook_uq": {
-          "name": "items_id_pocketbook_uq",
+        "items_id_deck_uq": {
+          "name": "items_id_deck_uq",
           "nullsNotDistinct": false,
           "columns": [
             "id",
-            "pocketbook_id"
+            "deck_id"
           ]
         }
       },
@@ -601,8 +601,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "pocketbook_id": {
-          "name": "pocketbook_id",
+        "deck_id": {
+          "name": "deck_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -639,11 +639,11 @@
           "tableTo": "items",
           "columnsFrom": [
             "item_id",
-            "pocketbook_id"
+            "deck_id"
           ],
           "columnsTo": [
             "id",
-            "pocketbook_id"
+            "deck_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -654,11 +654,11 @@
           "tableTo": "categories",
           "columnsFrom": [
             "category_id",
-            "pocketbook_id"
+            "deck_id"
           ],
           "columnsTo": [
             "id",
-            "pocketbook_id"
+            "deck_id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -776,8 +776,8 @@
         "calc"
       ]
     },
-    "public.pocketbook_kind": {
-      "name": "pocketbook_kind",
+    "public.deck_kind": {
+      "name": "deck_kind",
       "schema": "public",
       "values": [
         "personal",

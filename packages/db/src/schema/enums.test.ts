@@ -1,24 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import {
-  pocketbookKindEnum,
+  deckKindEnum,
   categoryVisibilityEnum,
   itemTypeEnum,
   itemStatusEnum,
   sourceKindEnum,
 } from './common';
 import { items } from './items';
-import {
-  pocketbookKinds,
-  categoryVisibilities,
-  itemTypes,
-  itemStatuses,
-  sourceKinds,
-} from '@pb/shared';
+import { deckKinds, categoryVisibilities, itemTypes, itemStatuses, sourceKinds } from '@pb/shared';
 
 describe('schema enums', () => {
-  it('pocketbookKindEnum.enumValues equals pocketbookKinds', () => {
-    expect(pocketbookKindEnum.enumValues).toEqual(pocketbookKinds);
+  it('deckKindEnum.enumValues equals deckKinds', () => {
+    expect(deckKindEnum.enumValues).toEqual(deckKinds);
   });
 
   it('categoryVisibilityEnum.enumValues equals categoryVisibilities', () => {

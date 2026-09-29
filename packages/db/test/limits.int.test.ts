@@ -1,22 +1,22 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { withTestDb } from './db-fixture';
-import { accounts, users, pocketbooks, items } from '../src/schema';
+import { accounts, users, decks, items } from '../src/schema';
 
 const ctx = withTestDb();
 
 describe('DB limits (constraint checks)', () => {
   const testAccountId = '550e8400-e29b-41d4-a716-446655440000';
   const testUserId = '550e8400-e29b-41d4-a716-446655440001';
-  const testPocketbookId = '550e8400-e29b-41d4-a716-446655440002';
+  const testDeckId = '550e8400-e29b-41d4-a716-446655440002';
 
   beforeAll(async () => {
-    // Setup: create account, pocketbook, user
+    // Setup: create account, deck, user
     await ctx.db.insert(accounts).values({
       id: testAccountId,
       name: 'Test Account',
     });
-    await ctx.db.insert(pocketbooks).values({
-      id: testPocketbookId,
+    await ctx.db.insert(decks).values({
+      id: testDeckId,
       kind: 'personal',
       slug: 'test-limits',
       name: 'Test Limits',
@@ -36,7 +36,7 @@ describe('DB limits (constraint checks)', () => {
     try {
       await ctx.db.insert(items).values({
         id: '550e8400-e29b-41d4-a716-446655440003',
-        pocketbookId: testPocketbookId,
+        deckId: testDeckId,
         type: 'text',
         status: 'published',
         title: 't',
@@ -57,7 +57,7 @@ describe('DB limits (constraint checks)', () => {
 
     await ctx.db.insert(items).values({
       id: '550e8400-e29b-41d4-a716-446655440004',
-      pocketbookId: testPocketbookId,
+      deckId: testDeckId,
       type: 'text',
       status: 'published',
       title: 't',
@@ -75,7 +75,7 @@ describe('DB limits (constraint checks)', () => {
     try {
       await ctx.db.insert(items).values({
         id: '550e8400-e29b-41d4-a716-446655440005',
-        pocketbookId: testPocketbookId,
+        deckId: testDeckId,
         type: 'text',
         status: 'published',
         title: 't',
@@ -94,11 +94,11 @@ describe('DB limits (constraint checks)', () => {
   it('rejects payload that is an array (not an object)', async () => {
     try {
       await ctx.pool.query(
-        `INSERT INTO items (id, pocketbook_id, type, status, title, body, payload, source_kind, created_by)
+        `INSERT INTO items (id, deck_id, type, status, title, body, payload, source_kind, created_by)
          VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9)`,
         [
           '550e8400-e29b-41d4-a716-446655440006',
-          testPocketbookId,
+          testDeckId,
           'text',
           'published',
           't',
@@ -118,11 +118,11 @@ describe('DB limits (constraint checks)', () => {
   it('rejects payload that is a string (not an object)', async () => {
     try {
       await ctx.pool.query(
-        `INSERT INTO items (id, pocketbook_id, type, status, title, body, payload, source_kind, created_by)
+        `INSERT INTO items (id, deck_id, type, status, title, body, payload, source_kind, created_by)
          VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9)`,
         [
           '550e8400-e29b-41d4-a716-446655440007',
-          testPocketbookId,
+          testDeckId,
           'text',
           'published',
           't',

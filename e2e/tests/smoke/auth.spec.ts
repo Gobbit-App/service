@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 test.use({ extraHTTPHeaders: {} });
 
 test('requests without dev credentials get 401 problem+json @smoke', async ({ request }) => {
-  const response = await request.get('/pocketbooks');
+  const response = await request.get('/decks');
 
   expect(response.status()).toBe(401);
   expect(response.headers()['content-type']).toContain('application/problem+json');

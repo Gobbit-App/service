@@ -2,17 +2,17 @@ import type { Action, CurrentUser } from '../types';
 import { notFound } from '../errors/http-errors';
 
 /**
- * Asserts that the current user has access to the given pocketbook.
+ * Asserts that the current user has access to the given deck.
  * Phase 2 will replace this with a more sophisticated can() function.
  */
-export function assertPocketbookAccess(
+export function assertDeckAccess(
   user: CurrentUser,
-  pocketbook: { ownerAccountId: string },
+  deck: { ownerAccountId: string },
   action: Action,
 ): void {
   void action;
 
-  if (pocketbook.ownerAccountId !== user.accountId) {
-    throw notFound('Pocketbook not found');
+  if (deck.ownerAccountId !== user.accountId) {
+    throw notFound('Deck not found');
   }
 }

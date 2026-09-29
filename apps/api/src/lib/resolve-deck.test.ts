@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { isUuid, resolvePocketbook } from './resolve-pocketbook';
-import type { PocketbookRow } from '@pb/db';
+import { isUuid, resolveDeck } from './resolve-deck';
+import type { DeckRow } from '@pb/db';
 
 describe('isUuid', () => {
   it('returns true for a v4 uuid', () => {
@@ -13,9 +13,9 @@ describe('isUuid', () => {
   });
 });
 
-describe('resolvePocketbook', () => {
+describe('resolveDeck', () => {
   it('calls findById when given a uuid', async () => {
-    const mockRow: PocketbookRow = {
+    const mockRow: DeckRow = {
       id: '550e8400-e29b-41d4-a716-446655440000',
       kind: 'personal',
       slug: 'test',
@@ -32,7 +32,7 @@ describe('resolvePocketbook', () => {
     const repo = { findById, findBySlug };
 
     const uuid = '550e8400-e29b-41d4-a716-446655440000';
-    const result = await resolvePocketbook(repo, uuid);
+    const result = await resolveDeck(repo, uuid);
 
     expect(findById).toHaveBeenCalledWith(uuid);
     expect(findBySlug).not.toHaveBeenCalled();
@@ -40,7 +40,7 @@ describe('resolvePocketbook', () => {
   });
 
   it('calls findBySlug when given a slug', async () => {
-    const mockRow: PocketbookRow = {
+    const mockRow: DeckRow = {
       id: 'some-id',
       kind: 'personal',
       slug: 'family',
@@ -56,7 +56,7 @@ describe('resolvePocketbook', () => {
     const findBySlug = vi.fn().mockResolvedValue(mockRow);
     const repo = { findById, findBySlug };
 
-    const result = await resolvePocketbook(repo, 'family');
+    const result = await resolveDeck(repo, 'family');
 
     expect(findById).not.toHaveBeenCalled();
     expect(findBySlug).toHaveBeenCalledWith('family');
@@ -70,7 +70,7 @@ describe('resolvePocketbook', () => {
 
     const uuid = '550e8400-e29b-41d4-a716-446655440000';
 
-    await expect(resolvePocketbook(repo, uuid)).rejects.toMatchObject({ status: 404 });
+    await expect(resolveDeck(repo, uuid)).rejects.toMatchObject({ status: 404 });
   });
 
   it('throws 404 when findBySlug returns null', async () => {
@@ -78,6 +78,6 @@ describe('resolvePocketbook', () => {
     const findBySlug = vi.fn().mockResolvedValue(null);
     const repo = { findById, findBySlug };
 
-    await expect(resolvePocketbook(repo, 'nonexistent')).rejects.toMatchObject({ status: 404 });
+    await expect(resolveDeck(repo, 'nonexistent')).rejects.toMatchObject({ status: 404 });
   });
 });

@@ -7,5 +7,5 @@ export * from './schemas/payloads';
 export * from './schemas/pagination';
 export * from './schemas/problem';
 export * from './schemas/category';
-export * from './schemas/pocketbook';
+export * from './schemas/deck';
 export * from './schemas/item';

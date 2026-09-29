@@ -282,7 +282,7 @@ export const seedCards: SeedCard[] = [
       title: "Children's Vaccination Record",
       body: 'Important record of all vaccinations administered. Keep this safe and bring to medical appointments and school',
       payload: {
-        publicId: 'samples/pocketbook/vaccination-card',
+        publicId: 'samples/deck/vaccination-card',
         alt: 'Vaccination card',
       },
       status: 'published',

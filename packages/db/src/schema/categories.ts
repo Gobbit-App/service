@@ -1,15 +1,15 @@
 import { pgTable, uuid, text, boolean, integer, unique, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { categoryVisibilityEnum, timestamps } from './common';
-import { pocketbooks } from './pocketbooks';
+import { decks } from './decks';
 
 export const categories = pgTable(
   'categories',
   {
     id: uuid().primaryKey().defaultRandom(),
-    pocketbookId: uuid()
+    deckId: uuid()
       .notNull()
-      .references(() => pocketbooks.id, { onDelete: 'cascade' }),
+      .references(() => decks.id, { onDelete: 'cascade' }),
     slug: text().notNull(),
     name: text().notNull(),
     visibility: categoryVisibilityEnum().notNull().default('shared'),
@@ -18,9 +18,9 @@ export const categories = pgTable(
     ...timestamps,
   },
   (t) => [
-    unique('categories_id_pocketbook_uq').on(t.id, t.pocketbookId),
-    uniqueIndex('categories_pocketbook_slug_active_uq')
-      .on(t.pocketbookId, t.slug)
+    unique('categories_id_deck_uq').on(t.id, t.deckId),
+    uniqueIndex('categories_deck_slug_active_uq')
+      .on(t.deckId, t.slug)
       .where(sql`deleted_at is null`),
   ],
 );

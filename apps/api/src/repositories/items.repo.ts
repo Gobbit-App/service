@@ -6,7 +6,7 @@ export function createItemsRepo(db: Db) {
   return {
     async create(
       v: {
-        pocketbookId: string;
+        deckId: string;
         type: ItemType;
         status: ItemStatus;
         title: string;
@@ -27,7 +27,7 @@ export function createItemsRepo(db: Db) {
             categoryIds.map((categoryId) => ({
               categoryId,
               itemId: item.id,
-              pocketbookId: v.pocketbookId,
+              deckId: v.deckId,
             })),
           );
         }
@@ -47,7 +47,7 @@ export function createItemsRepo(db: Db) {
     },
 
     async list(q: {
-      pocketbookId: string;
+      deckId: string;
       status: ItemStatus;
       type?: ItemType;
       categoryId?: string;
@@ -55,7 +55,7 @@ export function createItemsRepo(db: Db) {
       limit: number;
     }): Promise<ItemRow[]> {
       const conditions = [
-        eq(items.pocketbookId, q.pocketbookId),
+        eq(items.deckId, q.deckId),
         eq(items.status, q.status),
         isNull(items.deletedAt),
       ];
@@ -113,7 +113,7 @@ export function createItemsRepo(db: Db) {
 
         if (categoryIds !== undefined) {
           const [item] = await tx
-            .select({ pocketbookId: items.pocketbookId })
+            .select({ deckId: items.deckId })
             .from(items)
             .where(eq(items.id, id))
             .limit(1);
@@ -126,7 +126,7 @@ export function createItemsRepo(db: Db) {
                 categoryIds.map((categoryId) => ({
                   categoryId,
                   itemId: id,
-                  pocketbookId: item.pocketbookId,
+                  deckId: item.deckId,
                 })),
               );
             }

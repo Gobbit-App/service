@@ -1,13 +1,13 @@
 import { pgTable, uuid, text, boolean, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { pocketbookKindEnum, timestamps } from './common';
+import { deckKindEnum, timestamps } from './common';
 import { accounts } from './accounts';
 
-export const pocketbooks = pgTable(
-  'pocketbooks',
+export const decks = pgTable(
+  'decks',
   {
     id: uuid().primaryKey().defaultRandom(),
-    kind: pocketbookKindEnum().notNull(),
+    kind: deckKindEnum().notNull(),
     slug: text().notNull(),
     name: text().notNull(),
     ownerAccountId: uuid()
@@ -17,7 +17,7 @@ export const pocketbooks = pgTable(
     ...timestamps,
   },
   (t) => [
-    uniqueIndex('pocketbooks_slug_active_uq')
+    uniqueIndex('decks_slug_active_uq')
       .on(t.slug)
       .where(sql`deleted_at is null`),
   ],

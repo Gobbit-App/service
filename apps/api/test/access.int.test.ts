@@ -5,8 +5,8 @@ describe('access control and dev auth', () => {
   const ctx = setupApiTest();
 
   describe('other user (owner of other-personal only)', () => {
-    it('GET /pocketbooks returns only other-personal', async () => {
-      const res = await ctx.app.request('/pocketbooks', {
+    it('GET /decks returns only other-personal', async () => {
+      const res = await ctx.app.request('/decks', {
         headers: ctx.as(OTHER_EMAIL),
       });
       expect(res.status).toBe(200);
@@ -15,29 +15,29 @@ describe('access control and dev auth', () => {
       expect(body.data[0].slug).toBe('other-personal');
     });
 
-    it('GET /pocketbooks/family returns 404', async () => {
-      const res = await ctx.app.request('/pocketbooks/family', {
+    it('GET /decks/family returns 404', async () => {
+      const res = await ctx.app.request('/decks/family', {
         headers: ctx.as(OTHER_EMAIL),
       });
       expect(res.status).toBe(404);
     });
 
-    it('GET /pocketbooks/family/items returns 404', async () => {
-      const res = await ctx.app.request('/pocketbooks/family/items', {
+    it('GET /decks/family/items returns 404', async () => {
+      const res = await ctx.app.request('/decks/family/items', {
         headers: ctx.as(OTHER_EMAIL),
       });
       expect(res.status).toBe(404);
     });
 
-    it('GET /pocketbooks/family/categories returns 404', async () => {
-      const res = await ctx.app.request('/pocketbooks/family/categories', {
+    it('GET /decks/family/categories returns 404', async () => {
+      const res = await ctx.app.request('/decks/family/categories', {
         headers: ctx.as(OTHER_EMAIL),
       });
       expect(res.status).toBe(404);
     });
 
-    it('POST /pocketbooks/family/items returns 404', async () => {
-      const res = await ctx.app.request('/pocketbooks/family/items', {
+    it('POST /decks/family/items returns 404', async () => {
+      const res = await ctx.app.request('/decks/family/items', {
         method: 'POST',
         headers: ctx.as(OTHER_EMAIL),
         body: JSON.stringify({
@@ -86,9 +86,9 @@ describe('access control and dev auth', () => {
     });
   });
 
-  describe('dev user still sees family pocketbook', () => {
-    it('GET /pocketbooks/family returns 200', async () => {
-      const res = await ctx.app.request('/pocketbooks/family', {
+  describe('dev user still sees family deck', () => {
+    it('GET /decks/family returns 200', async () => {
+      const res = await ctx.app.request('/decks/family', {
         headers: ctx.as(DEFAULT_DEV_EMAIL),
       });
       expect(res.status).toBe(200);
@@ -105,7 +105,7 @@ describe('access control and dev auth', () => {
 
   describe('dev auth failures', () => {
     it('unknown X-Dev-User returns 401', async () => {
-      const res = await ctx.app.request('/pocketbooks', {
+      const res = await ctx.app.request('/decks', {
         headers: {
           Authorization: `Bearer ${'x'.repeat(40)}`,
           'X-Dev-User': 'nobody@example.test',
@@ -116,7 +116,7 @@ describe('access control and dev auth', () => {
     });
 
     it('wrong bearer token returns 401', async () => {
-      const res = await ctx.app.request('/pocketbooks', {
+      const res = await ctx.app.request('/decks', {
         headers: {
           Authorization: 'Bearer ' + 'y'.repeat(40),
           'X-Dev-User': DEFAULT_DEV_EMAIL,

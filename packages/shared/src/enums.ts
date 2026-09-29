@@ -1,5 +1,5 @@
-export const pocketbookKinds = ['personal', 'shared', 'communal'] as const;
-export type PocketbookKind = (typeof pocketbookKinds)[number];
+export const deckKinds = ['personal', 'shared', 'communal'] as const;
+export type DeckKind = (typeof deckKinds)[number];
 
 export const categoryVisibilities = ['private', 'shared', 'public'] as const;
 export type CategoryVisibility = (typeof categoryVisibilities)[number];

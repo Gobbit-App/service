@@ -7,7 +7,7 @@ import { withTestDb, type TestDb } from '@pb/db/test';
 
 export const TEST_TOKEN = 'x'.repeat(40);
 
-export const FAMILY_ID = seedId('pocketbook/family');
+export const FAMILY_ID = seedId('deck/family');
 
 export function setupApiTest(): {
   readonly app: OpenAPIHono<AppEnv>;

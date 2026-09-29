@@ -1,34 +1,34 @@
 import { describe, it, expect } from 'vitest';
-import { assertPocketbookAccess } from './assert-pocketbook-access';
+import { assertDeckAccess } from './assert-deck-access';
 import { HttpError } from '../errors/http-errors';
 import type { CurrentUser } from '../types';
 
-describe('assertPocketbookAccess', () => {
+describe('assertDeckAccess', () => {
   const user: CurrentUser = {
     id: '123e4567-e89b-12d3-a456-426614174000',
     accountId: 'account-owner',
     email: 'owner@example.com',
   };
 
-  const ownerPocketbook = { ownerAccountId: 'account-owner' };
-  const nonOwnerPocketbook = { ownerAccountId: 'account-other' };
+  const ownerDeck = { ownerAccountId: 'account-owner' };
+  const nonOwnerDeck = { ownerAccountId: 'account-other' };
 
   it('allows owner read access', () => {
     expect(() => {
-      assertPocketbookAccess(user, ownerPocketbook, 'read');
+      assertDeckAccess(user, ownerDeck, 'read');
     }).not.toThrow();
   });
 
   it('allows owner write access', () => {
     expect(() => {
-      assertPocketbookAccess(user, ownerPocketbook, 'write');
+      assertDeckAccess(user, ownerDeck, 'write');
     }).not.toThrow();
   });
 
   it('throws 404 for non-owner read access', () => {
     let error: unknown;
     try {
-      assertPocketbookAccess(user, nonOwnerPocketbook, 'read');
+      assertDeckAccess(user, nonOwnerDeck, 'read');
     } catch (err) {
       error = err;
     }
@@ -36,14 +36,14 @@ describe('assertPocketbookAccess', () => {
     expect(error).toBeInstanceOf(HttpError);
     if (error instanceof HttpError) {
       expect(error.status).toBe(404);
-      expect(error.detail).toBe('Pocketbook not found');
+      expect(error.detail).toBe('Deck not found');
     }
   });
 
   it('throws 404 for non-owner write access', () => {
     let error: unknown;
     try {
-      assertPocketbookAccess(user, nonOwnerPocketbook, 'write');
+      assertDeckAccess(user, nonOwnerDeck, 'write');
     } catch (err) {
       error = err;
     }
@@ -51,7 +51,7 @@ describe('assertPocketbookAccess', () => {
     expect(error).toBeInstanceOf(HttpError);
     if (error instanceof HttpError) {
       expect(error.status).toBe(404);
-      expect(error.detail).toBe('Pocketbook not found');
+      expect(error.detail).toBe('Deck not found');
     }
   });
 });

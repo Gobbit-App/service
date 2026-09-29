@@ -1,4 +1,4 @@
-name: pocketbook
+name: deck
 
 services:
   db:

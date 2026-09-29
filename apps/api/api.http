@@ -8,47 +8,47 @@ GET {{baseUrl}}/health
 ### OpenAPI schema
 GET {{baseUrl}}/openapi.json
 
-### List pocketbooks
-GET {{baseUrl}}/pocketbooks
+### List decks
+GET {{baseUrl}}/decks
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 
-### Get family pocketbook
-GET {{baseUrl}}/pocketbooks/family
+### Get family deck
+GET {{baseUrl}}/decks/family
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 
 ### List family categories
-GET {{baseUrl}}/pocketbooks/family/categories
+GET {{baseUrl}}/decks/family/categories
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 
 ### List family items with food category (page 1)
 # @name foodPage1
-GET {{baseUrl}}/pocketbooks/family/items?category=food&status=published&limit=10
+GET {{baseUrl}}/decks/family/items?category=food&status=published&limit=10
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 
 ### List family items with food category (page 2)
-GET {{baseUrl}}/pocketbooks/family/items?category=food&status=published&limit=10&cursor={{foodPage1.response.body.nextCursor}}
+GET {{baseUrl}}/decks/family/items?category=food&status=published&limit=10&cursor={{foodPage1.response.body.nextCursor}}
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 
-### Create a new pocketbook
-POST {{baseUrl}}/pocketbooks
+### Create a new deck
+POST {{baseUrl}}/decks
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 Content-Type: application/json
 
 {
-  "name": "Test Pocketbook",
-  "slug": "test-pocketbook",
+  "name": "Test Deck",
+  "slug": "test-deck",
   "kind": "personal",
   "isPublic": false
 }
 
-### Create a category in smoke pocketbook
-POST {{baseUrl}}/pocketbooks/smoke/categories
+### Create a category in smoke deck
+POST {{baseUrl}}/decks/smoke/categories
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 Content-Type: application/json
@@ -60,9 +60,9 @@ Content-Type: application/json
   "position": 0
 }
 
-### Create a text item in smoke pocketbook
+### Create a text item in smoke deck
 # @name created
-POST {{baseUrl}}/pocketbooks/smoke/items
+POST {{baseUrl}}/decks/smoke/items
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 Content-Type: application/json
@@ -113,7 +113,7 @@ X-Dev-User: {{user}}
 
 ### Negative test: body exceeds CARD_BODY_MAX (600 characters)
 # Expects 422 Unprocessable Content (body is 601 'a' characters)
-POST {{baseUrl}}/pocketbooks/smoke/items
+POST {{baseUrl}}/decks/smoke/items
 Authorization: Bearer {{token}}
 X-Dev-User: {{user}}
 Content-Type: application/json

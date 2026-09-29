@@ -21,10 +21,10 @@ describe('OpenAPI', () => {
     const paths = doc.paths as Record<string, Record<string, unknown>>;
     const expectedPaths: Record<string, string[]> = {
       '/health': ['get'],
-      '/pocketbooks': ['get', 'post'],
-      '/pocketbooks/{id}': ['get', 'patch'],
-      '/pocketbooks/{id}/categories': ['get', 'post'],
-      '/pocketbooks/{id}/items': ['get', 'post'],
+      '/decks': ['get', 'post'],
+      '/decks/{id}': ['get', 'patch'],
+      '/decks/{id}/categories': ['get', 'post'],
+      '/decks/{id}/items': ['get', 'post'],
       '/items/{id}': ['get', 'patch', 'delete'],
       '/items/{id}/archive': ['post'],
       '/items/{id}/favorite': ['post', 'delete'],

@@ -12,23 +12,21 @@ describe('database invariants (P1.2/D7)', () => {
     return result.rows[0].id;
   }
 
-  // Helper to create pocketbook
-  async function mkPocketbook(slug: string): Promise<string> {
+  // Helper to create deck
+  async function mkDeck(slug: string): Promise<string> {
     const accountId = await mkAccount();
     const result = await t.pool.query(
-      'INSERT INTO pocketbooks (kind, slug, name, owner_account_id, is_public) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      ['shared', slug, 'Test Pocketbook', accountId, false],
+      'INSERT INTO decks (kind, slug, name, owner_account_id, is_public) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+      ['shared', slug, 'Test Deck', accountId, false],
     );
     return result.rows[0].id;
   }
 
   describe('(1) default category creation', () => {
-    it('new pocketbook creates exactly one default general category', async () => {
-      const pbId = await mkPocketbook(`test-1-${Date.now()}`);
+    it('new deck creates exactly one default general category', async () => {
+      const pbId = await mkDeck(`test-1-${Date.now()}`);
 
-      const result = await t.pool.query('SELECT * FROM categories WHERE pocketbook_id = $1', [
-        pbId,
-      ]);
+      const result = await t.pool.query('SELECT * FROM categories WHERE deck_id = $1', [pbId]);
 
       expect(result.rows).toHaveLength(1);
       const cat = result.rows[0];
@@ -43,10 +41,10 @@ describe('database invariants (P1.2/D7)', () => {
 
   describe('(2) default category protection', () => {
     it('DELETE default category rejects with P0001 default_category_protected', async () => {
-      const pbId = await mkPocketbook(`test-2a-${Date.now()}`);
+      const pbId = await mkDeck(`test-2a-${Date.now()}`);
 
       const catResult = await t.pool.query(
-        'SELECT id FROM categories WHERE pocketbook_id = $1 AND is_default = true',
+        'SELECT id FROM categories WHERE deck_id = $1 AND is_default = true',
         [pbId],
       );
       const catId = catResult.rows[0].id;
@@ -61,10 +59,10 @@ describe('database invariants (P1.2/D7)', () => {
     });
 
     it('soft DELETE default category (SET deleted_at=now) rejects with P0001', async () => {
-      const pbId = await mkPocketbook(`test-2b-${Date.now()}`);
+      const pbId = await mkDeck(`test-2b-${Date.now()}`);
 
       const catResult = await t.pool.query(
-        'SELECT id FROM categories WHERE pocketbook_id = $1 AND is_default = true',
+        'SELECT id FROM categories WHERE deck_id = $1 AND is_default = true',
         [pbId],
       );
       const catId = catResult.rows[0].id;
@@ -79,10 +77,10 @@ describe('database invariants (P1.2/D7)', () => {
     });
 
     it('UPDATE SET is_default=false on default category rejects with P0001', async () => {
-      const pbId = await mkPocketbook(`test-2c-${Date.now()}`);
+      const pbId = await mkDeck(`test-2c-${Date.now()}`);
 
       const catResult = await t.pool.query(
-        'SELECT id FROM categories WHERE pocketbook_id = $1 AND is_default = true',
+        'SELECT id FROM categories WHERE deck_id = $1 AND is_default = true',
         [pbId],
       );
       const catId = catResult.rows[0].id;
@@ -99,10 +97,10 @@ describe('database invariants (P1.2/D7)', () => {
 
   describe('(3) non-default category deletion', () => {
     it('DELETE non-default category succeeds', async () => {
-      const pbId = await mkPocketbook(`test-3a-${Date.now()}`);
+      const pbId = await mkDeck(`test-3a-${Date.now()}`);
 
       const catResult = await t.pool.query(
-        'INSERT INTO categories (pocketbook_id, slug, name, visibility, position) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        'INSERT INTO categories (deck_id, slug, name, visibility, position) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [pbId, 'x', 'X', 'shared', 1],
       );
       const catId = catResult.rows[0].id;
@@ -114,10 +112,10 @@ describe('database invariants (P1.2/D7)', () => {
     });
 
     it('soft DELETE non-default category succeeds', async () => {
-      const pbId = await mkPocketbook(`test-3b-${Date.now()}`);
+      const pbId = await mkDeck(`test-3b-${Date.now()}`);
 
       const catResult = await t.pool.query(
-        'INSERT INTO categories (pocketbook_id, slug, name, visibility, position) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        'INSERT INTO categories (deck_id, slug, name, visibility, position) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [pbId, 'y', 'Y', 'shared', 1],
       );
       const catId = catResult.rows[0].id;
@@ -132,12 +130,12 @@ describe('database invariants (P1.2/D7)', () => {
   });
 
   describe('(4) unique default category constraint', () => {
-    it('inserting second is_default=true in same pocketbook rejects with 23505', async () => {
-      const pbId = await mkPocketbook(`test-4-${Date.now()}`);
+    it('inserting second is_default=true in same deck rejects with 23505', async () => {
+      const pbId = await mkDeck(`test-4-${Date.now()}`);
 
       try {
         await t.pool.query(
-          'INSERT INTO categories (pocketbook_id, slug, name, is_default, visibility, position) VALUES ($1, $2, $3, $4, $5, $6)',
+          'INSERT INTO categories (deck_id, slug, name, is_default, visibility, position) VALUES ($1, $2, $3, $4, $5, $6)',
           [pbId, 'second-default', 'Second Default', true, 'shared', 1],
         );
         expect.fail('Should have thrown');
@@ -180,20 +178,20 @@ describe('database invariants (P1.2/D7)', () => {
         },
       },
       {
-        name: 'pocketbooks',
+        name: 'decks',
         create: async () => {
-          return mkPocketbook(`test-pb-${Date.now()}-${Math.random()}`);
+          return mkDeck(`test-pb-${Date.now()}-${Math.random()}`);
         },
         update: async (id: string) => {
-          await t.pool.query('UPDATE pocketbooks SET name = $1 WHERE id = $2', ['Updated', id]);
+          await t.pool.query('UPDATE decks SET name = $1 WHERE id = $2', ['Updated', id]);
         },
       },
       {
         name: 'categories',
         create: async () => {
-          const pbId = await mkPocketbook(`test-cat-${Date.now()}-${Math.random()}`);
+          const pbId = await mkDeck(`test-cat-${Date.now()}-${Math.random()}`);
           const res = await t.pool.query(
-            'INSERT INTO categories (pocketbook_id, slug, name, visibility, position) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+            'INSERT INTO categories (deck_id, slug, name, visibility, position) VALUES ($1, $2, $3, $4, $5) RETURNING id',
             [pbId, 'test-cat', 'Test Category', 'shared', 1],
           );
           return res.rows[0].id;
@@ -205,9 +203,9 @@ describe('database invariants (P1.2/D7)', () => {
       {
         name: 'items',
         create: async () => {
-          const pbId = await mkPocketbook(`test-item-${Date.now()}-${Math.random()}`);
+          const pbId = await mkDeck(`test-item-${Date.now()}-${Math.random()}`);
           const res = await t.pool.query(
-            'INSERT INTO items (pocketbook_id, type, title) VALUES ($1, $2, $3) RETURNING id',
+            'INSERT INTO items (deck_id, type, title) VALUES ($1, $2, $3) RETURNING id',
             [pbId, 'text', 'Test Item'],
           );
           return res.rows[0].id;
@@ -234,40 +232,36 @@ describe('database invariants (P1.2/D7)', () => {
   });
 
   describe('(6) cascade delete', () => {
-    it('hard DELETE pocketbook cascades to categories', async () => {
-      const pbId = await mkPocketbook(`test-6a-${Date.now()}`);
+    it('hard DELETE deck cascades to categories', async () => {
+      const pbId = await mkDeck(`test-6a-${Date.now()}`);
 
-      const catRes = await t.pool.query('SELECT id FROM categories WHERE pocketbook_id = $1', [
-        pbId,
-      ]);
+      const catRes = await t.pool.query('SELECT id FROM categories WHERE deck_id = $1', [pbId]);
       const catId = catRes.rows[0].id;
 
-      await t.pool.query('DELETE FROM pocketbooks WHERE id = $1', [pbId]);
+      await t.pool.query('DELETE FROM decks WHERE id = $1', [pbId]);
 
       const checkRes = await t.pool.query('SELECT * FROM categories WHERE id = $1', [catId]);
       expect(checkRes.rows).toHaveLength(0);
     });
 
-    it('hard DELETE pocketbook cascades with items and item_categories', async () => {
-      const pbId = await mkPocketbook(`test-6b-${Date.now()}`);
+    it('hard DELETE deck cascades with items and item_categories', async () => {
+      const pbId = await mkDeck(`test-6b-${Date.now()}`);
 
-      const catRes = await t.pool.query('SELECT id FROM categories WHERE pocketbook_id = $1', [
-        pbId,
-      ]);
+      const catRes = await t.pool.query('SELECT id FROM categories WHERE deck_id = $1', [pbId]);
       const catId = catRes.rows[0].id;
 
       const itemRes = await t.pool.query(
-        'INSERT INTO items (pocketbook_id, type, title) VALUES ($1, $2, $3) RETURNING id',
+        'INSERT INTO items (deck_id, type, title) VALUES ($1, $2, $3) RETURNING id',
         [pbId, 'text', 'Test Item'],
       );
       const itemId = itemRes.rows[0].id;
 
       await t.pool.query(
-        'INSERT INTO item_categories (item_id, category_id, pocketbook_id) VALUES ($1, $2, $3)',
+        'INSERT INTO item_categories (item_id, category_id, deck_id) VALUES ($1, $2, $3)',
         [itemId, catId, pbId],
       );
 
-      await t.pool.query('DELETE FROM pocketbooks WHERE id = $1', [pbId]);
+      await t.pool.query('DELETE FROM decks WHERE id = $1', [pbId]);
 
       const itemCheckRes = await t.pool.query('SELECT * FROM items WHERE id = $1', [itemId]);
       expect(itemCheckRes.rows).toHaveLength(0);

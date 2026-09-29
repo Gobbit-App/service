@@ -21,7 +21,7 @@ export const FAMILY_CATEGORIES = [
 export function buildSeedData(devEmail: string) {
   const devAccountId = seedId('account/dev');
   const otherAccountId = seedId('account/other');
-  const familyPocketbookId = seedId('pocketbook/family');
+  const familyDeckId = seedId('deck/family');
 
   return {
     accounts: [
@@ -48,17 +48,17 @@ export function buildSeedData(devEmail: string) {
         displayName: 'Other User',
       },
     ],
-    pocketbooks: [
+    decks: [
       {
-        id: seedId('pocketbook/dev-personal'),
+        id: seedId('deck/dev-personal'),
         kind: 'personal' as const,
         slug: 'dev-personal',
-        name: 'My Pocketbook',
+        name: 'My Deck',
         ownerAccountId: devAccountId,
         isPublic: false,
       },
       {
-        id: familyPocketbookId,
+        id: familyDeckId,
         kind: 'shared' as const,
         slug: 'family',
         name: 'Family',
@@ -66,7 +66,7 @@ export function buildSeedData(devEmail: string) {
         isPublic: false,
       },
       {
-        id: seedId('pocketbook/smoke'),
+        id: seedId('deck/smoke'),
         kind: 'shared' as const,
         slug: 'smoke',
         name: 'Smoke Tests',
@@ -74,17 +74,17 @@ export function buildSeedData(devEmail: string) {
         isPublic: false,
       },
       {
-        id: seedId('pocketbook/other-personal'),
+        id: seedId('deck/other-personal'),
         kind: 'personal' as const,
         slug: 'other-personal',
-        name: 'Other Pocketbook',
+        name: 'Other Deck',
         ownerAccountId: otherAccountId,
         isPublic: false,
       },
     ],
     categories: FAMILY_CATEGORIES.map((cat) => ({
       id: seedId(`family/${cat.slug}`),
-      pocketbookId: familyPocketbookId,
+      deckId: familyDeckId,
       slug: cat.slug,
       name: cat.name,
       position: cat.position,

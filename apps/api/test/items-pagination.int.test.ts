@@ -6,12 +6,12 @@ describe('items pagination and filters', () => {
   const ctx = setupApiTest();
 
   describe('keyset pagination (dev-personal)', () => {
-    const pocketbookId = seedId('pocketbook/dev-personal');
+    const deckId = seedId('deck/dev-personal');
 
     it('creates 25 text items sequentially', async () => {
       for (let i = 1; i <= 25; i++) {
         const title = `Item ${String(i).padStart(2, '0')}`;
-        const response = await ctx.app.request(`/pocketbooks/${pocketbookId}/items`, {
+        const response = await ctx.app.request(`/decks/${deckId}/items`, {
           method: 'POST',
           headers: ctx.as(),
           body: JSON.stringify({
@@ -31,7 +31,7 @@ describe('items pagination and filters', () => {
       const expectedSizes = [10, 10, 5];
 
       for (let page = 0; page < 3; page++) {
-        let path = `/pocketbooks/${pocketbookId}/items?limit=10`;
+        let path = `/decks/${deckId}/items?limit=10`;
         if (cursor) {
           path += `&cursor=${encodeURIComponent(cursor)}`;
         }
@@ -75,7 +75,7 @@ describe('items pagination and filters', () => {
 
     it('maintains stability when new item added mid-pagination', async () => {
       // Fetch page 1
-      const resp1 = await ctx.app.request(`/pocketbooks/${pocketbookId}/items?limit=10`, {
+      const resp1 = await ctx.app.request(`/decks/${deckId}/items?limit=10`, {
         headers: ctx.as(),
       });
       expect(resp1.status).toBe(200);
@@ -88,7 +88,7 @@ describe('items pagination and filters', () => {
       expect(cursor2).not.toBeNull();
 
       // POST a new item
-      const newItemResponse = await ctx.app.request(`/pocketbooks/${pocketbookId}/items`, {
+      const newItemResponse = await ctx.app.request(`/decks/${deckId}/items`, {
         method: 'POST',
         headers: ctx.as(),
         body: JSON.stringify({
@@ -105,7 +105,7 @@ describe('items pagination and filters', () => {
       let currentCursor = cursor2;
 
       for (let page = 0; page < 2; page++) {
-        const path = `/pocketbooks/${pocketbookId}/items?limit=10&cursor=${encodeURIComponent(currentCursor!)}`;
+        const path = `/decks/${deckId}/items?limit=10&cursor=${encodeURIComponent(currentCursor!)}`;
 
         const response = await ctx.app.request(path, {
           headers: ctx.as(),
@@ -136,15 +136,12 @@ describe('items pagination and filters', () => {
   });
 
   describe('filters (family)', () => {
-    const familyPocketbookId = seedId('pocketbook/family');
+    const familyDeckId = seedId('deck/family');
 
     it('filters by type=table → 2 items', async () => {
-      const response = await ctx.app.request(
-        `/pocketbooks/${familyPocketbookId}/items?type=table`,
-        {
-          headers: ctx.as(),
-        },
-      );
+      const response = await ctx.app.request(`/decks/${familyDeckId}/items?type=table`, {
+        headers: ctx.as(),
+      });
       expect(response.status).toBe(200);
 
       const data = (await response.json()) as ItemPage;
@@ -156,7 +153,7 @@ describe('items pagination and filters', () => {
 
     it('filters by category=food with limit=50 → 12 items', async () => {
       const response = await ctx.app.request(
-        `/pocketbooks/${familyPocketbookId}/items?category=food&limit=50`,
+        `/decks/${familyDeckId}/items?category=food&limit=50`,
         {
           headers: ctx.as(),
         },
@@ -168,12 +165,9 @@ describe('items pagination and filters', () => {
     });
 
     it('filters by status=archived → 2 items', async () => {
-      const response = await ctx.app.request(
-        `/pocketbooks/${familyPocketbookId}/items?status=archived`,
-        {
-          headers: ctx.as(),
-        },
-      );
+      const response = await ctx.app.request(`/decks/${familyDeckId}/items?status=archived`, {
+        headers: ctx.as(),
+      });
       expect(response.status).toBe(200);
 
       const data = (await response.json()) as ItemPage;
@@ -184,7 +178,7 @@ describe('items pagination and filters', () => {
     });
 
     it('default status filter → 23 items', async () => {
-      const response = await ctx.app.request(`/pocketbooks/${familyPocketbookId}/items?limit=50`, {
+      const response = await ctx.app.request(`/decks/${familyDeckId}/items?limit=50`, {
         headers: ctx.as(),
       });
       expect(response.status).toBe(200);
@@ -197,12 +191,9 @@ describe('items pagination and filters', () => {
     });
 
     it('invalid category slug → 404', async () => {
-      const response = await ctx.app.request(
-        `/pocketbooks/${familyPocketbookId}/items?category=nope`,
-        {
-          headers: ctx.as(),
-        },
-      );
+      const response = await ctx.app.request(`/decks/${familyDeckId}/items?category=nope`, {
+        headers: ctx.as(),
+      });
       expect(response.status).toBe(404);
 
       const data = await response.json();
@@ -210,7 +201,7 @@ describe('items pagination and filters', () => {
     });
 
     it('limit > 50 → 400', async () => {
-      const response = await ctx.app.request(`/pocketbooks/${familyPocketbookId}/items?limit=51`, {
+      const response = await ctx.app.request(`/decks/${familyDeckId}/items?limit=51`, {
         headers: ctx.as(),
       });
       expect(response.status).toBe(400);
@@ -220,7 +211,7 @@ describe('items pagination and filters', () => {
     });
 
     it('limit = 0 → 400', async () => {
-      const response = await ctx.app.request(`/pocketbooks/${familyPocketbookId}/items?limit=0`, {
+      const response = await ctx.app.request(`/decks/${familyDeckId}/items?limit=0`, {
         headers: ctx.as(),
       });
       expect(response.status).toBe(400);
@@ -230,12 +221,9 @@ describe('items pagination and filters', () => {
     });
 
     it('invalid cursor → 400 with /problems/invalid-cursor', async () => {
-      const response = await ctx.app.request(
-        `/pocketbooks/${familyPocketbookId}/items?cursor=garbage`,
-        {
-          headers: ctx.as(),
-        },
-      );
+      const response = await ctx.app.request(`/decks/${familyDeckId}/items?cursor=garbage`, {
+        headers: ctx.as(),
+      });
       expect(response.status).toBe(400);
 
       const data = await response.json();
@@ -244,7 +232,7 @@ describe('items pagination and filters', () => {
 
     it('soft-deleted item not in default list', async () => {
       // Get first item
-      const resp1 = await ctx.app.request(`/pocketbooks/${familyPocketbookId}/items?limit=50`, {
+      const resp1 = await ctx.app.request(`/decks/${familyDeckId}/items?limit=50`, {
         headers: ctx.as(),
       });
       expect(resp1.status).toBe(200);
@@ -260,7 +248,7 @@ describe('items pagination and filters', () => {
       expect(deleteResponse.status).toBe(204);
 
       // Fetch list again
-      const resp2 = await ctx.app.request(`/pocketbooks/${familyPocketbookId}/items?limit=50`, {
+      const resp2 = await ctx.app.request(`/decks/${familyDeckId}/items?limit=50`, {
         headers: ctx.as(),
       });
       expect(resp2.status).toBe(200);

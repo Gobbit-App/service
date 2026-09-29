@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { toPocketbookDto, toCategoryDto, toItemDto } from './mappers';
-import { pocketbookSchema, categorySchema, itemSchema } from '@pb/shared';
-import type { PocketbookRow, CategoryRow, ItemRow } from '@pb/db';
+import { toDeckDto, toCategoryDto, toItemDto } from './mappers';
+import { deckSchema, categorySchema, itemSchema } from '@pb/shared';
+import type { DeckRow, CategoryRow, ItemRow } from '@pb/db';
 
 describe('mappers', () => {
-  describe('toPocketbookDto', () => {
-    it('should map PocketbookRow to Pocketbook DTO and parse with schema', () => {
+  describe('toDeckDto', () => {
+    it('should map DeckRow to Deck DTO and parse with schema', () => {
       const date = new Date('2026-01-01T00:00:00.000Z');
-      const row: PocketbookRow = {
+      const row: DeckRow = {
         id: '123e4567-e89b-12d3-a456-426614174000',
         kind: 'personal',
-        slug: 'test-pocketbook',
-        name: 'Test Pocketbook',
+        slug: 'test-deck',
+        name: 'Test Deck',
         ownerAccountId: '223e4567-e89b-12d3-a456-426614174000',
         isPublic: false,
         createdAt: date,
@@ -19,13 +19,13 @@ describe('mappers', () => {
         deletedAt: null,
       };
 
-      const dto = toPocketbookDto(row);
+      const dto = toDeckDto(row);
 
       expect(dto.createdAt).toBe('2026-01-01T00:00:00.000Z');
       expect(dto.updatedAt).toBe('2026-01-01T00:00:00.000Z');
       expect(Object.keys(dto)).not.toContain('deletedAt');
 
-      const parsed = pocketbookSchema.parse(dto);
+      const parsed = deckSchema.parse(dto);
       expect(parsed).toBeDefined();
     });
   });
@@ -35,7 +35,7 @@ describe('mappers', () => {
       const date = new Date('2026-01-01T00:00:00.000Z');
       const row: CategoryRow = {
         id: '323e4567-e89b-12d3-a456-426614174000',
-        pocketbookId: '123e4567-e89b-12d3-a456-426614174000',
+        deckId: '123e4567-e89b-12d3-a456-426614174000',
         slug: 'test-category',
         name: 'Test Category',
         visibility: 'shared',
@@ -62,7 +62,7 @@ describe('mappers', () => {
       const date = new Date('2026-01-01T00:00:00.000Z');
       const row: ItemRow = {
         id: '423e4567-e89b-12d3-a456-426614174000',
-        pocketbookId: '123e4567-e89b-12d3-a456-426614174000',
+        deckId: '123e4567-e89b-12d3-a456-426614174000',
         type: 'text',
         status: 'published',
         title: 'Test Item',

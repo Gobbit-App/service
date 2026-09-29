@@ -8,8 +8,8 @@ let foodCategoryId: string;
 
 describe('Items Integration Tests', () => {
   beforeAll(async () => {
-    // Get general category from smoke pocketbook
-    const categoriesRes = await ctx.app.request('/pocketbooks/smoke/categories', {
+    // Get general category from smoke deck
+    const categoriesRes = await ctx.app.request('/decks/smoke/categories', {
       headers: ctx.as(),
     });
     expect(categoriesRes.status).toBe(200);
@@ -18,12 +18,12 @@ describe('Items Integration Tests', () => {
     expect(general).toBeDefined();
     generalId = general.id;
 
-    // Get food category ID for testing cross-pocketbook validation
+    // Get food category ID for testing cross-deck validation
     foodCategoryId = seedId('family/food');
   });
 
   it('POST text with defaults → 201, published, verifiedAt set, categoryIds=[generalId]', async () => {
-    const res = await ctx.app.request('/pocketbooks/smoke/items', {
+    const res = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -42,7 +42,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('POST status proposed → verifiedAt null', async () => {
-    const res = await ctx.app.request('/pocketbooks/smoke/items', {
+    const res = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -59,7 +59,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('GET /items/:id → 200 with same data', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -82,7 +82,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('PATCH title → 200', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -104,7 +104,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('PATCH type → 400', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -124,7 +124,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('POST table item → 201', async () => {
-    const res = await ctx.app.request('/pocketbooks/smoke/items', {
+    const res = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -143,7 +143,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('PATCH table payload with ragged rows → 400', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -171,7 +171,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('PATCH table with wrong payload type → 400', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -196,7 +196,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('PATCH published item categoryIds to empty → 422 /problems/item-needs-category', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -218,8 +218,8 @@ describe('Items Integration Tests', () => {
     expect(problem.type).toBe('/problems/item-needs-category');
   });
 
-  it('POST with categoryIds from another pocketbook → 400 and errors include that id', async () => {
-    const res = await ctx.app.request('/pocketbooks/smoke/items', {
+  it('POST with categoryIds from another deck → 400 and errors include that id', async () => {
+    const res = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -236,7 +236,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('POST body exceeding character limit → 400 and errors[0].path body', async () => {
-    const res = await ctx.app.request('/pocketbooks/smoke/items', {
+    const res = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -252,7 +252,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('POST body with 600 Hebrew characters → 201', async () => {
-    const res = await ctx.app.request('/pocketbooks/smoke/items', {
+    const res = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -267,7 +267,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('POST link with javascript: URL → 400', async () => {
-    const res = await ctx.app.request('/pocketbooks/smoke/items', {
+    const res = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -282,7 +282,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('POST /items/:id/archive twice → both 200 status archived', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -311,8 +311,8 @@ describe('Items Integration Tests', () => {
     expect(item.status).toBe('archived');
   });
 
-  it('GET /pocketbooks/smoke/items excludes archived by default', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+  it('GET /decks/smoke/items excludes archived by default', async () => {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -329,7 +329,7 @@ describe('Items Integration Tests', () => {
       headers: ctx.as(),
     });
 
-    const listRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const listRes = await ctx.app.request('/decks/smoke/items', {
       headers: ctx.as(),
     });
     expect(listRes.status).toBe(200);
@@ -338,8 +338,8 @@ describe('Items Integration Tests', () => {
     expect(found).toBeUndefined();
   });
 
-  it('GET /pocketbooks/smoke/items?status=archived includes archived', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+  it('GET /decks/smoke/items?status=archived includes archived', async () => {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -356,7 +356,7 @@ describe('Items Integration Tests', () => {
       headers: ctx.as(),
     });
 
-    const listRes = await ctx.app.request('/pocketbooks/smoke/items?status=archived', {
+    const listRes = await ctx.app.request('/decks/smoke/items?status=archived', {
       headers: ctx.as(),
     });
     expect(listRes.status).toBe(200);
@@ -366,7 +366,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('DELETE /items/:id → 204; GET → 404; not in any list', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -389,7 +389,7 @@ describe('Items Integration Tests', () => {
     });
     expect(getRes.status).toBe(404);
 
-    const listRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const listRes = await ctx.app.request('/decks/smoke/items', {
       headers: ctx.as(),
     });
     expect(listRes.status).toBe(200);
@@ -399,7 +399,7 @@ describe('Items Integration Tests', () => {
   });
 
   it('DELETE /items/:id again → 404', async () => {
-    const createRes = await ctx.app.request('/pocketbooks/smoke/items', {
+    const createRes = await ctx.app.request('/decks/smoke/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({

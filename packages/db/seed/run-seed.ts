@@ -52,10 +52,10 @@ export async function runSeed(
       );
     }
 
-    // Upsert pocketbooks
-    for (const pb of data.pocketbooks) {
+    // Upsert decks
+    for (const pb of data.decks) {
       await client.query(
-        `INSERT INTO pocketbooks AS t (id, kind, slug, name, owner_account_id, is_public)
+        `INSERT INTO decks AS t (id, kind, slug, name, owner_account_id, is_public)
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (id) DO UPDATE SET
            kind = EXCLUDED.kind,
@@ -73,24 +73,24 @@ export async function runSeed(
     // Upsert categories
     for (const cat of data.categories) {
       await client.query(
-        `INSERT INTO categories AS t (id, pocketbook_id, slug, name, visibility, is_default, position)
+        `INSERT INTO categories AS t (id, deck_id, slug, name, visibility, is_default, position)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO UPDATE SET
-           pocketbook_id = EXCLUDED.pocketbook_id,
+           deck_id = EXCLUDED.deck_id,
            slug = EXCLUDED.slug,
            name = EXCLUDED.name,
            visibility = EXCLUDED.visibility,
            is_default = EXCLUDED.is_default,
            position = EXCLUDED.position
-         WHERE (t.pocketbook_id, t.slug, t.name, t.visibility, t.is_default, t.position) IS DISTINCT FROM
-           (EXCLUDED.pocketbook_id, EXCLUDED.slug, EXCLUDED.name, EXCLUDED.visibility,
+         WHERE (t.deck_id, t.slug, t.name, t.visibility, t.is_default, t.position) IS DISTINCT FROM
+           (EXCLUDED.deck_id, EXCLUDED.slug, EXCLUDED.name, EXCLUDED.visibility,
             EXCLUDED.is_default, EXCLUDED.position)`,
-        [cat.id, cat.pocketbookId, cat.slug, cat.name, cat.visibility, false, cat.position],
+        [cat.id, cat.deckId, cat.slug, cat.name, cat.visibility, false, cat.position],
       );
     }
 
     // Insert items
-    const familyPocketbookId = seedId('pocketbook/family');
+    const familyDeckId = seedId('deck/family');
     const devUserId = seedId('user/dev');
     const baseTime = Date.UTC(2026, 0, 1);
     const verifiedAtStr = '2026-01-01T00:00:00.000Z';
@@ -108,7 +108,7 @@ export async function runSeed(
       const payloadJson = JSON.stringify(parsedCard.payload);
 
       await client.query(
-        `INSERT INTO items AS t (id, pocketbook_id, type, status, title, body, payload, source_url, source_kind, verified_at, created_by, created_at)
+        `INSERT INTO items AS t (id, deck_id, type, status, title, body, payload, source_url, source_kind, verified_at, created_by, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10::timestamptz, $11, $12::timestamptz)
          ON CONFLICT (id) DO UPDATE SET
            type = EXCLUDED.type,
@@ -125,7 +125,7 @@ export async function runSeed(
             EXCLUDED.source_url, EXCLUDED.source_kind, EXCLUDED.verified_at, EXCLUDED.created_at)`,
         [
           seedId(sc.key),
-          familyPocketbookId,
+          familyDeckId,
           parsedCard.type,
           sc.status,
           parsedCard.title,
@@ -147,10 +147,10 @@ export async function runSeed(
       for (const categorySlug of sc.categories) {
         const categoryId = seedId(`family/${categorySlug}`);
         await client.query(
-          `INSERT INTO item_categories (item_id, category_id, pocketbook_id, created_at)
+          `INSERT INTO item_categories (item_id, category_id, deck_id, created_at)
            VALUES ($1, $2, $3, now())
            ON CONFLICT (item_id, category_id) DO NOTHING`,
-          [itemId, categoryId, familyPocketbookId],
+          [itemId, categoryId, familyDeckId],
         );
       }
     }

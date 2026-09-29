@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures/api';
 
-test('@smoke - GET /pocketbooks includes created pocketbooks', async ({ api }) => {
-  const response = await api.get('/pocketbooks');
+test('@smoke - GET /decks includes created decks', async ({ api }) => {
+  const response = await api.get('/decks');
   expect(response.status()).toBe(200);
 
   const data = await response.json();
@@ -11,8 +11,8 @@ test('@smoke - GET /pocketbooks includes created pocketbooks', async ({ api }) =
   expect(slugs).toContain('smoke');
 });
 
-test('@smoke - GET /pocketbooks/family/categories includes general', async ({ api }) => {
-  const response = await api.get('/pocketbooks/family/categories');
+test('@smoke - GET /decks/family/categories includes general', async ({ api }) => {
+  const response = await api.get('/decks/family/categories');
   expect(response.status()).toBe(200);
 
   const data = await response.json();
@@ -21,8 +21,8 @@ test('@smoke - GET /pocketbooks/family/categories includes general', async ({ ap
   expect(slugs).toContain('general');
 });
 
-test('@smoke - GET /pocketbooks/family/items returns food items with cursor', async ({ api }) => {
-  const response = await api.get('/pocketbooks/family/items?category=food&limit=10');
+test('@smoke - GET /decks/family/items returns food items with cursor', async ({ api }) => {
+  const response = await api.get('/decks/family/items?category=food&limit=10');
   expect(response.status()).toBe(200);
 
   const data = await response.json();

@@ -8,7 +8,7 @@ describe('seed pagination', () => {
     const foodCategoryId = seedId('family/food');
 
     // First request: get 10 items with category=food
-    const firstRes = await ctx.app.request('/pocketbooks/family/items?category=food&limit=10', {
+    const firstRes = await ctx.app.request('/decks/family/items?category=food&limit=10', {
       headers: ctx.as(DEFAULT_DEV_EMAIL),
     });
 
@@ -29,7 +29,7 @@ describe('seed pagination', () => {
 
     // Second request: get remaining items with cursor
     const secondRes = await ctx.app.request(
-      `/pocketbooks/family/items?category=food&limit=10&cursor=${encodeURIComponent(firstPage.nextCursor)}`,
+      `/decks/family/items?category=food&limit=10&cursor=${encodeURIComponent(firstPage.nextCursor)}`,
       {
         headers: ctx.as(DEFAULT_DEV_EMAIL),
       },
