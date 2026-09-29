@@ -12,7 +12,8 @@ jobs:
     # Targets the deployed API; set the SMOKE_RUNNER repo variable (e.g. 'self-hosted') if it is
     # only reachable from a private runner. Triggered only from main, never by fork PRs.
     runs-on: ${{ vars.SMOKE_RUNNER || 'ubuntu-latest' }}
-    # Skipped until a deployed API is configured via the API_BASE_URL repository variable.
+    # Skipped until a deployed API is configured via the API_BASE_URL repository variable
+    # (https://gobbit.niranhome.win/api, D46).
     if: >-
       vars.API_BASE_URL != '' &&
       (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
@@ -31,8 +32,7 @@ jobs:
       - run: pnpm --filter e2e exec playwright test --grep @smoke
         env:
           BASE_URL: ${{ vars.API_BASE_URL }}
-          DEV_API_TOKEN: ${{ secrets.DEV_API_TOKEN }}
-          DEV_USER: ${{ secrets.DEV_USER }}
+          SMOKE_SESSION_TOKEN: ${{ secrets.SMOKE_SESSION_TOKEN }}
           CI: 'true'
 
       - if: always()

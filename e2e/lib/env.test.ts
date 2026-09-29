@@ -6,15 +6,13 @@ describe('resolveE2eEnv', () => {
     expect(resolveE2eEnv({})).toEqual({
       baseURL: 'http://localhost:3000',
       token: '',
-      user: 'dev@example.test',
     });
   });
 
   it('treats empty and whitespace values as unset (GitHub Actions unset vars)', () => {
-    expect(resolveE2eEnv({ BASE_URL: '', DEV_API_TOKEN: '  ', DEV_USER: '' })).toEqual({
+    expect(resolveE2eEnv({ BASE_URL: '', SMOKE_SESSION_TOKEN: '  ' })).toEqual({
       baseURL: 'http://localhost:3000',
       token: '',
-      user: 'dev@example.test',
     });
   });
 
@@ -22,10 +20,9 @@ describe('resolveE2eEnv', () => {
     expect(
       resolveE2eEnv({
         BASE_URL: 'https://api.example.com/',
-        DEV_API_TOKEN: 'tok',
-        DEV_USER: 'a@example.test',
+        SMOKE_SESSION_TOKEN: 'tok',
       }),
-    ).toEqual({ baseURL: 'https://api.example.com', token: 'tok', user: 'a@example.test' });
+    ).toEqual({ baseURL: 'https://api.example.com', token: 'tok' });
   });
 
   it('fails fast in CI when BASE_URL is missing', () => {

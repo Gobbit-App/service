@@ -25,13 +25,34 @@ services:
       DATABASE_URL: postgres://pb:pb@db:5432/pb
       PORT: 3000
       NODE_ENV: production
-      DEV_AUTH_ENABLED: ${DEV_AUTH_ENABLED:-false}
-      DEV_API_TOKEN: ${DEV_API_TOKEN:-}
+      # Public address used to build magic-link URLs (D46: https://gobbit.niranhome.win/api).
+      API_URL: ${API_URL:-http://localhost:3000}
+      APP_URL: ${APP_URL:-}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      # Local default prints links to the container log; deployed hosts use resend.
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-console}
+      ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-true}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
+      SEED_OWNER_EMAIL: ${SEED_OWNER_EMAIL:-}
+      SEED_OWNER_NAME: ${SEED_OWNER_NAME:-}
+      SMOKE_SESSION_TOKEN: ${SMOKE_SESSION_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy
     ports:
       - 127.0.0.1:${API_PORT:-3000}:3000
+    # D46: one public origin; Traefik sends /api/* here with the prefix stripped.
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.gobbit-api.rule=Host(`${PUBLIC_HOST:-gobbit.niranhome.win}`) && PathPrefix(`/api`)
+      - traefik.http.routers.gobbit-api.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
+      - traefik.http.routers.gobbit-api.middlewares=gobbit-api-strip
+      - traefik.http.middlewares.gobbit-api-strip.stripprefix.prefixes=/api
+      - traefik.http.services.gobbit-api.loadbalancer.server.port=3000
     restart: unless-stopped
 
 volumes:

@@ -73,3 +73,24 @@ test('items validation @smoke', async ({ api, smokeDeck }) => {
   const problem = await res.json();
   expect(problem.errors[0].path).toBe('body');
 });
+
+test('a private category and its card are visible to the owner @smoke', async ({
+  api,
+  smokeDeck,
+}) => {
+  const catRes = await api.post(`/decks/${smokeDeck.slug}/categories`, {
+    data: { name: 'Smoke private', slug: 'smoke-private', visibility: 'private' },
+  });
+  expect(catRes.status()).toBe(201);
+  const category = await catRes.json();
+  expect(category.visibility).toBe('private');
+
+  const itemRes = await api.post(`/decks/${smokeDeck.slug}/items`, {
+    data: { type: 'text', title: 'private smoke card', categoryIds: [category.id] },
+  });
+  expect(itemRes.status()).toBe(201);
+
+  const list = await api.get(`/decks/${smokeDeck.slug}/categories`);
+  const slugs = (await list.json()).data.map((c: { slug: string }) => c.slug);
+  expect(slugs).toContain('smoke-private');
+});
