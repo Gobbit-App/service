@@ -1,15 +1,28 @@
 import type { ItemCreateInput } from '@pb/shared';
 
-export interface SeedCard {
+/** Category slugs the sample cards are tagged with (created in the `family` sample deck). */
+export const SAMPLE_CATEGORIES = [
+  { slug: 'school', name: 'School', position: 1 },
+  { slug: 'health', name: 'Health', position: 2 },
+  { slug: 'food', name: 'Food', position: 3 },
+  { slug: 'admin', name: 'Admin', position: 4 },
+  { slug: 'home', name: 'Home', position: 5 },
+  { slug: 'fun', name: 'Fun', position: 6 },
+] as const;
+
+export type SampleCategorySlug = (typeof SAMPLE_CATEGORIES)[number]['slug'];
+
+/** Read-only multilingual test cards (formerly the Phase 1 seed, D49). */
+export interface SampleCard {
   key: string;
-  categories: string[];
+  categories: SampleCategorySlug[];
   status: 'published' | 'archived';
   favorite?: boolean;
   lang: 'he' | 'el' | 'en';
   card: ItemCreateInput;
 }
 
-export const seedCards: SeedCard[] = [
+export const sampleCards: SampleCard[] = [
   // FOOD CARDS (12 total, all published)
 
   // Meal plan table

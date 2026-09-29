@@ -1,31 +1,29 @@
 import { test, expect } from '../../fixtures/api';
 
-test('@smoke - GET /decks includes created decks', async ({ api }) => {
-  const response = await api.get('/decks');
-  expect(response.status()).toBe(200);
+test('@smoke - a new deck is listed and gets the general category', async ({ api, smokeDeck }) => {
+  const list = await api.get('/decks');
+  expect(list.status()).toBe(200);
+  const slugs = (await list.json()).data.map((d: { slug: string }) => d.slug);
+  expect(slugs).toContain(smokeDeck.slug);
 
-  const data = await response.json();
-  const slugs = data.data.map((pb: { slug: string }) => pb.slug);
-
-  expect(slugs).toContain('family');
-  expect(slugs).toContain('smoke');
+  const cats = await api.get(`/decks/${smokeDeck.slug}/categories`);
+  expect(cats.status()).toBe(200);
+  const catSlugs = (await cats.json()).data.map((c: { slug: string }) => c.slug);
+  expect(catSlugs).toEqual(['general']);
 });
 
-test('@smoke - GET /decks/family/categories includes general', async ({ api }) => {
-  const response = await api.get('/decks/family/categories');
-  expect(response.status()).toBe(200);
+test('@smoke - DELETE /decks/:id hides the deck', async ({ api }) => {
+  const slug = `smoke-del-${Date.now()}`;
+  const created = await api.post('/decks', { data: { name: slug, slug, kind: 'shared' } });
+  expect(created.status()).toBe(201);
+  const { id } = await created.json();
 
-  const data = await response.json();
-  const slugs = data.data.map((cat: { slug: string }) => cat.slug);
-
-  expect(slugs).toContain('general');
+  expect((await api.delete(`/decks/${id}`)).status()).toBe(204);
+  expect((await api.get(`/decks/${id}`)).status()).toBe(404);
 });
 
-test('@smoke - GET /decks/family/items returns food items with cursor', async ({ api }) => {
-  const response = await api.get('/decks/family/items?category=food&limit=10');
-  expect(response.status()).toBe(200);
-
-  const data = await response.json();
-  expect(data.data).toHaveLength(10);
-  expect(data.nextCursor).not.toBeNull();
+test('@smoke - unknown deck is a problem+json 404', async ({ api }) => {
+  const res = await api.get('/decks/does-not-exist-smoke');
+  expect(res.status()).toBe(404);
+  expect(res.headers()['content-type']).toContain('application/problem+json');
 });

@@ -33,8 +33,9 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 4. **Migrate and seed:**
    ```bash
    pnpm db:migrate
-   pnpm db:seed
+   SEED_OWNER_EMAIL=dev@example.test pnpm db:seed
    ```
+   The seed creates only the owner account and user (no sample decks); the email must match `DEV_USER`.
 
 5. **Start the development server:**
    ```bash
@@ -78,7 +79,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm db:generate` | Generate migrations with drizzle-kit |
 | `pnpm db:migrate` | Run pending migrations |
 | `pnpm db:rollback` | Rollback latest migration |
-| `pnpm db:seed` | Populate dev data (pass `--allow-prod` for production) |
+| `pnpm db:seed` | Upsert the owner account/user from `SEED_OWNER_EMAIL` (pass `--allow-prod` for production) |
 | `pnpm compose:up` | Bring up full stack via docker-compose |
 | `pnpm compose:down` | Tear down docker-compose services |
 
@@ -90,10 +91,10 @@ To run the entire stack (database + API) with Docker Compose:
 DEV_AUTH_ENABLED=true DEV_API_TOKEN=$(openssl rand -hex 32) pnpm compose:up
 ```
 
-The API container automatically runs migrations on startup. Seed dev data:
+The API container automatically runs migrations on startup. Seed the owner user (`SEED_OWNER_EMAIL` required):
 
 ```bash
-DATABASE_URL=postgres://pb:pb@localhost:5432/pb pnpm db:seed
+DATABASE_URL=postgres://pb:pb@localhost:5432/pb SEED_OWNER_EMAIL=dev@example.test pnpm db:seed
 ```
 
 API is available at `http://localhost:3000`.

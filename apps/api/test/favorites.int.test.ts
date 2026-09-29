@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { eq, and } from 'drizzle-orm';
-import { setupApiTest, seedId } from './helpers';
+import { setupApiTest, fixtureId } from './helpers';
 import { favorites } from '@pb/db';
 
 describe('favorites', () => {
@@ -15,7 +15,7 @@ describe('favorites', () => {
       const itemsPage = await itemsResp.json();
       const favoritedItems = itemsPage.data.filter((item: any) => item.isFavorite);
       expect(favoritedItems).toHaveLength(1);
-      expect(favoritedItems[0].id).toBe(seedId('family/food/souvlaki-place'));
+      expect(favoritedItems[0].id).toBe(fixtureId('family/food/souvlaki-place'));
     });
   });
 
@@ -46,7 +46,7 @@ describe('favorites', () => {
       expect(res.status).toBe(204);
 
       // SQL: count favorites rows for (dev user, item) = 1
-      const devUserId = seedId('user/dev');
+      const devUserId = fixtureId('user/owner');
       const favRows = await ctx.t.db
         .select()
         .from(favorites)
@@ -84,7 +84,7 @@ describe('favorites', () => {
       const itemId = targetItem.id;
 
       // Insert favorite via SQL for other user
-      const otherUserId = seedId('user/other');
+      const otherUserId = fixtureId('user/other');
       await ctx.t.db.insert(favorites).values({
         userId: otherUserId,
         itemId: itemId,

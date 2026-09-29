@@ -1,12 +1,40 @@
 import { describe, it, expect } from 'vitest';
-import { setupApiTest, seedId } from './helpers';
+import { setupApiTest, fixtureId } from './helpers';
 import type { ItemPage } from '@pb/shared';
 
 describe('items pagination and filters', () => {
   const ctx = setupApiTest();
 
-  describe('keyset pagination (dev-personal)', () => {
-    const deckId = seedId('deck/dev-personal');
+  // Runs first: a later block deletes a family item.
+  describe('category filter on sample cards (family)', () => {
+    it('pages 12 food cards as 10 + 2, all published and tagged food', async () => {
+      const foodCategoryId = fixtureId('family/food');
+      const first = await ctx.app.request('/decks/family/items?category=food&limit=10', {
+        headers: ctx.as(),
+      });
+      expect(first.status).toBe(200);
+      const firstPage = (await first.json()) as ItemPage;
+      expect(firstPage.data).toHaveLength(10);
+      expect(firstPage.nextCursor).not.toBeNull();
+
+      const second = await ctx.app.request(
+        `/decks/family/items?category=food&limit=10&cursor=${encodeURIComponent(firstPage.nextCursor!)}`,
+        { headers: ctx.as() },
+      );
+      expect(second.status).toBe(200);
+      const secondPage = (await second.json()) as ItemPage;
+      expect(secondPage.data).toHaveLength(2);
+      expect(secondPage.nextCursor).toBeNull();
+
+      for (const item of [...firstPage.data, ...secondPage.data]) {
+        expect(item.status).toBe('published');
+        expect(item.categoryIds).toContain(foodCategoryId);
+      }
+    });
+  });
+
+  describe('keyset pagination (personal)', () => {
+    const deckId = fixtureId('deck/personal');
 
     it('creates 25 text items sequentially', async () => {
       for (let i = 1; i <= 25; i++) {
@@ -136,7 +164,7 @@ describe('items pagination and filters', () => {
   });
 
   describe('filters (family)', () => {
-    const familyDeckId = seedId('deck/family');
+    const familyDeckId = fixtureId('deck/family');
 
     it('filters by type=table → 2 items', async () => {
       const response = await ctx.app.request(`/decks/${familyDeckId}/items?type=table`, {

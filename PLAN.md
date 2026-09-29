@@ -38,12 +38,12 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
 - [ ] **1. Magic links** — request a link for a fresh address; the email arrives; the link signs in; the same link a second time is refused.
 - [ ] **2. Sessions for web and mobile** — the same session works via cookie from the browser and via bearer from `curl`; `POST /auth/logout` invalidates it everywhere.
 - [ ] **3. Memberships and the permission matrix** — the matrix test prints a role × action table; a reader's `POST /items` returns 403 with a body naming the missing permission.
-- [ ] **4. Invites** — invite a second member as reader; they click, land on Family, and cannot see the inviter's personal pocketbook.
+- [ ] **4. Invites** — invite a second member as reader; they click, land on Family, and cannot see the inviter's personal deck.
 - [ ] **5. Category visibility** — a private `Admin` category exists in Family; the reader's item list omits it, the owner's includes it.
 - [ ] **6. Rate limits and abuse** — the sixth request in an hour returns 429; the email is still not disclosed as existing or not.
 ## Phase 3 — Reader PWA
 
-- [ ] **1. App shell** — the deployed `app.<domain>` loads the seeded Family pocketbook on a phone in under 2 s on 4G (Lighthouse mobile performance ≥ 90).
+- [ ] **1. App shell** — the deployed `app.<domain>` loads the seeded Family deck on a phone in under 2 s on 4G (Lighthouse mobile performance ≥ 90).
 - [ ] **2. Sign-in flow** — cold start on a phone, sign in, land on Family.
 - [ ] **3. Card renderers** — the 25 seed cards render without overflow on a 360 px wide viewport; the calc card computes.
 - [ ] **4. Category navigation** — switch School → Food → back to School and land on the same card.
@@ -56,12 +56,12 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
 - [ ] **2. Embeddings pipeline** — insert a card; within seconds `embedding IS NOT NULL`; the job log shows one call.
 - [ ] **3. Hybrid query** — in `psql`, four queries against the seed data: `רופא שיניים` returns the English dentist card first; a 4-digit fragment of its phone returns it first; "parking" returns the card whose body mentions parking; a nonsense string returns nothing above the threshold.
 - [ ] **4. API and UI** — type on the phone, results update as you type, each result shows a small "text / meaning" tag.
-- [ ] **5. Ask mode (small RAG)** — "when is pickup on Fridays?" answers from the School card and links it; "what is the capital of Peru?" answers that the pocketbook has nothing on it.
+- [ ] **5. Ask mode (small RAG)** — "when is pickup on Fridays?" answers from the School card and links it; "what is the capital of Peru?" answers that the deck has nothing on it.
 - [ ] **6. Evaluation set** — `pnpm test:search` prints recall and the misses.
 ## Phase 5 — Ingestion agent
 
 - [ ] **1. Ingest endpoint and job table** — `curl` a URL to `/ingest`; the job row appears; `GET /ingest/:id` shows status moving to `done`.
-- [ ] **2. Android share target** — from Chrome on Android, share an Instagram post to "Pocketbook"; the job appears in the queue.
+- [ ] **2. Android share target** — from Chrome on Android, share an Instagram post to "Gobbit"; the job appears in the queue.
 - [ ] **3. iPhone path** — on an iPhone, share a Safari page via the Shortcut; forward a WhatsApp message by email; both become jobs.
 - [ ] **4. Fetch and normalize** — three inputs (news article, Instagram link, screenshot of a WhatsApp message) each produce a normalized record visible in the job's debug view.
 - [ ] **5. Extraction with structured output** — the three inputs above yield well-formed cards; the WhatsApp screenshot yields the phone number and address as entities.
@@ -81,9 +81,9 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
 - [ ] **2. Responsive delivery** — Lighthouse shows no "properly size images" warning on the list view.
 - [ ] **3. Link previews with a snapshot** — a link card whose target is taken offline still renders its preview and shows a "link may be dead" flag after the check runs.
 - [ ] **4. Instagram and other locked hosts** — an Instagram link card renders with caption text and the shared image when the share sheet provided one.
-## Phase 8 — Public communal pocketbook
+## Phase 8 — Public communal deck
 
-- [ ] **1. Communal kind** — create the communal pocketbook, mark three categories public; `GET /public/<community-slug>/items` works with no cookie and omits the non-public category.
+- [ ] **1. Communal kind** — create the communal deck, mark three categories public; `GET /public/<community-slug>/items` works with no cookie and omits the non-public category.
 - [ ] **2. Server-rendered public pages** — paste a card link into WhatsApp; the preview shows title, snippet and image. `curl` shows the full HTML without JavaScript.
 - [ ] **3. Permalinks and "open in app"** — a member and a stranger open the same link and see different category counts.
 - [ ] **4. Search on public pages** — search אמקה on the public page returns the AMKA card.
@@ -95,7 +95,7 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
 - [ ] **2. Waitlist table and endpoint** — sign up from the landing page, click the confirmation email, see the row confirmed; a bot-style submission with the honeypot filled is silently dropped.
 - [ ] **3. Landing page** — paste the root URL into WhatsApp and get a proper preview; complete the form on a phone in under 30 seconds.
 - [ ] **4. Privacy-friendly analytics** — the analytics dashboard shows visits and form conversion for the last 7 days.
-- [ ] **5. Admin waitlist view and invite** — invite one waitlist entry; they sign in and land in their own empty pocketbook with the `general` category.
+- [ ] **5. Admin waitlist view and invite** — invite one waitlist entry; they sign in and land in their own empty deck with the `general` category.
 - [ ] **6. Signal review** — a SQL view `waitlist_summary` returns counts by kind, status and week.
 ## Phase 10 — Curation agents
 

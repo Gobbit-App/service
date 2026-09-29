@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { setupApiTest, seedId } from './helpers';
+import { setupApiTest, fixtureId } from './helpers';
 import { categoryListSchema, categorySchema } from '@pb/shared';
 
 describe('categories routes', () => {
@@ -83,7 +83,7 @@ describe('categories routes', () => {
   });
 
   it('DELETE default category via SQL → P0001 constraint', async () => {
-    const familyDeckId = seedId('deck/family');
+    const familyDeckId = fixtureId('deck/family');
 
     let error: any;
     try {

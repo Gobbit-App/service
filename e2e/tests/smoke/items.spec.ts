@@ -1,10 +1,10 @@
-import { test, expect, SMOKE_DECK } from '../../fixtures/api';
+import { test, expect } from '../../fixtures/api';
 
-test('items lifecycle @smoke', async ({ api, scratch }) => {
+test('items lifecycle @smoke', async ({ api, smokeDeck }) => {
   const title = `smoke ${Date.now()}`;
 
   // Create item
-  const createRes = await api.post(`/decks/${SMOKE_DECK}/items`, {
+  const createRes = await api.post(`/decks/${smokeDeck.slug}/items`, {
     data: {
       type: 'text',
       title,
@@ -14,7 +14,6 @@ test('items lifecycle @smoke', async ({ api, scratch }) => {
   expect(createRes.status()).toBe(201);
   const item = await createRes.json();
   const itemId = item.id;
-  scratch.track(itemId);
 
   // Get item
   const getRes = await api.get(`/items/${itemId}`);
@@ -37,7 +36,7 @@ test('items lifecycle @smoke', async ({ api, scratch }) => {
   expect(archived.status).toBe('archived');
 
   // List items (default status=published, so archived item not included)
-  const listRes = await api.get(`/decks/${SMOKE_DECK}/items`);
+  const listRes = await api.get(`/decks/${smokeDeck.slug}/items`);
   expect(listRes.status()).toBe(200);
   const page = await listRes.json();
   expect(page.data.map((i: { id: string }) => i.id)).not.toContain(itemId);
@@ -59,8 +58,8 @@ test('items lifecycle @smoke', async ({ api, scratch }) => {
   expect(notFoundRes.status()).toBe(404);
 });
 
-test('items validation @smoke', async ({ api }) => {
-  const res = await api.post(`/decks/${SMOKE_DECK}/items`, {
+test('items validation @smoke', async ({ api, smokeDeck }) => {
+  const res = await api.post(`/decks/${smokeDeck.slug}/items`, {
     data: {
       type: 'text',
       title: 'test',

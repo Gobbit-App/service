@@ -30,6 +30,7 @@ describe('createDecksService', () => {
       findBySlug: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      softDelete: vi.fn(),
     };
 
     categoriesRepo = {
@@ -138,6 +139,31 @@ describe('createDecksService', () => {
         status: 404,
         type: '/problems/not-found',
       });
+    });
+  });
+
+  describe('remove', () => {
+    const deck = {
+      id: '00000000-0000-4000-8000-000000000001',
+      kind: 'shared' as const,
+      slug: 'fam',
+      name: 'Fam',
+      isPublic: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    };
+
+    it('soft-deletes an owned deck', async () => {
+      decksRepo.findBySlug.mockResolvedValue({ ...deck, ownerAccountId: user.accountId });
+      await service.remove(user, 'fam');
+      expect(decksRepo.softDelete).toHaveBeenCalledWith(deck.id);
+    });
+
+    it("404s on another account's deck without deleting", async () => {
+      decksRepo.findBySlug.mockResolvedValue({ ...deck, ownerAccountId: 'someone-else' });
+      await expect(service.remove(user, 'fam')).rejects.toMatchObject({ status: 404 });
+      expect(decksRepo.softDelete).not.toHaveBeenCalled();
     });
   });
 });

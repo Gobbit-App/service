@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { deckListSchema, deckWithCategoriesSchema, deckSchema, problemSchema } from '@pb/shared';
-import { setupApiTest, seedId } from './helpers';
+import { setupApiTest, fixtureId } from './helpers';
 
 const ctx = setupApiTest();
 
@@ -77,16 +77,16 @@ describe('decks', () => {
       const body = await res.json();
       const list = deckListSchema.parse(body);
       const slugs = list.data.map((pb) => pb.slug);
-      expect(slugs).toContain('dev-personal');
+      expect(slugs).toContain('personal');
       expect(slugs).toContain('family');
-      expect(slugs).toContain('smoke');
+      expect(slugs).toContain('scratch');
       expect(slugs).not.toContain('other-personal');
     });
   });
 
   describe('GET /decks/{id}', () => {
     it('gets deck by slug and by id return same data @smoke', async () => {
-      const familyId = seedId('deck/family');
+      const familyId = fixtureId('deck/family');
 
       const bySlugRes = await ctx.app.request('/decks/family', {
         headers: ctx.as(),
@@ -149,7 +149,7 @@ describe('decks', () => {
     });
 
     it('rejects empty patch @smoke', async () => {
-      const familyId = seedId('deck/family');
+      const familyId = fixtureId('deck/family');
       const res = await ctx.app.request(`/decks/${familyId}`, {
         method: 'PATCH',
         headers: ctx.as(),
@@ -158,6 +158,45 @@ describe('decks', () => {
       expect(res.status).toBe(400);
       const body = await res.json();
       problemSchema.parse(body);
+    });
+  });
+
+  describe('DELETE /decks/:id', () => {
+    it('soft-deletes the deck, then 404s and frees the slug', async () => {
+      const create = await ctx.app.request('/decks', {
+        method: 'POST',
+        headers: ctx.as(),
+        body: JSON.stringify({ name: 'Throwaway', slug: 'throwaway', kind: 'shared' }),
+      });
+      expect(create.status).toBe(201);
+      const { id } = await create.json();
+
+      const del = await ctx.app.request(`/decks/${id}`, { method: 'DELETE', headers: ctx.as() });
+      expect(del.status).toBe(204);
+
+      expect((await ctx.app.request(`/decks/${id}`, { headers: ctx.as() })).status).toBe(404);
+      expect((await ctx.app.request('/decks/throwaway', { headers: ctx.as() })).status).toBe(404);
+      const again = await ctx.app.request(`/decks/${id}`, { method: 'DELETE', headers: ctx.as() });
+      expect(again.status).toBe(404);
+
+      const list = await (await ctx.app.request('/decks', { headers: ctx.as() })).json();
+      expect(list.data.map((d: { id: string }) => d.id)).not.toContain(id);
+
+      const reuse = await ctx.app.request('/decks', {
+        method: 'POST',
+        headers: ctx.as(),
+        body: JSON.stringify({ name: 'Throwaway', slug: 'throwaway', kind: 'shared' }),
+      });
+      expect(reuse.status).toBe(201);
+      expect((await reuse.json()).id).not.toBe(id);
+    });
+
+    it("404s on another user's deck", async () => {
+      const res = await ctx.app.request('/decks/other-personal', {
+        method: 'DELETE',
+        headers: ctx.as(),
+      });
+      expect(res.status).toBe(404);
     });
   });
 });

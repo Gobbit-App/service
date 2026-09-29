@@ -51,6 +51,16 @@ export function createDecksRepo(db: Db) {
       }
       return row;
     },
+
+    /** D50: soft delete; the partial unique index frees the slug for reuse. */
+    async softDelete(id: string): Promise<boolean> {
+      const rows = await db
+        .update(decks)
+        .set({ deletedAt: new Date() })
+        .where(and(eq(decks.id, id), isNull(decks.deletedAt)))
+        .returning({ id: decks.id });
+      return rows.length > 0;
+    },
   };
 }
 

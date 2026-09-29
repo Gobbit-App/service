@@ -419,43 +419,25 @@ Exposing the latest migration tag helps e2e tests confirm the DB is in the expec
 
 ---
 
-## Seeding
+## Seeding and test data (D49)
 
-### Deterministic UUIDs (uuid v5)
+### Owner-only seed
 
-```ts
-const SEED_NAMESPACE = '6f1c2b1e-4a53-4b8e-9d5e-2a7c9f0e1b3d'
-const seedId = (key: string) => v5(key, SEED_NAMESPACE)
-```
+`pnpm db:seed` (`packages/db/scripts/seed.ts` → `seed/run-seed.ts`) upserts exactly **one account and one user** — the owner — and nothing else. No decks, categories or cards are seeded; a fresh deployment starts empty.
 
-Seeding the same database always produces the same IDs, making tests predictable.
+- `SEED_OWNER_EMAIL` is required (the script exits non-zero without it); `SEED_OWNER_NAME` defaults to the email local part. Parsing lives in `seed/owner.ts` (`parseOwnerSeedEnv`).
+- Ids are uuid v5 under `SEED_NAMESPACE` (`seedId('owner')` for the account, `seedId('owner/user')` for the user), so re-running upserts in place.
+- Idempotent: `ON CONFLICT … DO UPDATE … WHERE … IS DISTINCT FROM`, so a second run with the same values leaves `updated_at` untouched; a changed name or email updates the row in place.
+- `NODE_ENV=production` requires `--allow-prod`.
+- `SMOKE_SESSION_TOKEN` (D43) adds one long-lived bearer session for the owner once the `sessions` table exists (P2.0).
 
-### Seed data structure
+### Test factories (`@pb/db/test`)
 
-**buildSeedData(devEmail)**:
-- Accounts: `seedId('account/dev')` (Dev Household), `seedId('account/other')` (Other Household)
-- Users: `seedId('user/dev')` (dev@example.test, Dev User), `seedId('user/other')` (other@example.test, Other User)
-- Decks: `seedId('deck/<slug>')` for dev-personal, family, smoke, other-personal (all isPublic false)
-- Categories: `seedId('family/<slug>')` for school, health, food, admin, home, fun (only in family deck)
-- **Never manually inserts 'general'** — the DB trigger creates it
+Integration tests build their own data; nothing depends on seeded rows.
 
-### Card seed
-
-**seedCards[]**: 25 published + archived items with keys like `seedId(card.key)`:
-- 23 published + 2 archived
-- 12 published in 'food' category
-- 2 table-type items
-- 1 calc-type item
-- 1 favorited by dev
-- Multiple languages (he, el, en)
-
-### Idempotency & prod safety
-
-- Seed runs via `runSeed(pool, opts)`, idempotent (insert or ignore)
-- Never runs in production (guard via environment check)
-- Useful for local dev, testing, CI/CD
-
----
+- `factories.ts`: `createAccountUser`, `createDeck` (the trigger adds `general`), `defaultCategory`, `createCategory`, `createItem` (runs the card through `itemCreateSchema`, links categories, defaults to `general`), `addFavorite`. Ids come from `fixtureId(key)` — uuid v5 under a separate `FIXTURE_NAMESPACE`.
+- `fixtures/sample-cards.ts`: the 25 Phase 1 cards (`SampleCard`: `ItemCreate` + category slugs + status/lang/favorite), and `SAMPLE_CATEGORIES`. Its unit test pins the shape the suites rely on: 23 published + 2 archived, 12 food (all published), 2 table, 1 calc, 1 favorite, he/el/en.
+- `sample-world.ts`: `createSampleWorld(db)` reproduces the Phase 1 layout — owner (`owner@example.test`) with decks `personal` (empty), `family` (six categories + the 25 cards), `scratch` (empty), and a second user (`other@example.test`) with `other-personal`. `apps/api/test/helpers.ts#setupApiTest()` builds it once per suite and exposes it as `world`.
 
 ## Test Pyramid
 
@@ -472,7 +454,7 @@ Examples:
 
 Location: `**/*.int.test.ts` (under `test/`)  
 Environment: Node + Docker (Testcontainers PostgreSQL)  
-Test data: seeded via `runSeed()`  
+Test data: built with `@pb/db/test` factories (`createSampleWorld()`)  
 Examples:
 - Repository tests (actual SQL via Drizzle)
 - Service tests calling real repos
@@ -636,7 +618,7 @@ Tagging: every test title includes `@smoke`
 
 **Rationale**:
 - Reproducible: same seed produces same IDs every run
-- Testable: e2e can assert on hardcoded IDs like `seedId('deck/family')`
+- Testable: suites assert on stable ids like `fixtureId('deck/family')` (since D49 these come from test factories, not the seed)
 - No collisions: different keys hash to different IDs
 - Never in production: seed only used in dev/test (guarded by env check)
 
@@ -771,8 +753,16 @@ Tagging: every test title includes `@smoke`
 - **License: MPL-2.0** (file-level copyleft): changes to project files are shared back, while the code can still be combined with proprietary code. Root `LICENSE` holds the full text; every `package.json` declares `"license": "MPL-2.0"`.
 - **`"private": true` stays** in every `package.json`: it only blocks accidental npm publishing of this app monorepo.
 
+### ADR-024: Rename pocketbook → deck, rewrite migrations in place, owner-only seed (D48–D50)
+
+**Decisions**:
+- The domain noun is **deck** everywhere: tables (`decks`, `deck_id`, enum `deck_kind`), constraint names, schemas, routes (`/decks…`) and docs. The product is **Gobbit**; the repository name is unchanged.
+- **Migrations were rewritten in place** (`0001_core`, `0002_invariants`, `0003_card_limits` and their `down/` files) with the same tags, rather than adding a rename migration. This was safe because no deployed database held user data at the time: Phase 1 only ever ran against disposable dev, CI and seeded smoke databases, all of which are recreated from scratch. Any existing local database must be dropped and re-migrated.
+- **Seed reset**: the seed creates only the owner user (see Seeding). Fake users and sample cards moved to test fixtures, so the deployed database contains no fabricated people.
+- **`DELETE /decks/:id`** (soft delete; the partial unique index frees the slug) was added so the smoke suite can create a `smoke-<runId>` deck per test and remove it afterwards, leaving the deployed database as found.
+
 ---
 
 ## Summary
 
-Community Pocketbook Phase 1 is a layered REST API with OpenAPI documentation, dev authentication, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. Seeding is deterministic and idempotent. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 2 will replace dev auth with magic links, add shared/public decks and granular `can()` checks, and introduce the web frontend.
+Community Pocketbook Phase 1 is a layered REST API with OpenAPI documentation, dev authentication, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 2 will replace dev auth with magic links, add shared/public decks and granular `can()` checks, and introduce the web frontend.

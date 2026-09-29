@@ -2,23 +2,31 @@ import { beforeAll } from 'vitest';
 import type { OpenAPIHono } from '@hono/zod-openapi';
 import type { AppEnv } from '../src/types';
 import { createApp } from '../src/app';
-import { runSeed, DEFAULT_DEV_EMAIL, seedId } from '@pb/db/seed';
-import { withTestDb, type TestDb } from '@pb/db/test';
+import {
+  createSampleWorld,
+  fixtureId,
+  OWNER_EMAIL,
+  withTestDb,
+  type SampleWorld,
+  type TestDb,
+} from '@pb/db/test';
 
 export const TEST_TOKEN = 'x'.repeat(40);
 
-export const FAMILY_ID = seedId('deck/family');
+export const FAMILY_ID = fixtureId('deck/family');
 
 export function setupApiTest(): {
   readonly app: OpenAPIHono<AppEnv>;
   readonly t: TestDb;
+  readonly world: SampleWorld;
   as(email?: string): Record<string, string>;
 } {
   const t = withTestDb();
   let app: OpenAPIHono<AppEnv>;
+  let world: SampleWorld;
 
   beforeAll(async () => {
-    await runSeed(t.pool);
+    world = await createSampleWorld(t.db);
     app = createApp({
       db: t.db,
       pool: t.pool,
@@ -36,7 +44,10 @@ export function setupApiTest(): {
     get t(): TestDb {
       return t;
     },
-    as(email: string = DEFAULT_DEV_EMAIL): Record<string, string> {
+    get world(): SampleWorld {
+      return world!;
+    },
+    as(email: string = OWNER_EMAIL): Record<string, string> {
       return {
         Authorization: `Bearer ${TEST_TOKEN}`,
         'X-Dev-User': email,
@@ -51,4 +62,4 @@ export async function json(res: Response): Promise<any> {
   return res.json();
 }
 
-export { DEFAULT_DEV_EMAIL, OTHER_EMAIL, seedId } from '@pb/db/seed';
+export { OWNER_EMAIL, OTHER_EMAIL, fixtureId } from '@pb/db/test';

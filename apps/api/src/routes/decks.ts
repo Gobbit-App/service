@@ -164,4 +164,25 @@ export function registerDecksRoutes(app: OpenAPIHono<AppEnv>, services: Services
     const deck = await services.decks.update(user, id, patch);
     return c.json(deck, 200);
   });
+
+  const deleteRoute = createRoute({
+    method: 'delete',
+    path: '/decks/{id}',
+    tags: ['decks'],
+    security,
+    request: {
+      params: z.object({ id: z.string().min(1) }),
+    },
+    responses: {
+      204: { description: 'Deck deleted (soft)' },
+      ...problems('unauthorized', 'not-found'),
+    },
+  });
+
+  app.openapi(deleteRoute, async (c) => {
+    const user = getUser(c);
+    const { id } = c.req.valid('param');
+    await services.decks.remove(user, id);
+    return c.body(null, 204);
+  });
 }

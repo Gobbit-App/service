@@ -60,6 +60,12 @@ export function createDecksService({
       const updated = await decks.update(pb.id, patch);
       return toDeckDto(updated);
     },
+
+    async remove(user: CurrentUser, idOrSlug: string): Promise<void> {
+      const pb = await resolveDeck(decks, idOrSlug);
+      assertDeckAccess(user, pb, 'write');
+      await decks.softDelete(pb.id);
+    },
   };
 }
 
