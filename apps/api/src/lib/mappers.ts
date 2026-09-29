@@ -1,7 +1,7 @@
-import type { Category, Item, Deck } from '@pb/shared';
+import type { Category, Item, Deck, MemberRole } from '@pb/shared';
 import type { CategoryRow, ItemRow, DeckRow } from '@pb/db';
 
-export function toDeckDto(r: DeckRow): Deck {
+export function toDeckDto(r: DeckRow, role: MemberRole): Deck {
   return {
     id: r.id,
     kind: r.kind,
@@ -9,6 +9,7 @@ export function toDeckDto(r: DeckRow): Deck {
     name: r.name,
     isPublic: r.isPublic,
     ownerAccountId: r.ownerAccountId,
+    role,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };

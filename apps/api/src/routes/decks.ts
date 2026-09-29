@@ -5,60 +5,11 @@ import {
   deckPatchSchema,
   deckSchema,
   deckWithCategoriesSchema,
-  problemSchema,
 } from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';
-
-const security = [{ DevToken: [], DevUser: [] }];
-
-function problems(
-  ...codes: string[]
-): Record<
-  number,
-  { content: { 'application/problem+json': { schema: typeof problemSchema } }; description: string }
-> {
-  const codeToStatus: Record<string, number> = {
-    'bad-request': 400,
-    validation: 400,
-    unauthorized: 401,
-    'not-found': 404,
-    conflict: 409,
-    unprocessable: 422,
-  };
-
-  const statusToDescription: Record<number, string> = {
-    400: 'Bad Request',
-    401: 'Unauthorized',
-    404: 'Not Found',
-    409: 'Conflict',
-    422: 'Unprocessable Content',
-  };
-
-  const statuses = new Set<number>();
-  for (const code of codes) {
-    if (code in codeToStatus) {
-      statuses.add(codeToStatus[code]);
-    }
-  }
-
-  const result: Record<
-    number,
-    {
-      content: { 'application/problem+json': { schema: typeof problemSchema } };
-      description: string;
-    }
-  > = {};
-  for (const status of statuses) {
-    result[status] = {
-      content: { 'application/problem+json': { schema: problemSchema } },
-      description: statusToDescription[status],
-    };
-  }
-
-  return result;
-}
+import { AUTH_SECURITY as security, problems } from '../lib/openapi';
 
 export function registerDecksRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
   // GET /decks
@@ -153,7 +104,14 @@ export function registerDecksRoutes(app: OpenAPIHono<AppEnv>, services: Services
         content: { 'application/json': { schema: deckSchema } },
         description: 'Deck updated',
       },
-      ...problems('bad-request', 'validation', 'unauthorized', 'not-found', 'conflict'),
+      ...problems(
+        'bad-request',
+        'validation',
+        'unauthorized',
+        'forbidden',
+        'not-found',
+        'conflict',
+      ),
     },
   });
 
@@ -175,7 +133,7 @@ export function registerDecksRoutes(app: OpenAPIHono<AppEnv>, services: Services
     },
     responses: {
       204: { description: 'Deck deleted (soft)' },
-      ...problems('unauthorized', 'not-found'),
+      ...problems('unauthorized', 'forbidden', 'not-found'),
     },
   });
 

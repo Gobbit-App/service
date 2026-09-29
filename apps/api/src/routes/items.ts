@@ -10,18 +10,20 @@ import {
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';
+import { AUTH_SECURITY, problems } from '../lib/openapi';
 
 export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
   const listRoute = createRoute({
     method: 'get',
     path: '/decks/{id}/items',
     tags: ['items'],
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
     request: {
       params: z.object({ id: z.string().min(1) }),
       query: itemListQuerySchema,
     },
     responses: {
+      ...problems('forbidden'),
       200: {
         content: {
           'application/json': {
@@ -69,7 +71,7 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
     method: 'post',
     path: '/decks/{id}/items',
     tags: ['items'],
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
     request: {
       params: z.object({ id: z.string().min(1) }),
       body: {
@@ -82,6 +84,7 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
       },
     },
     responses: {
+      ...problems('forbidden'),
       201: {
         content: {
           'application/json': {
@@ -145,11 +148,12 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
     method: 'get',
     path: '/items/{id}',
     tags: ['items'],
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
     request: {
       params: z.object({ id: z.string().min(1) }),
     },
     responses: {
+      ...problems('forbidden'),
       200: {
         content: {
           'application/json': {
@@ -188,7 +192,7 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
     method: 'patch',
     path: '/items/{id}',
     tags: ['items'],
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
     request: {
       params: z.object({ id: z.string().min(1) }),
       body: {
@@ -201,6 +205,7 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
       },
     },
     responses: {
+      ...problems('forbidden'),
       200: {
         content: {
           'application/json': {
@@ -264,11 +269,12 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
     method: 'delete',
     path: '/items/{id}',
     tags: ['items'],
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
     request: {
       params: z.object({ id: z.string().min(1) }),
     },
     responses: {
+      ...problems('forbidden'),
       204: {
         description: 'Item deleted successfully',
       },
@@ -302,11 +308,12 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
     method: 'post',
     path: '/items/{id}/archive',
     tags: ['items'],
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
     request: {
       params: z.object({ id: z.string().min(1) }),
     },
     responses: {
+      ...problems('forbidden'),
       200: {
         content: {
           'application/json': {

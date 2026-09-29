@@ -1,19 +1,28 @@
 import { eq, isNull, asc, and, inArray, sql } from 'drizzle-orm';
 import type { CategoryRow, Db } from '@pb/db';
 import { categories } from '@pb/db';
-import type { CategoryVisibility } from '@pb/shared';
+import type { CategoryVisibility, MemberRole } from '@pb/shared';
+import { visibleCategoriesWhere } from '../access/visibility';
 
 export function createCategoriesRepo(db: Db) {
   return {
-    async listByDeck(deckId: string): Promise<CategoryRow[]> {
+    /** D38: only the categories `role` may see. */
+    async listByDeck(deckId: string, role: MemberRole): Promise<CategoryRow[]> {
       return db
         .select()
         .from(categories)
-        .where(and(eq(categories.deckId, deckId), isNull(categories.deletedAt)))
+        .where(
+          and(
+            eq(categories.deckId, deckId),
+            isNull(categories.deletedAt),
+            visibleCategoriesWhere(role),
+          ),
+        )
         .orderBy(asc(categories.position), asc(categories.name));
     },
 
-    async findBySlug(deckId: string, slug: string): Promise<CategoryRow | null> {
+    /** D38: an invisible slug is indistinguishable from a missing one. */
+    async findBySlug(deckId: string, slug: string, role: MemberRole): Promise<CategoryRow | null> {
       const result = await db
         .select()
         .from(categories)
@@ -22,6 +31,7 @@ export function createCategoriesRepo(db: Db) {
             eq(categories.deckId, deckId),
             eq(categories.slug, slug),
             isNull(categories.deletedAt),
+            visibleCategoriesWhere(role),
           ),
         )
         .limit(1);
@@ -43,7 +53,8 @@ export function createCategoriesRepo(db: Db) {
       return result[0] ?? null;
     },
 
-    async findExistingIds(deckId: string, ids: string[]): Promise<string[]> {
+    /** D38: ids `role` can't see are reported as unknown by the caller. */
+    async findExistingIds(deckId: string, ids: string[], role: MemberRole): Promise<string[]> {
       if (ids.length === 0) return [];
 
       const result = await db
@@ -54,6 +65,7 @@ export function createCategoriesRepo(db: Db) {
             eq(categories.deckId, deckId),
             inArray(categories.id, ids),
             isNull(categories.deletedAt),
+            visibleCategoriesWhere(role),
           ),
         );
       return result.map((r) => r.id);

@@ -3,30 +3,32 @@ import { type CategoriesRepo } from '../repositories/categories.repo';
 import { type DecksRepo } from '../repositories/decks.repo';
 import { type CurrentUser } from '../types';
 import { badRequest } from '../errors/http-errors';
+import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
 import { toCategoryDto } from '../lib/mappers';
 import { toSlug } from '../lib/slug';
-import { assertDeckAccess } from '../access/assert-deck-access';
 import { resolveDeck } from '../lib/resolve-deck';
 
 export function createCategoriesService({
   decks,
   categories,
+  memberships,
 }: {
   decks: DecksRepo;
   categories: CategoriesRepo;
+  memberships: MembershipLookup;
 }) {
   return {
     async list(user: CurrentUser, idOrSlug: string): Promise<Category[]> {
       const deck = await resolveDeck(decks, idOrSlug);
-      assertDeckAccess(user, deck, 'read');
+      const role = await authorize(user, deck, 'category.read', memberships);
 
-      const rows = await categories.listByDeck(deck.id);
+      const rows = await categories.listByDeck(deck.id, role);
       return rows.map(toCategoryDto);
     },
 
     async create(user: CurrentUser, idOrSlug: string, input: CategoryCreate): Promise<Category> {
       const deck = await resolveDeck(decks, idOrSlug);
-      assertDeckAccess(user, deck, 'write');
+      const role = await authorize(user, deck, 'category.create', memberships);
 
       const slug = input.slug ?? toSlug(input.name);
       if (slug === '') {
@@ -36,6 +38,10 @@ export function createCategoriesService({
       }
 
       const visibility = input.visibility ?? 'shared';
+      if (visibility === 'private') {
+        // D38: only roles that can see private categories may create one.
+        assertPermission(role, 'category.read_private');
+      }
       const maxPos = await categories.maxPosition(deck.id);
       const position = input.position ?? maxPos + 1;
 

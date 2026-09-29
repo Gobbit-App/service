@@ -21,6 +21,7 @@ describe('createDecksService', () => {
   let service: ReturnType<typeof createDecksService>;
   let decksRepo: any;
   let categoriesRepo: any;
+  let membershipsRepo: any;
   let user: CurrentUser;
 
   beforeEach(() => {
@@ -42,18 +43,20 @@ describe('createDecksService', () => {
       create: vi.fn(),
     };
 
+    membershipsRepo = { findActive: vi.fn().mockResolvedValue(null) };
+
     service = createDecksService({
       decks: decksRepo,
       categories: categoriesRepo,
+      memberships: membershipsRepo,
     });
 
     user = {
       id: 'user-1',
       accountId: 'account-1',
       email: 'test@example.com',
+      displayName: 'test',
     };
-
-    vi.clearAllMocks();
   });
 
   describe('create', () => {
@@ -96,7 +99,8 @@ describe('createDecksService', () => {
         ownerAccountId: user.accountId,
       });
 
-      expect(categoriesRepo.listByDeck).toHaveBeenCalledWith('pb-1');
+      expect(categoriesRepo.listByDeck).toHaveBeenCalledWith('pb-1', 'owner');
+      expect(result.role).toBe('owner');
 
       expect(result.categories).toHaveLength(1);
       expect(result.categories[0].slug).toBe('general');
@@ -139,6 +143,37 @@ describe('createDecksService', () => {
         status: 404,
         type: '/problems/not-found',
       });
+      expect(membershipsRepo.findActive).toHaveBeenCalledWith('pb-3', user.id);
+    });
+
+    it('returns the deck with the member role for an accepted reader', async () => {
+      decksRepo.findBySlug.mockResolvedValue({
+        id: 'pb-3',
+        kind: 'shared' as const,
+        slug: 'other-family',
+        name: 'Other Family',
+        ownerAccountId: 'other-account-id',
+        isPublic: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      });
+      membershipsRepo.findActive.mockResolvedValue({ role: 'reader', acceptedAt: new Date() });
+
+      const result = await service.get(user, 'other-family');
+
+      expect(result.role).toBe('reader');
+    });
+
+    it('ignores a pending (unaccepted) membership', async () => {
+      decksRepo.findBySlug.mockResolvedValue({
+        id: 'pb-3',
+        ownerAccountId: 'other-account-id',
+        slug: 'other-family',
+      });
+      membershipsRepo.findActive.mockResolvedValue({ role: 'editor', acceptedAt: null });
+
+      await expect(service.get(user, 'other-family')).rejects.toMatchObject({ status: 404 });
     });
   });
 
@@ -158,6 +193,13 @@ describe('createDecksService', () => {
       decksRepo.findBySlug.mockResolvedValue({ ...deck, ownerAccountId: user.accountId });
       await service.remove(user, 'fam');
       expect(decksRepo.softDelete).toHaveBeenCalledWith(deck.id);
+    });
+
+    it('403s an editor member without deleting', async () => {
+      decksRepo.findBySlug.mockResolvedValue({ ...deck, ownerAccountId: 'someone-else' });
+      membershipsRepo.findActive.mockResolvedValue({ role: 'editor', acceptedAt: new Date() });
+      await expect(service.remove(user, 'fam')).rejects.toMatchObject({ status: 403 });
+      expect(decksRepo.softDelete).not.toHaveBeenCalled();
     });
 
     it("404s on another account's deck without deleting", async () => {

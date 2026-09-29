@@ -3,6 +3,7 @@ import { problemSchema } from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';
+import { AUTH_SECURITY } from '../lib/openapi';
 
 export function registerFavoritesRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
   const addFavoriteRoute = createRoute({
@@ -25,7 +26,7 @@ export function registerFavoritesRoutes(app: OpenAPIHono<AppEnv>, services: Serv
         description: 'Item not found',
       },
     },
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
   });
 
   app.openapi(addFavoriteRoute, async (c) => {
@@ -55,7 +56,7 @@ export function registerFavoritesRoutes(app: OpenAPIHono<AppEnv>, services: Serv
         description: 'Item not found',
       },
     },
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
   });
 
   app.openapi(removeFavoriteRoute, async (c) => {

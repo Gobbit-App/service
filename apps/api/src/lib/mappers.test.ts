@@ -19,7 +19,7 @@ describe('mappers', () => {
         deletedAt: null,
       };
 
-      const dto = toDeckDto(row);
+      const dto = toDeckDto(row, 'owner');
 
       expect(dto.createdAt).toBe('2026-01-01T00:00:00.000Z');
       expect(dto.updatedAt).toBe('2026-01-01T00:00:00.000Z');

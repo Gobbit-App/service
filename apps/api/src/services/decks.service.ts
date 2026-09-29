@@ -5,20 +5,23 @@ import { type Deck, type DeckWithCategories, type DeckCreate, type DeckPatch } f
 import { toDeckDto, toCategoryDto } from '../lib/mappers';
 import { toSlug } from '../lib/slug';
 import { resolveDeck } from '../lib/resolve-deck';
-import { assertDeckAccess } from '../access/assert-deck-access';
+import { authorize, type MembershipLookup } from '../access/authorize';
 import { badRequest } from '../errors/http-errors';
 
 export function createDecksService({
   decks,
   categories,
+  memberships,
 }: {
   decks: DecksRepo;
   categories: CategoriesRepo;
+  memberships: MembershipLookup;
 }) {
   return {
+    /** D33: owned ∪ member-of, each with the caller's role. */
     async list(user: CurrentUser): Promise<Deck[]> {
-      const rows = await decks.listByOwner(user.accountId);
-      return rows.map(toDeckDto);
+      const rows = await decks.listForUser(user.id, user.accountId);
+      return rows.map(({ deck, role }) => toDeckDto(deck, role));
     },
 
     async create(user: CurrentUser, input: DeckCreate): Promise<DeckWithCategories> {
@@ -40,31 +43,31 @@ export function createDecksService({
         ownerAccountId: user.accountId,
       });
 
-      const cats = await categories.listByDeck(created.id);
+      const cats = await categories.listByDeck(created.id, 'owner');
 
       return {
-        ...toDeckDto(created),
+        ...toDeckDto(created, 'owner'),
         categories: cats.map(toCategoryDto),
       };
     },
 
     async get(user: CurrentUser, idOrSlug: string): Promise<Deck> {
-      const pb = await resolveDeck(decks, idOrSlug);
-      assertDeckAccess(user, pb, 'read');
-      return toDeckDto(pb);
+      const deck = await resolveDeck(decks, idOrSlug);
+      const role = await authorize(user, deck, 'deck.read', memberships);
+      return toDeckDto(deck, role);
     },
 
     async update(user: CurrentUser, idOrSlug: string, patch: DeckPatch): Promise<Deck> {
-      const pb = await resolveDeck(decks, idOrSlug);
-      assertDeckAccess(user, pb, 'write');
-      const updated = await decks.update(pb.id, patch);
-      return toDeckDto(updated);
+      const deck = await resolveDeck(decks, idOrSlug);
+      const role = await authorize(user, deck, 'deck.update', memberships);
+      const updated = await decks.update(deck.id, patch);
+      return toDeckDto(updated, role);
     },
 
     async remove(user: CurrentUser, idOrSlug: string): Promise<void> {
-      const pb = await resolveDeck(decks, idOrSlug);
-      assertDeckAccess(user, pb, 'write');
-      await decks.softDelete(pb.id);
+      const deck = await resolveDeck(decks, idOrSlug);
+      await authorize(user, deck, 'deck.delete', memberships);
+      await decks.softDelete(deck.id);
     },
   };
 }

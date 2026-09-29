@@ -5,6 +5,8 @@ import {
   itemCreateSchema,
   type CategoryVisibility,
   type DeckKind,
+  type MemberRole,
+  type SessionKind,
   type ItemCreateInput,
   type ItemStatus,
 } from '@pb/shared';
@@ -16,12 +18,17 @@ import {
   favorites,
   itemCategories,
   items,
+  memberships,
+  sessions,
   users,
   type CategoryRow,
   type DeckRow,
   type ItemRow,
+  type MembershipRow,
+  type SessionRow,
   type UserRow,
 } from '../src/schema';
+import { sha256Hex } from '../src/token-hash';
 
 /** Namespace for deterministic test ids (never used by the production seed). */
 export const FIXTURE_NAMESPACE = '0b8f3c52-7d1e-4f6a-9c2b-5e8d1a3f7b40';
@@ -186,4 +193,58 @@ export async function addFavorite(
   item: Pick<ItemRow, 'id'>,
 ): Promise<void> {
   await db.insert(favorites).values({ userId: user.id, itemId: item.id }).onConflictDoNothing();
+}
+
+export interface AddMemberOptions {
+  invitedBy?: string;
+  /** `null` leaves the invite pending; defaults to accepted now. */
+  acceptedAt?: Date | null;
+}
+
+/** Gives `user` a role on `deck` (the DB rejects users of the deck's owner account — D36). */
+export async function addMember(
+  db: Db,
+  deck: Pick<DeckRow, 'id'>,
+  user: Pick<UserRow, 'id'>,
+  role: MemberRole,
+  opts: AddMemberOptions = {},
+): Promise<MembershipRow> {
+  const [row] = await db
+    .insert(memberships)
+    .values({
+      deckId: deck.id,
+      userId: user.id,
+      role,
+      invitedBy: opts.invitedBy,
+      acceptedAt: opts.acceptedAt === undefined ? new Date() : opts.acceptedAt,
+    })
+    .returning();
+  return row;
+}
+
+export interface OpenSessionOptions {
+  kind?: SessionKind;
+  token?: string;
+  expiresAt?: Date;
+  userAgent?: string;
+}
+
+/** Inserts a live session for `user` and returns the raw token alongside the row. */
+export async function openSession(
+  db: Db,
+  user: Pick<UserRow, 'id'>,
+  opts: OpenSessionOptions = {},
+): Promise<{ token: string; session: SessionRow }> {
+  const token = opts.token ?? randomBytes(32).toString('base64url');
+  const [session] = await db
+    .insert(sessions)
+    .values({
+      userId: user.id,
+      tokenHash: sha256Hex(token),
+      kind: opts.kind ?? 'bearer',
+      expiresAt: opts.expiresAt ?? new Date(Date.now() + 90 * 86_400_000),
+      userAgent: opts.userAgent ?? 'test',
+    })
+    .returning();
+  return { token, session };
 }

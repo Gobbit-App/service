@@ -1,5 +1,14 @@
 import { pgEnum, timestamp } from 'drizzle-orm/pg-core';
-import { categoryVisibilities, itemStatuses, itemTypes, deckKinds, sourceKinds } from '@pb/shared';
+import {
+  categoryVisibilities,
+  itemStatuses,
+  itemTypes,
+  deckKinds,
+  sourceKinds,
+  memberRoles,
+  magicLinkPurposes,
+  sessionKinds,
+} from '@pb/shared';
 
 export const tstz = () => timestamp({ withTimezone: true, precision: 3, mode: 'date' });
 
@@ -14,3 +23,6 @@ export const categoryVisibilityEnum = pgEnum('category_visibility', categoryVisi
 export const itemTypeEnum = pgEnum('item_type', itemTypes);
 export const itemStatusEnum = pgEnum('item_status', itemStatuses);
 export const sourceKindEnum = pgEnum('source_kind', sourceKinds);
+export const memberRoleEnum = pgEnum('member_role', memberRoles);
+export const magicLinkPurposeEnum = pgEnum('magic_link_purpose', magicLinkPurposes);
+export const sessionKindEnum = pgEnum('session_kind', sessionKinds);

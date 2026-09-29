@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { setupApiTest, OWNER_EMAIL, OTHER_EMAIL, fixtureId } from './helpers';
 
-describe('access control and dev auth', () => {
+describe('access control', () => {
   const ctx = setupApiTest();
 
   describe('other user (owner of other-personal only)', () => {
@@ -86,7 +86,7 @@ describe('access control and dev auth', () => {
     });
   });
 
-  describe('dev user still sees family deck', () => {
+  describe('owner still sees family deck', () => {
     it('GET /decks/family returns 200', async () => {
       const res = await ctx.app.request('/decks/family', {
         headers: ctx.as(OWNER_EMAIL),
@@ -103,25 +103,23 @@ describe('access control and dev auth', () => {
     });
   });
 
-  describe('dev auth failures', () => {
-    it('unknown X-Dev-User returns 401', async () => {
-      const res = await ctx.app.request('/decks', {
-        headers: {
-          Authorization: `Bearer ${'x'.repeat(40)}`,
-          'X-Dev-User': 'nobody@example.test',
-          'Content-Type': 'application/json',
-        },
-      });
+  describe('credential failures', () => {
+    it('no credentials on a protected route returns 401', async () => {
+      const res = await ctx.app.request('/decks', { headers: ctx.anon() });
       expect(res.status).toBe(401);
     });
 
-    it('wrong bearer token returns 401', async () => {
+    it('unknown bearer token returns 401 problem+json', async () => {
       const res = await ctx.app.request('/decks', {
-        headers: {
-          Authorization: 'Bearer ' + 'y'.repeat(40),
-          'X-Dev-User': OWNER_EMAIL,
-          'Content-Type': 'application/json',
-        },
+        headers: { Authorization: 'Bearer ' + 'y'.repeat(43), 'Content-Type': 'application/json' },
+      });
+      expect(res.status).toBe(401);
+      expect(res.headers.get('Content-Type')).toContain('application/problem+json');
+    });
+
+    it('non-bearer Authorization scheme returns 401', async () => {
+      const res = await ctx.app.request('/decks', {
+        headers: { Authorization: 'Basic abc', 'Content-Type': 'application/json' },
       });
       expect(res.status).toBe(401);
     });

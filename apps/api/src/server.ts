@@ -1,6 +1,7 @@
 import { parseEnv } from './env';
 import { createPool, createDb } from '@pb/db';
 import { createApp } from './app';
+import { createMailer } from './mail/create-mailer';
 import { serve } from '@hono/node-server';
 
 async function main() {
@@ -9,22 +10,14 @@ async function main() {
   const pool = createPool(env.DATABASE_URL);
   const db = createDb(pool);
 
-  const app = createApp({
-    db,
-    pool,
-    env: {
-      DEV_AUTH_ENABLED: env.DEV_AUTH_ENABLED,
-      DEV_API_TOKEN: env.DEV_API_TOKEN,
-    },
-  });
+  const app = createApp({ db, pool, env, mailer: createMailer(env) });
 
   const server = serve({
     fetch: app.fetch,
     port: env.PORT,
   });
 
-  const authStatus = env.DEV_AUTH_ENABLED ? ' (dev auth enabled)' : '';
-  console.log(`API listening on :${env.PORT}${authStatus}`);
+  console.log(`API listening on :${env.PORT} (mail: ${env.MAIL_PROVIDER}, url: ${env.API_URL})`);
 
   const handleShutdown = () => {
     server.close();

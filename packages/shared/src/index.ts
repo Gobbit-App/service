@@ -9,3 +9,7 @@ export * from './schemas/problem';
 export * from './schemas/category';
 export * from './schemas/deck';
 export * from './schemas/item';
+export * from './schemas/auth';
+export * from './schemas/membership';
+export * from './authz/permissions';
+export * from './authz/can';

@@ -7,6 +7,10 @@ export * from './categories';
 export * from './items';
 export * from './item-categories';
 export * from './favorites';
+export * from './memberships';
+export * from './sessions';
+export * from './magic-links';
+export * from './rate-limit-counters';
 
 import { accounts } from './accounts';
 import { users } from './users';
@@ -15,6 +19,9 @@ import { categories } from './categories';
 import { items } from './items';
 import { itemCategories } from './item-categories';
 import { favorites } from './favorites';
+import { memberships } from './memberships';
+import { sessions } from './sessions';
+import { magicLinks } from './magic-links';
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -23,7 +30,13 @@ export type CategoryRow = typeof categories.$inferSelect;
 export type ItemRow = typeof items.$inferSelect;
 export type ItemCategoryRow = typeof itemCategories.$inferSelect;
 export type FavoriteRow = typeof favorites.$inferSelect;
+export type MembershipRow = typeof memberships.$inferSelect;
+export type SessionRow = typeof sessions.$inferSelect;
+export type MagicLinkRow = typeof magicLinks.$inferSelect;
 
 export type NewDeckRow = typeof decks.$inferInsert;
 export type NewCategoryRow = typeof categories.$inferInsert;
 export type NewItemRow = typeof items.$inferInsert;
+export type NewMembershipRow = typeof memberships.$inferInsert;
+export type NewSessionRow = typeof sessions.$inferInsert;
+export type NewMagicLinkRow = typeof magicLinks.$inferInsert;

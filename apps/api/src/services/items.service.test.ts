@@ -11,6 +11,7 @@ const USER: CurrentUser = {
   id: 'u1',
   accountId: 'a1',
   email: 'dev@example.test',
+  displayName: 'dev',
 };
 
 const PB_ID = '550e8400-e29b-41d4-a716-446655440000';
@@ -56,6 +57,7 @@ describe('createItemsService', () => {
   let categories: any;
   let items: any;
   let favorites: any;
+  let memberships: any;
 
   beforeEach(() => {
     decks = {
@@ -74,6 +76,7 @@ describe('createItemsService', () => {
       create: vi.fn().mockResolvedValue(createItemRow()),
       findById: vi.fn().mockResolvedValue(createItemRow()),
       update: vi.fn().mockResolvedValue(createItemRow()),
+      isVisibleTo: vi.fn().mockResolvedValue(true),
       categoryIdsFor: vi.fn().mockResolvedValue(new Map([[PB_ID, [DEFAULT_CAT]]])),
     } as unknown as ItemsRepo;
 
@@ -81,11 +84,14 @@ describe('createItemsService', () => {
       favoritedAmong: vi.fn().mockResolvedValue(new Set()),
     } as unknown as FavoritesRepo;
 
+    memberships = { findActive: vi.fn().mockResolvedValue(null) };
+
     service = createItemsService({
       decks,
       categories,
       items,
       favorites,
+      memberships,
     });
   });
 
@@ -232,6 +238,17 @@ describe('createItemsService', () => {
       await expect(service.update(USER, itemId, patch)).rejects.toMatchObject({
         status: 404,
       });
+    });
+
+    it('403s a reader member trying to update', async () => {
+      const itemId = '550e8400-e29b-41d4-a716-446655440002';
+      decks.findById.mockResolvedValue({ ...PB_ROW, ownerAccountId: 'other-account' });
+      memberships.findActive.mockResolvedValue({ role: 'reader', acceptedAt: new Date() });
+
+      await expect(service.update(USER, itemId, { title: 'x' })).rejects.toMatchObject({
+        status: 403,
+      });
+      expect(items.update).not.toHaveBeenCalled();
     });
   });
 });

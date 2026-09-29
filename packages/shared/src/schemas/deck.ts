@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { nameSchema, slugSchema } from './common';
 import { categorySchema } from './category';
-import { deckKinds } from '../enums';
+import { deckKinds, memberRoles } from '../enums';
 
 export const deckSchema = z.object({
   id: z.string(),
@@ -12,6 +12,8 @@ export const deckSchema = z.object({
   ownerAccountId: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  /** D33: the caller's role on this deck. */
+  role: z.enum(memberRoles),
 });
 
 export const deckWithCategoriesSchema = deckSchema.extend({

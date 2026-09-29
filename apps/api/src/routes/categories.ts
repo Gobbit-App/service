@@ -8,6 +8,7 @@ import {
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';
+import { AUTH_SECURITY, problems } from '../lib/openapi';
 
 export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
   const listCategoriesRoute = createRoute({
@@ -18,6 +19,7 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
       params: z.object({ id: z.string().min(1) }),
     },
     responses: {
+      ...problems('forbidden'),
       200: {
         content: {
           'application/json': {
@@ -43,7 +45,7 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
         description: 'Deck not found',
       },
     },
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
   });
 
   app.openapi(listCategoriesRoute, async (c) => {
@@ -69,6 +71,7 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
       },
     },
     responses: {
+      ...problems('forbidden'),
       201: {
         content: {
           'application/json': {
@@ -118,7 +121,7 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
         description: 'Unprocessable content',
       },
     },
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
   });
 
   app.openapi(createCategoryRoute, async (c) => {

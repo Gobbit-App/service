@@ -6,9 +6,21 @@ import {
   itemTypeEnum,
   itemStatusEnum,
   sourceKindEnum,
+  memberRoleEnum,
+  magicLinkPurposeEnum,
+  sessionKindEnum,
 } from './common';
 import { items } from './items';
-import { deckKinds, categoryVisibilities, itemTypes, itemStatuses, sourceKinds } from '@pb/shared';
+import {
+  deckKinds,
+  categoryVisibilities,
+  itemTypes,
+  itemStatuses,
+  sourceKinds,
+  memberRoles,
+  magicLinkPurposes,
+  sessionKinds,
+} from '@pb/shared';
 
 describe('schema enums', () => {
   it('deckKindEnum.enumValues equals deckKinds', () => {
@@ -29,6 +41,18 @@ describe('schema enums', () => {
 
   it('sourceKindEnum.enumValues equals sourceKinds', () => {
     expect(sourceKindEnum.enumValues).toEqual(sourceKinds);
+  });
+
+  it('memberRoleEnum.enumValues equals memberRoles', () => {
+    expect(memberRoleEnum.enumValues).toEqual(memberRoles);
+  });
+
+  it('magicLinkPurposeEnum.enumValues equals magicLinkPurposes', () => {
+    expect(magicLinkPurposeEnum.enumValues).toEqual(magicLinkPurposes);
+  });
+
+  it('sessionKindEnum.enumValues equals sessionKinds', () => {
+    expect(sessionKindEnum.enumValues).toEqual(sessionKinds);
   });
 
   describe('items table checks', () => {
