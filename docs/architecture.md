@@ -16,11 +16,13 @@ All packages are private, ES modules, strict TypeScript. Runtime via `tsx` (no b
 
 ### Key dependencies
 
-Root: typescript 5.9, vitest 3, eslint 9, prettier 3, tsx 4.
-@pb/shared: zod 4.1, mathjs 14.9.
-@pb/db: drizzle-orm 0.45, pg 8.16, drizzle-kit 0.31, @testcontainers/postgresql 11.7.
-@pb/api: hono 4.10, @hono/zod-openapi 1.1, @hono/node-server 1.19, @sindresorhus/slugify 3.
-e2e: @playwright/test 1.56.
+Root: typescript 6.0, vitest 5, eslint 10, typescript-eslint 8, prettier 3, tsx 4.
+@pb/shared: zod 4.6, mathjs 15.
+@pb/db: drizzle-orm 0.45, pg 8.23, uuid 14, drizzle-kit 0.31, @testcontainers/postgresql 12.
+@pb/api: hono 4.13, @hono/zod-openapi 1.6, @hono/node-server 2, @sindresorhus/slugify 3.
+e2e: @playwright/test 1.63.
+
+TypeScript is held at 6.0 (not 7.x) because typescript-eslint supports `typescript <6.1`. `@types/node` tracks Node 22, the minimum in `engines` and CI.
 
 ---
 
