@@ -24,7 +24,7 @@ docs/            — architecture.md (keep synced)
 - **Errors**: `application/problem+json` (RFC 7807) via central handler
 - **Invariants**: Auto timestamps, default category creation & protection in migrations; hand-written down files in `packages/db/migrations/down/`
 - **Auth**: magic links → server-side sessions (`gobbit_session` cookie or `Authorization: Bearer`); access via `authorize()` + `can()`, visibility via `visibleCategoriesWhere()`. Smoke/`api.http` use the seeded `SMOKE_SESSION_TOKEN`
-- **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; E2E `@smoke` → `smoke` deck only
+- **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; E2E `@smoke` → each test creates and deletes its own `smoke-<id>` deck (D50)
 - **Docs**: Keep `docs/architecture.md` and `README.md` synced with code
 
 ## Key Commands
