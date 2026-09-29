@@ -1,6 +1,6 @@
-# Community Pocketbook — Phase 1
+# Gobbit (Community Pocketbook) — Phase 2
 
-A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivers core data model + typed REST API.
+A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 adds magic-link sessions, memberships/roles and category visibility.
 
 ## Repo Layout
 
@@ -23,7 +23,7 @@ docs/            — architecture.md (keep synced)
 - **Card limits**: body ≤600 Unicode points; payload ≤8192 UTF-8 bytes (DB CHECK constraints)
 - **Errors**: `application/problem+json` (RFC 7807) via central handler
 - **Invariants**: Auto timestamps, default category creation & protection in migrations; hand-written down files in `packages/db/migrations/down/`
-- **Dev Auth**: `DEV_API_TOKEN` (Bearer) + `X-Dev-User` header (Phase 2: real auth)
+- **Auth**: magic links → server-side sessions (`gobbit_session` cookie or `Authorization: Bearer`); access via `authorize()` + `can()`, visibility via `visibleCategoriesWhere()`. Smoke/`api.http` use the seeded `SMOKE_SESSION_TOKEN`
 - **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; E2E `@smoke` → `smoke` deck only
 - **Docs**: Keep `docs/architecture.md` and `README.md` synced with code
 

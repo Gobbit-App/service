@@ -1,4 +1,4 @@
-# Community Pocketbook
+# Gobbit (Community Pocketbook)
 
 A collaborative, categorizable knowledge repository supporting multiple item types (text, links, images, tables, calculations) with role-based access, soft deletion, and keyset pagination. Built with TypeScript, Hono, Drizzle ORM, and PostgreSQL.
 
@@ -19,11 +19,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    ```bash
    cp .env.example .env
    ```
-   Generate a DEV_API_TOKEN:
-   ```bash
-   openssl rand -hex 32
-   ```
-   Paste the output into `.env` as `DEV_API_TOKEN`.
+   Set `SEED_OWNER_EMAIL` to your address. Local defaults use the console mailer (sign-in links are printed to the API log) and `COOKIE_SECURE=false`.
 
 3. **Start the database:**
    ```bash
@@ -33,9 +29,9 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 4. **Migrate and seed:**
    ```bash
    pnpm db:migrate
-   SEED_OWNER_EMAIL=dev@example.test pnpm db:seed
+   pnpm db:seed
    ```
-   The seed creates only the owner account and user (no sample decks); the email must match `DEV_USER`.
+   The seed creates only the owner account and user from `SEED_OWNER_EMAIL` (no sample decks). If `SMOKE_SESSION_TOKEN` is set it also upserts a 365-day owner bearer session with that token (for the smoke suite and `api.http`).
 
 5. **Start the development server:**
    ```bash
@@ -48,6 +44,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    curl http://localhost:3000/health
    ```
 
+7. **Sign in:** see [Authentication](#authentication) below.
+
 ## Environment Variables
 
 | Variable | Default | Purpose |
@@ -55,9 +53,20 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `DATABASE_URL` | `postgres://pb:pb@localhost:5432/pb` | PostgreSQL connection string |
 | `PORT` | `3000` | API server port |
 | `NODE_ENV` | `development` | Environment (development, test, production) |
-| `DEV_AUTH_ENABLED` | `false` | Enable dev auth (Bearer token + X-Dev-User header) |
-| `DEV_API_TOKEN` | — | Dev auth token (≥32 chars when enabled); generate with `openssl rand -hex 32` |
-| `DEV_USER` | `dev@example.test` | Default dev user for e2e / smoke tests |
+| `API_URL` | `http://localhost:${PORT}` | Public API address used in magic links (**required in production**) |
+| `APP_URL` | — | Web app origin; sign-in/invite callbacks redirect here (falls back to `${API_URL}/me`) |
+| `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
+| `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
+| `CORS_ORIGINS` | — | Comma-separated origins allowed for credentialed CORS and CSRF |
+| `MAIL_PROVIDER` | `console` | `console` (links logged) or `resend` |
+| `RESEND_API_KEY` / `MAIL_FROM` | — | Required when `MAIL_PROVIDER=resend` |
+| `ALLOW_CONSOLE_MAIL` | `false` | Must be `true` to use the console mailer in production |
+| `MAGIC_LINK_TTL_MINUTES` | `15` | Sign-in link lifetime |
+| `INVITE_TTL_DAYS` | `7` | Invite link lifetime |
+| `SESSION_TTL_DAYS` | `90` | Sliding session lifetime |
+| `CLIENT_IP_HEADER` | — (socket address) | Header with the real client IP behind a proxy (e.g. `cf-connecting-ip`) |
+| `SEED_OWNER_EMAIL` / `SEED_OWNER_NAME` | — | Owner created by `pnpm db:seed` (email required) |
+| `SMOKE_SESSION_TOKEN` | — | Optional ≥32-char owner bearer seeded for the smoke suite; generate with `openssl rand -base64 32` |
 | `BASE_URL` | `http://localhost:3000` | API base URL for e2e tests |
 | `DB_PORT` | `5432` | Mapped database port in Compose |
 | `API_PORT` | `3000` | Mapped API port in Compose |
@@ -88,14 +97,16 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 To run the entire stack (database + API) with Docker Compose:
 
 ```bash
-DEV_AUTH_ENABLED=true DEV_API_TOKEN=$(openssl rand -hex 32) pnpm compose:up
+pnpm compose:up
 ```
 
-The API container automatically runs migrations on startup. Seed the owner user (`SEED_OWNER_EMAIL` required):
+Compose reads `.env` (console mailer, `COOKIE_SECURE=false` by default). The API container automatically runs migrations on startup. Seed the owner user (`SEED_OWNER_EMAIL` required):
 
 ```bash
-DATABASE_URL=postgres://pb:pb@localhost:5432/pb SEED_OWNER_EMAIL=dev@example.test pnpm db:seed
+DATABASE_URL=postgres://pb:pb@localhost:5432/pb SEED_OWNER_EMAIL=you@example.test pnpm db:seed
 ```
+
+The API service also carries Traefik labels (router `gobbit-api`, ``Host(`${PUBLIC_HOST}`) && PathPrefix(`/api`)``, `/api` stripped) for the deployed setup.
 
 API is available at `http://localhost:3000`.
 
@@ -103,11 +114,13 @@ API is available at `http://localhost:3000`.
 
 ### Locally
 
-With the dev server running:
+With the dev server running and the seed run with `SMOKE_SESSION_TOKEN` set:
 
 ```bash
-pnpm test:e2e
+SMOKE_SESSION_TOKEN=<token> pnpm test:e2e
 ```
+
+Each spec creates its own `smoke-<id>` deck and removes it (and any memberships) afterwards. The members spec invites the one standing user `smoke-invitee@example.test`; its user row stays, only the membership is removed.
 
 or just smoke tests:
 
@@ -120,7 +133,7 @@ pnpm test:e2e --grep @smoke
 Set environment variables and run:
 
 ```bash
-BASE_URL=https://api.example.com DEV_API_TOKEN=<token> DEV_USER=dev@example.test pnpm test:e2e
+BASE_URL=https://gobbit.niranhome.win/api SMOKE_SESSION_TOKEN=<token> pnpm test:e2e
 ```
 
 Tests poll `/health` on startup to verify migrations are complete.
@@ -140,8 +153,11 @@ Set these in your deployment platform:
 
 - `DATABASE_URL` – PostgreSQL connection string
 - `NODE_ENV=production`
-- `DEV_AUTH_ENABLED=false` (or `true` if you want a maintenance token)
-- `DEV_API_TOKEN` – if enabled, a strong random token (≥32 chars)
+- `API_URL` – public API address (e.g. `https://gobbit.niranhome.win/api`)
+- `APP_URL`, `COOKIE_DOMAIN`, `CORS_ORIGINS` – as needed for the web app
+- `MAIL_PROVIDER=resend` with `RESEND_API_KEY` and `MAIL_FROM` (or `console` + `ALLOW_CONSOLE_MAIL=true`)
+- `CLIENT_IP_HEADER=cf-connecting-ip` behind Cloudflare
+- `SEED_OWNER_EMAIL` and, for smoke runs, `SMOKE_SESSION_TOKEN` (run `pnpm db:seed --allow-prod` once)
 - `PORT=3000` or as needed
 
 ### GitHub Actions
@@ -152,15 +168,14 @@ Set these in your deployment platform:
 - name: Run e2e smoke tests
   env:
     BASE_URL: ${{ vars.API_BASE_URL }}
-    DEV_API_TOKEN: ${{ secrets.DEV_API_TOKEN }}
-    DEV_USER: ${{ secrets.DEV_USER }}
+    SMOKE_SESSION_TOKEN: ${{ secrets.SMOKE_SESSION_TOKEN }}
   run: pnpm test:e2e --grep @smoke
 ```
 
-Required secrets: `DEV_API_TOKEN`, `DEV_USER`.  
-Required variables: `API_BASE_URL`. Optional: `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
+Required secrets: `SMOKE_SESSION_TOKEN` (the same value seeded on the deployed DB).  
+Required variables: `API_BASE_URL` (`https://gobbit.niranhome.win/api`). Optional: `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
 
-The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, blank `BASE_URL` / `DEV_*` values fall back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` is missing.
+The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, a blank `BASE_URL` falls back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` or `SMOKE_SESSION_TOKEN` is missing.
 
 CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks never execute on private machines. Workflows take the pnpm version from `packageManager` in `package.json` and the Node version from `.nvmrc`.
 
@@ -173,11 +188,23 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/health` | System health & latest migration tag |
+| **Auth** |
+| `POST` | `/auth/magic-link` | Email a sign-in link (always `200 { ok: true }`; rate limited) |
+| `GET` | `/auth/callback` | Consume a sign-in/invite link, set session cookie, redirect |
+| `POST` | `/auth/token-exchange` | Exchange a one-time code for a bearer session |
+| `POST` | `/auth/logout` | End the current session |
+| `POST` | `/auth/logout-all` | End all of the user's sessions |
+| `GET` | `/me` | Current user and their decks with roles |
 | **Decks** |
 | `GET` | `/decks` | List user's decks |
 | `POST` | `/decks` | Create deck |
 | `GET` | `/decks/{id}` | Get deck (by id or slug) |
 | `PATCH` | `/decks/{id}` | Update deck |
+| `DELETE` | `/decks/{id}` | Soft-delete deck (owner) |
+| **Members** |
+| `GET` | `/decks/{id}/members` | List members (owner implicit first, pending included) |
+| `POST` | `/decks/{id}/invites` | Invite by email with a role (201 new / 200 resend) |
+| `DELETE` | `/decks/{id}/members/{userId}` | Remove a member |
 | **Categories** |
 | `GET` | `/decks/{id}/categories` | List categories |
 | `POST` | `/decks/{id}/categories` | Create category |
@@ -199,13 +226,18 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 
 ### Authentication
 
-Dev auth (when `DEV_AUTH_ENABLED=true`):
+Passwordless magic links with server-side sessions. Browsers get an HttpOnly session cookie (unsafe methods require an allowed `Origin`, CSRF); scripts and native clients use `Authorization: Bearer <token>`.
 
 ```bash
-curl -H 'Authorization: Bearer <DEV_API_TOKEN>' \
-     -H 'X-Dev-User: dev@example.test' \
-     http://localhost:3000/health
+# 1. request a link (with MAIL_PROVIDER=console it is printed to the API log)
+curl -X POST http://localhost:3000/auth/magic-link \
+     -H 'Content-Type: application/json' -d '{"email":"you@example.test"}'
+
+# 2. open the logged link in a browser (sets the cookie), or use a seeded bearer:
+curl -H "Authorization: Bearer $SMOKE_SESSION_TOKEN" http://localhost:3000/me
 ```
+
+Access is per deck: the account owner is implicitly `owner` of its decks; invited members get `reader`, `editor` or `maintainer`. Decks a user cannot see return 404; forbidden actions return 403 `/problems/forbidden`. Categories marked `private` (and cards filed only under them) are hidden from readers and editors. See `docs/architecture.md` for details.
 
 ## Project Structure
 

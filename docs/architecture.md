@@ -1,14 +1,14 @@
-# Architecture — Community Pocketbook Phase 1
+# Architecture — Gobbit (Community Pocketbook) Phase 2
 
 ## Overview
 
-Community Pocketbook is a monorepo (pnpm) organizing shared logic, persistence, API, and testing into isolated, typed packages.
+Gobbit (repository: community-pocketbook) is a monorepo (pnpm) organizing shared logic, persistence, API, and testing into isolated, typed packages.
 
 ### Workspace structure
 
 - **`@pb/shared`** (packages/shared): Enums, limits, validation schemas (Zod), and utility functions. Single source of truth for domain constraints. Exports normalized to one entry point.
 - **`@pb/db`** (packages/db): Drizzle ORM schema, migrations (drizzle-kit generated + hand-written custom), seeding logic, and database client. Exposes migrations, schema types, test fixtures.
-- **`@pb/api`** (apps/api): Hono REST API with OpenAPI documentation. Layered: routes (parse input) → services (rules) → repositories (SQL). Error handling via RFC 9457 Problem+JSON. Dev authentication for Phase 1.
+- **`@pb/api`** (apps/api): Hono REST API with OpenAPI documentation. Layered: routes (parse input) → services (rules) → repositories (SQL). Error handling via RFC 9457 Problem+JSON. Magic-link sign-in with server-side sessions, per-deck roles and category visibility (Phase 2).
 - **`e2e`** (e2e/): Playwright test suite with smoke tests tagged `@smoke`.
 - **`@pb/web`** (apps/web): Placeholder for Phase 3 frontend.
 
@@ -39,6 +39,10 @@ erDiagram
   ITEMS ||--o{ FAVORITES : ""
   USERS ||--o{ FAVORITES : ""
   USERS ||--o{ ITEMS : "createdBy"
+  DECKS ||--o{ MEMBERSHIPS : ""
+  USERS ||--o{ MEMBERSHIPS : ""
+  USERS ||--o{ SESSIONS : ""
+  MEMBERSHIPS ||--o{ MAGIC_LINKS : "invite"
 
   ACCOUNTS {
     uuid id PK
@@ -113,6 +117,50 @@ erDiagram
     timestamptz created_at
   }
 
+  MEMBERSHIPS {
+    uuid id PK
+    uuid deck_id FK
+    uuid user_id FK
+    member_role role
+    uuid invited_by FK
+    timestamptz invited_at
+    timestamptz accepted_at
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz deleted_at
+  }
+
+  SESSIONS {
+    uuid id PK
+    uuid user_id FK
+    text token_hash
+    session_kind kind
+    timestamptz expires_at
+    timestamptz last_seen_at
+    text user_agent
+    timestamptz revoked_at
+    timestamptz created_at
+  }
+
+  MAGIC_LINKS {
+    uuid id PK
+    text email
+    text token_hash
+    magic_link_purpose purpose
+    uuid membership_id FK
+    text next
+    timestamptz expires_at
+    timestamptz used_at
+    text requested_ip
+    timestamptz created_at
+  }
+
+  RATE_LIMIT_COUNTERS {
+    text key PK
+    timestamptz window_start PK
+    integer count
+  }
+
   HEALTH {
     smallint id PK
     string status
@@ -145,11 +193,12 @@ erDiagram
 | **D13: Status default published** | Item created with status=null defaults to 'published' and `verified_at = now()`. | `itemCreateSchema` defaults status; service sets verifiedAt. |
 | **D14: Pagination keyset cursor** | Cursor encodes (createdAt, id) tuple, limiting result sets. Limit default 20, max 50; >50 rejects. | `limitSchema` in @pb/shared; `itemListQuerySchema`; service `items.list()` decodes, queries with SQL keyset filter. |
 | **D15: Favorite idempotence** | Adding/removing favorite twice is safe (no error). | Repository `favorites.add()` uses `onConflictDoNothing`; `favorites.remove()` does not error if missing. |
-| **D16: Dev auth gate** | Dev token + X-Dev-User header required for all routes except /health, /openapi.json. Removed Phase 2. | Middleware `devAuth()` uses constant-time comparison, validates email. `DEV_AUTH_ENABLED` environment flag. |
-| **D17: Access control (Phase 1)** | Routes only expose user's own decks (owned by their account). 404 for foreign decks. | Service methods call `assertDeckAccess()`, which checks `deck.ownerAccountId === user.accountId`. |
+| **D16: Session auth gate** (Phase 2, replaces dev auth) | A valid session (bearer or cookie) is required for all routes except `/health`, `/openapi.json`, `/auth/magic-link` and `/auth/callback` (`LENIENT_PATHS`). | Middleware `sessionAuth()` (`middleware/session-auth.ts`), see [Authentication](#authentication). |
+| **D17: Access control** (Phase 2: D33–D35) | No role on a deck → 404; a role without the permission → 403 `/problems/forbidden`. | `authorize()` in `access/authorize.ts` (`resolveRole` + `can()`), called by every deck-scoped service method. |
+| **D36: One membership per user–deck** | Partial unique `(deck_id, user_id) WHERE deleted_at IS NULL`; owner-account users can't be members of their own decks. | Unique index + `BEFORE INSERT` trigger raising `owner_account_membership` (`0005_auth_triggers`). |
 | **D18: Problem schema** | All errors returned as RFC 9457 problem+json with type URL, status, title, detail, and optional field errors. | `Problem`, `ProblemFieldError` schemas in @pb/shared; error handlers in middleware convert Zod, pg, and app errors. |
 | **D19: Migration rollback** | `db:rollback` reverses the latest applied migration by running its `.down.sql` and deleting the journal entry. | `rollbackLatest()` in `src/migrations.ts` executes down file in transaction, maps tag from __drizzle_migrations. |
-| **D21: E2E smoke tests** | Tagged tests `@smoke` write into 'smoke' deck, all read /health before starting. | Playwright config `testDir: ./tests`, global-setup waits for health + latest migration tag match. |
+| **D21: E2E smoke tests** | Tagged tests `@smoke` each create and delete their own `smoke-<id>` deck (D50), all read /health before starting. | Playwright config `testDir: ./tests`, global-setup waits for health + latest migration tag match. |
 
 ---
 
@@ -184,7 +233,7 @@ Services and repositories import these, ensuring consistency across API, tests, 
 Routes use `@hono/zod-openapi`:
 - Input: path params (z.object), query (z.object), JSON body (z.object)
 - Output: 200/201 with content schema; 4xx/5xx with `problemSchema`
-- Metadata: method, path, security (DevToken + DevUser), description
+- Metadata: method, path, security (`AUTH_SECURITY` = `SessionCookie` or `BearerToken`), description
 - Handler: receives validated input, calls service, returns DTO or 404/409/422
 
 Example pattern:
@@ -200,7 +249,7 @@ const route = createRoute({
     201: { content: { 'application/json': { schema: itemSchema } } },
     400: { content: { 'application/problem+json': { schema: problemSchema } } }
   },
-  security: [{ DevToken: [], DevUser: [] }]
+  security: AUTH_SECURITY
 });
 
 app.openapi(route, async (c) => {
@@ -215,7 +264,7 @@ app.openapi(route, async (c) => {
 ### Service layer
 
 Services encapsulate business rules:
-- **Access control**: `assertDeckAccess(user, deck, action)` ensures ownership
+- **Access control**: `authorize(user, deck, permission, memberships)` resolves the role and asserts the permission
 - **Validation**: call Zod `parse()` on structured inputs (e.g., payload by type)
 - **Cascades**: when creating a deck, fetch the default category; when updating an item, maybe recompute isFavorite
 - **Soft delete**: use repository methods; service owns the semantics (e.g., `archive()` is idempotent)
@@ -332,39 +381,53 @@ pageSchema<T>(item: T) = z.object({
 
 ---
 
-## Dev Authentication (Phase 1)
+## Authentication
 
-### Mechanism
+### Magic links (D22–D26)
 
-1. **Authorization header**: `Authorization: Bearer <token>`
-2. **User header**: `X-Dev-User: <email>`
-3. **Bypass paths**: `/health`, `/openapi.json` require no auth
-4. **Constant-time comparison**: `timingSafeEqual` prevents timing attacks
-5. **Lookup**: call `lookupUser(email)` to fetch `CurrentUser` from database
+1. `POST /auth/magic-link { email }` always answers `200 { ok: true }` (no account enumeration; a malformed email is `400`). Rate limits run first (see below). The link token is `base64url(randomBytes(32))`; only `sha256(token)` is stored in `magic_links.token_hash`.
+2. The mail (`Mailer`: `ResendMailer` / `ConsoleMailer` / `MemoryMailer`, chosen by `MAIL_PROVIDER`) carries `${API_URL}/auth/callback?token=…`. Sign-in links live `MAGIC_LINK_TTL_MINUTES` (15), invite links `INVITE_TTL_DAYS` (7).
+3. `GET /auth/callback?token=` consumes the link with one atomic `UPDATE … WHERE used_at IS NULL AND expires_at > now() RETURNING *` (zero rows → invalid/used/expired, reason derived afterwards). The user is found or created in exactly one place, `users.service.findOrCreateByEmail()` (D25). For invites it sets `accepted_at`. It opens a cookie session and answers `303` to `${APP_URL}${next}` (or `${API_URL}/me` without `APP_URL`); `next` must be a relative path (`^/[^/\\]`). A bad link → `303 ${APP_URL}/auth/error?reason=…` or `401 /problems/magic-link-invalid`.
 
-### Middleware
+### Sessions (D27–D31)
 
-```ts
-devAuth(opts: { token: string; lookupUser: (email) => Promise<CurrentUser | null> })
-  → checks Authorization header (constant-time)
-  → checks X-Dev-User header
-  → calls lookupUser(email.trim().toLowerCase())
-  → sets c.set('user', user) or throws unauthorized()
-```
+- `sessions` rows are opaque random tokens stored as hashes, `kind` `cookie | bearer`, sliding lifetime `SESSION_TTL_DAYS` (90): `last_seen_at`/`expires_at` are bumped in one `UPDATE` at most once an hour.
+- Cookie `gobbit_session`: `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` per `COOKIE_SECURE`, `Domain` per `COOKIE_DOMAIN` (host-only when unset).
+- **Precedence**: `Authorization: Bearer` first; the cookie only when no bearer header exists. A bad bearer is `401 /problems/session-invalid` even with a valid cookie.
+- `POST /auth/token-exchange` (cookie-authenticated only) mints a separate `bearer` session and returns `{ token, expiresAt }` once.
+- `POST /auth/logout` revokes the current session (clears the cookie); `POST /auth/logout-all` revokes all of the user's sessions.
+- Lookup is by hash, then `timingSafeEqual` on the stored hash. All expiry logic reads the injected clock `now()` (D42).
 
-### Environment
+### CORS and CSRF (D32)
 
-- **DEV_AUTH_ENABLED**: boolean, default false
-- **DEV_API_TOKEN**: string, ≥32 chars when enabled
-- **Guard**: app.ts conditionally registers middleware if enabled
+`hono/cors` with `CORS_ORIGINS` and `credentials: true`. `middleware/csrf.ts` wraps `hono/csrf` over `CORS_ORIGINS` plus the API's own origin, for cookie-authenticated unsafe requests; requests with an `Authorization` header skip it. Rejections are `403` problem+json.
 
-### Phase 2 replacement
+### Deployment layout (D46)
 
-Dev auth is a Phase 1 scaffold. Phase 2 replaces it with:
-- Magic link login (email → token sent)
-- JWT tokens
-- Session cookies
-- `can()` function for granular access (not just ownership)
+One origin `https://gobbit.niranhome.win`: Traefik routes `PathPrefix(/api)` to the API with a strip-prefix middleware (labels in `infra/docker-compose.yml`), so `API_URL=https://gobbit.niranhome.win/api`, `COOKIE_DOMAIN` unset, `CORS_ORIGINS=https://gobbit.niranhome.win`, `CLIENT_IP_HEADER=cf-connecting-ip`.
+
+## Authorization (D33–D35)
+
+- `resolveRole(user, deck, membership)`: users of the deck's `owner_account_id` are implicitly `owner`; otherwise the **accepted** membership's role; pending or none → no role.
+- `can(role, permission)` (`@pb/shared` authz) is a pure table over the `Permission` union; the matrix is unit-tested exhaustively.
+- `authorize()` combines both: no role → `404` (ADR-004); role lacking the permission → `403 /problems/forbidden` with `permission` and `role` extension members.
+- `GET /decks` and `GET /me` return owned ∪ accepted-member decks, each with the caller's `role`.
+- Memberships: `GET /decks/:id/members` (implicit owner first, pending included), `POST /decks/:id/invites { email, role }` (creates the user if needed, pending membership + invite link; `201`, resend `200`, accepted member `409`, self `400`), `DELETE /decks/:id/members/:userId`.
+
+## Visibility (D38)
+
+`visibleCategoriesWhere(role)` (`access/visibility.ts`) is the single predicate: owner/maintainer → all; editor/reader → `shared` + `public`; no role → `public` (Phase 8). It is applied in:
+
+1. category listing,
+2. item listing (`EXISTS` over `item_categories ⋈ categories`, so pagination stays consistent),
+3. item get (no visible category → `404`),
+4. the `?category=` slug filter (invisible → `404`),
+5. `categoryIds` validation on create/patch (invisible → `400`),
+6. the item DTO (`categoryIds` lists only visible categories).
+
+## Rate limits (D39–D40)
+
+Postgres table `rate_limit_counters`, fixed one-hour windows, `INSERT … ON CONFLICT DO UPDATE SET count = count + 1 RETURNING count`. Keys and limits (from `@pb/shared`): `magic-link:email:<sha256>` 5, `magic-link:ip:<ip>` 20, `callback:ip:<ip>` 30. The email counter is checked before any user lookup, so a `429 /problems/rate-limited` (with `Retry-After`) reveals nothing. Rows older than two windows are purged on ~1% of increments. The client IP is the socket address unless `CLIENT_IP_HEADER` names a trusted header; `X-Forwarded-For` is never trusted implicitly.
 
 ---
 
@@ -429,7 +492,7 @@ Exposing the latest migration tag helps e2e tests confirm the DB is in the expec
 - Ids are uuid v5 under `SEED_NAMESPACE` (`seedId('owner')` for the account, `seedId('owner/user')` for the user), so re-running upserts in place.
 - Idempotent: `ON CONFLICT … DO UPDATE … WHERE … IS DISTINCT FROM`, so a second run with the same values leaves `updated_at` untouched; a changed name or email updates the row in place.
 - `NODE_ENV=production` requires `--allow-prod`.
-- `SMOKE_SESSION_TOKEN` (D43) adds one long-lived bearer session for the owner once the `sessions` table exists (P2.0).
+- `SMOKE_SESSION_TOKEN` (D43, ≥32 chars) upserts one 365-day `bearer` session for the owner (`user_agent = 'smoke'`); re-running with a new token rotates it. No other users are seeded.
 
 ### Test factories (`@pb/db/test`)
 
@@ -474,8 +537,10 @@ Tagging: every test title includes `@smoke`
 **Pre-test**: global-setup waits for `/health` to report `ok=true` and migration tag matching the latest journal entry.
 
 **API helpers**:
-- `test.extend({ api, scratch })`: api = request context, scratch tracks item IDs for cleanup
-- `ctx.as(email)`: returns auth headers for dev token + dev user
+- `api`: request context carrying `Authorization: Bearer ${SMOKE_SESSION_TOKEN}` (the seeded owner session)
+- `anon`: request context with no credentials (401 checks)
+- `smokeDeck`: creates a `smoke-<id>` deck before the test; afterwards removes its memberships and soft-deletes it
+- The members spec invites the single standing user `smoke-invitee@example.test`; only its membership is cleaned up
 
 ---
 
@@ -663,6 +728,8 @@ Tagging: every test title includes `@smoke`
 
 ### ADR-016: Dev auth middleware with constant-time comparison
 
+**Status**: Superseded by ADR-025 and ADR-031 (Phase 2).
+
 **Decision**: Dev token validated via `timingSafeEqual`, length checked first. Removed in Phase 2.
 
 **Rationale**:
@@ -680,7 +747,7 @@ Tagging: every test title includes `@smoke`
 **Rationale**:
 - Centralized: consistent policy across routes
 - Fail-safe: throws 404 not found (doesn't expose existence)
-- Extensible: Phase 2 can add `can()` granularity (read vs write, shared decks)
+- Extensible: Phase 2 added `can()` granularity via `authorize()` (see Authorization)
 
 ---
 
@@ -721,7 +788,7 @@ Tagging: every test title includes `@smoke`
 
 ### ADR-021: Smoke tests with @smoke tag and health wait
 
-**Decision**: E2E tests tagged `@smoke` write only to 'smoke' deck. Global setup waits for `/health` ok=true + migration tag match.
+**Decision**: E2E tests tagged `@smoke` each work in their own `smoke-<id>` deck (D50). Global setup waits for `/health` ok=true + migration tag match.
 
 **Rationale**:
 - Isolation: smoke tests use dedicated deck (don't interfere with other tests)
@@ -763,6 +830,70 @@ Tagging: every test title includes `@smoke`
 
 ---
 
+### ADR-025: Opaque server-side sessions over JWT (D22, D27)
+
+**Decision**: Sessions are random 32-byte tokens; only their sha256 is stored. Cookie and bearer sessions are both rows in `sessions`.
+
+**Rationale**: Logout and "log out everywhere" are one `UPDATE`; no signing-key rotation or token blacklist; a DB leak yields no usable tokens. The cost (one indexed lookup per request) is negligible at this scale.
+
+---
+
+### ADR-026: Atomic single-use magic links (D23)
+
+**Decision**: Consumption is a single conditional `UPDATE … RETURNING`; the failure reason is computed only afterwards.
+
+**Rationale**: Two concurrent clicks can't both succeed, and there is no read-then-write race window.
+
+---
+
+### ADR-027: An invite creates the user (D25, D37)
+
+**Decision**: `POST /decks/:id/invites` calls `findOrCreateByEmail()`, so a pending membership always has a non-null `user_id`.
+
+**Rationale**: One code path creates users (Phase 9 can gate registration there); memberships stay simple FKs; the invite link only has to accept.
+
+---
+
+### ADR-028: Implicit owner via the account (D33)
+
+**Decision**: Users of a deck's `owner_account_id` are `owner` without a membership row; a trigger forbids giving them one.
+
+**Rationale**: Personal decks need no membership bookkeeping, and there is exactly one source of truth per user–deck pair.
+
+---
+
+### ADR-029: DTO category filtering (D38)
+
+**Decision**: The item DTO's `categoryIds` is filtered by the same visibility predicate as the queries.
+
+**Rationale**: A card shared with a reader must not leak the ids of private categories it is also filed under.
+
+---
+
+### ADR-030: Postgres rate limiting (D39)
+
+**Decision**: Fixed-window counters in `rate_limit_counters`, no Redis.
+
+**Rationale**: One fewer service to run; the atomic upsert is correct under concurrency; volumes are tiny. pg-boss (Phase 4) can take over the cleanup.
+
+---
+
+### ADR-031: Dev auth deleted, not flagged off (D43)
+
+**Decision**: The dev-token flag, token variable, user header and middleware are removed. The smoke suite authenticates with a seeded owner bearer session (`SMOKE_SESSION_TOKEN`).
+
+**Rationale**: A dormant bypass is a latent vulnerability; the smoke suite now exercises the real session path end to end.
+
+---
+
+### ADR-032: Owner-only seed with test factories (D49)
+
+**Decision**: The seed creates only the owner (plus the optional smoke session); integration and smoke tests build their own data with `@pb/db/test` factories or per-test `smoke-<id>` decks.
+
+**Rationale**: The deployed database contains no fabricated people or cards, and tests don't depend on shared mutable state.
+
+---
+
 ## Summary
 
-Community Pocketbook Phase 1 is a layered REST API with OpenAPI documentation, dev authentication, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 2 will replace dev auth with magic links, add shared/public decks and granular `can()` checks, and introduce the web frontend.
+Gobbit Phase 2 is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 introduces the web frontend on the same origin.

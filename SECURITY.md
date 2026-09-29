@@ -20,5 +20,5 @@ Only the latest commit on `main` receives security fixes while the project is pr
 
 ## Scope notes
 
-- `DEV_API_TOKEN` / `X-Dev-User` authentication is a **development-only** mechanism (see `docs/architecture.md`). Deployments exposed to the internet must set `DEV_AUTH_ENABLED=false` or use a strong random token (≥ 32 characters).
+- Authentication is passwordless (magic links + server-side sessions, see `docs/architecture.md`). Deployments must use `COOKIE_SECURE=true`, a real mailer (`MAIL_PROVIDER=resend`), and set `CLIENT_IP_HEADER` only to a header the proxy controls. `SMOKE_SESSION_TOKEN` is an owner credential: keep it secret (≥ 32 random characters) and rotate it by re-running the seed.
 - The default database credentials in `.env.example` and `infra/docker-compose.yml` are for local development only.
