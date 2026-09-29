@@ -20,6 +20,7 @@ export async function runSeed(
       } catch (err) {
         throw new Error(
           `Invalid seed card "${sc.key}": ${err instanceof Error ? err.message : String(err)}`,
+          { cause: err },
         );
       }
     }
