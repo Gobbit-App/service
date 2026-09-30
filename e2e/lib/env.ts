@@ -1,11 +1,10 @@
 export interface E2eEnv {
   baseURL: string;
+  /** Owner bearer session seeded by `pnpm db:seed` when `SMOKE_SESSION_TOKEN` is set (D43). */
   token: string;
-  user: string;
 }
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
-const DEFAULT_USER = 'dev@example.test';
 
 type EnvSource = Record<string, string | undefined>;
 
@@ -21,7 +20,7 @@ export function resolveE2eEnv(env: EnvSource = process.env): E2eEnv {
   if (!rawBaseURL && read(env, 'CI')) {
     throw new Error(
       'BASE_URL is not set. In CI, configure the API_BASE_URL repository variable ' +
-        '(and DEV_API_TOKEN / DEV_USER secrets) to point the smoke tests at a deployed API.',
+        '(and the SMOKE_SESSION_TOKEN secret) to point the smoke tests at a deployed API.',
     );
   }
 
@@ -38,7 +37,6 @@ export function resolveE2eEnv(env: EnvSource = process.env): E2eEnv {
 
   return {
     baseURL,
-    token: read(env, 'DEV_API_TOKEN') ?? '',
-    user: read(env, 'DEV_USER') ?? DEFAULT_USER,
+    token: read(env, 'SMOKE_SESSION_TOKEN') ?? '',
   };
 }

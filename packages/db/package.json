@@ -6,7 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./seed": "./seed/run-seed.ts",
-    "./test": "./test/db-fixture.ts"
+    "./test": "./test/index.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",

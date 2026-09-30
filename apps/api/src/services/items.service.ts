@@ -2,8 +2,10 @@ import type { ItemRow } from '@pb/db';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
-import type { PocketbooksRepo } from '../repositories/pocketbooks.repo';
+import type { DecksRepo } from '../repositories/decks.repo';
 import {
+  type MemberRole,
+  type Permission,
   decodeCursor,
   encodeCursor,
   type Item,
@@ -13,42 +15,59 @@ import {
   type ItemPatch,
   payloadSchemaFor,
 } from '@pb/shared';
-import { assertPocketbookAccess } from '../access/assert-pocketbook-access';
+import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
+import { canSeePrivate } from '../access/visibility';
 import { badRequest, notFound, unprocessable } from '../errors/http-errors';
-import { resolvePocketbook } from '../lib/resolve-pocketbook';
+import { resolveDeck } from '../lib/resolve-deck';
 import { toItemDto } from '../lib/mappers';
 import { type CurrentUser } from '../types';
 
 export function createItemsService(deps: {
-  pocketbooks: PocketbooksRepo;
+  decks: DecksRepo;
   categories: CategoriesRepo;
   items: ItemsRepo;
   favorites: FavoritesRepo;
+  memberships: MembershipLookup;
 }) {
-  const { pocketbooks, categories, items, favorites } = deps;
+  const { decks, categories, items, favorites, memberships } = deps;
+  const ITEM_NOT_FOUND = 'Item not found';
 
   // Private helpers
 
-  async function loadOwnedItem(user: CurrentUser, itemId: string) {
+  /** § 4 permission on the item's deck; a card hidden by visibility is a 404 (D38). */
+  async function loadItem(user: CurrentUser, itemId: string, permission: Permission) {
     const item = await items.findById(itemId);
-    if (!item) throw notFound('Item not found');
+    if (!item) throw notFound(ITEM_NOT_FOUND);
 
-    const pocketbook = await pocketbooks.findById(item.pocketbookId);
-    if (!pocketbook) throw notFound('Item not found');
+    const deck = await decks.findById(item.deckId);
+    if (!deck) throw notFound(ITEM_NOT_FOUND);
 
-    assertPocketbookAccess(user, pocketbook, 'read');
-    return item;
+    const role = await authorize(user, deck, permission, memberships, ITEM_NOT_FOUND);
+    if (!(await items.isVisibleTo(item.id, role))) throw notFound(ITEM_NOT_FOUND);
+    return { item, role };
   }
 
-  async function validateCategoryIds(pocketbookId: string, ids: string[]): Promise<string[]> {
+  /** Category ids of the item that `role` can't see; kept when that role rewrites the list. */
+  async function hiddenCategoryIds(itemId: string, role: MemberRole): Promise<string[]> {
+    if (canSeePrivate(role)) return [];
+    const all = (await items.categoryIdsFor([itemId], 'owner')).get(itemId) ?? [];
+    const visible = new Set((await items.categoryIdsFor([itemId], role)).get(itemId) ?? []);
+    return all.filter((id) => !visible.has(id));
+  }
+
+  async function validateCategoryIds(
+    deckId: string,
+    ids: string[],
+    role: MemberRole,
+  ): Promise<string[]> {
     const unique = [...new Set(ids)];
-    const existing = await categories.findExistingIds(pocketbookId, unique);
+    const existing = await categories.findExistingIds(deckId, unique, role);
     const existingSet = new Set(existing);
     const missing = unique.filter((id) => !existingSet.has(id));
 
     if (missing.length > 0) {
       throw badRequest(
-        'Unknown categories for this pocketbook',
+        'Unknown categories for this deck',
         missing.map((id) => ({ path: 'categoryIds', message: id })),
       );
     }
@@ -56,11 +75,11 @@ export function createItemsService(deps: {
     return unique;
   }
 
-  async function toDtos(user: CurrentUser, rows: ItemRow[]) {
+  async function toDtos(user: CurrentUser, rows: ItemRow[], role: MemberRole) {
     if (rows.length === 0) return [];
 
     const itemIds = rows.map((r) => r.id);
-    const categoryIdsMap = await items.categoryIdsFor(itemIds);
+    const categoryIdsMap = await items.categoryIdsFor(itemIds, role);
     const favoriteIds = await favorites.favoritedAmong(user.id, itemIds);
 
     return rows.map((row) =>
@@ -72,12 +91,12 @@ export function createItemsService(deps: {
 
   return {
     async list(user: CurrentUser, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
-      const pocketbook = await resolvePocketbook(pocketbooks, idOrSlug);
-      assertPocketbookAccess(user, pocketbook, 'read');
+      const deck = await resolveDeck(decks, idOrSlug);
+      const role = await authorize(user, deck, 'item.read', memberships);
 
       let categoryId: string | undefined;
       if (q.category) {
-        const cat = await categories.findBySlug(pocketbook.id, q.category);
+        const cat = await categories.findBySlug(deck.id, q.category, role);
         if (!cat) throw notFound('Category not found');
         categoryId = cat.id;
       }
@@ -86,7 +105,8 @@ export function createItemsService(deps: {
 
       // Fetch limit+1 to check if there are more
       const rows = await items.list({
-        pocketbookId: pocketbook.id,
+        role,
+        deckId: deck.id,
         status: q.status,
         type: q.type,
         categoryId,
@@ -103,7 +123,7 @@ export function createItemsService(deps: {
         nextCursor = encodeCursor({ createdAt: lastItem.createdAt, id: lastItem.id });
       }
 
-      const itemDtos = await toDtos(user, data);
+      const itemDtos = await toDtos(user, data, role);
 
       return {
         data: itemDtos,
@@ -112,18 +132,18 @@ export function createItemsService(deps: {
     },
 
     async create(user: CurrentUser, idOrSlug: string, input: ItemCreate): Promise<Item> {
-      const pocketbook = await resolvePocketbook(pocketbooks, idOrSlug);
-      assertPocketbookAccess(user, pocketbook, 'write');
+      const deck = await resolveDeck(decks, idOrSlug);
+      const role = await authorize(user, deck, 'item.create', memberships);
 
       // Determine category IDs (D6)
       let categoryIds = input.categoryIds ?? [];
       if (categoryIds.length === 0) {
-        const defaultCat = await categories.findDefault(pocketbook.id);
+        const defaultCat = await categories.findDefault(deck.id);
         if (defaultCat) {
           categoryIds = [defaultCat.id];
         }
       } else {
-        categoryIds = await validateCategoryIds(pocketbook.id, categoryIds);
+        categoryIds = await validateCategoryIds(deck.id, categoryIds, role);
       }
 
       // Status default (D13)
@@ -133,7 +153,7 @@ export function createItemsService(deps: {
 
       const createdItem = await items.create(
         {
-          pocketbookId: pocketbook.id,
+          deckId: deck.id,
           type: input.type,
           status,
           title: input.title,
@@ -147,18 +167,23 @@ export function createItemsService(deps: {
         categoryIds,
       );
 
-      const itemDtos = await toDtos(user, [createdItem]);
+      const itemDtos = await toDtos(user, [createdItem], role);
       return itemDtos[0];
     },
 
     async get(user: CurrentUser, itemId: string): Promise<Item> {
-      const item = await loadOwnedItem(user, itemId);
-      const itemDtos = await toDtos(user, [item]);
+      const { item, role } = await loadItem(user, itemId, 'item.read');
+      const itemDtos = await toDtos(user, [item], role);
       return itemDtos[0];
     },
 
     async update(user: CurrentUser, itemId: string, patch: ItemPatch): Promise<Item> {
-      const item = await loadOwnedItem(user, itemId);
+      const { item, role } = await loadItem(user, itemId, 'item.update');
+
+      // § 4: publishing a proposal is a reviewer action
+      if (item.status === 'proposed' && patch.status === 'published') {
+        assertPermission(role, 'item.publish');
+      }
 
       // D12: type is immutable (defensive)
       if ('type' in patch) {
@@ -173,11 +198,14 @@ export function createItemsService(deps: {
       // Compute resulting status and categories before writing
       const resultingStatus = patch.status ?? item.status;
 
-      const categoryIdsMap = await items.categoryIdsFor([item.id]);
+      const categoryIdsMap = await items.categoryIdsFor([item.id], 'owner');
       const currentCategoryIds = categoryIdsMap.get(item.id) ?? [];
       const resultingCategoryIds =
         patch.categoryIds !== undefined
-          ? await validateCategoryIds(item.pocketbookId, patch.categoryIds)
+          ? [
+              ...(await validateCategoryIds(item.deckId, patch.categoryIds, role)),
+              ...(await hiddenCategoryIds(item.id, role)),
+            ]
           : currentCategoryIds;
 
       // D6: published item needs at least one category
@@ -207,26 +235,26 @@ export function createItemsService(deps: {
         patch.categoryIds !== undefined ? resultingCategoryIds : undefined,
       );
 
-      const itemDtos = await toDtos(user, [updatedItem]);
+      const itemDtos = await toDtos(user, [updatedItem], role);
       return itemDtos[0];
     },
 
     async remove(user: CurrentUser, itemId: string): Promise<void> {
-      const item = await loadOwnedItem(user, itemId);
+      const { item } = await loadItem(user, itemId, 'item.delete');
       await items.softDelete(item.id);
     },
 
     async archive(user: CurrentUser, itemId: string): Promise<Item> {
-      const item = await loadOwnedItem(user, itemId);
+      const { item, role } = await loadItem(user, itemId, 'item.archive');
 
       // Idempotent: if already archived, return current DTO without writing
       if (item.status === 'archived') {
-        const itemDtos = await toDtos(user, [item]);
+        const itemDtos = await toDtos(user, [item], role);
         return itemDtos[0];
       }
 
       const archived = await items.update(item.id, { status: 'archived' });
-      const itemDtos = await toDtos(user, [archived]);
+      const itemDtos = await toDtos(user, [archived], role);
       return itemDtos[0];
     },
   };

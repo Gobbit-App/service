@@ -1,24 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import {
-  pocketbookKindEnum,
+  deckKindEnum,
   categoryVisibilityEnum,
   itemTypeEnum,
   itemStatusEnum,
   sourceKindEnum,
+  memberRoleEnum,
+  magicLinkPurposeEnum,
+  sessionKindEnum,
 } from './common';
 import { items } from './items';
 import {
-  pocketbookKinds,
+  deckKinds,
   categoryVisibilities,
   itemTypes,
   itemStatuses,
   sourceKinds,
+  memberRoles,
+  magicLinkPurposes,
+  sessionKinds,
 } from '@pb/shared';
 
 describe('schema enums', () => {
-  it('pocketbookKindEnum.enumValues equals pocketbookKinds', () => {
-    expect(pocketbookKindEnum.enumValues).toEqual(pocketbookKinds);
+  it('deckKindEnum.enumValues equals deckKinds', () => {
+    expect(deckKindEnum.enumValues).toEqual(deckKinds);
   });
 
   it('categoryVisibilityEnum.enumValues equals categoryVisibilities', () => {
@@ -35,6 +41,18 @@ describe('schema enums', () => {
 
   it('sourceKindEnum.enumValues equals sourceKinds', () => {
     expect(sourceKindEnum.enumValues).toEqual(sourceKinds);
+  });
+
+  it('memberRoleEnum.enumValues equals memberRoles', () => {
+    expect(memberRoleEnum.enumValues).toEqual(memberRoles);
+  });
+
+  it('magicLinkPurposeEnum.enumValues equals magicLinkPurposes', () => {
+    expect(magicLinkPurposeEnum.enumValues).toEqual(magicLinkPurposes);
+  });
+
+  it('sessionKindEnum.enumValues equals sessionKinds', () => {
+    expect(sessionKindEnum.enumValues).toEqual(sessionKinds);
   });
 
   describe('items table checks', () => {

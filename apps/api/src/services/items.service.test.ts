@@ -4,13 +4,14 @@ import type { CurrentUser } from '../types';
 
 type ItemsRepo = any;
 type CategoriesRepo = any;
-type PocketbooksRepo = any;
+type DecksRepo = any;
 type FavoritesRepo = any;
 
 const USER: CurrentUser = {
   id: 'u1',
   accountId: 'a1',
   email: 'dev@example.test',
+  displayName: 'dev',
 };
 
 const PB_ID = '550e8400-e29b-41d4-a716-446655440000';
@@ -33,7 +34,7 @@ const KNOWN_CATS = new Set([DEFAULT_CAT, 'cat-2']);
 function createItemRow(overrides = {}) {
   return {
     id: '550e8400-e29b-41d4-a716-446655440002',
-    pocketbookId: PB_ID,
+    deckId: PB_ID,
     type: 'table',
     status: 'published',
     title: 'Test Item',
@@ -52,16 +53,17 @@ function createItemRow(overrides = {}) {
 
 describe('createItemsService', () => {
   let service: any;
-  let pocketbooks: any;
+  let decks: any;
   let categories: any;
   let items: any;
   let favorites: any;
+  let memberships: any;
 
   beforeEach(() => {
-    pocketbooks = {
+    decks = {
       findBySlug: vi.fn().mockResolvedValue(PB_ROW),
       findById: vi.fn().mockResolvedValue(PB_ROW),
-    } as unknown as PocketbooksRepo;
+    } as unknown as DecksRepo;
 
     categories = {
       findDefault: vi.fn().mockResolvedValue({ id: DEFAULT_CAT }),
@@ -74,6 +76,7 @@ describe('createItemsService', () => {
       create: vi.fn().mockResolvedValue(createItemRow()),
       findById: vi.fn().mockResolvedValue(createItemRow()),
       update: vi.fn().mockResolvedValue(createItemRow()),
+      isVisibleTo: vi.fn().mockResolvedValue(true),
       categoryIdsFor: vi.fn().mockResolvedValue(new Map([[PB_ID, [DEFAULT_CAT]]])),
     } as unknown as ItemsRepo;
 
@@ -81,11 +84,14 @@ describe('createItemsService', () => {
       favoritedAmong: vi.fn().mockResolvedValue(new Set()),
     } as unknown as FavoritesRepo;
 
+    memberships = { findActive: vi.fn().mockResolvedValue(null) };
+
     service = createItemsService({
-      pocketbooks,
+      decks,
       categories,
       items,
       favorites,
+      memberships,
     });
   });
 
@@ -102,7 +108,7 @@ describe('createItemsService', () => {
 
       expect(items.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          pocketbookId: PB_ID,
+          deckId: PB_ID,
         }),
         [DEFAULT_CAT],
       );
@@ -220,9 +226,9 @@ describe('createItemsService', () => {
 
     it('returns 404 for item owned by different account', async () => {
       const itemId = '550e8400-e29b-41d4-a716-446655440002';
-      const otherItem = createItemRow({ pocketbookId: 'other-pb' });
+      const otherItem = createItemRow({ deckId: 'other-pb' });
       items.findById.mockResolvedValue(otherItem);
-      pocketbooks.findById.mockResolvedValue({
+      decks.findById.mockResolvedValue({
         ...PB_ROW,
         ownerAccountId: 'other-account',
       });
@@ -232,6 +238,17 @@ describe('createItemsService', () => {
       await expect(service.update(USER, itemId, patch)).rejects.toMatchObject({
         status: 404,
       });
+    });
+
+    it('403s a reader member trying to update', async () => {
+      const itemId = '550e8400-e29b-41d4-a716-446655440002';
+      decks.findById.mockResolvedValue({ ...PB_ROW, ownerAccountId: 'other-account' });
+      memberships.findActive.mockResolvedValue({ role: 'reader', acceptedAt: new Date() });
+
+      await expect(service.update(USER, itemId, { title: 'x' })).rejects.toMatchObject({
+        status: 403,
+      });
+      expect(items.update).not.toHaveBeenCalled();
     });
   });
 });

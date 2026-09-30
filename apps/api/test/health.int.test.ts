@@ -24,8 +24,8 @@ describe('health and API access control', () => {
     expect(res.status).toBe(200);
   });
 
-  it('GET /pocketbooks without auth headers returns 401 unauthorized', async () => {
-    const res = await ctx.app.request('/pocketbooks');
+  it('GET /decks without auth headers returns 401 unauthorized', async () => {
+    const res = await ctx.app.request('/decks');
     expect(res.status).toBe(401);
     const contentType = res.headers.get('content-type');
     expect(contentType).toContain('application/problem+json');

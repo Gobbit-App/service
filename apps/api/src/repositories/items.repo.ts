@@ -1,12 +1,30 @@
-import { and, desc, eq, exists, inArray, isNull, sql } from 'drizzle-orm';
-import { itemCategories, items, type Db, type ItemRow } from '@pb/db';
-import type { CursorData, ItemStatus, ItemType, SourceKind } from '@pb/shared';
+import { and, desc, eq, exists, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import { categories, itemCategories, items, type Db, type ItemRow } from '@pb/db';
+import type { CursorData, ItemStatus, ItemType, MemberRole, SourceKind } from '@pb/shared';
+import { canSeePrivate, visibleCategoriesWhere } from '../access/visibility';
 
 export function createItemsRepo(db: Db) {
+  /** D38: the item sits in at least one category `role` can see. */
+  function hasVisibleCategory(role: MemberRole): SQL {
+    return exists(
+      db
+        .select({ one: sql`1` })
+        .from(itemCategories)
+        .innerJoin(categories, eq(categories.id, itemCategories.categoryId))
+        .where(
+          and(
+            eq(itemCategories.itemId, items.id),
+            isNull(categories.deletedAt),
+            visibleCategoriesWhere(role),
+          ),
+        ),
+    );
+  }
+
   return {
     async create(
       v: {
-        pocketbookId: string;
+        deckId: string;
         type: ItemType;
         status: ItemStatus;
         title: string;
@@ -27,7 +45,7 @@ export function createItemsRepo(db: Db) {
             categoryIds.map((categoryId) => ({
               categoryId,
               itemId: item.id,
-              pocketbookId: v.pocketbookId,
+              deckId: v.deckId,
             })),
           );
         }
@@ -46,8 +64,20 @@ export function createItemsRepo(db: Db) {
       return item ?? null;
     },
 
+    /** D38: false when every category of the item is hidden from `role` (→ 404). */
+    async isVisibleTo(id: string, role: MemberRole): Promise<boolean> {
+      if (canSeePrivate(role)) return true;
+      const [row] = await db
+        .select({ id: items.id })
+        .from(items)
+        .where(and(eq(items.id, id), hasVisibleCategory(role)))
+        .limit(1);
+      return row !== undefined;
+    },
+
     async list(q: {
-      pocketbookId: string;
+      role: MemberRole;
+      deckId: string;
       status: ItemStatus;
       type?: ItemType;
       categoryId?: string;
@@ -55,13 +85,17 @@ export function createItemsRepo(db: Db) {
       limit: number;
     }): Promise<ItemRow[]> {
       const conditions = [
-        eq(items.pocketbookId, q.pocketbookId),
+        eq(items.deckId, q.deckId),
         eq(items.status, q.status),
         isNull(items.deletedAt),
       ];
 
       if (q.type) {
         conditions.push(eq(items.type, q.type));
+      }
+
+      if (!canSeePrivate(q.role)) {
+        conditions.push(hasVisibleCategory(q.role));
       }
 
       if (q.categoryId) {
@@ -113,7 +147,7 @@ export function createItemsRepo(db: Db) {
 
         if (categoryIds !== undefined) {
           const [item] = await tx
-            .select({ pocketbookId: items.pocketbookId })
+            .select({ deckId: items.deckId })
             .from(items)
             .where(eq(items.id, id))
             .limit(1);
@@ -126,7 +160,7 @@ export function createItemsRepo(db: Db) {
                 categoryIds.map((categoryId) => ({
                   categoryId,
                   itemId: id,
-                  pocketbookId: item.pocketbookId,
+                  deckId: item.deckId,
                 })),
               );
             }
@@ -143,7 +177,8 @@ export function createItemsRepo(db: Db) {
       await db.update(items).set({ deletedAt: new Date() }).where(eq(items.id, id));
     },
 
-    async categoryIdsFor(itemIds: string[]): Promise<Map<string, string[]>> {
+    /** D38: only the category ids `role` can see, so private ids never leak via a shared card. */
+    async categoryIdsFor(itemIds: string[], role: MemberRole): Promise<Map<string, string[]>> {
       const result = new Map<string, string[]>();
 
       for (const id of itemIds) {
@@ -160,7 +195,14 @@ export function createItemsRepo(db: Db) {
           itemId: itemCategories.itemId,
         })
         .from(itemCategories)
-        .where(inArray(itemCategories.itemId, itemIds))
+        .innerJoin(categories, eq(categories.id, itemCategories.categoryId))
+        .where(
+          and(
+            inArray(itemCategories.itemId, itemIds),
+            isNull(categories.deletedAt),
+            visibleCategoriesWhere(role),
+          ),
+        )
         .orderBy(itemCategories.createdAt, itemCategories.categoryId);
 
       for (const row of rows) {

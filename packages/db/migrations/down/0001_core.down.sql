@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS items CASCADE;
 --> statement-breakpoint
 DROP TABLE IF EXISTS categories CASCADE;
 --> statement-breakpoint
-DROP TABLE IF EXISTS pocketbooks CASCADE;
+DROP TABLE IF EXISTS decks CASCADE;
 --> statement-breakpoint
 DROP TABLE IF EXISTS users CASCADE;
 --> statement-breakpoint
@@ -20,4 +20,4 @@ DROP TYPE IF EXISTS item_type;
 --> statement-breakpoint
 DROP TYPE IF EXISTS category_visibility;
 --> statement-breakpoint
-DROP TYPE IF EXISTS pocketbook_kind;
+DROP TYPE IF EXISTS deck_kind;

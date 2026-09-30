@@ -1,4 +1,5 @@
-import { Context } from 'hono';
+import type { Context } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import { ZodError } from 'zod';
 import { InvalidCursorError } from '@pb/shared';
 import { HttpError, problemFromZodError, problemResponse } from '../errors/http-errors';
@@ -7,7 +8,15 @@ import type { AppEnv } from '../types';
 
 export function errorHandler(err: Error, c: Context<AppEnv>): Response {
   if (err instanceof HttpError) {
-    return problemResponse(c, err.toProblem());
+    return problemResponse(c, err.toProblem(), err.headers);
+  }
+
+  if (err instanceof HTTPException) {
+    return problemResponse(c, {
+      type: '/problems/http',
+      title: err.message || 'HTTP error',
+      status: err.status,
+    });
   }
 
   if (err instanceof ZodError) {

@@ -1,10 +1,10 @@
-import { test, expect, SMOKE_POCKETBOOK } from '../../fixtures/api';
+import { test, expect } from '../../fixtures/api';
 
-test('items lifecycle @smoke', async ({ api, scratch }) => {
+test('items lifecycle @smoke', async ({ api, smokeDeck }) => {
   const title = `smoke ${Date.now()}`;
 
   // Create item
-  const createRes = await api.post(`/pocketbooks/${SMOKE_POCKETBOOK}/items`, {
+  const createRes = await api.post(`/decks/${smokeDeck.slug}/items`, {
     data: {
       type: 'text',
       title,
@@ -14,7 +14,6 @@ test('items lifecycle @smoke', async ({ api, scratch }) => {
   expect(createRes.status()).toBe(201);
   const item = await createRes.json();
   const itemId = item.id;
-  scratch.track(itemId);
 
   // Get item
   const getRes = await api.get(`/items/${itemId}`);
@@ -37,7 +36,7 @@ test('items lifecycle @smoke', async ({ api, scratch }) => {
   expect(archived.status).toBe('archived');
 
   // List items (default status=published, so archived item not included)
-  const listRes = await api.get(`/pocketbooks/${SMOKE_POCKETBOOK}/items`);
+  const listRes = await api.get(`/decks/${smokeDeck.slug}/items`);
   expect(listRes.status()).toBe(200);
   const page = await listRes.json();
   expect(page.data.map((i: { id: string }) => i.id)).not.toContain(itemId);
@@ -59,8 +58,8 @@ test('items lifecycle @smoke', async ({ api, scratch }) => {
   expect(notFoundRes.status()).toBe(404);
 });
 
-test('items validation @smoke', async ({ api }) => {
-  const res = await api.post(`/pocketbooks/${SMOKE_POCKETBOOK}/items`, {
+test('items validation @smoke', async ({ api, smokeDeck }) => {
+  const res = await api.post(`/decks/${smokeDeck.slug}/items`, {
     data: {
       type: 'text',
       title: 'test',
@@ -73,4 +72,25 @@ test('items validation @smoke', async ({ api }) => {
 
   const problem = await res.json();
   expect(problem.errors[0].path).toBe('body');
+});
+
+test('a private category and its card are visible to the owner @smoke', async ({
+  api,
+  smokeDeck,
+}) => {
+  const catRes = await api.post(`/decks/${smokeDeck.slug}/categories`, {
+    data: { name: 'Smoke private', slug: 'smoke-private', visibility: 'private' },
+  });
+  expect(catRes.status()).toBe(201);
+  const category = await catRes.json();
+  expect(category.visibility).toBe('private');
+
+  const itemRes = await api.post(`/decks/${smokeDeck.slug}/items`, {
+    data: { type: 'text', title: 'private smoke card', categoryIds: [category.id] },
+  });
+  expect(itemRes.status()).toBe(201);
+
+  const list = await api.get(`/decks/${smokeDeck.slug}/categories`);
+  const slugs = (await list.json()).data.map((c: { slug: string }) => c.slug);
+  expect(slugs).toContain('smoke-private');
 });

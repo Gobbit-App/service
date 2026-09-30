@@ -8,23 +8,25 @@ import {
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';
+import { AUTH_SECURITY, problems } from '../lib/openapi';
 
 export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
   const listCategoriesRoute = createRoute({
     method: 'get',
-    path: '/pocketbooks/{id}/categories',
+    path: '/decks/{id}/categories',
     tags: ['categories'],
     request: {
       params: z.object({ id: z.string().min(1) }),
     },
     responses: {
+      ...problems('forbidden'),
       200: {
         content: {
           'application/json': {
             schema: categoryListSchema,
           },
         },
-        description: 'Categories in the pocketbook',
+        description: 'Categories in the deck',
       },
       401: {
         content: {
@@ -40,10 +42,10 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
             schema: problemSchema,
           },
         },
-        description: 'Pocketbook not found',
+        description: 'Deck not found',
       },
     },
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
   });
 
   app.openapi(listCategoriesRoute, async (c) => {
@@ -55,7 +57,7 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
 
   const createCategoryRoute = createRoute({
     method: 'post',
-    path: '/pocketbooks/{id}/categories',
+    path: '/decks/{id}/categories',
     tags: ['categories'],
     request: {
       params: z.object({ id: z.string().min(1) }),
@@ -69,6 +71,7 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
       },
     },
     responses: {
+      ...problems('forbidden'),
       201: {
         content: {
           'application/json': {
@@ -99,7 +102,7 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
             schema: problemSchema,
           },
         },
-        description: 'Pocketbook not found',
+        description: 'Deck not found',
       },
       409: {
         content: {
@@ -118,7 +121,7 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
         description: 'Unprocessable content',
       },
     },
-    security: [{ DevToken: [], DevUser: [] }],
+    security: AUTH_SECURITY,
   });
 
   app.openapi(createCategoryRoute, async (c) => {

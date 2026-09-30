@@ -7,6 +7,6 @@ test('openapi.json lists core paths @smoke', async ({ api }) => {
 
   const json = await response.json();
 
-  expect(json.paths['/pocketbooks']).toBeDefined();
+  expect(json.paths['/decks']).toBeDefined();
   expect(json.paths['/items/{id}']).toBeDefined();
 });

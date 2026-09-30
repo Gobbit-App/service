@@ -1,26 +1,39 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
+import { cors } from 'hono/cors';
 import type pg from 'pg';
 import type { Db } from '@pb/db';
 import type { AppEnv } from './types';
 import type { Env } from './env';
+import type { Mailer } from './mail/mailer';
 
 import { buildServices } from './services';
 import { requestId } from './middleware/request-id';
-import { devAuth } from './middleware/dev-auth';
+import { csrf, csrfOrigins } from './middleware/csrf';
+import { sessionAuth } from './middleware/session-auth';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { problemFromZodError, problemResponse } from './errors/http-errors';
+import { SESSION_COOKIE } from './lib/cookies';
 import { registerHealthRoutes } from './routes/health';
-import { registerPocketbooksRoutes } from './routes/pocketbooks';
+import { registerAuthRoutes } from './routes/auth';
+import { registerMeRoutes } from './routes/me';
+import { registerDecksRoutes } from './routes/decks';
+import { registerMembersRoutes } from './routes/members';
 import { registerCategoriesRoutes } from './routes/categories';
 import { registerItemsRoutes } from './routes/items';
 import { registerFavoritesRoutes } from './routes/favorites';
 
-export function createApp(deps: {
+export interface AppDeps {
   db: Db;
   pool: pg.Pool;
-  env: Pick<Env, 'DEV_AUTH_ENABLED' | 'DEV_API_TOKEN'>;
-}): OpenAPIHono<AppEnv> {
-  const services = buildServices(deps.db);
+  env: Env;
+  mailer: Mailer;
+  /** Injectable clock; integration tests advance it to expire sessions and links. */
+  now?: () => Date;
+}
+
+export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
+  const { env } = deps;
+  const services = buildServices(deps);
 
   const app = new OpenAPIHono<AppEnv>({
     defaultHook: (result, c) => {
@@ -30,40 +43,45 @@ export function createApp(deps: {
     },
   });
 
-  app.use('*', requestId());
-
-  if (deps.env.DEV_AUTH_ENABLED) {
-    app.use(
-      '*',
-      devAuth({
-        token: deps.env.DEV_API_TOKEN ?? '',
-        lookupUser: services.users.findByEmail,
-      }),
-    );
+  // D32: cors → csrf → requestId → sessionAuth → routes
+  if (env.CORS_ORIGINS.length > 0) {
+    app.use('*', cors({ origin: env.CORS_ORIGINS, credentials: true }));
   }
+  app.use('*', csrf(csrfOrigins(env.CORS_ORIGINS, env.API_URL)));
+  app.use('*', requestId());
+  app.use(
+    '*',
+    sessionAuth({
+      authenticate: services.auth.authenticate,
+      cookie: { secure: env.COOKIE_SECURE, domain: env.COOKIE_DOMAIN },
+    }),
+  );
 
   registerHealthRoutes(app, { pool: deps.pool });
-  registerPocketbooksRoutes(app, services);
+  registerAuthRoutes(app, services, env);
+  registerMeRoutes(app, services);
+  registerDecksRoutes(app, services);
+  registerMembersRoutes(app, services);
   registerCategoriesRoutes(app, services);
   registerItemsRoutes(app, services);
   registerFavoritesRoutes(app, services);
 
-  app.openAPIRegistry.registerComponent('securitySchemes', 'DevToken', {
-    type: 'http',
-    scheme: 'bearer',
+  app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
+    type: 'apiKey',
+    in: 'cookie',
+    name: SESSION_COOKIE,
   });
 
-  app.openAPIRegistry.registerComponent('securitySchemes', 'DevUser', {
-    type: 'apiKey',
-    in: 'header',
-    name: 'X-Dev-User',
+  app.openAPIRegistry.registerComponent('securitySchemes', 'BearerToken', {
+    type: 'http',
+    scheme: 'bearer',
   });
 
   app.doc31('/openapi.json', {
     openapi: '3.1.0',
     info: {
-      title: 'Community Pocketbook API',
-      version: '0.1.0',
+      title: 'Gobbit API',
+      version: '0.2.0',
     },
   });
 

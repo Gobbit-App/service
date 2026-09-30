@@ -4,7 +4,7 @@ import { categoryVisibilities } from '../enums';
 
 export const categorySchema = z.object({
   id: z.string(),
-  pocketbookId: z.string(),
+  deckId: z.string(),
   slug: z.string(),
   name: z.string(),
   visibility: z.enum(categoryVisibilities),

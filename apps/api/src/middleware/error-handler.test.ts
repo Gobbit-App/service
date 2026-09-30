@@ -22,7 +22,7 @@ describe('errorHandler', () => {
   it('handles HttpError notFound', async () => {
     app.get('/test', (c) => {
       c.set('requestId', 'test-id');
-      throw notFound('Pocketbook not found');
+      throw notFound('Deck not found');
     });
     app.onError((err, c) => errorHandler(err, c));
 

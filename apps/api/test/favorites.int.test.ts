@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { eq, and } from 'drizzle-orm';
-import { setupApiTest, seedId } from './helpers';
+import { setupApiTest, fixtureId } from './helpers';
 import { favorites } from '@pb/db';
 
 describe('favorites', () => {
@@ -8,21 +8,21 @@ describe('favorites', () => {
 
   describe('seeded data', () => {
     it('should have exactly one favorited item initially (the souvlaki link)', async () => {
-      const itemsResp = await ctx.app.request('/pocketbooks/family/items?limit=50', {
+      const itemsResp = await ctx.app.request('/decks/family/items?limit=50', {
         headers: ctx.as(),
       });
       expect(itemsResp.status).toBe(200);
       const itemsPage = await itemsResp.json();
       const favoritedItems = itemsPage.data.filter((item: any) => item.isFavorite);
       expect(favoritedItems).toHaveLength(1);
-      expect(favoritedItems[0].id).toBe(seedId('family/food/souvlaki-place'));
+      expect(favoritedItems[0].id).toBe(fixtureId('family/food/souvlaki-place'));
     });
   });
 
   describe('POST /items/{id}/favorite', () => {
     it('should add favorite and be idempotent (D15)', async () => {
-      // Get family pocketbook items, find first one without favorite
-      const itemsResp = await ctx.app.request('/pocketbooks/family/items?limit=50', {
+      // Get family deck items, find first one without favorite
+      const itemsResp = await ctx.app.request('/decks/family/items?limit=50', {
         headers: ctx.as(),
       });
       expect(itemsResp.status).toBe(200);
@@ -46,7 +46,7 @@ describe('favorites', () => {
       expect(res.status).toBe(204);
 
       // SQL: count favorites rows for (dev user, item) = 1
-      const devUserId = seedId('user/dev');
+      const devUserId = fixtureId('user/owner');
       const favRows = await ctx.t.db
         .select()
         .from(favorites)
@@ -75,7 +75,7 @@ describe('favorites', () => {
   describe('cross-user favorites', () => {
     it('should not show other users favorite to current user', async () => {
       // Get a non-favorited item
-      const itemsResp = await ctx.app.request('/pocketbooks/family/items?limit=50', {
+      const itemsResp = await ctx.app.request('/decks/family/items?limit=50', {
         headers: ctx.as(),
       });
       expect(itemsResp.status).toBe(200);
@@ -84,7 +84,7 @@ describe('favorites', () => {
       const itemId = targetItem.id;
 
       // Insert favorite via SQL for other user
-      const otherUserId = seedId('user/other');
+      const otherUserId = fixtureId('user/other');
       await ctx.t.db.insert(favorites).values({
         userId: otherUserId,
         itemId: itemId,
@@ -103,7 +103,7 @@ describe('favorites', () => {
   describe('DELETE /items/{id}/favorite', () => {
     it('should remove favorite and be idempotent', async () => {
       // Get family items, find first one with isFavorite true
-      const itemsResp = await ctx.app.request('/pocketbooks/family/items?limit=50', {
+      const itemsResp = await ctx.app.request('/decks/family/items?limit=50', {
         headers: ctx.as(),
       });
       expect(itemsResp.status).toBe(200);

@@ -5,7 +5,7 @@ describe('common schemas', () => {
   describe('slugSchema', () => {
     it('accepts valid slugs', () => {
       expect(slugSchema.parse('family')).toBe('family');
-      expect(slugSchema.parse('my-pocketbook-2')).toBe('my-pocketbook-2');
+      expect(slugSchema.parse('my-deck-2')).toBe('my-deck-2');
     });
 
     it('rejects empty string', () => {

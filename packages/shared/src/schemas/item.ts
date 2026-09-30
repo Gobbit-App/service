@@ -121,7 +121,7 @@ export type ItemPatch = z.infer<typeof itemPatchSchema>;
 
 export const itemSchema = z.object({
   id: uuidSchema,
-  pocketbookId: uuidSchema,
+  deckId: uuidSchema,
   type: z.enum(itemTypes),
   status: z.enum(itemStatuses),
   title: z.string(),

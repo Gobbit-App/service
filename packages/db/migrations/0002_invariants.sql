@@ -18,7 +18,7 @@ CREATE TRIGGER users_set_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE 
 
 --> statement-breakpoint
 
-CREATE TRIGGER pocketbooks_set_updated_at BEFORE UPDATE ON pocketbooks FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER decks_set_updated_at BEFORE UPDATE ON decks FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 --> statement-breakpoint
 
@@ -32,7 +32,7 @@ CREATE TRIGGER items_set_updated_at BEFORE UPDATE ON items FOR EACH ROW EXECUTE 
 
 CREATE OR REPLACE FUNCTION create_default_category() RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO categories (pocketbook_id, slug, name, is_default, visibility, position)
+  INSERT INTO categories (deck_id, slug, name, is_default, visibility, position)
   VALUES (NEW.id, 'general', 'General', true, 'shared', 0);
   RETURN NEW;
 END;
@@ -40,7 +40,7 @@ $$ LANGUAGE plpgsql;
 
 --> statement-breakpoint
 
-CREATE TRIGGER pocketbooks_create_default_category AFTER INSERT ON pocketbooks FOR EACH ROW EXECUTE FUNCTION create_default_category();
+CREATE TRIGGER decks_create_default_category AFTER INSERT ON decks FOR EACH ROW EXECUTE FUNCTION create_default_category();
 
 --> statement-breakpoint
 
@@ -50,7 +50,7 @@ BEGIN
     TG_OP = 'DELETE' OR
     (TG_OP = 'UPDATE' AND OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL) OR
     (TG_OP = 'UPDATE' AND NEW.is_default = false)
-  ) AND pg_trigger_depth() = 1 AND EXISTS (SELECT 1 FROM pocketbooks WHERE id = OLD.pocketbook_id) THEN
+  ) AND pg_trigger_depth() = 1 AND EXISTS (SELECT 1 FROM decks WHERE id = OLD.deck_id) THEN
     RAISE EXCEPTION 'default_category_protected' USING ERRCODE = 'P0001';
   END IF;
 
@@ -68,4 +68,4 @@ CREATE TRIGGER categories_protect_default BEFORE DELETE OR UPDATE OF deleted_at,
 
 --> statement-breakpoint
 
-CREATE UNIQUE INDEX categories_one_default_uq ON categories (pocketbook_id) WHERE is_default AND deleted_at IS NULL;
+CREATE UNIQUE INDEX categories_one_default_uq ON categories (deck_id) WHERE is_default AND deleted_at IS NULL;

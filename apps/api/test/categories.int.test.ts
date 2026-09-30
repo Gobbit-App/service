@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { setupApiTest, seedId } from './helpers';
+import { setupApiTest, fixtureId } from './helpers';
 import { categoryListSchema, categorySchema } from '@pb/shared';
 
 describe('categories routes', () => {
   const ctx = setupApiTest();
 
-  it('GET /pocketbooks/family/categories → 200 with 7 categories in order', async () => {
-    const res = await ctx.app.request('/pocketbooks/family/categories', {
+  it('GET /decks/family/categories → 200 with 7 categories in order', async () => {
+    const res = await ctx.app.request('/decks/family/categories', {
       headers: ctx.as(),
     });
     expect(res.status).toBe(200);
@@ -26,8 +26,8 @@ describe('categories routes', () => {
     ]);
   });
 
-  it('POST /pocketbooks/family/categories with {name:"Travel Plans"} → 201', async () => {
-    const res = await ctx.app.request('/pocketbooks/family/categories', {
+  it('POST /decks/family/categories with {name:"Travel Plans"} → 201', async () => {
+    const res = await ctx.app.request('/decks/family/categories', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({ name: 'Travel Plans' }),
@@ -42,8 +42,8 @@ describe('categories routes', () => {
     expect(parsed.isDefault).toBe(false);
   });
 
-  it('POST /pocketbooks/family/categories with same name → 409', async () => {
-    const res = await ctx.app.request('/pocketbooks/family/categories', {
+  it('POST /decks/family/categories with same name → 409', async () => {
+    const res = await ctx.app.request('/decks/family/categories', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({ name: 'Travel Plans' }),
@@ -51,8 +51,8 @@ describe('categories routes', () => {
     expect(res.status).toBe(409);
   });
 
-  it('POST /pocketbooks/family/categories with {name:"Kids", slug:"kids", visibility:"private", position:2} → 201', async () => {
-    const res = await ctx.app.request('/pocketbooks/family/categories', {
+  it('POST /decks/family/categories with {name:"Kids", slug:"kids", visibility:"private", position:2} → 201', async () => {
+    const res = await ctx.app.request('/decks/family/categories', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
@@ -73,8 +73,8 @@ describe('categories routes', () => {
     expect(parsed.isDefault).toBe(false);
   });
 
-  it('POST /pocketbooks/other-personal/categories as dev → 404', async () => {
-    const res = await ctx.app.request('/pocketbooks/other-personal/categories', {
+  it('POST /decks/other-personal/categories as dev → 404', async () => {
+    const res = await ctx.app.request('/decks/other-personal/categories', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({ name: 'Some Category' }),
@@ -83,12 +83,12 @@ describe('categories routes', () => {
   });
 
   it('DELETE default category via SQL → P0001 constraint', async () => {
-    const familyPocketbookId = seedId('pocketbook/family');
+    const familyDeckId = fixtureId('deck/family');
 
     let error: any;
     try {
-      await ctx.t.pool.query('DELETE FROM categories WHERE pocketbook_id=$1 AND is_default', [
-        familyPocketbookId,
+      await ctx.t.pool.query('DELETE FROM categories WHERE deck_id=$1 AND is_default', [
+        familyDeckId,
       ]);
     } catch (e) {
       error = e;

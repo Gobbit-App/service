@@ -6,7 +6,7 @@ DROP TRIGGER IF EXISTS categories_protect_default ON categories;
 
 --> statement-breakpoint
 
-DROP TRIGGER IF EXISTS pocketbooks_create_default_category ON pocketbooks;
+DROP TRIGGER IF EXISTS decks_create_default_category ON decks;
 
 --> statement-breakpoint
 
@@ -18,7 +18,7 @@ DROP TRIGGER IF EXISTS users_set_updated_at ON users;
 
 --> statement-breakpoint
 
-DROP TRIGGER IF EXISTS pocketbooks_set_updated_at ON pocketbooks;
+DROP TRIGGER IF EXISTS decks_set_updated_at ON decks;
 
 --> statement-breakpoint
 

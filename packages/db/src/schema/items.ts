@@ -3,15 +3,15 @@ import { sql } from 'drizzle-orm';
 import { CARD_BODY_MAX, PAYLOAD_DB_BACKSTOP_BYTES } from '@pb/shared';
 import { itemStatusEnum, itemTypeEnum, sourceKindEnum, timestamps, tstz } from './common';
 import { users } from './users';
-import { pocketbooks } from './pocketbooks';
+import { decks } from './decks';
 
 export const items = pgTable(
   'items',
   {
     id: uuid().primaryKey().defaultRandom(),
-    pocketbookId: uuid()
+    deckId: uuid()
       .notNull()
-      .references(() => pocketbooks.id, { onDelete: 'cascade' }),
+      .references(() => decks.id, { onDelete: 'cascade' }),
     type: itemTypeEnum().notNull(),
     status: itemStatusEnum().notNull().default('published'),
     title: varchar({ length: 120 }).notNull(),
@@ -24,8 +24,8 @@ export const items = pgTable(
     ...timestamps,
   },
   (t) => [
-    unique('items_id_pocketbook_uq').on(t.id, t.pocketbookId),
-    index('items_list_idx').on(t.pocketbookId, t.status, t.createdAt.desc(), t.id.desc()),
+    unique('items_id_deck_uq').on(t.id, t.deckId),
+    index('items_list_idx').on(t.deckId, t.status, t.createdAt.desc(), t.id.desc()),
     check('items_body_len_chk', sql`char_length(${t.body}) <= ${sql.raw(String(CARD_BODY_MAX))}`), // card-limits
     check(
       'items_payload_size_chk',

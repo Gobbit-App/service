@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 import { resolveE2eEnv } from './lib/env';
 
-const { baseURL, token, user } = resolveE2eEnv();
+const { baseURL, token } = resolveE2eEnv();
 
 export default defineConfig({
   testDir: './tests',
@@ -11,10 +11,8 @@ export default defineConfig({
       name: 'api-smoke',
       use: {
         baseURL,
-        extraHTTPHeaders: {
-          Authorization: `Bearer ${token}`,
-          'X-Dev-User': user,
-        },
+        // D43: the owner's seeded smoke session; `anon` fixture requests carry no credentials.
+        extraHTTPHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       },
     },
   ],

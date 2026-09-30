@@ -1,7 +1,7 @@
-import type { Category, Item, Pocketbook } from '@pb/shared';
-import type { CategoryRow, ItemRow, PocketbookRow } from '@pb/db';
+import type { Category, Item, Deck, MemberRole } from '@pb/shared';
+import type { CategoryRow, ItemRow, DeckRow } from '@pb/db';
 
-export function toPocketbookDto(r: PocketbookRow): Pocketbook {
+export function toDeckDto(r: DeckRow, role: MemberRole): Deck {
   return {
     id: r.id,
     kind: r.kind,
@@ -9,6 +9,7 @@ export function toPocketbookDto(r: PocketbookRow): Pocketbook {
     name: r.name,
     isPublic: r.isPublic,
     ownerAccountId: r.ownerAccountId,
+    role,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };
@@ -17,7 +18,7 @@ export function toPocketbookDto(r: PocketbookRow): Pocketbook {
 export function toCategoryDto(r: CategoryRow): Category {
   return {
     id: r.id,
-    pocketbookId: r.pocketbookId,
+    deckId: r.deckId,
     slug: r.slug,
     name: r.name,
     visibility: r.visibility,
@@ -31,7 +32,7 @@ export function toCategoryDto(r: CategoryRow): Category {
 export function toItemDto(r: ItemRow, categoryIds: string[], isFavorite: boolean): Item {
   return {
     id: r.id,
-    pocketbookId: r.pocketbookId,
+    deckId: r.deckId,
     type: r.type,
     status: r.status,
     title: r.title,

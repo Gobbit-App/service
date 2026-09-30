@@ -21,13 +21,22 @@ describe('OpenAPI', () => {
     const paths = doc.paths as Record<string, Record<string, unknown>>;
     const expectedPaths: Record<string, string[]> = {
       '/health': ['get'],
-      '/pocketbooks': ['get', 'post'],
-      '/pocketbooks/{id}': ['get', 'patch'],
-      '/pocketbooks/{id}/categories': ['get', 'post'],
-      '/pocketbooks/{id}/items': ['get', 'post'],
+      '/decks': ['get', 'post'],
+      '/decks/{id}': ['get', 'patch', 'delete'],
+      '/decks/{id}/categories': ['get', 'post'],
+      '/decks/{id}/items': ['get', 'post'],
+      '/decks/{id}/members': ['get'],
+      '/decks/{id}/members/{userId}': ['delete'],
+      '/decks/{id}/invites': ['post'],
       '/items/{id}': ['get', 'patch', 'delete'],
       '/items/{id}/archive': ['post'],
       '/items/{id}/favorite': ['post', 'delete'],
+      '/auth/magic-link': ['post'],
+      '/auth/callback': ['get'],
+      '/auth/logout': ['post'],
+      '/auth/logout-all': ['post'],
+      '/auth/token-exchange': ['post'],
+      '/me': ['get'],
     };
 
     for (const [path, methods] of Object.entries(expectedPaths)) {
@@ -40,14 +49,20 @@ describe('OpenAPI', () => {
     // Check security schemes
     const securitySchemes = (doc.components as Record<string, Record<string, any>>).securitySchemes;
 
-    expect(securitySchemes.DevToken).toBeDefined();
-    expect(securitySchemes.DevToken.type).toBe('http');
-    expect(securitySchemes.DevToken.scheme).toBe('bearer');
+    expect(securitySchemes.SessionCookie).toEqual({
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'gobbit_session',
+    });
+    expect(securitySchemes.BearerToken).toEqual({ type: 'http', scheme: 'bearer' });
+    expect(Object.keys(securitySchemes).sort()).toEqual(['BearerToken', 'SessionCookie']);
 
-    expect(securitySchemes.DevUser).toBeDefined();
-    expect(securitySchemes.DevUser.type).toBe('apiKey');
-    expect(securitySchemes.DevUser.in).toBe('header');
-    expect(securitySchemes.DevUser.name).toBe('X-Dev-User');
+    // Authenticated routes accept either scheme; public auth routes declare none
+    const decksGet = paths['/decks'].get as { security?: unknown };
+    expect(decksGet.security).toEqual([{ SessionCookie: [] }, { BearerToken: [] }]);
+    const magicLink = paths['/auth/magic-link'].post as { security?: unknown };
+    expect(magicLink.security).toBeUndefined();
+    expect((doc.info as { title: string }).title).toBe('Gobbit API');
 
     // Check for expected strings in stringified doc
     const docString = JSON.stringify(doc);
