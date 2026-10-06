@@ -1,12 +1,13 @@
-# Gobbit — Phase 2
+# Gobbit — Phase 3
 
-A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 adds magic-link sessions, memberships/roles and category visibility.
+A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 adds the Reader PWA (offline reading, favorites, share previews).
 
 ## Repo Layout
 
 ```
 apps/api/        — Hono REST API (TypeScript strict)
-apps/web/        — Placeholder (Phase 3)
+apps/web/        — Reader PWA (React, Vite, TanStack Router/Query) + Caddy image
+packages/api-client/ — Generated OpenAPI types + typed client (@pb/api-client)
 packages/shared/ — Zod schemas, limits, utils (@pb/shared)
 packages/db/     — Drizzle ORM, migrations, seed (@pb/db)
 e2e/             — Playwright smoke tests
@@ -31,6 +32,7 @@ docs/            — architecture.md (keep synced)
 - **Env**: `pnpm dev` and `pnpm db:*` load the repo-root `.env` if present (`tsx --env-file-if-exists`); real env vars win
 - **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; E2E `@smoke` → each test creates and deletes its own `smoke-<id>` deck (D50)
 - **Git hooks**: `.githooks/` via `prepare` — pre-commit = Prettier + ESLint on staged files (check only), pre-push = typecheck + unit
+- **Web**: plain CSS, no UI kit; API data offline via persisted query cache, never the service worker; same origin everywhere (no CORS)
 - **Docs**: Keep `docs/architecture.md` and `README.md` synced with code
 
 ## Key Commands
@@ -39,7 +41,9 @@ docs/            — architecture.md (keep synced)
 pnpm test:{unit,int,e2e}           # Test suites
 pnpm typecheck / lint / format     # Code quality
 pnpm db:{generate,migrate,rollback,seed}  # Database
-pnpm dev                           # API dev mode (watch)
+pnpm dev                           # API :3000 + web :5173 (Vite proxies /api, /s)
+pnpm api:openapi                   # Regenerate api-client after route changes (CI checks drift)
+pnpm build:web / budget / og:static # Web build, 150 KB gzip budget, static OG/icons
 pnpm compose:{up,down}             # Docker (Postgres + API)
 ```
 

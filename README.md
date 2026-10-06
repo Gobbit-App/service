@@ -37,7 +37,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    ```bash
    pnpm dev
    ```
-   API listens on `http://localhost:3000`.
+   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). `pnpm dev:api` / `pnpm dev:web` run one side only.
 
 6. **Verify health:**
    ```bash
@@ -53,8 +53,9 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `DATABASE_URL` | `postgres://pb:pb@localhost:5432/pb` | PostgreSQL connection string |
 | `PORT` | `3000` | API server port |
 | `NODE_ENV` | `development` | Environment (development, test, production) |
-| `API_URL` | `http://localhost:${PORT}` | Public API address used in magic links (**required in production**) |
-| `APP_URL` | — | Web app origin; sign-in/invite callbacks redirect here (falls back to `${API_URL}/me`) |
+| `API_URL` | `http://localhost:${PORT}` | Public API address used in magic links (**required in production**). Local `.env`: `http://localhost:5173/api` (through the Vite proxy) |
+| `APP_URL` | — | Web app origin; sign-in/invite callbacks redirect here (falls back to `${API_URL}/me`) and share links/private OG image use it. Local `.env`: `http://localhost:5173` |
+| `CLOUDINARY_URL` | — | The "API environment variable" URL from the Cloudinary console; **required in production**. Uploads generated share images; only the cloud name reaches clients (`GET /config`) |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
 | `CORS_ORIGINS` | — | Comma-separated origins allowed for credentialed CORS and CSRF |
@@ -70,14 +71,22 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `SMOKE_SESSION_TOKEN` | — | Local: optional ≥32-char owner bearer the seed creates (`openssl rand -base64 32`). Smoke suite: the bearer it authenticates with |
 | `EXPECTED_SHA` | — | Smoke suite only: wait until `/health` reports this commit (CI sets it) |
 | `BASE_URL` | `http://localhost:3000` | API base URL for e2e tests |
+| `WEB_BASE_URL` | `BASE_URL` without `/api`, else `http://localhost:5173` | Web origin for the `web-smoke` e2e project |
 | `DB_PORT` | `5432` | Mapped database port in Compose |
 | `API_PORT` | `3000` | Mapped API port in Compose |
+| `WEB_PORT` | `8080` | Mapped web port in Compose (local overlay) |
+| `API_IMAGE_TAG` / `WEB_IMAGE_TAG` | `latest` | Deployed image tags (base Compose file) |
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `pnpm dev` | Start API dev server (tsx watch) |
+| `pnpm dev` | API (tsx watch, :3000) and web (Vite, :5173) together |
+| `pnpm dev:api` / `pnpm dev:web` | One of the two |
+| `pnpm build:web` | Build the Reader PWA to `apps/web/dist` |
+| `pnpm budget` | Check initial JS ≤ 150 KB gzip (after `build:web`) |
+| `pnpm api:openapi` | Regenerate `packages/api-client` (OpenAPI document + types) after changing API routes |
+| `pnpm og:static` | Re-render the private share image, PWA icons and favicon into `apps/web/public` (commit the result) |
 | `pnpm lint` | Run ESLint |
 | `pnpm format` | Format with Prettier |
 | `pnpm format:check` | Check formatting |
@@ -96,21 +105,21 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 
 ## Running the Full Stack
 
-To run the entire stack (database + API) with Docker Compose:
+To run the entire stack (database + API + web image) with Docker Compose:
 
 ```bash
 pnpm compose:up
 ```
 
-`compose:up` layers `infra/docker-compose.local.yml` over the base file: it publishes the DB and API on `127.0.0.1` and relaxes the production defaults for plain HTTP (`COOKIE_SECURE=false`, console mailer allowed — sign-in links appear in `docker compose -f infra/docker-compose.yml logs api`). The base `infra/docker-compose.yml` is what the deployed host runs: no host ports, `COOKIE_SECURE=true` and no console mail by default, `POSTGRES_PASSWORD` from the environment. The API container runs migrations on startup. Seed the owner user from the host (uses `.env`, `SEED_OWNER_EMAIL` required):
+`compose:up` layers `infra/docker-compose.local.yml` over the base file: it builds both images from source, publishes the DB, the API and the web image on `127.0.0.1` (web on **http://localhost:8080**, with `API_URL=http://localhost:8080/api`), runs the API with `NODE_ENV=development` (so `CLOUDINARY_URL` is optional) and relaxes the production defaults for plain HTTP (`COOKIE_SECURE=false`, console mailer allowed — sign-in links appear in `docker compose -f infra/docker-compose.yml logs api`). The base `infra/docker-compose.yml` is what the deployed host runs: no host ports, `COOKIE_SECURE=true` and no console mail by default, `POSTGRES_PASSWORD` from the environment. The API container runs migrations on startup. Seed the owner user from the host (uses `.env`, `SEED_OWNER_EMAIL` required):
 
 ```bash
 pnpm db:seed
 ```
 
-The API service also carries Traefik labels (router `gobbit-api`, ``Host(`${PUBLIC_HOST}`) && PathPrefix(`/api`)``, `/api` stripped) for the deployed setup. On Dokploy the service must also be reachable by Traefik (Dokploy's `dokploy-network` or its isolated-deployment option) — see the deployment notes in `PLAN.md` Phase 0.
+The `web` service carries the Traefik labels for the deployed setup (router `gobbit`, ``Host(`${PUBLIC_HOST}`)`` → `web:80`) and joins `dokploy-network`; its Caddy routes `/api/*` (stripped) and `/s/*` to the API. The API is internal only.
 
-API is available at `http://localhost:3000`.
+The app is at `http://localhost:8080`; the API is also published directly at `http://localhost:3000`.
 
 ## Smoke Tests
 
@@ -138,38 +147,44 @@ Set environment variables and run:
 BASE_URL=https://gobbit.niranhome.win/api SMOKE_SESSION_TOKEN=<token> pnpm test:e2e
 ```
 
-Tests poll `/health` on startup to verify migrations are complete.
+Tests poll `/health` on startup to verify migrations are complete (and `/version.json` on the web origin when `EXPECTED_SHA` is set).
+
+### Browser smoke (web-smoke)
+
+`web.spec.ts` and `share.spec.ts` run in Chromium (Pixel 7 viewport) against `WEB_BASE_URL` — by default `BASE_URL` without its `/api` suffix, or `http://localhost:5173` locally. Install the browser once:
+
+```bash
+pnpm --filter e2e exec playwright install chromium
+```
 
 ## Deployment
 
 ### How a push reaches the box
 
 ```
-push to main → CI (tests) → image job: build with GIT_SHA, push ghcr.io/gobbit-app/service/api:{latest,<sha>}
-             → POST $DOKPLOY_DEPLOY_WEBHOOK → Dokploy pulls the image, restarts the Compose project
-             → smoke.yml waits until https://gobbit.niranhome.win/api/health reports commit = <sha>, then runs
+push to main → CI (tests, client drift, web build + budget)
+             → image job (matrix api, web): build with GIT_SHA, push ghcr.io/gobbit-app/service/{api,web}:{latest,<sha>}
+             → deploy job: POST $DOKPLOY_DEPLOY_WEBHOOK → Dokploy pulls both images, restarts the Compose project
+             → smoke.yml waits until /api/health and /version.json report commit = <sha>, then runs the API and web-smoke projects
 ```
 
-- **Image:** `ghcr.io/gobbit-app/service/api`, tagged `latest` and the full commit SHA. The base Compose file runs `${API_IMAGE_TAG:-latest}` with `pull_policy: always`. If the GHCR package is private, give Dokploy registry credentials for `ghcr.io`.
-- **Base image:** `node:22-slim`
+- **Images:** `ghcr.io/gobbit-app/service/api` and `ghcr.io/gobbit-app/service/web`, tagged `latest` and the full commit SHA. The base Compose file runs `${API_IMAGE_TAG:-latest}` / `${WEB_IMAGE_TAG:-latest}` with `pull_policy: always`. If the GHCR packages are private, give Dokploy registry credentials for `ghcr.io`.
+- **Base images:** API `node:22-slim`; web built on `node:22-slim`, served by `caddy:2-alpine` (`apps/web/Caddyfile`: routing, cache headers, CSP). The web image serves `/version.json` with its commit.
 - **Health check:** `GET /health` → `{ ok, db_ms, migration, commit }`; `commit` is the `GIT_SHA` build arg.
 - **Migrations:** Automatic on container startup via `docker-entrypoint.sh`
-- **Networking:** the API joins Dokploy's external `dokploy-network` (label `traefik.docker.network=dokploy-network`), where Traefik and the shared `cloudflared` Compose service run. The tunnel's public hostname `gobbit.niranhome.win` points at Traefik; Traefik routes `/api` here (D46).
+- **Networking:** only `web` joins Dokploy's external `dokploy-network` (label `traefik.docker.network=dokploy-network`), where Traefik and the shared `cloudflared` Compose service run. The tunnel's public hostname `gobbit.niranhome.win` points at Traefik; Traefik sends the whole host to `web:80`, and Caddy forwards `/api` and `/s` to `api:3000` on the project network (D51).
 - **No seed on the box:** the deployed database starts empty. Sign in by magic link as the owner (the first sign-in creates the user), then mint the smoke token (below).
 - **Backups:** see `infra/README.md`.
 
 ### Environment Variables (Production)
 
-Set these in your deployment platform:
+Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM`, `CLIENT_IP_HEADER=cf-connecting-ip`, `NODE_ENV=production`) is a default in `infra/docker-compose.yml` (D52). Dokploy holds only the secrets:
 
 - `POSTGRES_PASSWORD` – used by the Compose `db` service and the API's `DATABASE_URL` (Compose builds it from this)
-- `DATABASE_URL` – PostgreSQL connection string (only when not using the bundled Compose `db`)
-- `NODE_ENV=production`
-- `API_URL` – public API address (e.g. `https://gobbit.niranhome.win/api`)
-- `APP_URL`, `COOKIE_DOMAIN`, `CORS_ORIGINS` – as needed for the web app
-- `MAIL_PROVIDER=resend` with `RESEND_API_KEY` and `MAIL_FROM` (or `console` + `ALLOW_CONSOLE_MAIL=true`)
-- `CLIENT_IP_HEADER=cf-connecting-ip` behind Cloudflare
-- `PORT=3000` or as needed
+- `RESEND_API_KEY`
+- `CLOUDINARY_URL` – the API refuses to start in production without it
+
+Optional overrides: `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`.
 
 ### GitHub Actions
 
@@ -179,12 +194,13 @@ Set these in your deployment platform:
 - name: Run e2e smoke tests
   env:
     BASE_URL: ${{ vars.API_BASE_URL }}
+    WEB_BASE_URL: ${{ vars.WEB_BASE_URL }}
     SMOKE_SESSION_TOKEN: ${{ secrets.SMOKE_SESSION_TOKEN }}
   run: pnpm test:e2e --grep @smoke
 ```
 
 Required secrets: `SMOKE_SESSION_TOKEN` (an owner bearer on the deployed instance — see "Smoke token" below). Optional: `DOKPLOY_DEPLOY_WEBHOOK` (the Compose service's deploy webhook URL; without it the image is pushed but Dokploy is not told).  
-Required variables: `API_BASE_URL` (`https://gobbit.niranhome.win/api`). Optional: `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
+Required variables: `API_BASE_URL` (`https://gobbit.niranhome.win/api`). Optional: `WEB_BASE_URL` (defaults to `API_BASE_URL` without `/api`), `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
 
 The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, a blank `BASE_URL` falls back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` or `SMOKE_SESSION_TOKEN` is missing.
 
@@ -279,8 +295,9 @@ Either kind dies with `POST /auth/logout-all` (and with `POST /auth/logout` sent
 community-pocketbook/
 ├── apps/
 │   ├── api/          # Hono HTTP server, services, routes
-│   └── web/          # Frontend (Phase 3)
+│   └── web/          # Reader PWA (React + Vite) and its Caddy image
 ├── packages/
+│   ├── api-client/   # Generated OpenAPI types + typed fetch/query client
 │   ├── shared/       # Zod schemas, types, utilities
 │   └── db/           # Drizzle ORM, migrations, seeding
 ├── e2e/              # Playwright smoke tests

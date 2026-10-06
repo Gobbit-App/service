@@ -51,13 +51,15 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
   - Oct 1: all six implemented on branch `worktree-p2-implementation` (not merged, not deployed). Unit suite green (485 tests, Linux run); integration and e2e not re-run in the Oct 1 review. Boxes stay unchecked until the demos run over HTTPS.
 ## Phase 3 — Reader PWA
 
+Oct 6: P3.0–P3.7 implemented on branch `worktree-p3-implementation` (builds on the unmerged Phase 2 branch). Unit, integration, typecheck, lint, web build and bundle budget (110 KB of 150 KB) green locally; `web-smoke` lists but has not run against a deployment. Boxes stay unchecked until the demos run on the deployed URL. Demos are on Android (Chrome); iOS install and iMessage previews are out of scope for Phase 3.
+
 - [ ] **1. App shell** — the deployed `https://gobbit.niranhome.win` loads the Family deck on a phone in under 2 s on 4G (Lighthouse mobile performance ≥ 90).
 - [ ] **2. Sign-in flow** — cold start on a phone, sign in, land on Family.
 - [ ] **3. Card renderers** — the Family deck's cards, including at least one of each type and a calc card, render without overflow on a 360 px wide viewport; the calc card computes. (Was "the 25 seed cards"; there is no seeded data since D49.)
 - [ ] **4. Category navigation** — switch School → Food → back to School and land on the same card.
-- [ ] **5. PWA install and offline** — add to home screen on Android and iOS; enable airplane mode; open the app; the last-viewed category and its cards still show.
+- [ ] **5. PWA install and offline** — add to home screen on Android; enable airplane mode; open the app; the last-viewed category and its cards still show.
 - [ ] **6. Favorites and archive views** — favorite a card on one phone; it appears in favorites on the other after refresh.
-- [ ] **7. Share previews** — share a private card and a public card to WhatsApp, Telegram, iMessage and Slack; the private one shows the branded invite card, the public one shows real content; edit the public card and re-share, the preview reflects the edit.
+- [ ] **7. Share previews** — share a private card and a public card from `https://gobbit.niranhome.win` to WhatsApp, Telegram and Slack; the private one shows the branded invite card, the public one shows real content; edit the public card and re-share, the preview reflects the edit.
 - [ ] **8. Error and empty states** — stop the API container; the app shows cached content with the offline banner and recovers when the container returns.
 ## Phase 4 — Search
 

@@ -2,8 +2,8 @@
 
 | File | Used by | What it is |
 | --- | --- | --- |
-| `docker-compose.yml` | Dokploy (deployed) | `db` (pgvector/pg17) + `api` (GHCR image), no host ports, production defaults, Traefik labels, `dokploy-network` |
-| `docker-compose.local.yml` | `pnpm compose:{up,down}` | Builds the API from source, publishes ports on `127.0.0.1`, plain-HTTP defaults |
+| `docker-compose.yml` | Dokploy (deployed) | `db` (pgvector/pg17) + `api` + `web` (GHCR images), no host ports, all non-secret deployed values as defaults; only `web` has Traefik labels and joins `dokploy-network` |
+| `docker-compose.local.yml` | `pnpm compose:{up,down}` | Builds both images from source, publishes ports on `127.0.0.1` (web on 8080), plain-HTTP defaults, API in `development` mode |
 | `db-init/` | `db` first start | Creates the `vector` and `pg_trgm` extensions |
 
 ## Deployed layout
@@ -12,13 +12,13 @@
 phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared (Dokploy compose service)
                                          │  dokploy-network
                                          ▼
-                                      Traefik ── Host(gobbit.niranhome.win) && PathPrefix(/api), strip /api ──▶ api:3000
-                                                                                                                │ default network
-                                                                                                                ▼
-                                                                                                             db:5432
+                                      Traefik ── Host(gobbit.niranhome.win) ──▶ web:80 (Caddy, apps/web/Caddyfile)
+                                                                                  │ default network
+                                                     /api/* (strip) and /s/* ─────┤──▶ api:3000 ──▶ db:5432
+                                                     everything else ─────────────┘    static files, SPA fallback
 ```
 
-Dokploy environment for this Compose project: `POSTGRES_PASSWORD`, `API_URL=https://gobbit.niranhome.win/api`, `CORS_ORIGINS=https://gobbit.niranhome.win`, `CLIENT_IP_HEADER=cf-connecting-ip`, `MAIL_PROVIDER=resend`, `RESEND_API_KEY`, `MAIL_FROM=Gobbit <hello@gobbit.niranhome.win>`; optionally `API_IMAGE_TAG` (default `latest`), `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`. `COOKIE_SECURE` defaults to `true` and must stay that way.
+Dokploy environment for this Compose project — secrets only (D52): `POSTGRES_PASSWORD`, `RESEND_API_KEY`, `CLOUDINARY_URL`. Everything else (`API_URL`, `APP_URL`, `MAIL_PROVIDER`, `MAIL_FROM`, `CLIENT_IP_HEADER`, …) is a default in `docker-compose.yml`. Optional overrides: `API_IMAGE_TAG` / `WEB_IMAGE_TAG` (default `latest`), `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`. There is no Dokploy "Domains" entry; the router comes from the `web` labels. `COOKIE_SECURE` defaults to `true` and must stay that way.
 
 ## Backups (Phase 0 step 7)
 
