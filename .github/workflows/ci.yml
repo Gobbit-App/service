@@ -34,6 +34,21 @@ jobs:
 
       - run: pnpm --filter @pb/db exec drizzle-kit check
 
+      # D53: the committed OpenAPI document and generated client types match the API routes.
+      - name: No API client drift
+        run: |
+          pnpm api:openapi
+          test -z "$(git status --porcelain packages/api-client)" || {
+            git status --porcelain packages/api-client
+            echo 'API routes changed without regenerating the client (run pnpm api:openapi).'
+            exit 1
+          }
+
+      # D57: the web build succeeds and its initial JS stays within the gzip budget.
+      - run: pnpm build:web
+
+      - run: pnpm budget
+
       # Schema ↔ migration drift: the Drizzle schema must not produce a new migration.
       - name: No ungenerated schema changes
         run: |
@@ -51,6 +66,10 @@ jobs:
     permissions:
       packages: write
       contents: read
+    # D51: both images are built from the same commit; smoke checks both report it.
+    strategy:
+      matrix:
+        service: [api, web]
     steps:
       - uses: actions/checkout@v7
 
@@ -64,7 +83,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}/api
+          images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
           tags: |
             type=raw,value=latest
             type=sha,format=long,prefix=
@@ -72,14 +91,18 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: .
-          file: apps/api/Dockerfile
+          file: apps/${{ matrix.service }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GIT_SHA=${{ github.sha }}
 
-      # Tell Dokploy to pull the new image and restart the Compose project. Skipped until the
+  deploy:
+    needs: image
+    runs-on: ubuntu-latest
+    steps:
+      # Tell Dokploy to pull the new images and restart the Compose project. Skipped until the
       # DOKPLOY_DEPLOY_WEBHOOK secret (the compose service's deploy webhook URL) is set.
       - name: Redeploy on Dokploy
         env:

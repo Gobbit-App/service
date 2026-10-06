@@ -1,4 +1,5 @@
-# Local overlay for `pnpm compose:up`: publishes the DB and API on localhost and relaxes the
+# Local overlay for `pnpm compose:up`: builds both images from source, serves the app on
+# http://localhost:8080 (the web image proxies /api and /s to the API, D64) and relaxes the
 # production defaults of docker-compose.yml for plain HTTP (no Secure cookie, console mailer
 # printing sign-in links to `docker compose logs api`). Not used on the deployed host.
 services:
@@ -15,5 +16,21 @@ services:
     ports:
       - 127.0.0.1:${API_PORT:-3000}:3000
     environment:
+      # Development lets the API boot without CLOUDINARY_URL (image cards and OG uploads off).
+      NODE_ENV: ${NODE_ENV:-development}
+      API_URL: ${API_URL:-http://localhost:8080/api}
+      APP_URL: ${APP_URL:-http://localhost:8080}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-console}
       ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-true}
+      MAIL_FROM: ${MAIL_FROM:-}
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    image: gobbit-web:local
+    pull_policy: build
+    ports:
+      - 127.0.0.1:${WEB_PORT:-8080}:80

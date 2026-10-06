@@ -27,37 +27,47 @@ services:
       DATABASE_URL: postgres://pb:${POSTGRES_PASSWORD:-pb}@db:5432/pb
       PORT: 3000
       NODE_ENV: production
-      # Public address used to build magic-link URLs (D46: https://gobbit.niranhome.win/api).
-      API_URL: ${API_URL:-http://localhost:3000}
-      APP_URL: ${APP_URL:-}
+      # D52: every non-secret deployed value is a default here; Dokploy holds only the secrets
+      # (POSTGRES_PASSWORD, RESEND_API_KEY, CLOUDINARY_URL). docker-compose.local.yml overrides
+      # these for localhost.
+      # Public addresses: magic links, share pages and the sign-in callback (D46, D51).
+      API_URL: ${API_URL:-https://gobbit.niranhome.win/api}
+      APP_URL: ${APP_URL:-https://gobbit.niranhome.win}
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
-      # Production-safe defaults (NODE_ENV=production): Secure cookie, no console mailer.
-      # docker-compose.local.yml relaxes both for plain-HTTP local runs.
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      # The web image proxies /api on the same origin, so CORS stays off (D64).
       CORS_ORIGINS: ${CORS_ORIGINS:-}
-      # Deployed hosts set MAIL_PROVIDER=resend; with console the API refuses to boot in
-      # production unless ALLOW_CONSOLE_MAIL=true (env.ts guard).
-      MAIL_PROVIDER: ${MAIL_PROVIDER:-console}
+      # With console the API refuses to boot in production unless ALLOW_CONSOLE_MAIL=true.
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-resend}
       ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-false}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      MAIL_FROM: ${MAIL_FROM:-}
-      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
+      MAIL_FROM: ${MAIL_FROM:-Gobbit <hello@gobbit.niranhome.win>}
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
+      # Image delivery and the OG image cache (D55, D60); required in production.
+      CLOUDINARY_URL: ${CLOUDINARY_URL:-}
     depends_on:
       db:
         condition: service_healthy
+    # Internal only: the web service is the one public entry point (D51).
+    restart: unless-stopped
+
+  web:
+    # D51: static PWA + Caddy, which routes /api (prefix stripped) and /s to api:3000.
+    image: ghcr.io/gobbit-app/service/web:${WEB_IMAGE_TAG:-latest}
+    pull_policy: always
+    depends_on:
+      - api
     # Traefik (and the cloudflared service that feeds it) live on Dokploy's shared network.
     networks:
       - default
       - dokploy-network
-    # D46: one public origin; Traefik sends /api/* here with the prefix stripped.
+    # D52: one router for the whole origin; path routing lives in the image's Caddyfile.
     labels:
       - traefik.enable=true
       - traefik.docker.network=dokploy-network
-      - traefik.http.routers.gobbit-api.rule=Host(`${PUBLIC_HOST:-gobbit.niranhome.win}`) && PathPrefix(`/api`)
-      - traefik.http.routers.gobbit-api.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
-      - traefik.http.routers.gobbit-api.middlewares=gobbit-api-strip
-      - traefik.http.middlewares.gobbit-api-strip.stripprefix.prefixes=/api
-      - traefik.http.services.gobbit-api.loadbalancer.server.port=3000
+      - traefik.http.routers.gobbit.rule=Host(`${PUBLIC_HOST:-gobbit.niranhome.win}`)
+      - traefik.http.routers.gobbit.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
+      - traefik.http.services.gobbit.loadbalancer.server.port=80
     restart: unless-stopped
 
 volumes:
