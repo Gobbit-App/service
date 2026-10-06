@@ -188,4 +188,13 @@ describe('itemListQuerySchema', () => {
       expect(result.data.type).toBe('table');
     }
   });
+
+  it("{favorite:'true'} ok; omitted stays undefined", () => {
+    expect(itemListQuerySchema.parse({ favorite: 'true' }).favorite).toBe('true');
+    expect(itemListQuerySchema.parse({}).favorite).toBeUndefined();
+  });
+
+  it.each(['false', '1', 'yes', ''])('{favorite:%j} rejected', (favorite) => {
+    expect(itemListQuerySchema.safeParse({ favorite }).success).toBe(false);
+  });
 });

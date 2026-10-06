@@ -10,6 +10,8 @@ export * from './schemas/category';
 export * from './schemas/deck';
 export * from './schemas/item';
 export * from './schemas/auth';
+export * from './schemas/config';
 export * from './schemas/membership';
 export * from './authz/permissions';
 export * from './authz/can';
+export * from './utils/text-script';

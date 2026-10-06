@@ -17,6 +17,7 @@ import type { UsersRepo } from '../repositories/users.repo';
 import type { Authenticated, CredentialSource, CurrentUser } from '../types';
 import { generateToken, hashesEqual, hashToken } from '../lib/tokens';
 import { rateKeys } from '../lib/rate-window';
+import { safeNextPath } from '../lib/next-path';
 import { cookieSessionRequired } from '../errors/http-errors';
 import { normalizeEmail, type UsersService } from './users.service';
 import type { RateLimitService } from './rate-limit.service';
@@ -146,7 +147,7 @@ export function createAuthService(deps: {
     },
 
     /** D22/D39: always succeeds for a well-formed address (no enumeration) unless rate limited. */
-    async requestMagicLink(input: { email: string; ip: string }): Promise<void> {
+    async requestMagicLink(input: { email: string; ip: string; next?: string }): Promise<void> {
       const email = normalizeEmail(input.email);
       await deps.rateLimits.enforce(
         rateKeys.magicLinkEmail(hashToken(email)),
@@ -161,6 +162,8 @@ export function createAuthService(deps: {
         purpose: 'sign_in',
         expiresAt: new Date(now().getTime() + env.MAGIC_LINK_TTL_MINUTES * MINUTE_MS),
         requestedIp: input.ip,
+        // An off-site or malformed next is dropped, never stored (the callback re-checks it).
+        next: safeNextPath(input.next),
       });
 
       const link = `${env.API_URL}/auth/callback?token=${encodeURIComponent(token)}`;

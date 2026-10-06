@@ -110,6 +110,7 @@ export function createItemsService(deps: {
         status: q.status,
         type: q.type,
         categoryId,
+        favoriteOf: q.favorite === 'true' ? user.id : undefined,
         cursor,
         limit: q.limit + 1,
       });

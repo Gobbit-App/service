@@ -8,7 +8,21 @@ import { sessionInvalid } from '../errors/http-errors';
  * Paths where a stale cookie is ignored instead of rejected, so a browser holding a dead
  * session can still sign in again (and health/doc probes never fail on cookies).
  */
-export const LENIENT_PATHS = ['/health', '/openapi.json', '/auth/magic-link', '/auth/callback'];
+export const LENIENT_PATHS = [
+  '/health',
+  '/openapi.json',
+  '/config',
+  '/auth/magic-link',
+  '/auth/callback',
+];
+
+/** Path prefixes that are public pages (share previews) and so are lenient as well. */
+export const LENIENT_PREFIXES = ['/s/'];
+
+/** True when a stale cookie must not block this path. */
+export function isLenientPath(path: string): boolean {
+  return LENIENT_PATHS.includes(path) || LENIENT_PREFIXES.some((p) => path.startsWith(p));
+}
 
 const BEARER_RE = /^Bearer\s+(.+)$/i;
 
@@ -44,7 +58,7 @@ export function sessionAuth(opts: SessionAuthOptions): MiddlewareHandler<AppEnv>
 
     const auth = await opts.authenticate({ cookie });
     if (!auth) {
-      if (LENIENT_PATHS.includes(c.req.path)) {
+      if (isLenientPath(c.req.path)) {
         return next();
       }
       throw sessionInvalid({ 'Set-Cookie': clearSessionCookie(opts.cookie) });

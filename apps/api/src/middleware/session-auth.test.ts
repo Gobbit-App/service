@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import type { Authenticated, AppEnv } from '../types';
 import { SESSION_COOKIE } from '../lib/cookies';
 import { errorHandler } from './error-handler';
-import { LENIENT_PATHS, sessionAuth, type SessionAuthOptions } from './session-auth';
+import { isLenientPath, LENIENT_PATHS, sessionAuth, type SessionAuthOptions } from './session-auth';
 
 const auth = {
   user: { id: 'u1', accountId: 'a1', email: 'a@b.c', displayName: 'A' },
@@ -78,5 +78,19 @@ describe('sessionAuth', () => {
     const res = await app.request(path, { headers: cookie('stale') });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ user: null });
+  });
+
+  it('ignores a stale cookie on share previews (/s/:itemId)', async () => {
+    app.get('/s/:id', (c) => c.json({ user: c.get('user')?.id ?? null }));
+    authenticate.mockResolvedValue(null);
+    const res = await app.request('/s/abc', { headers: cookie('stale') });
+    expect(res.status).toBe(200);
+  });
+
+  it('isLenientPath matches only exact paths and the /s/ prefix', () => {
+    expect(isLenientPath('/config')).toBe(true);
+    expect(isLenientPath('/s/x')).toBe(true);
+    expect(isLenientPath('/sx')).toBe(false);
+    expect(isLenientPath('/decks')).toBe(false);
   });
 });
