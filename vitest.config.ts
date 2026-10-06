@@ -12,10 +12,11 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['{apps,packages,e2e}/**/*.test.ts'],
-          exclude: ['**/*.int.test.ts', '**/node_modules/**'],
+          exclude: ['**/*.int.test.ts', '**/node_modules/**', 'apps/web/src/**'],
           environment: 'node',
         },
       },
+      'apps/web/vitest.config.ts',
       {
         test: {
           name: 'integration',
@@ -32,11 +33,18 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['packages/shared/src/**', 'apps/api/src/**'],
-      exclude: ['**/*.test.ts', 'apps/api/src/server.ts'],
+      include: ['packages/shared/src/**', 'apps/api/src/**', 'apps/web/src/**'],
+      exclude: [
+        '**/*.test.{ts,tsx}',
+        'apps/api/src/server.ts',
+        'apps/web/src/main.tsx',
+        'apps/web/src/routeTree.gen.ts',
+        'apps/web/src/test/**',
+      ],
       thresholds: {
         'packages/shared/src/**': { lines: 90 },
         'apps/api/src/**': { lines: 80 },
+        'apps/web/src/**': { lines: 70 },
       },
     },
   },
