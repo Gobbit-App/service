@@ -22,6 +22,8 @@ import { registerMembersRoutes } from './routes/members';
 import { registerCategoriesRoutes } from './routes/categories';
 import { registerItemsRoutes } from './routes/items';
 import { registerFavoritesRoutes } from './routes/favorites';
+import { registerShareRoutes } from './routes/share';
+import type { ShareWiring } from './share/wiring';
 
 export interface AppDeps {
   db: Db;
@@ -30,6 +32,8 @@ export interface AppDeps {
   mailer: Mailer;
   /** Injectable clock; integration tests advance it to expire sessions and links. */
   now?: () => Date;
+  /** OG image store/renderer overrides for tests (D60). */
+  share?: ShareWiring;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -67,6 +71,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerCategoriesRoutes(app, services);
   registerItemsRoutes(app, services);
   registerFavoritesRoutes(app, services);
+  registerShareRoutes(app, services);
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',
