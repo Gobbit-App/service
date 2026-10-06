@@ -20,7 +20,7 @@ interface HealthResponse {
 }
 
 export default async function globalSetup(): Promise<void> {
-  const { baseURL: baseUrl, expectedSha } = resolveE2eEnv();
+  const { baseURL: baseUrl, expectedSha, webBaseURL } = resolveE2eEnv();
 
   // Read the latest migration tag from journal
   const journalPath = fileURLToPath(
@@ -61,6 +61,7 @@ export default async function globalSetup(): Promise<void> {
         (!expectedSha || body.commit === expectedSha)
       ) {
         console.log('✓ API is ready');
+        if (expectedSha) await waitForWebCommit(webBaseURL, expectedSha, maxAttempts, delayMs);
         return;
       }
     } catch (err) {
@@ -77,5 +78,35 @@ export default async function globalSetup(): Promise<void> {
   // Timeout - throw with last response
   throw new Error(
     `API did not become ready within ${(maxAttempts * delayMs) / 1000} seconds. Last response: ${JSON.stringify(lastResponse)}`,
+  );
+}
+
+/** Both images ship from one CI run (D62); smoke waits until the web image reports it too. */
+async function waitForWebCommit(
+  webBaseUrl: string,
+  expectedSha: string,
+  maxAttempts: number,
+  delayMs: number,
+): Promise<void> {
+  let lastCommit: string | null = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(`${webBaseUrl}/version.json`, { cache: 'no-store' });
+      const body = (await response.json()) as { commit?: string };
+      lastCommit = body.commit ?? null;
+      console.log(`[${attempt}/${maxAttempts}] web commit=${lastCommit}, expected=${expectedSha}`);
+      if (lastCommit === expectedSha) {
+        console.log('✓ Web is ready');
+        return;
+      }
+    } catch (err) {
+      console.log(
+        `[${attempt}/${maxAttempts}] /version.json failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+    if (attempt < maxAttempts) await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  throw new Error(
+    `Web did not report commit ${expectedSha} within ${(maxAttempts * delayMs) / 1000} seconds (last: ${lastCommit})`,
   );
 }

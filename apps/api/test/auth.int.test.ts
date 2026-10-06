@@ -24,11 +24,11 @@ function authClient(ctx: ApiTestContext) {
     rotateIp: () => {
       ip = nextIp();
     },
-    requestLink: (email: string) =>
+    requestLink: (email: string, next?: string) =>
       ctx.app.request('/auth/magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-test-ip': ip },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, next }),
       }),
     callback: (token: string) =>
       ctx.app.request(`/auth/callback?token=${encodeURIComponent(token)}`, {
@@ -177,6 +177,21 @@ describe('magic links with APP_URL (D26 redirects)', () => {
 
   it('success redirects to the web app root', async () => {
     await client.requestLink('web@example.test');
+    const cb = await client.callback(tokenFromMail(ctx.mailer));
+    expect(cb.status).toBe(303);
+    expect(cb.headers.get('Location')).toBe(`${APP_URL}/`);
+  });
+
+  it('success returns to a safe next path (P3.0)', async () => {
+    await client.requestLink('web-next@example.test', '/d/family?all=true');
+    const cb = await client.callback(tokenFromMail(ctx.mailer));
+    expect(cb.status).toBe(303);
+    expect(cb.headers.get('Location')).toBe(`${APP_URL}/d/family?all=true`);
+  });
+
+  it('an off-site next is dropped and the user lands on the root', async () => {
+    client.rotateIp();
+    await client.requestLink('web-evil@example.test', '//evil.example/steal');
     const cb = await client.callback(tokenFromMail(ctx.mailer));
     expect(cb.status).toBe(303);
     expect(cb.headers.get('Location')).toBe(`${APP_URL}/`);
