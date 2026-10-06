@@ -7,6 +7,9 @@ const API_TARGET = process.env.API_PROXY_TARGET ?? 'http://localhost:3000';
 const THIRTY_DAYS = 60 * 60 * 24 * 30;
 
 export default defineConfig({
+  define: {
+    __APP_COMMIT__: JSON.stringify(process.env.GIT_SHA ?? 'dev'),
+  },
   plugins: [
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     react(),
@@ -59,6 +62,8 @@ export default defineConfig({
   build: {
     manifest: true,
     target: 'es2022',
+    // The lazy calc chunk carries mathjs (~180 KB gzip, D57); the initial budget is checked by `pnpm budget`.
+    chunkSizeWarningLimit: 700,
   },
   server: {
     port: 5173,
