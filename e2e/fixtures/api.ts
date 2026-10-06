@@ -48,9 +48,9 @@ export const test = base.extend<{
       await ctx.dispose();
     }
   },
-  smokeDeck: async ({ request }, use) => {
+  smokeDeck: async ({ api }, use) => {
     const slug = `smoke-${randomUUID().slice(0, 8)}`;
-    const res = await request.post('decks', {
+    const res = await api.post('decks', {
       data: { name: `Smoke ${slug}`, slug, kind: 'shared' },
     });
     expect(res.status(), `create ${slug}`).toBe(201);
@@ -58,8 +58,8 @@ export const test = base.extend<{
     try {
       await use({ id: deck.id, slug: deck.slug });
     } finally {
-      await removeMembers(request, deck.id);
-      const del = await request.delete(`decks/${deck.id}`);
+      await removeMembers(api, deck.id);
+      const del = await api.delete(`decks/${deck.id}`);
       if (del.status() !== 204 && del.status() !== 404) {
         console.warn(`smoke deck ${slug} cleanup returned ${del.status()}`);
       }

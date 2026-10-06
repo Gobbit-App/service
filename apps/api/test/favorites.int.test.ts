@@ -17,6 +17,25 @@ describe('favorites', () => {
       expect(favoritedItems).toHaveLength(1);
       expect(favoritedItems[0].id).toBe(fixtureId('family/food/souvlaki-place'));
     });
+
+    it('?favorite=true lists only the caller favorites (P3.0)', async () => {
+      const res = await ctx.app.request('/decks/family/items?favorite=true&limit=50', {
+        headers: ctx.as(),
+      });
+      expect(res.status).toBe(200);
+      const page = await res.json();
+      expect(page.data.map((item: any) => item.id)).toEqual([
+        fixtureId('family/food/souvlaki-place'),
+      ]);
+    });
+
+    it('?favorite=true is empty for a member with no favorites', async () => {
+      const res = await ctx.app.request('/decks/scratch/items?favorite=true', {
+        headers: ctx.as(),
+      });
+      expect(res.status).toBe(200);
+      expect((await res.json()).data).toEqual([]);
+    });
   });
 
   describe('POST /items/{id}/favorite', () => {
