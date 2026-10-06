@@ -14,7 +14,7 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "build": "pnpm -r --if-present build",
     "test": "vitest run",
-    "test:unit": "vitest run --project unit",
+    "test:unit": "vitest run --project unit --project web",
     "test:int": "vitest run --project integration",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "pnpm --filter e2e test",
@@ -25,7 +25,8 @@
     "dev": "pnpm --filter @pb/api dev",
     "compose:up": "(docker network inspect dokploy-network >/dev/null 2>&1 || docker network create dokploy-network >/dev/null) && docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml up -d --build",
     "compose:down": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml down",
-    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
+    "api:openapi": "pnpm --filter @pb/api openapi && pnpm --filter @pb/api-client generate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -34,6 +35,7 @@
     "@vitest/coverage-v8": "^5.0.2",
     "drizzle-orm": "^0.45.3",
     "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.12.0",
     "pg": "^8.23.0",
     "prettier": "^3.9.9",
