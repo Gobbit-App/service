@@ -43,6 +43,13 @@
       "when": 1790718691193,
       "tag": "0005_auth_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791292506080,
+      "tag": "0006_og_images",
+      "breakpoints": true
     }
   ]
 }
