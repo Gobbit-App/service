@@ -202,6 +202,19 @@ describe('createAuthService', () => {
       expect(hashToken(token)).toBe(created.tokenHash);
     });
 
+    it('stores a safe next path with the link', async () => {
+      await service.requestMagicLink({ email: 'a@b.co', ip: 'ip', next: '/d/family' });
+      expect(magicLinks.create.mock.calls[0][0].next).toBe('/d/family');
+    });
+
+    it.each(['//evil.com', 'https://evil.com', '/\\evil', '/'])(
+      'drops an unsafe next %j',
+      async (next) => {
+        await service.requestMagicLink({ email: 'a@b.co', ip: 'ip', next });
+        expect(magicLinks.create.mock.calls[0][0].next).toBeUndefined();
+      },
+    );
+
     it('stops at the email limit without touching the IP limit or sending', async () => {
       rateLimits.enforce.mockRejectedValueOnce(new HttpError(429, 't', 'x'));
       await expect(service.requestMagicLink({ email: 'a@b.co', ip: 'ip' })).rejects.toThrow();

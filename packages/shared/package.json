@@ -5,7 +5,11 @@
   "private": true,
   "license": "MPL-2.0",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./enums": "./src/enums.ts",
+    "./authz": "./src/authz/can.ts",
+    "./calc": "./src/calc/evaluate.ts",
+    "./text-script": "./src/utils/text-script.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

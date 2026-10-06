@@ -14,6 +14,7 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { problemFromZodError, problemResponse } from './errors/http-errors';
 import { SESSION_COOKIE } from './lib/cookies';
 import { registerHealthRoutes } from './routes/health';
+import { registerConfigRoutes } from './routes/config';
 import { registerAuthRoutes } from './routes/auth';
 import { registerMeRoutes } from './routes/me';
 import { registerDecksRoutes } from './routes/decks';
@@ -58,6 +59,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   );
 
   registerHealthRoutes(app, { pool: deps.pool, commit: env.GIT_SHA });
+  registerConfigRoutes(app, env);
   registerAuthRoutes(app, services, env);
   registerMeRoutes(app, services);
   registerDecksRoutes(app, services);
