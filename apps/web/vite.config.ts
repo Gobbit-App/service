@@ -17,7 +17,7 @@ export default defineConfig({
       strategies: 'generateSW',
       registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['favicon.svg', 'icons/*.png', 'og/*.png'],
+      includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
         name: 'Gobbit',
         short_name: 'Gobbit',

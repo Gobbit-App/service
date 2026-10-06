@@ -46,18 +46,32 @@ async function loadFonts(): Promise<Font[]> {
   );
 }
 
-/** Loads the fonts once and returns a renderer that reuses them (D60). */
-export async function createOgRenderer(): Promise<OgRenderer> {
+/** Renders an element tree to SVG or PNG at any size (OG images and the static app icons). */
+export type TreeRenderer = {
+  svg: (tree: OgNode, width: number, height: number) => Promise<string>;
+  png: (tree: OgNode, width: number, height: number) => Promise<Uint8Array>;
+};
+
+/** Loads the fonts once and returns a renderer that reuses them. */
+export async function createTreeRenderer(): Promise<TreeRenderer> {
   const fonts = await loadFonts();
 
-  return async (tree) => {
-    // Satori's element type is React's; the plain-object tree has the same runtime shape.
-    const svg = await satori(tree as unknown as Parameters<typeof satori>[0], {
-      width: OG_WIDTH,
-      height: OG_HEIGHT,
-      fonts,
-    });
-    const png = new Resvg(svg, { fitTo: { mode: 'width', value: OG_WIDTH } }).render().asPng();
-    return new Uint8Array(png);
+  // Satori's element type is React's; the plain-object tree has the same runtime shape.
+  const svg = (tree: OgNode, width: number, height: number): Promise<string> =>
+    satori(tree as unknown as Parameters<typeof satori>[0], { width, height, fonts });
+
+  return {
+    svg,
+    png: async (tree, width, height) => {
+      const markup = await svg(tree, width, height);
+      const png = new Resvg(markup, { fitTo: { mode: 'width', value: width } }).render().asPng();
+      return new Uint8Array(png);
+    },
   };
+}
+
+/** D60: the 1200×630 share-preview renderer. */
+export async function createOgRenderer(): Promise<OgRenderer> {
+  const renderer = await createTreeRenderer();
+  return (tree) => renderer.png(tree, OG_WIDTH, OG_HEIGHT);
 }
