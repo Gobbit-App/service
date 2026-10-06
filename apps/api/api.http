@@ -159,3 +159,103 @@ Authorization: Bearer {{token}}
 ### Delete the test deck (owner only; soft delete, slug becomes reusable — D50)
 DELETE {{baseUrl}}/decks/test-deck
 Authorization: Bearer {{token}}
+
+### ─── Family cards (D63): one request per card type; the Reader shows them at /d/family ───
+# Run top to bottom against the deployed API (@baseUrl = https://gobbit.niranhome.win/api).
+# Image cards need a publicId already uploaded through the Cloudinary console.
+
+### Create the Family deck
+POST {{baseUrl}}/decks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Family", "slug": "family", "kind": "shared", "isPublic": false }
+
+### Create the Food category
+# @name familyFood
+POST {{baseUrl}}/decks/family/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Food", "slug": "food", "visibility": "shared", "position": 0 }
+
+### Text card (markdown body, no raw HTML)
+POST {{baseUrl}}/decks/family/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "text",
+  "title": "Shopping day",
+  "body": "**Thursday** after school. Check the [list](https://example.com/list) first.",
+  "payload": {},
+  "categoryIds": ["{{familyFood.response.body.id}}"]
+}
+
+### Link card
+POST {{baseUrl}}/decks/family/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "link",
+  "title": "Favourite souvlaki place",
+  "body": "Order the pita gyros.",
+  "payload": { "url": "https://example.com/souvlaki" },
+  "categoryIds": ["{{familyFood.response.body.id}}"]
+}
+
+### Image card (publicId from the Cloudinary console)
+POST {{baseUrl}}/decks/family/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "image",
+  "title": "Pantry layout",
+  "payload": { "publicId": "<folder/your-uploaded-image>", "alt": "Pantry shelves" },
+  "categoryIds": ["{{familyFood.response.body.id}}"]
+}
+
+### Table card
+POST {{baseUrl}}/decks/family/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "table",
+  "title": "Weekly meal plan",
+  "payload": {
+    "columns": ["Day", "Lunch", "Dinner"],
+    "rows": [
+      ["Sunday", "Falafel", "Fish with rice"],
+      ["Monday", "Lentil soup", "Roast chicken"]
+    ]
+  },
+  "categoryIds": ["{{familyFood.response.body.id}}"]
+}
+
+### Calc card
+POST {{baseUrl}}/decks/family/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "calc",
+  "title": "Recipe scaling",
+  "payload": {
+    "fields": [
+      { "key": "servings", "label": "Servings", "default": 4 },
+      { "key": "grams", "label": "Grams per serving", "unit": "g", "default": 120 }
+    ],
+    "expression": "servings * grams",
+    "resultLabel": "Total grams"
+  },
+  "categoryIds": ["{{familyFood.response.body.id}}"]
+}
+
+### Public runtime config (D55)
+GET {{baseUrl}}/config
+
+### Share preview HTML (D58; 200 with the private page for anything not public)
+GET {{baseUrl}}/s/<itemId>
