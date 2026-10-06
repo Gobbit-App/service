@@ -116,6 +116,21 @@ describe('memberships and the permission matrix (P2.4, D33–D36)', () => {
       expect(res.status).toBe(400);
     });
 
+    it('a co-owner (owner membership) can update but not delete the deck', async () => {
+      const coOwner = await member('owner');
+      const patch = await send('PATCH', '/decks/family', coOwner.email, { name: 'Family' });
+      expect(patch.status).toBe(200);
+
+      const res = await send('DELETE', '/decks/family', coOwner.email);
+      expect(res.status).toBe(403);
+      expect(await json(res)).toMatchObject({
+        type: '/problems/forbidden',
+        permission: 'deck.delete',
+        role: 'owner',
+      });
+      expect((await get('/decks/family', ctx.world.owner.email)).status).toBe(200);
+    });
+
     it('removing a non-member is 404', async () => {
       const res = await send(
         'DELETE',

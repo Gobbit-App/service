@@ -107,6 +107,15 @@ describe('category visibility (P2.6, D38)', () => {
     expect(res.status).toBe(403);
   });
 
+  it('an editor cannot create a public category either (shared only)', async () => {
+    const res = await send('POST', '/decks/family/categories', editor.email, {
+      name: 'Open',
+      slug: 'open',
+      visibility: 'public',
+    });
+    expect(res.status).toBe(403);
+  });
+
   it('paginates the reader’s view consistently with the owner’s minus hidden cards', async () => {
     const ownerIds = await allItemIds(OWNER_EMAIL, 50);
     const readerIds = await allItemIds(reader.email, 3);

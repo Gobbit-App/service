@@ -1,0 +1,15 @@
+#!/bin/sh
+# Fast checks on the staged files only: Prettier and ESLint (no fixing, so partially staged
+# files are never rewritten). Fix with `pnpm format` / `pnpm lint --fix`, then stage again.
+# Skip once with `git commit --no-verify`.
+set -e
+
+files=$(git diff --cached --name-only --diff-filter=ACMR -z | tr '\0' '\n')
+[ -z "$files" ] && exit 0
+
+echo "$files" | tr '\n' '\0' | xargs -0 pnpm exec prettier --check --ignore-unknown --log-level warn
+
+lintable=$(echo "$files" | grep -E '\.(ts|tsx|js|mjs|cjs)$' || true)
+if [ -n "$lintable" ]; then
+  echo "$lintable" | tr '\n' '\0' | xargs -0 pnpm exec eslint --no-warn-ignored --max-warnings 0
+fi

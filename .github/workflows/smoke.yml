@@ -33,6 +33,8 @@ jobs:
         env:
           BASE_URL: ${{ vars.API_BASE_URL }}
           SMOKE_SESSION_TOKEN: ${{ secrets.SMOKE_SESSION_TOKEN }}
+          # Wait until the deployed /health reports the commit CI just built and shipped.
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
           CI: 'true'
 
       - if: always()

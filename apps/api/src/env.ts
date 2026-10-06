@@ -40,6 +40,8 @@ const baseSchema = z.object({
   INVITE_TTL_DAYS: positiveInt(INVITE_TTL_DAYS_DEFAULT),
   SESSION_TTL_DAYS: positiveInt(SESSION_TTL_DAYS_DEFAULT),
   CLIENT_IP_HEADER: z.string().optional(),
+  /** Commit the image was built from (Docker build arg); reported by /health so smoke can wait for a deploy. */
+  GIT_SHA: z.string().optional(),
 });
 
 export const envSchema = baseSchema

@@ -125,7 +125,10 @@ export function createMembershipsService(deps: {
       await memberships.softDelete(membership.id, now());
     },
 
-    /** D37: creates the user when needed; a pending member gets a new link (resend). */
+    /**
+     * D37: creates the user when needed. Resending to a pending member replaces the earlier
+     * invite: the new role applies and every older invite link stops working.
+     */
     async invite(
       user: CurrentUser,
       idOrSlug: string,
@@ -147,15 +150,23 @@ export function createMembershipsService(deps: {
         throw conflict('This user is already a member of the deck', '/problems/already-member');
       }
 
-      const membership =
-        existing ??
-        (await memberships.create({
+      let membership;
+      if (existing) {
+        await magicLinks.expireUnusedForMembership(existing.id, now());
+        membership = await memberships.reinvite(existing.id, {
+          role: input.role,
+          invitedBy: user.id,
+          now: now(),
+        });
+      } else {
+        membership = await memberships.create({
           deckId: deck.id,
           userId: invitee.id,
           role: input.role,
           invitedBy: user.id,
           now: now(),
-        }));
+        });
+      }
 
       await sendInvite(user, deck, membership, invitee);
       return { membership: toMembershipDto(membership, invitee), created: !existing };

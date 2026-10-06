@@ -5,7 +5,8 @@ services:
     image: pgvector/pgvector:pg17
     environment:
       POSTGRES_USER: pb
-      POSTGRES_PASSWORD: pb
+      # Set a real password on the deployed host; `pb` is the local default only.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pb}
       POSTGRES_DB: pb
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -13,41 +14,45 @@ services:
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U pb -d pb']
       interval: 5s
-    ports:
-      - 127.0.0.1:${DB_PORT:-5432}:5432
+    # No host ports here (P0.2: DB reachable only on the Docker network). Local port mappings
+    # live in docker-compose.local.yml, which `pnpm compose:up` layers on top of this file.
     restart: unless-stopped
 
   api:
-    build:
-      context: ..
-      dockerfile: apps/api/Dockerfile
+    # Deployed: Dokploy runs the image CI pushes to GHCR (tag = `latest` or a full commit SHA).
+    # docker-compose.local.yml builds it from source instead.
+    image: ghcr.io/gobbit-app/service/api:${API_IMAGE_TAG:-latest}
+    pull_policy: always
     environment:
-      DATABASE_URL: postgres://pb:pb@db:5432/pb
+      DATABASE_URL: postgres://pb:${POSTGRES_PASSWORD:-pb}@db:5432/pb
       PORT: 3000
       NODE_ENV: production
       # Public address used to build magic-link URLs (D46: https://gobbit.niranhome.win/api).
       API_URL: ${API_URL:-http://localhost:3000}
       APP_URL: ${APP_URL:-}
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # Production-safe defaults (NODE_ENV=production): Secure cookie, no console mailer.
+      # docker-compose.local.yml relaxes both for plain-HTTP local runs.
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
-      # Local default prints links to the container log; deployed hosts use resend.
+      # Deployed hosts set MAIL_PROVIDER=resend; with console the API refuses to boot in
+      # production unless ALLOW_CONSOLE_MAIL=true (env.ts guard).
       MAIL_PROVIDER: ${MAIL_PROVIDER:-console}
-      ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-true}
+      ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-false}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-}
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
-      SEED_OWNER_EMAIL: ${SEED_OWNER_EMAIL:-}
-      SEED_OWNER_NAME: ${SEED_OWNER_NAME:-}
-      SMOKE_SESSION_TOKEN: ${SMOKE_SESSION_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - 127.0.0.1:${API_PORT:-3000}:3000
+    # Traefik (and the cloudflared service that feeds it) live on Dokploy's shared network.
+    networks:
+      - default
+      - dokploy-network
     # D46: one public origin; Traefik sends /api/* here with the prefix stripped.
     labels:
       - traefik.enable=true
+      - traefik.docker.network=dokploy-network
       - traefik.http.routers.gobbit-api.rule=Host(`${PUBLIC_HOST:-gobbit.niranhome.win}`) && PathPrefix(`/api`)
       - traefik.http.routers.gobbit-api.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
       - traefik.http.routers.gobbit-api.middlewares=gobbit-api-strip
@@ -57,3 +62,8 @@ services:
 
 volumes:
   pgdata:
+
+networks:
+  # Created by Dokploy on the box; `pnpm compose:up` creates an empty one locally.
+  dokploy-network:
+    external: true

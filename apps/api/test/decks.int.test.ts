@@ -6,7 +6,7 @@ const ctx = setupApiTest();
 
 describe('decks', () => {
   describe('POST /decks', () => {
-    it('creates a deck with derived slug @smoke', async () => {
+    it('creates a deck with derived slug', async () => {
       const res = await ctx.app.request('/decks', {
         method: 'POST',
         headers: ctx.as(),
@@ -23,7 +23,7 @@ describe('decks', () => {
       expect(general.isDefault).toBe(true);
     });
 
-    it('rejects duplicate slug @smoke', async () => {
+    it('rejects duplicate slug', async () => {
       const res = await ctx.app.request('/decks', {
         method: 'POST',
         headers: ctx.as(),
@@ -34,7 +34,7 @@ describe('decks', () => {
       problemSchema.parse(body);
     });
 
-    it('rejects extra fields @smoke', async () => {
+    it('rejects extra fields', async () => {
       const res = await ctx.app.request('/decks', {
         method: 'POST',
         headers: ctx.as(),
@@ -47,7 +47,7 @@ describe('decks', () => {
       expect(Array.isArray(problem.errors)).toBe(true);
     });
 
-    it('handles names that cannot be slugified @smoke', async () => {
+    it('handles names that cannot be slugified', async () => {
       const res = await ctx.app.request('/decks', {
         method: 'POST',
         headers: ctx.as(),
@@ -69,7 +69,7 @@ describe('decks', () => {
   });
 
   describe('GET /decks', () => {
-    it('lists decks owned by user @smoke', async () => {
+    it('lists decks owned by user', async () => {
       const res = await ctx.app.request('/decks', {
         headers: ctx.as(),
       });
@@ -85,7 +85,7 @@ describe('decks', () => {
   });
 
   describe('GET /decks/{id}', () => {
-    it('gets deck by slug and by id return same data @smoke', async () => {
+    it('gets deck by slug and by id return same data', async () => {
       const familyId = fixtureId('deck/family');
 
       const bySlugRes = await ctx.app.request('/decks/family', {
@@ -106,7 +106,7 @@ describe('decks', () => {
       expect(bySlugPb).toEqual(byIdPb);
     });
 
-    it('returns 404 for nonexistent deck @smoke', async () => {
+    it('returns 404 for nonexistent deck', async () => {
       const res = await ctx.app.request('/decks/does-not-exist', {
         headers: ctx.as(),
       });
@@ -117,7 +117,7 @@ describe('decks', () => {
   });
 
   describe('PATCH /decks/{id}', () => {
-    it('updates deck @smoke', async () => {
+    it('updates deck', async () => {
       // First create one to update
       const createRes = await ctx.app.request('/decks', {
         method: 'POST',
@@ -148,7 +148,7 @@ describe('decks', () => {
       expect(pb.updatedAt).not.toBe(originalUpdatedAt);
     });
 
-    it('rejects empty patch @smoke', async () => {
+    it('rejects empty patch', async () => {
       const familyId = fixtureId('deck/family');
       const res = await ctx.app.request(`/decks/${familyId}`, {
         method: 'PATCH',

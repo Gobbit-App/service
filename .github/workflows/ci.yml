@@ -29,13 +29,20 @@ jobs:
 
       - run: pnpm typecheck
 
-      - run: pnpm test:unit
-
-      - run: pnpm test:int
-
+      # One run of both Vitest projects (unit + integration) with the coverage gates.
       - run: pnpm test:coverage
 
       - run: pnpm --filter @pb/db exec drizzle-kit check
+
+      # Schema ↔ migration drift: the Drizzle schema must not produce a new migration.
+      - name: No ungenerated schema changes
+        run: |
+          pnpm db:generate
+          test -z "$(git status --porcelain packages/db/migrations)" || {
+            git status --porcelain packages/db/migrations
+            echo 'Schema changed without a committed migration (run pnpm db:generate).'
+            exit 1
+          }
 
   image:
     needs: test
@@ -69,3 +76,17 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+
+      # Tell Dokploy to pull the new image and restart the Compose project. Skipped until the
+      # DOKPLOY_DEPLOY_WEBHOOK secret (the compose service's deploy webhook URL) is set.
+      - name: Redeploy on Dokploy
+        env:
+          DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
+        run: |
+          if [ -z "$DOKPLOY_DEPLOY_WEBHOOK" ]; then
+            echo 'DOKPLOY_DEPLOY_WEBHOOK not set; skipping redeploy.'
+            exit 0
+          fi
+          curl -fsS -X POST "$DOKPLOY_DEPLOY_WEBHOOK"

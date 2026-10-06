@@ -19,8 +19,10 @@ RUN corepack enable && corepack prepare pnpm@11.15.0 --activate && pnpm install 
 COPY packages/ packages/
 COPY apps/api/ apps/api/
 
-# Set environment
+# Set environment. GIT_SHA (passed by CI) is reported by /health so smoke waits for this build.
+ARG GIT_SHA=
 ENV NODE_ENV=production
+ENV GIT_SHA=${GIT_SHA}
 
 # Expose port
 EXPOSE 3000

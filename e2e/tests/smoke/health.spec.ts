@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { test, expect } from '../../fixtures/api';
+import { resolveE2eEnv } from '../../lib/env';
 
 const getLatestMigrationTag = (): string | null => {
   try {
@@ -21,11 +22,14 @@ const getLatestMigrationTag = (): string | null => {
 test('GET /health reports ok and the latest migration @smoke', async ({ api }) => {
   const latestTag = getLatestMigrationTag();
 
-  const response = await api.get('/health');
+  const response = await api.get('health');
   expect(response.status()).toBe(200);
 
   const body = await response.json();
   expect(body.ok).toBe(true);
   expect(typeof body.db_ms).toBe('number');
   expect(body.migration).toBe(latestTag);
+
+  const { expectedSha } = resolveE2eEnv();
+  if (expectedSha) expect(body.commit).toBe(expectedSha);
 });

@@ -15,11 +15,17 @@ Content-Type: application/json
 GET {{baseUrl}}/me
 Authorization: Bearer {{token}}
 
-### Exchange the cookie session for a bearer (D29; cookie-authenticated requests only)
+### Exchange the cookie session for a bearer (D30; cookie-authenticated requests only)
+# Send it with the browser's cookie, e.g. `Cookie: gobbit_session=<value>`; a bearer request gets 403.
 POST {{baseUrl}}/auth/token-exchange
 
 ### Sign out this session
+# Careful: with the seeded smoke token this revokes it — re-run `pnpm db:seed` to restore it.
 POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+
+### Sign out everywhere (revokes every session of the user, the smoke token included)
+POST {{baseUrl}}/auth/logout-all
 Authorization: Bearer {{token}}
 
 ### Health check
@@ -40,7 +46,9 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/decks/test-deck/categories
 Authorization: Bearer {{token}}
 
-### List test-deck items in the food category (page 1)
+### List test-deck items in a category (page 1)
+# The seed creates no decks or cards (D49): run "Create a new deck", "Create a category" and a few
+# "Create a text item" requests below first; swap `food` for the category slug you created.
 # @name foodPage1
 GET {{baseUrl}}/decks/test-deck/items?category=food&status=published&limit=10
 Authorization: Bearer {{token}}
@@ -118,7 +126,7 @@ DELETE {{baseUrl}}/items/{{created.response.body.id}}
 Authorization: Bearer {{token}}
 
 ### Negative test: body exceeds CARD_BODY_MAX (600 characters)
-# Expects 422 Unprocessable Content (body is 601 'a' characters)
+# Expects 400 problem+json with errors[0].path = body (body is 601 'a' characters)
 POST {{baseUrl}}/decks/test-deck/items
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -143,3 +151,11 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 { "email": "reader@example.test", "role": "reader" }
+
+### Remove a member (owner only; implicit owners and yourself → 400)
+DELETE {{baseUrl}}/decks/test-deck/members/<userId from the members list>
+Authorization: Bearer {{token}}
+
+### Delete the test deck (owner only; soft delete, slug becomes reusable — D50)
+DELETE {{baseUrl}}/decks/test-deck
+Authorization: Bearer {{token}}

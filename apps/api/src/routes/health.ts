@@ -7,9 +7,14 @@ export const healthResponseSchema = z.object({
   ok: z.boolean(),
   db_ms: z.number().nullable(),
   migration: z.string().nullable(),
+  /** Git commit the running image was built from (`GIT_SHA`), or null outside a CI-built image. */
+  commit: z.string().nullable(),
 });
 
-export function registerHealthRoutes(app: OpenAPIHono<AppEnv>, deps: { pool: pg.Pool }): void {
+export function registerHealthRoutes(
+  app: OpenAPIHono<AppEnv>,
+  deps: { pool: pg.Pool; commit?: string },
+): void {
   const route = createRoute({
     method: 'get',
     path: '/health',
@@ -34,6 +39,8 @@ export function registerHealthRoutes(app: OpenAPIHono<AppEnv>, deps: { pool: pg.
     },
   });
 
+  const commit = deps.commit ?? null;
+
   app.openapi(route, async (c) => {
     try {
       const start = performance.now();
@@ -43,9 +50,9 @@ export function registerHealthRoutes(app: OpenAPIHono<AppEnv>, deps: { pool: pg.
 
       const migration = await getLatestMigrationTag(deps.pool);
 
-      return c.json({ ok: true, db_ms, migration }, 200);
+      return c.json({ ok: true, db_ms, migration, commit }, 200);
     } catch {
-      return c.json({ ok: false, db_ms: null, migration: null }, 503);
+      return c.json({ ok: false, db_ms: null, migration: null, commit }, 503);
     }
   });
 }

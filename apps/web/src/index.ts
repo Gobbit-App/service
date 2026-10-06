@@ -1,5 +1,5 @@
 /**
- * Community Pocketbook Web UI (React PWA)
+ * Gobbit Web UI (React PWA)
  * Implementation scheduled for Phase 3
  */
 

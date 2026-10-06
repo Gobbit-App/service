@@ -9,16 +9,21 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
   - local ✅ `pnpm build && pnpm test` green (root Vitest: unit + integration). `pnpm -r test` also runs e2e, which needs a live API.
 - [ ] **2. Postgres on Dokploy** — `psql` from inside the network returns both extensions in `\dx`.
   - local ✅ Compose `db` (pgvector/pg17) + `infra/db-init` extensions; covered by migrations.int. Not run on Dokploy.
+  - Oct 1: the base `infra/docker-compose.yml` publishes no host ports (local ports moved to `docker-compose.local.yml`); `POSTGRES_PASSWORD` comes from the environment.
 - [ ] **3. Migrations** — run the migration twice; second run is a no-op; the row exists.
   - local ✅ migrate is idempotent (migrations.int + container entrypoint); health row seeded by 0000_health.
 - [ ] **4. API skeleton** — `curl https://api.<domain>/health` returns `{ ok: true, db_ms: <n>, migration: <name> }`.
   - local ✅ `curl localhost:<API_PORT>/health` → `{ok:true, db_ms, migration:"0003_card_limits"}` via Compose. Not deployed.
+  - Oct 1: deployed URL is `https://gobbit.niranhome.win/api/health` (single origin, D46); latest migration is now `0005_auth_triggers`.
 - [ ] **5. Public HTTPS** — the `/health` call above works from your phone on mobile data, and `curl -I` shows a valid certificate.
   - skipped — needs Cloudflare Tunnel + domain.
+  - Oct 1: domain settled (`gobbit.niranhome.win`, D46). `cloudflared` already runs on Dokploy as its own Compose service; to do: add the public hostname `gobbit.niranhome.win` → Traefik in the tunnel. The API joins `dokploy-network`.
 - [ ] **6. CI/CD** — change the `/health` response text, push, watch the change appear on the phone within a few minutes without touching Dokploy.
   - partial — `.github/workflows/ci.yml` + `smoke.yml` written; self-hosted runner, GHCR and Dokploy wiring not done.
+  - Oct 1: CI runs on GitHub-hosted runners (ADR-023, confirmed). Repo side done: the image is built with `GIT_SHA` and pushed to GHCR; CI then calls `DOKPLOY_DEPLOY_WEBHOOK`; Dokploy runs the GHCR image; `/health` reports `commit`; smoke waits for it (ADR-033). To do on the box/GitHub: create the Dokploy Compose project from `infra/docker-compose.yml` with its env, set the `DOKPLOY_DEPLOY_WEBHOOK` and `SMOKE_SESSION_TOKEN` secrets and the `API_BASE_URL` variable (smoke token: sign in, then `/auth/token-exchange` — there is no seed on the box).
 - [ ] **7. Backups, minimal** — restore last night's dump into a throwaway database and select the health row.
   - skipped — needs box + off-box storage.
+  - Oct 1: decided — Dokploy's scheduled backup to the S3 store on the NAS (same destination as the other services). Steps and restore procedure in `infra/README.md`; rehearsal not done.
 ## Phase 1 — Core data model and API
 
 - [ ] **1. Schema migration** — `pnpm db:migrate` on the deployed DB; `\d items` shows the columns; a rollback migration exists and is tested locally.
@@ -31,8 +36,10 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
   - local ✅ `apps/api/api.http` + e2e smoke 8/8 against local Compose. Not run against deployed API.
 - [ ] **5. Seed script** — `GET /pocketbooks/family/items?category=food` returns the food cards, paginated two pages of 10.
   - local ✅ `pnpm db:seed` idempotent, 25 items; pagination covered by seed-pagination.int.
+  - superseded by D49 (Phase 2): the seed creates only the owner, is local-only, and the deployed instance is never seeded, so this demo can no longer run as written. The 25 cards are test fixtures; pagination is covered by `items-pagination.int`.
 - [ ] **6. Integration tests** — `pnpm test` green in CI on the self-hosted runner.
   - local ✅ `pnpm test` green locally; not yet run in CI on the self-hosted runner.
+  - Oct 1: CI on GitHub-hosted runners (ADR-023, confirmed); the demo reads "green in CI".
 ## Phase 2 — Auth and membership
 
 - [ ] **1. Magic links** — request a link for a fresh address; the email arrives; the link signs in; the same link a second time is refused.
@@ -41,24 +48,28 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
 - [ ] **4. Invites** — invite a second member as reader; they click, land on Family, and cannot see the inviter's personal deck.
 - [ ] **5. Category visibility** — a private `Admin` category exists in Family; the reader's item list omits it, the owner's includes it.
 - [ ] **6. Rate limits and abuse** — the sixth request in an hour returns 429; the email is still not disclosed as existing or not.
+  - Oct 1: all six implemented on branch `worktree-p2-implementation` (not merged, not deployed). Unit suite green (485 tests, Linux run); integration and e2e not re-run in the Oct 1 review. Boxes stay unchecked until the demos run over HTTPS.
 ## Phase 3 — Reader PWA
 
-- [ ] **1. App shell** — the deployed `app.<domain>` loads the seeded Family deck on a phone in under 2 s on 4G (Lighthouse mobile performance ≥ 90).
+- [ ] **1. App shell** — the deployed `https://gobbit.niranhome.win` loads the Family deck on a phone in under 2 s on 4G (Lighthouse mobile performance ≥ 90).
 - [ ] **2. Sign-in flow** — cold start on a phone, sign in, land on Family.
-- [ ] **3. Card renderers** — the 25 seed cards render without overflow on a 360 px wide viewport; the calc card computes.
+- [ ] **3. Card renderers** — the Family deck's cards, including at least one of each type and a calc card, render without overflow on a 360 px wide viewport; the calc card computes. (Was "the 25 seed cards"; there is no seeded data since D49.)
 - [ ] **4. Category navigation** — switch School → Food → back to School and land on the same card.
 - [ ] **5. PWA install and offline** — add to home screen on Android and iOS; enable airplane mode; open the app; the last-viewed category and its cards still show.
 - [ ] **6. Favorites and archive views** — favorite a card on one phone; it appears in favorites on the other after refresh.
-- [ ] **7. Error and empty states** — stop the API container; the app shows cached content with the offline banner and recovers when the container returns.
+- [ ] **7. Share previews** — share a private card and a public card to WhatsApp, Telegram, iMessage and Slack; the private one shows the branded invite card, the public one shows real content; edit the public card and re-share, the preview reflects the edit.
+- [ ] **8. Error and empty states** — stop the API container; the app shows cached content with the offline banner and recovers when the container returns.
 ## Phase 4 — Search
 
 - [ ] **1. Search text column** — `EXPLAIN ANALYZE` on a `similarity()` query over 10 000 synthetic rows uses the GIN index and returns in under 30 ms.
 - [ ] **2. Embeddings pipeline** — insert a card; within seconds `embedding IS NOT NULL`; the job log shows one call.
-- [ ] **3. Hybrid query** — in `psql`, four queries against the seed data: `רופא שיניים` returns the English dentist card first; a 4-digit fragment of its phone returns it first; "parking" returns the card whose body mentions parking; a nonsense string returns nothing above the threshold.
+- [ ] **3. Hybrid query** — in `psql`, four queries against the Family deck (or the sample-card fixtures): `רופא שיניים` returns the English dentist card first; a 4-digit fragment of its phone returns it first; "parking" returns the card whose body mentions parking; a nonsense string returns nothing above the threshold.
 - [ ] **4. API and UI** — type on the phone, results update as you type, each result shows a small "text / meaning" tag.
 - [ ] **5. Ask mode (small RAG)** — "when is pickup on Fridays?" answers from the School card and links it; "what is the capital of Peru?" answers that the deck has nothing on it.
 - [ ] **6. Evaluation set** — `pnpm test:search` prints recall and the misses.
 ## Phase 5 — Ingestion agent
+
+- Scheduled (Oct 1): enforce "a published item has ≥ 1 category" in the database (a deferred constraint trigger on `items` status → published and on `item_categories` deletes), before the review queue starts publishing agent proposals. Today it is service-only.
 
 - [ ] **1. Ingest endpoint and job table** — `curl` a URL to `/ingest`; the job row appears; `GET /ingest/:id` shows status moving to `done`.
 - [ ] **2. Android share target** — from Chrome on Android, share an Instagram post to "Gobbit"; the job appears in the queue.

@@ -46,6 +46,23 @@ export function createMagicLinksRepo(db: Db) {
       return row ?? null;
     },
 
+    /**
+     * D37 resend: every still-usable invite link of this membership stops working (it reads as
+     * `expired`), so only the newest invite can be accepted.
+     */
+    async expireUnusedForMembership(membershipId: string, now: Date): Promise<void> {
+      await db
+        .update(magicLinks)
+        .set({ expiresAt: now })
+        .where(
+          and(
+            eq(magicLinks.membershipId, membershipId),
+            isNull(magicLinks.usedAt),
+            gt(magicLinks.expiresAt, now),
+          ),
+        );
+    },
+
     /** Only used to classify why a consume failed. */
     async findByTokenHash(tokenHash: string): Promise<MagicLinkRow | null> {
       const [row] = await db

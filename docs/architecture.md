@@ -182,20 +182,22 @@ erDiagram
 
 | Invariant | Description | Enforced by |
 |-----------|-------------|------------|
-| **D3: Published item → ≥1 category** | An item with status='published' must have at least one category. | Service `items.create()`, `items.update()` superRefine; service `update()` rejects if result would be published with no categories. |
+| **Published item → ≥1 category** (master plan P1.2) | An item with status='published' must have at least one category. | Service only: `items.create()` (D6 assigns `general` when none given) and `items.update()` rejects a result that would be published with no categories. The master plan's "trigger later" is not scheduled yet. |
 | **D5: item_categories dual FK** | Each item_category row references both item and category via composite FK, ensuring consistency. | Drizzle schema composite FK with ON DELETE CASCADE. |
 | **D6: Empty categoryIds → default** | If item created with no categoryIds, automatically assign default category of deck. | Service `items.create()` after fetching default. |
 | **D7: Default category auto-create + protect** | Every deck gets a 'general' default category on insert. Cannot be deleted or have is_default=false. | DB trigger `decks_create_default_category` (INSERT) + `categories_protect_default` (DELETE/UPDATE); unique index `categories_one_default_uq` ensures ≤1 default per deck. |
-| **D8: Soft delete for archival** | Deletion sets `deleted_at`, not removing rows. Queries exclude soft-deleted. | All repository `.find*()`, `.list()` include `WHERE isNull(t.deletedAt)`. Service `items.softDelete()`. |
-| **D9: Updated-at triggers** | Every update to accounts, users, decks, categories, items sets `updated_at = now()`. | DB trigger `<table>_set_updated_at` BEFORE UPDATE on each table. |
-| **D10: Payload schema per type** | Each item type (text, link, image, table, calc) validates payload against strict Zod schema. Payload byte size ≤ 8192 UTF-8; DB enforces ≤ 9216 with check constraint. | `payloadSchemaFor(type)` in `@pb/shared`; service calls `parse()` on PATCH; repository checks bytes; DB check constraint `items_payload_size_chk`. |
+| **D3: Slugs** | `decks.slug` unique among live decks; `categories.slug` unique per deck. | Partial unique indexes `decks_slug_active_uq`, `categories_deck_slug_active_uq` (`WHERE deleted_at IS NULL`); 23505 → 409. |
+| **D8: Body budget** | `body` ≤ `CARD_BODY_MAX` (600) Unicode code points. | zod `itemBodySchema` in @pb/shared; DB check constraint on `char_length(body)` (`0003_card_limits`). |
+| **Soft delete** (master plan P1.1, ADR-005) | Deleting sets `deleted_at` on accounts, users, decks, categories, items and memberships; queries exclude soft-deleted rows. Join tables (`item_categories`, `favorites`) are hard-deleted by design. | All repository `.find*()`, `.list()` include `WHERE isNull(t.deletedAt)`. Service `items.softDelete()`. |
+| **Auto `updated_at`** (master plan P1.1) | Every update to accounts, users, decks, categories, items and memberships sets `updated_at = now()`. | DB trigger `<table>_set_updated_at` BEFORE UPDATE on each table. |
+| **D9/D10: Payload budget and shape** | Each item type (text, link, image, table, calc) validates payload against a strict Zod schema. Payload ≤ 8192 UTF-8 bytes; DB enforces ≤ 9216 with a check constraint. | `payloadSchemaFor(type)` and the byte budget in @pb/shared (zod is authoritative); service calls `parse()` on PATCH; DB check constraint `items_payload_size_chk`. |
 | **D12: Item type immutable** | Cannot PATCH an item's type. | Service `items.update()` rejects `'type' in patch` with 400. |
-| **D13: Status default published** | Item created with status=null defaults to 'published' and `verified_at = now()`. | `itemCreateSchema` defaults status; service sets verifiedAt. |
+| **D13: Status default published** | Item created without a status defaults to 'published' and `verified_at = now()`. | Service `items.create()` sets both. |
 | **D14: Pagination keyset cursor** | Cursor encodes (createdAt, id) tuple, limiting result sets. Limit default 20, max 50; >50 rejects. | `limitSchema` in @pb/shared; `itemListQuerySchema`; service `items.list()` decodes, queries with SQL keyset filter. |
 | **D15: Favorite idempotence** | Adding/removing favorite twice is safe (no error). | Repository `favorites.add()` uses `onConflictDoNothing`; `favorites.remove()` does not error if missing. |
-| **D16: Session auth gate** (Phase 2, replaces dev auth) | A valid session (bearer or cookie) is required for all routes except `/health`, `/openapi.json`, `/auth/magic-link` and `/auth/callback` (`LENIENT_PATHS`). | Middleware `sessionAuth()` (`middleware/session-auth.ts`), see [Authentication](#authentication). |
+| **D16: Session auth gate** (Phase 2, replaces dev auth) | Routes that need a caller require a valid session (bearer or cookie); anonymous requests to them get 401. `/health`, `/openapi.json`, `/auth/magic-link` and `/auth/callback` are open. | Middleware `sessionAuth()` resolves the caller but never demands one; each protected route calls `getUser()` (401). A stale or invalid cookie is 401 + cleared, except on `LENIENT_PATHS` (the four open paths), where it is ignored so a signed-out browser can still sign in. |
 | **D17: Access control** (Phase 2: D33–D35) | No role on a deck → 404; a role without the permission → 403 `/problems/forbidden`. | `authorize()` in `access/authorize.ts` (`resolveRole` + `can()`), called by every deck-scoped service method. |
-| **D36: One membership per user–deck** | Partial unique `(deck_id, user_id) WHERE deleted_at IS NULL`; owner-account users can't be members of their own decks. | Unique index + `BEFORE INSERT` trigger raising `owner_account_membership` (`0005_auth_triggers`). |
+| **D36: One membership per user–deck** | Partial unique `(deck_id, user_id) WHERE deleted_at IS NULL`; owner-account users can't be members of their own decks. | Unique index + `BEFORE INSERT OR UPDATE OF deck_id, user_id` trigger raising `owner_account_membership` (`0005_auth_triggers`), mapped to 400. |
 | **D18: Problem schema** | All errors returned as RFC 9457 problem+json with type URL, status, title, detail, and optional field errors. | `Problem`, `ProblemFieldError` schemas in @pb/shared; error handlers in middleware convert Zod, pg, and app errors. |
 | **D19: Migration rollback** | `db:rollback` reverses the latest applied migration by running its `.down.sql` and deleting the journal entry. | `rollbackLatest()` in `src/migrations.ts` executes down file in transaction, maps tag from __drizzle_migrations. |
 | **D21: E2E smoke tests** | Tagged tests `@smoke` each create and delete their own `smoke-<id>` deck (D50), all read /health before starting. | Playwright config `testDir: ./tests`, global-setup waits for health + latest migration tag match. |
@@ -404,7 +406,7 @@ pageSchema<T>(item: T) = z.object({
 
 ### Deployment layout (D46)
 
-One origin `https://gobbit.niranhome.win`: Traefik routes `PathPrefix(/api)` to the API with a strip-prefix middleware (labels in `infra/docker-compose.yml`), so `API_URL=https://gobbit.niranhome.win/api`, `COOKIE_DOMAIN` unset, `CORS_ORIGINS=https://gobbit.niranhome.win`, `CLIENT_IP_HEADER=cf-connecting-ip`.
+Images come from GHCR (ADR-033); backups and restore are in `infra/README.md`. One origin `https://gobbit.niranhome.win`: Traefik routes `PathPrefix(/api)` to the API with a strip-prefix middleware (labels in `infra/docker-compose.yml`), so `API_URL=https://gobbit.niranhome.win/api`, `COOKIE_DOMAIN` unset, `CORS_ORIGINS=https://gobbit.niranhome.win`, `CLIENT_IP_HEADER=cf-connecting-ip`.
 
 ## Authorization (D33–D35)
 
@@ -413,6 +415,8 @@ One origin `https://gobbit.niranhome.win`: Traefik routes `PathPrefix(/api)` to 
 - `authorize()` combines both: no role → `404` (ADR-004); role lacking the permission → `403 /problems/forbidden` with `permission` and `role` extension members.
 - `GET /decks` and `GET /me` return owned ∪ accepted-member decks, each with the caller's `role`.
 - Memberships: `GET /decks/:id/members` (implicit owner first, pending included), `POST /decks/:id/invites { email, role }` (creates the user if needed, pending membership + invite link; `201`, resend `200`, accepted member `409`, self `400`), `DELETE /decks/:id/members/:userId`.
+- A resend to a pending member replaces the invite: the membership takes the new `role`, inviter and `invited_at`, and every unused invite link of that membership is expired (it reports `reason=expired`), so only the newest link works.
+- `owner` memberships (co-admins) get every owner permission except `deck.delete`: `DELETE /decks/:id` additionally requires the caller to belong to the deck's owner account (`403 /problems/forbidden`, `permission: deck.delete`, `role: owner`). This is the one rule outside the `can()` matrix (D34 had deferred resource-level rules).
 
 ## Visibility (D38)
 
@@ -437,7 +441,7 @@ Postgres table `rate_limit_counters`, fixed one-hour windows, `INSERT … ON CON
 
 1. **Generated** by drizzle-kit: `pnpm db:generate` reads schema files in `src/schema/`, outputs SQL to `migrations/`
 2. **Hand-written custom**: `migrations/0002_invariants.sql` (triggers, functions, indexes)
-3. **Automatic naming**: `0000_health`, `0001_core`, `0002_invariants`, `0003_card_limits`
+3. **Automatic naming**: `0000_health`, `0001_core`, `0002_invariants` (custom), `0003_card_limits`, `0004_auth`, `0005_auth_triggers` (custom)
 4. **Down files**: `migrations/down/<tag>.down.sql` for rollback
 
 ### Custom migrations: 0002_invariants
@@ -474,7 +478,8 @@ check('items_payload_object_chk', jsonb_typeof(payload) = 'object')
 {
   "ok": true,
   "db_ms": 2,
-  "migration": "0003_card_limits"
+  "migration": "0005_auth_triggers",
+  "commit": "<40-char sha from GIT_SHA, or null outside a CI-built image>"
 }
 ```
 
@@ -491,7 +496,7 @@ Exposing the latest migration tag helps e2e tests confirm the DB is in the expec
 - `SEED_OWNER_EMAIL` is required (the script exits non-zero without it); `SEED_OWNER_NAME` defaults to the email local part. Parsing lives in `seed/owner.ts` (`parseOwnerSeedEnv`).
 - Ids are uuid v5 under `SEED_NAMESPACE` (`seedId('owner')` for the account, `seedId('owner/user')` for the user), so re-running upserts in place.
 - Idempotent: `ON CONFLICT … DO UPDATE … WHERE … IS DISTINCT FROM`, so a second run with the same values leaves `updated_at` untouched; a changed name or email updates the row in place.
-- `NODE_ENV=production` requires `--allow-prod`.
+- Local development only: the script refuses `NODE_ENV=production` outright (Oct 1). A deployed instance is never seeded; the owner's first magic-link sign-in creates the user (D25).
 - `SMOKE_SESSION_TOKEN` (D43, ≥32 chars) upserts one 365-day `bearer` session for the owner (`user_agent = 'smoke'`); re-running with a new token rotates it. No other users are seeded.
 
 ### Test factories (`@pb/db/test`)
@@ -523,9 +528,9 @@ Examples:
 - Service tests calling real repos
 - API route tests via `setupApiTest()`
 
-**Test isolation**: Each test gets a fresh DB cloned from `template_pb`:
+**Test isolation**: Each test file gets a fresh DB cloned from `template_pb`:
 1. Global setup: creates template DB with all migrations
-2. Per-test: `withTestDb()` clones template (fast), runs test, drops clone
+2. Per file: `withTestDb()` clones the template (fast), the file's tests run, the clone is dropped
 
 ### E2E tests (smoke)
 
@@ -534,10 +539,10 @@ Environment: Playwright
 Base URL: `http://localhost:3000` (or BASE_URL env)  
 Tagging: every test title includes `@smoke`
 
-**Pre-test**: global-setup waits for `/health` to report `ok=true` and migration tag matching the latest journal entry.
+**Pre-test**: global-setup waits for `/health` to report `ok=true` and migration tag matching the latest journal entry — and, when `EXPECTED_SHA` is set (CI sets the triggering commit), `commit` equal to it, for up to 10 minutes while Dokploy pulls and restarts.
 
 **API helpers**:
-- `api`: request context carrying `Authorization: Bearer ${SMOKE_SESSION_TOKEN}` (the seeded owner session)
+- `api`: request context carrying `Authorization: Bearer ${SMOKE_SESSION_TOKEN}` (locally the seeded owner session; deployed, a bearer minted with `/auth/token-exchange`)
 - `anon`: request context with no credentials (401 checks)
 - `smokeDeck`: creates a `smoke-<id>` deck before the test; afterwards removes its memberships and soft-deletes it
 - The members spec invites the single standing user `smoke-invitee@example.test`; only its membership is cleaned up
@@ -589,7 +594,7 @@ Tagging: every test title includes `@smoke`
 - Consistent with "access control as query filter" pattern (repository only sees user's own data)
 - Phase 2 can refine to shared/public decks; 404 still applies to truly private ones
 
-**Implementation**: `assertDeckAccess()` throws `notFound()` on mismatch.
+**Implementation**: Phase 1 used `assertDeckAccess()`; since Phase 2 `authorize()` (`access/authorize.ts`) throws `notFound()` when the caller has no role on the deck (D35), and 403 only when a role lacks the permission.
 
 ---
 
@@ -742,7 +747,7 @@ Tagging: every test title includes `@smoke`
 
 ### ADR-017: Access control in service layer
 
-**Decision**: `assertDeckAccess(user, deck, action)` checks ownership. Called by every service method that touches a deck.
+**Decision**: access is checked in the service layer. Phase 1: `assertDeckAccess(user, deck, action)` (ownership). Phase 2: `authorize(user, deck, permission, memberships)` — `resolveRole()` + `can()` — called by every service method that touches a deck.
 
 **Rationale**:
 - Centralized: consistent policy across routes
@@ -880,7 +885,7 @@ Tagging: every test title includes `@smoke`
 
 ### ADR-031: Dev auth deleted, not flagged off (D43)
 
-**Decision**: The dev-token flag, token variable, user header and middleware are removed. The smoke suite authenticates with a seeded owner bearer session (`SMOKE_SESSION_TOKEN`).
+**Decision**: The dev-token flag, token variable, user header and middleware are removed. The smoke suite authenticates with a real owner bearer session (`SMOKE_SESSION_TOKEN`): seeded locally, minted with `/auth/token-exchange` on the deployed instance.
 
 **Rationale**: A dormant bypass is a latent vulnerability; the smoke suite now exercises the real session path end to end.
 
@@ -891,6 +896,16 @@ Tagging: every test title includes `@smoke`
 **Decision**: The seed creates only the owner (plus the optional smoke session); integration and smoke tests build their own data with `@pb/db/test` factories or per-test `smoke-<id>` decks.
 
 **Rationale**: The deployed database contains no fabricated people or cards, and tests don't depend on shared mutable state.
+
+**Update (Oct 1)**: the seed is local-only and refuses production; the deployed database is never seeded.
+
+---
+
+### ADR-033: Deploy the CI-built image; `/health` reports the commit
+
+**Decision**: CI builds the API image once (with `GIT_SHA`), pushes it to GHCR and calls the Dokploy deploy webhook; Dokploy runs that image (`infra/docker-compose.yml`, `pull_policy: always`) on Dokploy's `dokploy-network`, behind the shared `cloudflared` → Traefik route. `/health` returns `commit`, and the smoke workflow waits for the commit it was triggered by before testing.
+
+**Rationale**: The image that passed CI is the one that runs (no second build on the box), the same pattern as the owner's other Dokploy apps, and smoke can't pass against the previous container.
 
 ---
 

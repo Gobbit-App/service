@@ -113,7 +113,11 @@ export function createAuthService(deps: {
 
       let session = found.session;
       if (at.getTime() - session.lastSeenAt.getTime() > SESSION_TOUCH_INTERVAL_MS) {
-        const expiresAt = new Date(at.getTime() + sessionTtlMs);
+        // D27 slides the expiry forward but never shortens it: the seeded smoke session (D43)
+        // starts with 365 days and must not collapse to SESSION_TTL_DAYS on first use.
+        const expiresAt = new Date(
+          Math.max(session.expiresAt.getTime(), at.getTime() + sessionTtlMs),
+        );
         await sessions.touch(session.id, at, expiresAt);
         session = { ...session, lastSeenAt: at, expiresAt };
       }

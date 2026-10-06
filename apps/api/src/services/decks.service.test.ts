@@ -202,6 +202,16 @@ describe('createDecksService', () => {
       expect(decksRepo.softDelete).not.toHaveBeenCalled();
     });
 
+    it('403s a co-owner (owner membership) without deleting (D50)', async () => {
+      decksRepo.findBySlug.mockResolvedValue({ ...deck, ownerAccountId: 'someone-else' });
+      membershipsRepo.findActive.mockResolvedValue({ role: 'owner', acceptedAt: new Date() });
+      await expect(service.remove(user, 'fam')).rejects.toMatchObject({
+        status: 403,
+        type: '/problems/forbidden',
+      });
+      expect(decksRepo.softDelete).not.toHaveBeenCalled();
+    });
+
     it("404s on another account's deck without deleting", async () => {
       decksRepo.findBySlug.mockResolvedValue({ ...deck, ownerAccountId: 'someone-else' });
       await expect(service.remove(user, 'fam')).rejects.toMatchObject({ status: 404 });

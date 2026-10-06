@@ -57,7 +57,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
     }),
   );
 
-  registerHealthRoutes(app, { pool: deps.pool });
+  registerHealthRoutes(app, { pool: deps.pool, commit: env.GIT_SHA });
   registerAuthRoutes(app, services, env);
   registerMeRoutes(app, services);
   registerDecksRoutes(app, services);

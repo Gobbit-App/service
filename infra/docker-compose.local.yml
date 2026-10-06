@@ -1,0 +1,19 @@
+# Local overlay for `pnpm compose:up`: publishes the DB and API on localhost and relaxes the
+# production defaults of docker-compose.yml for plain HTTP (no Secure cookie, console mailer
+# printing sign-in links to `docker compose logs api`). Not used on the deployed host.
+services:
+  db:
+    ports:
+      - 127.0.0.1:${DB_PORT:-5432}:5432
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: gobbit-api:local
+    pull_policy: build
+    ports:
+      - 127.0.0.1:${API_PORT:-3000}:3000
+    environment:
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-true}

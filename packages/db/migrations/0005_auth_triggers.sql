@@ -21,4 +21,4 @@ $$ LANGUAGE plpgsql;
 
 --> statement-breakpoint
 
-CREATE TRIGGER memberships_reject_owner_account BEFORE INSERT ON memberships FOR EACH ROW EXECUTE FUNCTION reject_owner_account_membership();
+CREATE TRIGGER memberships_reject_owner_account BEFORE INSERT OR UPDATE OF deck_id, user_id ON memberships FOR EACH ROW EXECUTE FUNCTION reject_owner_account_membership();
