@@ -29,13 +29,37 @@ jobs:
 
       - run: pnpm typecheck
 
-      - run: pnpm test:unit
+      # Pull the Testcontainers images up front, with retries: a Docker Hub hiccup otherwise
+      # surfaces as an opaque "HTTP code 500" in the integration global setup, which aborts the
+      # whole Vitest run ("No test files found", 0% coverage). Keep in sync with
+      # packages/db/test/global-setup.ts and the Ryuk version bundled with testcontainers.
+      - name: Pull Testcontainers images
+        run: |
+          for image in pgvector/pgvector:pg17 testcontainers/ryuk:0.14.0; do
+            for attempt in 1 2 3 4; do
+              docker pull --quiet "$image" && break
+              [ "$attempt" = 4 ] && { echo "::error::docker pull $image failed after 4 attempts"; exit 1; }
+              sleep $((attempt * 10))
+            done
+          done
 
-      - run: pnpm test:int
-
+      # One run of both Vitest projects (unit + integration) with the coverage gates.
       - run: pnpm test:coverage
+        env:
+          # Surfaces the Docker daemon's own error text if container start-up still fails.
+          DEBUG: testcontainers*
 
       - run: pnpm --filter @pb/db exec drizzle-kit check
+
+      # Schema ↔ migration drift: the Drizzle schema must not produce a new migration.
+      - name: No ungenerated schema changes
+        run: |
+          pnpm db:generate
+          test -z "$(git status --porcelain packages/db/migrations)" || {
+            git status --porcelain packages/db/migrations
+            echo 'Schema changed without a committed migration (run pnpm db:generate).'
+            exit 1
+          }
 
   image:
     needs: test
@@ -69,3 +93,17 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+
+      # Tell Dokploy to pull the new image and restart the Compose project. Skipped until the
+      # DOKPLOY_DEPLOY_WEBHOOK secret (the compose service's deploy webhook URL) is set.
+      - name: Redeploy on Dokploy
+        env:
+          DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
+        run: |
+          if [ -z "$DOKPLOY_DEPLOY_WEBHOOK" ]; then
+            echo 'DOKPLOY_DEPLOY_WEBHOOK not set; skipping redeploy.'
+            exit 0
+          fi
+          curl -fsS -X POST "$DOKPLOY_DEPLOY_WEBHOOK"

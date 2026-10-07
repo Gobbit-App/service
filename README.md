@@ -19,11 +19,11 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    ```bash
    cp .env.example .env
    ```
-   Set `SEED_OWNER_EMAIL` to your address. Local defaults use the console mailer (sign-in links are printed to the API log) and `COOKIE_SECURE=false`.
+   Set `SEED_OWNER_EMAIL` to your address. Local defaults use the console mailer (sign-in links are printed to the API log) and `COOKIE_SECURE=false`. `pnpm dev` and the `pnpm db:*` scripts load this root `.env` automatically when it exists; variables already set in your shell win.
 
 3. **Start the database:**
    ```bash
-   docker compose -f infra/docker-compose.yml up -d db
+   docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml up -d db
    ```
 
 4. **Migrate and seed:**
@@ -65,8 +65,10 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `INVITE_TTL_DAYS` | `7` | Invite link lifetime |
 | `SESSION_TTL_DAYS` | `90` | Sliding session lifetime |
 | `CLIENT_IP_HEADER` | — (socket address) | Header with the real client IP behind a proxy (e.g. `cf-connecting-ip`) |
-| `SEED_OWNER_EMAIL` / `SEED_OWNER_NAME` | — | Owner created by `pnpm db:seed` (email required) |
-| `SMOKE_SESSION_TOKEN` | — | Optional ≥32-char owner bearer seeded for the smoke suite; generate with `openssl rand -base64 32` |
+| `SEED_OWNER_EMAIL` / `SEED_OWNER_NAME` | — | Owner created by `pnpm db:seed` (email required; local development only) |
+| `GIT_SHA` | — | Commit the image was built from (set by the Docker build in CI); reported by `/health` as `commit` |
+| `SMOKE_SESSION_TOKEN` | — | Local: optional ≥32-char owner bearer the seed creates (`openssl rand -base64 32`). Smoke suite: the bearer it authenticates with |
+| `EXPECTED_SHA` | — | Smoke suite only: wait until `/health` reports this commit (CI sets it) |
 | `BASE_URL` | `http://localhost:3000` | API base URL for e2e tests |
 | `DB_PORT` | `5432` | Mapped database port in Compose |
 | `API_PORT` | `3000` | Mapped API port in Compose |
@@ -88,8 +90,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm db:generate` | Generate migrations with drizzle-kit |
 | `pnpm db:migrate` | Run pending migrations |
 | `pnpm db:rollback` | Rollback latest migration |
-| `pnpm db:seed` | Upsert the owner account/user from `SEED_OWNER_EMAIL` (pass `--allow-prod` for production) |
-| `pnpm compose:up` | Bring up full stack via docker-compose |
+| `pnpm db:seed` | Upsert the owner account/user from `SEED_OWNER_EMAIL` (local development only; refuses `NODE_ENV=production`) |
+| `pnpm compose:up` | Build and start the local stack (base + `docker-compose.local.yml`) |
 | `pnpm compose:down` | Tear down docker-compose services |
 
 ## Running the Full Stack
@@ -100,13 +102,13 @@ To run the entire stack (database + API) with Docker Compose:
 pnpm compose:up
 ```
 
-Compose reads `.env` (console mailer, `COOKIE_SECURE=false` by default). The API container automatically runs migrations on startup. Seed the owner user (`SEED_OWNER_EMAIL` required):
+`compose:up` layers `infra/docker-compose.local.yml` over the base file: it publishes the DB and API on `127.0.0.1` and relaxes the production defaults for plain HTTP (`COOKIE_SECURE=false`, console mailer allowed — sign-in links appear in `docker compose -f infra/docker-compose.yml logs api`). The base `infra/docker-compose.yml` is what the deployed host runs: no host ports, `COOKIE_SECURE=true` and no console mail by default, `POSTGRES_PASSWORD` from the environment. The API container runs migrations on startup. Seed the owner user from the host (uses `.env`, `SEED_OWNER_EMAIL` required):
 
 ```bash
-DATABASE_URL=postgres://pb:pb@localhost:5432/pb SEED_OWNER_EMAIL=you@example.test pnpm db:seed
+pnpm db:seed
 ```
 
-The API service also carries Traefik labels (router `gobbit-api`, ``Host(`${PUBLIC_HOST}`) && PathPrefix(`/api`)``, `/api` stripped) for the deployed setup.
+The API service also carries Traefik labels (router `gobbit-api`, ``Host(`${PUBLIC_HOST}`) && PathPrefix(`/api`)``, `/api` stripped) for the deployed setup. On Dokploy the service must also be reachable by Traefik (Dokploy's `dokploy-network` or its isolated-deployment option) — see the deployment notes in `PLAN.md` Phase 0.
 
 API is available at `http://localhost:3000`.
 
@@ -140,24 +142,33 @@ Tests poll `/health` on startup to verify migrations are complete.
 
 ## Deployment
 
-### Container image (any Docker host, e.g. Dokploy)
+### How a push reaches the box
 
-- **Image:** `ghcr.io/<owner>/<repo>/api` (lowercased, e.g. `ghcr.io/gobbit-app/service/api`), tagged `latest` and the full commit SHA
+```
+push to main → CI (tests) → image job: build with GIT_SHA, push ghcr.io/gobbit-app/service/api:{latest,<sha>}
+             → POST $DOKPLOY_DEPLOY_WEBHOOK → Dokploy pulls the image, restarts the Compose project
+             → smoke.yml waits until https://gobbit.niranhome.win/api/health reports commit = <sha>, then runs
+```
+
+- **Image:** `ghcr.io/gobbit-app/service/api`, tagged `latest` and the full commit SHA. The base Compose file runs `${API_IMAGE_TAG:-latest}` with `pull_policy: always`. If the GHCR package is private, give Dokploy registry credentials for `ghcr.io`.
 - **Base image:** `node:22-slim`
-- **Health check:** `GET /health` endpoint
+- **Health check:** `GET /health` → `{ ok, db_ms, migration, commit }`; `commit` is the `GIT_SHA` build arg.
 - **Migrations:** Automatic on container startup via `docker-entrypoint.sh`
+- **Networking:** the API joins Dokploy's external `dokploy-network` (label `traefik.docker.network=dokploy-network`), where Traefik and the shared `cloudflared` Compose service run. The tunnel's public hostname `gobbit.niranhome.win` points at Traefik; Traefik routes `/api` here (D46).
+- **No seed on the box:** the deployed database starts empty. Sign in by magic link as the owner (the first sign-in creates the user), then mint the smoke token (below).
+- **Backups:** see `infra/README.md`.
 
 ### Environment Variables (Production)
 
 Set these in your deployment platform:
 
-- `DATABASE_URL` – PostgreSQL connection string
+- `POSTGRES_PASSWORD` – used by the Compose `db` service and the API's `DATABASE_URL` (Compose builds it from this)
+- `DATABASE_URL` – PostgreSQL connection string (only when not using the bundled Compose `db`)
 - `NODE_ENV=production`
 - `API_URL` – public API address (e.g. `https://gobbit.niranhome.win/api`)
 - `APP_URL`, `COOKIE_DOMAIN`, `CORS_ORIGINS` – as needed for the web app
 - `MAIL_PROVIDER=resend` with `RESEND_API_KEY` and `MAIL_FROM` (or `console` + `ALLOW_CONSOLE_MAIL=true`)
 - `CLIENT_IP_HEADER=cf-connecting-ip` behind Cloudflare
-- `SEED_OWNER_EMAIL` and, for smoke runs, `SMOKE_SESSION_TOKEN` (run `pnpm db:seed --allow-prod` once)
 - `PORT=3000` or as needed
 
 ### GitHub Actions
@@ -172,14 +183,14 @@ Set these in your deployment platform:
   run: pnpm test:e2e --grep @smoke
 ```
 
-Required secrets: `SMOKE_SESSION_TOKEN` (the same value seeded on the deployed DB).  
+Required secrets: `SMOKE_SESSION_TOKEN` (an owner bearer on the deployed instance — see "Smoke token" below). Optional: `DOKPLOY_DEPLOY_WEBHOOK` (the Compose service's deploy webhook URL; without it the image is pushed but Dokploy is not told).  
 Required variables: `API_BASE_URL` (`https://gobbit.niranhome.win/api`). Optional: `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
 
 The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, a blank `BASE_URL` falls back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` or `SMOKE_SESSION_TOKEN` is missing.
 
 CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks never execute on private machines. Workflows take the pnpm version from `packageManager` in `package.json` and the Node version from `.nvmrc`.
 
-**Note:** Database tunneling and backups (Phase 0 steps 5–7) are not yet implemented.
+**Note:** the tunnel route, the Dokploy project and its backup schedule (Phase 0 steps 5–7) are not set up yet; the repo side is ready.
 
 ## API Overview
 
@@ -187,11 +198,11 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/health` | System health & latest migration tag |
+| `GET` | `/health` | System health, latest migration tag and running commit |
 | **Auth** |
 | `POST` | `/auth/magic-link` | Email a sign-in link (always `200 { ok: true }`; rate limited) |
 | `GET` | `/auth/callback` | Consume a sign-in/invite link, set session cookie, redirect |
-| `POST` | `/auth/token-exchange` | Exchange a one-time code for a bearer session |
+| `POST` | `/auth/token-exchange` | From a cookie-authenticated request, mint a new bearer session (token shown once) |
 | `POST` | `/auth/logout` | End the current session |
 | `POST` | `/auth/logout-all` | End all of the user's sessions |
 | `GET` | `/me` | Current user and their decks with roles |
@@ -237,7 +248,30 @@ curl -X POST http://localhost:3000/auth/magic-link \
 curl -H "Authorization: Bearer $SMOKE_SESSION_TOKEN" http://localhost:3000/me
 ```
 
-Access is per deck: the account owner is implicitly `owner` of its decks; invited members get `reader`, `editor` or `maintainer`. Decks a user cannot see return 404; forbidden actions return 403 `/problems/forbidden`. Categories marked `private` (and cards filed only under them) are hidden from readers and editors. See `docs/architecture.md` for details.
+Access is per deck: the account owner is implicitly `owner` of its decks; invited members get `reader` (default), `editor`, `maintainer` or `owner` (co-admins, e.g. the Phase 8 communal deck; everything the account owner can do except delete the deck). Re-inviting a pending member replaces the invite: the new role applies and older links stop working. Decks a user cannot see return 404; forbidden actions return 403 `/problems/forbidden`. Categories marked `private` (and cards filed only under them) are hidden from readers and editors. See `docs/architecture.md` for details.
+
+### First run (empty instance)
+
+1. Locally: `pnpm db:seed` creates only your owner user. Deployed: skip it — the first sign-in creates you.
+2. `POST /auth/magic-link {"email":"<SEED_OWNER_EMAIL>"}` and open the link (console mailer: API log). You land on `/me` with `decks: []`.
+3. `POST /decks {"name":"Family","slug":"family","kind":"shared"}` — the `general` category is created for you.
+4. `POST /decks/family/invites {"email":"<second person>","role":"reader"}` — they open their link and see only Family.
+
+Everything else (categories, cards) is created through the API; there is no sample data (D49).
+
+### Smoke token: mint and rotate
+
+- **Local:** `openssl rand -base64 32` → `SMOKE_SESSION_TOKEN` in `.env` → `pnpm db:seed` (re-running with a new value rotates it; the seeded session lasts 365 days).
+- **Deployed:** there is no seed. Sign in as the owner in a browser, copy the `gobbit_session` cookie, then mint a bearer and store it as the `SMOKE_SESSION_TOKEN` GitHub secret:
+
+  ```bash
+  curl -s -X POST https://gobbit.niranhome.win/api/auth/token-exchange \
+       -H 'Cookie: gobbit_session=<value>' | jq -r .token
+  ```
+
+  It is a 90-day sliding session, so smoke runs keep it alive; after 90 idle days mint a new one.
+
+Either kind dies with `POST /auth/logout-all` (and with `POST /auth/logout` sent with that token, e.g. from `api.http`) — mint or seed again.
 
 ## Project Structure
 
@@ -250,7 +284,7 @@ community-pocketbook/
 │   ├── shared/       # Zod schemas, types, utilities
 │   └── db/           # Drizzle ORM, migrations, seeding
 ├── e2e/              # Playwright smoke tests
-├── infra/            # Docker Compose, database initialization
+├── infra/            # Docker Compose (deployed + local overlay), DB init, backups (README)
 ├── docs/             # Architecture & design decisions
 ├── .env.example      # Environment variable template
 └── README.md         # This file
@@ -272,6 +306,15 @@ This is a **pnpm monorepo** with workspace `packages/` and `apps/`. Each package
 - ESM everywhere (`"type": "module"`)
 - Named exports only
 - Relative imports without extensions
+
+### Git hooks
+
+`pnpm install` points git at `.githooks/` (the `prepare` script). No extra dependencies:
+
+- **pre-commit:** Prettier and ESLint on the staged files only, check mode (nothing is rewritten). Fix with `pnpm format` / `pnpm lint --fix` and stage again.
+- **pre-push:** `pnpm typecheck && pnpm test:unit` (~10 s). Integration and smoke tests stay in CI.
+
+Skip once with `--no-verify`.
 
 ### Database
 

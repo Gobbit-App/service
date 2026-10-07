@@ -3,8 +3,12 @@ import { parseOwnerSeedEnv, runSeed } from '../seed/run-seed';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://pb:pb@localhost:5432/pb';
 
-if (process.env.NODE_ENV === 'production' && !process.argv.includes('--allow-prod')) {
-  console.error('Refusing to seed with NODE_ENV=production (pass --allow-prod to override)');
+// The seed is for local development only: deployed instances start empty and the owner signs in
+// by magic link (D25). The deployed smoke token comes from POST /auth/token-exchange (README).
+if (process.env.NODE_ENV === 'production') {
+  console.error(
+    'Refusing to seed with NODE_ENV=production: the seed is for local development only',
+  );
   process.exit(1);
 }
 

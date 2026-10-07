@@ -23,8 +23,9 @@
     "db:rollback": "pnpm --filter @pb/db db:rollback",
     "db:seed": "pnpm --filter @pb/db db:seed",
     "dev": "pnpm --filter @pb/api dev",
-    "compose:up": "docker compose -f infra/docker-compose.yml up -d --build",
-    "compose:down": "docker compose -f infra/docker-compose.yml down"
+    "compose:up": "(docker network inspect dokploy-network >/dev/null 2>&1 || docker network create dokploy-network >/dev/null) && docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml up -d --build",
+    "compose:down": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml down",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
