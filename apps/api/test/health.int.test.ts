@@ -19,6 +19,11 @@ describe('health and API access control', () => {
     expect(body.migration).toBe(latestJournalTag());
   });
 
+  it('GET /health commit is null when GIT_SHA is unset', async () => {
+    const res = await ctx.app.request('/health');
+    expect((await res.json()).commit).toBeNull();
+  });
+
   it('GET /openapi.json returns 200 without auth headers', async () => {
     const res = await ctx.app.request('/openapi.json');
     expect(res.status).toBe(200);

@@ -112,6 +112,20 @@ describe('createAuthService', () => {
       expect(result?.session.expiresAt).toEqual(expectedExpiry);
     });
 
+    it('never shortens a longer expiry when sliding (seeded smoke session, D43)', async () => {
+      const longExpiry = new Date(NOW.getTime() + 365 * 86_400_000);
+      const session = sessionRow({
+        lastSeenAt: new Date(NOW.getTime() - SESSION_TOUCH_INTERVAL_MS - 1),
+        expiresAt: longExpiry,
+      });
+      sessions.findActiveByTokenHash.mockResolvedValue({ session, user });
+
+      const result = await service.authenticate({ bearer: 'tok' });
+
+      expect(sessions.touch).toHaveBeenCalledWith('s1', NOW, longExpiry);
+      expect(result?.session.expiresAt).toEqual(longExpiry);
+    });
+
     it('prefers the bearer over the cookie', async () => {
       sessions.findActiveByTokenHash.mockResolvedValue({ session: sessionRow(), user });
       const result = await service.authenticate({ bearer: 'tok', cookie: 'other' });

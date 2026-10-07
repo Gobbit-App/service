@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in Community Pocketbook. Bug reports, ideas and pull requests are welcome.
+Thanks for your interest in Gobbit (the `community-pocketbook` repository). Bug reports, ideas and pull requests are welcome.
 
 ## Before you start
 

@@ -46,11 +46,11 @@ describe('favorites', () => {
       expect(res.status).toBe(204);
 
       // SQL: count favorites rows for (dev user, item) = 1
-      const devUserId = fixtureId('user/owner');
+      const ownerUserId = fixtureId('user/owner');
       const favRows = await ctx.t.db
         .select()
         .from(favorites)
-        .where(and(eq(favorites.userId, devUserId), eq(favorites.itemId, itemId)));
+        .where(and(eq(favorites.userId, ownerUserId), eq(favorites.itemId, itemId)));
       expect(favRows).toHaveLength(1);
 
       // GET /items/:id → isFavorite true

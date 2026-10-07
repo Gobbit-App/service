@@ -91,6 +91,30 @@ describe('invites (P2.5, D37)', () => {
     expect(ctx.mailer.sent).toHaveLength(2);
   });
 
+  it('a resend replaces the earlier invite: old link dead, new role applies', async () => {
+    expect((await invite('family', 'reinvite@example.test', 'reader')).status).toBe(201);
+    const firstToken = tokenFromMail(ctx.mailer);
+
+    const res = await invite('family', 'reinvite@example.test', 'editor');
+    expect(res.status).toBe(200);
+    expect((await json(res)).membership.role).toBe('editor');
+    const secondToken = tokenFromMail(ctx.mailer);
+    expect(secondToken).not.toBe(firstToken);
+
+    ctx.clock.advance(1000);
+    expect(failureReason(await click(firstToken))).toBe('expired');
+
+    const cb = await click(secondToken);
+    expect(cb.status).toBe(303);
+    expect(cb.headers.get('Location')).toBe(`${APP_URL}/d/family`);
+    const invitee = await userByEmail('reinvite@example.test');
+    await ctx.sessionFor(invitee);
+    const decks = await json(await ctx.app.request('/decks', { headers: ctx.as(invitee.email) }));
+    expect(decks.data.map((d: { slug: string; role: string }) => [d.slug, d.role])).toEqual([
+      ['family', 'editor'],
+    ]);
+  });
+
   it('inviting an accepted member is 409', async () => {
     expect((await invite('family', reader.email)).status).toBe(409);
   });

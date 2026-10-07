@@ -68,6 +68,19 @@ export function createMembershipsRepo(db: Db) {
       return row;
     },
 
+    /** D37 resend to a pending member: the new invite's role, inviter and time replace the old. */
+    async reinvite(
+      id: string,
+      v: { role: MemberRole; invitedBy: string; now: Date },
+    ): Promise<MembershipRow> {
+      const [row] = await db
+        .update(memberships)
+        .set({ role: v.role, invitedBy: v.invitedBy, invitedAt: v.now })
+        .where(and(eq(memberships.id, id), isNull(memberships.acceptedAt)))
+        .returning();
+      return row;
+    },
+
     /** Sets `accepted_at` once; a second call keeps the first acceptance time. */
     async accept(id: string, now: Date): Promise<void> {
       await db

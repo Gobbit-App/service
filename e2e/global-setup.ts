@@ -16,10 +16,11 @@ interface HealthResponse {
   ok: boolean;
   db_ms: number | null;
   migration: string | null;
+  commit?: string | null;
 }
 
 export default async function globalSetup(): Promise<void> {
-  const { baseURL: baseUrl } = resolveE2eEnv();
+  const { baseURL: baseUrl, expectedSha } = resolveE2eEnv();
 
   // Read the latest migration tag from journal
   const journalPath = fileURLToPath(
@@ -38,7 +39,8 @@ export default async function globalSetup(): Promise<void> {
     throw err;
   }
 
-  const maxAttempts = 60; // 120 seconds / 2 seconds per attempt
+  // Waiting for a fresh deploy (EXPECTED_SHA) covers the image pull + restart: up to 10 minutes.
+  const maxAttempts = expectedSha ? 300 : 60; // 2 seconds per attempt
   const delayMs = 2000;
   let lastResponse: HealthResponse | null = null;
 
@@ -49,10 +51,15 @@ export default async function globalSetup(): Promise<void> {
       lastResponse = body;
 
       console.log(
-        `[${attempt}/${maxAttempts}] Health check: ok=${body.ok}, migration=${body.migration}, latest=${latestTag}`,
+        `[${attempt}/${maxAttempts}] Health check: ok=${body.ok}, migration=${body.migration}, latest=${latestTag}` +
+          (expectedSha ? `, commit=${body.commit ?? null}, expected=${expectedSha}` : ''),
       );
 
-      if (body.ok && body.migration === latestTag) {
+      if (
+        body.ok &&
+        body.migration === latestTag &&
+        (!expectedSha || body.commit === expectedSha)
+      ) {
         console.log('✓ API is ready');
         return;
       }

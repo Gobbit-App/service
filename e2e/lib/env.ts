@@ -2,6 +2,8 @@ export interface E2eEnv {
   baseURL: string;
   /** Owner bearer session seeded by `pnpm db:seed` when `SMOKE_SESSION_TOKEN` is set (D43). */
   token: string;
+  /** When set (CI: the commit that triggered the run), smoke waits until /health reports it. */
+  expectedSha?: string;
 }
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
@@ -38,5 +40,6 @@ export function resolveE2eEnv(env: EnvSource = process.env): E2eEnv {
   return {
     baseURL,
     token: read(env, 'SMOKE_SESSION_TOKEN') ?? '',
+    expectedSha: read(env, 'EXPECTED_SHA'),
   };
 }

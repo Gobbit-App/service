@@ -38,8 +38,9 @@ export function createCategoriesService({
       }
 
       const visibility = input.visibility ?? 'shared';
-      if (visibility === 'private') {
-        // D38: only roles that can see private categories may create one.
+      if (visibility !== 'shared') {
+        // D38 / § 4: roles that cannot see private categories (editors) create `shared` only —
+        // neither `private` nor `public` (a public category would expose its cards in Phase 8).
         assertPermission(role, 'category.read_private');
       }
       const maxPos = await categories.maxPosition(deck.id);

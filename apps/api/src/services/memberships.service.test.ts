@@ -35,9 +35,10 @@ describe('createMembershipsService', () => {
       findActive: vi.fn().mockResolvedValue(null),
       listByDeck: vi.fn().mockResolvedValue([]),
       create: vi.fn(),
+      reinvite: vi.fn(),
       softDelete: vi.fn(),
     };
-    magicLinks = { create: vi.fn() };
+    magicLinks = { create: vi.fn(), expireUnusedForMembership: vi.fn() };
     users = { listByAccount: vi.fn().mockResolvedValue([]), findById: vi.fn() };
     usersService = {
       findOrCreateByEmail: vi.fn().mockResolvedValue({ user: invitee, created: true }),
@@ -129,13 +130,24 @@ describe('createMembershipsService', () => {
       expect(mailer.send).not.toHaveBeenCalled();
     });
 
-    it('resends for a pending member without creating a membership', async () => {
+    it('resends for a pending member: new role, older links expired, no new membership', async () => {
       memberships.findActive.mockResolvedValue(membershipRow());
+      memberships.reinvite.mockResolvedValue(membershipRow({ role: 'editor' }));
 
       const result = await service.invite(caller, UUID, input);
 
       expect(result.created).toBe(false);
+      expect(result.membership.role).toBe('editor');
       expect(memberships.create).not.toHaveBeenCalled();
+      expect(magicLinks.expireUnusedForMembership).toHaveBeenCalledWith('m1', NOW);
+      expect(memberships.reinvite).toHaveBeenCalledWith('m1', {
+        role: 'editor',
+        invitedBy: 'caller',
+        now: NOW,
+      });
+      expect(magicLinks.expireUnusedForMembership.mock.invocationCallOrder[0]).toBeLessThan(
+        magicLinks.create.mock.invocationCallOrder[0],
+      );
       expect(mailer.send).toHaveBeenCalledTimes(1);
       expect(magicLinks.create).toHaveBeenCalledTimes(1);
     });

@@ -6,7 +6,7 @@ import { toDeckDto, toCategoryDto } from '../lib/mappers';
 import { toSlug } from '../lib/slug';
 import { resolveDeck } from '../lib/resolve-deck';
 import { authorize, type MembershipLookup } from '../access/authorize';
-import { badRequest } from '../errors/http-errors';
+import { accountOwnerRequired, badRequest } from '../errors/http-errors';
 
 export function createDecksService({
   decks,
@@ -67,6 +67,8 @@ export function createDecksService({
     async remove(user: CurrentUser, idOrSlug: string): Promise<void> {
       const deck = await resolveDeck(decks, idOrSlug);
       await authorize(user, deck, 'deck.delete', memberships);
+      // D50: co-owners (owner memberships) may not delete; only the owner account's users.
+      if (deck.ownerAccountId !== user.accountId) throw accountOwnerRequired('deck.delete');
       await decks.softDelete(deck.id);
     },
   };

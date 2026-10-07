@@ -49,6 +49,16 @@ export function mapPgError(err: unknown): Problem | null {
     };
   }
 
+  if (code === 'P0001' && message.includes('owner_account_membership')) {
+    // D36/D44: the DB backstop for the service-level check in memberships.service.invite.
+    return {
+      type: '/problems/bad-request',
+      title: 'Bad Request',
+      status: 400,
+      detail: 'Users of the deck owner account are already owners',
+    };
+  }
+
   if (code === '23505') {
     return {
       type: '/problems/conflict',

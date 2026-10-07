@@ -93,6 +93,14 @@ describe('pg-error-map', () => {
       expect(JSON.stringify(result)).not.toContain('select');
     });
 
+    it('maps P0001 with owner_account_membership to 400', () => {
+      const err = Object.assign(new Error('owner_account_membership'), {
+        code: 'P0001',
+        message: 'owner_account_membership',
+      });
+      expect(mapPgError(err)).toMatchObject({ type: '/problems/bad-request', status: 400 });
+    });
+
     it('returns null for P0001 with other message', () => {
       const err = Object.assign(new Error('some other error'), {
         code: 'P0001',

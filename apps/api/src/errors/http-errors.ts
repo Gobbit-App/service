@@ -95,6 +95,21 @@ export function forbidden(permission: Permission, role: MemberRole): HttpError {
   );
 }
 
+/**
+ * D50 (Oct 1 decision): a membership owner (co-admin) has every owner permission except deleting
+ * the deck, which stays with users of the deck's owner account.
+ */
+export function accountOwnerRequired(permission: Permission): HttpError {
+  return new HttpError(
+    403,
+    '/problems/forbidden',
+    'Forbidden',
+    "Only the deck's account owner can do this",
+    undefined,
+    { extensions: { permission, role: 'owner' } },
+  );
+}
+
 /** D32: a cookie-authenticated mutation from an origin that isn't allowed. */
 export function csrfRejected(): HttpError {
   return new HttpError(

@@ -1,4 +1,4 @@
--- Community Pocketbook Phase 1 Invariants (D7, P1.2)
+-- Gobbit Phase 1 invariants (D7, P1.2)
 -- Automatic updated_at, default categories, and category protection
 
 CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $$
