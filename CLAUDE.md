@@ -13,6 +13,7 @@ packages/db/     — Drizzle ORM, migrations, seed (@pb/db)
 e2e/             — Playwright smoke tests
 infra/           — Docker Compose (base = deployed, docker-compose.local.yml = local ports/dev defaults)
 apps/api/Dockerfile — API image (also used by Compose)
+apps/web/Dockerfile + Caddyfile — web image (static PWA; routes /api and /s to the API)
 docs/            — architecture.md (keep synced)
 ```
 
@@ -27,7 +28,7 @@ docs/            — architecture.md (keep synced)
 - **Invariants**: Auto timestamps, default category creation & protection in migrations; hand-written down files in `packages/db/migrations/down/`
 - **Auth**: magic links → server-side sessions (`gobbit_session` cookie or `Authorization: Bearer`); access via `authorize()` + `can()`, visibility via `visibleCategoriesWhere()`. Smoke/`api.http` use the seeded `SMOKE_SESSION_TOKEN`
 - **Seed**: local development only (refuses production); creates only the owner account/user from `SEED_OWNER_EMAIL` (+ optional smoke session); no sample decks or cards — tests build data with factories/fixtures (D49)
-- **Deploy**: CI pushes `ghcr.io/gobbit-app/service/api` (built with `GIT_SHA`) and calls the Dokploy webhook; `/health` reports `commit`; smoke waits for it (ADR-033, `infra/README.md`)
+- **Deploy**: CI builds `ghcr.io/gobbit-app/service/{api,web}` with `GIT_SHA`, then a `deploy` job calls the Dokploy webhook once; only `web` (Caddy) faces Traefik and proxies `/api` (stripped) and `/s` to the internal API; smoke waits for `/health` and `/version.json` to report the commit (ADR-033/034/038, `infra/README.md`)
 - **Roles**: co-owners (owner memberships) can do everything except delete the deck; re-inviting a pending member replaces the invite (new role, older links expired)
 - **Env**: `pnpm dev` and `pnpm db:*` load the repo-root `.env` if present (`tsx --env-file-if-exists`); real env vars win
 - **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; E2E `@smoke` → each test creates and deletes its own `smoke-<id>` deck (D50)
@@ -44,7 +45,7 @@ pnpm db:{generate,migrate,rollback,seed}  # Database
 pnpm dev                           # API :3000 + web :5173 (Vite proxies /api, /s)
 pnpm api:openapi                   # Regenerate api-client after route changes (CI checks drift)
 pnpm build:web / budget / og:static # Web build, 150 KB gzip budget, static OG/icons
-pnpm compose:{up,down}             # Docker (Postgres + API)
+pnpm compose:{up,down}             # Docker (Postgres + API + web on 127.0.0.1:8080)
 ```
 
 See `docs/architecture.md` and `README.md` for detailed setup.

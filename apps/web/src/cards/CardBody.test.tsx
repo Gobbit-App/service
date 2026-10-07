@@ -1,9 +1,16 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { makeItem } from '../test/fixtures';
 import { CardBody, INVALID_CARD_COPY } from './CardBody';
 
 describe('CardBody', () => {
+  // The first import of the calc chunk transforms mathjs (and instruments it under coverage),
+  // which can exceed findBy's 1 s on a cold CI runner. Warming the module cache here keeps that
+  // one-off cost out of the assertion; the test below still renders through React.lazy/Suspense.
+  beforeAll(async () => {
+    await import('./CalcCard');
+  }, 30_000);
+
   it('renders a text card body as markdown', () => {
     render(<CardBody item={makeItem({ body: 'Hello **world**' })} cloudName={null} />);
     expect(screen.getByText('world').tagName).toBe('STRONG');
