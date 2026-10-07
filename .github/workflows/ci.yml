@@ -29,8 +29,25 @@ jobs:
 
       - run: pnpm typecheck
 
+      # Pull the Testcontainers images up front, with retries: a Docker Hub hiccup otherwise
+      # surfaces as an opaque "HTTP code 500" in the integration global setup, which aborts the
+      # whole Vitest run ("No test files found", 0% coverage). Keep in sync with
+      # packages/db/test/global-setup.ts and the Ryuk version bundled with testcontainers.
+      - name: Pull Testcontainers images
+        run: |
+          for image in pgvector/pgvector:pg17 testcontainers/ryuk:0.14.0; do
+            for attempt in 1 2 3 4; do
+              docker pull --quiet "$image" && break
+              [ "$attempt" = 4 ] && { echo "::error::docker pull $image failed after 4 attempts"; exit 1; }
+              sleep $((attempt * 10))
+            done
+          done
+
       # One run of both Vitest projects (unit + integration) with the coverage gates.
       - run: pnpm test:coverage
+        env:
+          # Surfaces the Docker daemon's own error text if container start-up still fails.
+          DEBUG: testcontainers*
 
       - run: pnpm --filter @pb/db exec drizzle-kit check
 
