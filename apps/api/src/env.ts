@@ -4,6 +4,7 @@ import {
   INVITE_TTL_DAYS_DEFAULT,
   SESSION_TTL_DAYS_DEFAULT,
 } from '@pb/shared';
+import { cloudNameFrom } from './lib/cloudinary-url';
 
 const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
 
@@ -42,6 +43,8 @@ const baseSchema = z.object({
   CLIENT_IP_HEADER: z.string().optional(),
   /** Commit the image was built from (Docker build arg); reported by /health so smoke can wait for a deploy. */
   GIT_SHA: z.string().optional(),
+  /** Cloudinary credentials URL (key, secret, cloud name) — image delivery and OG cache (D55, D60). */
+  CLOUDINARY_URL: z.string().optional(),
 });
 
 export const envSchema = baseSchema
@@ -53,8 +56,13 @@ export const envSchema = baseSchema
       require('RESEND_API_KEY', 'RESEND_API_KEY is required when MAIL_PROVIDER=resend');
       require('MAIL_FROM', 'MAIL_FROM is required when MAIL_PROVIDER=resend');
     }
+    if (data.CLOUDINARY_URL !== undefined && cloudNameFrom(data.CLOUDINARY_URL) === null) {
+      // Never echo the value: it carries the API secret.
+      ctx.addIssue({ code: 'custom', path: ['CLOUDINARY_URL'], message: 'Invalid CLOUDINARY_URL' });
+    }
     if (data.NODE_ENV === 'production') {
       require('API_URL', 'API_URL is required in production');
+      require('CLOUDINARY_URL', 'CLOUDINARY_URL is required in production');
       if (data.MAIL_PROVIDER === 'console' && !data.ALLOW_CONSOLE_MAIL) {
         ctx.addIssue({
           code: 'custom',

@@ -7,18 +7,25 @@
     "dev": "tsx watch --env-file-if-exists=../../.env src/server.ts",
     "start": "tsx src/server.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "build": "tsc --noEmit -p tsconfig.json"
+    "build": "tsc --noEmit -p tsconfig.json",
+    "openapi": "tsx scripts/openapi.ts",
+    "og:static": "tsx scripts/og-static.ts"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/noto-sans-hebrew": "^5.3.0",
     "@hono/node-server": "^2.1.1",
     "@hono/zod-openapi": "^1.6.3",
     "@pb/db": "workspace:*",
     "@pb/shared": "workspace:*",
+    "@resvg/resvg-js": "^2.6.2",
     "@sindresorhus/slugify": "^3.0.1",
+    "cloudinary": "^2.11.0",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.13.9",
     "pg": "^8.23.0",
     "resend": "^6.30.0",
+    "satori": "^0.35.0",
     "tsx": "^4.23.15",
     "zod": "^4.6.5"
   },

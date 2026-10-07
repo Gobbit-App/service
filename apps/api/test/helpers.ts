@@ -6,6 +6,7 @@ import { createApp } from '../src/app';
 import { parseEnv, type Env } from '../src/env';
 import { MemoryMailer } from '../src/mail/memory-mailer';
 import { SESSION_COOKIE } from '../src/lib/cookies';
+import type { ShareWiring } from '../src/share/wiring';
 import {
   createSampleWorld,
   fixtureId,
@@ -54,6 +55,8 @@ export function testEnv(overrides: Record<string, string> = {}): Env {
 export interface SetupApiTestOptions {
   /** Env overrides (string values, as they would appear in `process.env`). */
   env?: Record<string, string>;
+  /** Share-preview overrides (OG store and renderer stubs). */
+  share?: ShareWiring;
 }
 
 export interface ApiTestContext {
@@ -104,7 +107,7 @@ export function setupApiTest(opts: SetupApiTestOptions = {}): ApiTestContext {
     world = await createSampleWorld(t.db);
     await sessionFor(world.owner);
     await sessionFor(world.other);
-    app = createApp({ db: t.db, pool: t.pool, env, mailer, now: clock.now });
+    app = createApp({ db: t.db, pool: t.pool, env, mailer, now: clock.now, share: opts.share });
   });
 
   return {

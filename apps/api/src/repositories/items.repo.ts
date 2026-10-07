@@ -1,5 +1,5 @@
 import { and, desc, eq, exists, inArray, isNull, sql, type SQL } from 'drizzle-orm';
-import { categories, itemCategories, items, type Db, type ItemRow } from '@pb/db';
+import { categories, favorites, itemCategories, items, type Db, type ItemRow } from '@pb/db';
 import type { CursorData, ItemStatus, ItemType, MemberRole, SourceKind } from '@pb/shared';
 import { canSeePrivate, visibleCategoriesWhere } from '../access/visibility';
 
@@ -81,6 +81,8 @@ export function createItemsRepo(db: Db) {
       status: ItemStatus;
       type?: ItemType;
       categoryId?: string;
+      /** Only items this user has favorited (P3 favorites view). */
+      favoriteOf?: string;
       cursor?: CursorData;
       limit: number;
     }): Promise<ItemRow[]> {
@@ -110,6 +112,17 @@ export function createItemsRepo(db: Db) {
                   eq(itemCategories.categoryId, q.categoryId),
                 ),
               ),
+          ),
+        );
+      }
+
+      if (q.favoriteOf) {
+        conditions.push(
+          exists(
+            db
+              .select({ one: sql`1` })
+              .from(favorites)
+              .where(and(eq(favorites.itemId, items.id), eq(favorites.userId, q.favoriteOf))),
           ),
         );
       }

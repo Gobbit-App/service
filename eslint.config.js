@@ -1,5 +1,6 @@
 import globals from 'globals';
 import js from '@eslint/js';
+import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -12,6 +13,9 @@ export default tseslint.config(
       'packages/db/migrations/**',
       'docs/thrifty/**',
       '.claude/**',
+      '**/dist/**',
+      'apps/web/dev-dist/**',
+      'apps/web/src/routeTree.gen.ts',
     ],
   },
   {
@@ -22,7 +26,15 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.ts'],
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: globals.browser,
+    },
+    plugins: { 'react-hooks': reactHooks },
+    rules: reactHooks.configs.recommended.rules,
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -32,7 +44,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.test.ts', '**/*.int.test.ts', 'e2e/**'],
+    files: ['**/*.test.{ts,tsx}', '**/*.int.test.ts', 'e2e/**'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },

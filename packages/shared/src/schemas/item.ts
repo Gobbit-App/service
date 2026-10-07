@@ -143,6 +143,8 @@ export const itemListQuerySchema = z.object({
   category: slugSchema.optional(),
   status: z.enum(itemStatuses).default('published'),
   type: z.enum(itemTypes).optional(),
+  /** P3: `favorite=true` narrows the list to the caller's favorites. */
+  favorite: z.enum(['true']).optional(),
   cursor: z.string().min(1).optional(),
   limit: limitSchema,
 });

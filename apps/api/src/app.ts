@@ -14,6 +14,7 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { problemFromZodError, problemResponse } from './errors/http-errors';
 import { SESSION_COOKIE } from './lib/cookies';
 import { registerHealthRoutes } from './routes/health';
+import { registerConfigRoutes } from './routes/config';
 import { registerAuthRoutes } from './routes/auth';
 import { registerMeRoutes } from './routes/me';
 import { registerDecksRoutes } from './routes/decks';
@@ -21,6 +22,8 @@ import { registerMembersRoutes } from './routes/members';
 import { registerCategoriesRoutes } from './routes/categories';
 import { registerItemsRoutes } from './routes/items';
 import { registerFavoritesRoutes } from './routes/favorites';
+import { registerShareRoutes } from './routes/share';
+import type { ShareWiring } from './share/wiring';
 
 export interface AppDeps {
   db: Db;
@@ -29,6 +32,8 @@ export interface AppDeps {
   mailer: Mailer;
   /** Injectable clock; integration tests advance it to expire sessions and links. */
   now?: () => Date;
+  /** OG image store/renderer overrides for tests (D60). */
+  share?: ShareWiring;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -58,6 +63,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   );
 
   registerHealthRoutes(app, { pool: deps.pool, commit: env.GIT_SHA });
+  registerConfigRoutes(app, env);
   registerAuthRoutes(app, services, env);
   registerMeRoutes(app, services);
   registerDecksRoutes(app, services);
@@ -65,6 +71,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerCategoriesRoutes(app, services);
   registerItemsRoutes(app, services);
   registerFavoritesRoutes(app, services);
+  registerShareRoutes(app, services);
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

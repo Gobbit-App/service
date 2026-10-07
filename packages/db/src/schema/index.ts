@@ -11,6 +11,7 @@ export * from './memberships';
 export * from './sessions';
 export * from './magic-links';
 export * from './rate-limit-counters';
+export * from './og-images';
 
 import { accounts } from './accounts';
 import { users } from './users';
@@ -22,6 +23,7 @@ import { favorites } from './favorites';
 import { memberships } from './memberships';
 import { sessions } from './sessions';
 import { magicLinks } from './magic-links';
+import { ogImages } from './og-images';
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -33,6 +35,7 @@ export type FavoriteRow = typeof favorites.$inferSelect;
 export type MembershipRow = typeof memberships.$inferSelect;
 export type SessionRow = typeof sessions.$inferSelect;
 export type MagicLinkRow = typeof magicLinks.$inferSelect;
+export type OgImageRow = typeof ogImages.$inferSelect;
 
 export type NewDeckRow = typeof decks.$inferInsert;
 export type NewCategoryRow = typeof categories.$inferInsert;

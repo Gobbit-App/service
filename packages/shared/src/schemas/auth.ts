@@ -6,7 +6,16 @@ export const EMAIL_MAX = 254;
 
 export const emailSchema = z.email().max(EMAIL_MAX);
 
-export const magicLinkRequestSchema = z.object({ email: emailSchema }).strict();
+/** Maximum length of the post-sign-in deep link (mirrors the API's `safeNextPath`). */
+export const NEXT_PATH_MAX = 512;
+
+export const magicLinkRequestSchema = z
+  .object({
+    email: emailSchema,
+    /** Same-origin path to land on after sign-in; off-site values are ignored by the API. */
+    next: z.string().max(NEXT_PATH_MAX).optional(),
+  })
+  .strict();
 
 export const okSchema = z.object({ ok: z.literal(true) });
 

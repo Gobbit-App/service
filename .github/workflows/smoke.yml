@@ -29,11 +29,16 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # D62: the web-smoke project drives Chromium against the deployed web origin.
+      - run: pnpm --filter e2e exec playwright install --with-deps chromium
+
       - run: pnpm --filter e2e exec playwright test --grep @smoke
         env:
           BASE_URL: ${{ vars.API_BASE_URL }}
+          # Optional; defaults to API_BASE_URL without its /api suffix (D51).
+          WEB_BASE_URL: ${{ vars.WEB_BASE_URL }}
           SMOKE_SESSION_TOKEN: ${{ secrets.SMOKE_SESSION_TOKEN }}
-          # Wait until the deployed /health reports the commit CI just built and shipped.
+          # Wait until /health and /version.json report the commit CI just built and shipped.
           EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
           CI: 'true'
 

@@ -3,6 +3,9 @@ import { parseEnv } from './env';
 
 describe('env', () => {
   const validUrl = 'postgresql://localhost/test';
+  const FAKE_CLOUDINARY_URL = ['cloudinary://', 'key', ':', 'not-a-real-secret', '@', 'demo'].join(
+    '',
+  );
 
   it('parses minimal config with defaults', () => {
     const env = parseEnv({ DATABASE_URL: validUrl });
@@ -77,6 +80,7 @@ describe('env', () => {
       API_URL: 'https://example.com',
       MAIL_PROVIDER: 'console',
       ALLOW_CONSOLE_MAIL: 'true',
+      CLOUDINARY_URL: FAKE_CLOUDINARY_URL,
     });
     expect(env.NODE_ENV).toBe('production');
     expect(env.MAIL_PROVIDER).toBe('console');
@@ -135,6 +139,7 @@ describe('env', () => {
       API_URL: 'https://example.com/',
       NODE_ENV: 'production',
       ALLOW_CONSOLE_MAIL: 'true',
+      CLOUDINARY_URL: FAKE_CLOUDINARY_URL,
     });
     expect(env.API_URL).toBe('https://example.com');
   });
