@@ -111,7 +111,7 @@ To run the entire stack (database + API + web image) with Docker Compose:
 pnpm compose:up
 ```
 
-`compose:up` layers `infra/docker-compose.local.yml` over the base file: it builds both images from source, publishes the DB, the API and the web image on `127.0.0.1` (web on **http://localhost:8080**, with `API_URL=http://localhost:8080/api`), runs the API with `NODE_ENV=development` (so `CLOUDINARY_URL` is optional) and relaxes the production defaults for plain HTTP (`COOKIE_SECURE=false`, console mailer allowed — sign-in links appear in `docker compose -f infra/docker-compose.yml logs api`). The base `infra/docker-compose.yml` is what the deployed host runs: no host ports, `COOKIE_SECURE=true` and no console mail by default, `POSTGRES_PASSWORD` from the environment. The API container runs migrations on startup. Seed the owner user from the host (uses `.env`, `SEED_OWNER_EMAIL` required):
+`compose:up` layers `infra/docker-compose.local.yml` over the base file: it builds both images from source, publishes the DB, the API and the web image on `127.0.0.1` (web on **http://localhost:8080**, with `API_URL=http://localhost:8080/api`), runs the API with `NODE_ENV=development` (so `CLOUDINARY_URL` is optional) and relaxes the production defaults for plain HTTP (`COOKIE_SECURE=false`, console mailer allowed — sign-in links appear in `docker compose -f infra/docker-compose.yml logs api`). The base `infra/docker-compose.yml` is what the deployed host runs: no host ports, `COOKIE_SECURE=true` and no console mail by default, no database service (`DATABASE_URL` points at the shared database, D67). The local Postgres lives only in `docker-compose.local.yml`. The API container runs migrations on startup. Seed the owner user from the host (uses `.env`, `SEED_OWNER_EMAIL` required):
 
 ```bash
 pnpm db:seed
@@ -171,16 +171,41 @@ push to main → CI (tests, client drift, web build + budget)
 - **Images:** `ghcr.io/gobbit-app/service/api` and `ghcr.io/gobbit-app/service/web`, tagged `latest` and the full commit SHA. The base Compose file runs `${API_IMAGE_TAG:-latest}` / `${WEB_IMAGE_TAG:-latest}` with `pull_policy: always`. If the GHCR packages are private, give Dokploy registry credentials for `ghcr.io`.
 - **Base images:** API `node:22-slim`; web built on `node:22-slim`, served by `caddy:2-alpine` (`apps/web/Caddyfile`: routing, cache headers, CSP). The web image serves `/version.json` with its commit.
 - **Health check:** `GET /health` → `{ ok, db_ms, migration, commit }`; `commit` is the `GIT_SHA` build arg.
-- **Migrations:** Automatic on container startup via `docker-entrypoint.sh`
+- **Database:** a shared Postgres outside the Compose project (see [Shared database](#shared-database-d67) below).
+- **Migrations:** Automatic on container startup via `docker-entrypoint.sh`, against `DATABASE_URL`. The container exits if it's unset or the database is unreachable, and Docker restarts it.
 - **Networking:** only `web` joins Dokploy's external `dokploy-network` (label `traefik.docker.network=dokploy-network`), where Traefik and the shared `cloudflared` Compose service run. The tunnel's public hostname `gobbit.niranhome.win` points at Traefik; Traefik sends the whole host to `web:80`, and Caddy forwards `/api` and `/s` to `api:3000` on the project network (D51).
 - **No seed on the box:** the deployed database starts empty. Sign in by magic link as the owner (the first sign-in creates the user), then mint the smoke token (below).
 - **Backups:** see `infra/README.md`.
+
+### Shared database (D67)
+
+Postgres is not part of the Compose project. The API connects to a shared Postgres (with pgvector) that other services also use, each with its own database and role. Today that is a Dokploy-managed database reached over the home network; later it may be a cloud provider. Only `DATABASE_URL` changes.
+
+One-time setup on the shared instance (Dokploy → **Create Service → Database → PostgreSQL**, image `pgvector/pgvector:pg18` or another pgvector tag). As its superuser:
+
+```sql
+CREATE ROLE gobbit LOGIN PASSWORD '<strong password>';
+CREATE DATABASE gobbit OWNER gobbit;
+REVOKE CONNECT ON DATABASE gobbit FROM PUBLIC;
+\c gobbit
+-- The app role can't create these (superuser only); migration 0000 then finds them and skips.
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+```
+
+The `gobbit` role owns its database (and, on Postgres 15+, its `public` schema), so migrations can create tables and the `drizzle` schema. It cannot touch other services' databases.
+
+**Reaching it:** give the Dokploy database an **External Port** (e.g. `5433`). Then set `DATABASE_URL=postgres://gobbit:<pw>@<box LAN IP>:5433/gobbit`. This works from the Gobbit containers on the same box and from any machine on the LAN. Don't port-forward it on the router. Docker-published ports bypass `ufw`, so the router (NAT) is what keeps it LAN-only.
+
+**Leaving the LAN (cloud DB, or another site):** append `?sslmode=verify-full` (node-postgres also treats `require` as `verify-full`). This works as is with providers whose certificates chain to a public CA (Neon, Supabase, Crunchy, …). A provider with a private CA (e.g. RDS) also needs its CA bundle in the image and `sslrootcert=<path>`. For a self-hosted DB, prefer a private network (Tailscale/WireGuard) over a public port.
+
+The API's `/health` reports `db_ms`, which is a quick way to see the network round-trip.
 
 ### Environment Variables (Production)
 
 Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM`, `CLIENT_IP_HEADER=cf-connecting-ip`, `NODE_ENV=production`) is a default in `infra/docker-compose.yml` (D52). Dokploy holds only the secrets:
 
-- `POSTGRES_PASSWORD` – used by the Compose `db` service and the API's `DATABASE_URL` (Compose builds it from this)
+- `DATABASE_URL` – the `gobbit` database on the shared Postgres, e.g. `postgres://gobbit:<pw>@<box LAN IP>:5433/gobbit` (add `?sslmode=verify-full` off the LAN)
 - `RESEND_API_KEY`
 - `CLOUDINARY_URL` – the API refuses to start in production without it
 
@@ -206,7 +231,7 @@ The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays 
 
 CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks never execute on private machines. Workflows take the pnpm version from `packageManager` in `package.json` and the Node version from `.nvmrc`.
 
-**Note:** the tunnel route, the Dokploy project and its backup schedule (Phase 0 steps 5–7) are not set up yet; the repo side is ready.
+**Note:** the shared database, the tunnel route, the Dokploy project and its backup schedule (Phase 0 steps 2, 5–7) are not set up yet; the repo side is ready.
 
 ## API Overview
 

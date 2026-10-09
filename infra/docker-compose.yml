@@ -1,34 +1,20 @@
 name: deck
 
 services:
-  db:
-    image: pgvector/pgvector:pg17
-    environment:
-      POSTGRES_USER: pb
-      # Set a real password on the deployed host; `pb` is the local default only.
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pb}
-      POSTGRES_DB: pb
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./db-init:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U pb -d pb']
-      interval: 5s
-    # No host ports here (P0.2: DB reachable only on the Docker network). Local port mappings
-    # live in docker-compose.local.yml, which `pnpm compose:up` layers on top of this file.
-    restart: unless-stopped
-
   api:
     # Deployed: Dokploy runs the image CI pushes to GHCR (tag = `latest` or a full commit SHA).
     # docker-compose.local.yml builds it from source instead.
     image: ghcr.io/gobbit-app/service/api:${API_IMAGE_TAG:-latest}
     pull_policy: always
     environment:
-      DATABASE_URL: postgres://pb:${POSTGRES_PASSWORD:-pb}@db:5432/pb
+      # D67: the database is a shared Postgres (pgvector) outside this project, reached over the
+      # home network now and possibly the internet later. Dokploy secret; append
+      # `?sslmode=verify-full` (or `require`) once the connection leaves a trusted network.
+      DATABASE_URL: ${DATABASE_URL:-}
       PORT: 3000
       NODE_ENV: production
       # D52: every non-secret deployed value is a default here; Dokploy holds only the secrets
-      # (POSTGRES_PASSWORD, RESEND_API_KEY, CLOUDINARY_URL). docker-compose.local.yml overrides
+      # (DATABASE_URL, RESEND_API_KEY, CLOUDINARY_URL). docker-compose.local.yml overrides
       # these for localhost.
       # Public addresses: magic links, share pages and the sign-in callback (D46, D51).
       API_URL: ${API_URL:-https://gobbit.niranhome.win/api}
@@ -45,10 +31,8 @@ services:
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
       # Image delivery and the OG image cache (D55, D60); required in production.
       CLOUDINARY_URL: ${CLOUDINARY_URL:-}
-    depends_on:
-      db:
-        condition: service_healthy
-    # Internal only: the web service is the one public entry point (D51).
+    # Internal only: the web service is the one public entry point (D51). Kept off
+    # dokploy-network on purpose: another project's `api` there would shadow Caddy's api:3000.
     restart: unless-stopped
 
   web:
@@ -69,9 +53,6 @@ services:
       - traefik.http.routers.gobbit.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
       - traefik.http.services.gobbit.loadbalancer.server.port=80
     restart: unless-stopped
-
-volumes:
-  pgdata:
 
 networks:
   # Created by Dokploy on the box; `pnpm compose:up` creates an empty one locally.

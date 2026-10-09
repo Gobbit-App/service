@@ -1,11 +1,24 @@
 # Local overlay for `pnpm compose:up`: builds both images from source, serves the app on
 # http://localhost:8080 (the web image proxies /api and /s to the API, D64) and relaxes the
 # production defaults of docker-compose.yml for plain HTTP (no Secure cookie, console mailer
-# printing sign-in links to `docker compose logs api`). Not used on the deployed host.
+# printing sign-in links to `docker compose logs api`). It also adds the local Postgres: the
+# deployed host uses a shared database outside the project (D67). Not used on the deployed host.
 services:
   db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: pb
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pb}
+      POSTGRES_DB: pb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pb -d pb']
+      interval: 5s
     ports:
       - 127.0.0.1:${DB_PORT:-5432}:5432
+    restart: unless-stopped
 
   api:
     build:
@@ -15,7 +28,11 @@ services:
     pull_policy: build
     ports:
       - 127.0.0.1:${API_PORT:-3000}:3000
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
+      DATABASE_URL: postgres://pb:${POSTGRES_PASSWORD:-pb}@db:5432/pb
       # Development lets the API boot without CLOUDINARY_URL (image cards and OG uploads off).
       NODE_ENV: ${NODE_ENV:-development}
       API_URL: ${API_URL:-http://localhost:8080/api}
@@ -34,3 +51,6 @@ services:
     pull_policy: build
     ports:
       - 127.0.0.1:${WEB_PORT:-8080}:80
+
+volumes:
+  pgdata:
