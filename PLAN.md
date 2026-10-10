@@ -10,6 +10,7 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
 - [ ] **2. Postgres on Dokploy** — `psql` from inside the network returns both extensions in `\dx`.
   - local ✅ Compose `db` (pgvector/pg17) + `infra/db-init` extensions; covered by migrations.int. Not run on Dokploy.
   - Oct 1: the base `infra/docker-compose.yml` publishes no host ports (local ports moved to `docker-compose.local.yml`); `POSTGRES_PASSWORD` comes from the environment.
+  - Oct 9: changed (D67, ADR-039): the deployed DB is a shared Dokploy-managed pgvector instance with a `gobbit` database and role; the Compose project has no `db` and takes `DATABASE_URL`. To do: create the instance, role, database and extensions (README → Shared database), then check `\dx` in `gobbit`.
 - [ ] **3. Migrations** — run the migration twice; second run is a no-op; the row exists.
   - local ✅ migrate is idempotent (migrations.int + container entrypoint); health row seeded by 0000_health.
 - [ ] **4. API skeleton** — `curl https://api.<domain>/health` returns `{ ok: true, db_ms: <n>, migration: <name> }`.

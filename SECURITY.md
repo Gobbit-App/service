@@ -21,4 +21,4 @@ Only the latest commit on `main` receives security fixes while the project is pr
 ## Scope notes
 
 - Authentication is passwordless (magic links + server-side sessions, see `docs/architecture.md`). Deployments must use `COOKIE_SECURE=true`, a real mailer (`MAIL_PROVIDER=resend`), and set `CLIENT_IP_HEADER` only to a header the proxy controls. `SMOKE_SESSION_TOKEN` is an owner credential: keep it secret (≥ 32 random characters) and rotate it by re-running the seed.
-- The default database credentials in `.env.example` and `infra/docker-compose.yml` are for local development only.
+- The default database credentials in `.env.example` and `infra/docker-compose.local.yml` are for local development only. The deployed `DATABASE_URL` uses a dedicated role that owns only the `gobbit` database on the shared instance. Keep that instance off the internet (LAN or private network), or require `sslmode=verify-full` when it isn't.

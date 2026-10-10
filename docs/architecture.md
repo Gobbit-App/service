@@ -410,7 +410,7 @@ pageSchema<T>(item: T) = z.object({
 
 ### Deployment layout (D46)
 
-Images come from GHCR (ADR-033); backups and restore are in `infra/README.md`. One origin `https://gobbit.niranhome.win`: Traefik routes `PathPrefix(/api)` to the API with a strip-prefix middleware (labels in `infra/docker-compose.yml`), so `API_URL=https://gobbit.niranhome.win/api`, `COOKIE_DOMAIN` unset, `CORS_ORIGINS=https://gobbit.niranhome.win`, `CLIENT_IP_HEADER=cf-connecting-ip`.
+Images come from GHCR (ADR-033); the database is a shared Postgres outside the Compose project (ADR-039); backups and restore are in `infra/README.md`. One origin `https://gobbit.niranhome.win`: Traefik routes `PathPrefix(/api)` to the API with a strip-prefix middleware (labels in `infra/docker-compose.yml`), so `API_URL=https://gobbit.niranhome.win/api`, `COOKIE_DOMAIN` unset, `CORS_ORIGINS=https://gobbit.niranhome.win`, `CLIENT_IP_HEADER=cf-connecting-ip`.
 
 ## Authorization (D33–D35)
 
@@ -1013,9 +1013,17 @@ Tagging: every test title includes `@smoke`
 
 ### ADR-038: Minimal Dokploy configuration (D52)
 
-**Decision**: Every non-secret deployed value is a default in `infra/docker-compose.yml`; `docker-compose.local.yml` overrides them for localhost. Dokploy holds only the Compose source, the secrets (`POSTGRES_PASSWORD`, `RESEND_API_KEY`, `CLOUDINARY_URL`), the deploy webhook and backups. Traefik gets one router from labels on `web`.
+**Decision**: Every non-secret deployed value is a default in `infra/docker-compose.yml`; `docker-compose.local.yml` overrides them for localhost. Dokploy holds only the Compose source, the secrets (`DATABASE_URL`, `RESEND_API_KEY`, `CLOUDINARY_URL`), the deploy webhook and backups. Traefik gets one router from labels on `web`.
 
 **Rationale**: The repo decides what runs where. A redeploy can't drift from what's reviewed.
+
+---
+
+### ADR-039: Shared Postgres outside the Compose project (D67)
+
+**Decision**: The deployed Compose project has no database. The API connects with `DATABASE_URL` (a Dokploy secret) to a shared pgvector Postgres used by several services, each with its own database and least-privilege owner role (`gobbit`). Today it is a Dokploy-managed database reached over the LAN on its external port. A later move to a cloud provider changes only the URL (`sslmode=verify-full` off the LAN). Extensions are created once by the instance's superuser; migration 0000's `CREATE EXTENSION IF NOT EXISTS` is then a no-op. `docker-compose.local.yml` adds a local `db` service for `pnpm compose:up`, and `docker-entrypoint.sh` refuses to start without `DATABASE_URL`. `api` stays off `dokploy-network`, where another project's `api` service could shadow Caddy's `api:3000` upstream.
+
+**Rationale**: One instance for many small services saves memory and maintenance. Dokploy's database backups work on managed databases, not on Postgres inside a Compose project. A URL is also the portable boundary for moving to the cloud. The cost: Gobbit shares the instance's Postgres major version and its failures, so local and integration tests (pg17) should track the shared instance's major version.
 
 ---
 
