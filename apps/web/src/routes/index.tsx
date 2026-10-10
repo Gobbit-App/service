@@ -47,9 +47,7 @@ function Home() {
       <AppHeader title="Pocketbooks" />
       <main className="page">
         {decks.data.length === 0 ? (
-          <EmptyState title="No pocketbooks yet">
-            Ask someone in your family to invite you to theirs.
-          </EmptyState>
+          <EmptyState title="No pocketbooks yet" />
         ) : (
           <ul className="deck-list">
             {decks.data.map((deck) => (

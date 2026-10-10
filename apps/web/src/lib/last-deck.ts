@@ -1,3 +1,5 @@
+import { RESERVED_DECK_SLUG } from '@pb/shared/decks';
+
 /** Storage key for the last opened deck slug. */
 export const LAST_DECK_KEY = 'gobbit:last-deck';
 
@@ -43,10 +45,16 @@ export function clearLastDeck(store: KeyValueStore | null = defaultStore()): voi
   }
 }
 
-/** Picks landing deck: last if in list, single deck if only one, else null. */
+/**
+ * Picks the landing deck (contract §11): last opened if still listed, else the personal deck,
+ * else the only deck, else null (the home list decides).
+ */
 export function pickLanding(deckSlugs: readonly string[], last: string | null): string | null {
   if (last !== null && deckSlugs.includes(last)) {
     return last;
+  }
+  if (deckSlugs.includes(RESERVED_DECK_SLUG)) {
+    return RESERVED_DECK_SLUG;
   }
   if (deckSlugs.length === 1) {
     return deckSlugs[0];
