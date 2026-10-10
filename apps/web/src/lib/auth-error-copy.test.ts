@@ -14,6 +14,10 @@ describe('parseReason', () => {
     expect(parseReason('expired')).toBe('expired');
   });
 
+  it('should return "onboarding" for "onboarding"', () => {
+    expect(parseReason('onboarding')).toBe('onboarding');
+  });
+
   it('should return "unknown" for undefined', () => {
     expect(parseReason(undefined)).toBe('unknown');
   });
@@ -44,6 +48,14 @@ describe('authErrorCopy', () => {
     const copy = authErrorCopy('expired');
     expect(copy.title).toBe('That link has expired');
     expect(copy.body).toBe('Sign-in links last 15 minutes. Request a new one below.');
+  });
+
+  it('should return correct copy for "onboarding"', () => {
+    const copy = authErrorCopy('onboarding');
+    expect(copy.title).toBe("We couldn't set up your pocketbook");
+    expect(copy.body).toBe(
+      'Sign-in stopped before it finished. Try the same link again, or request a new one below.',
+    );
   });
 
   it('should return correct copy for "unknown"', () => {

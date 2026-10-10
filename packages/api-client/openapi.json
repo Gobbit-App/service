@@ -1219,6 +1219,9 @@
                           "isPublic": {
                             "type": "boolean"
                           },
+                          "isDefault": {
+                            "type": "boolean"
+                          },
                           "ownerAccountId": {
                             "type": "string"
                           },
@@ -1244,6 +1247,7 @@
                           "slug",
                           "name",
                           "isPublic",
+                          "isDefault",
                           "ownerAccountId",
                           "createdAt",
                           "updatedAt",
@@ -1387,6 +1391,9 @@
                           "isPublic": {
                             "type": "boolean"
                           },
+                          "isDefault": {
+                            "type": "boolean"
+                          },
                           "ownerAccountId": {
                             "type": "string"
                           },
@@ -1412,6 +1419,7 @@
                           "slug",
                           "name",
                           "isPublic",
+                          "isDefault",
                           "ownerAccountId",
                           "createdAt",
                           "updatedAt",
@@ -1585,6 +1593,9 @@
                     "isPublic": {
                       "type": "boolean"
                     },
+                    "isDefault": {
+                      "type": "boolean"
+                    },
                     "ownerAccountId": {
                       "type": "string"
                     },
@@ -1661,6 +1672,7 @@
                     "slug",
                     "name",
                     "isPublic",
+                    "isDefault",
                     "ownerAccountId",
                     "createdAt",
                     "updatedAt",
@@ -1960,6 +1972,9 @@
                     "isPublic": {
                       "type": "boolean"
                     },
+                    "isDefault": {
+                      "type": "boolean"
+                    },
                     "ownerAccountId": {
                       "type": "string"
                     },
@@ -1985,6 +2000,7 @@
                     "slug",
                     "name",
                     "isPublic",
+                    "isDefault",
                     "ownerAccountId",
                     "createdAt",
                     "updatedAt",
@@ -2230,6 +2246,9 @@
                     "isPublic": {
                       "type": "boolean"
                     },
+                    "isDefault": {
+                      "type": "boolean"
+                    },
                     "ownerAccountId": {
                       "type": "string"
                     },
@@ -2255,6 +2274,7 @@
                     "slug",
                     "name",
                     "isPublic",
+                    "isDefault",
                     "ownerAccountId",
                     "createdAt",
                     "updatedAt",

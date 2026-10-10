@@ -1,10 +1,12 @@
 /** Possible auth error reasons. */
-export type AuthErrorReason = 'invalid' | 'used' | 'expired' | 'unknown';
+export type AuthErrorReason = 'invalid' | 'used' | 'expired' | 'onboarding' | 'unknown';
+
+const KNOWN_REASONS: readonly AuthErrorReason[] = ['invalid', 'used', 'expired', 'onboarding'];
 
 /** Validates and parses an auth error reason. */
 export function parseReason(reason: unknown): AuthErrorReason {
-  if (reason === 'invalid' || reason === 'used' || reason === 'expired') {
-    return reason;
+  if (KNOWN_REASONS.includes(reason as AuthErrorReason)) {
+    return reason as AuthErrorReason;
   }
   return 'unknown';
 }
@@ -26,6 +28,11 @@ export function authErrorCopy(reason: AuthErrorReason): { title: string; body: s
       return {
         title: 'That link has expired',
         body: 'Sign-in links last 15 minutes. Request a new one below.',
+      };
+    case 'onboarding':
+      return {
+        title: "We couldn't set up your pocketbook",
+        body: 'Sign-in stopped before it finished. Try the same link again, or request a new one below.',
       };
     case 'unknown':
       return {

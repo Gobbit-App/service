@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import { accounts, users } from '@pb/db';
-import type { Db } from '@pb/db';
+import type { DbExecutor } from '@pb/db';
 import type { CurrentUser } from '../types';
 
 const currentUserColumns = {
@@ -10,7 +10,7 @@ const currentUserColumns = {
   displayName: users.displayName,
 };
 
-export function createUsersRepo(db: Db) {
+export function createUsersRepo(db: DbExecutor) {
   return {
     /** `email` must already be normalised (trimmed, lowercased) — emails are stored that way. */
     async findByEmail(email: string): Promise<CurrentUser | null> {

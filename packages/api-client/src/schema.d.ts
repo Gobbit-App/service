@@ -558,6 +558,7 @@ export interface paths {
                                 slug: string;
                                 name: string;
                                 isPublic: boolean;
+                                isDefault: boolean;
                                 ownerAccountId: string;
                                 createdAt: string;
                                 updatedAt: string;
@@ -629,6 +630,7 @@ export interface paths {
                                 slug: string;
                                 name: string;
                                 isPublic: boolean;
+                                isDefault: boolean;
                                 ownerAccountId: string;
                                 createdAt: string;
                                 updatedAt: string;
@@ -695,6 +697,7 @@ export interface paths {
                             slug: string;
                             name: string;
                             isPublic: boolean;
+                            isDefault: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;
@@ -820,6 +823,7 @@ export interface paths {
                             slug: string;
                             name: string;
                             isPublic: boolean;
+                            isDefault: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;
@@ -996,6 +1000,7 @@ export interface paths {
                             slug: string;
                             name: string;
                             isPublic: boolean;
+                            isDefault: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;

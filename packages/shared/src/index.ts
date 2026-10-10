@@ -1,4 +1,5 @@
 export * from './limits';
+export * from './decks';
 export * from './enums';
 export * from './utils/utf8-bytes';
 export * from './schemas/common';

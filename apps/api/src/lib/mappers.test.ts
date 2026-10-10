@@ -14,6 +14,7 @@ describe('mappers', () => {
         name: 'Test Deck',
         ownerAccountId: '223e4567-e89b-12d3-a456-426614174000',
         isPublic: false,
+        isDefault: false,
         createdAt: date,
         updatedAt: date,
         deletedAt: null,
@@ -27,6 +28,44 @@ describe('mappers', () => {
 
       const parsed = deckSchema.parse(dto);
       expect(parsed).toBeDefined();
+    });
+
+    it('addresses the personal deck as "me" and flags it', () => {
+      const row: DeckRow = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        kind: 'personal',
+        slug: 'personal-223e4567-e89b-12d3-a456-426614174000',
+        name: 'My deck',
+        ownerAccountId: '223e4567-e89b-12d3-a456-426614174000',
+        isPublic: false,
+        isDefault: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      };
+
+      const dto = toDeckDto(row, 'owner');
+
+      expect(dto.slug).toBe('me');
+      expect(dto.isDefault).toBe(true);
+      expect(deckSchema.parse(dto).slug).toBe('me');
+    });
+
+    it('keeps the stored slug for non-default decks', () => {
+      const row: DeckRow = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        kind: 'shared',
+        slug: 'family',
+        name: 'Family',
+        ownerAccountId: '223e4567-e89b-12d3-a456-426614174000',
+        isPublic: false,
+        isDefault: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      };
+
+      expect(toDeckDto(row, 'owner')).toMatchObject({ slug: 'family', isDefault: false });
     });
   });
 

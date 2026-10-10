@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { hashToken } from '../src/lib/tokens';
 import { SESSION_COOKIE } from '../src/lib/cookies';
+import { personalDeckSlug } from '../src/repositories/decks.repo';
+import { createAccountUser, createDeck } from '@pb/db/test';
 import {
   json,
   OWNER_EMAIL,
@@ -73,7 +75,8 @@ describe('magic links without APP_URL (P2.2, D22–D26)', () => {
     const body = await json(me);
     expect(body.user.email).toBe('new.person@example.test');
     expect(body.user.displayName).toBe('new.person');
-    expect(body.decks).toEqual([]);
+    expect(body.decks).toHaveLength(1);
+    expect(body.decks[0]).toMatchObject({ slug: 'me', isDefault: true, role: 'owner' });
 
     const { rows } = await ctx.t.pool.query(
       'SELECT a.id FROM users u JOIN accounts a ON a.id = u.account_id WHERE u.email = $1',
@@ -206,5 +209,89 @@ describe('magic links with APP_URL (D26 redirects)', () => {
     expect(again.status).toBe(303);
     expect(again.headers.get('Location')).toBe(`${APP_URL}/auth/error?reason=used`);
     expect(again.headers.get('Set-Cookie')).toBeNull();
+  });
+
+  it('a link whose personal deck cannot be created redirects to onboarding and stays usable', async () => {
+    const blocked = await createAccountUser(ctx.t.db, { email: 'blocked@example.test' });
+    // A non-default deck already holds the account's personal slug, so ensureDefault inserts nothing.
+    const blocker = await createDeck(ctx.t.db, blocked, {
+      slug: personalDeckSlug(blocked.accountId),
+    });
+
+    await client.requestLink(blocked.email);
+    const token = tokenFromMail(ctx.mailer);
+
+    const failed = await client.callback(token);
+    expect(failed.status).toBe(303);
+    expect(failed.headers.get('Location')).toBe(`${APP_URL}/auth/error?reason=onboarding`);
+    expect(failed.headers.get('Set-Cookie')).toBeNull();
+    const unconsumed = await ctx.t.pool.query('SELECT used_at FROM magic_links WHERE email = $1', [
+      blocked.email,
+    ]);
+    expect(unconsumed.rows[0].used_at).toBeNull();
+
+    await ctx.t.pool.query('DELETE FROM decks WHERE id = $1', [blocker.id]);
+    const retry = await client.callback(token);
+    expect(retry.status).toBe(303);
+    expect(retry.headers.get('Location')).toBe(`${APP_URL}/`);
+    expect(sessionTokenFromSetCookie(retry)).not.toBeNull();
+  });
+});
+
+describe('sign-in onboarding (Phase 3B)', () => {
+  const ctx = setupApiTest({ env: { CLIENT_IP_HEADER: 'x-test-ip' } });
+  let client: ReturnType<typeof authClient>;
+
+  beforeEach(() => {
+    client = authClient(ctx);
+    ctx.mailer.clear();
+  });
+
+  const personalDecksFor = async (email: string) =>
+    (
+      await ctx.t.pool.query(
+        `SELECT d.id, d.slug FROM decks d JOIN users u ON u.account_id = d.owner_account_id
+         WHERE u.email = $1 AND d.is_default AND d.deleted_at IS NULL`,
+        [email],
+      )
+    ).rows;
+
+  it('a second sign-in keeps exactly one personal deck', async () => {
+    await client.requestLink('twice-onboard@example.test');
+    expect((await client.callback(tokenFromMail(ctx.mailer))).status).toBe(303);
+
+    await client.requestLink('twice-onboard@example.test');
+    expect((await client.callback(tokenFromMail(ctx.mailer))).status).toBe(303);
+
+    expect(await personalDecksFor('twice-onboard@example.test')).toHaveLength(1);
+  });
+
+  it('an existing user without a personal deck gets one on sign-in', async () => {
+    const existing = await createAccountUser(ctx.t.db, { email: 'no-deck@example.test' });
+    expect(await personalDecksFor(existing.email)).toHaveLength(0);
+
+    await client.requestLink(existing.email);
+    expect((await client.callback(tokenFromMail(ctx.mailer))).status).toBe(303);
+
+    const rows = await personalDecksFor(existing.email);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].slug).toBe(personalDeckSlug(existing.accountId));
+  });
+
+  it('an invitee gets their own personal deck, invisible to the inviter', async () => {
+    const invite = await ctx.app.request('/decks/family/invites', {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({ email: 'invitee-onboard@example.test', role: 'reader' }),
+    });
+    expect(invite.status).toBe(201);
+
+    const cb = await client.callback(tokenFromMail(ctx.mailer));
+    expect(cb.status).toBe(303);
+
+    const [personal] = await personalDecksFor('invitee-onboard@example.test');
+    expect(personal).toBeDefined();
+    const peek = await ctx.app.request(`/decks/${personal.id}`, { headers: ctx.as() });
+    expect(peek.status).toBe(404);
   });
 });

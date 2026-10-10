@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { nameSchema, slugSchema } from './common';
 import { categorySchema } from './category';
 import { deckKinds, memberRoles } from '../enums';
+import { RESERVED_DECK_SLUG } from '../decks';
+
+/** A user-chosen deck slug; `me` is reserved for the personal deck (Phase 3B). */
+const deckSlugSchema = slugSchema.refine((slug) => slug !== RESERVED_DECK_SLUG, {
+  message: `"${RESERVED_DECK_SLUG}" is reserved`,
+});
 
 export const deckSchema = z.object({
   id: z.string(),
@@ -9,6 +15,8 @@ export const deckSchema = z.object({
   slug: z.string(),
   name: z.string(),
   isPublic: z.boolean(),
+  /** Phase 3B: true for the caller's personal deck, whose `slug` is always `me`. */
+  isDefault: z.boolean(),
   ownerAccountId: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -23,7 +31,7 @@ export const deckWithCategoriesSchema = deckSchema.extend({
 export const deckCreateSchema = z
   .object({
     name: nameSchema,
-    slug: slugSchema.optional(),
+    slug: deckSlugSchema.optional(),
     kind: z.enum(deckKinds).optional(),
     isPublic: z.boolean().optional(),
   })
@@ -32,7 +40,7 @@ export const deckCreateSchema = z
 export const deckPatchSchema = z
   .object({
     name: nameSchema.optional(),
-    slug: slugSchema.optional(),
+    slug: deckSlugSchema.optional(),
     isPublic: z.boolean().optional(),
   })
   .strict()

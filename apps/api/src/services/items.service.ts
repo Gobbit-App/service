@@ -91,7 +91,7 @@ export function createItemsService(deps: {
 
   return {
     async list(user: CurrentUser, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
-      const deck = await resolveDeck(decks, idOrSlug);
+      const deck = await resolveDeck(decks, idOrSlug, user);
       const role = await authorize(user, deck, 'item.read', memberships);
 
       let categoryId: string | undefined;
@@ -133,7 +133,7 @@ export function createItemsService(deps: {
     },
 
     async create(user: CurrentUser, idOrSlug: string, input: ItemCreate): Promise<Item> {
-      const deck = await resolveDeck(decks, idOrSlug);
+      const deck = await resolveDeck(decks, idOrSlug, user);
       const role = await authorize(user, deck, 'item.create', memberships);
 
       // Determine category IDs (D6)

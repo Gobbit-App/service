@@ -29,6 +29,7 @@ describe('createDecksService', () => {
       listByOwner: vi.fn(),
       findById: vi.fn(),
       findBySlug: vi.fn(),
+      findDefaultForAccount: vi.fn().mockResolvedValue(null),
       create: vi.fn(),
       update: vi.fn(),
       softDelete: vi.fn(),
@@ -117,6 +118,16 @@ describe('createDecksService', () => {
             message: 'Required',
           }),
         ]),
+      });
+
+      expect(decksRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a name that derives the reserved slug "me" with 400', async () => {
+      await expect(service.create(user, { name: 'Me' })).rejects.toMatchObject({
+        status: 400,
+        type: '/problems/bad-request',
+        errors: [expect.objectContaining({ path: 'slug', message: '"me" is reserved' })],
       });
 
       expect(decksRepo.create).not.toHaveBeenCalled();
@@ -216,6 +227,69 @@ describe('createDecksService', () => {
       decksRepo.findBySlug.mockResolvedValue({ ...deck, ownerAccountId: 'someone-else' });
       await expect(service.remove(user, 'fam')).rejects.toMatchObject({ status: 404 });
       expect(decksRepo.softDelete).not.toHaveBeenCalled();
+    });
+
+    it('409s on the personal deck without deleting (Phase 3B)', async () => {
+      decksRepo.findDefaultForAccount.mockResolvedValue({
+        ...deck,
+        kind: 'personal',
+        isDefault: true,
+        ownerAccountId: user.accountId,
+      });
+      await expect(service.remove(user, 'me')).rejects.toMatchObject({
+        status: 409,
+        type: '/problems/personal-deck',
+        detail: "The personal deck can't be deleted",
+      });
+      expect(decksRepo.softDelete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('update (personal deck, Phase 3B)', () => {
+    const personal = {
+      id: '00000000-0000-4000-8000-000000000002',
+      kind: 'personal' as const,
+      slug: 'personal-account-1',
+      name: 'My deck',
+      isPublic: false,
+      isDefault: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    };
+
+    beforeEach(() => {
+      decksRepo.findDefaultForAccount.mockResolvedValue({
+        ...personal,
+        ownerAccountId: user.accountId,
+      });
+      decksRepo.update.mockImplementation(async (_id: string, patch: object) => ({
+        ...personal,
+        ...patch,
+        ownerAccountId: user.accountId,
+      }));
+    });
+
+    it('allows renaming the personal deck and keeps addressing it as me', async () => {
+      const result = await service.update(user, 'me', { name: 'Home' });
+      expect(decksRepo.update).toHaveBeenCalledWith(personal.id, { name: 'Home' });
+      expect(result).toMatchObject({ slug: 'me', isDefault: true, name: 'Home' });
+    });
+
+    it('409s when the slug is changed', async () => {
+      await expect(service.update(user, 'me', { slug: 'other' })).rejects.toMatchObject({
+        status: 409,
+        type: '/problems/personal-deck',
+      });
+      expect(decksRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('409s when visibility is changed', async () => {
+      await expect(service.update(user, 'me', { isPublic: true })).rejects.toMatchObject({
+        status: 409,
+        type: '/problems/personal-deck',
+      });
+      expect(decksRepo.update).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,5 +1,48 @@
 import { describe, it, expect } from 'vitest';
-import { deckCreateSchema, deckPatchSchema } from './deck';
+import { deckCreateSchema, deckPatchSchema, deckSchema } from './deck';
+
+const validDeckDto = {
+  id: '11111111-1111-4111-8111-111111111111',
+  kind: 'personal',
+  slug: 'me',
+  name: 'My deck',
+  isPublic: false,
+  isDefault: true,
+  ownerAccountId: '22222222-2222-4222-8222-222222222222',
+  createdAt: '2026-10-11T00:00:00.000Z',
+  updatedAt: '2026-10-11T00:00:00.000Z',
+  role: 'owner',
+};
+
+describe('deckSchema', () => {
+  it('accepts a DTO with isDefault', () => {
+    expect(deckSchema.safeParse(validDeckDto).success).toBe(true);
+  });
+
+  it('requires isDefault', () => {
+    const { isDefault: _omitted, ...withoutFlag } = validDeckDto;
+    expect(deckSchema.safeParse(withoutFlag).success).toBe(false);
+  });
+});
+
+describe('reserved deck slug "me"', () => {
+  it('rejects slug "me" on create', () => {
+    const result = deckCreateSchema.safeParse({ name: 'Me', slug: 'me' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe('"me" is reserved');
+  });
+
+  it('rejects slug "me" on patch', () => {
+    const result = deckPatchSchema.safeParse({ slug: 'me' });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe('"me" is reserved');
+  });
+
+  it('still accepts slugs that merely start with me', () => {
+    expect(deckCreateSchema.safeParse({ name: 'Me', slug: 'me-too' }).success).toBe(true);
+    expect(deckPatchSchema.safeParse({ slug: 'mexico' }).success).toBe(true);
+  });
+});
 
 describe('deckCreateSchema', () => {
   it('accepts {name:"Family"}', () => {

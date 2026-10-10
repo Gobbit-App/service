@@ -1,4 +1,4 @@
-import { type Db } from '@pb/db';
+import { type Db, type DbTx } from '@pb/db';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
 import { createDecksRepo } from '../repositories/decks.repo';
@@ -16,7 +16,7 @@ import { createItemsService } from './items.service';
 import { createFavoritesService } from './favorites.service';
 import { createUsersService } from './users.service';
 import { createRateLimitService } from './rate-limit.service';
-import { createAuthService } from './auth.service';
+import { createAuthService, type CallbackRepos, type CallbackTransaction } from './auth.service';
 import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
 
@@ -29,6 +29,20 @@ export interface ServiceDeps {
   share?: ShareWiring;
 }
 
+/** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
+export function buildCallbackRepos(tx: DbTx): CallbackRepos {
+  const users = createUsersRepo(tx);
+  const decks = createDecksRepo(tx);
+  return {
+    sessions: createSessionsRepo(tx),
+    magicLinks: createMagicLinksRepo(tx),
+    memberships: createMembershipsRepo(tx),
+    decks,
+    users,
+    usersService: createUsersService({ users, decks }),
+  };
+}
+
 export function buildServices({ db, env, mailer, now = () => new Date(), share }: ServiceDeps) {
   const users = createUsersRepo(db);
   const decks = createDecksRepo(db);
@@ -39,8 +53,10 @@ export function buildServices({ db, env, mailer, now = () => new Date(), share }
   const sessions = createSessionsRepo(db);
   const magicLinks = createMagicLinksRepo(db);
 
-  const usersService = createUsersService({ users });
+  const usersService = createUsersService({ users, decks });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
+  const transaction: CallbackTransaction = (fn) =>
+    db.transaction((tx) => fn(buildCallbackRepos(tx)));
 
   return {
     users: usersService,
@@ -51,10 +67,7 @@ export function buildServices({ db, env, mailer, now = () => new Date(), share }
       mailer,
       sessions,
       magicLinks,
-      memberships,
-      decks,
-      users,
-      usersService,
+      transaction,
       rateLimits,
     }),
     members: createMembershipsService({

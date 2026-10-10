@@ -1,6 +1,6 @@
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import type { MagicLinkPurpose } from '@pb/shared';
-import { magicLinks, type Db, type MagicLinkRow } from '@pb/db';
+import { magicLinks, type DbExecutor, type MagicLinkRow } from '@pb/db';
 
 export interface NewMagicLink {
   email: string;
@@ -12,7 +12,7 @@ export interface NewMagicLink {
   requestedIp?: string | null;
 }
 
-export function createMagicLinksRepo(db: Db) {
+export function createMagicLinksRepo(db: DbExecutor) {
   return {
     async create(v: NewMagicLink): Promise<MagicLinkRow> {
       const [row] = await db
