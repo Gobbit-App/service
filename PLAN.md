@@ -49,19 +49,37 @@ Demos only count as done when run against the deployed Dokploy instance (ground 
 - [ ] **4. Invites** — invite a second member as reader; they click, land on Family, and cannot see the inviter's personal deck.
 - [ ] **5. Category visibility** — a private `Admin` category exists in Family; the reader's item list omits it, the owner's includes it.
 - [ ] **6. Rate limits and abuse** — the sixth request in an hour returns 429; the email is still not disclosed as existing or not.
+  - Oct 10: D25 "no deck is auto-created" is superseded by Phase 3B (personal default deck on first sign-in).
   - Oct 1: all six implemented on branch `worktree-p2-implementation` (not merged, not deployed). Unit suite green (485 tests, Linux run); integration and e2e not re-run in the Oct 1 review. Boxes stay unchecked until the demos run over HTTPS.
 ## Phase 3 — Reader PWA
 
 Oct 6: P3.0–P3.7 implemented on branch `worktree-p3-implementation` (builds on the unmerged Phase 2 branch). Unit, integration, typecheck, lint, web build and bundle budget (110 KB of 150 KB) green locally; `web-smoke` lists but has not run against a deployment. Boxes stay unchecked until the demos run on the deployed URL. Demos are on Android (Chrome); iOS install and iMessage previews are out of scope for Phase 3.
 
 - [ ] **1. App shell** — the deployed `https://gobbit.niranhome.win` loads the Family deck on a phone in under 2 s on 4G (Lighthouse mobile performance ≥ 90).
-- [ ] **2. Sign-in flow** — cold start on a phone, sign in, land on Family.
+- [ ] **2. Sign-in flow** — cold start on a phone, sign in, land on Family. (From Phase 3B on, a user with no last deck lands on their personal deck.)
 - [ ] **3. Card renderers** — the Family deck's cards, including at least one of each type and a calc card, render without overflow on a 360 px wide viewport; the calc card computes. (Was "the 25 seed cards"; there is no seeded data since D49.)
 - [ ] **4. Category navigation** — switch School → Food → back to School and land on the same card.
 - [ ] **5. PWA install and offline** — add to home screen on Android; enable airplane mode; open the app; the last-viewed category and its cards still show.
 - [ ] **6. Favorites and archive views** — favorite a card on one phone; it appears in favorites on the other after refresh.
 - [ ] **7. Share previews** — share a private card and a public card from `https://gobbit.niranhome.win` to WhatsApp, Telegram and Slack; the private one shows the branded invite card, the public one shows real content; edit the public card and re-share, the preview reflects the edit.
 - [ ] **8. Error and empty states** — stop the API container; the app shows cached content with the offline banner and recovers when the container returns.
+## Phase 3B — First run: personal deck and deck management
+
+Oct 10: added after Phase 3 (product gap). Phases 0–3 never gave a signed-in user anything of their own or any way to create a deck except `curl`. This phase is a **gate**: Phase 4 and later do not start until its demos pass. It supersedes D25 ("no deck is auto-created") and the empty-start half of D49 (the seed still creates only the owner user). Numbering of later phases is unchanged.
+
+Rules:
+- Every user gets exactly one **personal default deck** (`kind = personal`, owned by the user's account, `general` category from the existing trigger), created the first time they complete a magic-link sign-in. Creation is idempotent ("ensure", not "create"), runs in the callback transaction before the session is opened, and is not queued: the redirect only happens once the deck exists. Users created by an invite get theirs on their first sign-in, not at invite time.
+- It lives in one function next to `users.service.findOrCreateByEmail()`, so the Phase 9 registration gate covers it too.
+- The personal default deck cannot be deleted (409) and is not shareable (no memberships, D33 owner-only). It can be renamed.
+- Slugs stay globally unique: the personal deck's slug is derived from the display name plus a short suffix on collision.
+
+- [ ] **1. Personal deck on first sign-in** — request a link for a fresh address on the phone; click it; land directly on `/d/<slug>` showing your own empty deck with the `general` category. Sign out and in again: still exactly one personal deck in `GET /decks`.
+- [ ] **2. Existing users and invitees** — the owner (seeded with no deck) has a personal deck after the backfill migration; an invitee who clicks an invite lands on the invited deck (`next` wins), also has their own personal deck, and the inviter cannot see it.
+- [ ] **3. Landing rules** — `/` opens the last deck when it is still listed, otherwise the personal deck; "ask someone to invite you" is gone; a forced failure of deck creation fails the sign-in with a clear error page instead of landing on an empty app.
+- [ ] **4. Create a deck from the UI** — from the deck list, create "Family" (shared) on the phone; it appears in the list and opens; `DELETE` of the personal deck is refused, deleting the new deck works.
+- [ ] **5. Categories from the UI** — add, rename, reorder and set visibility of categories in a deck you own; deleting `general` shows a clear refusal.
+- [ ] **6. Invite from the UI** — from Family's settings, invite an email with a role; pending invites are listed and can be re-sent; a reader sees no settings entry.
+- [ ] **7. First card in your own deck** — *(open decision: pull a minimal text/link card editor forward from Phase 6.1, or leave the personal deck read-only until Phase 6)*.
 ## Phase 4 — Search
 
 - [ ] **1. Search text column** — `EXPLAIN ANALYZE` on a `similarity()` query over 10 000 synthetic rows uses the GIN index and returns in under 30 ms.
@@ -109,7 +127,7 @@ Oct 6: P3.0–P3.7 implemented on branch `worktree-p3-implementation` (builds on
 - [ ] **2. Waitlist table and endpoint** — sign up from the landing page, click the confirmation email, see the row confirmed; a bot-style submission with the honeypot filled is silently dropped.
 - [ ] **3. Landing page** — paste the root URL into WhatsApp and get a proper preview; complete the form on a phone in under 30 seconds.
 - [ ] **4. Privacy-friendly analytics** — the analytics dashboard shows visits and form conversion for the last 7 days.
-- [ ] **5. Admin waitlist view and invite** — invite one waitlist entry; they sign in and land in their own empty deck with the `general` category.
+- [ ] **5. Admin waitlist view and invite** — invite one waitlist entry; they sign in and land in their own empty deck with the `general` category (the deck itself comes from Phase 3B; this demo checks the waitlist gate does not bypass it).
 - [ ] **6. Signal review** — a SQL view `waitlist_summary` returns counts by kind, status and week.
 ## Phase 10 — Curation agents
 
