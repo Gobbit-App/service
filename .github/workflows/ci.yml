@@ -5,6 +5,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Manual redeploy (Actions → CI → Run workflow). Builds and deploys only when run on main.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -80,7 +82,7 @@ jobs:
 
   image:
     needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       packages: write
