@@ -172,6 +172,8 @@ jobs:
     steps:
       # Tell Dokploy to pull the new images and restart the Compose project. Skipped until the
       # DOKPLOY_DEPLOY_WEBHOOK secret (the compose service's deploy webhook URL) is set.
+      # The compose service needs Autodeploy enabled, or Dokploy answers 400 ("Automatic
+      # deployments are disabled for this compose").
       - name: Redeploy on Dokploy
         env:
           DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
@@ -180,4 +182,6 @@ jobs:
             echo 'DOKPLOY_DEPLOY_WEBHOOK not set; skipping redeploy.'
             exit 0
           fi
-          curl -fsS -X POST "$DOKPLOY_DEPLOY_WEBHOOK"
+          # --fail-with-body: on an HTTP error, print Dokploy's message instead of just the code.
+          curl -sS --fail-with-body -X POST "$DOKPLOY_DEPLOY_WEBHOOK"
+          echo
