@@ -19,7 +19,7 @@ export function createCategoriesService({
 }) {
   return {
     async list(user: CurrentUser, idOrSlug: string): Promise<Category[]> {
-      const deck = await resolveDeck(decks, idOrSlug);
+      const deck = await resolveDeck(decks, idOrSlug, user);
       const role = await authorize(user, deck, 'category.read', memberships);
 
       const rows = await categories.listByDeck(deck.id, role);
@@ -27,7 +27,7 @@ export function createCategoriesService({
     },
 
     async create(user: CurrentUser, idOrSlug: string, input: CategoryCreate): Promise<Category> {
-      const deck = await resolveDeck(decks, idOrSlug);
+      const deck = await resolveDeck(decks, idOrSlug, user);
       const role = await authorize(user, deck, 'category.create', memberships);
 
       const slug = input.slug ?? toSlug(input.name);

@@ -11,7 +11,7 @@ import type { CurrentUser } from '../types';
 import { authorize } from '../access/authorize';
 import { resolveDeck } from '../lib/resolve-deck';
 import { generateToken, hashToken } from '../lib/tokens';
-import { badRequest, conflict, notFound } from '../errors/http-errors';
+import { badRequest, conflict, notFound, PERSONAL_DECK_PROBLEM } from '../errors/http-errors';
 import type { UsersService } from './users.service';
 
 const DAY_MS = 86_400_000;
@@ -78,7 +78,7 @@ export function createMembershipsService(deps: {
   return {
     /** Implicit owners (the owner account's users) first, then membership rows. */
     async list(user: CurrentUser, idOrSlug: string): Promise<Member[]> {
-      const deck = await resolveDeck(decks, idOrSlug);
+      const deck = await resolveDeck(decks, idOrSlug, user);
       await authorize(user, deck, 'member.list', memberships);
 
       const owners = await users.listByAccount(deck.ownerAccountId);
@@ -107,7 +107,7 @@ export function createMembershipsService(deps: {
     },
 
     async remove(user: CurrentUser, idOrSlug: string, userId: string): Promise<void> {
-      const deck = await resolveDeck(decks, idOrSlug);
+      const deck = await resolveDeck(decks, idOrSlug, user);
       await authorize(user, deck, 'member.remove', memberships);
 
       if (userId === user.id) {
@@ -134,8 +134,12 @@ export function createMembershipsService(deps: {
       idOrSlug: string,
       input: InviteCreate,
     ): Promise<{ membership: Membership; created: boolean }> {
-      const deck = await resolveDeck(decks, idOrSlug);
+      const deck = await resolveDeck(decks, idOrSlug, user);
       await authorize(user, deck, 'member.invite', memberships);
+      // Phase 3B: the personal deck is never shared (D33: owner-only, no memberships).
+      if (deck.isDefault) {
+        throw conflict("The personal deck can't be shared", PERSONAL_DECK_PROBLEM);
+      }
 
       const { user: invitee } = await usersService.findOrCreateByEmail(input.email);
       if (invitee.id === user.id) {

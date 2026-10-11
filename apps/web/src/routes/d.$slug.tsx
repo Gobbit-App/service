@@ -6,6 +6,7 @@ import { categoriesQuery, deckQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { writeLastDeck } from '../lib/last-deck';
+import { AddCardLink } from '../items/AddCardLink';
 import { viewFromPath, type ChipView } from '../ui/chip-order';
 import { ChipRow } from '../ui/ChipRow';
 import { useNavigateHref } from '../ui/NavLink';
@@ -25,6 +26,7 @@ function DeckLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigateHref();
   const deckSlug = deck.data?.slug;
+  const adding = pathname.endsWith('/new');
 
   useEffect(() => {
     if (deckSlug) writeLastDeck(deckSlug);
@@ -54,6 +56,7 @@ function DeckLayout() {
         onNavigate={navigate}
       />
       <main className="page">
+        {!adding && <AddCardLink deckSlug={slug} role={deck.data.role} />}
         <Outlet />
       </main>
     </>

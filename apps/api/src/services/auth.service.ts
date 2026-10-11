@@ -25,7 +25,7 @@ import type { RateLimitService } from './rate-limit.service';
 const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;
 
-export type MagicLinkFailureReason = 'invalid' | 'used' | 'expired';
+export type MagicLinkFailureReason = 'invalid' | 'used' | 'expired' | 'onboarding';
 
 /** A magic link that can't be consumed; the route decides between redirect and problem (D26). */
 export class MagicLinkFailure extends Error {
@@ -45,29 +45,40 @@ export function classifyMagicLinkFailure(
 
 export type AuthEnv = Pick<Env, 'API_URL' | 'MAGIC_LINK_TTL_MINUTES' | 'SESSION_TTL_DAYS'>;
 
-export function createAuthService(deps: {
-  env: AuthEnv;
-  now: () => Date;
-  mailer: Mailer;
+/** The repositories a magic-link callback reads and writes, bound to one transaction (Phase 3B). */
+export interface CallbackRepos {
   sessions: SessionsRepo;
   magicLinks: MagicLinksRepo;
   memberships: MembershipsRepo;
   decks: DecksRepo;
   users: UsersRepo;
   usersService: UsersService;
+}
+
+/** Runs `fn` with repos bound to one transaction; a throw from `fn` rolls every write back. */
+export type CallbackTransaction = <T>(fn: (repos: CallbackRepos) => Promise<T>) => Promise<T>;
+
+export function createAuthService(deps: {
+  env: AuthEnv;
+  now: () => Date;
+  mailer: Mailer;
+  sessions: SessionsRepo;
+  magicLinks: MagicLinksRepo;
+  transaction: CallbackTransaction;
   rateLimits: RateLimitService;
 }) {
-  const { env, now, mailer, sessions, magicLinks, memberships, decks, users, usersService } = deps;
+  const { env, now, mailer, sessions, magicLinks, transaction } = deps;
   const sessionTtlMs = env.SESSION_TTL_DAYS * DAY_MS;
 
-  async function openSession(
+  async function openSessionWith(
+    sessionsRepo: SessionsRepo,
     userId: string,
     kind: SessionKind,
     userAgent: string | null,
   ): Promise<{ token: string; session: SessionRow }> {
     const token = generateToken();
     const at = now();
-    const session = await sessions.create({
+    const session = await sessionsRepo.create({
       userId,
       tokenHash: hashToken(token),
       kind,
@@ -78,17 +89,36 @@ export function createAuthService(deps: {
     return { token, session };
   }
 
+  const openSession = (userId: string, kind: SessionKind, userAgent: string | null) =>
+    openSessionWith(sessions, userId, kind, userAgent);
+
   /** The user a membership-bound invite signs in, or null when the invite no longer applies. */
-  async function inviteUser(membershipId: string | null): Promise<CurrentUser | null> {
+  async function inviteUser(
+    r: CallbackRepos,
+    membershipId: string | null,
+  ): Promise<CurrentUser | null> {
     if (!membershipId) return null;
-    const membership = await memberships.findById(membershipId);
+    const membership = await r.memberships.findById(membershipId);
     if (!membership || membership.deletedAt) return null;
-    const deck = await decks.findById(membership.deckId);
+    const deck = await r.decks.findById(membership.deckId);
     if (!deck) return null;
-    const user = await users.findById(membership.userId);
+    const user = await r.users.findById(membership.userId);
     if (!user) return null;
-    await memberships.accept(membership.id, now());
+    await r.memberships.accept(membership.id, now());
     return user;
+  }
+
+  /**
+   * Phase 3B: the personal deck must exist before the session opens. A failure is logged and
+   * fails the sign-in (the transaction rolls back, so the link stays usable for a retry).
+   */
+  async function ensureOnboarding(usersService: UsersService, user: CurrentUser): Promise<void> {
+    try {
+      await usersService.ensurePersonalDeck(user);
+    } catch (err) {
+      console.error('[auth] onboarding failed', err);
+      throw new MagicLinkFailure('onboarding');
+    }
   }
 
   return {
@@ -173,7 +203,11 @@ export function createAuthService(deps: {
       });
     },
 
-    /** D23/D26/D37: consumes the link once and opens a cookie session for its user. */
+    /**
+     * D23/D26/D37: consumes the link once and opens a cookie session for its user. Phase 3B:
+     * consume, user resolution, personal-deck onboarding and session creation share one
+     * transaction, so any failure leaves the link unconsumed and no session open.
+     */
     async consumeMagicLink(input: {
       token: string;
       ip: string;
@@ -182,23 +216,26 @@ export function createAuthService(deps: {
       await deps.rateLimits.enforce(rateKeys.callbackIp(input.ip), RATE_CALLBACK_PER_IP);
 
       const tokenHash = hashToken(input.token);
-      const row = await magicLinks.consume(tokenHash, now());
-      if (!row) {
-        throw new MagicLinkFailure(
-          classifyMagicLinkFailure(await magicLinks.findByTokenHash(tokenHash)),
-        );
-      }
+      return transaction(async (r) => {
+        const row = await r.magicLinks.consume(tokenHash, now());
+        if (!row) {
+          throw new MagicLinkFailure(
+            classifyMagicLinkFailure(await r.magicLinks.findByTokenHash(tokenHash)),
+          );
+        }
 
-      const user =
-        row.purpose === 'invite'
-          ? await inviteUser(row.membershipId)
-          : (await usersService.findOrCreateByEmail(row.email)).user;
-      if (!user) {
-        throw new MagicLinkFailure('invalid');
-      }
+        const user =
+          row.purpose === 'invite'
+            ? await inviteUser(r, row.membershipId)
+            : (await r.usersService.findOrCreateByEmail(row.email)).user;
+        if (!user) {
+          throw new MagicLinkFailure('invalid');
+        }
 
-      const { token } = await openSession(user.id, 'cookie', input.userAgent);
-      return { token, next: row.next, user };
+        await ensureOnboarding(r.usersService, user);
+        const { token } = await openSessionWith(r.sessions, user.id, 'cookie', input.userAgent);
+        return { token, next: row.next, user };
+      });
     },
   };
 }

@@ -1,4 +1,7 @@
+import { PERSONAL_DECK_NAME } from '@pb/shared';
+import type { DeckRow } from '@pb/db';
 import type { UsersRepo } from '../repositories/users.repo';
+import type { DecksRepo } from '../repositories/decks.repo';
 import type { CurrentUser } from '../types';
 
 const UNIQUE_VIOLATION = '23505';
@@ -20,9 +23,26 @@ function isUniqueViolation(err: unknown): boolean {
   );
 }
 
-export function createUsersService({ users }: { users: UsersRepo }) {
+export function createUsersService({
+  users,
+  decks,
+}: {
+  users: UsersRepo;
+  decks: Pick<DecksRepo, 'ensureDefault'>;
+}) {
   return {
     findByEmail: (email: string) => users.findByEmail(normalizeEmail(email)),
+
+    /**
+     * Phase 3B: every user has exactly one personal deck. Runs on every sign-in and invite
+     * callback (inside the callback transaction, before the session opens), so it also covers
+     * users created before this phase. Idempotent ("ensure", not "create"). It supersedes
+     * D25's "no deck is auto-created". Sits next to findOrCreateByEmail so the Phase 9
+     * registration gate covers it too.
+     */
+    async ensurePersonalDeck(user: CurrentUser): Promise<DeckRow> {
+      return decks.ensureDefault({ accountId: user.accountId, name: PERSONAL_DECK_NAME });
+    },
 
     /**
      * D25: the single place where users come into existence (sign-in callback and invites).

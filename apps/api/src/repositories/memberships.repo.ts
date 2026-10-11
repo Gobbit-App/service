@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import type { MemberRole } from '@pb/shared';
-import { memberships, users, type Db, type MembershipRow } from '@pb/db';
+import { memberships, users, type DbExecutor, type MembershipRow } from '@pb/db';
 
 export interface MembershipWithUser {
   membership: MembershipRow;
@@ -9,7 +9,7 @@ export interface MembershipWithUser {
 
 const userColumns = { id: users.id, email: users.email, displayName: users.displayName };
 
-export function createMembershipsRepo(db: Db) {
+export function createMembershipsRepo(db: DbExecutor) {
   return {
     /** The live (not soft-deleted) membership of `userId` on `deckId`, pending or accepted. */
     async findActive(deckId: string, userId: string): Promise<MembershipRow | null> {

@@ -192,6 +192,7 @@ erDiagram
 | **D7: Default category auto-create + protect** | Every deck gets a 'general' default category on insert. Cannot be deleted or have is_default=false. | DB trigger `decks_create_default_category` (INSERT) + `categories_protect_default` (DELETE/UPDATE); unique index `categories_one_default_uq` ensures ≤1 default per deck. |
 | **D3: Slugs** | `decks.slug` unique among live decks; `categories.slug` unique per deck. | Partial unique indexes `decks_slug_active_uq`, `categories_deck_slug_active_uq` (`WHERE deleted_at IS NULL`); 23505 → 409. |
 | **D8: Body budget** | `body` ≤ `CARD_BODY_MAX` (600) Unicode code points. | zod `itemBodySchema` in @pb/shared; DB check constraint on `char_length(body)` (`0003_card_limits`). |
+| **Personal deck (Phase 3B, supersedes D25's no-auto-deck)** | Each account has exactly one personal deck (`is_default`), ensured on every sign-in. It cannot be deleted, shared, re-slugged or made public; its address is `me`. | Partial unique index `decks_default_per_account_uq`; CHECKs `decks_default_is_personal`, `decks_slug_not_reserved`; trigger `decks_protect_default` (P0001 `default_deck_protected`). Service rules answer 409 `/problems/personal-deck`. |
 | **Soft delete** (master plan P1.1, ADR-005) | Deleting sets `deleted_at` on accounts, users, decks, categories, items and memberships; queries exclude soft-deleted rows. Join tables (`item_categories`, `favorites`) are hard-deleted by design. | All repository `.find*()`, `.list()` include `WHERE isNull(t.deletedAt)`. Service `items.softDelete()`. |
 | **Auto `updated_at`** (master plan P1.1) | Every update to accounts, users, decks, categories, items and memberships sets `updated_at = now()`. | DB trigger `<table>_set_updated_at` BEFORE UPDATE on each table. |
 | **D9/D10: Payload budget and shape** | Each item type (text, link, image, table, calc) validates payload against a strict Zod schema. Payload ≤ 8192 UTF-8 bytes; DB enforces ≤ 9216 with a check constraint. | `payloadSchemaFor(type)` and the byte budget in @pb/shared (zod is authoritative); service calls `parse()` on PATCH; DB check constraint `items_payload_size_chk`. |
@@ -393,7 +394,7 @@ pageSchema<T>(item: T) = z.object({
 
 1. `POST /auth/magic-link { email }` always answers `200 { ok: true }` (no account enumeration; a malformed email is `400`). Rate limits run first (see below). The link token is `base64url(randomBytes(32))`; only `sha256(token)` is stored in `magic_links.token_hash`.
 2. The mail (`Mailer`: `ResendMailer` / `ConsoleMailer` / `MemoryMailer`, chosen by `MAIL_PROVIDER`) carries `${API_URL}/auth/callback?token=…`. Sign-in links live `MAGIC_LINK_TTL_MINUTES` (15), invite links `INVITE_TTL_DAYS` (7).
-3. `GET /auth/callback?token=` consumes the link with one atomic `UPDATE … WHERE used_at IS NULL AND expires_at > now() RETURNING *` (zero rows → invalid/used/expired, reason derived afterwards). The user is found or created in exactly one place, `users.service.findOrCreateByEmail()` (D25). For invites it sets `accepted_at`. It opens a cookie session and answers `303` to `${APP_URL}${next}` (or `${API_URL}/me` without `APP_URL`); `next` must be a relative path (`^/[^/\\]`). A bad link → `303 ${APP_URL}/auth/error?reason=…` or `401 /problems/magic-link-invalid`.
+3. `GET /auth/callback?token=` consumes the link with one atomic `UPDATE … WHERE used_at IS NULL AND expires_at > now() RETURNING *` (zero rows → invalid/used/expired, reason derived afterwards). The user is found or created in exactly one place, `users.service.findOrCreateByEmail()` (D25). For invites it sets `accepted_at`. In the same transaction, `usersService.ensurePersonalDeck()` makes sure the user has a personal deck (Phase 3B) before the cookie session opens; a failure there rolls the whole callback back and redirects to `/auth/error?reason=onboarding`. It answers `303` to `${APP_URL}${next}` (or `${API_URL}/me` without `APP_URL`); `next` must be a relative path (`^/[^/\\]`). A bad link → `303 ${APP_URL}/auth/error?reason=…` or `401 /problems/magic-link-invalid`.
 
 ### Sessions (D27–D31)
 
@@ -411,6 +412,18 @@ pageSchema<T>(item: T) = z.object({
 ### Deployment layout (D46)
 
 Images come from GHCR (ADR-033); the database is a shared Postgres outside the Compose project (ADR-039); backups and restore are in `infra/README.md`. One origin `https://gobbit.niranhome.win`: Traefik routes `PathPrefix(/api)` to the API with a strip-prefix middleware (labels in `infra/docker-compose.yml`), so `API_URL=https://gobbit.niranhome.win/api`, `COOKIE_DOMAIN` unset, `CORS_ORIGINS=https://gobbit.niranhome.win`, `CLIENT_IP_HEADER=cf-connecting-ip`.
+
+## Personal deck and first card (Phase 3B)
+
+Supersedes D25's "no deck is auto-created": every account gets exactly one personal deck, ensured on every sign-in (new users, invitees, and accounts that predate this phase; no backfill migration).
+
+- **Marker**: `decks.is_default` (TS `isDefault`) marks the personal deck. Its `kind` is `personal`, but other decks can also be `personal`, so code finds it only by the flag: `decks.repo#findDefaultForAccount(accountId)`.
+- **DB invariants** (migration `0007_default_deck`, hand-written part appended to the generated SQL; down file `migrations/down/0007_default_deck.down.sql`): partial unique index `decks_default_per_account_uq` on `(owner_account_id) WHERE is_default AND deleted_at IS NULL`; CHECK `decks_default_is_personal` (`NOT is_default OR kind = 'personal'`); CHECK `decks_slug_not_reserved` (`slug <> 'me'`); trigger `decks_protect_default` (BEFORE DELETE OR UPDATE OF deleted_at, is_default) raising `default_deck_protected` (P0001) unless `pg_trigger_depth() > 1`, so an account delete can cascade.
+- **Ensure**: `usersService.ensurePersonalDeck(user)` sits next to `findOrCreateByEmail()`. It inserts with `ON CONFLICT DO NOTHING` and reads the row back (`ensureDefault`), so it is idempotent. `GET /auth/callback` runs consume link, find or create user, ensure deck, open session in one transaction (`buildCallbackRepos` in `services/index.ts`). An ensure failure is logged (`[auth] onboarding failed`) and surfaces as `MagicLinkFailure('onboarding')`.
+- **Address**: the stored slug is `personal-<accountId>` and is never shown. `resolveDeck` maps `me` to the caller's default deck (404 when there is none), and `toDeckDto` returns `slug: 'me'` when `isDefault`. `me` is `RESERVED_DECK_SLUG` in `@pb/shared`, which no other deck can take. The default name is `PERSONAL_DECK_NAME` ("My deck") and can be renamed.
+- **409 rules** (`/problems/personal-deck`): deleting the deck, patching `slug` or `isPublic` on it, and inviting a member to it. Renaming is allowed.
+- **Landing (web)**: `pickLanding` in `lib/last-deck.ts` opens the last deck if it is still listed, else `me`, else the only deck, else the home list. The home empty state reads "No pocketbooks yet".
+- **Card editor (web)**: `/d/$slug/new` (`routes/d.$slug.new.tsx`) renders `CardEditor` inside the deck layout. It creates text and link cards only, with the category defaulting to the deck's default one. `useCreateItem` posts to `POST /decks/{id}/items` and invalidates every item list. API field errors show in `role="alert"` (`problemMessages`). The "Add card" link (`AddCardLink`) appears only for roles with `item.create`.
 
 ## Authorization (D33–D35)
 
@@ -533,10 +546,10 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
 
 | Folder | Holds |
 | --- | --- |
-| `routes/` | File routes (D65): `/`, `/sign-in?next=`, `/auth/error?reason=`, `/d/$slug`, `/d/$slug/c/$category`, `/d/$slug/favorites`, `/d/$slug/archived`, `/i/$itemId` |
-| `api/` | Typed client, query keys and queries, session and 401 redirect, favorites with optimistic cache updates, network state and offline detection, persistence |
+| `routes/` | File routes (D65): `/`, `/sign-in?next=`, `/auth/error?reason=`, `/d/$slug`, `/d/$slug/c/$category`, `/d/$slug/favorites`, `/d/$slug/archived`, `/d/$slug/new` (Phase 3B card editor), `/i/$itemId` |
+| `api/` | Typed client, query keys and queries, session and 401 redirect, favorites with optimistic cache updates, network state and offline detection, persistence, card creation (`create-item.ts`) and form error messages (`problem-messages.ts`) |
 | `cards/` | One renderer per card type. `CalcCard` is a `React.lazy` chunk because the evaluator pulls `mathjs` (D57) |
-| `items/` | The item list for a deck/category/favorites/archived view and its empty-state copy |
+| `items/` | The item list for a deck/category/favorites/archived view and its empty-state copy; Phase 3B `CardEditor`, the role-gated `AddCardLink` and `card-input.ts` (request body builder) |
 | `ui/`, `lib/`, `app/` | Shared components (chips, status views, `NavLink`), copy tables, header and the service-worker update prompt |
 
 - Session (D66): the app calls `GET /api/me` on boot; any 401 sends the user to `/sign-in?next=<path>`. The magic-link request carries `next`; the API callback redirects to `APP_URL + next` only for same-origin paths (`//host` and absolute URLs are dropped). Sign-out navigates to `/sign-in` first, then calls `POST /api/auth/logout` and clears the persisted cache, so no route re-fetches with a dead cookie.
@@ -1027,6 +1040,14 @@ Tagging: every test title includes `@smoke`
 
 ---
 
+### ADR-040: Personal deck ensured on every sign-in, addressed as `me` (Phase 3B)
+
+**Decision**: Each account has exactly one personal deck, marked `decks.is_default` and protected by a partial unique index, a trigger and CHECKs. `usersService.ensurePersonalDeck()` runs inside the magic-link callback transaction on every sign-in and invite, before the session opens. Its public address is `me`: a reserved slug that the API resolves and the PWA shows as `/d/me`. The stored slug is `personal-<accountId>` and is never shown. There is no backfill migration.
+
+**Rationale**: "Ensure" on every callback covers new users, invitees and accounts created before this phase without a data migration. It sits next to `findOrCreateByEmail()`, so the Phase 9 registration gate covers it too. Running it in the callback transaction means no user reaches the app without a deck, and a failure leaves no session behind. Finding the deck by `is_default` rather than `kind` stays correct when other personal decks exist. A fixed alias keeps URLs stable across renames and asks the user for no slug.
+
+---
+
 ## Summary
 
-Gobbit is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 adds the Reader PWA: a static React app in its own Caddy image that also routes `/api` and `/s` to the API on one origin, a generated typed client, offline reading through a persisted query cache, and share previews with lazily rendered Open Graph images.
+Gobbit is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 adds the Reader PWA: a static React app in its own Caddy image that also routes `/api` and `/s` to the API on one origin, a generated typed client, offline reading through a persisted query cache, and share previews with lazily rendered Open Graph images. Phase 3B gives every account a personal deck at `/d/me`, created on sign-in, and a minimal text and link card editor.

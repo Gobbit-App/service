@@ -44,6 +44,10 @@ describe('createAuthService', () => {
   let rateLimits: any;
   let mailer: any;
   let usersService: any;
+  let memberships: any;
+  let decks: any;
+  let users: any;
+  let transaction: any;
   let service: ReturnType<typeof createAuthService>;
 
   beforeEach(() => {
@@ -59,7 +63,19 @@ describe('createAuthService', () => {
     };
     rateLimits = { enforce: vi.fn().mockResolvedValue(undefined) };
     mailer = { send: vi.fn().mockResolvedValue(undefined) };
-    usersService = { findOrCreateByEmail: vi.fn().mockResolvedValue({ user, created: false }) };
+    usersService = {
+      findOrCreateByEmail: vi.fn().mockResolvedValue({ user, created: false }),
+      ensurePersonalDeck: vi.fn().mockResolvedValue(undefined),
+    };
+    memberships = {
+      findById: vi.fn(),
+      accept: vi.fn().mockResolvedValue(undefined),
+    };
+    decks = { findById: vi.fn().mockResolvedValue({ id: 'd1' }) };
+    users = { findById: vi.fn().mockResolvedValue(user) };
+    // Fake transaction: runs the callback against the same fakes (rollback is covered by the int test).
+    const repos = { sessions, magicLinks, memberships, decks, users, usersService };
+    transaction = vi.fn((fn) => fn(repos));
 
     service = createAuthService({
       env: { API_URL: 'https://api.test', MAGIC_LINK_TTL_MINUTES: 15, SESSION_TTL_DAYS: 30 },
@@ -67,10 +83,7 @@ describe('createAuthService', () => {
       mailer,
       sessions,
       magicLinks,
-      memberships: {} as any,
-      decks: {} as any,
-      users: {} as any,
-      usersService,
+      transaction,
       rateLimits,
     });
   });
@@ -246,6 +259,72 @@ describe('createAuthService', () => {
       expect(sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({ kind: 'cookie', userId: 'u1', userAgent: 'ua' }),
       );
+    });
+
+    it('runs consume, onboarding and session creation in one transaction', async () => {
+      magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'a@b.co', next: null });
+
+      await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null });
+
+      expect(transaction).toHaveBeenCalledTimes(1);
+      expect(usersService.ensurePersonalDeck).toHaveBeenCalledWith(user);
+    });
+
+    it('fails with onboarding and opens no session when the personal deck cannot be ensured', async () => {
+      magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'a@b.co', next: null });
+      usersService.ensurePersonalDeck.mockRejectedValue(new Error('db down'));
+      const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const err = await service
+        .consumeMagicLink({ token: 't', ip: 'ip', userAgent: null })
+        .catch((e) => e);
+
+      expect(err).toBeInstanceOf(MagicLinkFailure);
+      expect(err.reason).toBe('onboarding');
+      expect(sessions.create).not.toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith('[auth] onboarding failed', expect.any(Error));
+      logSpy.mockRestore();
+    });
+
+    it('ensures the personal deck before the session is created', async () => {
+      magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'a@b.co', next: null });
+
+      await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null });
+
+      const ensureOrder = usersService.ensurePersonalDeck.mock.invocationCallOrder[0];
+      const sessionOrder = sessions.create.mock.invocationCallOrder[0];
+      expect(ensureOrder).toBeLessThan(sessionOrder);
+    });
+
+    it('onboards the invitee, keeps next and accepts the invite', async () => {
+      magicLinks.consume.mockResolvedValue({
+        purpose: 'invite',
+        email: 'a@b.co',
+        membershipId: 'm1',
+        next: '/d/x',
+      });
+      memberships.findById.mockResolvedValue({
+        id: 'm1',
+        deckId: 'd1',
+        userId: 'u1',
+        deletedAt: null,
+      });
+
+      const result = await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null });
+
+      expect(result).toMatchObject({ next: '/d/x', user });
+      expect(usersService.ensurePersonalDeck).toHaveBeenCalledWith(user);
+      expect(memberships.accept).toHaveBeenCalledWith('m1', NOW);
+    });
+
+    it('does not onboard when the link is unusable', async () => {
+      magicLinks.consume.mockResolvedValue(null);
+      magicLinks.findByTokenHash.mockResolvedValue(null);
+
+      await expect(
+        service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null }),
+      ).rejects.toMatchObject({ reason: 'invalid' });
+      expect(usersService.ensurePersonalDeck).not.toHaveBeenCalled();
     });
   });
 });

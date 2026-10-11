@@ -75,6 +75,8 @@ export interface CreateDeckOptions {
   name?: string;
   kind?: DeckKind;
   isPublic?: boolean;
+  /** Personal deck (Phase 3B): kind defaults to `personal` and the slug to `personal-<accountId>`. */
+  isDefault?: boolean;
 }
 
 /** Creates a deck owned by the user's account; the DB trigger adds its `general` category. */
@@ -83,15 +85,17 @@ export async function createDeck(
   owner: Pick<UserRow, 'accountId'>,
   opts: CreateDeckOptions = {},
 ): Promise<DeckRow> {
-  const slug = opts.slug ?? `deck-${uniqueSuffix()}`;
+  const isDefault = opts.isDefault ?? false;
+  const slug = opts.slug ?? (isDefault ? `personal-${owner.accountId}` : `deck-${uniqueSuffix()}`);
   const [deck] = await db
     .insert(decks)
     .values({
       id: opts.id,
       slug,
       name: opts.name ?? slug,
-      kind: opts.kind ?? 'shared',
+      kind: opts.kind ?? (isDefault ? 'personal' : 'shared'),
       isPublic: opts.isPublic ?? false,
+      isDefault,
       ownerAccountId: owner.accountId,
     })
     .returning();

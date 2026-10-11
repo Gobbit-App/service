@@ -20,3 +20,9 @@ export function createDb(pool: pg.Pool) {
 }
 
 export type Db = ReturnType<typeof createDb>;
+
+/** The callback parameter of `db.transaction` (Phase 3B: callback runs in one tx). */
+export type DbTx = Parameters<Parameters<Db['transaction']>[0]>[0];
+
+/** Anything a repository can run queries on: the root connection or a transaction. */
+export type DbExecutor = Db | DbTx;

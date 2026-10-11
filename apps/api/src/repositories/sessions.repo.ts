@@ -1,6 +1,6 @@
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import type { SessionKind } from '@pb/shared';
-import { sessions, users, type Db, type SessionRow } from '@pb/db';
+import { sessions, users, type DbExecutor, type SessionRow } from '@pb/db';
 import type { CurrentUser } from '../types';
 
 export interface NewSession {
@@ -12,7 +12,7 @@ export interface NewSession {
   now: Date;
 }
 
-export function createSessionsRepo(db: Db) {
+export function createSessionsRepo(db: DbExecutor) {
   return {
     async create(v: NewSession): Promise<SessionRow> {
       const [row] = await db

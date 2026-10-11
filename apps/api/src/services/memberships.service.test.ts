@@ -106,6 +106,15 @@ describe('createMembershipsService', () => {
   describe('invite', () => {
     const input = { email: 'new@x.co', role: 'editor' as const };
 
+    it("409s inviting into the caller's personal deck (Phase 3B) before creating users", async () => {
+      decks.findById.mockResolvedValue({ ...deck, isDefault: true, kind: 'personal' });
+      const err = await service.invite(caller, UUID, input).catch((e) => e);
+      expect(err).toBeInstanceOf(HttpError);
+      expect(err).toMatchObject({ status: 409, type: '/problems/personal-deck' });
+      expect(usersService.findOrCreateByEmail).not.toHaveBeenCalled();
+      expect(mailer.send).not.toHaveBeenCalled();
+    });
+
     it('rejects inviting yourself with 400', async () => {
       usersService.findOrCreateByEmail.mockResolvedValue({ user: caller, created: false });
       const err = await service.invite(caller, UUID, input).catch((e) => e);

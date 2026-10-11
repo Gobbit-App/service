@@ -77,8 +77,10 @@ describe('invites (P2.5, D37)', () => {
     expect(row.rows[0].accepted_at).not.toBeNull();
 
     const decks = await json(await ctx.app.request('/decks', { headers: ctx.as(invitee.email) }));
+    // Phase 3B: the invitee's own personal deck (slug me) sits alongside the shared one.
     expect(decks.data.map((d: { slug: string; role: string }) => [d.slug, d.role])).toEqual([
       ['family', 'reader'],
+      ['me', 'owner'],
     ]);
 
     expect(failureReason(await click(token))).toBe('used');
@@ -112,6 +114,7 @@ describe('invites (P2.5, D37)', () => {
     const decks = await json(await ctx.app.request('/decks', { headers: ctx.as(invitee.email) }));
     expect(decks.data.map((d: { slug: string; role: string }) => [d.slug, d.role])).toEqual([
       ['family', 'editor'],
+      ['me', 'owner'],
     ]);
   });
 

@@ -1,6 +1,6 @@
 # Gobbit — Phase 3
 
-A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 adds the Reader PWA (offline reading, favorites, share previews).
+A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 adds the Reader PWA (offline reading, favorites, share previews). Phase 3B adds a personal deck at `/d/me` (created on every sign-in) and a minimal card editor.
 
 ## Repo Layout
 

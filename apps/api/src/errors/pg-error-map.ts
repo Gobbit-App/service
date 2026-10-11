@@ -1,4 +1,5 @@
 import type { Problem } from '@pb/shared';
+import { PERSONAL_DECK_PROBLEM } from './http-errors';
 
 export function findPgError(
   err: unknown,
@@ -45,6 +46,15 @@ export function mapPgError(err: unknown): Problem | null {
     return {
       type: '/problems/default-category-protected',
       title: 'Default category is protected',
+      status: 409,
+    };
+  }
+
+  if (code === 'P0001' && message.includes('default_deck_protected')) {
+    // Phase 3B: the personal deck can't be deleted (backstop for decks.service.remove).
+    return {
+      type: PERSONAL_DECK_PROBLEM,
+      title: 'Personal deck is protected',
       status: 409,
     };
   }

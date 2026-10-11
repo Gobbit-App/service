@@ -21,17 +21,38 @@ describe('displayNameFromEmail', () => {
 
 describe('createUsersService', () => {
   let repo: any;
+  let decksRepo: any;
   let service: ReturnType<typeof createUsersService>;
 
   beforeEach(() => {
     repo = { findByEmail: vi.fn(), createWithAccount: vi.fn() };
-    service = createUsersService({ users: repo });
+    decksRepo = { ensureDefault: vi.fn() };
+    service = createUsersService({ users: repo, decks: decksRepo });
   });
 
   it('findByEmail normalizes its input', async () => {
     repo.findByEmail.mockResolvedValue(user);
     await service.findByEmail(' Jane@Example.com ');
     expect(repo.findByEmail).toHaveBeenCalledWith('jane@example.com');
+  });
+
+  describe('ensurePersonalDeck', () => {
+    it('ensures the default deck for the user account with the default name', async () => {
+      const deck = { id: 'd1', isDefault: true };
+      decksRepo.ensureDefault.mockResolvedValue(deck);
+
+      await expect(service.ensurePersonalDeck(user)).resolves.toBe(deck);
+      expect(decksRepo.ensureDefault).toHaveBeenCalledWith({
+        accountId: 'a1',
+        name: 'My deck',
+      });
+    });
+
+    it('propagates repository failures so the sign-in can roll back', async () => {
+      decksRepo.ensureDefault.mockRejectedValue(new Error('could not be ensured'));
+
+      await expect(service.ensurePersonalDeck(user)).rejects.toThrow('could not be ensured');
+    });
   });
 
   describe('findOrCreateByEmail', () => {

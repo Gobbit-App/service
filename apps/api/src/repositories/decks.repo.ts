@@ -1,14 +1,34 @@
 import { and, eq, isNotNull, isNull, ne } from 'drizzle-orm';
 import type { DeckKind, MemberRole } from '@pb/shared';
-import { decks, memberships, type DeckRow, type Db } from '@pb/db';
+import { decks, memberships, type DeckRow, type DbExecutor } from '@pb/db';
 
-export function createDecksRepo(db: Db) {
+/** Stored slug of a personal deck (Phase 3B). Internal: clients only ever see `me`. */
+export function personalDeckSlug(accountId: string): string {
+  return `personal-${accountId}`;
+}
+
+export function createDecksRepo(db: DbExecutor) {
   async function listByOwner(accountId: string): Promise<DeckRow[]> {
     return db
       .select()
       .from(decks)
       .where(and(eq(decks.ownerAccountId, accountId), isNull(decks.deletedAt)))
       .orderBy(decks.createdAt, decks.id);
+  }
+
+  async function findDefaultForAccount(accountId: string): Promise<DeckRow | null> {
+    const [row] = await db
+      .select()
+      .from(decks)
+      .where(
+        and(
+          eq(decks.ownerAccountId, accountId),
+          eq(decks.isDefault, true),
+          isNull(decks.deletedAt),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
   }
 
   return {
@@ -56,6 +76,32 @@ export function createDecksRepo(db: Db) {
         .where(and(eq(decks.slug, slug), isNull(decks.deletedAt)))
         .limit(1);
       return row ?? null;
+    },
+
+    findDefaultForAccount,
+
+    /**
+     * Phase 3B: inserts the personal deck if the account has none. Without a conflict
+     * target, so a blocking slug collision also does nothing (the read below then fails
+     * and the caller surfaces the error); a caught unique violation would abort the tx.
+     */
+    async ensureDefault(v: { accountId: string; name: string }): Promise<DeckRow> {
+      await db
+        .insert(decks)
+        .values({
+          kind: 'personal',
+          slug: personalDeckSlug(v.accountId),
+          name: v.name,
+          isPublic: false,
+          isDefault: true,
+          ownerAccountId: v.accountId,
+        })
+        .onConflictDoNothing();
+      const row = await findDefaultForAccount(v.accountId);
+      if (!row) {
+        throw new Error(`Personal deck for account ${v.accountId} could not be ensured`);
+      }
+      return row;
     },
 
     async create(v: {

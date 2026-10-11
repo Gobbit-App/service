@@ -18,6 +18,21 @@ describe('pg-error-map', () => {
       });
     });
 
+    it('maps P0001 with default_deck_protected to 409 personal-deck', () => {
+      const err = Object.assign(new Error('default_deck_protected'), {
+        code: 'P0001',
+        message: 'default_deck_protected',
+      });
+
+      const result = mapPgError(err);
+
+      expect(result).toMatchObject({
+        status: 409,
+        type: '/problems/personal-deck',
+        title: 'Personal deck is protected',
+      });
+    });
+
     it('maps 23505 to 409 conflict', () => {
       const err = Object.assign(new Error('duplicate key'), {
         code: '23505',

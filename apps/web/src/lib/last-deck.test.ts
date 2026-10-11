@@ -127,6 +127,15 @@ describe('last-deck', () => {
       expect(pickLanding(['x', 'y', 'z'], 'z')).toBe('z');
     });
 
+    it('returns the personal deck over other decks when last is stale', () => {
+      expect(pickLanding(['family', 'me'], 'gone')).toBe('me');
+      expect(pickLanding(['family', 'me'], null)).toBe('me');
+    });
+
+    it('prefers last over the personal deck when both are listed', () => {
+      expect(pickLanding(['me', 'family'], 'family')).toBe('family');
+    });
+
     it('returns single deck when last is null', () => {
       expect(pickLanding(['only'], null)).toBe('only');
     });

@@ -1,13 +1,21 @@
-import type { Category, Item, Deck, MemberRole } from '@pb/shared';
+import {
+  RESERVED_DECK_SLUG,
+  type Category,
+  type Item,
+  type Deck,
+  type MemberRole,
+} from '@pb/shared';
 import type { CategoryRow, ItemRow, DeckRow } from '@pb/db';
 
+/** The personal deck is addressed as `me` whatever its stored slug (Phase 3B). */
 export function toDeckDto(r: DeckRow, role: MemberRole): Deck {
   return {
     id: r.id,
     kind: r.kind,
-    slug: r.slug,
+    slug: r.isDefault ? RESERVED_DECK_SLUG : r.slug,
     name: r.name,
     isPublic: r.isPublic,
+    isDefault: r.isDefault,
     ownerAccountId: r.ownerAccountId,
     role,
     createdAt: r.createdAt.toISOString(),

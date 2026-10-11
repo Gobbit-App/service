@@ -128,6 +128,9 @@ export function conflict(detail?: string, type = '/problems/conflict'): HttpErro
   return new HttpError(409, type, 'Conflict', detail);
 }
 
+/** Phase 3B: problem type for refusals that protect the personal deck. */
+export const PERSONAL_DECK_PROBLEM = '/problems/personal-deck';
+
 export function unprocessable(detail?: string, type = '/problems/unprocessable'): HttpError {
   return new HttpError(422, type, 'Unprocessable Content', detail);
 }

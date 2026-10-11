@@ -22,6 +22,12 @@ test('@smoke - DELETE /decks/:id hides the deck', async ({ api }) => {
   expect((await api.get(`decks/${id}`)).status()).toBe(404);
 });
 
+test('@smoke - DELETE /decks/me is never a success (Phase 3B)', async ({ api }) => {
+  const res = await api.delete('decks/me');
+  // 404 when the smoke user has no personal deck yet, 409 when it has one.
+  expect([404, 409]).toContain(res.status());
+});
+
 test('@smoke - unknown deck is a problem+json 404', async ({ api }) => {
   const res = await api.get('decks/does-not-exist-smoke');
   expect(res.status()).toBe(404);
