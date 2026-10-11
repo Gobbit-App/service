@@ -8,15 +8,38 @@ on:
   workflow_dispatch:
 
 jobs:
+  # A docs-only CI run succeeds without deploying; smoke would then wait for a commit that never
+  # ships. Only continue when the triggering run's deploy job actually succeeded.
+  deployed:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      ok: ${{ steps.check.outputs.ok }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            echo 'ok=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          conclusion=$(gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json jobs \
+            --jq '[.jobs[] | select(.name == "deploy")][0].conclusion // "missing"')
+          echo "CI run $RUN_ID deploy job: $conclusion"
+          if [ "$conclusion" = success ]; then ok=true; else ok=false; fi
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+
   smoke:
+    needs: deployed
     # Targets the deployed API; set the SMOKE_RUNNER repo variable (e.g. 'self-hosted') if it is
     # only reachable from a private runner. Triggered only from main, never by fork PRs.
     runs-on: ${{ vars.SMOKE_RUNNER || 'ubuntu-latest' }}
     # Skipped until a deployed API is configured via the API_BASE_URL repository variable
     # (https://gobbit.niranhome.win/api, D46).
-    if: >-
-      vars.API_BASE_URL != '' &&
-      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    if: vars.API_BASE_URL != '' && needs.deployed.outputs.ok == 'true'
     steps:
       - uses: actions/checkout@v7
 
