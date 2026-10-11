@@ -169,6 +169,7 @@ push to main → CI (tests, client drift, web build + budget)
 ```
 
 - **Manual deploy:** Actions → **CI** → **Run workflow** on `main` (or `gh workflow run ci.yml --ref main`). It runs the same pipeline for the current `main` head: tests, images, Dokploy webhook, then smoke. Run on any other branch, it only runs the tests.
+- **Docs-only changes skip CI:** a `changes` job (`dorny/paths-filter`) runs first. If every changed file is `*.md`, under `docs/`, `LICENSE` or `apps/api/api.http`, then test, image and deploy are skipped (reported as skipped, which passes required checks), and smoke is skipped because nothing was deployed. PRs compare against their base; pushes to `main` compare against the last commit CI passed on `main`, so code from a cancelled or failed run still ships with the next push. Manual runs always do everything.
 
 - **Images:** `ghcr.io/gobbit-app/service/api` and `ghcr.io/gobbit-app/service/web`, tagged `latest` and the full commit SHA. The base Compose file runs `${API_IMAGE_TAG:-latest}` / `${WEB_IMAGE_TAG:-latest}` with `pull_policy: always`. If the GHCR packages are private, give Dokploy registry credentials for `ghcr.io`.
 - **Base images:** API `node:22-slim`; web built on `node:22-slim`, served by `caddy:2-alpine` (`apps/web/Caddyfile`: routing, cache headers, CSP). The web image serves `/version.json` with its commit.

@@ -13,7 +13,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Docs-only changes skip test, image and deploy. The jobs report "skipped", which a required
+  # status check treats as passing (trigger-level paths-ignore would leave the check pending).
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # paths-filter lists PR files through the API
+      actions: read # gh run list
+    outputs:
+      # Fail-safe: anything but an explicit 'false' (filter skipped or unsure) runs everything.
+      code: ${{ steps.filter.outputs.code != 'false' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # Push to main: diff against the last commit CI passed on main, not just the previous
+      # push, so code from a cancelled or failed run is still tested and deployed.
+      - id: base
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch main \
+            --status success --limit 20 --json headSha,event \
+            --jq '[.[] | select(.event != "pull_request")][0].headSha // ""')
+          echo "Last successful main run: ${sha:-none}"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      # Skipped (→ full run) for manual dispatches and when main has no successful run yet.
+      - id: filter
+        if: >-
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'push' && steps.base.outputs.sha != '')
+        uses: dorny/paths-filter@v4
+        with:
+          base: ${{ steps.base.outputs.sha }}
+          predicate-quantifier: every
+          # Everything except files no build, test or image reads (*.md is prettier-ignored).
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!LICENSE'
+              - '!apps/api/api.http'
+
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

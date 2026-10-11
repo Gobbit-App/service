@@ -585,6 +585,7 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
 - **Local Compose runs `NODE_ENV=development`** for the API, so it boots without `CLOUDINARY_URL` (production requires it).
 - **CI `deploy` job**: the Dokploy webhook runs once after the `image` matrix (api, web) finishes, not inside it.
 - **Manual deploy**: `ci.yml` also runs on `workflow_dispatch`. On `main` it builds and deploys exactly like a push (tests still gate it, and `smoke.yml` follows through `workflow_run`); on other branches it only runs the tests.
+- **Docs-only gate**: `ci.yml` starts with a `changes` job (`dorny/paths-filter`, `predicate-quantifier: every`); `test` runs only if some changed file is outside `*.md`, `docs/**`, `LICENSE` and `apps/api/api.http`, and `image`/`deploy` follow `test`. The gate is job-level, not trigger-level `paths-ignore`, so a required check reports "skipped" (passing) instead of staying pending. Pushes to `main` diff against the head of the last successful non-PR CI run on `main` (`gh run list`), not `github.event.before`, because `cancel-in-progress` can cancel a code run and a following docs-only push must still deploy it. Manual dispatches, a missing previous run, or a skipped filter all run everything. `smoke.yml` first checks that the triggering run's `deploy` job succeeded, so it doesn't wait for a commit that was never deployed.
 - **`WEB_BASE_URL`** for e2e defaults to `BASE_URL` without its `/api` suffix.
 
 ---
