@@ -1,7 +1,9 @@
 name: CI
 
 on:
+  # Branch pushes are covered by pull_request; push only on main (images + deploy).
   push:
+    branches: [main]
   pull_request:
 
 concurrency:
