@@ -226,7 +226,7 @@ Optional overrides: `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_EN
   run: pnpm test:e2e --grep @smoke
 ```
 
-Required secrets: `SMOKE_SESSION_TOKEN` (an owner bearer on the deployed instance — see "Smoke token" below). Optional: `DOKPLOY_DEPLOY_WEBHOOK` (the Compose service's deploy webhook URL; without it the image is pushed but Dokploy is not told).  
+Required secrets: `SMOKE_SESSION_TOKEN` (an owner bearer on the deployed instance — see "Smoke token" below). Optional: `DOKPLOY_DEPLOY_WEBHOOK` (the Compose service's deploy webhook URL; without it the image is pushed but Dokploy is not told). The Dokploy Compose service must have **Autodeploy** enabled, otherwise the webhook answers 400 "Automatic deployments are disabled for this compose" and the deploy job fails.  
 Required variables: `API_BASE_URL` (`https://gobbit.niranhome.win/api`). Optional: `WEB_BASE_URL` (defaults to `API_BASE_URL` without `/api`), `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
 
 The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, a blank `BASE_URL` falls back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` or `SMOKE_SESSION_TOKEN` is missing.
