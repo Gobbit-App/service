@@ -584,6 +584,7 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
 - **`NavigateContext`** (`ui/NavLink.tsx`) lets components navigate without importing the router, so they render in unit tests without one.
 - **Local Compose runs `NODE_ENV=development`** for the API, so it boots without `CLOUDINARY_URL` (production requires it).
 - **CI `deploy` job**: the Dokploy webhook runs once after the `image` matrix (api, web) finishes, not inside it.
+- **Manual deploy**: `ci.yml` also runs on `workflow_dispatch`. On `main` it builds and deploys exactly like a push (tests still gate it, and `smoke.yml` follows through `workflow_run`); on other branches it only runs the tests.
 - **`WEB_BASE_URL`** for e2e defaults to `BASE_URL` without its `/api` suffix.
 
 ---
