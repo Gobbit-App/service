@@ -2,7 +2,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createIdbPersister } from './api/persist';
+import { createIdbPersister, shouldPersistQuery } from './api/persist';
 import { CACHE_MAX_AGE_MS, createAppQueryClient } from './api/query-client';
 import { signOut, unauthorizedRedirect } from './api/session';
 import { createAppRouter } from './app/router';
@@ -37,7 +37,12 @@ createRoot(root).render(
   <StrictMode>
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, maxAge: CACHE_MAX_AGE_MS, buster: __APP_COMMIT__ }}
+      persistOptions={{
+        persister,
+        maxAge: CACHE_MAX_AGE_MS,
+        buster: __APP_COMMIT__,
+        dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
+      }}
     >
       <NavigateContext.Provider value={navigate}>
         <RouterProvider router={router} />

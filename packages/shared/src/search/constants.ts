@@ -26,6 +26,9 @@ export const HNSW_EF_SEARCH = 100;
 export const SEARCH_Q_MAX = 200;
 export const SEARCH_LIMIT_MAX = 20;
 export const SEARCH_LIMIT_DEFAULT = 20;
+/** D79: PWA search box debounce and recent searches kept per deck. */
+export const SEARCH_DEBOUNCE_MS = 250;
+export const RECENT_SEARCHES_MAX = 8;
 
 /** Query-embedding cache (D76). */
 export const QUERY_EMBEDDING_CACHE_MAX = 500;

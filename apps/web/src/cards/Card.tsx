@@ -7,6 +7,7 @@ import { FavoriteButton } from '../ui/FavoriteButton';
 import { NavLink } from '../ui/NavLink';
 import { ShareButton } from '../ui/ShareButton';
 import { CardBody } from './CardBody';
+import { Highlighted } from '../search/Highlighted';
 import { useCloudName } from './use-cloud-name';
 
 /** Category chips in item order; ids the reader can't see are absent from the map (D38). */
@@ -21,6 +22,7 @@ export function Card({
   deckSlug,
   categories,
   linkTitle = true,
+  highlight = '',
   now = new Date(),
 }: {
   item: Item;
@@ -28,6 +30,8 @@ export function Card({
   categories: readonly Category[];
   /** In a list the title opens `/i/:itemId`; on that page it is plain text. */
   linkTitle?: boolean;
+  /** Search query whose words are marked in the title (D79). */
+  highlight?: string;
   now?: Date;
 }): ReactElement {
   const cloudName = useCloudName();
@@ -40,7 +44,13 @@ export function Card({
     <article className="card" aria-labelledby={titleId}>
       <header className="card__header">
         <h2 className="card__title" id={titleId} dir="auto">
-          {linkTitle ? <NavLink href={`/i/${item.id}`}>{item.title}</NavLink> : item.title}
+          {linkTitle ? (
+            <NavLink href={`/i/${item.id}`}>
+              <Highlighted text={item.title} query={highlight} />
+            </NavLink>
+          ) : (
+            <Highlighted text={item.title} query={highlight} />
+          )}
         </h2>
         <div className="card__actions">
           <FavoriteButton
