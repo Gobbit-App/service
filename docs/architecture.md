@@ -1,4 +1,4 @@
-# Architecture — Gobbit (Community Pocketbook) Phase 3
+# Architecture — Gobbit (Community Pocketbook) Phase 3B
 
 ## Overview
 
