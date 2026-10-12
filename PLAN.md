@@ -67,6 +67,8 @@ Oct 6: P3.0–P3.7 implemented on branch `worktree-p3-implementation` (builds on
 
 Oct 10: added after Phase 3 (product gap). Phases 0–3 never gave a signed-in user anything of their own: no deck unless someone invites them, and no way to add a card except `curl`. This phase is a **gate**: Phase 4 and later do not start until its demos pass. It supersedes D25 ("no deck is auto-created") and the empty-start half of D49 (the seed still creates only the owner user). Numbering of later phases is unchanged. Creating other decks, managing categories and inviting from the UI stay where the plan already has them; this phase adds none of it.
 
+Oct 12: implemented and merged (`db1da3b`), deployed at `2543adc` (migration `0007_default_deck`). The demos below have not been run on the phone yet; the Phase 4 gate is those four boxes.
+
 Rules:
 - Every user has exactly one **personal deck** (`kind = personal`, owned by the user's account, `general` category from the existing trigger).
 - **Onboarding runs on every sign-in, not only the first.** Each magic-link callback (sign-in and invite) checks that the user has a personal deck and, if not, runs the same onboarding as a first-time sign-in. This covers new users, users created by an invite, and users who signed in before this phase (the owner included). There is no backfill migration. The step is idempotent ("ensure", not "create") and runs in the callback transaction before the session opens. It is not queued: the redirect only happens once the deck exists.
@@ -80,12 +82,19 @@ Rules:
 - [ ] **4. First card from the phone** — in `/d/me`, create a text card and a link card with a minimal editor (title, body or URL, category defaulting to `general`); each appears in the list immediately and survives a reload; a 601-character body is refused in the form with the API's message. The editor follows the role matrix, so a reader in Family sees no "add card" entry. Editing, archiving, other card types and the editor preview stay in Phase 6.
 ## Phase 4 — Search
 
-- [ ] **1. Search text column** — `EXPLAIN ANALYZE` on a `similarity()` query over 10 000 synthetic rows uses the GIN index and returns in under 30 ms.
-- [ ] **2. Embeddings pipeline** — insert a card; within seconds `embedding IS NOT NULL`; the job log shows one call.
-- [ ] **3. Hybrid query** — in `psql`, four queries against the Family deck (or the sample-card fixtures): `רופא שיניים` returns the English dentist card first; a 4-digit fragment of its phone returns it first; "parking" returns the card whose body mentions parking; a nonsense string returns nothing above the threshold.
-- [ ] **4. API and UI** — type on the phone, results update as you type, each result shows a small "text / meaning" tag.
-- [ ] **5. Ask mode (small RAG)** — "when is pickup on Fridays?" answers from the School card and links it; "what is the capital of Peru?" answers that the deck has nothing on it.
-- [ ] **6. Evaluation set** — `pnpm test:search` prints recall and the misses.
+Oct 12: demos reworded to match the code as built through Phase 3B (details and decisions D68–D83 in the Phase 4 implementation plan):
+- No seeded cards (D49), and the Family fixtures have no dentist, parking or Friday-pickup card. Demos 3 and 5 run against a `search-demo` deck loaded through the API with `pnpm search:load` from new search fixtures; the same fixtures back the eval set.
+- `similarity()` scores a short query against a whole card and almost never passes a threshold. The text arm is `word_similarity` plus substring on the trigram index.
+- `payload->>'entities'` can't exist (payload schemas are strict). `search_text` takes title, body and payload text; entities join in Phase 5.
+- The hybrid query lives in the repository and reuses the single visibility predicate (D38). There is no `search_items()` SQL function, and psql can't embed a query, so demo 3 uses `pnpm search:query`.
+- "Job log" is the new `llm_calls` table, which Phase 5 reuses.
+
+- [ ] **1. Search text column** — `EXPLAIN ANALYZE` on a `word_similarity` (`<%`) query and on a substring (`ILIKE`) query over 10 000 synthetic rows uses the GIN trigram index and returns in under 30 ms.
+- [ ] **2. Embeddings pipeline** — create a card from the phone; within seconds `embedding IS NOT NULL` for it and `llm_calls` shows one `embed_item` call. A card inserted directly in `psql` is picked up by the sweeper within a minute.
+- [ ] **3. Hybrid query** — with `pnpm search:query --deck search-demo`: `רופא שיניים` returns the English dentist card first; a 4-digit fragment of its phone returns it first; "parking" returns the card whose body mentions parking; a nonsense string returns nothing.
+- [ ] **4. API and UI** — type on the phone, results update as you type, each result shows a small "text / meaning" tag; a reader never gets a card from a private category.
+- [ ] **5. Ask mode (small RAG)** — in `search-demo`, "when is pickup on Fridays?" answers from the School card and links it; "what is the capital of Peru?" answers that the deck has nothing on it (no LLM call is made).
+- [ ] **6. Evaluation set** — `pnpm test:search` prints recall@5 (≥ 0.9) and the misses, offline from the committed embedding cache.
 ## Phase 5 — Ingestion agent
 
 - Scheduled (Oct 1): enforce "a published item has ≥ 1 category" in the database (a deferred constraint trigger on `items` status → published and on `item_categories` deletes), before the review queue starts publishing agent proposals. Today it is service-only.
