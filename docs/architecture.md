@@ -546,10 +546,11 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
 
 | Folder | Holds |
 | --- | --- |
-| `routes/` | File routes (D65): `/`, `/sign-in?next=`, `/auth/error?reason=`, `/d/$slug`, `/d/$slug/c/$category`, `/d/$slug/favorites`, `/d/$slug/archived`, `/d/$slug/new` (Phase 3B card editor), `/i/$itemId` |
+| `routes/` | File routes (D65): `/`, `/sign-in?next=`, `/auth/error?reason=`, `/d/$slug`, `/d/$slug/c/$category`, `/d/$slug/favorites`, `/d/$slug/archived`, `/d/$slug/new` (Phase 3B card editor), `/d/$slug/search?q=&mode=` (Phase 4), `/i/$itemId` |
 | `api/` | Typed client, query keys and queries, session and 401 redirect, favorites with optimistic cache updates, network state and offline detection, persistence, card creation (`create-item.ts`) and form error messages (`problem-messages.ts`) |
 | `cards/` | One renderer per card type. `CalcCard` is a `React.lazy` chunk because the evaluator pulls `mathjs` (D57) |
 | `items/` | The item list for a deck/category/favorites/archived view and its empty-state copy; Phase 3B `CardEditor`, the role-gated `AddCardLink` and `card-input.ts` (request body builder) |
+| `search/` | Phase 4: `SearchBox`, `SearchResults`, `ModeToggle`, the lazy `AskView`, URL params, recent searches and the debounce hook |
 | `ui/`, `lib/`, `app/` | Shared components (chips, status views, `NavLink`), copy tables, header and the service-worker update prompt |
 
 - Session (D66): the app calls `GET /api/me` on boot; any 401 sends the user to `/sign-in?next=<path>`. The magic-link request carries `next`; the API callback redirects to `APP_URL + next` only for same-origin paths (`//host` and absolute URLs are dropped). Sign-out navigates to `/sign-in` first, then calls `POST /api/auth/logout` and clears the persisted cache, so no route re-fetches with a dead cookie.
@@ -588,6 +589,99 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
 - **Docs-only gate**: `ci.yml` starts with a `changes` job (`dorny/paths-filter`, `predicate-quantifier: every`); `test` runs only if some changed file is outside `*.md`, `docs/**`, `LICENSE` and `apps/api/api.http`, and `image`/`deploy` follow `test`. The gate is job-level, not trigger-level `paths-ignore`, so a required check reports "skipped" (passing) instead of staying pending. Pushes to `main` diff against the head of the last successful non-PR CI run on `main` (`gh run list`), not `github.event.before`, because `cancel-in-progress` can cancel a code run and a following docs-only push must still deploy it. Manual dispatches, a missing previous run, or a skipped filter all run everything. `smoke.yml` first checks that the triggering run's `deploy` job succeeded, so it doesn't wait for a commit that was never deployed.
 - **`WEB_BASE_URL`** for e2e defaults to `BASE_URL` without its `/api` suffix.
 
+## Search (Phase 4)
+
+### Data (migration `0008_search`)
+
+- Extensions `vector` (pgvector) and `pg_trgm`. Compose and Testcontainers use `pgvector/pgvector:pg17`.
+- `items.search_text` is a generated, stored column built by `item_search_text(type, title, body, payload)`. It holds the title, body and type-specific payload text (URLs, table cells, calc labels, image alt), passed through `search_normalize()`. That function lowercases, folds Greek tonos, strips Hebrew points and combining marks, maps the maqaf to a space, and removes separators between digits (`054-771 2345` → `0547712345`). A GIN trigram index sits on it.
+- `items.embedding vector(1536)` (HNSW, cosine, `m=16, ef_construction=64`), plus `embedding_model`, `embedded_hash` and `embedded_at`. An item is stale when `item_embedding_hash(search_text)` or the model differs from what is stored.
+- `search_queries` gets one row per search or ask: deck, user, mode, normalized q, result count, top `why` and latency. A weekly job prunes rows older than 180 days.
+- `llm_calls` gets one row per provider call: purpose (`embed_item`, `embed_query`, `ask`), provider, model, tokens, estimated `cost_usd`, latency and status. No prompt or answer text is stored.
+- The `items_set_updated_at` trigger fires only `BEFORE UPDATE OF` user-facing columns, so writing the embedding columns leaves `updated_at` alone.
+
+### Query path (`GET /decks/{id}/search?q=&limit=`)
+
+```
+route (Zod: q 1..200, limit ≤ 20) → searchService.search
+  authorize(viewer) → normalize(q) (SQL search_normalize) → query vector (LRU cache, hourly budget; null without OPENAI_API_KEY)
+  → searchRepo.hybrid: text arm  (word_similarity ≥ 0.4 on search_text, plus a substring arm; skipped below 3 chars)
+                       vector arm (cosine distance ≤ 0.55, same model, hnsw.ef_search 100)
+                       each ≤ 50 rows, published and not deleted, limited to the categories the role can see
+  → fuseRrf (k = 60, substring hits get +1/60) → DTOs with why ∈ {text, semantic, both} → log search_queries
+```
+
+- The response is `{ data: [{ item, why, score }], semantic }`. `semantic` is false when the vector arm didn't run (no key, over budget, provider error).
+- The web highlights matches client-side with `highlight()` from `@pb/shared/search`, which folds text the same way the SQL does.
+- Without `OPENAI_API_KEY`, search runs text-only and nothing is enqueued.
+
+### Ask (`POST /decks/{id}/ask`)
+
+- A missing `ANTHROPIC_API_KEY` answers 503. `/config` then reports `search.ask: false`, and the PWA hides the mode toggle.
+- Next comes the per-user rate limit (30/hour, the Phase 2 Postgres limiter), checked before any retrieval.
+- Retrieval reuses the search path. The top 8 hits go into a prompt (`ai/ask-prompt.ts`) that asks for a short answer in the question's script, citing card ids. `ai/ask-citations.ts` keeps only citations among the retrieved cards.
+- The model is `ASK_MODEL` (default `claude-haiku-5-5`) with a 20 s deadline. A timeout answers 504; a provider failure answers 503.
+- No hits, an ungrounded answer or no valid citations → a localized "not found" answer with `grounded: false` and no citations.
+
+### Embeddings worker (`apps/api/src/worker.ts`)
+
+- The worker is a separate process from the same API image (`pnpm --filter @pb/api worker`; the `worker` service in Compose). It runs pg-boss 12 in the app database, schema `pgboss`.
+- Queues:
+  - `embed-item`: one item per job, a singleton per item id, 3 retries with backoff.
+  - `embed-sweep`: every minute, queues up to 50 stale items.
+  - `prune-search-queries`: weekly.
+- After a create or update commits, the items service calls `embedQueue.enqueueIfStale()`. Enqueue failures are logged, never surfaced. The sweep catches anything missed: the worker was down, the model changed, or the item was written before Phase 4.
+- `embed-item` loads the item's `search_text` and skips the item if the stored hash still matches. Otherwise it calls the embedder (`EMBEDDING_MODEL`, default `text-embedding-3-small`, 10 s timeout) and writes the vector, model and hash. Every call is logged in `llm_calls`.
+- Health: the worker touches `/tmp/worker-heartbeat` every 30 s. The Compose healthcheck fails when the file is older than 90 s.
+- `pnpm dev` runs the API server and the worker together (`dev:server`, `dev:worker`).
+
+### Web (D79)
+
+- `SearchBox` sits under the deck header on every deck route. It debounces by 250 ms and navigates to `/d/$slug/search?q=&mode=`, replacing the history entry when already on the search route.
+- `routes/d.$slug.search.tsx` validates `q` and `mode` (`search/search-params.ts`). It shows one of:
+  - `SearchResults`: tags for `why`, highlighted matches, and recent searches when `q` is empty.
+  - The lazy `AskView` chunk, when Ask is enabled and selected.
+- Search queries use `keepPreviousData` and are excluded from the persisted cache. Search needs the network, and the offline state says so.
+- Recent searches (8 per deck) live in `localStorage`.
+- Value imports come from `@pb/shared/search`, never the package root, which would pull `mathjs` into the initial chunk.
+
+### Evaluation and demo data (D81, D82)
+
+- `searchCards` in `@pb/db/test`: 40 cards in Hebrew, Greek and English, covering every card type.
+- `search-eval.json`: 40 query → expected-key pairs. Kinds: substring, phone, typo, URL, no-result, cross-lingual and meaning.
+- `pnpm test:search` (vitest project `search`, `*.search.test.ts`):
+  - Loads the deck into a Testcontainers database.
+  - Asserts recall@5 ≥ 0.9 for the text arm on the text-capable pairs.
+  - Asserts the same for hybrid search on all pairs, when `search-embeddings.json` holds every vector it needs. Vectors are keyed by `sha256(model + text)`.
+- `pnpm test:search:update` (needs `OPENAI_API_KEY`) fills missing cache entries. The file is committed, so CI makes no API calls.
+- `pnpm search:load` creates a `search-demo` deck through the API and adds any missing fixture cards (idempotent by title).
+- `pnpm search:query "<q>"` prints the hits.
+- Both scripts take `--deck`, `--base-url` (or `BASE_URL`) and `--token` (or `SMOKE_SESSION_TOKEN`).
+
+### Deviations from the Phase 4 plan
+
+- **pgvector's built-in Drizzle `vector` type** instead of a custom type.
+- **Broader normalization**: the plan asked for lowercase and digits. The SQL also folds the maqaf, Greek tonos and combining marks, so `highlight()` and the database agree.
+- **`item_embedding_hash()` in SQL** decides staleness, so enqueue and sweep never compare text in TypeScript.
+- **`itemColumns`**: item queries select an explicit column list, so `search_text` and `embedding` never reach DTOs or list queries.
+- **`updated_at` trigger narrowed** to user-facing columns (see Data).
+- **RRF fused in TypeScript** (`lib/rrf.ts`). SQL returns two ranked arms, which keeps the fusion unit-testable.
+- **A heartbeat file for worker health** instead of an HTTP port.
+- **`llm_calls.cost_usd` is an estimate** from a price table in code (`ai/llm-calls.ts`). The `claude-haiku-5-5` price is assumed.
+- **The Ask rate limit runs before retrieval**, so a limited user costs no query embedding either.
+- **Ask is button-triggered** in the PWA (a mutation), not fired while typing.
+- **Tests use archived cards as the non-searchable case**, where the plan said draft. Only published cards are searchable.
+- **`SEARCH_EVAL_UPDATE=1` / `pnpm test:search:update`** instead of an `--update` flag, which vitest already uses for snapshots.
+- **The eval runs against the repository and RRF**, not over HTTP. It's the same ranking code without a server.
+- **No embedding cache yet**: `search-embeddings.json` stays `{}` until someone with `OPENAI_API_KEY` runs `pnpm test:search:update`.
+  - Until then the hybrid eval is skipped.
+  - Only the text arm is asserted. Its recall is 1.0 on 26 pairs.
+- **The search box isn't sticky**, which keeps the sticky chip-row offsets unchanged.
+- **The e2e web search tests live in `web.spec.ts`**, because the `web-smoke` project matches only `web|share` specs. The API checks are in `search.spec.ts`.
+- **`pnpm test` and `test:coverage` pin their projects** (unit, web, integration). The search project runs only through `test:search`.
+- **Fixture cards go into the default category.**
+- **`pnpm dev` for the API** runs `dev:server` and `dev:worker` through `pnpm run "/^dev:(server|worker)$/"`.
+
 ---
 
 ## Test Pyramid
@@ -615,6 +709,13 @@ Examples:
 1. Global setup: creates template DB with all migrations
 2. Per file: `withTestDb()` clones the template (fast), the file's tests run, the clone is dropped
 
+### Search eval (`pnpm test:search`)
+
+Location: `apps/api/test/*.search.test.ts` (vitest project `search`, excluded from `unit`)
+Environment: Node + Docker (same template database as integration)
+Test data: `searchCards` + `search-eval.json`, vectors from the committed `search-embeddings.json`
+Gate: recall@5 ≥ 0.9 (see Search → Evaluation)
+
 ### E2E tests (smoke)
 
 Location: `e2e/tests/smoke/*.spec.ts`  
@@ -629,6 +730,8 @@ Tagging: every test title includes `@smoke`
 - `anon`: request context with no credentials (401 checks)
 - `smokeDeck`: creates a `smoke-<id>` deck before the test; afterwards removes its memberships and soft-deletes it
 - The members spec invites the single standing user `smoke-invitee@example.test`; only its membership is cleaned up
+
+**Search smoke (Phase 4)**: `search.spec.ts` checks three API cases: a phone number searched as digits without the dash, a query with no results, and the 400 for a blank `q`. `web.spec.ts` checks that typing in the search box opens `/search` with highlighted, tagged results, and checks the empty state.
 
 **Browser smoke (`web-smoke` project, D62)**: `web.spec.ts` and `share.spec.ts` run in Chromium with a Pixel 7 viewport against `WEB_BASE_URL`. The browser is signed in by setting the `gobbit_session` cookie to the smoke token (sessions are looked up by token hash whatever the transport). Each test seeds a smoke deck with one card per type and checks: the deck list, no horizontal overflow at 360 px, the calc result, category switching via the URL, favorites surviving a reload, and the private share preview. The page itself never gets the bearer header.
 
@@ -1050,6 +1153,40 @@ Tagging: every test title includes `@smoke`
 
 ---
 
+### ADR-041: Hybrid search in one repository call, fused in TypeScript (D68–D71)
+
+**Decision**: Search uses Postgres only, with two arms on a generated `search_text` column:
+- a trigram and substring arm;
+- a pgvector cosine arm.
+
+`searchRepo.hybrid()` runs both arms under the same deck, status and category-visibility filters. `lib/rrf.ts` fuses them with reciprocal rank fusion (k = 60).
+
+**Rationale**: Family decks are small (hundreds of cards), so a separate search engine would add operations work without better results. The two arms cover each other's gaps:
+- Trigrams catch phone numbers, typos and mixed scripts that embeddings miss.
+- Vectors catch meaning and cross-lingual queries that trigrams miss.
+
+Filtering inside each arm means a hidden category can never rank or leak. Fusing in TypeScript keeps the SQL simple and the ranking testable without a database.
+
+---
+
+### ADR-042: pg-boss worker as a separate process (D72, D73)
+
+**Decision**: A worker process computes the embeddings. It runs from the same image with the `worker` entrypoint and uses pg-boss queues in the app database. Writes enqueue after commit, and a one-minute sweep re-queues anything stale. Both provider keys are optional:
+- Without `OPENAI_API_KEY`, search is text-only.
+- Without `ANTHROPIC_API_KEY`, Ask is off.
+
+**Rationale**: Provider latency and outages must not affect card writes. pg-boss needs no new infrastructure (no Redis), and its singleton keys deduplicate bursts of edits. Because the sweep catches whatever enqueueing misses, a failed enqueue or a model change fixes itself. Optional keys keep local development, CI and forks working without provider accounts.
+
+---
+
+### ADR-043: Committed embedding cache for the search eval (D81)
+
+**Decision**: The search eval reads vectors from `packages/db/test/fixtures/search-embeddings.json`, keyed by `sha256(model + text)`. Only `pnpm test:search:update` (with `OPENAI_API_KEY`) calls the API and rewrites the file. If the cache lacks any vector the eval needs, the hybrid assertion is skipped and only the text arm is gated.
+
+**Rationale**: CI stays deterministic, free and keyless, while the eval still measures the real model. A change to a fixture, a query or the model shows up as missing cache entries, so results can't drift silently.
+
+---
+
 ## Summary
 
-Gobbit is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 adds the Reader PWA: a static React app in its own Caddy image that also routes `/api` and `/s` to the API on one origin, a generated typed client, offline reading through a persisted query cache, and share previews with lazily rendered Open Graph images. Phase 3B gives every account a personal deck at `/d/me`, created on sign-in, and a minimal text and link card editor.
+Gobbit is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 adds the Reader PWA: a static React app in its own Caddy image that also routes `/api` and `/s` to the API on one origin, a generated typed client, offline reading through a persisted query cache, and share previews with lazily rendered Open Graph images. Phase 3B gives every account a personal deck at `/d/me`, created on sign-in, and a minimal text and link card editor. Phase 4 adds hybrid search: trigram and pgvector arms fused with RRF, limited to what the reader can see. It also adds an optional Ask answer with citations, an embeddings worker on pg-boss, and a recall eval backed by a committed embedding cache.

@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "tsc --noEmit -p tsconfig.json",
     "openapi": "tsx scripts/openapi.ts",
-    "og:static": "tsx scripts/og-static.ts"
+    "og:static": "tsx scripts/og-static.ts",
+    "search:load": "tsx --env-file-if-exists=../../.env scripts/search-load.ts",
+    "search:query": "tsx --env-file-if-exists=../../.env scripts/search-query.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

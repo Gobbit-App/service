@@ -31,8 +31,37 @@ services:
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
       # Image delivery and the OG image cache (D55, D60); required in production.
       CLOUDINARY_URL: ${CLOUDINARY_URL:-}
+      # Phase 4 search (D73, D77): each key is optional; without OPENAI_API_KEY search is text-only,
+      # without ANTHROPIC_API_KEY Ask is hidden. Dokploy secrets.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     # Internal only: the web service is the one public entry point (D51). Kept off
     # dokploy-network on purpose: another project's `api` there would shadow Caddy's api:3000.
+    restart: unless-stopped
+
+  worker:
+    # D72: pg-boss worker (embeddings, stale sweep, search_queries pruning). Same image as the
+    # API; the API runs the migrations, so the worker waits for it to be healthy.
+    image: ghcr.io/gobbit-app/service/api:${API_IMAGE_TAG:-latest}
+    pull_policy: always
+    entrypoint: ['pnpm', '--filter', '@pb/api', 'worker']
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-}
+      NODE_ENV: production
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+    # The worker serves no HTTP; it touches /tmp/worker-heartbeat every 30 s after a DB ping.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "process.exit(Date.now() - require('fs').statSync('/tmp/worker-heartbeat').mtimeMs < 90000 ? 0 : 1)"
+      interval: 30s
+      start_period: 30s
     restart: unless-stopped
 
   web:

@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./seed": "./seed/run-seed.ts",
-    "./test": "./test/index.ts"
+    "./test": "./test/index.ts",
+    "./test/search-cards": "./test/fixtures/search-cards.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
