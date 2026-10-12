@@ -26,4 +26,6 @@ export const rateKeys = {
   magicLinkEmail: (emailHash: string) => `magic-link:email:${emailHash}`,
   magicLinkIp: (ip: string) => `magic-link:ip:${ip}`,
   callbackIp: (ip: string) => `callback:ip:${ip}`,
+  askUser: (userId: string) => `ask:user:${userId}`,
+  queryEmbedUser: (userId: string) => `embed-query:user:${userId}`,
 };

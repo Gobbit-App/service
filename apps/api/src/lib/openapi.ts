@@ -15,6 +15,8 @@ const PROBLEM_STATUSES = {
   conflict: 409,
   unprocessable: 422,
   'rate-limited': 429,
+  unavailable: 503,
+  timeout: 504,
 } as const;
 
 export type ProblemCode = keyof typeof PROBLEM_STATUSES;
@@ -27,6 +29,8 @@ const STATUS_DESCRIPTIONS: Record<number, string> = {
   409: 'Conflict',
   422: 'Unprocessable Content',
   429: 'Too Many Requests',
+  503: 'Service Unavailable',
+  504: 'Gateway Timeout',
 };
 
 type ProblemResponse = {

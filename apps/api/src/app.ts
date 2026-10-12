@@ -24,6 +24,8 @@ import { registerItemsRoutes } from './routes/items';
 import { registerFavoritesRoutes } from './routes/favorites';
 import { registerShareRoutes } from './routes/share';
 import type { ShareWiring } from './share/wiring';
+import type { SearchWiring } from './services/search-wiring';
+import { registerSearchRoutes } from './routes/search';
 
 export interface AppDeps {
   db: Db;
@@ -34,6 +36,8 @@ export interface AppDeps {
   now?: () => Date;
   /** OG image store/renderer overrides for tests (D60). */
   share?: ShareWiring;
+  /** Embedder/asker/embed-queue overrides for tests (Phase 4). */
+  search?: SearchWiring;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -72,6 +76,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerItemsRoutes(app, services);
   registerFavoritesRoutes(app, services);
   registerShareRoutes(app, services);
+  registerSearchRoutes(app, services);
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

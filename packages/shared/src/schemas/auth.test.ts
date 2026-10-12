@@ -25,16 +25,21 @@ describe('magicLinkRequestSchema', () => {
 });
 
 describe('appConfigSchema', () => {
+  const OFF = { semantic: false, ask: false };
+
   it('allows a missing cloud name', () => {
-    expect(appConfigSchema.parse({ cloudinaryCloudName: null, commit: 'dev' }).commit).toBe('dev');
+    expect(
+      appConfigSchema.parse({ cloudinaryCloudName: null, commit: 'dev', search: OFF }).commit,
+    ).toBe('dev');
   });
 
   it('strips anything that is not part of the public config', () => {
     const parsed = appConfigSchema.parse({
       cloudinaryCloudName: 'demo',
       commit: 'abc',
+      search: OFF,
       apiSecret: 'nope',
     });
-    expect(parsed).toEqual({ cloudinaryCloudName: 'demo', commit: 'abc' });
+    expect(parsed).toEqual({ cloudinaryCloudName: 'demo', commit: 'abc', search: OFF });
   });
 });

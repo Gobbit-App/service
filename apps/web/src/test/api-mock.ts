@@ -14,7 +14,11 @@ export const clientModule = {
   api: { GET: tag('GET'), POST: tag('POST'), DELETE: tag('DELETE') },
   unwrap: (request: unknown) => {
     if (request === 'GET /config') {
-      return Promise.resolve({ cloudinaryCloudName: null, commit: 'test' });
+      return Promise.resolve({
+        cloudinaryCloudName: null,
+        commit: 'test',
+        search: { semantic: false, ask: false },
+      });
     }
     return respond(String(request));
   },

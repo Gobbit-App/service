@@ -114,6 +114,10 @@ describe('mappers', () => {
         createdAt: date,
         updatedAt: date,
         deletedAt: null,
+        searchText: 'test item test body',
+        embeddingModel: null,
+        embeddedHash: null,
+        embeddedAt: null,
       };
 
       const dto = toItemDto(row, ['c1'], true);

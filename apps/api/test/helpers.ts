@@ -7,6 +7,7 @@ import { parseEnv, type Env } from '../src/env';
 import { MemoryMailer } from '../src/mail/memory-mailer';
 import { SESSION_COOKIE } from '../src/lib/cookies';
 import type { ShareWiring } from '../src/share/wiring';
+import type { SearchWiring } from '../src/services/search-wiring';
 import {
   createSampleWorld,
   fixtureId,
@@ -57,6 +58,8 @@ export interface SetupApiTestOptions {
   env?: Record<string, string>;
   /** Share-preview overrides (OG store and renderer stubs). */
   share?: ShareWiring;
+  /** Embedder/asker/embed-queue fakes (Phase 4); default is no providers. */
+  search?: SearchWiring;
 }
 
 export interface ApiTestContext {
@@ -107,7 +110,15 @@ export function setupApiTest(opts: SetupApiTestOptions = {}): ApiTestContext {
     world = await createSampleWorld(t.db);
     await sessionFor(world.owner);
     await sessionFor(world.other);
-    app = createApp({ db: t.db, pool: t.pool, env, mailer, now: clock.now, share: opts.share });
+    app = createApp({
+      db: t.db,
+      pool: t.pool,
+      env,
+      mailer,
+      now: clock.now,
+      share: opts.share,
+      search: opts.search,
+    });
   });
 
   return {

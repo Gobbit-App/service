@@ -1,26 +1,21 @@
-import { and, desc, eq, exists, inArray, isNull, sql, type SQL } from 'drizzle-orm';
-import { categories, favorites, itemCategories, items, type Db, type ItemRow } from '@pb/db';
+import { and, desc, eq, exists, inArray, isNull, sql } from 'drizzle-orm';
+import {
+  categories,
+  favorites,
+  itemCategories,
+  itemColumns,
+  items,
+  type Db,
+  type ItemRow,
+} from '@pb/db';
 import type { CursorData, ItemStatus, ItemType, MemberRole, SourceKind } from '@pb/shared';
-import { canSeePrivate, visibleCategoriesWhere } from '../access/visibility';
+import {
+  canSeePrivate,
+  itemHasVisibleCategory,
+  visibleCategoriesWhere,
+} from '../access/visibility';
 
 export function createItemsRepo(db: Db) {
-  /** D38: the item sits in at least one category `role` can see. */
-  function hasVisibleCategory(role: MemberRole): SQL {
-    return exists(
-      db
-        .select({ one: sql`1` })
-        .from(itemCategories)
-        .innerJoin(categories, eq(categories.id, itemCategories.categoryId))
-        .where(
-          and(
-            eq(itemCategories.itemId, items.id),
-            isNull(categories.deletedAt),
-            visibleCategoriesWhere(role),
-          ),
-        ),
-    );
-  }
-
   return {
     async create(
       v: {
@@ -38,7 +33,7 @@ export function createItemsRepo(db: Db) {
       categoryIds: string[],
     ): Promise<ItemRow> {
       return await db.transaction(async (tx) => {
-        const [item] = await tx.insert(items).values(v).returning();
+        const [item] = await tx.insert(items).values(v).returning(itemColumns);
 
         if (categoryIds.length > 0) {
           await tx.insert(itemCategories).values(
@@ -56,7 +51,7 @@ export function createItemsRepo(db: Db) {
 
     async findById(id: string): Promise<ItemRow | null> {
       const [item] = await db
-        .select()
+        .select(itemColumns)
         .from(items)
         .where(and(eq(items.id, id), isNull(items.deletedAt)))
         .limit(1);
@@ -70,7 +65,7 @@ export function createItemsRepo(db: Db) {
       const [row] = await db
         .select({ id: items.id })
         .from(items)
-        .where(and(eq(items.id, id), hasVisibleCategory(role)))
+        .where(and(eq(items.id, id), itemHasVisibleCategory(role)))
         .limit(1);
       return row !== undefined;
     },
@@ -97,7 +92,7 @@ export function createItemsRepo(db: Db) {
       }
 
       if (!canSeePrivate(q.role)) {
-        conditions.push(hasVisibleCategory(q.role));
+        conditions.push(itemHasVisibleCategory(q.role));
       }
 
       if (q.categoryId) {
@@ -134,7 +129,7 @@ export function createItemsRepo(db: Db) {
       }
 
       return await db
-        .select()
+        .select(itemColumns)
         .from(items)
         .where(and(...conditions))
         .orderBy(desc(items.createdAt), desc(items.id))
@@ -180,7 +175,11 @@ export function createItemsRepo(db: Db) {
           }
         }
 
-        const [updatedItem] = await tx.select().from(items).where(eq(items.id, id)).limit(1);
+        const [updatedItem] = await tx
+          .select(itemColumns)
+          .from(items)
+          .where(eq(items.id, id))
+          .limit(1);
 
         return updatedItem!;
       });

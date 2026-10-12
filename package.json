@@ -29,12 +29,14 @@
     "api:openapi": "pnpm --filter @pb/api openapi && pnpm --filter @pb/api-client generate",
     "og:static": "pnpm --filter @pb/api og:static",
     "dev:api": "pnpm --filter @pb/api dev",
+    "dev:worker": "pnpm --filter @pb/api dev:worker",
     "dev:web": "pnpm --filter @pb/web dev",
     "build:web": "pnpm --filter @pb/web build",
     "budget": "pnpm --filter @pb/web budget"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@opentelemetry/api": "1.9.1",
     "@testcontainers/postgresql": "^12.1.0",
     "@types/node": "^22.20.4",
     "@vitest/coverage-v8": "^5.0.2",

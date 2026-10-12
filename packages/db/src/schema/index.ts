@@ -12,6 +12,8 @@ export * from './sessions';
 export * from './magic-links';
 export * from './rate-limit-counters';
 export * from './og-images';
+export * from './llm-calls';
+export * from './search-queries';
 
 import { accounts } from './accounts';
 import { users } from './users';
@@ -24,18 +26,23 @@ import { memberships } from './memberships';
 import { sessions } from './sessions';
 import { magicLinks } from './magic-links';
 import { ogImages } from './og-images';
+import { llmCalls } from './llm-calls';
+import { searchQueries } from './search-queries';
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
 export type DeckRow = typeof decks.$inferSelect;
 export type CategoryRow = typeof categories.$inferSelect;
-export type ItemRow = typeof items.$inferSelect;
+/** Items as the app reads them: no embedding vector (see `itemColumns`). */
+export type ItemRow = Omit<typeof items.$inferSelect, 'embedding'>;
 export type ItemCategoryRow = typeof itemCategories.$inferSelect;
 export type FavoriteRow = typeof favorites.$inferSelect;
 export type MembershipRow = typeof memberships.$inferSelect;
 export type SessionRow = typeof sessions.$inferSelect;
 export type MagicLinkRow = typeof magicLinks.$inferSelect;
 export type OgImageRow = typeof ogImages.$inferSelect;
+export type LlmCallRow = typeof llmCalls.$inferSelect;
+export type SearchQueryRow = typeof searchQueries.$inferSelect;
 
 export type NewDeckRow = typeof decks.$inferInsert;
 export type NewCategoryRow = typeof categories.$inferInsert;
@@ -43,3 +50,5 @@ export type NewItemRow = typeof items.$inferInsert;
 export type NewMembershipRow = typeof memberships.$inferInsert;
 export type NewSessionRow = typeof sessions.$inferInsert;
 export type NewMagicLinkRow = typeof magicLinks.$inferInsert;
+export type NewLlmCallRow = typeof llmCalls.$inferInsert;
+export type NewSearchQueryRow = typeof searchQueries.$inferInsert;

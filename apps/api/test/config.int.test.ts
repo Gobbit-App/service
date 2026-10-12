@@ -13,7 +13,11 @@ describe('GET /config (D55)', () => {
     expect(res.headers.get('Cache-Control')).toBe('public, max-age=300');
 
     const body = await json(res);
-    expect(body).toEqual({ cloudinaryCloudName: 'demo', commit: 'abc123' });
+    expect(body).toEqual({
+      cloudinaryCloudName: 'demo',
+      commit: 'abc123',
+      search: { semantic: false, ask: false },
+    });
 
     const raw = JSON.stringify(body);
     expect(raw).not.toContain('key123');
@@ -27,6 +31,10 @@ describe('GET /config without Cloudinary', () => {
   it('reports a null cloud name and the dev commit', async () => {
     const res = await ctx.app.request('/config', { headers: ctx.anon() });
     expect(res.status).toBe(200);
-    expect(await json(res)).toEqual({ cloudinaryCloudName: null, commit: 'dev' });
+    expect(await json(res)).toEqual({
+      cloudinaryCloudName: null,
+      commit: 'dev',
+      search: { semantic: false, ask: false },
+    });
   });
 });
