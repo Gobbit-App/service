@@ -164,7 +164,7 @@ pnpm --filter e2e exec playwright install chromium
 ```
 push to main → CI (tests, client drift, web build + budget)
              → image job (matrix api, web): build with GIT_SHA, push ghcr.io/gobbit-app/service/{api,web}:{latest,<sha>}
-             → deploy job: POST $DOKPLOY_DEPLOY_WEBHOOK → Dokploy pulls both images, restarts the Compose project
+             → deploy job: POST $DOKPLOY_DEPLOY_WEBHOOK (titled "<commit subject> — <sha7>") → Dokploy pulls both images, restarts the Compose project
              → smoke.yml waits until /api/health and /version.json report commit = <sha>, then runs the API and web-smoke projects
 ```
 

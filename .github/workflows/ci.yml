@@ -177,11 +177,47 @@ jobs:
       - name: Redeploy on Dokploy
         env:
           DOKPLOY_DEPLOY_WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
+          # Untrusted text (commit message) — passed via env and jq --arg, never inlined into the shell.
+          # Empty on workflow_dispatch, which has no head_commit.
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          IMAGE_REPO: ghcr.io/${{ github.repository }}
         run: |
-          if [ -z "$DOKPLOY_DEPLOY_WEBHOOK" ]; then
+          set -euo pipefail
+          if [ -z "${DOKPLOY_DEPLOY_WEBHOOK:-}" ]; then
             echo 'DOKPLOY_DEPLOY_WEBHOOK not set; skipping redeploy.'
             exit 0
           fi
+          echo "::add-mask::$DOKPLOY_DEPLOY_WEBHOOK"
+
+          # What's being released: the head commit's subject (or "Manual redeploy") + short SHA.
+          short_sha="${GITHUB_SHA:0:7}"
+          subject="${HEAD_COMMIT_MESSAGE%%$'\n'*}"
+          [ -n "$subject" ] || subject="Manual redeploy (${GITHUB_ACTOR})"
+          title="${subject:0:120} — ${short_sha}"
+          images="${IMAGE_REPO,,}/{api,web}:${GITHUB_SHA}"
+
+          {
+            echo "### Dokploy deploy"
+            echo
+            echo "- **Release:** ${title}"
+            echo "- **Commit:** [\`${short_sha}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})"
+            echo "- **Images:** \`${images}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Dokploy titles a deployment from body.head_commit.message (and shows head_commit.id)
+          # when the request carries `X-GitHub-Event: push`; without it every deploy gets
+          # a generic title. The Compose service is a raw source, so `ref` is not checked
+          # against a branch and the payload never changes what deploys (Compose pulls :latest).
+          payload=$(jq -n \
+            --arg ref "$GITHUB_REF" \
+            --arg id "$short_sha" \
+            --arg msg "$title" \
+            '{ref: $ref, head_commit: {id: $id, message: $msg}}')
+
+          echo "Triggering Dokploy deploy: $title"
           # --fail-with-body: on an HTTP error, print Dokploy's message instead of just the code.
-          curl -sS --fail-with-body -X POST "$DOKPLOY_DEPLOY_WEBHOOK"
+          curl -sS --fail-with-body -X POST "$DOKPLOY_DEPLOY_WEBHOOK" \
+            -H 'X-GitHub-Event: push' \
+            -H 'Content-Type: application/json' \
+            -d "$payload"
           echo
