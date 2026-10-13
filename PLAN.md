@@ -152,3 +152,21 @@ Oct 12: demos reworded to match the code as built through Phase 3B (details and 
 - [ ] **5. Secrets and supply chain** — CI fails on a deliberately introduced vulnerable dependency version.
 - [ ] **6. Migration escape hatch** — the app runs on a scratch cloud VM from last night's backup with the same domain pointed at it.
 
+## Phase 12 — Custom deck domains
+
+Oct 12: planned (details, decisions D84–D91 and sequencing in `docs/plans/custom-domains.md`). A shared or communal deck can be served on its own domain (a customer CNAME, for example `recipes.family.com`), and every link for that deck works there. Runs after Phase 11; relies on Phase 8's public pages.
+
+Rules:
+- **One deck per domain.** `https://<host>/` is the deck. URLs drop the `/d/<slug>` prefix, and no other deck is reachable on that host. One domain per deck, subdomains only, never a personal deck.
+- **A platform operator assigns domains.** `PLATFORM_ADMINS` (env emails) gates `/admin/domains`. Deck owners see the domain and its status read-only.
+- **Cloudflare for SaaS** issues the certificates and routes the custom hostnames through the tunnel to Traefik's catch-all router. Hosts that aren't verified answer 421, and links are never built from the raw `Host` header.
+- **Sessions created on a custom host can act only on that deck.** The deck owner controls that domain's DNS, so a captured link must not open the whole account. Account-wide actions (`me`, other decks, logout-all, admin) need the main domain.
+- **The custom domain is canonical** for share links, previews, invite and sign-in emails. Main-domain `/d/<slug>` keeps working for signed-in members; public pages and `/s/:id` on the main domain 301 to the custom host.
+- **Named after the deck:** a per-host manifest, title and `og:site_name` use the deck name, the email sender stays Gobbit, and the footer says "Powered by Gobbit".
+
+- [ ] **1. Assign a domain** — the operator adds `recipes.<test domain>` to a shared deck through `/admin/domains` and gets the CNAME instruction; once the CNAME exists the domain turns `active` without touching Cloudflare by hand. A non-admin gets 404; a personal deck is refused with 409.
+- [ ] **2. Stranger on the custom domain** — on a phone on mobile data, `https://recipes.<test domain>/` shows the deck's public categories under the deck name with a valid certificate; a card opens at `/i/<id>` with no `/d/` prefix; `/d/me` and other decks are not reachable there.
+- [ ] **3. Member on the custom domain** — request a sign-in link on the custom domain; the email link points at the custom domain and lands on the deck there; add a card. That session's `GET /api/decks` lists only this deck, `logout-all` is refused, and the member's main-domain session is unaffected.
+- [ ] **4. Links follow the deck** — share a card from the custom domain and from the main domain: both share URLs and their WhatsApp previews (`og:url`, canonical, site name) use the custom domain; an old main-domain `/s/<id>` link 301s there; an invite to the deck arrives with a custom-domain link.
+- [ ] **5. Install and offline** — add the custom domain to the Android home screen: the icon is labelled with the deck name; in airplane mode it opens and shows the last-viewed category.
+- [ ] **6. Removal and dangling DNS** — delete the customer CNAME: within a day (or on refresh) the domain turns `failed`, the host shows "not connected", and new links use the main domain again. Removing the domain revokes its scoped sessions. An unknown host pointed at the tunnel gets 421.

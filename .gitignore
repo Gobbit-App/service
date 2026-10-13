@@ -35,3 +35,6 @@ docs/thrifty/
 
 # Vite PWA dev service worker
 apps/web/dev-dist
+
+# Implementation notes (local, per plan)
+imp-notes/
