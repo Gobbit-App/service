@@ -16,3 +16,5 @@ export * from './schemas/membership';
 export * from './authz/permissions';
 export * from './authz/can';
 export * from './utils/text-script';
+export * from './search';
+export * from './schemas/search';

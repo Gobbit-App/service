@@ -93,3 +93,17 @@ test('a favorite survives a reload @smoke', async ({ page, webDeck }) => {
     }),
   ).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('typing in the pinned search box lists tagged results @smoke', async ({ page, webDeck }) => {
+  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.getByRole('searchbox', { name: 'Search this pocketbook' }).fill('Smoke text');
+  await expect(page).toHaveURL(/\/search\?q=Smoke(\+|%20)text/);
+  const hit = page.locator('.search-hit').first();
+  await expect(hit.locator('.result-tag')).toBeVisible();
+  await expect(hit.locator('mark.search-hit-mark').first()).toBeVisible();
+});
+
+test('a search with no matches shows the empty state @smoke', async ({ page, webDeck }) => {
+  await page.goto(webUrl(`/d/${webDeck.slug}/search?q=zqxjvw`));
+  await expect(page.getByText(/No cards match/)).toBeVisible();
+});

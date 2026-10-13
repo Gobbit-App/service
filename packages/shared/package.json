@@ -10,7 +10,8 @@
     "./authz": "./src/authz/can.ts",
     "./decks": "./src/decks.ts",
     "./calc": "./src/calc/evaluate.ts",
-    "./text-script": "./src/utils/text-script.ts"
+    "./text-script": "./src/utils/text-script.ts",
+    "./search": "./src/search/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

@@ -19,6 +19,8 @@ import { createRateLimitService } from './rate-limit.service';
 import { createAuthService, type CallbackRepos, type CallbackTransaction } from './auth.service';
 import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
+import { createItemDtoMapper } from './item-dtos';
+import { buildSearchServices, resolveEmbedQueue, type SearchWiring } from './search-wiring';
 
 export interface ServiceDeps {
   db: Db;
@@ -27,6 +29,8 @@ export interface ServiceDeps {
   now?: () => Date;
   /** OG store/renderer overrides (D60); production builds them from env. */
   share?: ShareWiring;
+  /** Embedder/asker/queue overrides (Phase 4); production builds them from env. */
+  search?: SearchWiring;
 }
 
 /** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
@@ -43,7 +47,14 @@ export function buildCallbackRepos(tx: DbTx): CallbackRepos {
   };
 }
 
-export function buildServices({ db, env, mailer, now = () => new Date(), share }: ServiceDeps) {
+export function buildServices({
+  db,
+  env,
+  mailer,
+  now = () => new Date(),
+  share,
+  search,
+}: ServiceDeps) {
   const users = createUsersRepo(db);
   const decks = createDecksRepo(db);
   const categories = createCategoriesRepo(db);
@@ -55,6 +66,16 @@ export function buildServices({ db, env, mailer, now = () => new Date(), share }
 
   const usersService = createUsersService({ users, decks });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
+  const toDtos = createItemDtoMapper({ items, favorites });
+  const searchServices = buildSearchServices({
+    db,
+    env,
+    decks,
+    memberships,
+    rateLimits,
+    toDtos,
+    wiring: search,
+  });
   const transaction: CallbackTransaction = (fn) =>
     db.transaction((tx) => fn(buildCallbackRepos(tx)));
 
@@ -82,9 +103,18 @@ export function buildServices({ db, env, mailer, now = () => new Date(), share }
     }),
     decks: createDecksService({ decks, categories, memberships }),
     categories: createCategoriesService({ decks, categories, memberships }),
-    items: createItemsService({ decks, categories, items, favorites, memberships }),
+    items: createItemsService({
+      decks,
+      categories,
+      items,
+      favorites,
+      memberships,
+      embedQueue: resolveEmbedQueue(search),
+    }),
     favorites: createFavoritesService({ decks, items, favorites, memberships }),
     share: buildShareService(db, env, share),
+    search: searchServices.search,
+    ask: searchServices.ask,
   };
 }
 

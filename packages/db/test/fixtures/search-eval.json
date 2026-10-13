@@ -1,0 +1,242 @@
+[
+  {
+    "q": "dentist",
+    "expect": ["dentist"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "7712345",
+    "expect": ["dentist"],
+    "lang": "en",
+    "kind": "phone"
+  },
+  {
+    "q": "054 771",
+    "expect": ["dentist"],
+    "lang": "en",
+    "kind": "phone"
+  },
+  {
+    "q": "parking",
+    "expect": ["parking"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "pickup",
+    "expect": ["school-pickup"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "wifi",
+    "expect": ["wifi"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "dentst",
+    "expect": ["dentist"],
+    "lang": "en",
+    "kind": "typo"
+  },
+  {
+    "q": "recyling",
+    "expect": ["garbage"],
+    "lang": "en",
+    "kind": "typo"
+  },
+  {
+    "q": "plumber",
+    "expect": ["plumber"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "iec.co.il",
+    "expect": ["electricity"],
+    "lang": "en",
+    "kind": "url"
+  },
+  {
+    "q": "gov.il/passport",
+    "expect": ["passport"],
+    "lang": "en",
+    "kind": "url"
+  },
+  {
+    "q": "רופאת ילדים",
+    "expect": ["pediatrician"],
+    "lang": "he",
+    "kind": "substring"
+  },
+  {
+    "q": "בית מרקחת",
+    "expect": ["pharmacy-he"],
+    "lang": "he",
+    "kind": "substring"
+  },
+  {
+    "q": "Ελένη",
+    "expect": ["grandma-phone"],
+    "lang": "el",
+    "kind": "substring"
+  },
+  {
+    "q": "μουσακα",
+    "expect": ["moussaka"],
+    "lang": "el",
+    "kind": "substring"
+  },
+  {
+    "q": "5551234",
+    "expect": ["grandma-phone"],
+    "lang": "el",
+    "kind": "phone"
+  },
+  {
+    "q": "peanuts",
+    "expect": ["allergies"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "שחייה",
+    "expect": ["swimming"],
+    "lang": "he",
+    "kind": "substring"
+  },
+  {
+    "q": "מד\"א",
+    "expect": ["emergency"],
+    "lang": "he",
+    "kind": "substring"
+  },
+  {
+    "q": "rabies",
+    "expect": ["vet"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "babysiter",
+    "expect": ["babysitter"],
+    "lang": "en",
+    "kind": "typo"
+  },
+  {
+    "q": "Leumi",
+    "expect": ["bank"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "form 135",
+    "expect": ["tax-refund"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "Line 25",
+    "expect": ["bus"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "zqxjvw",
+    "expect": [],
+    "lang": "en",
+    "kind": "none"
+  },
+  {
+    "q": "quantum chromodynamics",
+    "expect": [],
+    "lang": "en",
+    "kind": "none"
+  },
+  {
+    "q": "רופא שיניים",
+    "expect": ["dentist"],
+    "lang": "he",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "tooth doctor",
+    "expect": ["dentist"],
+    "lang": "en",
+    "kind": "meaning"
+  },
+  {
+    "q": "where can I leave the car",
+    "expect": ["parking"],
+    "lang": "en",
+    "kind": "meaning"
+  },
+  {
+    "q": "when do kids finish school on Friday",
+    "expect": ["school-pickup"],
+    "lang": "en",
+    "kind": "meaning"
+  },
+  {
+    "q": "γιατρός για δόντια",
+    "expect": ["dentist"],
+    "lang": "el",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "pharmacy open late",
+    "expect": ["pharmacy-he", "pharmacy-el"],
+    "lang": "en",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "kids doctor",
+    "expect": ["pediatrician"],
+    "lang": "en",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "internet support phone",
+    "expect": ["internet"],
+    "lang": "en",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "dog vaccine",
+    "expect": ["vet"],
+    "lang": "en",
+    "kind": "meaning"
+  },
+  {
+    "q": "emergency numbers",
+    "expect": ["emergency"],
+    "lang": "en",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "swimming lessons",
+    "expect": ["swimming"],
+    "lang": "en",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "moussaka recipe",
+    "expect": ["moussaka"],
+    "lang": "en",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "spare key",
+    "expect": ["neighbors"],
+    "lang": "en",
+    "kind": "cross-lingual"
+  },
+  {
+    "q": "how much water for rice",
+    "expect": ["rice"],
+    "lang": "en",
+    "kind": "meaning"
+  }
+]

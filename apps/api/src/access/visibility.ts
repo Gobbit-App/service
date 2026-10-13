@@ -1,6 +1,6 @@
 import { eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { can, type MemberRole } from '@pb/shared';
-import { categories } from '@pb/db';
+import { categories, itemCategories, items } from '@pb/db';
 
 /** True when `role` may see `private` categories (and the cards only they hold). */
 export function canSeePrivate(role: MemberRole | null): boolean {
@@ -19,4 +19,15 @@ export function visibleCategoriesWhere(role: MemberRole | null): SQL {
     return eq(categories.visibility, 'public');
   }
   return inArray(categories.visibility, ['shared', 'public']);
+}
+
+/** D38: the item (outer `items` row) sits in at least one live category `role` can see. */
+export function itemHasVisibleCategory(role: MemberRole | null): SQL {
+  return sql`exists (
+    select 1 from ${itemCategories}
+    inner join ${categories} on ${categories.id} = ${itemCategories.categoryId}
+    where ${itemCategories.itemId} = ${items.id}
+      and ${categories.deletedAt} is null
+      and ${visibleCategoriesWhere(role)}
+  )`;
 }

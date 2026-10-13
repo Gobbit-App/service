@@ -27,7 +27,7 @@ describe('schema', () => {
       ORDER BY column_name
     `);
 
-    expect(result.rows).toHaveLength(14);
+    expect(result.rows).toHaveLength(19);
     expect(result.rows).toEqual([
       {
         column_name: 'body',
@@ -60,6 +60,30 @@ describe('schema', () => {
         datetime_precision: 3,
       },
       {
+        column_name: 'embedded_at',
+        data_type: 'timestamp with time zone',
+        is_nullable: 'YES',
+        datetime_precision: 3,
+      },
+      {
+        column_name: 'embedded_hash',
+        data_type: 'text',
+        is_nullable: 'YES',
+        datetime_precision: null,
+      },
+      {
+        column_name: 'embedding',
+        data_type: 'USER-DEFINED',
+        is_nullable: 'YES',
+        datetime_precision: null,
+      },
+      {
+        column_name: 'embedding_model',
+        data_type: 'text',
+        is_nullable: 'YES',
+        datetime_precision: null,
+      },
+      {
         column_name: 'id',
         data_type: 'uuid',
         is_nullable: 'NO',
@@ -68,6 +92,12 @@ describe('schema', () => {
       {
         column_name: 'payload',
         data_type: 'jsonb',
+        is_nullable: 'NO',
+        datetime_precision: null,
+      },
+      {
+        column_name: 'search_text',
+        data_type: 'text',
         is_nullable: 'NO',
         datetime_precision: null,
       },

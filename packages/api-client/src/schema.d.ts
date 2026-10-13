@@ -83,6 +83,10 @@ export interface paths {
                         "application/json": {
                             cloudinaryCloudName: string | null;
                             commit: string;
+                            search: {
+                                semantic: boolean;
+                                ask: boolean;
+                            };
                         };
                     };
                 };
@@ -2947,6 +2951,372 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decks/{id}/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hybrid text + semantic search over the deck (D75) */
+        get: {
+            parameters: {
+                query: {
+                    q: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ranked matches; `semantic` is false when only the text arm ran */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                item: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: uuid */
+                                    deckId: string;
+                                    /** @enum {string} */
+                                    type: "text" | "link" | "image" | "table" | "calc";
+                                    /** @enum {string} */
+                                    status: "proposed" | "published" | "archived";
+                                    title: string;
+                                    body: string;
+                                    payload: {
+                                        [key: string]: unknown;
+                                    };
+                                    sourceUrl: string | null;
+                                    /** @enum {string} */
+                                    sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                                    verifiedAt: string | null;
+                                    createdBy: string | null;
+                                    createdAt: string;
+                                    updatedAt: string;
+                                    categoryIds: string[];
+                                    isFavorite: boolean;
+                                };
+                                /** @enum {string} */
+                                why: "text" | "semantic" | "both";
+                                score: number;
+                            }[];
+                            semantic: boolean;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decks/{id}/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer a question from the deck’s cards only, with citations (D77) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        question: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Grounded answer, or the fixed not-found answer with `grounded: false` */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            answer: string;
+                            citations: {
+                                /** Format: uuid */
+                                itemId: string;
+                                title: string;
+                            }[];
+                            grounded: boolean;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Gateway Timeout */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

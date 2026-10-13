@@ -1,0 +1,14 @@
+DROP TRIGGER IF EXISTS items_set_updated_at ON items;
+CREATE TRIGGER items_set_updated_at BEFORE UPDATE ON items FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+DROP INDEX IF EXISTS "items_embedding_hnsw_idx";
+DROP INDEX IF EXISTS "items_search_trgm_idx";
+ALTER TABLE "items" DROP COLUMN IF EXISTS "embedded_at";
+ALTER TABLE "items" DROP COLUMN IF EXISTS "embedded_hash";
+ALTER TABLE "items" DROP COLUMN IF EXISTS "embedding_model";
+ALTER TABLE "items" DROP COLUMN IF EXISTS "embedding";
+ALTER TABLE "items" DROP COLUMN IF EXISTS "search_text";
+DROP TABLE IF EXISTS "search_queries";
+DROP TABLE IF EXISTS "llm_calls";
+DROP FUNCTION IF EXISTS public.item_embedding_hash(text, text);
+DROP FUNCTION IF EXISTS public.item_search_text(item_type, text, text, jsonb);
+DROP FUNCTION IF EXISTS public.search_normalize(text);

@@ -147,6 +147,16 @@ export function rateLimited(retryAfterSeconds: number): HttpError {
   );
 }
 
+/** D77: the feature's provider is not configured or failed. */
+export function serviceUnavailable(detail?: string): HttpError {
+  return new HttpError(503, '/problems/unavailable', 'Service Unavailable', detail);
+}
+
+/** D77: the provider did not answer within the deadline. */
+export function gatewayTimeout(detail?: string): HttpError {
+  return new HttpError(504, '/problems/timeout', 'Gateway Timeout', detail);
+}
+
 export function problemFromZodError(err: {
   issues: { path: PropertyKey[]; message: string }[];
 }): Problem {

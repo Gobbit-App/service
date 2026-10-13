@@ -100,6 +100,9 @@ jobs:
           # Surfaces the Docker daemon's own error text if container start-up still fails.
           DEBUG: testcontainers*
 
+      # D81: search eval (recall@5) from the committed embedding cache; no provider key needed.
+      - run: pnpm test:search
+
       - run: pnpm --filter @pb/db exec drizzle-kit check
 
       # D53: the committed OpenAPI document and generated client types match the API routes.

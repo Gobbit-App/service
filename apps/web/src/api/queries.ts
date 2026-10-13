@@ -1,5 +1,14 @@
-import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
-import type { AppConfig, Category, Deck, Item, ItemPage, Me } from '@pb/shared';
+import { infiniteQueryOptions, keepPreviousData, queryOptions } from '@tanstack/react-query';
+import type {
+  AppConfig,
+  AskResponse,
+  Category,
+  Deck,
+  Item,
+  ItemPage,
+  Me,
+  SearchResponse,
+} from '@pb/shared';
 import { api, unwrap } from './client';
 import { itemListQuery, queryKeys, type ItemFilter } from './query-keys';
 
@@ -63,3 +72,21 @@ export const itemQuery = (itemId: string) =>
     queryFn: ({ signal }): Promise<Item> =>
       unwrap(api.GET('/items/{id}', { params: { path: { id: itemId } }, signal })),
   });
+
+/** D79: debounced deck search; the previous results stay on screen while the next load. */
+export const searchQuery = (deckSlug: string, q: string) =>
+  queryOptions({
+    queryKey: queryKeys.search(deckSlug, q),
+    queryFn: ({ signal }): Promise<SearchResponse> =>
+      unwrap(
+        api.GET('/decks/{id}/search', { params: { path: { id: deckSlug }, query: { q } }, signal }),
+      ),
+    enabled: q.trim().length > 0,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+  });
+
+/** D77: one Ask round trip; a mutation so typing never calls the model. */
+export const askDeck = (deckSlug: string, question: string): Promise<AskResponse> =>
+  unwrap(api.POST('/decks/{id}/ask', { params: { path: { id: deckSlug } }, body: { question } }));

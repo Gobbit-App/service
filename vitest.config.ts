@@ -12,7 +12,12 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['{apps,packages,e2e}/**/*.test.ts'],
-          exclude: ['**/*.int.test.ts', '**/node_modules/**', 'apps/web/src/**'],
+          exclude: [
+            '**/*.int.test.ts',
+            '**/*.search.test.ts',
+            '**/node_modules/**',
+            'apps/web/src/**',
+          ],
           environment: 'node',
         },
       },
@@ -28,6 +33,20 @@ export default defineConfig({
           fileParallelism: false,
           testTimeout: 30000,
           hookTimeout: 120000,
+        },
+      },
+      {
+        // D81: `pnpm test:search` — the search eval, not part of `pnpm test`.
+        test: {
+          name: 'search',
+          include: ['apps/api/test/**/*.search.test.ts'],
+          exclude: ['**/node_modules/**'],
+          environment: 'node',
+          globalSetup: [globalSetupPath],
+          pool: 'forks',
+          fileParallelism: false,
+          testTimeout: 120000,
+          hookTimeout: 300000,
         },
       },
     ],

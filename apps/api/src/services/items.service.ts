@@ -1,4 +1,3 @@
-import type { ItemRow } from '@pb/db';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
@@ -19,7 +18,8 @@ import { assertPermission, authorize, type MembershipLookup } from '../access/au
 import { canSeePrivate } from '../access/visibility';
 import { badRequest, notFound, unprocessable } from '../errors/http-errors';
 import { resolveDeck } from '../lib/resolve-deck';
-import { toItemDto } from '../lib/mappers';
+import type { EmbedQueue } from '../jobs/embed-queue';
+import { createItemDtoMapper } from './item-dtos';
 import { type CurrentUser } from '../types';
 
 export function createItemsService(deps: {
@@ -28,8 +28,11 @@ export function createItemsService(deps: {
   items: ItemsRepo;
   favorites: FavoritesRepo;
   memberships: MembershipLookup;
+  /** D72: after each committed write, queue a re-embed when the text changed. */
+  embedQueue: EmbedQueue;
 }) {
-  const { decks, categories, items, favorites, memberships } = deps;
+  const { decks, categories, items, favorites, memberships, embedQueue } = deps;
+  const toDtos = createItemDtoMapper({ items, favorites });
   const ITEM_NOT_FOUND = 'Item not found';
 
   // Private helpers
@@ -73,18 +76,6 @@ export function createItemsService(deps: {
     }
 
     return unique;
-  }
-
-  async function toDtos(user: CurrentUser, rows: ItemRow[], role: MemberRole) {
-    if (rows.length === 0) return [];
-
-    const itemIds = rows.map((r) => r.id);
-    const categoryIdsMap = await items.categoryIdsFor(itemIds, role);
-    const favoriteIds = await favorites.favoritedAmong(user.id, itemIds);
-
-    return rows.map((row) =>
-      toItemDto(row, categoryIdsMap.get(row.id) ?? [], favoriteIds.has(row.id)),
-    );
   }
 
   // Service methods
@@ -167,6 +158,7 @@ export function createItemsService(deps: {
         },
         categoryIds,
       );
+      await embedQueue.enqueueIfStale(createdItem.id);
 
       const itemDtos = await toDtos(user, [createdItem], role);
       return itemDtos[0];
@@ -235,6 +227,7 @@ export function createItemsService(deps: {
         updatePatch,
         patch.categoryIds !== undefined ? resultingCategoryIds : undefined,
       );
+      await embedQueue.enqueueIfStale(updatedItem.id);
 
       const itemDtos = await toDtos(user, [updatedItem], role);
       return itemDtos[0];

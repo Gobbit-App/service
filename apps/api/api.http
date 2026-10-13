@@ -254,6 +254,17 @@ Content-Type: application/json
   "categoryIds": ["{{familyFood.response.body.id}}"]
 }
 
+### Search (D68–D71; why = text | semantic | both)
+GET {{baseUrl}}/decks/family/search?q=shopping&limit=10
+Authorization: Bearer {{token}}
+
+### Ask (D77; 503 without ANTHROPIC_API_KEY, 30/hour per user)
+POST {{baseUrl}}/decks/family/ask
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "question": "Which day do we go shopping?" }
+
 ### Public runtime config (D55)
 GET {{baseUrl}}/config
 

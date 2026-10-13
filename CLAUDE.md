@@ -1,11 +1,11 @@
-# Gobbit — Phase 3B (next: Phase 4, search)
+# Gobbit — Phase 4 (search)
 
-A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 added the Reader PWA (offline reading, favorites, share previews); Phase 3B adds a personal deck at `/d/me` (created on every sign-in) and a minimal card editor. Phase 4 (search) is planned in `plans/phase4 implementation plan.md` (local, gitignored).
+A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 added the Reader PWA (offline reading, favorites, share previews); Phase 3B adds a personal deck at `/d/me` (created on every sign-in) and a minimal card editor. Phase 4 adds hybrid search (pg_trgm + pgvector, RRF), an optional cited Ask answer and an embeddings worker (plan: `plans/phase4 implementation plan.md`, local, gitignored).
 
 ## Repo Layout
 
 ```
-apps/api/        — Hono REST API (TypeScript strict)
+apps/api/        — Hono REST API (TypeScript strict) + embeddings worker (`src/worker.ts`, pg-boss)
 apps/web/        — Reader PWA (React, Vite, TanStack Router/Query) + Caddy image
 packages/api-client/ — Generated OpenAPI types + typed client (@pb/api-client)
 packages/shared/ — Zod schemas, limits, utils (@pb/shared)
@@ -31,21 +31,23 @@ docs/            — architecture.md (keep synced)
 - **Deploy**: CI builds `ghcr.io/gobbit-app/service/{api,web}` with `GIT_SHA`, then a `deploy` job calls the Dokploy webhook once; only `web` (Caddy) faces Traefik and proxies `/api` (stripped) and `/s` to the internal API; smoke waits for `/health` and `/version.json` to report the commit (ADR-033/034/038, `infra/README.md`)
 - **Roles**: co-owners (owner memberships) can do everything except delete the deck; re-inviting a pending member replaces the invite (new role, older links expired)
 - **Env**: `pnpm dev` and `pnpm db:*` load the repo-root `.env` if present (`tsx --env-file-if-exists`); real env vars win
-- **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; E2E `@smoke` → each test creates and deletes its own `smoke-<id>` deck (D50)
+- **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; Search eval `*.search.test.ts` (`pnpm test:search`, committed embedding cache); E2E `@smoke` → each test creates and deletes its own `smoke-<id>` deck (D50)
 - **Git hooks**: `.githooks/` via `prepare` — pre-commit = Prettier + ESLint on staged files (check only), pre-push = typecheck + unit
-- **Web**: plain CSS, no UI kit; API data offline via persisted query cache, never the service worker; same origin everywhere (no CORS)
+- **Search**: `searchRepo.hybrid()` filters both arms by deck, status and `visibleCategoriesWhere()`; fusion in `lib/rrf.ts`. `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` are optional (text-only search / Ask off); writes call `embedQueue.enqueueIfStale()` after commit, the worker sweep heals misses (ADR-041–043)
+- **Web**: plain CSS, no UI kit; API data offline via persisted query cache, never the service worker (search queries are not persisted); value imports from `@pb/shared` subpaths (`/search`, `/calc`, …), never the root (bundle budget); same origin everywhere (no CORS)
 - **Docs**: Keep `docs/architecture.md` and `README.md` synced with code
 
 ## Key Commands
 
 ```
-pnpm test:{unit,int,e2e}           # Test suites
+pnpm test:{unit,int,e2e,search}    # Test suites (test:search:update refreshes the embedding cache)
 pnpm typecheck / lint / format     # Code quality
 pnpm db:{generate,migrate,rollback,seed}  # Database
-pnpm dev                           # API :3000 + web :5173 (Vite proxies /api, /s)
+pnpm dev                           # API :3000 + worker + web :5173 (Vite proxies /api, /s)
+pnpm search:{load,query}           # Fixture deck into a running API / query it
 pnpm api:openapi                   # Regenerate api-client after route changes (CI checks drift)
 pnpm build:web / budget / og:static # Web build, 150 KB gzip budget, static OG/icons
-pnpm compose:{up,down}             # Docker (Postgres + API + web on 127.0.0.1:8080)
+pnpm compose:{up,down}             # Docker (Postgres + API + worker + web on 127.0.0.1:8080)
 ```
 
 See `docs/architecture.md` and `README.md` for detailed setup.

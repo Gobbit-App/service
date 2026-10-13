@@ -58,6 +58,7 @@ describe('createItemsService', () => {
   let items: any;
   let favorites: any;
   let memberships: any;
+  let embedQueue: { enqueueIfStale: ReturnType<typeof vi.fn<(id: string) => Promise<void>>> };
 
   beforeEach(() => {
     decks = {
@@ -85,6 +86,7 @@ describe('createItemsService', () => {
     } as unknown as FavoritesRepo;
 
     memberships = { findActive: vi.fn().mockResolvedValue(null) };
+    embedQueue = { enqueueIfStale: vi.fn().mockResolvedValue(undefined) };
 
     service = createItemsService({
       decks,
@@ -92,6 +94,7 @@ describe('createItemsService', () => {
       items,
       favorites,
       memberships,
+      embedQueue,
     });
   });
 
@@ -112,6 +115,7 @@ describe('createItemsService', () => {
         }),
         [DEFAULT_CAT],
       );
+      expect(embedQueue.enqueueIfStale).toHaveBeenCalledWith(createItemRow().id);
     });
 
     it('rejects unknown category id with 400 error at path categoryIds', async () => {
@@ -190,6 +194,7 @@ describe('createItemsService', () => {
       });
 
       expect(items.update).not.toHaveBeenCalled();
+      expect(embedQueue.enqueueIfStale).not.toHaveBeenCalled();
     });
 
     it('D6: allows empty categoryIds when status is archived', async () => {
@@ -202,6 +207,7 @@ describe('createItemsService', () => {
       await service.update(USER, itemId, patch);
 
       expect(items.update).toHaveBeenCalled();
+      expect(embedQueue.enqueueIfStale).toHaveBeenCalledTimes(1);
     });
 
     it('D12: rejects update with type field', async () => {
