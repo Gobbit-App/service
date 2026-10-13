@@ -1,4 +1,4 @@
-import type { Deck, Item, ItemPage } from '@pb/shared';
+import { PAGE_LIMIT_MAX, type Deck, type Item, type ItemPage } from '@pb/shared';
 import { searchCards } from '@pb/db/test/search-cards';
 import {
   ApiCliError,
@@ -27,7 +27,10 @@ async function existingTitles(request: ApiRequest, slug: string): Promise<Set<st
   let cursor: string | null = null;
   do {
     const query: string = cursor ? `&cursor=${encodeURIComponent(cursor)}` : '';
-    const page: ItemPage = await request<ItemPage>('GET', `/decks/${slug}/items?limit=100${query}`);
+    const page: ItemPage = await request<ItemPage>(
+      'GET',
+      `/decks/${slug}/items?limit=${PAGE_LIMIT_MAX}${query}`,
+    );
     for (const item of page.data) titles.add(item.title);
     cursor = page.nextCursor;
   } while (cursor);
