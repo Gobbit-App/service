@@ -5,6 +5,7 @@ import { EMBED_SWEEP_CRON, SEARCH_QUERY_PRUNE_CRON } from '@pb/shared';
 import { parseEnv } from './env';
 import { createBoss } from './jobs/boss';
 import { createEmbedItemHandler } from './jobs/embed-item';
+import { withEmbedItemLog } from './jobs/embed-item-log';
 import { createEmbedSweep } from './jobs/embed-sweep';
 import { ensureQueues } from './jobs/ensure-queues';
 import { createPruneSearchQueries } from './jobs/prune-search-queries';
@@ -37,11 +38,13 @@ async function main() {
   const embedder = defaultEmbedder(env);
   if (embedder) {
     const embeddings = createEmbeddingsRepo(db);
-    const embedItem = createEmbedItemHandler({
-      embedder,
-      embeddings,
-      llmCalls: createLlmCallsRepo(db),
-    });
+    const embedItem = withEmbedItemLog(
+      createEmbedItemHandler({
+        embedder,
+        embeddings,
+        llmCalls: createLlmCallsRepo(db),
+      }),
+    );
     const sweep = createEmbedSweep({ sender: boss, embeddings, model: embedder.model });
 
     await boss.schedule(QUEUES.embedSweep, EMBED_SWEEP_CRON);
