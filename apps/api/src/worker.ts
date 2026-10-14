@@ -13,7 +13,7 @@ import { QUEUES, type EmbedItemJob } from './jobs/queues';
 import { createEmbeddingsRepo } from './repositories/embeddings.repo';
 import { createLlmCallsRepo } from './repositories/llm-calls.repo';
 import { createSearchQueriesRepo } from './repositories/search-queries.repo';
-import { defaultEmbedder } from './services/search-wiring';
+import { defaultEmbedder } from './ai/providers';
 
 /** Compose healthcheck: the file's mtime must be fresh (D72, see infra/docker-compose.yml). */
 export const HEARTBEAT_FILE = process.env.WORKER_HEARTBEAT_FILE ?? '/tmp/worker-heartbeat';
@@ -67,7 +67,7 @@ async function main() {
   } else {
     // D73: without a key nothing is embedded; drop the sweep so it doesn't spin.
     await boss.unschedule(QUEUES.embedSweep);
-    console.log('[worker] OPENAI_API_KEY not set — embedding disabled');
+    console.log('[worker] OPENROUTER_API_KEY / OPENAI_API_KEY not set — embedding disabled');
   }
 
   const heartbeat = async () => {

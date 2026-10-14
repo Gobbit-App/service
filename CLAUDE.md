@@ -33,7 +33,7 @@ docs/            — architecture.md (keep synced)
 - **Env**: `pnpm dev` and `pnpm db:*` load the repo-root `.env` if present (`tsx --env-file-if-exists`); real env vars win
 - **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; Search eval `*.search.test.ts` (`pnpm test:search`, committed embedding cache); E2E `@smoke` → each test creates and deletes its own `smoke-<id>` deck (D50)
 - **Git hooks**: `.githooks/` via `prepare` — pre-commit = Prettier + ESLint on staged files (check only), pre-push = typecheck + unit
-- **Search**: `searchRepo.hybrid()` filters both arms by deck, status and `visibleCategoriesWhere()`; fusion in `lib/rrf.ts`. `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` are optional (text-only search / Ask off); writes call `embedQueue.enqueueIfStale()` after commit, the worker sweep heals misses (ADR-041–043)
+- **Search**: `searchRepo.hybrid()` filters both arms by deck, status and `visibleCategoriesWhere()`; fusion in `lib/rrf.ts`. `OPENROUTER_API_KEY` (preferred, both features) or `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` are optional (text-only search / Ask off); providers resolved in `ai/providers.ts` (ADR-044); writes call `embedQueue.enqueueIfStale()` after commit, the worker sweep heals misses (ADR-041–043)
 - **Web**: plain CSS, no UI kit; API data offline via persisted query cache, never the service worker (search queries are not persisted); value imports from `@pb/shared` subpaths (`/search`, `/calc`, …), never the root (bundle budget); same origin everywhere (no CORS)
 - **Docs**: Keep `docs/architecture.md` and `README.md` synced with code
 

@@ -37,7 +37,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    ```bash
    pnpm dev
    ```
-   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). The API side also starts the embeddings worker (`dev:server` + `dev:worker`), which only embeds when `OPENAI_API_KEY` is set. `pnpm dev:api` / `pnpm dev:web` run one side only.
+   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). The API side also starts the embeddings worker (`dev:server` + `dev:worker`), which only embeds when `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is set. `pnpm dev:api` / `pnpm dev:web` run one side only.
 
 6. **Verify health:**
    ```bash
@@ -56,9 +56,10 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `API_URL` | `http://localhost:${PORT}` | Public API address used in magic links (**required in production**). Local `.env`: `http://localhost:5173/api` (through the Vite proxy) |
 | `APP_URL` | — | Web app origin; sign-in/invite callbacks redirect here (falls back to `${API_URL}/me`) and share links/private OG image use it. Local `.env`: `http://localhost:5173` |
 | `CLOUDINARY_URL` | — | The "API environment variable" URL from the Cloudinary console; **required in production**. Uploads generated share images; only the cloud name reaches clients (`GET /config`) |
-| `OPENAI_API_KEY` | — | Optional (API + worker). Enables the semantic arm of search and the embeddings worker; without it search is text-only |
-| `ANTHROPIC_API_KEY` | — | Optional (API). Enables Ask (`POST /decks/{id}/ask`); without it Ask answers 503 and the PWA hides it |
-| `EMBEDDING_MODEL` / `ASK_MODEL` | `text-embedding-3-small` / `claude-haiku-5-5` | Provider models (changing `EMBEDDING_MODEL` re-embeds every item through the sweep) |
+| `OPENROUTER_API_KEY` | — | Optional (API + worker), preferred. One key for embeddings and Ask through OpenRouter; wins over the two direct keys below (ADR-044) |
+| `OPENAI_API_KEY` | — | Optional (API + worker). Direct OpenAI fallback: enables the semantic arm of search and the embeddings worker; without it search is text-only |
+| `ANTHROPIC_API_KEY` | — | Optional (API). Direct Anthropic fallback: enables Ask (`POST /decks/{id}/ask`); without it Ask answers 503 and the PWA hides it |
+| `EMBEDDING_MODEL` / `ASK_MODEL` | `text-embedding-3-small` / provider Haiku | Models. `EMBEDDING_MODEL` is the bare OpenAI id (sent to OpenRouter as `openai/<id>`; changing it re-embeds every item through the sweep). `ASK_MODEL` is provider-specific: default `anthropic/claude-haiku-5.5` (OpenRouter) or `claude-haiku-5-5` (Anthropic) |
 | `WORKER_CONCURRENCY` | `2` | Concurrent `embed-item` jobs per worker process |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
@@ -101,7 +102,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm test:coverage` | Coverage report (unit + api layers) |
 | `pnpm test:e2e` | Playwright smoke tests |
 | `pnpm test:search` | Search recall eval over the fixture deck (requires Docker; hybrid part needs the committed embedding cache) |
-| `pnpm test:search:update` | Same, filling missing vectors in `search-embeddings.json` with the real API (needs `OPENAI_API_KEY`; commit the file) |
+| `pnpm test:search:update` | Same, filling missing vectors in `search-embeddings.json` with the real API (needs `OPENROUTER_API_KEY` or `OPENAI_API_KEY`; commit the file) |
 | `pnpm search:load` | Create/fill a `search-demo` deck with the fixture cards through the API (`--deck`, `--base-url`/`BASE_URL`, `--token`/`SMOKE_SESSION_TOKEN`) |
 | `pnpm search:query "<q>"` | Print search hits (why, score) for a deck, same options |
 | `pnpm db:generate` | Generate migrations with drizzle-kit |
@@ -119,7 +120,7 @@ To run the entire stack (database + API + web image) with Docker Compose:
 pnpm compose:up
 ```
 
-`compose:up` layers `infra/docker-compose.local.yml` over the base file: it builds both images from source, publishes the DB, the API and the web image on `127.0.0.1` (web on **http://localhost:8080**, with `API_URL=http://localhost:8080/api`), runs the API with `NODE_ENV=development` (so `CLOUDINARY_URL` is optional) and relaxes the production defaults for plain HTTP (`COOKIE_SECURE=false`, console mailer allowed — sign-in links appear in `docker compose -f infra/docker-compose.yml logs api`). The base `infra/docker-compose.yml` is what the deployed host runs: no host ports, `COOKIE_SECURE=true` and no console mail by default, no database service (`DATABASE_URL` points at the shared database, D67). The local Postgres lives only in `docker-compose.local.yml`. The API container runs migrations on startup; a `worker` service (same API image, `worker` entrypoint) starts after the API is healthy and embeds cards when `OPENAI_API_KEY` is set, with a heartbeat-file healthcheck. Seed the owner user from the host (uses `.env`, `SEED_OWNER_EMAIL` required):
+`compose:up` layers `infra/docker-compose.local.yml` over the base file: it builds both images from source, publishes the DB, the API and the web image on `127.0.0.1` (web on **http://localhost:8080**, with `API_URL=http://localhost:8080/api`), runs the API with `NODE_ENV=development` (so `CLOUDINARY_URL` is optional) and relaxes the production defaults for plain HTTP (`COOKIE_SECURE=false`, console mailer allowed — sign-in links appear in `docker compose -f infra/docker-compose.yml logs api`). The base `infra/docker-compose.yml` is what the deployed host runs: no host ports, `COOKIE_SECURE=true` and no console mail by default, no database service (`DATABASE_URL` points at the shared database, D67). The local Postgres lives only in `docker-compose.local.yml`. The API container runs migrations on startup; a `worker` service (same API image, `worker` entrypoint) starts after the API is healthy and embeds cards when `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is set, with a heartbeat-file healthcheck. Seed the owner user from the host (uses `.env`, `SEED_OWNER_EMAIL` required):
 
 ```bash
 pnpm db:seed
@@ -220,7 +221,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 - `DATABASE_URL` – the `gobbit` database on the shared Postgres, e.g. `postgres://gobbit:<pw>@<box LAN IP>:5433/gobbit` (add `?sslmode=verify-full` off the LAN)
 - `RESEND_API_KEY`
 - `CLOUDINARY_URL` – the API refuses to start in production without it
-- `OPENAI_API_KEY` (API + worker) and `ANTHROPIC_API_KEY` (API) – optional; without them search is text-only and Ask is off
+- `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings and Ask. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API, Ask). Without them search is text-only and Ask is off
 
 Optional overrides: `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`.
 
@@ -282,7 +283,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `POST` | `/items/{id}/archive` | Archive item |
 | **Search** |
 | `GET` | `/decks/{id}/search?q=&limit=` | Hybrid search over visible, published cards (`why`: text / semantic / both) |
-| `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `ANTHROPIC_API_KEY`; 30/hour per user) |
+| `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
 | **Favorites** |
 | `POST` | `/items/{id}/favorite` | Add to favorites |
 | `DELETE` | `/items/{id}/favorite` | Remove from favorites |

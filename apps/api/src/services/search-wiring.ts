@@ -3,8 +3,7 @@ import { QUERY_EMBEDDING_BUDGET_PER_HOUR } from '@pb/shared';
 import type { Env } from '../env';
 import type { Asker } from '../ai/asker';
 import type { Embedder } from '../ai/embedder';
-import { createAnthropicAsker } from '../ai/anthropic-asker';
-import { createOpenAiEmbedder } from '../ai/openai-embedder';
+import { defaultAsker, defaultEmbedder } from '../ai/providers';
 import { createQueryEmbedder } from '../ai/query-embedder';
 import { noopEmbedQueue, type EmbedQueue } from '../jobs/embed-queue';
 import { rateKeys } from '../lib/rate-window';
@@ -25,18 +24,6 @@ export interface SearchWiring {
   embedQueue?: EmbedQueue;
   /** Ask deadline override (tests); defaults to ASK_TIMEOUT_MS. */
   askTimeoutMs?: number;
-}
-
-export function defaultEmbedder(env: Env): Embedder | null {
-  return env.OPENAI_API_KEY
-    ? createOpenAiEmbedder({ apiKey: env.OPENAI_API_KEY, model: env.EMBEDDING_MODEL })
-    : null;
-}
-
-function defaultAsker(env: Env): Asker | null {
-  return env.ANTHROPIC_API_KEY
-    ? createAnthropicAsker({ apiKey: env.ANTHROPIC_API_KEY, model: env.ASK_MODEL })
-    : null;
 }
 
 export function resolveEmbedQueue(wiring: SearchWiring | undefined): EmbedQueue {

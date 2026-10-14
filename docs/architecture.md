@@ -605,7 +605,7 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
 
 ```
 route (Zod: q 1..200, limit ≤ 20) → searchService.search
-  authorize(viewer) → normalize(q) (SQL search_normalize) → query vector (LRU cache, hourly budget; null without OPENAI_API_KEY)
+  authorize(viewer) → normalize(q) (SQL search_normalize) → query vector (LRU cache, hourly budget; null without an embedding key)
   → searchRepo.hybrid: text arm  (word_similarity ≥ 0.4 on search_text, plus a substring arm; skipped below 3 chars)
                        vector arm (cosine distance ≤ 0.55, same model, hnsw.ef_search 100)
                        each ≤ 50 rows, published and not deleted, limited to the categories the role can see
@@ -614,14 +614,14 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
 
 - The response is `{ data: [{ item, why, score }], semantic }`. `semantic` is false when the vector arm didn't run (no key, over budget, provider error).
 - The web highlights matches client-side with `highlight()` from `@pb/shared/search`, which folds text the same way the SQL does.
-- Without `OPENAI_API_KEY`, search runs text-only and nothing is enqueued.
+- Without an embedding key (`OPENROUTER_API_KEY` or `OPENAI_API_KEY`, ADR-044), search runs text-only and nothing is enqueued.
 
 ### Ask (`POST /decks/{id}/ask`)
 
-- A missing `ANTHROPIC_API_KEY` answers 503. `/config` then reports `search.ask: false`, and the PWA hides the mode toggle.
+- Without an Ask key (`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`) Ask answers 503. `/config` then reports `search.ask: false`, and the PWA hides the mode toggle.
 - Next comes the per-user rate limit (30/hour, the Phase 2 Postgres limiter), checked before any retrieval.
 - Retrieval reuses the search path. The top 8 hits go into a prompt (`ai/ask-prompt.ts`) that asks for a short answer in the question's script, citing card ids. `ai/ask-citations.ts` keeps only citations among the retrieved cards.
-- The model is `ASK_MODEL` (default `claude-haiku-5-5`) with a 20 s deadline. A timeout answers 504; a provider failure answers 503.
+- The model is `ASK_MODEL` (default Claude Haiku 5.5: `anthropic/claude-haiku-5.5` on OpenRouter, `claude-haiku-5-5` on Anthropic) with a 20 s deadline. A timeout answers 504; a provider failure answers 503.
 - No hits, an ungrounded answer or no valid citations → a localized "not found" answer with `grounded: false` and no citations.
 
 ### Embeddings worker (`apps/api/src/worker.ts`)
@@ -655,7 +655,7 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
   - Loads the deck into a Testcontainers database.
   - Asserts recall@5 ≥ 0.9 for the text arm on the text-capable pairs.
   - Asserts the same for hybrid search on all pairs, when `search-embeddings.json` holds every vector it needs. Vectors are keyed by `sha256(model + text)`.
-- `pnpm test:search:update` (needs `OPENAI_API_KEY`) fills missing cache entries. The file is committed, so CI makes no API calls.
+- `pnpm test:search:update` (needs `OPENROUTER_API_KEY` or `OPENAI_API_KEY`) fills missing cache entries. The file is committed, so CI makes no API calls.
 - `pnpm search:load` creates a `search-demo` deck through the API and adds any missing fixture cards (idempotent by title).
 - `pnpm search:query "<q>"` prints the hits.
 - Both scripts take `--deck`, `--base-url` (or `BASE_URL`) and `--token` (or `SMOKE_SESSION_TOKEN`).
@@ -675,7 +675,7 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
 - **Tests use archived cards as the non-searchable case**, where the plan said draft. Only published cards are searchable.
 - **`SEARCH_EVAL_UPDATE=1` / `pnpm test:search:update`** instead of an `--update` flag, which vitest already uses for snapshots.
 - **The eval runs against the repository and RRF**, not over HTTP. It's the same ranking code without a server.
-- **No embedding cache yet**: `search-embeddings.json` stays `{}` until someone with `OPENAI_API_KEY` runs `pnpm test:search:update`.
+- **No embedding cache yet**: `search-embeddings.json` stays `{}` until someone with an embedding key runs `pnpm test:search:update`.
   - Until then the hybrid eval is skipped.
   - Only the text arm is asserted. Its recall is 1.0 on 26 pairs.
 - **The search box isn't sticky**, which keeps the sticky chip-row offsets unchanged.
@@ -1174,8 +1174,8 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 ### ADR-042: pg-boss worker as a separate process (D72, D73)
 
 **Decision**: A worker process computes the embeddings. It runs from the same image with the `worker` entrypoint and uses pg-boss queues in the app database. Writes enqueue after commit, and a one-minute sweep re-queues anything stale. Both provider keys are optional:
-- Without `OPENAI_API_KEY`, search is text-only.
-- Without `ANTHROPIC_API_KEY`, Ask is off.
+- Without an embedding key (`OPENROUTER_API_KEY`/`OPENAI_API_KEY`), search is text-only.
+- Without an Ask key (`OPENROUTER_API_KEY`/`ANTHROPIC_API_KEY`), Ask is off.
 
 **Rationale**: Provider latency and outages must not affect card writes. pg-boss needs no new infrastructure (no Redis), and its singleton keys deduplicate bursts of edits. Because the sweep catches whatever enqueueing misses, a failed enqueue or a model change fixes itself. Optional keys keep local development, CI and forks working without provider accounts.
 
@@ -1183,9 +1183,19 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 
 ### ADR-043: Committed embedding cache for the search eval (D81)
 
-**Decision**: The search eval reads vectors from `packages/db/test/fixtures/search-embeddings.json`, keyed by `sha256(model + text)`. Only `pnpm test:search:update` (with `OPENAI_API_KEY`) calls the API and rewrites the file. If the cache lacks any vector the eval needs, the hybrid assertion is skipped and only the text arm is gated.
+**Decision**: The search eval reads vectors from `packages/db/test/fixtures/search-embeddings.json`, keyed by `sha256(model + text)`. Only `pnpm test:search:update` (with `OPENROUTER_API_KEY` or `OPENAI_API_KEY`) calls the API and rewrites the file. If the cache lacks any vector the eval needs, the hybrid assertion is skipped and only the text arm is gated.
 
 **Rationale**: CI stays deterministic, free and keyless, while the eval still measures the real model. A change to a fixture, a query or the model shows up as missing cache entries, so results can't drift silently.
+
+---
+
+### ADR-044: OpenRouter as the preferred provider gateway
+
+**Decision**: `ai/providers.ts` builds the embedder and the asker from env. `OPENROUTER_API_KEY` wins and serves both features through OpenRouter's OpenAI-compatible API (`https://openrouter.ai/api/v1`). `OPENAI_API_KEY` (embeddings) and `ANTHROPIC_API_KEY` (Ask) remain as direct fallbacks.
+- Embeddings use the OpenAI SDK with a `baseURL`. The stored model stays the bare `EMBEDDING_MODEL` (`text-embedding-3-small`) and the wire model is `openai/<id>`. The vectors are identical, so switching provider re-embeds nothing and the eval cache keys stay valid.
+- Ask over OpenRouter uses chat completions with a forced `answer` function call (`ai/openai-chat-asker.ts`). It shares the prompt, schema and citation checks with the Anthropic asker. `ASK_MODEL` is provider-specific; unset, it is `anthropic/claude-haiku-5.5` on OpenRouter or `claude-haiku-5-5` on Anthropic.
+
+**Rationale**: One key and one bill cover both features, and the models can be changed without new provider accounts. The direct keys keep existing setups working.
 
 ---
 

@@ -90,8 +90,8 @@ Oct 12: demos reworded to match the code as built through Phase 3B (details and 
 - "Job log" is the new `llm_calls` table, which Phase 5 reuses.
 
 Oct 12: implemented on branch `worktree-p4-implementation` (P4.0–P4.6; see "Search (Phase 4)" in `docs/architecture.md`, including its deviations). Boxes stay open until the demos are run on the deployed box:
-- Needs `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` in Dokploy (API + worker). Without them search is text-only and Ask is hidden.
-- `search-embeddings.json` is still empty: run `pnpm test:search:update` once with `OPENAI_API_KEY` and commit it, otherwise demo 6 only gates the text arm (26 pairs, recall 1.0 today).
+- Needs `OPENROUTER_API_KEY` (or `OPENAI_API_KEY` + `ANTHROPIC_API_KEY`) in Dokploy (API + worker). Without them search is text-only and Ask is hidden.
+- `search-embeddings.json` is still empty: run `pnpm test:search:update` once with `OPENROUTER_API_KEY` or `OPENAI_API_KEY` and commit it, otherwise demo 6 only gates the text arm (26 pairs, recall 1.0 today).
 - Demo 5: no LLM call only when retrieval finds nothing; a question with weak matches still calls the model, which then answers "not found" (`grounded: false`).
 
 - [ ] **1. Search text column** — `EXPLAIN ANALYZE` on a `word_similarity` (`<%`) query and on a substring (`ILIKE`) query over 10 000 synthetic rows uses the GIN trigram index and returns in under 30 ms.

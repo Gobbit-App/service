@@ -8,10 +8,11 @@ import { createBoss } from './jobs/boss';
 import { createEmbedQueue, noopEmbedQueue, type EmbedQueue } from './jobs/embed-queue';
 import { ensureQueues } from './jobs/ensure-queues';
 import { createEmbeddingsRepo } from './repositories/embeddings.repo';
+import { hasEmbeddingProvider } from './ai/providers';
 
 /** D72/D73: send-only pg-boss when embedding is configured; a queue outage never blocks startup. */
 async function startEmbedQueue(env: Env, db: Db): Promise<{ queue: EmbedQueue; boss?: PgBoss }> {
-  if (!env.OPENAI_API_KEY) return { queue: noopEmbedQueue };
+  if (!hasEmbeddingProvider(env)) return { queue: noopEmbedQueue };
   const boss = createBoss(env.DATABASE_URL, 'sender');
   try {
     await boss.start();

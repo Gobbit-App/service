@@ -6,7 +6,7 @@ export interface EmbedQueue {
   enqueueIfStale(itemId: string): Promise<void>;
 }
 
-/** Without `OPENAI_API_KEY` nothing is embedded, so nothing is enqueued (D73). */
+/** Without an embedding key nothing is embedded, so nothing is enqueued (D73). */
 export const noopEmbedQueue: EmbedQueue = {
   async enqueueIfStale() {},
 };
