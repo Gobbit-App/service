@@ -2,7 +2,7 @@
 
 | File | Used by | What it is |
 | --- | --- | --- |
-| `docker-compose.yml` | Dokploy (deployed) | `api` + `web` (GHCR images), no database (the API uses the shared Postgres, D67), no host ports, all non-secret deployed values as defaults; only `web` has Traefik labels and joins `dokploy-network` |
+| `docker-compose.yml` | Dokploy (deployed) | `api` + `worker` + `web` (GHCR images; `worker` is the API image with the `worker` entrypoint), no database (the API uses the shared Postgres, D67), no host ports, all non-secret deployed values as defaults; only `web` has Traefik labels and joins `dokploy-network` |
 | `docker-compose.local.yml` | `pnpm compose:{up,down}` | Adds the local `db` (pgvector/pg17), builds both images from source, publishes ports on `127.0.0.1` (web on 8080), plain-HTTP defaults, API in `development` mode |
 | `db-init/` | local `db` first start | Creates the `vector` and `pg_trgm` extensions |
 
@@ -16,9 +16,12 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared (Dokploy compose ser
                                                                                   │ default network
                                                      /api/* (strip) and /s/* ─────┤──▶ api:3000 ──▶ shared Postgres (DATABASE_URL)
                                                      everything else ─────────────┘    static files, SPA fallback
+                                                                                       worker ──▶ shared Postgres (pg-boss jobs, embeddings)
 ```
 
-Dokploy environment for this Compose project — secrets only (D52): `DATABASE_URL`, `RESEND_API_KEY`, `CLOUDINARY_URL`. Setting up the shared database (role, database, extensions, external port, TLS) is in the root `README.md` → *Shared database*. Everything else (`API_URL`, `APP_URL`, `MAIL_PROVIDER`, `MAIL_FROM`, `CLIENT_IP_HEADER`, …) is a default in `docker-compose.yml`. Optional overrides: `API_IMAGE_TAG` / `WEB_IMAGE_TAG` (default `latest`), `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`. There is no Dokploy "Domains" entry; the router comes from the `web` labels. `COOKIE_SECURE` defaults to `true` and must stay that way.
+**The Dokploy Compose service is a raw source:** its YAML is a copy of `docker-compose.yml` pasted into Dokploy, and the deploy webhook only pulls new images and restarts. Any change to `docker-compose.yml` (new service, new env var) must be pasted into Dokploy → Compose → *Raw* by hand, then deployed. Otherwise production keeps running the old service list.
+
+Dokploy environment for this Compose project — secrets only (D52): `DATABASE_URL`, `RESEND_API_KEY`, `CLOUDINARY_URL`, and optionally `OPENAI_API_KEY` (search embeddings, read by `api` and `worker`) and `ANTHROPIC_API_KEY` (Ask, read by `api`). Setting up the shared database (role, database, extensions, external port, TLS) is in the root `README.md` → *Shared database*. Everything else (`API_URL`, `APP_URL`, `MAIL_PROVIDER`, `MAIL_FROM`, `CLIENT_IP_HEADER`, …) is a default in `docker-compose.yml`. Optional overrides: `API_IMAGE_TAG` / `WEB_IMAGE_TAG` (default `latest`), `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`. There is no Dokploy "Domains" entry; the router comes from the `web` labels. `COOKIE_SECURE` defaults to `true` and must stay that way.
 
 ## Backups (Phase 0 step 7)
 
