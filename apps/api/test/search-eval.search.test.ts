@@ -18,7 +18,7 @@ import {
   loadEmbeddingCache,
   saveEmbeddingCache,
 } from '../src/ai/cached-embedder';
-import { createOpenAiEmbedder } from '../src/ai/openai-embedder';
+import { defaultEmbedder } from '../src/ai/providers';
 import { createEmbedItemHandler } from '../src/jobs/embed-item';
 import { fuseRrf } from '../src/lib/rrf';
 import { createEmbeddingsRepo } from '../src/repositories/embeddings.repo';
@@ -40,15 +40,24 @@ import {
 const CACHE_FILE = fileURLToPath(SEARCH_EMBEDDINGS_PATH);
 const model = process.env.EMBEDDING_MODEL ?? DEFAULT_EMBEDDING_MODEL;
 const update = process.env.SEARCH_EVAL_UPDATE === '1';
-const apiKey = process.env.OPENAI_API_KEY;
-if (update && !apiKey) throw new Error('SEARCH_EVAL_UPDATE=1 needs OPENAI_API_KEY');
+// Either provider yields the same vectors under the bare model id, so the cache keys match.
+const liveEmbedder = defaultEmbedder({
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  ANTHROPIC_API_KEY: undefined,
+  EMBEDDING_MODEL: model,
+  ASK_MODEL: undefined,
+});
+if (update && !liveEmbedder) {
+  throw new Error('SEARCH_EVAL_UPDATE=1 needs OPENROUTER_API_KEY or OPENAI_API_KEY');
+}
 
 const cases = loadSearchEval();
 const cache = await loadEmbeddingCache(CACHE_FILE);
 const embedder = createCachedEmbedder({
   cache,
   model,
-  fallback: update && apiKey ? createOpenAiEmbedder({ apiKey, model }) : undefined,
+  fallback: update ? (liveEmbedder ?? undefined) : undefined,
 });
 
 describe('search eval (D81)', () => {
@@ -80,7 +89,7 @@ describe('search eval (D81)', () => {
     if (!semantic) {
       console.warn(
         `[search-eval] ${CACHE_FILE} lacks vectors for ${model}; hybrid recall skipped ` +
-          '(run `pnpm test:search:update` with OPENAI_API_KEY)',
+          '(run `pnpm test:search:update` with OPENROUTER_API_KEY or OPENAI_API_KEY)',
       );
       return;
     }

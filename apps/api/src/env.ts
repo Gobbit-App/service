@@ -4,7 +4,6 @@ import {
   INVITE_TTL_DAYS_DEFAULT,
   SESSION_TTL_DAYS_DEFAULT,
   DEFAULT_EMBEDDING_MODEL,
-  DEFAULT_ASK_MODEL,
 } from '@pb/shared';
 import { cloudNameFrom } from './lib/cloudinary-url';
 
@@ -47,12 +46,16 @@ const baseSchema = z.object({
   GIT_SHA: z.string().optional(),
   /** Cloudinary credentials URL (key, secret, cloud name) — image delivery and OG cache (D55, D60). */
   CLOUDINARY_URL: z.string().optional(),
-  /** D73: optional; without it search is text-only and no embedding jobs run. Never logged. */
+  /** Optional; one key for embeddings and Ask, preferred over the direct keys below. Never logged. */
+  OPENROUTER_API_KEY: z.string().optional(),
+  /** D73: optional; without an embedding key search is text-only and no embedding jobs run. Never logged. */
   OPENAI_API_KEY: z.string().optional(),
-  /** D77: optional; without it Ask answers 503 and /config hides it. Never logged. */
+  /** D77: optional; without an Ask key Ask answers 503 and /config hides it. Never logged. */
   ANTHROPIC_API_KEY: z.string().optional(),
+  /** Stored model identity (bare OpenAI id); OpenRouter is sent `openai/<id>`. */
   EMBEDDING_MODEL: z.string().default(DEFAULT_EMBEDDING_MODEL),
-  ASK_MODEL: z.string().default(DEFAULT_ASK_MODEL),
+  /** Provider-specific id; unset → the provider's Haiku default (see ai/providers.ts). */
+  ASK_MODEL: z.string().optional(),
   /** D72: concurrent embed-item jobs per worker process. */
   WORKER_CONCURRENCY: positiveInt(2),
 });

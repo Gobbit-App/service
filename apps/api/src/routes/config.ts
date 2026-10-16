@@ -3,8 +3,12 @@ import { appConfigSchema, type AppConfig } from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Env } from '../env';
 import { cloudNameFrom } from '../lib/cloudinary-url';
+import { hasAskProvider, hasEmbeddingProvider } from '../ai/providers';
 
-type ConfigEnv = Pick<Env, 'CLOUDINARY_URL' | 'GIT_SHA' | 'OPENAI_API_KEY' | 'ANTHROPIC_API_KEY'>;
+type ConfigEnv = Pick<
+  Env,
+  'CLOUDINARY_URL' | 'GIT_SHA' | 'OPENROUTER_API_KEY' | 'OPENAI_API_KEY' | 'ANTHROPIC_API_KEY'
+>;
 
 /** Browsers and the web image may cache the config for five minutes (D55). */
 export const CONFIG_CACHE_CONTROL = 'public, max-age=300';
@@ -15,8 +19,8 @@ export function buildAppConfig(env: ConfigEnv): AppConfig {
     cloudinaryCloudName: cloudNameFrom(env.CLOUDINARY_URL),
     commit: env.GIT_SHA ?? 'dev',
     search: {
-      semantic: Boolean(env.OPENAI_API_KEY),
-      ask: Boolean(env.ANTHROPIC_API_KEY),
+      semantic: hasEmbeddingProvider(env),
+      ask: hasAskProvider(env),
     },
   });
 }

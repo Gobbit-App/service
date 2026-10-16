@@ -31,8 +31,10 @@ services:
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
       # Image delivery and the OG image cache (D55, D60); required in production.
       CLOUDINARY_URL: ${CLOUDINARY_URL:-}
-      # Phase 4 search (D73, D77): each key is optional; without OPENAI_API_KEY search is text-only,
-      # without ANTHROPIC_API_KEY Ask is hidden. Dokploy secrets.
+      # Phase 4 search (D73, D77, ADR-044): all keys optional Dokploy secrets. OPENROUTER_API_KEY
+      # covers embeddings and Ask; otherwise OPENAI_API_KEY (embeddings) / ANTHROPIC_API_KEY (Ask).
+      # No embedding key → text-only search; no Ask key → Ask hidden.
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     # Internal only: the web service is the one public entry point (D51). Kept off
@@ -51,6 +53,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-}
       NODE_ENV: production
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
     # The worker serves no HTTP; it touches /tmp/worker-heartbeat every 30 s after a DB ping.

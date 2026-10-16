@@ -25,7 +25,7 @@ export function createSearchService(deps: {
   memberships: MembershipLookup;
   search: SearchRepo;
   searchQueries: Pick<SearchQueriesRepo, 'insert'>;
-  /** Null without `OPENAI_API_KEY`: text-only search (D73). */
+  /** Null without an embedding key: text-only search (D73). */
   queryEmbedder: QueryEmbedder | null;
   /** The model whose stored item vectors are comparable; matches the worker's EMBEDDING_MODEL. */
   embeddingModel: string;

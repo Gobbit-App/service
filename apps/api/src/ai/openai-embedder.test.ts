@@ -113,6 +113,28 @@ describe('createOpenAiEmbedder', () => {
     await expect(embedder.embed(['a'])).rejects.toBe(boom);
   });
 
+  it('sends requestModel on the wire but reports the stored model and provider label', async () => {
+    const { client, create } = makeClient();
+    const embedder = createOpenAiEmbedder({
+      apiKey: 'test-key',
+      model: 'text-embedding-3-small',
+      requestModel: 'openai/text-embedding-3-small',
+      provider: 'openrouter',
+      dims: 3,
+      client,
+    });
+
+    await embedder.embed(['t1']);
+
+    expect(create.mock.calls[0]?.[0].model).toBe('openai/text-embedding-3-small');
+    expect(embedder.model).toBe('text-embedding-3-small');
+    expect(embedder.provider).toBe('openrouter');
+  });
+
+  it('defaults the provider label to openai', () => {
+    expect(makeEmbedder(makeClient().client).provider).toBe('openai');
+  });
+
   it('forwards the abort signal to the client', async () => {
     const { client, create } = makeClient();
     const embedder = makeEmbedder(client);

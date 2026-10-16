@@ -17,7 +17,7 @@ import type { RateLimitService } from './rate-limit.service';
 import type { SearchService } from './search.service';
 
 export function createAskService(deps: {
-  /** Null without `ANTHROPIC_API_KEY` → 503 (D73). */
+  /** Null without an Ask key (`OPENROUTER_API_KEY`/`ANTHROPIC_API_KEY`) → 503 (D73). */
   asker: Asker | null;
   search: Pick<SearchService, 'retrieve'>;
   rateLimits: Pick<RateLimitService, 'enforce'>;

@@ -35,6 +35,16 @@ describe('buildAppConfig', () => {
     expect(config.search).toEqual({ semantic: true, ask: true });
     expect(JSON.stringify(config)).not.toContain('test-value');
   });
+
+  it('flags both features from an OpenRouter key alone', () => {
+    const config = buildAppConfig({
+      CLOUDINARY_URL: undefined,
+      GIT_SHA: 'abc',
+      OPENROUTER_API_KEY: 'openrouter-test-value',
+    });
+    expect(config.search).toEqual({ semantic: true, ask: true });
+    expect(JSON.stringify(config)).not.toContain('test-value');
+  });
 });
 
 describe('GET /config', () => {
