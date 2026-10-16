@@ -7,6 +7,7 @@ import {
   llmCostUsd,
   recordLlmCall,
 } from './llm-calls';
+import { OPENROUTER_DEFAULT_ASK_MODEL } from './providers';
 
 const ctx: LlmCallContext = {
   purpose: 'ask',
@@ -30,7 +31,15 @@ function clock(...times: number[]): () => number {
 describe('llmCostUsd', () => {
   it('prices known models per 1M tokens', () => {
     expect(llmCostUsd('text-embedding-3-small', 1_000_000, 0)).toBeCloseTo(0.02, 10);
-    expect(llmCostUsd('claude-haiku-5-5', 1_000_000, 1_000_000)).toBeCloseTo(6, 10);
+    expect(llmCostUsd('claude-haiku-5-5', 1_000_000, 1_000_000)).toBeCloseTo(0.6, 10);
+  });
+
+  it('prices the OpenRouter id of the default Ask model like the direct one', () => {
+    expect(llmCostUsd(OPENROUTER_DEFAULT_ASK_MODEL, 2_000, 300)).toBeCloseTo(
+      llmCostUsd('claude-haiku-5-5', 2_000, 300),
+      12,
+    );
+    expect(llmCostUsd(OPENROUTER_DEFAULT_ASK_MODEL, 2_000, 300)).toBeGreaterThan(0);
   });
 
   it('costs unknown models at 0', () => {
@@ -67,7 +76,7 @@ describe('recordLlmCall', () => {
       status: 'ok',
       inputTokens: 1000,
       outputTokens: 500,
-      costUsd: '0.003500',
+      costUsd: '0.000350',
       latencyMs: 250,
       error: null,
     });
