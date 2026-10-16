@@ -1194,6 +1194,7 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 **Decision**: `ai/providers.ts` builds the embedder and the asker from env. `OPENROUTER_API_KEY` wins and serves both features through OpenRouter's OpenAI-compatible API (`https://openrouter.ai/api/v1`). `OPENAI_API_KEY` (embeddings) and `ANTHROPIC_API_KEY` (Ask) remain as direct fallbacks.
 - Embeddings use the OpenAI SDK with a `baseURL`. The stored model stays the bare `EMBEDDING_MODEL` (`text-embedding-3-small`) and the wire model is `openai/<id>`. The vectors are identical, so switching provider re-embeds nothing and the eval cache keys stay valid.
 - Ask over OpenRouter uses chat completions with a forced `answer` function call (`ai/openai-chat-asker.ts`). It shares the prompt, schema and citation checks with the Anthropic asker. `ASK_MODEL` is provider-specific; unset, it is `anthropic/claude-haiku-5.5` on OpenRouter or `claude-haiku-5-5` on Anthropic.
+- Compose passes `ASK_MODEL` (api) and `EMBEDDING_MODEL` (api + worker) through, so models switch per environment without a code change. `llm_calls` prices by the id sent to the provider (`LLM_PRICES_PER_MTOK`); an unlisted model is logged at cost 0.
 
 **Rationale**: One key and one bill cover both features, and the models can be changed without new provider accounts. The direct keys keep existing setups working.
 

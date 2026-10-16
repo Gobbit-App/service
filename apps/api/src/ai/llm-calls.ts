@@ -1,11 +1,18 @@
 import type { NewLlmCallRow } from '@pb/db';
 import type { LlmPurpose } from '@pb/shared';
 
-/** USD per 1M tokens. Unknown models cost 0 (still logged). */
+/**
+ * USD per 1M tokens, keyed by the id the provider is called with (OpenRouter ids carry a
+ * `vendor/` prefix). Unknown models cost 0 (still logged), so add a row when switching ASK_MODEL.
+ * Prices as of 2026-10.
+ */
 export const LLM_PRICES_PER_MTOK: Readonly<Record<string, { input: number; output: number }>> = {
   'text-embedding-3-small': { input: 0.02, output: 0 },
   'text-embedding-3-large': { input: 0.13, output: 0 },
-  'claude-haiku-5-5': { input: 1, output: 5 },
+  'claude-haiku-5-5': { input: 0.1, output: 0.5 },
+  'anthropic/claude-haiku-5.5': { input: 0.1, output: 0.5 },
+  'qwen/qwen3.7-flash': { input: 0.03, output: 0.13 },
+  'openai/gpt-5-nano': { input: 0.05, output: 0.4 },
 };
 
 const ERROR_MESSAGE_MAX = 500;

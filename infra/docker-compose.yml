@@ -37,6 +37,9 @@ services:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Unset → defaults in ai/providers.ts; EMBEDDING_MODEL must match the worker's.
+      ASK_MODEL: ${ASK_MODEL:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
     # Internal only: the web service is the one public entry point (D51). Kept off
     # dokploy-network on purpose: another project's `api` there would shadow Caddy's api:3000.
     restart: unless-stopped
@@ -55,6 +58,7 @@ services:
       NODE_ENV: production
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
     # The worker serves no HTTP; it touches /tmp/worker-heartbeat every 30 s after a DB ping.
     healthcheck:
