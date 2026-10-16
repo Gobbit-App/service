@@ -116,6 +116,17 @@ describe('pg-error-map', () => {
       expect(mapPgError(err)).toMatchObject({ type: '/problems/bad-request', status: 400 });
     });
 
+    it('maps P0001 with item_needs_category to 422 (D95)', () => {
+      const err = Object.assign(new Error('item_needs_category'), {
+        code: 'P0001',
+        message: 'item_needs_category',
+      });
+      expect(mapPgError(err)).toMatchObject({
+        type: '/problems/item-needs-category',
+        status: 422,
+      });
+    });
+
     it('returns null for P0001 with other message', () => {
       const err = Object.assign(new Error('some other error'), {
         code: 'P0001',

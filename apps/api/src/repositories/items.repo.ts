@@ -8,7 +8,14 @@ import {
   type Db,
   type ItemRow,
 } from '@pb/db';
-import type { CursorData, ItemStatus, ItemType, MemberRole, SourceKind } from '@pb/shared';
+import type {
+  CursorData,
+  Entities,
+  ItemStatus,
+  ItemType,
+  MemberRole,
+  SourceKind,
+} from '@pb/shared';
 import {
   canSeePrivate,
   itemHasVisibleCategory,
@@ -25,6 +32,7 @@ export function createItemsRepo(db: Db) {
         title: string;
         body: string;
         payload: Record<string, unknown>;
+        entities?: Entities;
         sourceUrl: string | null;
         sourceKind: SourceKind;
         verifiedAt: Date | null;
@@ -141,6 +149,7 @@ export function createItemsRepo(db: Db) {
       patch: Partial<{
         body: string;
         payload: Record<string, unknown>;
+        entities: Entities;
         sourceUrl: string | null;
         status: ItemStatus;
         title: string;

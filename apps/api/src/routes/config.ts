@@ -3,11 +3,23 @@ import { appConfigSchema, type AppConfig } from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Env } from '../env';
 import { cloudNameFrom } from '../lib/cloudinary-url';
-import { hasAskProvider, hasEmbeddingProvider } from '../ai/providers';
+import {
+  emailIngestDomain,
+  hasAskProvider,
+  hasEmbeddingProvider,
+  hasExtractProvider,
+} from '../ai/providers';
 
 type ConfigEnv = Pick<
   Env,
-  'CLOUDINARY_URL' | 'GIT_SHA' | 'OPENROUTER_API_KEY' | 'OPENAI_API_KEY' | 'ANTHROPIC_API_KEY'
+  | 'CLOUDINARY_URL'
+  | 'GIT_SHA'
+  | 'OPENROUTER_API_KEY'
+  | 'OPENAI_API_KEY'
+  | 'ANTHROPIC_API_KEY'
+  | 'INGEST_EMAIL_DOMAIN'
+  | 'RESEND_WEBHOOK_SECRET'
+  | 'SHORTCUT_URL'
 >;
 
 /** Browsers and the web image may cache the config for five minutes (D55). */
@@ -21,6 +33,11 @@ export function buildAppConfig(env: ConfigEnv): AppConfig {
     search: {
       semantic: hasEmbeddingProvider(env),
       ask: hasAskProvider(env),
+    },
+    ingest: {
+      enabled: hasExtractProvider(env),
+      emailDomain: hasExtractProvider(env) ? emailIngestDomain(env) : null,
+      shortcutUrl: env.SHORTCUT_URL ?? null,
     },
   });
 }

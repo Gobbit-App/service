@@ -9,6 +9,7 @@ import type { Mailer } from './mail/mailer';
 import { buildServices } from './services';
 import { requestId } from './middleware/request-id';
 import { requestLog } from './middleware/request-log';
+import { bodyLimits } from './middleware/body-limit';
 import { csrf, csrfOrigins } from './middleware/csrf';
 import { sessionAuth } from './middleware/session-auth';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
@@ -53,7 +54,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
     },
   });
 
-  // D32: cors → csrf → requestId → sessionAuth → routes (requestLog wraps them all, off in tests)
+  // D32: cors → csrf → bodyLimits (D101) → requestId → sessionAuth → routes (requestLog wraps them all, off in tests)
   if (env.NODE_ENV !== 'test') {
     app.use('*', requestLog());
   }
@@ -61,6 +62,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
     app.use('*', cors({ origin: env.CORS_ORIGINS, credentials: true }));
   }
   app.use('*', csrf(csrfOrigins(env.CORS_ORIGINS, env.API_URL)));
+  app.use('*', bodyLimits());
   app.use('*', requestId());
   app.use(
     '*',

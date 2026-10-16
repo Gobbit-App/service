@@ -23,6 +23,18 @@ export function hasAskProvider(env: KeyEnv): boolean {
   return Boolean(env.OPENROUTER_API_KEY || env.ANTHROPIC_API_KEY);
 }
 
+/** D93: ingestion (extraction) runs on the same chat providers as Ask. */
+export function hasExtractProvider(env: KeyEnv): boolean {
+  return hasAskProvider(env);
+}
+
+/** D104: email-in needs both the inbound domain and the webhook signing secret. */
+export function emailIngestDomain(
+  env: Pick<Env, 'INGEST_EMAIL_DOMAIN' | 'RESEND_WEBHOOK_SECRET'>,
+): string | null {
+  return env.INGEST_EMAIL_DOMAIN && env.RESEND_WEBHOOK_SECRET ? env.INGEST_EMAIL_DOMAIN : null;
+}
+
 /**
  * OpenRouter names OpenAI models `openai/<id>`. The stored model stays the bare id, so vectors
  * made through either provider compare equal and switching provider re-embeds nothing.

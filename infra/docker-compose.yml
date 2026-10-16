@@ -1,45 +1,59 @@
 name: deck
 
+# The API and the worker share one environment: same image, same parseEnv() (production
+# requires API_URL, CLOUDINARY_URL and mail settings), and P5 jobs need the AI and Cloudinary keys.
+x-api-env: &api-env
+  # D67: the database is a shared Postgres (pgvector) outside this project, reached over the
+  # home network now and possibly the internet later. Dokploy secret; append
+  # `?sslmode=verify-full` (or `require`) once the connection leaves a trusted network.
+  DATABASE_URL: ${DATABASE_URL:-}
+  PORT: 3000
+  NODE_ENV: production
+  # D52: every non-secret deployed value is a default here; Dokploy holds only the secrets
+  # (DATABASE_URL, RESEND_API_KEY, CLOUDINARY_URL). docker-compose.local.yml overrides
+  # these for localhost.
+  # Public addresses: magic links, share pages and the sign-in callback (D46, D51).
+  API_URL: ${API_URL:-https://gobbit.niranhome.win/api}
+  APP_URL: ${APP_URL:-https://gobbit.niranhome.win}
+  COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+  COOKIE_SECURE: ${COOKIE_SECURE:-true}
+  # The web image proxies /api on the same origin, so CORS stays off (D64).
+  CORS_ORIGINS: ${CORS_ORIGINS:-}
+  # With console the API refuses to boot in production unless ALLOW_CONSOLE_MAIL=true.
+  MAIL_PROVIDER: ${MAIL_PROVIDER:-resend}
+  ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-false}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  MAIL_FROM: ${MAIL_FROM:-Gobbit <hello@gobbit.niranhome.win>}
+  CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
+  # Image delivery and the OG image cache (D55, D60); required in production.
+  CLOUDINARY_URL: ${CLOUDINARY_URL:-}
+  # Phase 4 search (D73, D77, ADR-044): all keys optional Dokploy secrets. OPENROUTER_API_KEY
+  # covers embeddings and Ask; otherwise OPENAI_API_KEY (embeddings) / ANTHROPIC_API_KEY (Ask).
+  # No embedding key → text-only search; no Ask key → Ask hidden.
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  # Unset → defaults in ai/providers.ts; EMBEDDING_MODEL must match the worker's.
+  ASK_MODEL: ${ASK_MODEL:-}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+  # Phase 5 ingestion (D93, D101, D104, D105): on whenever an Ask provider key is set.
+  # Unset models → the provider's Haiku (extract) / Sonnet (escalation) defaults.
+  EXTRACT_MODEL: ${EXTRACT_MODEL:-}
+  EXTRACT_ESCALATION_MODEL: ${EXTRACT_ESCALATION_MODEL:-}
+  INGEST_DAILY_CAP: ${INGEST_DAILY_CAP:-50}
+  # Email-in stays off unless both are set (D104); the webhook secret is a Dokploy secret.
+  INGEST_EMAIL_DOMAIN: ${INGEST_EMAIL_DOMAIN:-}
+  RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
+  # iCloud link of the published "Share to Gobbit" Shortcut (shown in settings).
+  SHORTCUT_URL: ${SHORTCUT_URL:-}
+
 services:
   api:
     # Deployed: Dokploy runs the image CI pushes to GHCR (tag = `latest` or a full commit SHA).
     # docker-compose.local.yml builds it from source instead.
     image: ghcr.io/gobbit-app/service/api:${API_IMAGE_TAG:-latest}
     pull_policy: always
-    environment:
-      # D67: the database is a shared Postgres (pgvector) outside this project, reached over the
-      # home network now and possibly the internet later. Dokploy secret; append
-      # `?sslmode=verify-full` (or `require`) once the connection leaves a trusted network.
-      DATABASE_URL: ${DATABASE_URL:-}
-      PORT: 3000
-      NODE_ENV: production
-      # D52: every non-secret deployed value is a default here; Dokploy holds only the secrets
-      # (DATABASE_URL, RESEND_API_KEY, CLOUDINARY_URL). docker-compose.local.yml overrides
-      # these for localhost.
-      # Public addresses: magic links, share pages and the sign-in callback (D46, D51).
-      API_URL: ${API_URL:-https://gobbit.niranhome.win/api}
-      APP_URL: ${APP_URL:-https://gobbit.niranhome.win}
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
-      COOKIE_SECURE: ${COOKIE_SECURE:-true}
-      # The web image proxies /api on the same origin, so CORS stays off (D64).
-      CORS_ORIGINS: ${CORS_ORIGINS:-}
-      # With console the API refuses to boot in production unless ALLOW_CONSOLE_MAIL=true.
-      MAIL_PROVIDER: ${MAIL_PROVIDER:-resend}
-      ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-false}
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
-      MAIL_FROM: ${MAIL_FROM:-Gobbit <hello@gobbit.niranhome.win>}
-      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
-      # Image delivery and the OG image cache (D55, D60); required in production.
-      CLOUDINARY_URL: ${CLOUDINARY_URL:-}
-      # Phase 4 search (D73, D77, ADR-044): all keys optional Dokploy secrets. OPENROUTER_API_KEY
-      # covers embeddings and Ask; otherwise OPENAI_API_KEY (embeddings) / ANTHROPIC_API_KEY (Ask).
-      # No embedding key → text-only search; no Ask key → Ask hidden.
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      # Unset → defaults in ai/providers.ts; EMBEDDING_MODEL must match the worker's.
-      ASK_MODEL: ${ASK_MODEL:-}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+    environment: *api-env
     # Internal only: the web service is the one public entry point (D51). Kept off
     # dokploy-network on purpose: another project's `api` there would shadow Caddy's api:3000.
     restart: unless-stopped
@@ -54,11 +68,7 @@ services:
       api:
         condition: service_healthy
     environment:
-      DATABASE_URL: ${DATABASE_URL:-}
-      NODE_ENV: production
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      <<: *api-env
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
     # The worker serves no HTTP; it touches /tmp/worker-heartbeat every 30 s after a DB ping.
     healthcheck:

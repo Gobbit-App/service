@@ -18,3 +18,5 @@ export * from './authz/can';
 export * from './utils/text-script';
 export * from './search';
 export * from './schemas/search';
+export * from './ingest';
+export * from './schemas/ingest';

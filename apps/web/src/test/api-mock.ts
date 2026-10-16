@@ -18,6 +18,7 @@ export const clientModule = {
         cloudinaryCloudName: null,
         commit: 'test',
         search: { semantic: false, ask: false },
+        ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       });
     }
     return respond(String(request));

@@ -13,6 +13,7 @@ import {
   type ItemPage,
   type ItemPatch,
   can,
+  compactEntities,
   payloadSchemaFor,
 } from '@pb/shared';
 import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
@@ -167,6 +168,7 @@ export function createItemsService(deps: {
           title: input.title,
           body: input.body,
           payload: input.payload,
+          entities: compactEntities(input.entities ?? {}),
           sourceUrl: input.sourceUrl ?? null,
           sourceKind,
           verifiedAt,
@@ -230,6 +232,7 @@ export function createItemsService(deps: {
       if (patch.title !== undefined) updatePatch.title = patch.title;
       if (patch.body !== undefined) updatePatch.body = patch.body;
       if (patch.payload !== undefined) updatePatch.payload = patch.payload;
+      if (patch.entities !== undefined) updatePatch.entities = compactEntities(patch.entities);
       if (patch.sourceUrl !== undefined) updatePatch.sourceUrl = patch.sourceUrl;
       if (patch.status !== undefined) updatePatch.status = patch.status;
 

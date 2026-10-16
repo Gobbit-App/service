@@ -69,6 +69,16 @@ export function mapPgError(err: unknown): Problem | null {
     };
   }
 
+  if (code === 'P0001' && message.includes('item_needs_category')) {
+    // D95: the DB backstop for the service-level D6 check (deferred constraint trigger).
+    return {
+      type: '/problems/item-needs-category',
+      title: 'Unprocessable Content',
+      status: 422,
+      detail: 'A published item needs at least one category',
+    };
+  }
+
   if (code === '23505') {
     return {
       type: '/problems/conflict',

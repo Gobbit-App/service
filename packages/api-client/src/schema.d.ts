@@ -87,6 +87,11 @@ export interface paths {
                                 semantic: boolean;
                                 ask: boolean;
                             };
+                            ingest: {
+                                enabled: boolean;
+                                emailDomain: string | null;
+                                shortcutUrl: string | null;
+                            };
                         };
                     };
                 };
@@ -1893,6 +1898,15 @@ export interface paths {
                                 payload: {
                                     [key: string]: unknown;
                                 };
+                                entities: {
+                                    phones?: string[];
+                                    addresses?: string[];
+                                    hours?: string[];
+                                    prices?: string[];
+                                    dates?: string[];
+                                    people?: string[];
+                                    urls?: string[];
+                                };
                                 sourceUrl: string | null;
                                 /** @enum {string} */
                                 sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
@@ -2025,6 +2039,15 @@ export interface paths {
                         sourceUrl?: string;
                         /** @enum {string} */
                         status?: "proposed" | "published" | "archived";
+                        entities?: {
+                            phones?: string[];
+                            addresses?: string[];
+                            hours?: string[];
+                            prices?: string[];
+                            dates?: string[];
+                            people?: string[];
+                            urls?: string[];
+                        };
                     } | {
                         /** @enum {string} */
                         type: "link";
@@ -2049,6 +2072,15 @@ export interface paths {
                         sourceUrl?: string;
                         /** @enum {string} */
                         status?: "proposed" | "published" | "archived";
+                        entities?: {
+                            phones?: string[];
+                            addresses?: string[];
+                            hours?: string[];
+                            prices?: string[];
+                            dates?: string[];
+                            people?: string[];
+                            urls?: string[];
+                        };
                     } | {
                         /** @enum {string} */
                         type: "image";
@@ -2067,6 +2099,15 @@ export interface paths {
                         sourceUrl?: string;
                         /** @enum {string} */
                         status?: "proposed" | "published" | "archived";
+                        entities?: {
+                            phones?: string[];
+                            addresses?: string[];
+                            hours?: string[];
+                            prices?: string[];
+                            dates?: string[];
+                            people?: string[];
+                            urls?: string[];
+                        };
                     } | {
                         /** @enum {string} */
                         type: "table";
@@ -2085,6 +2126,15 @@ export interface paths {
                         sourceUrl?: string;
                         /** @enum {string} */
                         status?: "proposed" | "published" | "archived";
+                        entities?: {
+                            phones?: string[];
+                            addresses?: string[];
+                            hours?: string[];
+                            prices?: string[];
+                            dates?: string[];
+                            people?: string[];
+                            urls?: string[];
+                        };
                     } | {
                         /** @enum {string} */
                         type: "calc";
@@ -2109,6 +2159,15 @@ export interface paths {
                         sourceUrl?: string;
                         /** @enum {string} */
                         status?: "proposed" | "published" | "archived";
+                        entities?: {
+                            phones?: string[];
+                            addresses?: string[];
+                            hours?: string[];
+                            prices?: string[];
+                            dates?: string[];
+                            people?: string[];
+                            urls?: string[];
+                        };
                     };
                 };
             };
@@ -2132,6 +2191,15 @@ export interface paths {
                             body: string;
                             payload: {
                                 [key: string]: unknown;
+                            };
+                            entities: {
+                                phones?: string[];
+                                addresses?: string[];
+                                hours?: string[];
+                                prices?: string[];
+                                dates?: string[];
+                                people?: string[];
+                                urls?: string[];
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
@@ -2322,6 +2390,15 @@ export interface paths {
                             body: string;
                             payload: {
                                 [key: string]: unknown;
+                            };
+                            entities: {
+                                phones?: string[];
+                                addresses?: string[];
+                                hours?: string[];
+                                prices?: string[];
+                                dates?: string[];
+                                people?: string[];
+                                urls?: string[];
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
@@ -2516,6 +2593,15 @@ export interface paths {
                         sourceUrl?: string | null;
                         /** @enum {string} */
                         status?: "proposed" | "published" | "archived";
+                        entities?: {
+                            phones?: string[];
+                            addresses?: string[];
+                            hours?: string[];
+                            prices?: string[];
+                            dates?: string[];
+                            people?: string[];
+                            urls?: string[];
+                        };
                     };
                 };
             };
@@ -2539,6 +2625,15 @@ export interface paths {
                             body: string;
                             payload: {
                                 [key: string]: unknown;
+                            };
+                            entities: {
+                                phones?: string[];
+                                addresses?: string[];
+                                hours?: string[];
+                                prices?: string[];
+                                dates?: string[];
+                                people?: string[];
+                                urls?: string[];
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
@@ -2727,6 +2822,15 @@ export interface paths {
                             body: string;
                             payload: {
                                 [key: string]: unknown;
+                            };
+                            entities: {
+                                phones?: string[];
+                                addresses?: string[];
+                                hours?: string[];
+                                prices?: string[];
+                                dates?: string[];
+                                people?: string[];
+                                urls?: string[];
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
@@ -2999,6 +3103,15 @@ export interface paths {
                                     body: string;
                                     payload: {
                                         [key: string]: unknown;
+                                    };
+                                    entities: {
+                                        phones?: string[];
+                                        addresses?: string[];
+                                        hours?: string[];
+                                        prices?: string[];
+                                        dates?: string[];
+                                        people?: string[];
+                                        urls?: string[];
                                     };
                                     sourceUrl: string | null;
                                     /** @enum {string} */

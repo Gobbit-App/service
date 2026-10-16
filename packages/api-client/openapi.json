@@ -143,12 +143,38 @@
                         "semantic",
                         "ask"
                       ]
+                    },
+                    "ingest": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "emailDomain": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "shortcutUrl": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "emailDomain",
+                        "shortcutUrl"
+                      ]
                     }
                   },
                   "required": [
                     "cloudinaryCloudName",
                     "commit",
-                    "search"
+                    "search",
+                    "ingest"
                   ]
                 }
               }
@@ -5270,6 +5296,75 @@
                             "type": "object",
                             "additionalProperties": {}
                           },
+                          "entities": {
+                            "type": "object",
+                            "properties": {
+                              "phones": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 120
+                                },
+                                "maxItems": 10
+                              },
+                              "addresses": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 120
+                                },
+                                "maxItems": 10
+                              },
+                              "hours": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 120
+                                },
+                                "maxItems": 10
+                              },
+                              "prices": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 120
+                                },
+                                "maxItems": 10
+                              },
+                              "dates": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 120
+                                },
+                                "maxItems": 10
+                              },
+                              "people": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 120
+                                },
+                                "maxItems": 10
+                              },
+                              "urls": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 120
+                                },
+                                "maxItems": 10
+                              }
+                            },
+                            "additionalProperties": false
+                          },
                           "sourceUrl": {
                             "type": [
                               "string",
@@ -5323,6 +5418,7 @@
                           "title",
                           "body",
                           "payload",
+                          "entities",
                           "sourceUrl",
                           "sourceKind",
                           "verifiedAt",
@@ -5734,6 +5830,75 @@
                           "published",
                           "archived"
                         ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -5807,6 +5972,75 @@
                           "published",
                           "archived"
                         ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -5870,6 +6104,75 @@
                           "published",
                           "archived"
                         ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -5944,6 +6247,75 @@
                           "published",
                           "archived"
                         ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -6037,6 +6409,75 @@
                           "published",
                           "archived"
                         ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -6096,6 +6537,75 @@
                       "type": "object",
                       "additionalProperties": {}
                     },
+                    "entities": {
+                      "type": "object",
+                      "properties": {
+                        "phones": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "hours": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "prices": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "dates": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "people": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "urls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        }
+                      },
+                      "additionalProperties": false
+                    },
                     "sourceUrl": {
                       "type": [
                         "string",
@@ -6149,6 +6659,7 @@
                     "title",
                     "body",
                     "payload",
+                    "entities",
                     "sourceUrl",
                     "sourceKind",
                     "verifiedAt",
@@ -6701,6 +7212,75 @@
                       "type": "object",
                       "additionalProperties": {}
                     },
+                    "entities": {
+                      "type": "object",
+                      "properties": {
+                        "phones": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "hours": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "prices": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "dates": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "people": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "urls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        }
+                      },
+                      "additionalProperties": false
+                    },
                     "sourceUrl": {
                       "type": [
                         "string",
@@ -6754,6 +7334,7 @@
                     "title",
                     "body",
                     "payload",
+                    "entities",
                     "sourceUrl",
                     "sourceKind",
                     "verifiedAt",
@@ -7066,6 +7647,75 @@
                       "published",
                       "archived"
                     ]
+                  },
+                  "entities": {
+                    "type": "object",
+                    "properties": {
+                      "phones": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "maxItems": 10
+                      },
+                      "addresses": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "maxItems": 10
+                      },
+                      "hours": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "maxItems": 10
+                      },
+                      "prices": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "maxItems": 10
+                      },
+                      "dates": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "maxItems": 10
+                      },
+                      "people": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "maxItems": 10
+                      },
+                      "urls": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "maxItems": 10
+                      }
+                    },
+                    "additionalProperties": false
                   }
                 },
                 "additionalProperties": false
@@ -7116,6 +7766,75 @@
                     "payload": {
                       "type": "object",
                       "additionalProperties": {}
+                    },
+                    "entities": {
+                      "type": "object",
+                      "properties": {
+                        "phones": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "hours": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "prices": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "dates": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "people": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "urls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        }
+                      },
+                      "additionalProperties": false
                     },
                     "sourceUrl": {
                       "type": [
@@ -7170,6 +7889,7 @@
                     "title",
                     "body",
                     "payload",
+                    "entities",
                     "sourceUrl",
                     "sourceKind",
                     "verifiedAt",
@@ -7985,6 +8705,75 @@
                       "type": "object",
                       "additionalProperties": {}
                     },
+                    "entities": {
+                      "type": "object",
+                      "properties": {
+                        "phones": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "hours": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "prices": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "dates": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "people": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "urls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        }
+                      },
+                      "additionalProperties": false
+                    },
                     "sourceUrl": {
                       "type": [
                         "string",
@@ -8038,6 +8827,7 @@
                     "title",
                     "body",
                     "payload",
+                    "entities",
                     "sourceUrl",
                     "sourceKind",
                     "verifiedAt",
@@ -8758,6 +9548,75 @@
                                 "type": "object",
                                 "additionalProperties": {}
                               },
+                              "entities": {
+                                "type": "object",
+                                "properties": {
+                                  "phones": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 120
+                                    },
+                                    "maxItems": 10
+                                  },
+                                  "addresses": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 120
+                                    },
+                                    "maxItems": 10
+                                  },
+                                  "hours": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 120
+                                    },
+                                    "maxItems": 10
+                                  },
+                                  "prices": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 120
+                                    },
+                                    "maxItems": 10
+                                  },
+                                  "dates": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 120
+                                    },
+                                    "maxItems": 10
+                                  },
+                                  "people": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 120
+                                    },
+                                    "maxItems": 10
+                                  },
+                                  "urls": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 120
+                                    },
+                                    "maxItems": 10
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
                               "sourceUrl": {
                                 "type": [
                                   "string",
@@ -8811,6 +9670,7 @@
                               "title",
                               "body",
                               "payload",
+                              "entities",
                               "sourceUrl",
                               "sourceKind",
                               "verifiedAt",

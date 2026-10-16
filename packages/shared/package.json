@@ -11,7 +11,8 @@
     "./decks": "./src/decks.ts",
     "./calc": "./src/calc/evaluate.ts",
     "./text-script": "./src/utils/text-script.ts",
-    "./search": "./src/search/index.ts"
+    "./search": "./src/search/index.ts",
+    "./ingest": "./src/ingest/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

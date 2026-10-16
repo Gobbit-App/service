@@ -12,6 +12,7 @@ describe('buildAppConfig', () => {
       cloudinaryCloudName: 'demo',
       commit: 'abc',
       search: { semantic: false, ask: false },
+      ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
     });
     expect(JSON.stringify(config)).not.toContain('key123');
     expect(JSON.stringify(config)).not.toContain('not-a-real-secret');
@@ -22,6 +23,7 @@ describe('buildAppConfig', () => {
       cloudinaryCloudName: null,
       commit: 'dev',
       search: { semantic: false, ask: false },
+      ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
     });
   });
 
@@ -45,6 +47,44 @@ describe('buildAppConfig', () => {
     expect(config.search).toEqual({ semantic: true, ask: true });
     expect(JSON.stringify(config)).not.toContain('test-value');
   });
+
+  it('enables ingest with an extraction provider and shows the Shortcut link', () => {
+    const config = buildAppConfig({
+      CLOUDINARY_URL: undefined,
+      GIT_SHA: 'abc',
+      ANTHROPIC_API_KEY: 'anthropic-test-value',
+      SHORTCUT_URL: 'https://www.icloud.com/shortcuts/abc',
+    });
+    expect(config.ingest).toEqual({
+      enabled: true,
+      emailDomain: null,
+      shortcutUrl: 'https://www.icloud.com/shortcuts/abc',
+    });
+  });
+
+  it('shows the email-in domain only when the domain and webhook secret are both set (D104)', () => {
+    const base = { CLOUDINARY_URL: undefined, GIT_SHA: 'abc', ANTHROPIC_API_KEY: 'a' };
+    expect(
+      buildAppConfig({ ...base, INGEST_EMAIL_DOMAIN: 'in.example.com' }).ingest.emailDomain,
+    ).toBe(null);
+    const config = buildAppConfig({
+      ...base,
+      INGEST_EMAIL_DOMAIN: 'in.example.com',
+      RESEND_WEBHOOK_SECRET: 'whsec-test-value',
+    });
+    expect(config.ingest.emailDomain).toBe('in.example.com');
+    expect(JSON.stringify(config)).not.toContain('whsec-test-value');
+  });
+
+  it('keeps email-in off without an extraction provider', () => {
+    const config = buildAppConfig({
+      CLOUDINARY_URL: undefined,
+      GIT_SHA: 'abc',
+      INGEST_EMAIL_DOMAIN: 'in.example.com',
+      RESEND_WEBHOOK_SECRET: 'whsec-test-value',
+    });
+    expect(config.ingest).toEqual({ enabled: false, emailDomain: null, shortcutUrl: null });
+  });
 });
 
 describe('GET /config', () => {
@@ -59,6 +99,7 @@ describe('GET /config', () => {
       cloudinaryCloudName: 'demo',
       commit: 'abc',
       search: { semantic: false, ask: false },
+      ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
     });
     expect(body).not.toContain('not-a-real-secret');
   });

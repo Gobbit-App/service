@@ -17,6 +17,7 @@ describe('GET /config (D55)', () => {
       cloudinaryCloudName: 'demo',
       commit: 'abc123',
       search: { semantic: false, ask: false },
+      ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
     });
 
     const raw = JSON.stringify(body);
@@ -35,6 +36,7 @@ describe('GET /config without Cloudinary', () => {
       cloudinaryCloudName: null,
       commit: 'dev',
       search: { semantic: false, ask: false },
+      ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
     });
   });
 });
