@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import type { Job } from 'pg-boss';
 import { createDb, createPool } from '@pb/db';
-import { EMBED_SWEEP_CRON, SEARCH_QUERY_PRUNE_CRON } from '@pb/shared';
+import { EMBED_SWEEP_CRON, INGEST_PRUNE_CRON, SEARCH_QUERY_PRUNE_CRON } from '@pb/shared';
 import { parseEnv } from './env';
 import { createBoss } from './jobs/boss';
 import { createEmbedItemHandler } from './jobs/embed-item';
@@ -9,6 +9,9 @@ import { withEmbedItemLog } from './jobs/embed-item-log';
 import { createEmbedSweep } from './jobs/embed-sweep';
 import { ensureQueues } from './jobs/ensure-queues';
 import { createPruneSearchQueries } from './jobs/prune-search-queries';
+import { createPruneIngestJobs } from './jobs/prune-ingest-jobs';
+import { createIngestJobsRepo } from './repositories/ingest-jobs.repo';
+import { createCloudinaryIngestUploads } from './media/ingest-uploads';
 import { QUEUES, type EmbedItemJob } from './jobs/queues';
 import { createEmbeddingsRepo } from './repositories/embeddings.repo';
 import { createLlmCallsRepo } from './repositories/llm-calls.repo';
@@ -34,6 +37,18 @@ async function main() {
     const removed = await prune();
     console.log(`[worker] pruned ${removed} search_queries rows`);
   });
+
+  const pruneIngest = createPruneIngestJobs({
+    jobs: createIngestJobsRepo(db),
+    uploads: env.CLOUDINARY_URL ? createCloudinaryIngestUploads(env.CLOUDINARY_URL) : null,
+  });
+  await boss.schedule(QUEUES.pruneIngestJobs, INGEST_PRUNE_CRON);
+  await boss.work(QUEUES.pruneIngestJobs, async () => {
+    const { pruned, uploadsDeleted } = await pruneIngest();
+    console.log(`[worker] pruned ${pruned} ingest jobs (${uploadsDeleted} upload sets deleted)`);
+  });
+  // The ingest handler and its sweep land with extraction (P5.3).
+  await boss.unschedule(QUEUES.ingestSweep);
 
   const embedder = defaultEmbedder(env);
   if (embedder) {

@@ -1,12 +1,21 @@
-/** Queue names shared by the API (sender) and the worker (D72, D80). */
+import { INGEST_JOB_RETRIES } from '@pb/shared';
+
+/** Queue names shared by the API (sender) and the worker (D72, D80, D93). */
 export const QUEUES = {
   embedItem: 'embed-item',
   embedSweep: 'embed-sweep',
   pruneSearchQueries: 'prune-search-queries',
+  ingest: 'ingest',
+  ingestSweep: 'ingest-sweep',
+  pruneIngestJobs: 'prune-ingest-jobs',
 } as const;
 
 export interface EmbedItemJob {
   itemId: string;
+}
+
+export interface IngestJobData {
+  jobId: string;
 }
 
 /** The slice of pg-boss the enqueuers need; a recording fake stands in for it in tests. */
@@ -20,3 +29,6 @@ export interface JobSender {
 
 /** D72: retries with exponential backoff for provider blips. */
 export const EMBED_ITEM_SEND_OPTIONS = { retryLimit: 3, retryBackoff: true } as const;
+
+/** D93: pg-boss retries provider blips; the row's `attempts` caps re-runs from the sweep. */
+export const INGEST_SEND_OPTIONS = { retryLimit: INGEST_JOB_RETRIES, retryBackoff: true } as const;

@@ -28,6 +28,9 @@ import { registerShareRoutes } from './routes/share';
 import type { ShareWiring } from './share/wiring';
 import type { SearchWiring } from './services/search-wiring';
 import { registerSearchRoutes } from './routes/search';
+import type { IngestWiring } from './services/ingest-wiring';
+import { registerIngestRoutes } from './routes/ingest';
+import { registerIngestTokensRoutes } from './routes/ingest-tokens';
 
 export interface AppDeps {
   db: Db;
@@ -40,6 +43,8 @@ export interface AppDeps {
   share?: ShareWiring;
   /** Embedder/asker/embed-queue overrides for tests (Phase 4). */
   search?: SearchWiring;
+  /** Ingest uploads/queue/enabled overrides for tests (Phase 5). */
+  ingest?: IngestWiring;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -83,6 +88,8 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerFavoritesRoutes(app, services);
   registerShareRoutes(app, services);
   registerSearchRoutes(app, services);
+  registerIngestRoutes(app, services);
+  registerIngestTokensRoutes(app, services);
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

@@ -57,6 +57,35 @@ describe('sessionAuth', () => {
     expect(res.headers.get('set-cookie')).toBeNull();
   });
 
+  describe('ingest tokens (D99)', () => {
+    const ingestToken = `ing_${'A'.repeat(43)}`;
+    const bearer = { Authorization: `Bearer ${ingestToken}` };
+
+    beforeEach(() => {
+      app.post('/ingest', (c) => c.json({ ingestBearer: c.get('ingestBearer') ?? null }));
+      app.post('/items', (c) => c.json({ ok: true }));
+    });
+
+    it('parks the token for POST /ingest without a session lookup', async () => {
+      const res = await app.request('/ingest', { method: 'POST', headers: bearer });
+      expect(await res.json()).toEqual({ ingestBearer: ingestToken });
+      expect(authenticate).not.toHaveBeenCalled();
+    });
+
+    it('401s the token on any other route', async () => {
+      const get = await app.request('/private', { headers: bearer });
+      const post = await app.request('/items', { method: 'POST', headers: bearer });
+      expect(get.status).toBe(401);
+      expect(post.status).toBe(401);
+      expect(authenticate).not.toHaveBeenCalled();
+    });
+
+    it('401s the token on GET /ingest', async () => {
+      const res = await app.request('/ingest', { headers: bearer });
+      expect(res.status).toBe(401);
+    });
+  });
+
   it('401s on a malformed Authorization header without authenticating', async () => {
     const res = await app.request('/private', { headers: { Authorization: 'Basic abc' } });
     expect(res.status).toBe(401);

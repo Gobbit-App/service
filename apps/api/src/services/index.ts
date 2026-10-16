@@ -21,6 +21,7 @@ import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
 import { createItemDtoMapper } from './item-dtos';
 import { buildSearchServices, resolveEmbedQueue, type SearchWiring } from './search-wiring';
+import { buildIngestServices, type IngestWiring } from './ingest-wiring';
 
 export interface ServiceDeps {
   db: Db;
@@ -31,6 +32,8 @@ export interface ServiceDeps {
   share?: ShareWiring;
   /** Embedder/asker/queue overrides (Phase 4); production builds them from env. */
   search?: SearchWiring;
+  /** Ingest uploads/queue/enabled overrides (Phase 5); production builds them from env. */
+  ingest?: IngestWiring;
 }
 
 /** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
@@ -54,6 +57,7 @@ export function buildServices({
   now = () => new Date(),
   share,
   search,
+  ingest,
 }: ServiceDeps) {
   const users = createUsersRepo(db);
   const decks = createDecksRepo(db);
@@ -75,6 +79,14 @@ export function buildServices({
     rateLimits,
     toDtos,
     wiring: search,
+  });
+  const ingestServices = buildIngestServices({
+    db,
+    env,
+    decks,
+    memberships,
+    now,
+    wiring: ingest,
   });
   const transaction: CallbackTransaction = (fn) =>
     db.transaction((tx) => fn(buildCallbackRepos(tx)));
@@ -115,6 +127,8 @@ export function buildServices({
     share: buildShareService(db, env, share),
     search: searchServices.search,
     ask: searchServices.ask,
+    ingest: ingestServices.ingest,
+    ingestTokens: ingestServices.ingestTokens,
   };
 }
 
