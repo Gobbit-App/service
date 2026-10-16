@@ -340,6 +340,7 @@ All errors (except 5xx) follow the Problem schema:
 - `instanceof InvalidCursorError`: 400 /problems/invalid-cursor
 - `mapPgError(err)` detects pg codes (23505, 23514, 23503, P0001); non-null → respond with mapped Problem
 - All other errors: log with requestId, respond 500 /problems/internal (no stack trace to client)
+- Request log (`middleware/request-log.ts`): one stdout line per request, `[api] METHOD /path STATUS 12ms <requestId>`. It is registered first, so CSRF rejections are logged too. The query string is never logged (search text stays out of logs), `/health` is skipped, and it is off when `NODE_ENV=test`.
 
 ---
 
@@ -632,6 +633,7 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
   - `prune-search-queries`: weekly.
 - After a create or update commits, the items service calls `embedQueue.enqueueIfStale()`. Enqueue failures are logged, never surfaced. The sweep catches anything missed: the worker was down, the model changed, or the item was written before Phase 4.
 - `embed-item` loads the item's `search_text` and skips the item if the stored hash still matches. Otherwise it calls the embedder (`EMBEDDING_MODEL`, default `text-embedding-3-small`, 10 s timeout) and writes the vector, model and hash. Every call is logged in `llm_calls`.
+- Logs (`jobs/embed-item-log.ts`): one line per job, `[worker] embed <itemId> → embedded|fresh|missing|superseded (Nms)`. A failure is logged before it propagates, so pg-boss retries show up in the log. Sweeps log `sweep queued N stale items` when N > 0.
 - Health: the worker touches `/tmp/worker-heartbeat` every 30 s. The Compose healthcheck fails when the file is older than 90 s.
 - `pnpm dev` runs the API server and the worker together (`dev:server`, `dev:worker`).
 

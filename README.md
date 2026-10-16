@@ -186,6 +186,7 @@ push to main → CI (tests, client drift, web build + budget)
 - **Migrations:** Automatic on container startup via `docker-entrypoint.sh`, against `DATABASE_URL`. The container exits if it's unset or the database is unreachable, and Docker restarts it.
 - **Networking:** only `web` joins Dokploy's external `dokploy-network` (label `traefik.docker.network=dokploy-network`), where Traefik and the shared `cloudflared` Compose service run. The tunnel's public hostname `gobbit.niranhome.win` points at Traefik; Traefik sends the whole host to `web:80`, and Caddy forwards `/api` and `/s` to `api:3000` on the project network (D51).
 - **No seed on the box:** the deployed database starts empty. Sign in by magic link as the owner (the first sign-in creates the user), then mint the smoke token (below).
+- **Logs:** the `api` container logs one line per request (`[api] GET /decks/… 200 12ms <requestId>`; no query strings, `/health` skipped). Embedding activity is in the separate `worker` container: `[worker] embed <itemId> → embedded (Nms)` per job, plus failures and sweep counts.
 - **Backups:** see `infra/README.md`.
 
 ### Shared database (D67)
