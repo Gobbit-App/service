@@ -8,7 +8,10 @@ import type { SafeFetch } from '../src/fetch/safe-fetch';
 import { normalizeRaw } from '../src/ingest/normalize-raw';
 import { createSharerRole } from '../src/ingest/sharer-role';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
-import { createIngestHandler } from '../src/jobs/ingest';
+import { createIngestHandler, type IngestHandlerDeps } from '../src/jobs/ingest';
+import { runDedup } from '../src/ingest/run-dedup';
+import { createDedupRepo } from '../src/repositories/dedup.repo';
+import { createEmbeddingsRepo } from '../src/repositories/embeddings.repo';
 import type { IngestQueue } from '../src/jobs/ingest-queue';
 import { createCategoriesRepo } from '../src/repositories/categories.repo';
 import { createDecksRepo } from '../src/repositories/decks.repo';
@@ -57,7 +60,7 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
     await ctx.sessionFor(editor);
   });
 
-  function handler(script?: unknown[]) {
+  function handler(script?: unknown[], dedup?: IngestHandlerDeps['dedup']) {
     const db = ctx.t.db;
     const extractor = createFakeExtractor(script ? { script } : undefined);
     const embedQueue = new RecordingEmbedQueue();
@@ -79,6 +82,7 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
       },
       embedQueue,
       log: () => undefined,
+      dedup,
     });
     return { run, extractor, embedQueue };
   }
@@ -209,5 +213,42 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
 
     expect(await run(job!.id)).toBe('failed');
     expect((await jobRow(job!.id)).error).toBe('sharer_not_member');
+  });
+
+  const keylessDedup: IngestHandlerDeps['dedup'] = (input) =>
+    runDedup(
+      {
+        dedup: createDedupRepo(ctx.t.db),
+        embedder: null,
+        embeddings: createEmbeddingsRepo(ctx.t.db),
+        llmCalls: createLlmCallsRepo(ctx.t.db),
+      },
+      input,
+    );
+
+  it('records the dedup verdict: the same URL shared twice is an update of the first card', async () => {
+    const first = await share({ url: 'https://dan.example/?utm_source=wa' });
+    const second = await share({ url: 'https://dan.example/' });
+    const { run } = handler(undefined, keylessDedup);
+
+    expect(await run(first)).toBe('proposed');
+    expect(await run(second)).toBe('proposed');
+    const firstJob = await jobRow(first);
+    expect((await jobRow(second)).dedup).toMatchObject({
+      action: 'update',
+      via: 'source_url',
+    });
+    expect((await jobRow(second)).dedup?.itemId).not.toBe((await jobRow(second)).resultItemId);
+    expect(firstJob.dedup).not.toBeNull();
+  });
+
+  it('a dedup error still proposes the card, with no verdict', async () => {
+    const jobId = await share({ text: 'Bakery opens at 7' });
+    const { run } = handler(undefined, async () => {
+      throw new Error('db hiccup');
+    });
+
+    expect(await run(jobId)).toBe('proposed');
+    expect(await jobRow(jobId)).toMatchObject({ status: 'proposed', dedup: null });
   });
 });

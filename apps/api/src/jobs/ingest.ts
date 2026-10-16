@@ -1,5 +1,6 @@
 import {
   EXTRACT_STYLE_EXAMPLES,
+  type DedupVerdict,
   INGEST_JOB_RETRIES,
   type IngestChannel,
   type IngestRaw,
@@ -11,6 +12,7 @@ import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
 import { runExtraction, type RunExtractionDeps } from '../ingest/run-extraction';
+import type { RunDedupInput } from '../ingest/run-dedup';
 import type { EmbedQueue } from './embed-queue';
 
 export type IngestOutcome = 'proposed' | 'failed' | 'skipped';
@@ -23,6 +25,8 @@ export interface IngestHandlerDeps {
   roleOf: (deckId: string, userId: string) => Promise<MemberRole | null>;
   normalize: (raw: IngestRaw) => Promise<NormalizedSource>;
   extraction: RunExtractionDeps;
+  /** D103: the dedup verdict for the new proposal (bound `runDedup`); omitted → no verdict. */
+  dedup?: (input: RunDedupInput) => Promise<DedupVerdict>;
   embedQueue: EmbedQueue;
   now?: () => Date;
   log?: (message: string) => void;
@@ -40,13 +44,27 @@ export function isLastAttempt(attempts: number): boolean {
 
 /**
  * D93: one ingest job through the pipeline: claim → normalize (D102) → extract (D105/D110) →
- * insert a `proposed` card by the sharer (D109) → enqueue its embedding. Invalid model output
+ * insert a `proposed` card by the sharer (D109) → embed the draft and dedup (D103) → enqueue its
+ * embedding (a no-op once the draft vector is stored). Invalid model output
  * fails the job; provider errors rethrow so pg-boss retries, until the last attempt fails it.
  */
 export function createIngestHandler(deps: IngestHandlerDeps) {
   const { jobs, categories, items, embedQueue } = deps;
   const now = deps.now ?? (() => new Date());
   const log = deps.log ?? ((m: string) => console.error(m));
+
+  /** The proposal already exists, so a dedup error leaves no verdict rather than retrying. */
+  async function verdictFor(input: RunDedupInput): Promise<DedupVerdict | null> {
+    if (!deps.dedup) return null;
+    try {
+      return await deps.dedup(input);
+    } catch (err) {
+      log(
+        `[ingest] dedup for job ${input.jobId} failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return null;
+    }
+  }
 
   async function fail(jobId: string, error: string): Promise<IngestOutcome> {
     await jobs.setStatus(jobId, 'failed', error.slice(0, 500), now());
@@ -121,10 +139,21 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         categoryIds,
       );
 
+      const dedup = await verdictFor({
+        itemId: created.id,
+        deckId: job.deckId,
+        title: created.title,
+        sourceUrl: created.sourceUrl,
+        jobId: job.id,
+        userId: job.userId,
+        signal: opts?.signal,
+      });
+
       await jobs.update(job.id, {
         status: 'proposed',
         extraction: { ...outcome.summary, categoryIds },
         resultItemId: created.id,
+        dedup,
         error: null,
         finishedAt: now(),
       });

@@ -16,6 +16,8 @@ import { createIngestSweep } from './jobs/ingest-sweep';
 import { createSafeFetch } from './fetch/safe-fetch';
 import { normalizeRaw } from './ingest/normalize-raw';
 import { createSharerRole } from './ingest/sharer-role';
+import { runDedup } from './ingest/run-dedup';
+import { createDedupRepo } from './repositories/dedup.repo';
 import { createCategoriesRepo } from './repositories/categories.repo';
 import { createDecksRepo } from './repositories/decks.repo';
 import { createItemsRepo } from './repositories/items.repo';
@@ -93,6 +95,16 @@ async function main() {
             model: embedder.model,
           })
         : noopEmbedQueue,
+      dedup: (input) =>
+        runDedup(
+          {
+            dedup: createDedupRepo(db),
+            embedder,
+            embeddings: createEmbeddingsRepo(db),
+            llmCalls: createLlmCallsRepo(db),
+          },
+          input,
+        ),
     });
     const ingestSweep = createIngestSweep({
       jobs: ingestJobs,
