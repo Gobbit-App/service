@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultAsker,
   defaultEmbedder,
+  defaultExtractor,
   hasAskProvider,
   hasEmbeddingProvider,
   openRouterEmbeddingModel,
   OPENROUTER_DEFAULT_ASK_MODEL,
+  OPENROUTER_DEFAULT_EXTRACT_ESCALATION_MODEL,
+  OPENROUTER_DEFAULT_EXTRACT_MODEL,
   type ProviderEnv,
 } from './providers';
 
@@ -86,5 +89,45 @@ describe('defaultAsker', () => {
     const asker = defaultAsker({ ...base, ANTHROPIC_API_KEY: 'an-test' });
     expect(asker?.provider).toBe('anthropic');
     expect(asker?.model).toBe('claude-haiku-5-5');
+  });
+});
+
+describe('defaultExtractor', () => {
+  const extractBase = {
+    ...base,
+    EXTRACT_MODEL: undefined,
+    EXTRACT_ESCALATION_MODEL: undefined,
+  };
+
+  it('is null without a chat key (an embeddings-only key is not enough)', () => {
+    expect(defaultExtractor({ ...extractBase, OPENAI_API_KEY: 'sk' })).toBeNull();
+  });
+
+  it('prefers OpenRouter with the Haiku → Sonnet ids', () => {
+    const setup = defaultExtractor({
+      ...extractBase,
+      OPENROUTER_API_KEY: 'or',
+      ANTHROPIC_API_KEY: 'an',
+    });
+    expect(setup?.extractor.provider).toBe('openrouter');
+    expect(setup?.model).toBe(OPENROUTER_DEFAULT_EXTRACT_MODEL);
+    expect(setup?.escalationModel).toBe(OPENROUTER_DEFAULT_EXTRACT_ESCALATION_MODEL);
+  });
+
+  it('falls back to Anthropic with the Anthropic ids', () => {
+    const setup = defaultExtractor({ ...extractBase, ANTHROPIC_API_KEY: 'an' });
+    expect(setup?.extractor.provider).toBe('anthropic');
+    expect(setup?.model).toBe('claude-haiku-5-5');
+    expect(setup?.escalationModel).toBe('claude-sonnet-5-5');
+  });
+
+  it('honours EXTRACT_MODEL and EXTRACT_ESCALATION_MODEL', () => {
+    const setup = defaultExtractor({
+      ...extractBase,
+      ANTHROPIC_API_KEY: 'an',
+      EXTRACT_MODEL: 'small',
+      EXTRACT_ESCALATION_MODEL: 'big',
+    });
+    expect(setup).toMatchObject({ model: 'small', escalationModel: 'big' });
   });
 });
