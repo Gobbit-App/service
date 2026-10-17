@@ -560,7 +560,8 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
 
 ### Offline model (D56)
 
-- The service worker (`generateSW`) precaches the app shell and caches Cloudinary images `CacheFirst` (30 days, 300 entries). It never caches API responses, and `og/**` is not precached.
+- The service worker (`src/sw.ts`, vite-plugin-pwa `injectManifest`, typechecked with `tsconfig.sw.json`) precaches the app shell and caches Cloudinary images `CacheFirst` (30 days, 300 entries). It never caches API responses, and `og/**` is not precached.
+- Share target (D108, Phase 5): the manifest's `share_target` posts `multipart/form-data` to `/share`. The SW stores `{title, text, url, images}` in IndexedDB (`gobbit-share` store, one pending record, 1 h TTL) and answers `303 /share?pending=<id>`. The confirm screen reads it, picks a deck (`item.create` roles; requested → last opened → personal) and sends `POST /api/ingest` (`channel: pwa`). Without a SW, Caddy answers a `POST /share` with `303 /share?failed=1`. The deck's "Paste" button opens the same screen as a paste box (`channel: paste`).
 - API data persists through TanStack Query's persister to IndexedDB (`idb-keyval`, `maxAge` 7 days, `buster` = commit).
 - The offline banner shows when a query fails with a network error while cached data is on screen, and clears on the next successful fetch.
 - Sign-out removes the persisted cache.
