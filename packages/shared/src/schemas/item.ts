@@ -12,6 +12,7 @@ import { pageSchema, limitSchema } from './pagination';
 import { CARD_BODY_MAX, CARD_TITLE_MAX, PAYLOAD_MAX_BYTES } from '../limits';
 import { itemTypes, itemStatuses, sourceKinds } from '../enums';
 import { codePointLength } from '../utils/utf8-bytes';
+import { entitiesSchema } from '../ingest/entities';
 
 export const itemBodySchema = z
   .string()
@@ -40,6 +41,8 @@ const commonCreateFields = {
     .optional(),
   sourceUrl: httpUrlSchema.optional(),
   status: z.enum(itemStatuses).optional(),
+  /** D97: extracted facts (phones, addresses, …), searchable. */
+  entities: entitiesSchema.optional(),
 };
 
 // Per-type create schemas
@@ -113,6 +116,7 @@ export const itemPatchSchema = z
     categoryIds: z.array(z.uuid()).optional(),
     sourceUrl: httpUrlSchema.nullable().optional(),
     status: z.enum(itemStatuses).optional(),
+    entities: entitiesSchema.optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, 'At least one field is required');
@@ -127,6 +131,7 @@ export const itemSchema = z.object({
   title: z.string(),
   body: z.string(),
   payload: z.record(z.string(), z.unknown()),
+  entities: entitiesSchema,
   sourceUrl: z.string().nullable(),
   sourceKind: z.enum(sourceKinds),
   verifiedAt: z.string().nullable(),

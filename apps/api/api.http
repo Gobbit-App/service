@@ -265,6 +265,87 @@ Content-Type: application/json
 
 { "question": "Which day do we go shopping?" }
 
+### ─── Ingestion (Phase 5) ───
+# Needs an extraction provider (OPENROUTER_API_KEY or ANTHROPIC_API_KEY), else 503. Jobs run in
+# the worker (`pnpm dev` starts it); proposals then show up in the deck's review queue.
+
+### Share a link into a deck (D93; 202 { id, status }, 50/day per user)
+# @name shared
+POST {{baseUrl}}/ingest
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "deckId": "family", "url": "https://example.com/plumber", "text": "Our plumber, call before 9", "channel": "paste" }
+
+### Share a photo (multipart, ≤ 3 `files`, each ≤ 8 MB)
+POST {{baseUrl}}/ingest
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=gobbit
+
+--gobbit
+Content-Disposition: form-data; name="deckId"
+
+family
+--gobbit
+Content-Disposition: form-data; name="files"; filename="note.jpg"
+Content-Type: image/jpeg
+
+< ./note.jpg
+--gobbit--
+
+### Job status / debug view (D109: sharer or a deck publisher)
+GET {{baseUrl}}/ingest/{{shared.response.body.id}}
+Authorization: Bearer {{token}}
+
+### Create an ingest token (D99; the secret is returned once, max 5 live per user)
+# @name ingestToken
+POST {{baseUrl}}/me/ingest-tokens
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "label": "My iPhone" }
+
+### Share with the ingest token (only POST /ingest accepts it; channel is always `shortcut`)
+POST {{baseUrl}}/ingest
+Authorization: Bearer {{ingestToken.response.body.token}}
+Content-Type: application/json
+
+{ "text": "Bin day moved to Thursday" }
+
+### List ingest tokens (display prefix only, never the secret)
+GET {{baseUrl}}/me/ingest-tokens
+Authorization: Bearer {{token}}
+
+### Revoke an ingest token
+DELETE {{baseUrl}}/me/ingest-tokens/{{ingestToken.response.body.id}}
+Authorization: Bearer {{token}}
+
+### Review queue (D106; needs item.publish)
+GET {{baseUrl}}/decks/family/review
+Authorization: Bearer {{token}}
+
+### Review count (the header pill)
+GET {{baseUrl}}/decks/family/review/count
+Authorization: Bearer {{token}}
+
+### Publish a proposal (mode new | update; createCategory adds the suggested category)
+POST {{baseUrl}}/items/<proposedItemId>/publish
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "mode": "new", "createCategory": false }
+
+### Discard a proposal (soft-deletes it and removes the job's uploads)
+POST {{baseUrl}}/items/<proposedItemId>/discard
+Authorization: Bearer {{token}}
+
+### Resend inbound webhook (D104; 404 unless email-in is configured)
+# Signed by Resend (Svix headers), so it can't be sent by hand: an unsigned request is a 401.
+POST {{baseUrl}}/webhooks/resend/inbound
+Content-Type: application/json
+
+{ "type": "email.received", "data": { "email_id": "test" } }
+
 ### Public runtime config (D55)
 GET {{baseUrl}}/config
 

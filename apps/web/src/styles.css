@@ -589,8 +589,10 @@ h3 {
 
 /* ---------- Card editor (Phase 3B) ---------- */
 
-.add-card-link {
-  justify-self: start;
+.deck-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
   margin-bottom: var(--gutter);
 }
 
@@ -631,7 +633,7 @@ h3 {
   font-size: 16px;
 }
 
-.card-editor input:not([type='radio']),
+.card-editor input:not([type='radio']):not([type='checkbox']),
 .card-editor select {
   min-height: var(--tap);
 }
@@ -642,6 +644,220 @@ h3 {
 
 .card-editor .button {
   justify-self: start;
+}
+
+/* ---------- Share target and paste (Phase 5, D108) ---------- */
+
+.share-notice {
+  margin: 0 0 var(--gutter);
+  color: var(--color-muted);
+}
+
+.share-form__title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.share-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.share-thumbs__item {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+.share-thumbs__image {
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--color-border);
+}
+
+.share-sent__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+}
+
+/* ---------- Settings: ingest tokens (Phase 5, D99) ---------- */
+
+.button--danger {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+}
+
+.muted {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.settings-notice {
+  margin: 0 0 var(--gap);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-banner);
+  color: var(--color-banner-text);
+}
+
+.settings-section {
+  margin-bottom: calc(var(--gap) * 2);
+}
+
+.settings-section > h2 {
+  margin: 0 0 8px;
+  font-size: 1.0625rem;
+}
+
+.token-list {
+  margin: 0 0 var(--gap);
+  padding: 0;
+  list-style: none;
+}
+
+.token-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.token-list__actions,
+.token-secret__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.token-secret {
+  margin-bottom: var(--gap);
+  padding: 12px;
+  border: 1px solid var(--color-accent);
+  border-radius: 12px;
+}
+
+.token-secret__value {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Review queue (Phase 5, D107) ---------- */
+
+.review-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.review-queue {
+  display: grid;
+  gap: var(--gutter);
+}
+
+.review-card {
+  display: grid;
+  gap: var(--gap);
+}
+
+.review-card__source,
+.review-card__preview {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.review-card__preview {
+  font-style: italic;
+}
+
+.review-card__dedup {
+  padding: var(--gap);
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+}
+
+.review-card__banner {
+  margin: 0 0 8px;
+}
+
+.review-card__new-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+}
+
+.review-card__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.review-card__discard {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.entity-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entity-chips__kind {
+  color: var(--color-muted);
+}
+
+.review-diff {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.review-diff dt {
+  font-weight: 600;
+}
+
+.review-diff dd {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.review-diff del {
+  color: var(--color-muted);
+}
+
+.review-diff ins {
+  text-decoration: none;
+}
+
+.review-diff__same {
+  margin: 0;
+  color: var(--color-muted);
 }
 
 .sign-in-sent {

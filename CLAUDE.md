@@ -1,11 +1,11 @@
-# Gobbit — Phase 4 (search)
+# Gobbit — Phase 5 (ingestion)
 
-A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 added the Reader PWA (offline reading, favorites, share previews); Phase 3B adds a personal deck at `/d/me` (created on every sign-in) and a minimal card editor. Phase 4 adds hybrid search (pg_trgm + pgvector, RRF), an optional cited Ask answer and an embeddings worker (plan: `plans/phase4 implementation plan.md`, local, gitignored).
+A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 added the Reader PWA (offline reading, favorites, share previews); Phase 3B adds a personal deck at `/d/me` (created on every sign-in) and a minimal card editor. Phase 4 adds hybrid search (pg_trgm + pgvector, RRF), an optional cited Ask answer and an embeddings worker. Phase 5 adds ingestion: shares (Android share target, iPhone Shortcut with ingest tokens, paste box, flagged email-in) become `ingest_jobs` that the worker fetches (SSRF-guarded), extracts with an LLM into a **proposed** card and dedups; publishers approve them in a review queue (plan: `plans/phase5 implementation plan.md`, local, gitignored).
 
 ## Repo Layout
 
 ```
-apps/api/        — Hono REST API (TypeScript strict) + embeddings worker (`src/worker.ts`, pg-boss)
+apps/api/        — Hono REST API (TypeScript strict) + worker (`src/worker.ts`, pg-boss: embeddings, ingestion)
 apps/web/        — Reader PWA (React, Vite, TanStack Router/Query) + Caddy image
 packages/api-client/ — Generated OpenAPI types + typed client (@pb/api-client)
 packages/shared/ — Zod schemas, limits, utils (@pb/shared)
@@ -14,7 +14,7 @@ e2e/             — Playwright smoke tests
 infra/           — Docker Compose (base = deployed, docker-compose.local.yml = local ports/dev defaults)
 apps/api/Dockerfile — API image (also used by Compose)
 apps/web/Dockerfile + Caddyfile — web image (static PWA; routes /api and /s to the API)
-docs/            — architecture.md (keep synced)
+docs/            — architecture.md (keep synced), shortcut/README.md (iPhone Shortcut + email-in)
 ```
 
 ## Ground Rules
@@ -34,6 +34,7 @@ docs/            — architecture.md (keep synced)
 - **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; Search eval `*.search.test.ts` (`pnpm test:search`, committed embedding cache); E2E `@smoke` → each test creates and deletes its own `smoke-<id>` deck (D50)
 - **Git hooks**: `.githooks/` via `prepare` — pre-commit = Prettier + ESLint on staged files (check only), pre-push = typecheck + unit
 - **Search**: `searchRepo.hybrid()` filters both arms by deck, status and `visibleCategoriesWhere()`; fusion in `lib/rrf.ts`. `OPENROUTER_API_KEY` (preferred, both features) or `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` are optional (text-only search / Ask off); providers resolved in `ai/providers.ts` (ADR-044); writes call `embedQueue.enqueueIfStale()` after commit, the worker sweep heals misses (ADR-041–043)
+- **Ingestion**: `POST /ingest` → `ingest_jobs` → worker `jobs/ingest.ts` (fetch → normalize → extract → proposed item → dedup). The agent never publishes; proposals are visible only to publishers and their creator (D96); published items need ≥ 1 category (DB trigger, D95). `ing_` ingest tokens work only on `POST /ingest` (ADR-046); outbound fetches go through `fetch/safe-fetch.ts` only (ADR-048). Email-in (`/webhooks/resend/inbound`) is on only with `INGEST_EMAIL_DOMAIN` + `RESEND_WEBHOOK_SECRET` + `RESEND_API_KEY`
 - **Web**: plain CSS, no UI kit; API data offline via persisted query cache, never the service worker (search queries are not persisted); value imports from `@pb/shared` subpaths (`/search`, `/calc`, …), never the root (bundle budget); same origin everywhere (no CORS)
 - **Docs**: Keep `docs/architecture.md` and `README.md` synced with code
 

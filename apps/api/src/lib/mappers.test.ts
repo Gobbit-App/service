@@ -107,6 +107,7 @@ describe('mappers', () => {
         title: 'Test Item',
         body: 'Test body',
         payload: {},
+        entities: { phones: ['+972-3-555-0100'] },
         sourceUrl: null,
         sourceKind: 'manual',
         verifiedAt: null,
@@ -127,6 +128,7 @@ describe('mappers', () => {
       expect(dto.verifiedAt).toBeNull();
       expect(dto.categoryIds).toEqual(['c1']);
       expect(dto.isFavorite).toBe(true);
+      expect(dto.entities).toEqual({ phones: ['+972-3-555-0100'] });
       expect(Object.keys(dto)).not.toContain('deletedAt');
 
       const parsed = itemSchema.parse(dto);

@@ -11,6 +11,8 @@ export const LLM_PRICES_PER_MTOK: Readonly<Record<string, { input: number; outpu
   'text-embedding-3-large': { input: 0.13, output: 0 },
   'claude-haiku-5-5': { input: 0.1, output: 0.5 },
   'anthropic/claude-haiku-5.5': { input: 0.1, output: 0.5 },
+  'claude-sonnet-5-5': { input: 3, output: 15 },
+  'anthropic/claude-sonnet-5.5': { input: 3, output: 15 },
   'qwen/qwen3.7-flash': { input: 0.03, output: 0.13 },
   'openai/gpt-5-nano': { input: 0.05, output: 0.4 },
 };

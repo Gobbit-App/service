@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AuthErrorRouteImport } from './routes/auth.error'
 import { Route as DSlugRouteImport } from './routes/d.$slug'
@@ -18,12 +20,23 @@ import { Route as DSlugIndexRouteImport } from './routes/d.$slug.index'
 import { Route as DSlugArchivedRouteImport } from './routes/d.$slug.archived'
 import { Route as DSlugFavoritesRouteImport } from './routes/d.$slug.favorites'
 import { Route as DSlugNewRouteImport } from './routes/d.$slug.new'
+import { Route as DSlugReviewRouteImport } from './routes/d.$slug.review'
 import { Route as DSlugSearchRouteImport } from './routes/d.$slug.search'
 import { Route as DSlugCCategoryRouteImport } from './routes/d.$slug.c.$category'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareRoute = ShareRouteImport.update({
+  id: '/share',
+  path: '/share',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -66,6 +79,11 @@ const DSlugNewRoute = DSlugNewRouteImport.update({
   path: '/new',
   getParentRoute: () => DSlugRoute,
 } as any)
+const DSlugReviewRoute = DSlugReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => DSlugRoute,
+} as any)
 const DSlugSearchRoute = DSlugSearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -79,6 +97,8 @@ const DSlugCCategoryRoute = DSlugCCategoryRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/auth/error': typeof AuthErrorRoute
   '/d/$slug': typeof DSlugRouteWithChildren
@@ -86,18 +106,22 @@ export interface FileRoutesByFullPath {
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
   '/d/$slug/new': typeof DSlugNewRoute
+  '/d/$slug/review': typeof DSlugReviewRoute
   '/d/$slug/search': typeof DSlugSearchRoute
   '/d/$slug/': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/auth/error': typeof AuthErrorRoute
   '/i/$itemId': typeof IItemIdRoute
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
   '/d/$slug/new': typeof DSlugNewRoute
+  '/d/$slug/review': typeof DSlugReviewRoute
   '/d/$slug/search': typeof DSlugSearchRoute
   '/d/$slug': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
@@ -105,6 +129,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
+  '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/auth/error': typeof AuthErrorRoute
   '/d/$slug': typeof DSlugRouteWithChildren
@@ -112,6 +138,7 @@ export interface FileRoutesById {
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
   '/d/$slug/new': typeof DSlugNewRoute
+  '/d/$slug/review': typeof DSlugReviewRoute
   '/d/$slug/search': typeof DSlugSearchRoute
   '/d/$slug/': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
@@ -120,6 +147,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/settings'
+    | '/share'
     | '/sign-in'
     | '/auth/error'
     | '/d/$slug'
@@ -127,24 +156,30 @@ export interface FileRouteTypes {
     | '/d/$slug/archived'
     | '/d/$slug/favorites'
     | '/d/$slug/new'
+    | '/d/$slug/review'
     | '/d/$slug/search'
     | '/d/$slug/'
     | '/d/$slug/c/$category'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/settings'
+    | '/share'
     | '/sign-in'
     | '/auth/error'
     | '/i/$itemId'
     | '/d/$slug/archived'
     | '/d/$slug/favorites'
     | '/d/$slug/new'
+    | '/d/$slug/review'
     | '/d/$slug/search'
     | '/d/$slug'
     | '/d/$slug/c/$category'
   id:
     | '__root__'
     | '/'
+    | '/settings'
+    | '/share'
     | '/sign-in'
     | '/auth/error'
     | '/d/$slug'
@@ -152,6 +187,7 @@ export interface FileRouteTypes {
     | '/d/$slug/archived'
     | '/d/$slug/favorites'
     | '/d/$slug/new'
+    | '/d/$slug/review'
     | '/d/$slug/search'
     | '/d/$slug/'
     | '/d/$slug/c/$category'
@@ -159,6 +195,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SettingsRoute: typeof SettingsRoute
+  ShareRoute: typeof ShareRoute
   SignInRoute: typeof SignInRoute
   AuthErrorRoute: typeof AuthErrorRoute
   DSlugRoute: typeof DSlugRouteWithChildren
@@ -172,6 +210,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share': {
+      id: '/share'
+      path: '/share'
+      fullPath: '/share'
+      preLoaderRoute: typeof ShareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-in': {
@@ -230,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DSlugNewRouteImport
       parentRoute: typeof DSlugRoute
     }
+    '/d/$slug/review': {
+      id: '/d/$slug/review'
+      path: '/review'
+      fullPath: '/d/$slug/review'
+      preLoaderRoute: typeof DSlugReviewRouteImport
+      parentRoute: typeof DSlugRoute
+    }
     '/d/$slug/search': {
       id: '/d/$slug/search'
       path: '/search'
@@ -251,6 +310,7 @@ interface DSlugRouteChildren {
   DSlugArchivedRoute: typeof DSlugArchivedRoute
   DSlugFavoritesRoute: typeof DSlugFavoritesRoute
   DSlugNewRoute: typeof DSlugNewRoute
+  DSlugReviewRoute: typeof DSlugReviewRoute
   DSlugSearchRoute: typeof DSlugSearchRoute
   DSlugIndexRoute: typeof DSlugIndexRoute
   DSlugCCategoryRoute: typeof DSlugCCategoryRoute
@@ -260,6 +320,7 @@ const DSlugRouteChildren: DSlugRouteChildren = {
   DSlugArchivedRoute: DSlugArchivedRoute,
   DSlugFavoritesRoute: DSlugFavoritesRoute,
   DSlugNewRoute: DSlugNewRoute,
+  DSlugReviewRoute: DSlugReviewRoute,
   DSlugSearchRoute: DSlugSearchRoute,
   DSlugIndexRoute: DSlugIndexRoute,
   DSlugCCategoryRoute: DSlugCCategoryRoute,
@@ -269,6 +330,8 @@ const DSlugRouteWithChildren = DSlugRoute._addFileChildren(DSlugRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SettingsRoute: SettingsRoute,
+  ShareRoute: ShareRoute,
   SignInRoute: SignInRoute,
   AuthErrorRoute: AuthErrorRoute,
   DSlugRoute: DSlugRouteWithChildren,

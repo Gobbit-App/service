@@ -8,6 +8,7 @@ import { MemoryMailer } from '../src/mail/memory-mailer';
 import { SESSION_COOKIE } from '../src/lib/cookies';
 import type { ShareWiring } from '../src/share/wiring';
 import type { SearchWiring } from '../src/services/search-wiring';
+import type { IngestWiring } from '../src/services/ingest-wiring';
 import {
   createSampleWorld,
   fixtureId,
@@ -60,6 +61,8 @@ export interface SetupApiTestOptions {
   share?: ShareWiring;
   /** Embedder/asker/embed-queue fakes (Phase 4); default is no providers. */
   search?: SearchWiring;
+  /** Ingest uploads/queue/enabled fakes (Phase 5); default is enabled-off by env keys. */
+  ingest?: IngestWiring;
 }
 
 export interface ApiTestContext {
@@ -118,6 +121,7 @@ export function setupApiTest(opts: SetupApiTestOptions = {}): ApiTestContext {
       now: clock.now,
       share: opts.share,
       search: opts.search,
+      ingest: opts.ingest,
     });
   });
 

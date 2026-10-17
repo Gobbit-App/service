@@ -12,6 +12,7 @@ export function makeItem(overrides: Partial<Item> = {}): Item {
     title: 'A card',
     body: 'Some text',
     payload: {},
+    entities: {},
     sourceUrl: null,
     sourceKind: 'manual',
     verifiedAt: null,

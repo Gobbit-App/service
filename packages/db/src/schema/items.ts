@@ -10,7 +10,13 @@ import {
   vector,
 } from 'drizzle-orm/pg-core';
 import { getTableColumns, sql } from 'drizzle-orm';
-import { CARD_BODY_MAX, PAYLOAD_DB_BACKSTOP_BYTES, EMBEDDING_DIMS } from '@pb/shared';
+import {
+  CARD_BODY_MAX,
+  ENTITIES_MAX_BYTES,
+  PAYLOAD_DB_BACKSTOP_BYTES,
+  EMBEDDING_DIMS,
+  type Entities,
+} from '@pb/shared';
 import { itemStatusEnum, itemTypeEnum, sourceKindEnum, timestamps, tstz } from './common';
 import { users } from './users';
 import { decks } from './decks';
@@ -31,11 +37,13 @@ export const items = pgTable(
     sourceKind: sourceKindEnum().notNull().default('manual'),
     verifiedAt: tstz(),
     createdBy: uuid().references(() => users.id, { onDelete: 'set null' }),
+    /** D97: extracted facts (phones, addresses, …); part of search_text. */
+    entities: jsonb().$type<Entities>().notNull().default({}),
     ...timestamps,
-    // D69/D70: normalized title + body + payload strings; item_search_text() lives in 0008_search.
+    // D69/D70/D97: normalized title + body + payload strings + entities; item_search_text() in 0009_ingest.
     searchText: text()
       .notNull()
-      .generatedAlwaysAs(sql`item_search_text("type", "title", "body", "payload")`),
+      .generatedAlwaysAs(sql`item_search_text("type", "title", "body", "payload", "entities")`),
     // D74: written only by the embed-item job.
     embedding: vector({ dimensions: EMBEDDING_DIMS }),
     embeddingModel: text(),
@@ -55,6 +63,10 @@ export const items = pgTable(
       sql`octet_length(${t.payload}::text) <= ${sql.raw(String(PAYLOAD_DB_BACKSTOP_BYTES))}`,
     ), // card-limits
     check('items_payload_object_chk', sql`jsonb_typeof(${t.payload}) = 'object'`), // card-limits
+    check(
+      'items_entities_chk',
+      sql`jsonb_typeof(${t.entities}) = 'object' AND octet_length(${t.entities}::text) <= ${sql.raw(String(ENTITIES_MAX_BYTES))}`,
+    ),
   ],
 );
 

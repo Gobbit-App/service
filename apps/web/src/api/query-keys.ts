@@ -3,6 +3,9 @@ import type { ItemListQuery } from '@pb/shared';
 /** First segment of every search query key. */
 export const SEARCH_KEY = 'search';
 
+/** First segment of every review-queue key (D107: never persisted, like search). */
+export const REVIEW_KEY = 'review';
+
 /** Which slice of a deck's items a list shows (D65 routes). */
 export type ItemFilter =
   | { kind: 'all' }
@@ -16,6 +19,7 @@ export const ITEM_PAGE_SIZE = 20;
 export const queryKeys = {
   me: ['me'] as const,
   config: ['config'] as const,
+  ingestTokens: ['me', 'ingest-tokens'] as const,
   decks: ['decks'] as const,
   deck: (idOrSlug: string) => ['decks', idOrSlug] as const,
   categories: (idOrSlug: string) => ['decks', idOrSlug, 'categories'] as const,
@@ -25,6 +29,9 @@ export const queryKeys = {
   item: (itemId: string) => ['item', itemId] as const,
   /** D79: never persisted (see `persist.ts`). */
   search: (deckSlug: string, q: string) => [SEARCH_KEY, deckSlug, q] as const,
+  /** D107: never persisted (see `persist.ts`). */
+  review: (deckSlug: string) => [REVIEW_KEY, deckSlug] as const,
+  reviewCount: (deckSlug: string) => [REVIEW_KEY, deckSlug, 'count'] as const,
 };
 
 /** Query-string parameters for `GET /decks/{id}/items`. */

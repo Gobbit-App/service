@@ -5,7 +5,7 @@ import { decks } from './decks';
 import { items } from './items';
 import { users } from './users';
 
-/** D78: one row per provider call (embeddings, Ask), written by recordLlmCall(). Phase 5 reuses it. */
+/** D78: one row per provider call (embeddings, Ask, extraction), written by recordLlmCall(). */
 export const llmCalls = pgTable(
   'llm_calls',
   {
@@ -28,7 +28,10 @@ export const llmCalls = pgTable(
   (t) => [
     index('llm_calls_created_idx').on(t.createdAt.desc()),
     index('llm_calls_item_idx').on(t.itemId),
-    check('llm_calls_purpose_chk', sql`${t.purpose} IN ('embed_item', 'embed_query', 'ask')`),
+    check(
+      'llm_calls_purpose_chk',
+      sql`${t.purpose} IN ('embed_item', 'embed_query', 'ask', 'extract', 'extract_escalated', 'embed_draft')`,
+    ),
     check('llm_calls_status_chk', sql`${t.status} IN ('ok', 'error')`),
   ],
 );

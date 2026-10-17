@@ -61,6 +61,10 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `ANTHROPIC_API_KEY` | — | Optional (API). Direct Anthropic fallback: enables Ask (`POST /decks/{id}/ask`); without it Ask answers 503 and the PWA hides it |
 | `EMBEDDING_MODEL` / `ASK_MODEL` | `text-embedding-3-small` / provider Haiku | Models. `EMBEDDING_MODEL` is the bare OpenAI id (sent to OpenRouter as `openai/<id>`; changing it re-embeds every item through the sweep). `ASK_MODEL` is provider-specific: default `anthropic/claude-haiku-5.5` (OpenRouter) or `claude-haiku-5-5` (Anthropic); any OpenRouter model with forced tool calls works, e.g. `qwen/qwen3.7-flash` (~4× cheaper, for local testing). Add a row to `LLM_PRICES_PER_MTOK` (`ai/llm-calls.ts`) when switching, or `llm_calls` logs cost 0. Both are passed through by Compose |
 | `WORKER_CONCURRENCY` | `2` | Concurrent `embed-item` jobs per worker process |
+| `EXTRACT_MODEL` / `EXTRACT_ESCALATION_MODEL` | provider Haiku / provider Sonnet | Ingestion models (API + worker). Ingestion is on when an extraction provider is set (`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`); otherwise `POST /ingest` answers 503 and the PWA hides sharing. Low-confidence proposals are re-run once on the escalation model |
+| `INGEST_DAILY_CAP` | `50` | Shares per user per rolling 24 h (429 beyond) |
+| `SHORTCUT_URL` | — | iCloud link of the published "Share to Gobbit" Shortcut; shown in Settings (`docs/shortcut/README.md`) |
+| `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
 | `CORS_ORIGINS` | — | Comma-separated origins allowed for credentialed CORS and CSRF |
@@ -221,9 +225,10 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 - `DATABASE_URL` – the `gobbit` database on the shared Postgres, e.g. `postgres://gobbit:<pw>@<box LAN IP>:5433/gobbit` (add `?sslmode=verify-full` off the LAN)
 - `RESEND_API_KEY`
 - `CLOUDINARY_URL` – the API refuses to start in production without it
-- `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings and Ask. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API, Ask). Without them search is text-only and Ask is off
+- `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden
+- `RESEND_WEBHOOK_SECRET` – only for email-in, together with `INGEST_EMAIL_DOMAIN` (a plain value; see *Sharing into Gobbit*)
 
-Optional overrides: `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`.
+Optional overrides: `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`.
 
 ### GitHub Actions
 
@@ -284,9 +289,28 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | **Search** |
 | `GET` | `/decks/{id}/search?q=&limit=` | Hybrid search over visible, published cards (`why`: text / semantic / both) |
 | `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
+| **Ingestion** |
+| `POST` | `/ingest` | Share a URL/text/≤ 3 images (JSON or multipart) into a deck; `202 { id, status }`. Session or `ing_` ingest token |
+| `GET` | `/ingest/{id}` | Job status and debug view (sharer or deck publisher) |
+| `GET` | `/me/ingest-tokens` | List your ingest tokens (prefix only) |
+| `POST` | `/me/ingest-tokens` | Create an ingest token (shown once; max 5) |
+| `DELETE` | `/me/ingest-tokens/{id}` | Revoke an ingest token |
+| `GET` | `/decks/{id}/review` | Proposals awaiting review (needs `item.publish`) |
+| `GET` | `/decks/{id}/review/count` | Number of proposals (header pill) |
+| `POST` | `/items/{id}/publish` | Publish a proposal as new, or apply it as an update to its duplicate |
+| `POST` | `/items/{id}/discard` | Discard a proposal |
+| `POST` | `/webhooks/resend/inbound` | Resend inbound mail (Svix-signed; only when email-in is configured; not in OpenAPI) |
 | **Favorites** |
 | `POST` | `/items/{id}/favorite` | Add to favorites |
 | `DELETE` | `/items/{id}/favorite` | Remove from favorites |
+
+### Sharing into Gobbit (Phase 5)
+
+Shares become **proposed** cards; a publisher approves them under **Review** in the deck. Ingestion needs an extraction provider key (see the env table) and the worker running.
+
+- **Android**: install the PWA, then share from any app to *Gobbit*; pick the deck and send. The deck page's **Paste** button does the same for copied text or links.
+- **iPhone**: create an ingest token in **Settings** (gear in the header), then add the *Share to Gobbit* Shortcut and paste the token when asked. Building and publishing the Shortcut (and setting `SHORTCUT_URL`): [`docs/shortcut/README.md`](./docs/shortcut/README.md).
+- **Email (optional)**: each token also has an address `<token without ing_>@INGEST_EMAIL_DOMAIN`, shown once with the new token. Setup: Resend → *Receiving* (domain + MX records) → *Webhooks*: endpoint `https://<host>/api/webhooks/resend/inbound`, event `email.received`; set `INGEST_EMAIL_DOMAIN`, `RESEND_WEBHOOK_SECRET` (the `whsec_…` signing secret) and `RESEND_API_KEY`, then redeploy. Details in the same doc.
 
 ### Interactive API
 
@@ -336,7 +360,7 @@ Either kind dies with `POST /auth/logout-all` (and with `POST /auth/logout` sent
 ```
 community-pocketbook/
 ├── apps/
-│   ├── api/          # Hono HTTP server, services, routes, embeddings worker
+│   ├── api/          # Hono HTTP server, services, routes, worker (embeddings, ingestion)
 │   └── web/          # Reader PWA (React + Vite) and its Caddy image
 ├── packages/
 │   ├── api-client/   # Generated OpenAPI types + typed fetch/query client
@@ -353,6 +377,7 @@ community-pocketbook/
 
 - **[Architecture & Decisions](./docs/architecture.md)** – System design, schema patterns, API conventions
 - **[Roadmap](./PLAN.md)** – Phase demos and progress
+- **[iPhone Shortcut and email-in](./docs/shortcut/README.md)** – Building/publishing the Shortcut, inbound mail setup
 - **[Contributing](./CONTRIBUTING.md)** · **[Security](./SECURITY.md)** · **[Code of Conduct](./CODE_OF_CONDUCT.md)**
 
 ## Development

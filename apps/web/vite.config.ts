@@ -4,7 +4,6 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const API_TARGET = process.env.API_PROXY_TARGET ?? 'http://localhost:3000';
-const THIRTY_DAYS = 60 * 60 * 24 * 30;
 
 export default defineConfig({
   define: {
@@ -14,11 +13,14 @@ export default defineConfig({
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     react(),
     VitePWA({
-      strategies: 'generateSW',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'prompt',
       injectRegister: false,
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
+        id: '/',
         name: 'Gobbit',
         short_name: 'Gobbit',
         description: "Your family's pocket of useful cards",
@@ -39,23 +41,23 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // D98: Android's share sheet POSTs here; the SW stashes it and opens the confirm screen.
+        share_target: {
+          action: '/share',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+            files: [{ name: 'files', accept: ['image/*'] }],
+          },
+        },
       },
-      workbox: {
+      // D98: the SW (`src/sw.ts`) owns the runtime rules; only the precache list is configured here.
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         globIgnores: ['og/**'],
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/s\//, /^\/version\.json$/],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/res\.cloudinary\.com\//,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'cloudinary-images',
-              expiration: { maxEntries: 300, maxAgeSeconds: THIRTY_DAYS },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
       },
     }),
   ],

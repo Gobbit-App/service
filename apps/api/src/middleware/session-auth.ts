@@ -3,6 +3,7 @@ import { getCookie } from 'hono/cookie';
 import type { AppEnv, Authenticated } from '../types';
 import { clearSessionCookie, SESSION_COOKIE } from '../lib/cookies';
 import { sessionInvalid } from '../errors/http-errors';
+import { isIngestToken } from '../ingest/ingest-token';
 
 /**
  * Paths where a stale cookie is ignored instead of rejected, so a browser holding a dead
@@ -26,6 +27,11 @@ export function isLenientPath(path: string): boolean {
 
 const BEARER_RE = /^Bearer\s+(.+)$/i;
 
+/** D99: the only route an ingest token may call. */
+export function isIngestTokenRoute(method: string, path: string): boolean {
+  return method === 'POST' && path === '/ingest';
+}
+
 export interface SessionAuthOptions {
   authenticate(credentials: { bearer?: string; cookie?: string }): Promise<Authenticated | null>;
   cookie: { secure: boolean; domain?: string };
@@ -43,6 +49,14 @@ export function sessionAuth(opts: SessionAuthOptions): MiddlewareHandler<AppEnv>
 
     if (header !== undefined) {
       const bearer = BEARER_RE.exec(header)?.[1]?.trim();
+      if (bearer && isIngestToken(bearer)) {
+        // D99: ingest tokens authenticate POST /ingest only; everywhere else they're invalid.
+        if (!isIngestTokenRoute(c.req.method, c.req.path)) {
+          throw sessionInvalid();
+        }
+        c.set('ingestBearer', bearer);
+        return next();
+      }
       const auth = bearer ? await opts.authenticate({ bearer }) : null;
       if (!auth) {
         throw sessionInvalid();
