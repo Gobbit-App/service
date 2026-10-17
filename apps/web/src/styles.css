@@ -589,8 +589,10 @@ h3 {
 
 /* ---------- Card editor (Phase 3B) ---------- */
 
-.add-card-link {
-  justify-self: start;
+.deck-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
   margin-bottom: var(--gutter);
 }
 
@@ -642,6 +644,47 @@ h3 {
 
 .card-editor .button {
   justify-self: start;
+}
+
+/* ---------- Share target and paste (Phase 5, D108) ---------- */
+
+.share-notice {
+  margin: 0 0 var(--gutter);
+  color: var(--color-muted);
+}
+
+.share-form__title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.share-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.share-thumbs__item {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+.share-thumbs__image {
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--color-border);
+}
+
+.share-sent__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
 }
 
 /* ---------- Settings: ingest tokens (Phase 5, D99) ---------- */

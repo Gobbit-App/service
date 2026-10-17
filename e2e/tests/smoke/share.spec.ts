@@ -17,3 +17,44 @@ test('a private share page carries the generic OG tags and no card text @smoke',
   expect(html).toMatch(/<meta property="og:image" content="[^"]+\/og\/private\.png">/);
   expect(html).not.toContain(item.title);
 });
+
+/** D108: the deck's "Paste" button opens the share screen preset to the deck. */
+test('pasting a text sends it to the deck for review @smoke', async ({ page, webDeck }) => {
+  // The ingest endpoint needs an extraction provider; the UI flow is what's under test here.
+  let sent: string | null = null;
+  await page.route('**/api/ingest', async (route) => {
+    sent = route.request().postData();
+    await route.fulfill({
+      status: 202,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: '00000000-0000-4000-8000-000000000999', status: 'queued' }),
+    });
+  });
+
+  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.getByRole('link', { name: 'Paste' }).click();
+  await expect(page).toHaveURL(new RegExp(`/share\\?deck=${webDeck.slug}$`));
+  await expect(page.getByLabel('Pocketbook')).toHaveValue(webDeck.slug);
+
+  const send = page.getByRole('button', { name: 'Send to Gobbit' });
+  await expect(send).toBeDisabled();
+  await page.getByLabel('Text').fill('Gate code 1234');
+  await send.click();
+
+  await expect(page.getByText("Sent — it'll appear in Review")).toBeVisible();
+  expect(sent).toContain('Gate code 1234');
+  expect(sent).toContain(webDeck.id);
+});
+
+test('an expired or failed share falls back to the paste box @smoke', async ({ page, anon }) => {
+  const res = await anon.post(webUrl('/share'), { multipart: { text: 'hi' }, maxRedirects: 0 });
+  expect(res.status()).toBe(303);
+  expect(res.headers()['location']).toBe('/share?failed=1');
+
+  await page.goto(webUrl('/share?failed=1'));
+  await expect(page.getByText("Couldn't receive what you shared.")).toBeVisible();
+
+  await page.goto(webUrl('/share?pending=missing'));
+  await expect(page.getByText('That share expired or was already sent.')).toBeVisible();
+  await expect(page.getByLabel('Text')).toHaveValue('');
+});
