@@ -110,6 +110,16 @@ Oct 17: implemented on branch `p5-implementation` (P5.0–P5.8, decisions D92–
 - Demo 8's real-model check has no `pnpm test:ingest` yet; run it by hand on the deployed box (CI covers the prompt with a fake extractor).
 - The dedup thresholds (0.92 / 0.80) haven't been checked against real embeddings; demo 6 is the first check.
 
+Oct 17 addendum, **P5.9 MCP readiness** (planned, not implemented; details in `plans/phase5 implementation plan.md` § P5.9, the MCP plan is Phase 13). Small changes to land with Phase 5 so the Phase 13 MCP server reuses ingestion without reshaping it:
+- **A1.** Add `mcp` to the `ingest_channel` enum and `sourceKinds`. Amend `0009_ingest` in place while P5 is unmerged.
+- **A2.** `ingest.service.proposeDirect()`: an already-structured draft becomes a `proposed` item plus a job with no fetch or extraction step. It reuses dedup, the category resolution and the review-queue shape. An explicit target gives an `update` verdict with `via: 'explicit'`. Phase 8 bulk import and Phase 10 agents reuse it.
+- **A3.** Review source line: `CHANNEL_LABELS.mcp` plus the AI app's name stored on the job.
+- **A4.** Move the token helpers into a shared `prefixed-token` module with a prefix registry (`ing_` now, `mcp_` / `mcpa_` / `mcpr_` later). Session auth rejects every registered non-session prefix on REST.
+- **A5.** The 24 h proposal cap is per channel, so MCP gets its own limit without changing the share limit.
+- **A6.** Publishing as an update already refuses a target in another deck. It should also refuse a target that is no longer `published` (archived or deleted between the proposal and the review), which MCP makes more likely.
+- **A7.** Split Settings into sections (Sharing tokens now, "Connected AI apps" in Phase 13).
+- **A8.** Docs: note the readiness hooks in the Ingestion section of `docs/architecture.md`.
+
 
 - [ ] **1. Ingest endpoint and job table** — `curl` a URL to `/ingest` with an ingest token; the job row appears; `GET /ingest/:id` shows status moving from `queued` to `proposed` (or `failed` with an error).
 - [ ] **2. Android share target** — from Chrome on Android, share an Instagram post to "Gobbit", pick the deck and send; the proposal appears in the deck's review queue.
