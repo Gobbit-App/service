@@ -20,7 +20,12 @@ import { createAuthService, type CallbackRepos, type CallbackTransaction } from 
 import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
 import { createItemDtoMapper } from './item-dtos';
-import { buildSearchServices, resolveEmbedQueue, type SearchWiring } from './search-wiring';
+import {
+  buildSearchServices,
+  resolveEmbedder,
+  resolveEmbedQueue,
+  type SearchWiring,
+} from './search-wiring';
 import { buildIngestServices, type IngestWiring } from './ingest-wiring';
 
 export interface ServiceDeps {
@@ -89,6 +94,7 @@ export function buildServices({
     users,
     toDtos,
     embedQueue: resolveEmbedQueue(search),
+    embedder: resolveEmbedder(env, search),
     now,
     wiring: ingest,
   });

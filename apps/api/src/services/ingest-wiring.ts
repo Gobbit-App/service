@@ -1,4 +1,10 @@
 import type { Db } from '@pb/db';
+import { INGEST_COMBINED_DAILY_CAP, ingestDailyCaps } from '@pb/shared';
+import type { Embedder } from '../ai/embedder';
+import { runDedup } from '../ingest/run-dedup';
+import { createDedupRepo } from '../repositories/dedup.repo';
+import { createEmbeddingsRepo } from '../repositories/embeddings.repo';
+import { createLlmCallsRepo } from '../repositories/llm-calls.repo';
 import type { Env } from '../env';
 import type { MembershipLookup } from '../access/authorize';
 import { hasExtractProvider } from '../ai/providers';
@@ -44,6 +50,8 @@ export function buildIngestServices(deps: {
   users: Pick<UsersRepo, 'findById'>;
   toDtos: ItemDtoMapper;
   embedQueue: EmbedQueue;
+  /** Embeds direct proposals for dedup (D103); null → the keyless signals only. */
+  embedder: Embedder | null;
   now: () => Date;
   wiring?: IngestWiring;
 }) {
@@ -62,9 +70,23 @@ export function buildIngestServices(deps: {
       decks,
       memberships,
       jobs,
+      categories: createCategoriesRepo(db),
+      items: deps.items,
       uploads,
       queue: wiring.queue ?? noopIngestQueue,
-      dailyCap: env.INGEST_DAILY_CAP,
+      dailyCaps: ingestDailyCaps(env.INGEST_DAILY_CAP),
+      combinedCap: INGEST_COMBINED_DAILY_CAP,
+      dedup: (input) =>
+        runDedup(
+          {
+            dedup: createDedupRepo(db),
+            embedder: deps.embedder,
+            embeddings: createEmbeddingsRepo(db),
+            llmCalls: createLlmCallsRepo(db),
+          },
+          input,
+        ),
+      embedQueue: deps.embedQueue,
       now,
     }),
     ingestTokens: createIngestTokensService({

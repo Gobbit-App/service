@@ -1,5 +1,6 @@
-import { index, integer, jsonb, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, pgEnum, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
 import {
+  INGEST_CLIENT_LABEL_MAX,
   ingestChannels,
   ingestJobStatuses,
   type DedupVerdict,
@@ -25,6 +26,8 @@ export const ingestJobs = pgTable(
       .notNull()
       .references(() => decks.id, { onDelete: 'cascade' }),
     channel: ingestChannelEnum().notNull(),
+    /** The AI app behind a direct (`mcp`) proposal, shown on the review source line. */
+    clientLabel: varchar({ length: INGEST_CLIENT_LABEL_MAX }),
     status: ingestJobStatusEnum().notNull().default('queued'),
     /** What was shared; nulled after 30 days by prune-ingest-jobs. */
     raw: jsonb().$type<IngestRaw>(),

@@ -2,17 +2,16 @@ import {
   EXTRACT_STYLE_EXAMPLES,
   type DedupVerdict,
   INGEST_JOB_RETRIES,
-  type IngestChannel,
   type IngestRaw,
   type MemberRole,
   type NormalizedSource,
-  type SourceKind,
 } from '@pb/shared';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
 import { runExtraction, type RunExtractionDeps } from '../ingest/run-extraction';
 import type { RunDedupInput } from '../ingest/run-dedup';
+import { proposeItem } from '../ingest/propose';
 import type { EmbedQueue } from './embed-queue';
 
 export type IngestOutcome = 'proposed' | 'failed' | 'skipped';
@@ -32,11 +31,6 @@ export interface IngestHandlerDeps {
   log?: (message: string) => void;
 }
 
-/** D100: email shares are tagged `email`; everything else came through a share. */
-export function sourceKindFor(channel: IngestChannel): SourceKind {
-  return channel === 'email' ? 'email' : 'share';
-}
-
 /** pg-boss runs a job at most 1 + INGEST_JOB_RETRIES times; the last failure is final. */
 export function isLastAttempt(attempts: number): boolean {
   return attempts > INGEST_JOB_RETRIES;
@@ -52,19 +46,6 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
   const { jobs, categories, items, embedQueue } = deps;
   const now = deps.now ?? (() => new Date());
   const log = deps.log ?? ((m: string) => console.error(m));
-
-  /** The proposal already exists, so a dedup error leaves no verdict rather than retrying. */
-  async function verdictFor(input: RunDedupInput): Promise<DedupVerdict | null> {
-    if (!deps.dedup) return null;
-    try {
-      return await deps.dedup(input);
-    } catch (err) {
-      log(
-        `[ingest] dedup for job ${input.jobId} failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
-      return null;
-    }
-  }
 
   async function fail(jobId: string, error: string): Promise<IngestOutcome> {
     await jobs.setStatus(jobId, 'failed', error.slice(0, 500), now());
@@ -114,50 +95,15 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       });
       if (!outcome.ok) return await fail(job.id, outcome.error);
 
-      // A proposal needs a visible home; the default category stands in when none fit.
-      let categoryIds = outcome.summary.categoryIds;
-      if (categoryIds.length === 0) {
-        const fallback = await categories.findDefault(job.deckId);
-        categoryIds = fallback ? [fallback.id] : [];
-      }
-
-      const { item } = outcome;
-      const created = await items.create(
+      await proposeItem(
+        { categories, items, jobs, dedup: deps.dedup, embedQueue, now, log },
         {
-          deckId: job.deckId,
-          type: item.type,
-          status: 'proposed',
-          title: item.title,
-          body: item.body,
-          payload: item.payload,
-          entities: item.entities ?? {},
-          sourceUrl: item.sourceUrl ?? null,
-          sourceKind: sourceKindFor(job.channel),
-          verifiedAt: null,
-          createdBy: job.userId,
+          job: { id: job.id, deckId: job.deckId, userId: job.userId, channel: job.channel },
+          item: outcome.item,
+          summary: outcome.summary,
+          signal: opts?.signal,
         },
-        categoryIds,
       );
-
-      const dedup = await verdictFor({
-        itemId: created.id,
-        deckId: job.deckId,
-        title: created.title,
-        sourceUrl: created.sourceUrl,
-        jobId: job.id,
-        userId: job.userId,
-        signal: opts?.signal,
-      });
-
-      await jobs.update(job.id, {
-        status: 'proposed',
-        extraction: { ...outcome.summary, categoryIds },
-        resultItemId: created.id,
-        dedup,
-        error: null,
-        finishedAt: now(),
-      });
-      await embedQueue.enqueueIfStale(created.id);
       return 'proposed';
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

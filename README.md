@@ -62,7 +62,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `EMBEDDING_MODEL` / `ASK_MODEL` | `text-embedding-3-small` / provider Haiku | Models. `EMBEDDING_MODEL` is the bare OpenAI id (sent to OpenRouter as `openai/<id>`; changing it re-embeds every item through the sweep). `ASK_MODEL` is provider-specific: default `anthropic/claude-haiku-5.5` (OpenRouter) or `claude-haiku-5-5` (Anthropic); any OpenRouter model with forced tool calls works, e.g. `qwen/qwen3.7-flash` (~4× cheaper, for local testing). Add a row to `LLM_PRICES_PER_MTOK` (`ai/llm-calls.ts`) when switching, or `llm_calls` logs cost 0. Both are passed through by Compose |
 | `WORKER_CONCURRENCY` | `2` | Concurrent `embed-item` jobs per worker process |
 | `EXTRACT_MODEL` / `EXTRACT_ESCALATION_MODEL` | provider Haiku / provider Sonnet | Ingestion models (API + worker). Ingestion is on when an extraction provider is set (`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`); otherwise `POST /ingest` answers 503 and the PWA hides sharing. Low-confidence proposals are re-run once on the escalation model |
-| `INGEST_DAILY_CAP` | `50` | Shares per user per rolling 24 h (429 beyond) |
+| `INGEST_DAILY_CAP` | `50` | Shares per user and channel per rolling 24 h (429 beyond; all channels together stop at 200) |
 | `SHORTCUT_URL` | — | iCloud link of the published "Share to Gobbit" Shortcut; shown in Settings (`docs/shortcut/README.md`) |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |

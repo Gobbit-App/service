@@ -10,7 +10,15 @@ export type ItemType = (typeof itemTypes)[number];
 export const itemStatuses = ['proposed', 'published', 'archived'] as const;
 export type ItemStatus = (typeof itemStatuses)[number];
 
-export const sourceKinds = ['manual', 'link', 'share', 'email', 'telegram', 'import'] as const;
+export const sourceKinds = [
+  'manual',
+  'link',
+  'share',
+  'email',
+  'telegram',
+  'import',
+  'mcp',
+] as const;
 export type SourceKind = (typeof sourceKinds)[number];
 
 export const memberRoles = ['owner', 'maintainer', 'editor', 'reader'] as const;

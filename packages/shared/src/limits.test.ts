@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
+import { ingestChannels } from './ingest/constants';
 import {
+  ingestDailyCaps,
+  INGEST_CHANNEL_DAILY_CAPS,
   CARD_BODY_MAX,
   CALC_MAX_FIELDS,
   PAGE_LIMIT_DEFAULT,
@@ -37,5 +40,15 @@ describe('limits', () => {
 
   it('CALC_MAX_FIELDS should be 6', () => {
     expect(CALC_MAX_FIELDS).toBe(6);
+  });
+});
+
+describe('ingestDailyCaps (D110)', () => {
+  it('gives every channel its override or the default cap', () => {
+    const caps = ingestDailyCaps(7);
+    expect(Object.keys(caps).sort()).toEqual([...ingestChannels].sort());
+    for (const channel of ingestChannels) {
+      expect(caps[channel]).toBe(INGEST_CHANNEL_DAILY_CAPS[channel] ?? 7);
+    }
   });
 });

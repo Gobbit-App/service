@@ -11,6 +11,7 @@ function makeJob(overrides: Partial<ReviewJob>): ReviewJob {
     id: 'j',
     channel: 'pwa',
     sharedBy: null,
+    clientLabel: null,
     createdAt: '2026-01-01T11:58:00.000Z',
     dedup: null,
     newCategory: null,
@@ -49,6 +50,16 @@ describe('sourceLine (D107)', () => {
       createdAt: '2026-01-01T09:00:00.000Z',
     });
     expect(sourceLine(job, NOW)).toContain('via email');
+  });
+
+  it("leads the AI app label with the app's name (P5.9)", () => {
+    const job = makeJob({
+      channel: 'mcp',
+      clientLabel: 'Claude',
+      sharedBy: { id: 'u', displayName: 'Dana' },
+    });
+    expect(sourceLine(job, NOW)).toBe('shared by Dana via Claude (AI app) · 2 minutes ago');
+    expect(sourceLine(makeJob({ channel: 'mcp' }), NOW)).toContain('via AI app');
   });
 
   it('omits the time part when createdAt is invalid', () => {

@@ -107,6 +107,7 @@ export const ingestJobSchema = z.object({
   deckId: uuidSchema,
   userId: uuidSchema.nullable(),
   channel: z.enum(ingestChannels),
+  clientLabel: z.string().nullable(),
   status: z.enum(ingestJobStatuses),
   raw: ingestRawSchema.nullable(),
   normalized: normalizedSourceSchema.nullable(),
@@ -133,6 +134,8 @@ export const reviewEntrySchema = z.object({
       id: uuidSchema,
       channel: z.enum(ingestChannels),
       sharedBy: z.object({ id: uuidSchema, displayName: z.string() }).nullable(),
+      /** The AI app that made a direct proposal (`mcp` channel), e.g. "Claude". */
+      clientLabel: z.string().nullable(),
       createdAt: isoDateTimeSchema,
       dedup: dedupVerdictSchema.nullable(),
       newCategory: z.string().nullable(),

@@ -250,6 +250,29 @@ describe('review queue (D106, D107)', () => {
       expect(embedQueue.ids).toEqual([target.id]);
     });
 
+    it('update mode 409s when the target is no longer published (P5.9)', async () => {
+      const target = await createItem(ctx.t.db, deck, {
+        card: { type: 'text', title: 'Dan (old)', body: 'old' },
+      });
+      const { item } = await proposal({
+        dedup: { action: 'update', itemId: target.id, similarity: null, via: 'explicit' },
+      });
+      await ctx.t.db.update(items).set({ status: 'archived' }).where(eq(items.id, target.id));
+
+      const list = await json(
+        await ctx.app.request(`/decks/${deck.id}/review`, { headers: ctx.as() }),
+      );
+      expect(list.data[0].target).toBeNull();
+
+      const res = await post(`/items/${item.id}/publish`, { mode: 'update' });
+      expect(res.status).toBe(409);
+      expect((await json(res)).detail).toBe(
+        'The card this proposal updates is archived or deleted',
+      );
+      expect((await itemRow(item.id)).status).toBe('proposed');
+      expect((await itemRow(target.id)).title).toBe('Dan (old)');
+    });
+
     it('update mode without a dedup target is a 400', async () => {
       const { item } = await proposal();
       expect((await post(`/items/${item.id}/publish`, { mode: 'update' })).status).toBe(400);

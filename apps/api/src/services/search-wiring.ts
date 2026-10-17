@@ -26,6 +26,11 @@ export interface SearchWiring {
   askTimeoutMs?: number;
 }
 
+/** The embedder from the wiring override, else from env keys (null → no embeddings). */
+export function resolveEmbedder(env: Env, wiring: SearchWiring | undefined): Embedder | null {
+  return wiring?.embedder === undefined ? defaultEmbedder(env) : wiring.embedder;
+}
+
 export function resolveEmbedQueue(wiring: SearchWiring | undefined): EmbedQueue {
   return wiring?.embedQueue ?? noopEmbedQueue;
 }
@@ -40,7 +45,7 @@ export function buildSearchServices(deps: {
   wiring?: SearchWiring;
 }) {
   const { db, env, decks, memberships, rateLimits, toDtos, wiring } = deps;
-  const embedder = wiring?.embedder === undefined ? defaultEmbedder(env) : wiring.embedder;
+  const embedder = resolveEmbedder(env, wiring);
   const asker = wiring?.asker === undefined ? defaultAsker(env) : wiring.asker;
   const llmCalls = createLlmCallsRepo(db);
 

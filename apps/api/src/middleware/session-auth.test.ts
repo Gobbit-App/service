@@ -84,6 +84,12 @@ describe('sessionAuth', () => {
       const res = await app.request('/ingest', { headers: bearer });
       expect(res.status).toBe(401);
     });
+
+    it('401s a malformed token with a registered prefix without a session lookup (ADR-046)', async () => {
+      const res = await app.request('/private', { headers: { Authorization: 'Bearer ing_short' } });
+      expect(res.status).toBe(401);
+      expect(authenticate).not.toHaveBeenCalled();
+    });
   });
 
   it('401s on a malformed Authorization header without authenticating', async () => {

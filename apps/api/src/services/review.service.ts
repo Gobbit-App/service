@@ -72,11 +72,13 @@ export function createReviewService(deps: {
     return new Map(found.flatMap((u) => (u ? [[u.id, u.displayName] as const] : [])));
   }
 
-  /** Targets of possible-duplicate/update verdicts that are still live in the same deck. */
+  /** Targets of possible-duplicate/update verdicts that are still published in the same deck. */
   async function loadTargets(deckId: string, jobRows: IngestJobRow[]): Promise<ItemRow[]> {
     const ids = [...new Set(jobRows.flatMap((j) => dedupTargetId(j.dedup) ?? []))];
     const rows = await Promise.all(ids.map((id) => items.findById(id)));
-    return rows.filter((r): r is ItemRow => r !== null && r.deckId === deckId);
+    return rows.filter(
+      (r): r is ItemRow => r !== null && r.deckId === deckId && r.status === 'published',
+    );
   }
 
   /** The job's suggested category, created on demand (or reused when the slug exists). */
@@ -139,6 +141,7 @@ export function createReviewService(deps: {
                   job.userId && names.has(job.userId)
                     ? { id: job.userId, displayName: names.get(job.userId)! }
                     : null,
+                clientLabel: job.clientLabel ?? null,
                 createdAt: job.createdAt.toISOString(),
                 dedup: job.dedup ?? null,
                 newCategory: job.extraction?.newCategory ?? null,
@@ -186,6 +189,9 @@ export function createReviewService(deps: {
           const target = await tx.items.findById(targetId);
           if (!target || target.deckId !== item.deckId) {
             throw conflict('The card this proposal updates no longer exists');
+          }
+          if (target.status !== 'published') {
+            throw conflict('The card this proposal updates is archived or deleted');
           }
           await tx.items.update(
             target.id,

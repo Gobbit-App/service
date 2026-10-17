@@ -71,6 +71,13 @@
       "when": 1792190290895,
       "tag": "0009_ingest",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792277709958,
+      "tag": "0010_mcp_readiness",
+      "breakpoints": true
     }
   ]
 }
