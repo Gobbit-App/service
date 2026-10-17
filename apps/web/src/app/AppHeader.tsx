@@ -37,6 +37,10 @@ export function AppHeader({
         {title}
       </h1>
       {actions}
+      <NavLink href="/settings" className="icon-button app-header__settings">
+        <span aria-hidden="true">⚙</span>
+        <span className="visually-hidden">Settings</span>
+      </NavLink>
       <button
         type="button"
         className="button button--ghost app-header__sign-out"

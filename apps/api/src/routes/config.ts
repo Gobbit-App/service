@@ -19,6 +19,7 @@ type ConfigEnv = Pick<
   | 'ANTHROPIC_API_KEY'
   | 'INGEST_EMAIL_DOMAIN'
   | 'RESEND_WEBHOOK_SECRET'
+  | 'RESEND_API_KEY'
   | 'SHORTCUT_URL'
 >;
 

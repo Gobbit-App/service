@@ -65,7 +65,7 @@ const baseSchema = z.object({
   EXTRACT_ESCALATION_MODEL: z.string().optional(),
   /** D101: ingest jobs per user per rolling day. */
   INGEST_DAILY_CAP: positiveInt(INGEST_DAILY_CAP),
-  /** D104: email-in is on only when both the domain and the Resend webhook secret are set. */
+  /** D104: email-in is on only when the domain, the webhook secret and RESEND_API_KEY are set. */
   INGEST_EMAIL_DOMAIN: z.string().optional(),
   /** D104: Svix signing secret of the Resend inbound webhook. Never logged. */
   RESEND_WEBHOOK_SECRET: z.string().optional(),

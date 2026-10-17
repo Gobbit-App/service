@@ -7,6 +7,7 @@ import { createCloudinaryIngestUploads, type IngestUploadStore } from '../media/
 import type { DecksRepo } from '../repositories/decks.repo';
 import { createIngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import { createIngestTokensRepo } from '../repositories/ingest-tokens.repo';
+import type { ResendInbound } from '../ingest/resend-inbound';
 import { createIngestService } from './ingest.service';
 import { createIngestTokensService } from './ingest-tokens.service';
 import { createReviewService } from './review.service';
@@ -23,6 +24,8 @@ export interface IngestWiring {
   /** `null` → image shares are refused (503); defaults to Cloudinary when configured. */
   uploads?: IngestUploadStore | null;
   queue?: IngestQueue;
+  /** D104: Resend inbound reader for the email-in webhook; defaults to the Resend API. */
+  emailInbound?: ResendInbound;
 }
 
 export function buildIngestServices(deps: {

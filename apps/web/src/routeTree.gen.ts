@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AuthErrorRouteImport } from './routes/auth.error'
@@ -26,6 +27,11 @@ import { Route as DSlugCCategoryRouteImport } from './routes/d.$slug.c.$category
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShareRoute = ShareRouteImport.update({
@@ -91,6 +97,7 @@ const DSlugCCategoryRoute = DSlugCCategoryRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/auth/error': typeof AuthErrorRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/auth/error': typeof AuthErrorRoute
@@ -121,6 +129,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/auth/error': typeof AuthErrorRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/settings'
     | '/share'
     | '/sign-in'
     | '/auth/error'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/settings'
     | '/share'
     | '/sign-in'
     | '/auth/error'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/settings'
     | '/share'
     | '/sign-in'
     | '/auth/error'
@@ -183,6 +195,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SettingsRoute: typeof SettingsRoute
   ShareRoute: typeof ShareRoute
   SignInRoute: typeof SignInRoute
   AuthErrorRoute: typeof AuthErrorRoute
@@ -197,6 +210,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/share': {
@@ -310,6 +330,7 @@ const DSlugRouteWithChildren = DSlugRoute._addFileChildren(DSlugRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SettingsRoute: SettingsRoute,
   ShareRoute: ShareRoute,
   SignInRoute: SignInRoute,
   AuthErrorRoute: AuthErrorRoute,

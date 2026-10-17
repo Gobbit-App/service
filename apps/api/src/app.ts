@@ -32,6 +32,7 @@ import type { IngestWiring } from './services/ingest-wiring';
 import { registerIngestRoutes } from './routes/ingest';
 import { registerIngestTokensRoutes } from './routes/ingest-tokens';
 import { registerReviewRoutes } from './routes/review';
+import { registerWebhookRoutes } from './routes/webhooks';
 
 export interface AppDeps {
   db: Db;
@@ -92,6 +93,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerIngestRoutes(app, services);
   registerIngestTokensRoutes(app, services);
   registerReviewRoutes(app, services);
+  registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

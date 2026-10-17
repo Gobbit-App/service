@@ -38,11 +38,16 @@ export function hasExtractProvider(env: KeyEnv): boolean {
   return hasAskProvider(env);
 }
 
-/** D104: email-in needs both the inbound domain and the webhook signing secret. */
+/**
+ * D104: email-in needs the inbound domain, the webhook signing secret and the Resend API key
+ * (the webhook carries metadata only; the body and attachments are fetched with the key).
+ */
 export function emailIngestDomain(
-  env: Pick<Env, 'INGEST_EMAIL_DOMAIN' | 'RESEND_WEBHOOK_SECRET'>,
+  env: Pick<Env, 'INGEST_EMAIL_DOMAIN' | 'RESEND_WEBHOOK_SECRET' | 'RESEND_API_KEY'>,
 ): string | null {
-  return env.INGEST_EMAIL_DOMAIN && env.RESEND_WEBHOOK_SECRET ? env.INGEST_EMAIL_DOMAIN : null;
+  return env.INGEST_EMAIL_DOMAIN && env.RESEND_WEBHOOK_SECRET && env.RESEND_API_KEY
+    ? env.INGEST_EMAIL_DOMAIN
+    : null;
 }
 
 /**

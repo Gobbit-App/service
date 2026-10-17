@@ -62,15 +62,23 @@ describe('buildAppConfig', () => {
     });
   });
 
-  it('shows the email-in domain only when the domain and webhook secret are both set (D104)', () => {
+  it('shows the email-in domain only with the domain, webhook secret and API key (D104)', () => {
     const base = { CLOUDINARY_URL: undefined, GIT_SHA: 'abc', ANTHROPIC_API_KEY: 'a' };
     expect(
       buildAppConfig({ ...base, INGEST_EMAIL_DOMAIN: 'in.example.com' }).ingest.emailDomain,
+    ).toBe(null);
+    expect(
+      buildAppConfig({
+        ...base,
+        INGEST_EMAIL_DOMAIN: 'in.example.com',
+        RESEND_WEBHOOK_SECRET: 'whsec-test-value',
+      }).ingest.emailDomain,
     ).toBe(null);
     const config = buildAppConfig({
       ...base,
       INGEST_EMAIL_DOMAIN: 'in.example.com',
       RESEND_WEBHOOK_SECRET: 'whsec-test-value',
+      RESEND_API_KEY: 're-test-value',
     });
     expect(config.ingest.emailDomain).toBe('in.example.com');
     expect(JSON.stringify(config)).not.toContain('whsec-test-value');
@@ -82,6 +90,7 @@ describe('buildAppConfig', () => {
       GIT_SHA: 'abc',
       INGEST_EMAIL_DOMAIN: 'in.example.com',
       RESEND_WEBHOOK_SECRET: 'whsec-test-value',
+      RESEND_API_KEY: 're-test-value',
     });
     expect(config.ingest).toEqual({ enabled: false, emailDomain: null, shortcutUrl: null });
   });

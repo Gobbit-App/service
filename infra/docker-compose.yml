@@ -41,7 +41,8 @@ x-api-env: &api-env
   EXTRACT_MODEL: ${EXTRACT_MODEL:-}
   EXTRACT_ESCALATION_MODEL: ${EXTRACT_ESCALATION_MODEL:-}
   INGEST_DAILY_CAP: ${INGEST_DAILY_CAP:-50}
-  # Email-in stays off unless both are set (D104); the webhook secret is a Dokploy secret.
+  # Email-in stays off unless both are set plus RESEND_API_KEY (D104); the webhook secret is a
+  # Dokploy secret.
   INGEST_EMAIL_DOMAIN: ${INGEST_EMAIL_DOMAIN:-}
   RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
   # iCloud link of the published "Share to Gobbit" Shortcut (shown in settings).

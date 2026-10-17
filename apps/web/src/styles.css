@@ -687,6 +687,70 @@ h3 {
   gap: var(--gap);
 }
 
+/* ---------- Settings: ingest tokens (Phase 5, D99) ---------- */
+
+.button--danger {
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+}
+
+.muted {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.settings-notice {
+  margin: 0 0 var(--gap);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-banner);
+  color: var(--color-banner-text);
+}
+
+.settings-section {
+  margin-bottom: calc(var(--gap) * 2);
+}
+
+.settings-section > h2 {
+  margin: 0 0 8px;
+  font-size: 1.0625rem;
+}
+
+.token-list {
+  margin: 0 0 var(--gap);
+  padding: 0;
+  list-style: none;
+}
+
+.token-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.token-list__actions,
+.token-secret__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.token-secret {
+  margin-bottom: var(--gap);
+  padding: 12px;
+  border: 1px solid var(--color-accent);
+  border-radius: 12px;
+}
+
+.token-secret__value {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
 /* ---------- Review queue (Phase 5, D107) ---------- */
 
 .review-pill {

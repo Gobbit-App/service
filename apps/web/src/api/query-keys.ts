@@ -19,6 +19,7 @@ export const ITEM_PAGE_SIZE = 20;
 export const queryKeys = {
   me: ['me'] as const,
   config: ['config'] as const,
+  ingestTokens: ['me', 'ingest-tokens'] as const,
   decks: ['decks'] as const,
   deck: (idOrSlug: string) => ['decks', idOrSlug] as const,
   categories: (idOrSlug: string) => ['decks', idOrSlug, 'categories'] as const,
