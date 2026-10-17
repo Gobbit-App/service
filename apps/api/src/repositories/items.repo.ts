@@ -5,7 +5,7 @@ import {
   itemCategories,
   itemColumns,
   items,
-  type Db,
+  type DbExecutor,
   type ItemRow,
 } from '@pb/db';
 import type {
@@ -22,7 +22,7 @@ import {
   visibleCategoriesWhere,
 } from '../access/visibility';
 
-export function createItemsRepo(db: Db) {
+export function createItemsRepo(db: DbExecutor) {
   return {
     async create(
       v: {
@@ -192,6 +192,15 @@ export function createItemsRepo(db: Db) {
 
         return updatedItem!;
       });
+    },
+
+    /** Live items in the deck with `status` (the review pill counts proposals, D107). */
+    async countByStatus(deckId: string, status: ItemStatus): Promise<number> {
+      const [row] = await db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(items)
+        .where(and(eq(items.deckId, deckId), eq(items.status, status), isNull(items.deletedAt)));
+      return row?.n ?? 0;
     },
 
     async softDelete(id: string): Promise<void> {

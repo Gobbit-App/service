@@ -31,6 +31,7 @@ import { registerSearchRoutes } from './routes/search';
 import type { IngestWiring } from './services/ingest-wiring';
 import { registerIngestRoutes } from './routes/ingest';
 import { registerIngestTokensRoutes } from './routes/ingest-tokens';
+import { registerReviewRoutes } from './routes/review';
 
 export interface AppDeps {
   db: Db;
@@ -90,6 +91,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerSearchRoutes(app, services);
   registerIngestRoutes(app, services);
   registerIngestTokensRoutes(app, services);
+  registerReviewRoutes(app, services);
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

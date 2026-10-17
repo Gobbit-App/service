@@ -85,6 +85,10 @@ export function buildServices({
     env,
     decks,
     memberships,
+    items,
+    users,
+    toDtos,
+    embedQueue: resolveEmbedQueue(search),
     now,
     wiring: ingest,
   });
@@ -129,6 +133,7 @@ export function buildServices({
     ask: searchServices.ask,
     ingest: ingestServices.ingest,
     ingestTokens: ingestServices.ingestTokens,
+    review: ingestServices.review,
   };
 }
 

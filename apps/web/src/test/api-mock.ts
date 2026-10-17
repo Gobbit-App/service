@@ -11,7 +11,7 @@ export const respond = vi.fn<(request: string) => Promise<unknown>>();
 const tag = (method: string) => (path: string) => `${method} ${path}`;
 
 export const clientModule = {
-  api: { GET: tag('GET'), POST: tag('POST'), DELETE: tag('DELETE') },
+  api: { GET: tag('GET'), POST: tag('POST'), PATCH: tag('PATCH'), DELETE: tag('DELETE') },
   unwrap: (request: unknown) => {
     if (request === 'GET /config') {
       return Promise.resolve({

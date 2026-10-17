@@ -1,10 +1,10 @@
 import { eq, isNull, asc, and, inArray, sql } from 'drizzle-orm';
-import type { CategoryRow, Db } from '@pb/db';
+import type { CategoryRow, DbExecutor } from '@pb/db';
 import { categories } from '@pb/db';
 import type { CategoryVisibility, MemberRole } from '@pb/shared';
 import { visibleCategoriesWhere } from '../access/visibility';
 
-export function createCategoriesRepo(db: Db) {
+export function createCategoriesRepo(db: DbExecutor) {
   return {
     /** D38: only the categories `role` may see. */
     async listByDeck(deckId: string, role: MemberRole): Promise<CategoryRow[]> {

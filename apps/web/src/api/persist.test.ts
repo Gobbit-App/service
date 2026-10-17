@@ -18,4 +18,9 @@ describe('shouldPersistQuery (D79)', () => {
   it('never persists search results', async () => {
     expect(shouldPersistQuery(await settledQuery(queryKeys.search('family', 'wifi')))).toBe(false);
   });
+
+  it('never persists the review queue (D107)', async () => {
+    expect(shouldPersistQuery(await settledQuery(queryKeys.review('family')))).toBe(false);
+    expect(shouldPersistQuery(await settledQuery(queryKeys.reviewCount('family')))).toBe(false);
+  });
 });

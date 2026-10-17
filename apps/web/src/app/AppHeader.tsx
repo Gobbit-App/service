@@ -1,11 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouteContext } from '@tanstack/react-router';
-import { useState, type ReactElement } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { meQuery } from '../api/queries';
 import { NavLink, useNavigateHref } from '../ui/NavLink';
 
-/** Top bar of signed-in pages: home link, page title and sign-out (D66: `/me` runs on boot). */
-export function AppHeader({ title }: { title: string }): ReactElement {
+/**
+ * Top bar of signed-in pages: home link, page title, page actions (e.g. the review pill) and
+ * sign-out (D66: `/me` runs on boot).
+ */
+export function AppHeader({
+  title,
+  actions,
+}: {
+  title: string;
+  actions?: ReactNode;
+}): ReactElement {
   const me = useQuery(meQuery());
   const { signOut } = useRouteContext({ from: '__root__' });
   const navigate = useNavigateHref();
@@ -27,6 +36,7 @@ export function AppHeader({ title }: { title: string }): ReactElement {
       <h1 className="app-header__title" dir="auto">
         {title}
       </h1>
+      {actions}
       <button
         type="button"
         className="button button--ghost app-header__sign-out"

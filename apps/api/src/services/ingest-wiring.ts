@@ -9,6 +9,12 @@ import { createIngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import { createIngestTokensRepo } from '../repositories/ingest-tokens.repo';
 import { createIngestService } from './ingest.service';
 import { createIngestTokensService } from './ingest-tokens.service';
+import { createReviewService } from './review.service';
+import type { ItemDtoMapper } from './item-dtos';
+import type { EmbedQueue } from '../jobs/embed-queue';
+import { createCategoriesRepo } from '../repositories/categories.repo';
+import { createItemsRepo, type ItemsRepo } from '../repositories/items.repo';
+import type { UsersRepo } from '../repositories/users.repo';
 
 /** Overrides for tests; production builds everything from env (D93). */
 export interface IngestWiring {
@@ -31,10 +37,15 @@ export function buildIngestServices(deps: {
   >;
   decks: DecksRepo;
   memberships: MembershipLookup;
+  items: ItemsRepo;
+  users: Pick<UsersRepo, 'findById'>;
+  toDtos: ItemDtoMapper;
+  embedQueue: EmbedQueue;
   now: () => Date;
   wiring?: IngestWiring;
 }) {
   const { db, env, decks, memberships, now, wiring = {} } = deps;
+  const jobs = createIngestJobsRepo(db);
   const uploads =
     wiring.uploads !== undefined
       ? wiring.uploads
@@ -47,7 +58,7 @@ export function buildIngestServices(deps: {
       enabled: wiring.enabled ?? hasExtractProvider(env),
       decks,
       memberships,
-      jobs: createIngestJobsRepo(db),
+      jobs,
       uploads,
       queue: wiring.queue ?? noopIngestQueue,
       dailyCap: env.INGEST_DAILY_CAP,
@@ -57,6 +68,26 @@ export function buildIngestServices(deps: {
       tokens: createIngestTokensRepo(db),
       decks,
       memberships,
+      now,
+    }),
+    review: createReviewService({
+      decks,
+      memberships,
+      users: deps.users,
+      items: deps.items,
+      jobs,
+      toDtos: deps.toDtos,
+      // Publish/discard change the item, its categories and the job in one commit (D95 trigger).
+      transaction: (fn) =>
+        db.transaction((tx) =>
+          fn({
+            items: createItemsRepo(tx),
+            categories: createCategoriesRepo(tx),
+            jobs: createIngestJobsRepo(tx),
+          }),
+        ),
+      uploads,
+      embedQueue: deps.embedQueue,
       now,
     }),
   };

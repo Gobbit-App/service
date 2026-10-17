@@ -631,7 +631,7 @@ h3 {
   font-size: 16px;
 }
 
-.card-editor input:not([type='radio']),
+.card-editor input:not([type='radio']):not([type='checkbox']),
 .card-editor select {
   min-height: var(--tap);
 }
@@ -642,6 +642,115 @@ h3 {
 
 .card-editor .button {
   justify-self: start;
+}
+
+/* ---------- Review queue (Phase 5, D107) ---------- */
+
+.review-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.review-queue {
+  display: grid;
+  gap: var(--gutter);
+}
+
+.review-card {
+  display: grid;
+  gap: var(--gap);
+}
+
+.review-card__source,
+.review-card__preview {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.review-card__preview {
+  font-style: italic;
+}
+
+.review-card__dedup {
+  padding: var(--gap);
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+}
+
+.review-card__banner {
+  margin: 0 0 8px;
+}
+
+.review-card__new-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+}
+
+.review-card__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.review-card__discard {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.entity-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entity-chips__kind {
+  color: var(--color-muted);
+}
+
+.review-diff {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.review-diff dt {
+  font-weight: 600;
+}
+
+.review-diff dd {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.review-diff del {
+  color: var(--color-muted);
+}
+
+.review-diff ins {
+  text-decoration: none;
+}
+
+.review-diff__same {
+  margin: 0;
+  color: var(--color-muted);
 }
 
 .sign-in-sent {
