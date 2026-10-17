@@ -21,5 +21,7 @@ export type AppEnv = {
     requestId: string;
     user?: CurrentUser;
     auth?: Authenticated;
+    /** D99: an `ing_` bearer on POST /ingest, resolved by the ingest route (never a session). */
+    ingestBearer?: string;
   };
 };

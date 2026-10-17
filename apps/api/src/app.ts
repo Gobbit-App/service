@@ -9,6 +9,7 @@ import type { Mailer } from './mail/mailer';
 import { buildServices } from './services';
 import { requestId } from './middleware/request-id';
 import { requestLog } from './middleware/request-log';
+import { bodyLimits } from './middleware/body-limit';
 import { csrf, csrfOrigins } from './middleware/csrf';
 import { sessionAuth } from './middleware/session-auth';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
@@ -27,6 +28,11 @@ import { registerShareRoutes } from './routes/share';
 import type { ShareWiring } from './share/wiring';
 import type { SearchWiring } from './services/search-wiring';
 import { registerSearchRoutes } from './routes/search';
+import type { IngestWiring } from './services/ingest-wiring';
+import { registerIngestRoutes } from './routes/ingest';
+import { registerIngestTokensRoutes } from './routes/ingest-tokens';
+import { registerReviewRoutes } from './routes/review';
+import { registerWebhookRoutes } from './routes/webhooks';
 
 export interface AppDeps {
   db: Db;
@@ -39,6 +45,8 @@ export interface AppDeps {
   share?: ShareWiring;
   /** Embedder/asker/embed-queue overrides for tests (Phase 4). */
   search?: SearchWiring;
+  /** Ingest uploads/queue/enabled overrides for tests (Phase 5). */
+  ingest?: IngestWiring;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -53,7 +61,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
     },
   });
 
-  // D32: cors → csrf → requestId → sessionAuth → routes (requestLog wraps them all, off in tests)
+  // D32: cors → csrf → bodyLimits (D101) → requestId → sessionAuth → routes (requestLog wraps them all, off in tests)
   if (env.NODE_ENV !== 'test') {
     app.use('*', requestLog());
   }
@@ -61,6 +69,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
     app.use('*', cors({ origin: env.CORS_ORIGINS, credentials: true }));
   }
   app.use('*', csrf(csrfOrigins(env.CORS_ORIGINS, env.API_URL)));
+  app.use('*', bodyLimits());
   app.use('*', requestId());
   app.use(
     '*',
@@ -81,6 +90,10 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerFavoritesRoutes(app, services);
   registerShareRoutes(app, services);
   registerSearchRoutes(app, services);
+  registerIngestRoutes(app, services);
+  registerIngestTokensRoutes(app, services);
+  registerReviewRoutes(app, services);
+  registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

@@ -1,7 +1,8 @@
 # D51: the web image owns the routing for the one public origin.
 #   /api/*  -> API with the prefix stripped     /s/*  -> API unchanged (share previews)
 #   files   -> served from /srv                  else  -> index.html (SPA fallback)
-# D54: response headers (connect-src allows Cloudinary: the service worker fetch()es images to cache them). API_UPSTREAM overrides the default upstream (api:3000).
+# D54: response headers (connect-src allows Cloudinary: the service worker fetch()es images to cache them;
+# img-src allows blob: for the share screen's thumbnails, D108). API_UPSTREAM overrides the default upstream (api:3000).
 {
 	admin off
 	auto_https off
@@ -11,7 +12,7 @@
 	encode zstd gzip
 
 	header {
-		Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; connect-src 'self' https://res.cloudinary.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://res.cloudinary.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'"
 		Referrer-Policy strict-origin-when-cross-origin
 		X-Content-Type-Options nosniff
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
@@ -37,6 +38,14 @@
 		header @static Cache-Control "public, max-age=86400"
 		@revalidate not path /assets/* /icons/* /og/* /favicon.svg
 		header @revalidate Cache-Control "no-cache"
+
+		# D98: the service worker answers the share target's POST /share. Without one (not
+		# installed yet, or bypassed) send the user to the paste box instead of a 405.
+		@sharePost {
+			method POST
+			path /share
+		}
+		redir @sharePost /share?failed=1 303
 
 		try_files {path} /index.html
 		file_server

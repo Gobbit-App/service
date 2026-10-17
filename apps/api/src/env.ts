@@ -4,6 +4,7 @@ import {
   INVITE_TTL_DAYS_DEFAULT,
   SESSION_TTL_DAYS_DEFAULT,
   DEFAULT_EMBEDDING_MODEL,
+  INGEST_DAILY_CAP,
 } from '@pb/shared';
 import { cloudNameFrom } from './lib/cloudinary-url';
 
@@ -58,6 +59,18 @@ const baseSchema = z.object({
   ASK_MODEL: z.string().optional(),
   /** D72: concurrent embed-item jobs per worker process. */
   WORKER_CONCURRENCY: positiveInt(2),
+  /** D105: provider-specific extraction model; unset → the provider's Haiku default. */
+  EXTRACT_MODEL: z.string().optional(),
+  /** D105: the one retry when confidence is low; unset → the provider's Sonnet default. */
+  EXTRACT_ESCALATION_MODEL: z.string().optional(),
+  /** D101: ingest jobs per user per rolling day. */
+  INGEST_DAILY_CAP: positiveInt(INGEST_DAILY_CAP),
+  /** D104: email-in is on only when the domain, the webhook secret and RESEND_API_KEY are set. */
+  INGEST_EMAIL_DOMAIN: z.string().optional(),
+  /** D104: Svix signing secret of the Resend inbound webhook. Never logged. */
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
+  /** iCloud link of the published "Share to Gobbit" Shortcut, shown in settings. */
+  SHORTCUT_URL: z.url().optional(),
 });
 
 export const envSchema = baseSchema

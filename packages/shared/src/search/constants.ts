@@ -59,7 +59,15 @@ export type SearchWhy = (typeof searchWhys)[number];
 export const searchModes = ['search', 'ask'] as const;
 export type SearchMode = (typeof searchModes)[number];
 
-export const llmPurposes = ['embed_item', 'embed_query', 'ask'] as const;
+/** P5 adds the extraction and draft-embedding purposes (D110). */
+export const llmPurposes = [
+  'embed_item',
+  'embed_query',
+  'ask',
+  'extract',
+  'extract_escalated',
+  'embed_draft',
+] as const;
 export type LlmPurpose = (typeof llmPurposes)[number];
 
 export const llmCallStatuses = ['ok', 'error'] as const;

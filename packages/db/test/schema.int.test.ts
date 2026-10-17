@@ -27,7 +27,7 @@ describe('schema', () => {
       ORDER BY column_name
     `);
 
-    expect(result.rows).toHaveLength(19);
+    expect(result.rows).toHaveLength(20);
     expect(result.rows).toEqual([
       {
         column_name: 'body',
@@ -81,6 +81,12 @@ describe('schema', () => {
         column_name: 'embedding_model',
         data_type: 'text',
         is_nullable: 'YES',
+        datetime_precision: null,
+      },
+      {
+        column_name: 'entities',
+        data_type: 'jsonb',
+        is_nullable: 'NO',
         datetime_precision: null,
       },
       {
@@ -187,7 +193,7 @@ describe('schema', () => {
     // Insert item into deck A
     const itemResult = await t.pool.query(
       'INSERT INTO items (deck_id, type, status, title, body, payload) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-      [pbA, 'text', 'published', 't', '', '{}'],
+      [pbA, 'text', 'proposed', 't', '', '{}'],
     );
     const itemId = itemResult.rows[0].id;
 

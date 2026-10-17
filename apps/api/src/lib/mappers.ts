@@ -46,6 +46,7 @@ export function toItemDto(r: ItemRow, categoryIds: string[], isFavorite: boolean
     title: r.title,
     body: r.body,
     payload: r.payload,
+    entities: r.entities,
     sourceUrl: r.sourceUrl ?? null,
     sourceKind: r.sourceKind,
     verifiedAt: r.verifiedAt?.toISOString() ?? null,

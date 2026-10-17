@@ -205,7 +205,7 @@ describe('database invariants (P1.2/D7)', () => {
         create: async () => {
           const pbId = await mkDeck(`test-item-${Date.now()}-${Math.random()}`);
           const res = await t.pool.query(
-            'INSERT INTO items (deck_id, type, title) VALUES ($1, $2, $3) RETURNING id',
+            "INSERT INTO items (deck_id, type, status, title) VALUES ($1, $2, 'proposed', $3) RETURNING id",
             [pbId, 'text', 'Test Item'],
           );
           return res.rows[0].id;
@@ -251,7 +251,7 @@ describe('database invariants (P1.2/D7)', () => {
       const catId = catRes.rows[0].id;
 
       const itemRes = await t.pool.query(
-        'INSERT INTO items (deck_id, type, title) VALUES ($1, $2, $3) RETURNING id',
+        "INSERT INTO items (deck_id, type, status, title) VALUES ($1, $2, 'proposed', $3) RETURNING id",
         [pbId, 'text', 'Test Item'],
       );
       const itemId = itemRes.rows[0].id;

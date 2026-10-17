@@ -26,10 +26,16 @@ describe('magicLinkRequestSchema', () => {
 
 describe('appConfigSchema', () => {
   const OFF = { semantic: false, ask: false };
+  const INGEST_OFF = { enabled: false, emailDomain: null, shortcutUrl: null };
 
   it('allows a missing cloud name', () => {
     expect(
-      appConfigSchema.parse({ cloudinaryCloudName: null, commit: 'dev', search: OFF }).commit,
+      appConfigSchema.parse({
+        cloudinaryCloudName: null,
+        commit: 'dev',
+        search: OFF,
+        ingest: INGEST_OFF,
+      }).commit,
     ).toBe('dev');
   });
 
@@ -38,8 +44,14 @@ describe('appConfigSchema', () => {
       cloudinaryCloudName: 'demo',
       commit: 'abc',
       search: OFF,
+      ingest: INGEST_OFF,
       apiSecret: 'nope',
     });
-    expect(parsed).toEqual({ cloudinaryCloudName: 'demo', commit: 'abc', search: OFF });
+    expect(parsed).toEqual({
+      cloudinaryCloudName: 'demo',
+      commit: 'abc',
+      search: OFF,
+      ingest: INGEST_OFF,
+    });
   });
 });

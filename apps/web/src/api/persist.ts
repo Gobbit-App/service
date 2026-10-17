@@ -2,7 +2,7 @@ import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persi
 import { defaultShouldDehydrateQuery, type Query } from '@tanstack/react-query';
 import type { Persister } from '@tanstack/react-query-persist-client';
 import { del, get, set } from 'idb-keyval';
-import { SEARCH_KEY } from './query-keys';
+import { REVIEW_KEY, SEARCH_KEY } from './query-keys';
 
 /** IndexedDB key holding the dehydrated query cache (D56). */
 export const PERSIST_KEY = 'gobbit:query-cache';
@@ -19,7 +19,10 @@ export function createIdbPersister(): Persister {
   });
 }
 
-/** D79: search results never reach IndexedDB; everything else follows the default rule. */
+/** Query keys whose data never reaches IndexedDB: search (D79) and the review queue (D107). */
+const NOT_PERSISTED: ReadonlySet<unknown> = new Set([SEARCH_KEY, REVIEW_KEY]);
+
+/** Everything else follows the default rule. */
 export function shouldPersistQuery(query: Query): boolean {
-  return query.queryKey[0] !== SEARCH_KEY && defaultShouldDehydrateQuery(query);
+  return !NOT_PERSISTED.has(query.queryKey[0]) && defaultShouldDehydrateQuery(query);
 }

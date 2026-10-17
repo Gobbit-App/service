@@ -5,17 +5,24 @@ import {
   itemCategories,
   itemColumns,
   items,
-  type Db,
+  type DbExecutor,
   type ItemRow,
 } from '@pb/db';
-import type { CursorData, ItemStatus, ItemType, MemberRole, SourceKind } from '@pb/shared';
+import type {
+  CursorData,
+  Entities,
+  ItemStatus,
+  ItemType,
+  MemberRole,
+  SourceKind,
+} from '@pb/shared';
 import {
   canSeePrivate,
   itemHasVisibleCategory,
   visibleCategoriesWhere,
 } from '../access/visibility';
 
-export function createItemsRepo(db: Db) {
+export function createItemsRepo(db: DbExecutor) {
   return {
     async create(
       v: {
@@ -25,6 +32,7 @@ export function createItemsRepo(db: Db) {
         title: string;
         body: string;
         payload: Record<string, unknown>;
+        entities?: Entities;
         sourceUrl: string | null;
         sourceKind: SourceKind;
         verifiedAt: Date | null;
@@ -141,6 +149,7 @@ export function createItemsRepo(db: Db) {
       patch: Partial<{
         body: string;
         payload: Record<string, unknown>;
+        entities: Entities;
         sourceUrl: string | null;
         status: ItemStatus;
         title: string;
@@ -183,6 +192,15 @@ export function createItemsRepo(db: Db) {
 
         return updatedItem!;
       });
+    },
+
+    /** Live items in the deck with `status` (the review pill counts proposals, D107). */
+    async countByStatus(deckId: string, status: ItemStatus): Promise<number> {
+      const [row] = await db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(items)
+        .where(and(eq(items.deckId, deckId), eq(items.status, status), isNull(items.deletedAt)));
+      return row?.n ?? 0;
     },
 
     async softDelete(id: string): Promise<void> {

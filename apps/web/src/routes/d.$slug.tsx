@@ -13,6 +13,8 @@ import { AppHeader } from '../app/AppHeader';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { writeLastDeck } from '../lib/last-deck';
 import { AddCardLink } from '../items/AddCardLink';
+import { ReviewPill } from '../review/ReviewPill';
+import { PasteLink } from '../share/PasteLink';
 import { SearchBox } from '../search/SearchBox';
 import { parseSearchParams } from '../search/search-params';
 import { viewFromPath, type ChipView } from '../ui/chip-order';
@@ -36,6 +38,7 @@ function DeckLayout() {
   const deckSlug = deck.data?.slug;
   const adding = pathname.endsWith('/new');
   const searching = pathname.endsWith('/search');
+  const reviewing = pathname.endsWith('/review');
   const { q, mode } = parseSearchParams(useSearch({ strict: false }));
   const routerNavigate = useNavigate();
 
@@ -72,7 +75,10 @@ function DeckLayout() {
 
   return (
     <>
-      <AppHeader title={deck.data.name} />
+      <AppHeader
+        title={deck.data.name}
+        actions={can(deck.data.role, 'item.publish') && <ReviewPill deckSlug={slug} />}
+      />
       <SearchBox initialQuery={searching ? q : ''} onSearch={onSearch} />
       <ChipRow
         deckSlug={slug}
@@ -82,7 +88,12 @@ function DeckLayout() {
         onNavigate={navigate}
       />
       <main className="page">
-        {!adding && !searching && <AddCardLink deckSlug={slug} role={deck.data.role} />}
+        {!adding && !searching && !reviewing && can(deck.data.role, 'item.create') && (
+          <div className="deck-actions">
+            <AddCardLink deckSlug={slug} role={deck.data.role} />
+            <PasteLink deckSlug={slug} role={deck.data.role} />
+          </div>
+        )}
         <Outlet />
       </main>
     </>

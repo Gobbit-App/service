@@ -12,11 +12,13 @@ import {
   type ItemListQuery,
   type ItemPage,
   type ItemPatch,
+  can,
+  compactEntities,
   payloadSchemaFor,
 } from '@pb/shared';
 import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
 import { canSeePrivate } from '../access/visibility';
-import { badRequest, notFound, unprocessable } from '../errors/http-errors';
+import { badRequest, forbidden, notFound, unprocessable } from '../errors/http-errors';
 import { resolveDeck } from '../lib/resolve-deck';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import { createItemDtoMapper } from './item-dtos';
@@ -37,6 +39,15 @@ export function createItemsService(deps: {
 
   // Private helpers
 
+  /** D96: a proposal is visible to deck publishers and to the user who created it. */
+  function canSeeProposal(
+    item: { status: string; createdBy: string | null },
+    user: CurrentUser,
+    role: MemberRole,
+  ): boolean {
+    return item.status !== 'proposed' || can(role, 'item.publish') || item.createdBy === user.id;
+  }
+
   /** § 4 permission on the item's deck; a card hidden by visibility is a 404 (D38). */
   async function loadItem(user: CurrentUser, itemId: string, permission: Permission) {
     const item = await items.findById(itemId);
@@ -46,6 +57,7 @@ export function createItemsService(deps: {
     if (!deck) throw notFound(ITEM_NOT_FOUND);
 
     const role = await authorize(user, deck, permission, memberships, ITEM_NOT_FOUND);
+    if (!canSeeProposal(item, user, role)) throw notFound(ITEM_NOT_FOUND);
     if (!(await items.isVisibleTo(item.id, role))) throw notFound(ITEM_NOT_FOUND);
     return { item, role };
   }
@@ -84,6 +96,11 @@ export function createItemsService(deps: {
     async list(user: CurrentUser, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
       const deck = await resolveDeck(decks, idOrSlug, user);
       const role = await authorize(user, deck, 'item.read', memberships);
+
+      // D96: listing proposals is a reviewer action
+      if (q.status === 'proposed' && !can(role, 'item.publish')) {
+        throw forbidden('item.publish', role);
+      }
 
       let categoryId: string | undefined;
       if (q.category) {
@@ -151,6 +168,7 @@ export function createItemsService(deps: {
           title: input.title,
           body: input.body,
           payload: input.payload,
+          entities: compactEntities(input.entities ?? {}),
           sourceUrl: input.sourceUrl ?? null,
           sourceKind,
           verifiedAt,
@@ -214,6 +232,7 @@ export function createItemsService(deps: {
       if (patch.title !== undefined) updatePatch.title = patch.title;
       if (patch.body !== undefined) updatePatch.body = patch.body;
       if (patch.payload !== undefined) updatePatch.payload = patch.payload;
+      if (patch.entities !== undefined) updatePatch.entities = compactEntities(patch.entities);
       if (patch.sourceUrl !== undefined) updatePatch.sourceUrl = patch.sourceUrl;
       if (patch.status !== undefined) updatePatch.status = patch.status;
 

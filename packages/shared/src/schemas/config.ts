@@ -9,6 +9,14 @@ export const appConfigSchema = z.object({
     semantic: z.boolean(),
     ask: z.boolean(),
   }),
+  /** D93/D104: ingestion is on when an extraction provider is configured. */
+  ingest: z.object({
+    enabled: z.boolean(),
+    /** Email-in domain (`<token>@domain`), null when the D104 flag is off. */
+    emailDomain: z.string().nullable(),
+    /** iCloud link of the "Share to Gobbit" Shortcut, null until published. */
+    shortcutUrl: z.string().nullable(),
+  }),
 });
 
 export type AppConfig = z.infer<typeof appConfigSchema>;

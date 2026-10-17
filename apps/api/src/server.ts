@@ -6,27 +6,46 @@ import { createMailer } from './mail/create-mailer';
 import { serve } from '@hono/node-server';
 import { createBoss } from './jobs/boss';
 import { createEmbedQueue, noopEmbedQueue, type EmbedQueue } from './jobs/embed-queue';
+import { createIngestQueue, noopIngestQueue, type IngestQueue } from './jobs/ingest-queue';
 import { ensureQueues } from './jobs/ensure-queues';
 import { createEmbeddingsRepo } from './repositories/embeddings.repo';
-import { hasEmbeddingProvider } from './ai/providers';
+import { hasEmbeddingProvider, hasExtractProvider } from './ai/providers';
 
-/** D72/D73: send-only pg-boss when embedding is configured; a queue outage never blocks startup. */
-async function startEmbedQueue(env: Env, db: Db): Promise<{ queue: EmbedQueue; boss?: PgBoss }> {
-  if (!hasEmbeddingProvider(env)) return { queue: noopEmbedQueue };
+interface Queues {
+  embedQueue: EmbedQueue;
+  ingestQueue: IngestQueue;
+  boss?: PgBoss;
+}
+
+const NO_QUEUES: Queues = { embedQueue: noopEmbedQueue, ingestQueue: noopIngestQueue };
+
+/**
+ * D72/D73/D93: send-only pg-boss when embedding or extraction is configured; a queue outage
+ * never blocks startup (the worker's sweeps pick up what wasn't sent).
+ */
+async function startQueues(env: Env, db: Db): Promise<Queues> {
+  const embeds = hasEmbeddingProvider(env);
+  const extracts = hasExtractProvider(env);
+  if (!embeds && !extracts) return NO_QUEUES;
   const boss = createBoss(env.DATABASE_URL, 'sender');
   try {
     await boss.start();
     await ensureQueues(boss);
   } catch (err) {
-    console.error('[api] pg-boss unavailable, relying on the sweeper:', err);
-    return { queue: noopEmbedQueue };
+    console.error('[api] pg-boss unavailable, relying on the sweepers:', err);
+    return NO_QUEUES;
   }
-  const queue = createEmbedQueue({
-    sender: boss,
-    embeddings: createEmbeddingsRepo(db),
-    model: env.EMBEDDING_MODEL,
-  });
-  return { queue, boss };
+  return {
+    embedQueue: embeds
+      ? createEmbedQueue({
+          sender: boss,
+          embeddings: createEmbeddingsRepo(db),
+          model: env.EMBEDDING_MODEL,
+        })
+      : noopEmbedQueue,
+    ingestQueue: extracts ? createIngestQueue({ sender: boss }) : noopIngestQueue,
+    boss,
+  };
 }
 
 async function main() {
@@ -34,7 +53,7 @@ async function main() {
 
   const pool = createPool(env.DATABASE_URL);
   const db = createDb(pool);
-  const { queue: embedQueue, boss } = await startEmbedQueue(env, db);
+  const { embedQueue, ingestQueue, boss } = await startQueues(env, db);
 
   const app = createApp({
     db,
@@ -42,6 +61,7 @@ async function main() {
     env,
     mailer: createMailer(env),
     search: { embedQueue },
+    ingest: { queue: ingestQueue },
   });
 
   const server = serve({
