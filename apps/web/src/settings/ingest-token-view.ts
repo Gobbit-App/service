@@ -1,0 +1,25 @@
+import type { Deck, IngestToken } from '@pb/shared';
+import { can } from '@pb/shared/authz';
+import { INGEST_TOKEN_PREFIX } from '@pb/shared/ingest-constants';
+
+/** D104: the email-in address is the token without its `ing_` prefix at the inbound domain. */
+export function ingestEmailAddress(token: string, domain: string | null): string | null {
+  if (!domain || !token.startsWith(INGEST_TOKEN_PREFIX)) return null;
+  return `${token.slice(INGEST_TOKEN_PREFIX.length)}@${domain}`;
+}
+
+/** Where a token's shares land: its bound deck, else the request's deck or the personal one. */
+export function tokenScope(token: Pick<IngestToken, 'deckId'>, decks: readonly Deck[]): string {
+  if (token.deckId === null) return 'Any pocketbook (personal by default)';
+  return decks.find((d) => d.id === token.deckId)?.name ?? 'A pocketbook you left';
+}
+
+export function lastUsedLabel(lastUsedAt: string | null, locale?: string): string {
+  if (!lastUsedAt) return 'Never used';
+  return `Last used ${new Date(lastUsedAt).toLocaleDateString(locale)}`;
+}
+
+/** Decks a token may be bound to: the same roles that can share into them. */
+export function bindableDecks(decks: readonly Deck[]): Deck[] {
+  return decks.filter((d) => can(d.role, 'item.create'));
+}
