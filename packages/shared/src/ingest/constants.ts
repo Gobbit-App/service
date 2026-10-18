@@ -21,7 +21,8 @@ export const terminalIngestJobStatuses: readonly IngestJobStatus[] = [
   'discarded',
 ];
 
-export const ingestChannels = ['pwa', 'shortcut', 'email', 'paste'] as const;
+/** `mcp`: proposals made directly by an AI app (Phase 13), never fetched or extracted. */
+export const ingestChannels = ['pwa', 'shortcut', 'email', 'paste', 'mcp'] as const;
 export type IngestChannel = (typeof ingestChannels)[number];
 
 /** D100: the agent proposes only these card types. */
@@ -31,11 +32,18 @@ export type IngestCardType = (typeof ingestCardTypes)[number];
 export const dedupActions = ['new', 'possible_duplicate', 'update'] as const;
 export type DedupAction = (typeof dedupActions)[number];
 
-export const dedupVias = ['source_url', 'vector', 'title', 'none'] as const;
+/** `explicit`: a direct proposal named the card it updates, so no similarity search ran. */
+export const dedupVias = ['source_url', 'vector', 'title', 'none', 'explicit'] as const;
 export type DedupVia = (typeof dedupVias)[number];
 
-/** D110: jobs per user in a rolling day. */
+/** D110: jobs per user and channel in a rolling day (default of INGEST_DAILY_CAP). */
 export const INGEST_DAILY_CAP = 50;
+/** Jobs per user across all channels in a rolling day, so per-channel caps can't be stacked. */
+export const INGEST_COMBINED_DAILY_CAP = 200;
+/** Longest app name kept on a direct proposal (`ingest_jobs.client_label`). */
+export const INGEST_CLIENT_LABEL_MAX = 60;
+/** `extraction.model` of a direct proposal: nothing was extracted. */
+export const DIRECT_PROPOSAL_MODEL = 'direct';
 export const INGEST_CAP_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /** D101: uploads and request size. */

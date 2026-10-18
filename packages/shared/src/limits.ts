@@ -1,3 +1,5 @@
+import { ingestChannels, type IngestChannel } from './ingest/constants';
+
 /** Maximum character count (Unicode code points) for card body. */
 export const CARD_BODY_MAX = 600;
 
@@ -57,3 +59,16 @@ export const TOKEN_BYTES = 32;
 
 /** Minimum length of a token supplied through the environment (SMOKE_SESSION_TOKEN). */
 export const MIN_SEEDED_TOKEN_LENGTH = 32;
+
+/**
+ * Per-channel overrides of the daily ingest cap (jobs per user per rolling day). Channels not
+ * listed use INGEST_DAILY_CAP (env-overridable); Phase 13 sets `mcp` here.
+ */
+export const INGEST_CHANNEL_DAILY_CAPS: Partial<Record<IngestChannel, number>> = {};
+
+/** The daily cap of every channel: its override, else `defaultCap`. */
+export function ingestDailyCaps(defaultCap: number): Record<IngestChannel, number> {
+  return Object.fromEntries(
+    ingestChannels.map((c) => [c, INGEST_CHANNEL_DAILY_CAPS[c] ?? defaultCap]),
+  ) as Record<IngestChannel, number>;
+}

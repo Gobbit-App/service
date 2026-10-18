@@ -28,6 +28,11 @@ const TRACKING_PARAMS: ReadonlySet<string> = new Set([
   'si',
 ]);
 
+/** A direct proposal that names the card it updates: no similarity search ran. */
+export function explicitVerdict(itemId: string): DedupVerdict {
+  return { action: 'update', itemId, similarity: null, via: 'explicit' };
+}
+
 /**
  * Decide how an incoming source relates to existing items.
  * @param s - Dedup signals collected for the source.

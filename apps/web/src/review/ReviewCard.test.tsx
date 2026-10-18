@@ -29,6 +29,7 @@ function entry(
       id: 'j1',
       channel: 'shortcut',
       sharedBy: { id: 'u1', displayName: 'Dana' },
+      clientLabel: null,
       createdAt: '2026-01-01T11:58:00.000Z',
       dedup: null,
       newCategory: null,

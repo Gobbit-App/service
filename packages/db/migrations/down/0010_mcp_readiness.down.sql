@@ -1,0 +1,15 @@
+ALTER TABLE "ingest_jobs" DROP COLUMN IF EXISTS "client_label";
+DELETE FROM "ingest_jobs" WHERE "channel" = 'mcp';
+ALTER TYPE "public"."ingest_channel" RENAME TO "ingest_channel_old";
+CREATE TYPE "public"."ingest_channel" AS ENUM('pwa', 'shortcut', 'email', 'paste');
+ALTER TABLE "ingest_jobs" ALTER COLUMN "channel" TYPE "public"."ingest_channel" USING "channel"::text::"public"."ingest_channel";
+DROP TYPE "public"."ingest_channel_old";
+UPDATE "items" SET "source_kind" = 'share' WHERE "source_kind" = 'mcp';
+DROP TRIGGER IF EXISTS items_set_updated_at ON items;
+ALTER TABLE "items" ALTER COLUMN "source_kind" DROP DEFAULT;
+ALTER TYPE "public"."source_kind" RENAME TO "source_kind_old";
+CREATE TYPE "public"."source_kind" AS ENUM('manual', 'link', 'share', 'email', 'telegram', 'import');
+ALTER TABLE "items" ALTER COLUMN "source_kind" TYPE "public"."source_kind" USING "source_kind"::text::"public"."source_kind";
+ALTER TABLE "items" ALTER COLUMN "source_kind" SET DEFAULT 'manual';
+DROP TYPE "public"."source_kind_old";
+CREATE TRIGGER items_set_updated_at BEFORE UPDATE OF deck_id, type, status, title, body, payload, entities, source_url, source_kind, verified_at, created_by, deleted_at ON items FOR EACH ROW EXECUTE FUNCTION set_updated_at();

@@ -1,23 +1,36 @@
 import { randomUUID } from 'node:crypto';
 import {
   can,
+  DIRECT_PROPOSAL_MODEL,
   INGEST_CAP_WINDOW_MS,
+  INGEST_CLIENT_LABEL_MAX,
   INGEST_IMAGE_MAX_BYTES,
   INGEST_IMAGE_MIMES,
   INGEST_MAX_IMAGES,
+  ingestCardTypes,
+  itemCreateSchema,
+  NAME_MAX,
   RESERVED_DECK_SLUG,
+  type DedupVerdict,
   type IngestAccepted,
   type IngestChannel,
   type IngestImage,
   type IngestJob,
   type IngestRaw,
   type IngestRequest,
+  type ItemCreate,
+  type MemberRole,
 } from '@pb/shared';
+import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
+import type { ItemsRepo } from '../repositories/items.repo';
 import { authorize, resolveRole, type MembershipLookup } from '../access/authorize';
 import { badRequest, notFound, rateLimited, serviceUnavailable } from '../errors/http-errors';
+import type { EmbedQueue } from '../jobs/embed-queue';
 import type { IngestQueue } from '../jobs/ingest-queue';
+import { proposeItem } from '../ingest/propose';
+import type { RunDedupInput } from '../ingest/run-dedup';
 import { toIngestJobDto } from '../lib/ingest-mappers';
 import { isUuid, resolveDeck } from '../lib/resolve-deck';
 import type { IngestUploadStore } from '../media/ingest-uploads';
@@ -39,6 +52,30 @@ export interface IngestCaller {
 
 export interface IngestSubmission extends IngestRequest {
   files: IngestFile[];
+}
+
+/** A card an AI app (or a later importer/agent) proposes as is: no fetch, no extraction. */
+export type DirectDraft = ItemCreate & {
+  /** A category the reviewer may create on publish (`createCategory`). */
+  newCategory?: string | null;
+};
+
+export interface DirectProposal {
+  user: CurrentUser;
+  /** Deck id or slug. */
+  deck: string;
+  draft: DirectDraft;
+  channel: IngestChannel;
+  /** Propose an edit of this published card instead of a new card (dedup via `explicit`). */
+  targetItemId?: string;
+  /** The app's name for the review source line, e.g. "Claude". */
+  clientLabel?: string;
+}
+
+export interface DirectProposalResult {
+  jobId: string;
+  itemId: string;
+  dedup: DedupVerdict | null;
 }
 
 /** Retry-After for the daily cap: the window is rolling, so an hour is a fair hint. */
@@ -72,20 +109,92 @@ export function channelFor(caller: IngestCaller, requested?: 'pwa' | 'paste'): I
   return requested ?? 'paste';
 }
 
+const ITEM_NOT_FOUND = 'Item not found';
+
+/** Card limits and the D100 card types for a direct draft; returns the parsed card. */
+export function parseDirectDraft(draft: DirectDraft): ItemCreate {
+  const { newCategory: _newCategory, ...card } = draft;
+  if (!(ingestCardTypes as readonly string[]).includes(card.type)) {
+    throw badRequest(`Proposals can only be ${ingestCardTypes.join(', ')} cards`);
+  }
+  const parsed = itemCreateSchema.safeParse(card);
+  if (!parsed.success) {
+    throw badRequest(parsed.error.issues[0]?.message ?? 'Invalid card');
+  }
+  return parsed.data;
+}
+
+/** A suggested category name, trimmed; blank → null, too long → 400. */
+export function suggestedCategory(name: string | null | undefined): string | null {
+  const trimmed = name?.trim() ?? '';
+  if (trimmed === '') return null;
+  if ([...trimmed].length > NAME_MAX) {
+    throw badRequest(`Category names are at most ${NAME_MAX} characters`);
+  }
+  return trimmed;
+}
+
 export function createIngestService(deps: {
   /** D93: off without an extraction provider (POST /ingest → 503). */
   enabled: boolean;
   decks: DecksRepo;
   memberships: MembershipLookup;
   jobs: IngestJobsRepo;
+  categories: Pick<CategoriesRepo, 'listByDeck' | 'findDefault'>;
+  items: Pick<ItemsRepo, 'create' | 'findById' | 'isVisibleTo'>;
   uploads: IngestUploadStore | null;
   queue: IngestQueue;
-  dailyCap: number;
+  /** D110: jobs per user and channel per rolling day. */
+  dailyCaps: Record<IngestChannel, number>;
+  /** Jobs per user across channels per rolling day. */
+  combinedCap: number;
+  /** D103 for direct proposals (bound `runDedup`); omitted → no verdict. */
+  dedup?: (input: RunDedupInput) => Promise<DedupVerdict>;
+  embedQueue: EmbedQueue;
   now: () => Date;
   newId?: () => string;
+  log?: (message: string) => void;
 }) {
-  const { enabled, decks, memberships, jobs, uploads, queue, dailyCap, now } = deps;
+  const { enabled, decks, memberships, jobs, uploads, queue, now } = deps;
   const newId = deps.newId ?? randomUUID;
+  const log = deps.log ?? ((m: string) => console.error(m));
+
+  /** D110: the channel's cap and the combined ceiling, over a rolling day. */
+  async function assertWithinCaps(userId: string, channel: IngestChannel): Promise<void> {
+    const since = new Date(now().getTime() - INGEST_CAP_WINDOW_MS);
+    const [own, all] = await Promise.all([
+      jobs.countByUserSince(userId, since, channel),
+      jobs.countByUserSince(userId, since),
+    ]);
+    if (own >= deps.dailyCaps[channel] || all >= deps.combinedCap) {
+      throw rateLimited(CAP_RETRY_AFTER_SECONDS);
+    }
+  }
+
+  /** ADR-004: a published card of this deck the caller can see, else 404. */
+  async function assertTarget(deckId: string, role: MemberRole, itemId: string): Promise<void> {
+    const target = isUuid(itemId) ? await deps.items.findById(itemId) : null;
+    if (
+      !target ||
+      target.deckId !== deckId ||
+      target.status !== 'published' ||
+      !(await deps.items.isVisibleTo(target.id, role))
+    ) {
+      throw notFound(ITEM_NOT_FOUND);
+    }
+  }
+
+  /** The draft's categories, which must all be categories of the deck the caller can see. */
+  async function draftCategories(
+    deckId: string,
+    role: MemberRole,
+    ids: readonly string[],
+  ): Promise<string[]> {
+    if (ids.length === 0) return [];
+    const visible = new Set((await deps.categories.listByDeck(deckId, role)).map((c) => c.id));
+    if (ids.some((id) => !visible.has(id))) throw badRequest('Unknown category');
+    return [...ids];
+  }
 
   async function uploadAll(jobId: string, deckId: string, files: IngestFile[]) {
     if (files.length === 0) return [];
@@ -122,10 +231,8 @@ export function createIngestService(deps: {
       const deck = await resolveDeck(decks, deckRef, user);
       await authorize(user, deck, 'item.create', memberships);
 
-      const since = new Date(now().getTime() - INGEST_CAP_WINDOW_MS);
-      if ((await jobs.countByUserSince(user.id, since)) >= dailyCap) {
-        throw rateLimited(CAP_RETRY_AFTER_SECONDS);
-      }
+      const channel = channelFor(caller, s.channel);
+      await assertWithinCaps(user.id, channel);
 
       const id = newId();
       const images = await uploadAll(id, deck.id, s.files);
@@ -138,12 +245,73 @@ export function createIngestService(deps: {
         id,
         userId: user.id,
         deckId: deck.id,
-        channel: channelFor(caller, s.channel),
+        channel,
         status: 'queued',
         raw,
       });
       await queue.enqueue(id);
       return { id, status: 'queued' };
+    },
+
+    /**
+     * A proposal made as is (AI apps in Phase 13, later bulk import and agents): a `proposed` job
+     * with no fetch, extraction or llm_calls, then the worker's post-extraction steps. Needs
+     * `item.create` on the deck and counts against the same caps as POST /ingest.
+     */
+    async proposeDirect(p: DirectProposal): Promise<DirectProposalResult> {
+      const deck = await resolveDeck(decks, p.deck, p.user);
+      const role = await authorize(p.user, deck, 'item.create', memberships);
+      const card = parseDirectDraft(p.draft);
+      const newCategory = suggestedCategory(p.draft.newCategory);
+      const categoryIds = await draftCategories(deck.id, role, card.categoryIds ?? []);
+      if (p.targetItemId) await assertTarget(deck.id, role, p.targetItemId);
+      await assertWithinCaps(p.user.id, p.channel);
+
+      const id = newId();
+      const clientLabel = p.clientLabel?.trim().slice(0, INGEST_CLIENT_LABEL_MAX) || null;
+      await jobs.create({
+        id,
+        userId: p.user.id,
+        deckId: deck.id,
+        channel: p.channel,
+        clientLabel,
+        status: 'proposed',
+        raw: { ...(card.sourceUrl ? { url: card.sourceUrl } : {}), images: [] },
+        normalized: null,
+      });
+
+      try {
+        const { item, dedup } = await proposeItem(
+          {
+            categories: deps.categories,
+            items: deps.items,
+            jobs,
+            dedup: deps.dedup,
+            embedQueue: deps.embedQueue,
+            now,
+            log,
+          },
+          {
+            job: { id, deckId: deck.id, userId: p.user.id, channel: p.channel },
+            item: card,
+            summary: {
+              model: DIRECT_PROPOSAL_MODEL,
+              escalated: false,
+              type: card.type as (typeof ingestCardTypes)[number],
+              confidence: 1,
+              language: 'und',
+              categoryIds,
+              newCategory,
+            },
+            targetItemId: p.targetItemId ?? null,
+          },
+        );
+        return { jobId: id, itemId: item.id, dedup };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        await jobs.setStatus(id, 'failed', `error: ${message}`.slice(0, 500), now());
+        throw err;
+      }
     },
 
     /** D109: the sharer or a deck publisher may see a job; anyone else gets 404. */

@@ -6,7 +6,7 @@ import {
   type IngestJobRow,
   type NewIngestJobRow,
 } from '@pb/db';
-import type { IngestJobStatus } from '@pb/shared';
+import type { IngestChannel, IngestJobStatus } from '@pb/shared';
 
 /** Fields the worker writes as the job moves through the pipeline (D93). */
 export type IngestJobPatch = Partial<
@@ -51,12 +51,18 @@ export function createIngestJobsRepo(db: DbExecutor) {
       return await db.select().from(ingestJobs).where(inArray(ingestJobs.resultItemId, itemIds));
     },
 
-    /** D110: jobs the user created since `since` (rolling daily cap). */
-    async countByUserSince(userId: string, since: Date): Promise<number> {
+    /** D110: jobs the user created since `since`, on one channel or all (rolling daily caps). */
+    async countByUserSince(userId: string, since: Date, channel?: IngestChannel): Promise<number> {
       const [row] = await db
         .select({ n: count() })
         .from(ingestJobs)
-        .where(and(eq(ingestJobs.userId, userId), gte(ingestJobs.createdAt, since)));
+        .where(
+          and(
+            eq(ingestJobs.userId, userId),
+            gte(ingestJobs.createdAt, since),
+            channel ? eq(ingestJobs.channel, channel) : undefined,
+          ),
+        );
       return row?.n ?? 0;
     },
 

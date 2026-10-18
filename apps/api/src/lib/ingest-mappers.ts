@@ -10,6 +10,7 @@ export function toIngestJobDto(r: IngestJobRow, costUsd: number): IngestJob {
     deckId: r.deckId,
     userId: r.userId,
     channel: r.channel,
+    clientLabel: r.clientLabel ?? null,
     status: r.status,
     raw: r.raw ?? null,
     normalized: r.normalized ?? null,

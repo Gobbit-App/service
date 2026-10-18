@@ -20,7 +20,7 @@ test('creates an ingest token, shows it once and revokes it from settings @smoke
   await page.goto(webUrl('/'));
   await page.getByRole('link', { name: 'Settings' }).click();
   await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByRole('heading', { name: 'Ingest tokens' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sharing tokens' })).toBeVisible();
 
   await page.getByLabel('Name').fill(label);
   await page.getByRole('button', { name: 'Create token' }).click();

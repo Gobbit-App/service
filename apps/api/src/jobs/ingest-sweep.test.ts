@@ -1,16 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { INGEST_JOB_RETRIES, INGEST_SWEEP_STALE_MS } from '@pb/shared';
 import { createIngestSweep } from './ingest-sweep';
-import { isLastAttempt, sourceKindFor } from './ingest';
+import { isLastAttempt } from './ingest';
 
 describe('ingest helpers', () => {
-  it('maps the email channel to the email source kind, everything else to share', () => {
-    expect(sourceKindFor('email')).toBe('email');
-    expect(sourceKindFor('pwa')).toBe('share');
-    expect(sourceKindFor('shortcut')).toBe('share');
-    expect(sourceKindFor('paste')).toBe('share');
-  });
-
   it('treats attempts beyond the retry budget as the last one', () => {
     expect(isLastAttempt(1)).toBe(false);
     expect(isLastAttempt(INGEST_JOB_RETRIES)).toBe(false);

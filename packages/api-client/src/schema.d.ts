@@ -1909,7 +1909,7 @@ export interface paths {
                                 };
                                 sourceUrl: string | null;
                                 /** @enum {string} */
-                                sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                                sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                 verifiedAt: string | null;
                                 createdBy: string | null;
                                 createdAt: string;
@@ -2203,7 +2203,7 @@ export interface paths {
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
-                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
                             createdAt: string;
@@ -2402,7 +2402,7 @@ export interface paths {
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
-                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
                             createdAt: string;
@@ -2637,7 +2637,7 @@ export interface paths {
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
-                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
                             createdAt: string;
@@ -2834,7 +2834,7 @@ export interface paths {
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
-                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
                             createdAt: string;
@@ -3115,7 +3115,7 @@ export interface paths {
                                     };
                                     sourceUrl: string | null;
                                     /** @enum {string} */
-                                    sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                                    sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
                                     createdAt: string;
@@ -3654,7 +3654,8 @@ export interface paths {
                             /** Format: uuid */
                             userId: string | null;
                             /** @enum {string} */
-                            channel: "pwa" | "shortcut" | "email" | "paste";
+                            channel: "pwa" | "shortcut" | "email" | "paste" | "mcp";
+                            clientLabel: string | null;
                             /** @enum {string} */
                             status: "queued" | "running" | "proposed" | "failed" | "published" | "discarded";
                             raw: {
@@ -3705,7 +3706,7 @@ export interface paths {
                                 itemId: string | null;
                                 similarity: number | null;
                                 /** @enum {string} */
-                                via: "source_url" | "vector" | "title" | "none";
+                                via: "source_url" | "vector" | "title" | "none" | "explicit";
                             } | null;
                             /** Format: uuid */
                             resultItemId: string | null;
@@ -4120,7 +4121,7 @@ export interface paths {
                                     };
                                     sourceUrl: string | null;
                                     /** @enum {string} */
-                                    sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                                    sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
                                     createdAt: string;
@@ -4132,12 +4133,13 @@ export interface paths {
                                     /** Format: uuid */
                                     id: string;
                                     /** @enum {string} */
-                                    channel: "pwa" | "shortcut" | "email" | "paste";
+                                    channel: "pwa" | "shortcut" | "email" | "paste" | "mcp";
                                     sharedBy: {
                                         /** Format: uuid */
                                         id: string;
                                         displayName: string;
                                     } | null;
+                                    clientLabel: string | null;
                                     createdAt: string;
                                     dedup: {
                                         /** @enum {string} */
@@ -4146,7 +4148,7 @@ export interface paths {
                                         itemId: string | null;
                                         similarity: number | null;
                                         /** @enum {string} */
-                                        via: "source_url" | "vector" | "title" | "none";
+                                        via: "source_url" | "vector" | "title" | "none" | "explicit";
                                     } | null;
                                     newCategory: string | null;
                                     sourcePreview: string | null;
@@ -4176,7 +4178,7 @@ export interface paths {
                                     };
                                     sourceUrl: string | null;
                                     /** @enum {string} */
-                                    sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                                    sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
                                     createdAt: string;
@@ -4432,7 +4434,7 @@ export interface paths {
                             };
                             sourceUrl: string | null;
                             /** @enum {string} */
-                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import";
+                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
                             createdAt: string;

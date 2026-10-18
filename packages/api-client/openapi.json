@@ -5415,7 +5415,8 @@
                               "share",
                               "email",
                               "telegram",
-                              "import"
+                              "import",
+                              "mcp"
                             ]
                           },
                           "verifiedAt": {
@@ -6656,7 +6657,8 @@
                         "share",
                         "email",
                         "telegram",
-                        "import"
+                        "import",
+                        "mcp"
                       ]
                     },
                     "verifiedAt": {
@@ -7331,7 +7333,8 @@
                         "share",
                         "email",
                         "telegram",
-                        "import"
+                        "import",
+                        "mcp"
                       ]
                     },
                     "verifiedAt": {
@@ -7886,7 +7889,8 @@
                         "share",
                         "email",
                         "telegram",
-                        "import"
+                        "import",
+                        "mcp"
                       ]
                     },
                     "verifiedAt": {
@@ -8824,7 +8828,8 @@
                         "share",
                         "email",
                         "telegram",
-                        "import"
+                        "import",
+                        "mcp"
                       ]
                     },
                     "verifiedAt": {
@@ -9667,7 +9672,8 @@
                                   "share",
                                   "email",
                                   "telegram",
-                                  "import"
+                                  "import",
+                                  "mcp"
                                 ]
                               },
                               "verifiedAt": {
@@ -11311,7 +11317,14 @@
                         "pwa",
                         "shortcut",
                         "email",
-                        "paste"
+                        "paste",
+                        "mcp"
+                      ]
+                    },
+                    "clientLabel": {
+                      "type": [
+                        "string",
+                        "null"
                       ]
                     },
                     "status": {
@@ -11566,7 +11579,8 @@
                             "source_url",
                             "vector",
                             "title",
-                            "none"
+                            "none",
+                            "explicit"
                           ]
                         }
                       },
@@ -11627,6 +11641,7 @@
                     "deckId",
                     "userId",
                     "channel",
+                    "clientLabel",
                     "status",
                     "raw",
                     "normalized",
@@ -12783,7 +12798,8 @@
                                   "share",
                                   "email",
                                   "telegram",
-                                  "import"
+                                  "import",
+                                  "mcp"
                                 ]
                               },
                               "verifiedAt": {
@@ -12849,7 +12865,8 @@
                                   "pwa",
                                   "shortcut",
                                   "email",
-                                  "paste"
+                                  "paste",
+                                  "mcp"
                                 ]
                               },
                               "sharedBy": {
@@ -12869,6 +12886,12 @@
                                 "required": [
                                   "id",
                                   "displayName"
+                                ]
+                              },
+                              "clientLabel": {
+                                "type": [
+                                  "string",
+                                  "null"
                                 ]
                               },
                               "createdAt": {
@@ -12907,7 +12930,8 @@
                                       "source_url",
                                       "vector",
                                       "title",
-                                      "none"
+                                      "none",
+                                      "explicit"
                                     ]
                                   }
                                 },
@@ -12935,6 +12959,7 @@
                               "id",
                               "channel",
                               "sharedBy",
+                              "clientLabel",
                               "createdAt",
                               "dedup",
                               "newCategory",
@@ -13066,7 +13091,8 @@
                                   "share",
                                   "email",
                                   "telegram",
-                                  "import"
+                                  "import",
+                                  "mcp"
                                 ]
                               },
                               "verifiedAt": {
@@ -13830,7 +13856,8 @@
                         "share",
                         "email",
                         "telegram",
-                        "import"
+                        "import",
+                        "mcp"
                       ]
                     },
                     "verifiedAt": {

@@ -4,6 +4,7 @@ import type { AppEnv, Authenticated } from '../types';
 import { clearSessionCookie, SESSION_COOKIE } from '../lib/cookies';
 import { sessionInvalid } from '../errors/http-errors';
 import { isIngestToken } from '../ingest/ingest-token';
+import { nonSessionPrefixOf } from '../lib/token-prefixes';
 
 /**
  * Paths where a stale cookie is ignored instead of rejected, so a browser holding a dead
@@ -40,7 +41,7 @@ export interface SessionAuthOptions {
 /**
  * D29: resolves the caller from `Authorization: Bearer` (wins) or the session cookie.
  * No credential → anonymous (routes that need a user call `getUser`, which 401s).
- * A bad bearer → 401; a bad cookie → 401 that also clears the cookie, except on LENIENT_PATHS.
+ * A bad bearer, or a non-session token (prefix registry) off its route → 401; a bad cookie → 401 that also clears the cookie, except on LENIENT_PATHS.
  */
 export function sessionAuth(opts: SessionAuthOptions): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
@@ -56,6 +57,10 @@ export function sessionAuth(opts: SessionAuthOptions): MiddlewareHandler<AppEnv>
         }
         c.set('ingestBearer', bearer);
         return next();
+      }
+      // ADR-046: a non-session token (any registered prefix) is never looked up as a session.
+      if (bearer && nonSessionPrefixOf(bearer)) {
+        throw sessionInvalid();
       }
       const auth = bearer ? await opts.authenticate({ bearer }) : null;
       if (!auth) {
