@@ -17,7 +17,8 @@ export function TokenSecret({
   return (
     <div className="token-secret" role="status">
       <p>
-        <strong>Copy “{created.label}” now.</strong> It won’t be shown again.
+        <strong>Copy “{created.label}” now.</strong> It won’t be shown again. Paste it into the
+        Shortcut or tool you’re connecting.
       </p>
       <div className="token-secret__row">
         <code className="token-secret__value">{created.token}</code>

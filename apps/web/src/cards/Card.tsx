@@ -1,7 +1,7 @@
 import { useMemo, type ReactElement } from 'react';
 import type { Category, Item } from '@pb/shared';
 import { useToggleFavorite } from '../api/favorites';
-import { checkedAgo } from '../lib/relative-time';
+import { cardAge } from '../lib/card-age';
 import { chipHref } from '../ui/chip-order';
 import { FavoriteButton } from '../ui/FavoriteButton';
 import { NavLink } from '../ui/NavLink';
@@ -16,7 +16,7 @@ export function itemCategories(item: Item, categories: readonly Category[]): Cat
   return item.categoryIds.flatMap((id) => byId.get(id) ?? []);
 }
 
-/** The card frame (§4): title, body, category chips, checked-ago, favorite and share. */
+/** The card frame (§4): title, body, category chips, added/edited age, favorite and share. */
 export function Card({
   item,
   deckSlug,
@@ -37,7 +37,7 @@ export function Card({
   const cloudName = useCloudName();
   const toggle = useToggleFavorite();
   const chips = useMemo(() => itemCategories(item, categories), [item, categories]);
-  const checked = checkedAgo(item.verifiedAt, now);
+  const age = cardAge(item, now);
   const titleId = `card-title-${item.id}`;
 
   return (
@@ -62,7 +62,7 @@ export function Card({
         </div>
       </header>
       <CardBody item={item} cloudName={cloudName} />
-      {(chips.length > 0 || checked) && (
+      {(chips.length > 0 || age) && (
         <footer className="card__meta">
           {chips.length > 0 && (
             <ul className="card__chips" aria-label="Categories">
@@ -78,7 +78,15 @@ export function Card({
               ))}
             </ul>
           )}
-          {checked && <span className="card__checked">{checked}</span>}
+          {age && (
+            <time
+              className="card__age"
+              dateTime={age.at.toISOString()}
+              title={age.at.toLocaleString()}
+            >
+              {age.label}
+            </time>
+          )}
         </footer>
       )}
     </article>

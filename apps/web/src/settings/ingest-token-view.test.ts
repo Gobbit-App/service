@@ -18,8 +18,8 @@ describe('ingest-token-view', () => {
   });
 
   describe('tokenScope', () => {
-    it('describes a token with no bound deck as personal by default', () => {
-      expect(tokenScope({ deckId: null }, [])).toBe('Any pocketbook (personal by default)');
+    it('describes a token with no bound deck as the personal pocketbook', () => {
+      expect(tokenScope({ deckId: null }, [])).toBe('My personal pocketbook (default)');
     });
 
     it('returns the bound deck name when the deck is known', () => {

@@ -33,20 +33,3 @@ export function relativeTime(from: Date, now: Date, locale = 'en'): string {
   const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
   return rtf.format(value, unit);
 }
-
-/** Format when something was last checked/verified. */
-export function checkedAgo(verifiedAt: string | null, now: Date, locale = 'en'): string | null {
-  if (verifiedAt === null) {
-    return null;
-  }
-
-  try {
-    const date = new Date(verifiedAt);
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-    return `checked ${relativeTime(date, now, locale)}`;
-  } catch {
-    return null;
-  }
-}

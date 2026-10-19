@@ -62,9 +62,9 @@ describe('SettingsScreen', () => {
 
   it('lists tokens with their scope and last use', async () => {
     setup({ tokens: [token(1), token(2, { deckId: family.id, lastUsedAt: STAMP })] });
-    const list = await screen.findByRole('list', { name: 'Ingest tokens' });
+    const list = await screen.findByRole('list', { name: 'Your tokens' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(within(list).getByText(/Any pocketbook/)).toBeInTheDocument();
+    expect(within(list).getByText(/My personal pocketbook/)).toBeInTheDocument();
     expect(within(list).getByText(/Family · Last used/)).toBeInTheDocument();
   });
 
@@ -126,9 +126,19 @@ describe('SettingsScreen', () => {
     expect(screen.getByText(/turned off on this server/)).toBeInTheDocument();
   });
 
-  it('says the Shortcut is not set up without a link', async () => {
+  it('hides the Shortcut and email ways when the server has neither', async () => {
     setup();
-    expect(await screen.findByText(/isn’t set up on this server/)).toBeInTheDocument();
+    const ways = await screen.findByRole('list', { name: 'Ways to use a token' });
+    expect(within(ways).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(ways).getByText(/\/api\/ingest$/)).toBeInTheDocument();
+    expect(screen.queryByText(/iPhone/)).toBeNull();
     expect(screen.queryByText(/turned off/)).toBeNull();
+  });
+
+  it('lists the email way with the inbound domain when email-in is on', async () => {
+    setup({ ingest: { emailDomain: 'in.example.com' } });
+    const ways = await screen.findByRole('list', { name: 'Ways to use a token' });
+    expect(within(ways).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(ways).getByText('in.example.com')).toBeInTheDocument();
   });
 });

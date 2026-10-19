@@ -21,7 +21,7 @@ export function TokensSection({
   const atMax = tokens.length >= INGEST_TOKENS_MAX;
 
   return (
-    <SettingsSection title="Sharing tokens">
+    <SettingsSection title="Your tokens">
       {created && (
         <TokenSecret created={created} emailDomain={emailDomain} onDone={() => setCreated(null)} />
       )}

@@ -717,6 +717,17 @@ h3 {
   font-size: 1.0625rem;
 }
 
+.send-in-ways {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.send-in-ways code {
+  overflow-wrap: anywhere;
+}
+
 .token-list {
   margin: 0 0 var(--gap);
   padding: 0;

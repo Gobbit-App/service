@@ -20,20 +20,24 @@ describe('itemCategories', () => {
 describe('Card', () => {
   const now = new Date('2026-03-01T00:00:00.000Z');
 
-  it('shows title, chips and checked-ago, and navigates in-app', () => {
+  it('shows title, chips and when it was added, and navigates in-app', () => {
     unwrap.mockReturnValue(new Promise(() => undefined));
     const item = makeItem({
       id: 'i1',
       title: 'Bus times',
       categoryIds: ['c-school'],
-      verifiedAt: '2026-02-15T00:00:00.000Z',
+      createdAt: '2026-02-15T00:00:00.000Z',
+      updatedAt: '2026-02-15T00:00:00.000Z',
     });
     const { navigate } = renderWithClient(
       <Card item={item} deckSlug="family" categories={[school]} now={now} />,
     );
 
     expect(screen.getByRole('article', { name: 'Bus times' })).toBeInTheDocument();
-    expect(screen.getByText(/^checked 2 weeks ago$/)).toBeInTheDocument();
+    expect(screen.getByText(/^Added 2 weeks ago$/)).toHaveAttribute(
+      'datetime',
+      '2026-02-15T00:00:00.000Z',
+    );
 
     fireEvent.click(screen.getByRole('link', { name: 'School' }));
     expect(navigate).toHaveBeenCalledWith('/d/family/c/school');
