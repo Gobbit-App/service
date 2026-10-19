@@ -20,7 +20,7 @@ test('creates an ingest token, shows it once and revokes it from settings @smoke
   await page.goto(webUrl('/'));
   await page.getByRole('link', { name: 'Settings' }).click();
   await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByRole('heading', { name: 'Sharing tokens' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your tokens' })).toBeVisible();
 
   await page.getByLabel('Name').fill(label);
   await page.getByRole('button', { name: 'Create token' }).click();
@@ -30,7 +30,7 @@ test('creates an ingest token, shows it once and revokes it from settings @smoke
   await page.getByRole('button', { name: 'Done' }).click();
   await expect(page.getByText(/^ing_[A-Za-z0-9_-]{43}$/)).toHaveCount(0);
 
-  const list = page.getByRole('list', { name: 'Ingest tokens' });
+  const list = page.getByRole('list', { name: 'Your tokens' });
   const row = list.getByRole('listitem').filter({ hasText: label });
   await expect(row).toContainText('Never used');
 

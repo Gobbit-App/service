@@ -2,7 +2,7 @@
 
 iOS Safari has no Web Share Target, so iPhone sharing goes through an Apple Shortcut that posts
 to `POST /api/ingest` with an **ingest token** (D99). Tokens are created in the app under
-**Settings → Ingest tokens**; each is shown once, accepted only by `POST /ingest`, and can be
+**Settings → Your tokens**; each is shown once, accepted only by `POST /ingest`, and can be
 bound to one pocketbook (otherwise shares go to the personal one, `/d/me`).
 
 The published Shortcut carries no secret: the token and server address are **Import Questions**
@@ -35,7 +35,7 @@ the user answers when adding it.
      `429` daily cap (`Retry-After`); `503` ingestion off on the server.
 4. Shortcut details → **Setup** → **Add Import Question** twice:
    - action 1 (Server): "What's your Gobbit address?" (default: the production URL)
-   - action 2 (Token): "Paste your Gobbit ingest token (Settings → Ingest tokens)"
+   - action 2 (Token): "Paste your Gobbit ingest token (Settings → Your tokens)"
 5. Test it from Safari's share sheet with a real token, then **revoke that token**.
 
 ## Publish

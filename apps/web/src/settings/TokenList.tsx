@@ -15,11 +15,11 @@ export function TokenList({
   const revoke = useRevokeIngestToken();
   const [confirming, setConfirming] = useState<string | null>(null);
 
-  if (tokens.length === 0) return <p className="muted">No tokens yet.</p>;
+  if (tokens.length === 0) return <p className="muted">No tokens yet. Create one below.</p>;
 
   return (
     <>
-      <ul className="token-list" aria-label="Ingest tokens">
+      <ul className="token-list" aria-label="Your tokens">
         {tokens.map((token) => (
           <li key={token.id} className="token-list__item">
             <div>

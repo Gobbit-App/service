@@ -4,10 +4,10 @@ import { ingestTokensQuery } from '../api/ingest-tokens';
 import { isNetworkError } from '../api/network-state';
 import { configQuery, decksQuery } from '../api/queries';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
-import { IphoneSection } from './IphoneSection';
+import { SendInSection } from './SendInSection';
 import { TokensSection } from './TokensSection';
 
-/** D99/D104: the iPhone Shortcut, email-in and the ingest tokens both of them use. */
+/** D99/D104: what ingest tokens are for and how to use them, then the tokens themselves. */
 export function SettingsScreen(): ReactElement {
   const config = useQuery(configQuery());
   const tokens = useQuery(ingestTokensQuery());
@@ -44,7 +44,7 @@ export function SettingsScreen(): ReactElement {
         </p>
       )}
 
-      <IphoneSection shortcutUrl={ingest.shortcutUrl} emailDomain={ingest.emailDomain} />
+      <SendInSection shortcutUrl={ingest.shortcutUrl} emailDomain={ingest.emailDomain} />
       <TokensSection
         tokens={tokens.data.data}
         decks={decks.data}

@@ -3,6 +3,7 @@ import type { Deck, IngestTokenCreated } from '@pb/shared';
 import { INGEST_TOKEN_LABEL_MAX } from '@pb/shared/ingest-constants';
 import { useCreateIngestToken } from '../api/ingest-tokens';
 import { problemMessages } from '../api/problem-messages';
+import { UNBOUND_SCOPE } from './ingest-token-view';
 
 /** D99: label + optional deck binding; the created token goes to `onCreated` (shown once). */
 export function NewTokenForm({
@@ -39,7 +40,7 @@ export function NewTokenForm({
         id={`${baseId}-label`}
         value={label}
         maxLength={INGEST_TOKEN_LABEL_MAX}
-        placeholder="e.g. My iPhone"
+        placeholder="e.g. iPhone Shortcut, work email"
         onChange={(event) => setLabel(event.currentTarget.value)}
       />
 
@@ -49,7 +50,7 @@ export function NewTokenForm({
         value={deckId}
         onChange={(event) => setDeckId(event.currentTarget.value)}
       >
-        <option value="">Any pocketbook (personal by default)</option>
+        <option value="">{UNBOUND_SCOPE}</option>
         {decks.map((deck) => (
           <option key={deck.id} value={deck.id}>
             {deck.name}
