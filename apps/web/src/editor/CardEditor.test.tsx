@@ -1,11 +1,13 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ItemType } from '@pb/shared';
 import { ApiError } from '../api/api-error';
 import { requests, respond } from '../test/api-mock';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import type { memoryDraftsKv } from '../test/memory-drafts-kv';
 import { emptyDraft, withType } from './draft';
-import { renderWithClient } from '../test/render';
+import { renderWithClient, testQueryClient } from '../test/render';
+import { configQuery } from '../api/queries';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
 // jsdom has no IndexedDB: every draft goes to one in-memory store.
@@ -153,6 +155,46 @@ describe('CardEditor: create', () => {
     const preview = screen.getByRole('region', { name: 'Preview', hidden: true });
     expect(preview).toHaveTextContent('Preview me');
     expect(preview.querySelector('a')).toBeNull();
+  });
+});
+
+describe('CardEditor: image cards (D133, FR-015)', () => {
+  function renderImage(cloudName: string | null, initialType: ItemType = 'text') {
+    const queryClient = testQueryClient();
+    queryClient.setQueryData(configQuery().queryKey, {
+      cloudinaryCloudName: cloudName,
+      commit: 'test',
+      search: { semantic: false, ask: false },
+      ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+    });
+    return renderWithClient(
+      <CardEditor mode="create" deck={deck} type={initialType} categories={categories} />,
+      { queryClient },
+    );
+  }
+
+  it('disables the image type with an explanation when image storage is off', () => {
+    renderImage(null);
+    const image = screen.getByRole('radio', { name: 'Image' });
+    expect(image).toBeDisabled();
+    expect(image).toHaveAccessibleDescription(/image storage isn't set up/);
+    expect(screen.getByRole('radio', { name: 'Calc' })).toBeEnabled();
+  });
+
+  it('offers the image type when a cloud name is configured', () => {
+    renderImage('test-cloud');
+    expect(screen.getByRole('radio', { name: 'Image' })).toBeEnabled();
+    expect(screen.queryByText(/image storage isn't set up/)).not.toBeInTheDocument();
+  });
+
+  it('blocks Save on an image card without a photo or alt text (FR-006)', () => {
+    renderImage('test-cloud', 'image');
+    type('Title', 'Bread');
+    expect(screen.getByLabelText('Take photo')).toBeInTheDocument();
+    expect(saveButton()).toBeDisabled();
+    expect(screen.getByText('Fix 2 fields')).toBeInTheDocument();
+    expect(screen.getByText('Add a photo')).toBeInTheDocument();
+    expect(screen.getByText('Alt text is required')).toBeInTheDocument();
   });
 });
 

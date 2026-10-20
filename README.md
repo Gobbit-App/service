@@ -55,7 +55,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `NODE_ENV` | `development` | Environment (development, test, production) |
 | `API_URL` | `http://localhost:${PORT}` | Public API address used in magic links (**required in production**). Local `.env`: `http://localhost:5173/api` (through the Vite proxy) |
 | `APP_URL` | — | Web app origin; sign-in/invite callbacks redirect here (falls back to `${API_URL}/me`) and share links/private OG image use it. Local `.env`: `http://localhost:5173` |
-| `CLOUDINARY_URL` | — | The "API environment variable" URL from the Cloudinary console; **required in production**. Uploads generated share images; only the cloud name reaches clients (`GET /config`) |
+| `CLOUDINARY_URL` | — | The "API environment variable" URL from the Cloudinary console; **required in production**. Uploads generated share images and signs the card editor's direct photo uploads (`POST /decks/{id}/media/sign`; without it image cards are off in the editor); only the cloud name reaches clients (`GET /config`). No upload preset is needed: the API signs folder, tags and formats itself (an optional signed preset with a size cap is not used yet) |
 | `OPENROUTER_API_KEY` | — | Optional (API + worker), preferred. One key for embeddings and Ask through OpenRouter; wins over the two direct keys below (ADR-044) |
 | `OPENAI_API_KEY` | — | Optional (API + worker). Direct OpenAI fallback: enables the semantic arm of search and the embeddings worker; without it search is text-only |
 | `ANTHROPIC_API_KEY` | — | Optional (API). Direct Anthropic fallback: enables Ask (`POST /decks/{id}/ask`); without it Ask answers 503 and the PWA hides it |
@@ -224,7 +224,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 
 - `DATABASE_URL` – the `gobbit` database on the shared Postgres, e.g. `postgres://gobbit:<pw>@<box LAN IP>:5433/gobbit` (add `?sslmode=verify-full` off the LAN)
 - `RESEND_API_KEY`
-- `CLOUDINARY_URL` – the API refuses to start in production without it
+- `CLOUDINARY_URL` – the API refuses to start in production without it; it also signs the editor's photo uploads (browser → `api.cloudinary.com`, allowed by the web CSP)
 - `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden
 - `RESEND_WEBHOOK_SECRET` – only for email-in, together with `INGEST_EMAIL_DOMAIN` (a plain value; see *Sharing into Gobbit*)
 
@@ -291,6 +291,9 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | **Search** |
 | `GET` | `/decks/{id}/search?q=&limit=` | Hybrid search over visible, published cards (`why`: text / semantic / both) |
 | `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
+| **Media** |
+| `POST` | `/decks/{id}/media/sign` | Signed parameters for one direct browser → Cloudinary photo upload (`item.create`; folder `gobbit/items/<deckId>`; 60/hour per user; 503 without `CLOUDINARY_URL`) |
+| `POST` | `/decks/{id}/link-preview` | Title, description and image of a URL through the SSRF-guarded fetcher; `{ preview: null }` on any failure (`item.create`; 30/hour per user; cached 1 h) |
 | **Ingestion** |
 | `POST` | `/ingest` | Share a URL/text/≤ 3 images (JSON or multipart) into a deck; `202 { id, status }`. Session or `ing_` ingest token |
 | `GET` | `/ingest/{id}` | Job status and debug view (sharer or deck publisher) |

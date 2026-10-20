@@ -50,6 +50,11 @@
   border: 0;
 }
 
+.editor__types-note {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 .editor__types legend {
   margin-bottom: 4px;
   font-weight: 600;
@@ -206,4 +211,46 @@
 .calc-fields__result {
   margin: 0;
   font-weight: 600;
+}
+
+/* Image card photo picker and upload progress (D133). */
+.image-fields__photo {
+  max-width: 360px;
+}
+
+.image-fields__thumb {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius);
+}
+
+.image-fields__pick,
+.image-fields__progress,
+.image-fields__failed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.image-fields__failed .field__error {
+  margin: 0;
+}
+
+.image-fields__progress progress {
+  flex: 1 1 160px;
+}
+
+.image-fields__picker {
+  cursor: pointer;
+}
+
+.image-fields__picker:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.image-fields__picker:has(input:focus-visible) {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
 }

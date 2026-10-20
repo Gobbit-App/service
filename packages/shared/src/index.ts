@@ -21,3 +21,4 @@ export * from './search';
 export * from './schemas/search';
 export * from './ingest';
 export * from './schemas/ingest';
+export * from './media';

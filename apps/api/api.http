@@ -358,6 +358,20 @@ Content-Type: application/json
 
 { "type": "email.received", "data": { "email_id": "test" } }
 
+### ─── Card media (Phase 6, 008) ───
+
+### Sign a direct photo upload (D133; 503 without CLOUDINARY_URL, 60/hour per user)
+# The browser then posts the file with these fields to `uploadUrl`; the secret is never returned.
+POST {{baseUrl}}/decks/family/media/sign
+Authorization: Bearer {{token}}
+
+### Link preview (D134; { preview: null } on any failure, 30/hour per user)
+POST {{baseUrl}}/decks/family/link-preview
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "url": "https://example.org/" }
+
 ### Public runtime config (D55)
 GET {{baseUrl}}/config
 

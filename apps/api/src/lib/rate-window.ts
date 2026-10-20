@@ -28,4 +28,6 @@ export const rateKeys = {
   callbackIp: (ip: string) => `callback:ip:${ip}`,
   askUser: (userId: string) => `ask:user:${userId}`,
   queryEmbedUser: (userId: string) => `embed-query:user:${userId}`,
+  mediaSignUser: (userId: string) => `media-sign:user:${userId}`,
+  linkPreviewUser: (userId: string) => `link-preview:user:${userId}`,
 };

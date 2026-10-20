@@ -66,9 +66,9 @@ describe('withType', () => {
 });
 
 describe('isCreatableType', () => {
-  it('accepts text, link, table and calc only', () => {
-    expect(['text', 'link', 'table', 'calc'].every(isCreatableType)).toBe(true);
-    expect(isCreatableType('image')).toBe(false);
+  it('accepts the five card types only', () => {
+    expect(['text', 'link', 'image', 'table', 'calc'].every(isCreatableType)).toBe(true);
+    expect(isCreatableType('video')).toBe(false);
     expect(isCreatableType(undefined)).toBe(false);
   });
 });

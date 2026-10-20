@@ -83,6 +83,27 @@ describe('validateDraft: link', () => {
   });
 });
 
+describe('validateDraft: image', () => {
+  const image = (publicId: string, alt: string): Draft =>
+    draft({ type: 'image', payload: { publicId, alt } });
+
+  it('needs a finished upload and non-blank alt text (FR-006)', () => {
+    expect(validateDraft(image('', ''))).toEqual({
+      'payload.publicId': 'Add a photo',
+      'payload.alt': 'Alt text is required',
+    });
+    expect(validateDraft(image('gobbit/items/d/p', '  '))['payload.alt']).toBe(
+      'Alt text is required',
+    );
+    expect(validateDraft(image('gobbit/items/d/p', 'A loaf'))).toEqual({});
+  });
+
+  it('a valid image draft is a valid create body', () => {
+    const body = toCreateBody(image('gobbit/items/d/p', 'A loaf'));
+    expect(itemCreateSchema.safeParse(body).success).toBe(true);
+  });
+});
+
 describe('validateDraft: table', () => {
   it('flags empty headings by column', () => {
     const errors = validateDraft(table(['A', ''], [['1', '2']]));

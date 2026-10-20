@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { can } from '@pb/shared/authz';
-import { categoriesQuery, deckQuery } from '../api/queries';
+import { categoriesQuery, configQuery, deckQuery } from '../api/queries';
 import { isCreatableType, type CreatableType } from '../editor/creatable-types';
 import { CardEditor } from '../editor/CardEditor';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
@@ -21,6 +21,7 @@ function NewCard() {
   const navigate = Route.useNavigate();
   const deck = useQuery(deckQuery(slug));
   const categories = useQuery(categoriesQuery(slug));
+  const config = useQuery(configQuery());
 
   // The deck layout already shows loading and access errors for the deck itself.
   if (!deck.data) return null;
@@ -33,6 +34,7 @@ function NewCard() {
     );
   }
   if (categories.isPending) return <LoadingState label="Loading categories…" />;
+  if (type === 'image' && config.isPending) return <LoadingState label="Loading…" />;
   if (categories.isError && !categories.data) {
     return (
       <ErrorState
@@ -42,11 +44,15 @@ function NewCard() {
     );
   }
 
+  // FR-015: without image storage `?type=image` opens a text card instead.
+  const imagesOff = !config.data?.cloudinaryCloudName;
+  const effectiveType = type === 'image' && imagesOff ? 'text' : type;
+
   return (
     <CardEditor
       mode="create"
       deck={deck.data}
-      type={type}
+      type={effectiveType}
       categories={categories.data}
       onTypeChange={(next) => void navigate({ search: { type: next }, replace: true })}
     />

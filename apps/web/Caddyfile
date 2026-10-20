@@ -1,7 +1,8 @@
 # D51: the web image owns the routing for the one public origin.
 #   /api/*  -> API with the prefix stripped     /s/*  -> API unchanged (share previews)
 #   files   -> served from /srv                  else  -> index.html (SPA fallback)
-# D54: response headers (connect-src allows Cloudinary: the service worker fetch()es images to cache them;
+# D54: response headers (connect-src allows Cloudinary: the service worker fetch()es images to cache them,
+# and the editor uploads photos straight to api.cloudinary.com, D133;
 # img-src allows blob: for the share screen's thumbnails, D108). API_UPSTREAM overrides the default upstream (api:3000).
 {
 	admin off
@@ -12,7 +13,7 @@
 	encode zstd gzip
 
 	header {
-		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://res.cloudinary.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'"
 		Referrer-Policy strict-origin-when-cross-origin
 		X-Content-Type-Options nosniff
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"

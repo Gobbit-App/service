@@ -28,8 +28,10 @@ import { registerShareRoutes } from './routes/share';
 import type { ShareWiring } from './share/wiring';
 import type { SearchWiring } from './services/search-wiring';
 import { registerSearchRoutes } from './routes/search';
+import { registerMediaRoutes } from './routes/media';
 import type { IngestWiring } from './services/ingest-wiring';
 import { registerIngestRoutes } from './routes/ingest';
+import type { MediaWiring } from './services/media-wiring';
 import { registerIngestTokensRoutes } from './routes/ingest-tokens';
 import { registerReviewRoutes } from './routes/review';
 import { registerWebhookRoutes } from './routes/webhooks';
@@ -47,6 +49,8 @@ export interface AppDeps {
   search?: SearchWiring;
   /** Ingest uploads/queue/enabled overrides for tests (Phase 5). */
   ingest?: IngestWiring;
+  /** Link preview fetcher override for tests (Phase 6). */
+  media?: MediaWiring;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -90,6 +94,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerFavoritesRoutes(app, services);
   registerShareRoutes(app, services);
   registerSearchRoutes(app, services);
+  registerMediaRoutes(app, services);
   registerIngestRoutes(app, services);
   registerIngestTokensRoutes(app, services);
   registerReviewRoutes(app, services);
