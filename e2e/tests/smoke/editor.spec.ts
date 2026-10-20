@@ -291,6 +291,9 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   await expect(page.getByRole('button', { name: 'Replace photo' })).toBeVisible();
   expect(uploads).toHaveLength(1);
   await page.getByLabel('Alt text', { exact: true }).fill('A test photo');
+  // The preview renders the photo through the same Card as the list (FR-008).
+  const preview = await showPreview(page);
+  await expect(preview.getByRole('img', { name: 'A test photo' })).toBeVisible();
   await save(page).click();
 
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));

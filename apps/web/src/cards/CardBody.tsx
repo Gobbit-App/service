@@ -32,7 +32,12 @@ function TypedBody({
     }
     case 'image': {
       const payload = asImagePayload(item.payload);
-      return payload ? <ImageCard payload={payload} cloudName={cloudName} /> : <Invalid />;
+      // Keyed by the photo, so a replaced photo (editor preview) starts without the old error.
+      return payload ? (
+        <ImageCard key={payload.publicId} payload={payload} cloudName={cloudName} />
+      ) : (
+        <Invalid />
+      );
     }
     case 'table': {
       const payload = asTablePayload(item.payload);

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { makeItem } from '../test/fixtures';
 import { CardBody, INVALID_CARD_COPY } from './CardBody';
@@ -34,6 +34,16 @@ describe('CardBody', () => {
     } as never);
     render(<CardBody item={item} cloudName="demo" />);
     expect(screen.getByAltText('School map').getAttribute('src')).toContain('/demo/');
+  });
+
+  it('shows a replaced photo after the previous one failed to load', () => {
+    const image = (publicId: string) =>
+      makeItem({ type: 'image', body: '', payload: { publicId, alt: 'Photo' } } as never);
+    const { rerender } = render(<CardBody item={image('old')} cloudName="demo" />);
+    fireEvent.error(screen.getByAltText('Photo'));
+    expect(screen.getByText('Image unavailable')).toBeInTheDocument();
+    rerender(<CardBody item={image('new')} cloudName="demo" />);
+    expect(screen.getByAltText('Photo').getAttribute('src')).toContain('/new');
   });
 
   it('lazy-loads the calculator', async () => {
