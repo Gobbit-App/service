@@ -60,13 +60,7 @@ pnpm test:e2e   # includes e2e/tests/smoke/lifecycle.spec.ts
 
 ## 5. Deployed instance (PLAN.md Phase 6 demo 2)
 
-Before merge, count what the first purge will remove (read-only, via the database console of the deployed instance):
-
-```sql
-SELECT count(*) FROM items WHERE deleted_at < now() - interval '30 days';
-```
-
-Note the count in `implementation-notes.md`. After CI deploys and the smoke job passes (`/version.json` reports the commit):
+The first Sunday purge after deploy also removes rows soft-deleted in earlier phases; this is accepted (no real content yet, see plan Rollout). After CI deploys and the smoke job passes (`/version.json` reports the commit):
 
 1. In a shared deck, archive a card from its card view.
 2. Search its title: no result.

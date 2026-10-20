@@ -129,7 +129,7 @@ description: "Tasks for 006-card-lifecycle"
 - [ ] T049 [P] README.md: new routes, the `prune-deleted-items` job in the worker list
 - [ ] T050 [P] CLAUDE.md ground rules: "lifecycle transitions only through `items.service` with an actor; deck links via `deckHref`"
 - [ ] T051 PLAN.md: link `specs/006-card-lifecycle` under Phase 6; tick demo 2 only after the deployed-instance run (quickstart §5)
-- [ ] T052 Run quickstart.md (including the pre-merge purge count on the deployed instance)
+- [ ] T052 Run quickstart.md
 - [ ] T053 `/speckit-converge` until it reports Converged
 
 ---
@@ -147,5 +147,5 @@ description: "Tasks for 006-card-lifecycle"
 
 ## Notes
 
-- Log decisions and deviations in implementation-notes.md as you go (e.g., the T001 baseline, the pre-merge purge count)
+- Log decisions and deviations in implementation-notes.md as you go (e.g., the T001 baseline)
 - Conventional commits, e.g. `feat(api): restore and undelete items`, `feat(web): card actions with undo`

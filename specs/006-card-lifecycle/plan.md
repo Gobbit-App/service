@@ -163,13 +163,13 @@ e2e/tests/smoke/lifecycle.spec.ts    # demo 2 + negative paths
 - **Migrations**: `0011_item_lifecycle`, index only, reversible, no backfill. `CREATE INDEX` on a small table; no `CONCURRENTLY` needed.
 - **Env / config**: none. The new cron is a constant.
 - **API client**: yes, `pnpm api:openapi` (new routes, list query enum, `deletedAt`).
-- **Deploy order / flags**: normal CI → Dokploy. The first purge runs the Sunday after deploy and removes anything deleted more than 30 days before. In production that is cards removed through `DELETE` or Discard in earlier phases (listed in quickstart so it is checked before the first run).
+- **Deploy order / flags**: normal CI → Dokploy. The first purge runs the Sunday after deploy and removes anything deleted more than 30 days before, including cards and proposals soft-deleted in earlier phases (`DELETE`, Discard, publish-as-update). Accepted: the deployed instance has no real users or content yet, so there is no grace period for pre-existing rows.
 
 ## Risks
 
 | Risk | Likelihood / impact | Mitigation |
 |------|---------------------|------------|
-| First purge removes old soft-deleted rows someone expected to keep | L / M | Quickstart step counts `deleted_at < now() − 30 days` on the deployed instance before merge; the undo window was never offered before, so nothing was promised. |
+| First purge removes old soft-deleted rows someone expected to keep | L / L | Accepted: no real users or content on the deployed instance yet, and the undo window was never offered before, so nothing was promised. No grace period for pre-existing rows. |
 | Changing every `items.service` signature breaks a caller | M / L | Only `routes/items.ts` calls the service (ingest and review use the repo); typecheck catches the rest. |
 | Optimistic insert on restore/undelete puts the card in the wrong position or a filtered list it doesn't belong to | M / L | Insert only into the `all` list, sorted by `createdAt`; invalidate category and favorites lists instead of editing them. |
 | Undelete of a card whose only category is gone fails the D95 trigger | L / L | No category-delete route exists today (`item_categories` FKs cascade, so one added later could empty a deleted card). The existing mapping returns 422 `/problems/item-needs-category`; int case with the link row removed directly. |
