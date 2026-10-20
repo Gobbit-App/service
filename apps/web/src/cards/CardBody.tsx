@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import type { Item } from '@pb/shared';
-import { ImageCard } from './ImageCard';
+import { ImageCard, type ImageLoading } from './ImageCard';
 import { LinkCard } from './LinkCard';
 import { TableCard } from './TableCard';
 import { TextCard } from './TextCard';
@@ -19,9 +19,11 @@ function Invalid(): ReactElement {
 function TypedBody({
   item,
   cloudName,
+  image,
 }: {
   item: Item;
   cloudName: string | null;
+  image?: ImageLoading;
 }): ReactElement | null {
   switch (item.type) {
     case 'text':
@@ -34,7 +36,7 @@ function TypedBody({
       const payload = asImagePayload(item.payload);
       // Keyed by the photo, so a replaced photo (editor preview) starts without the old error.
       return payload ? (
-        <ImageCard key={payload.publicId} payload={payload} cloudName={cloudName} />
+        <ImageCard key={payload.publicId} payload={payload} cloudName={cloudName} {...image} />
       ) : (
         <Invalid />
       );
@@ -61,14 +63,17 @@ function TypedBody({
 export function CardBody({
   item,
   cloudName,
+  image,
 }: {
   item: Item;
   cloudName: string | null;
+  /** Image loading hints for image cards (D144). */
+  image?: ImageLoading;
 }): ReactElement {
   const body = item.body?.trim() ?? '';
   return (
     <div className="card__body">
-      <TypedBody item={item} cloudName={cloudName} />
+      <TypedBody item={item} cloudName={cloudName} image={image} />
       {body !== '' && <TextCard body={body} />}
     </div>
   );

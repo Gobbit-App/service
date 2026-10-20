@@ -7,6 +7,7 @@ import { FavoriteButton } from '../ui/FavoriteButton';
 import { NavLink } from '../ui/NavLink';
 import { ShareButton } from '../ui/ShareButton';
 import { CardBody } from './CardBody';
+import type { ImageLoading } from './ImageCard';
 import { Highlighted } from '../search/Highlighted';
 import { useCloudName } from './use-cloud-name';
 
@@ -25,6 +26,7 @@ export function Card({
   highlight = '',
   now = new Date(),
   preview = false,
+  image,
 }: {
   item: Item;
   deckSlug: string;
@@ -36,6 +38,8 @@ export function Card({
   now?: Date;
   /** D136: the editor's preview: no favorite/share, title and chips as plain text. */
   preview?: boolean;
+  /** D144: image loading hints (Browse: measured width, priority for the current card). */
+  image?: ImageLoading;
 }): ReactElement {
   const cloudName = useCloudName();
   const toggle = useToggleFavorite();
@@ -66,7 +70,7 @@ export function Card({
           </div>
         )}
       </header>
-      <CardBody item={item} cloudName={cloudName} />
+      <CardBody item={item} cloudName={cloudName} image={image} />
       {(chips.length > 0 || age) && (
         <footer className="card__meta">
           {chips.length > 0 && (
