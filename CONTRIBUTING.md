@@ -4,7 +4,7 @@ Thanks for your interest in Gobbit (the `community-pocketbook` repository). Bug 
 
 ## Before you start
 
-- For anything bigger than a small fix, open an issue first so the approach can be agreed on.
+- For anything bigger than a small fix, open an issue first so the approach can be agreed on. Features are then specified under [`specs/`](./specs/README.md) with spec-kit and must pass the [constitution](./.specify/memory/constitution.md).
 - Check [PLAN.md](./PLAN.md) for the roadmap and [docs/architecture.md](./docs/architecture.md) for design decisions (ADRs).
 - Security problems: do **not** open a public issue — see [SECURITY.md](./SECURITY.md).
 

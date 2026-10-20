@@ -369,6 +369,8 @@ community-pocketbook/
 ├── e2e/              # Playwright smoke tests
 ├── infra/            # Docker Compose (deployed + local overlay), DB init, backups (README)
 ├── docs/             # Architecture & design decisions
+├── specs/            # spec-kit feature specs, plans and tasks (Phase 6 on)
+├── .specify/         # spec-kit constitution, templates and scripts
 ├── .env.example      # Environment variable template
 └── README.md         # This file
 ```
@@ -377,6 +379,7 @@ community-pocketbook/
 
 - **[Architecture & Decisions](./docs/architecture.md)** – System design, schema patterns, API conventions
 - **[Roadmap](./PLAN.md)** – Phase demos and progress
+- **[Specs](./specs/README.md)** – Feature specs, plans and tasks (spec-kit) · **[Constitution](./.specify/memory/constitution.md)** – principles every plan is checked against
 - **[iPhone Shortcut and email-in](./docs/shortcut/README.md)** – Building/publishing the Shortcut, inbound mail setup
 - **[Contributing](./CONTRIBUTING.md)** · **[Security](./SECURITY.md)** · **[Code of Conduct](./CODE_OF_CONDUCT.md)**
 
@@ -399,6 +402,20 @@ This is a **pnpm monorepo** with workspace `packages/` and `apps/`. Each package
 - **pre-push:** `pnpm typecheck && pnpm test:unit` (~10 s). Integration and smoke tests stay in CI.
 
 Skip once with `--no-verify`.
+
+### Planning (spec-kit)
+
+From Phase 6 on, features are specified, planned and implemented with [spec-kit](https://github.com/github/spec-kit) 1.2.2 and Claude Code. Nothing to install beyond [uv](https://docs.astral.sh/uv/) (only needed to run the `specify` CLI); the agent skills are committed in `.claude/skills/speckit-*`.
+
+1. In Claude Code, run `/speckit-specify <the outcome you want>`: this creates `specs/NNN-name/spec.md` (numbered from `006`).
+2. `/speckit-clarify`, then `/speckit-plan`, `/speckit-tasks` and `/speckit-analyze`.
+3. `/speckit-implement`, then `/speckit-converge`; repeat both until converge reports Converged.
+
+Plans gate on [`.specify/memory/constitution.md`](./.specify/memory/constitution.md); project-specific templates live in `.specify/templates/overrides/`. Conventions (numbering, decision IDs, how specs age) are in [`specs/README.md`](./specs/README.md). To upgrade spec-kit, change the version in the command below, run it on a branch and review the diff:
+
+```bash
+uvx --from specify-cli==1.2.2 specify init --here --force --non-interactive --integration claude --script sh
+```
 
 ### Database
 

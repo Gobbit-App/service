@@ -39,3 +39,7 @@ apps/web/dev-dist
 
 # Implementation notes (local, per plan)
 imp-notes/
+
+# Claude Code: local worktrees and per-user settings (skills under .claude/skills are committed)
+.claude/worktrees/
+.claude/settings.local.json

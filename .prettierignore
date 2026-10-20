@@ -13,3 +13,4 @@ apps/web/dev-dist
 apps/web/src/routeTree.gen.ts
 packages/api-client/openapi.json
 packages/api-client/src/schema.d.ts
+.specify

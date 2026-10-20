@@ -1084,7 +1084,7 @@ Tagging: every test title includes `@smoke`
 ### ADR-023: Open-source repository hygiene
 
 **Decisions**:
-- **Private notes stay local**: `plans/` (personal planning docs) and `docs/thrifty/` (AI build artifacts: prompts, per-sprint cost manifests) are gitignored. The public roadmap is the neutral `PLAN.md`.
+- **Private notes stay local**: `plans/` (personal planning docs) and `docs/thrifty/` (AI build artifacts: prompts, per-sprint cost manifests) are gitignored. The public roadmap is the neutral `PLAN.md`. (Amended by ADR-049: from Phase 6, feature specs and plans are committed under `specs/`; `plans/` remains for private scratch.)
 - **No personal data in fixtures**: seed data and tests use `example.test` emails and generic households only.
 - **CI on GitHub-hosted runners**: `ci.yml` runs on `ubuntu-latest` so fork PRs never execute on a private machine. `smoke.yml` (main only, targets the deployed API) picks its runner from the `SMOKE_RUNNER` repo variable, defaulting to `ubuntu-latest`, and is skipped while `API_BASE_URL` is unset. Actions are pinned to their latest major tags (Node 24 runtime); pnpm comes from `packageManager`, Node from `.nvmrc`.
 - **E2E env resolution** (`e2e/lib/env.ts`): GitHub passes unset vars/secrets as empty strings, so blank values are treated as unset; `BASE_URL` must be an http(s) URL, and a missing one fails fast under `CI`.
@@ -1304,6 +1304,18 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 **Decision**: The worker fetches shared URLs through an undici `Agent` whose `connect.lookup` resolves the host and rejects private, loopback, link-local, CGNAT, multicast and metadata addresses (`ipaddr.js`, IPv4-mapped IPv6 included). Only http(s) on 80/443, ≤ 3 redirects (each re-checked), 10 s, 3 MB, HTML only.
 
 **Rationale**: This is the first outbound fetch, from a process on the same network as Postgres and the API. Checking at connect time, not before the request, closes DNS rebinding; checking each redirect closes open-redirect hops.
+
+### ADR-049: Spec-driven development with spec-kit, specs committed
+
+**Decisions**:
+- **spec-kit 1.2.2** (Claude integration, `sh` scripts) drives planning and implementation from Phase 6 on: `/speckit-specify` → `clarify` → `plan` → `tasks` → `analyze` → `implement` → `converge`. Pinned in `.specify/init-options.json`; run with `uvx --from specify-cli==<version> specify …`, upgrades are deliberate PRs.
+- **Constitution** (`.specify/memory/constitution.md`): the existing ground rules and ADRs as seven principles, so every plan's Constitution Check gates on rules that are already true. Versioned (semver); amendments are PRs.
+- **Project templates in `.specify/templates/overrides/`** (plan, tasks): the real monorepo layout, a decisions table continuing the `D` series, invariant → test traceability, rollout, risks and a close-out phase (docs, `PLAN.md`, converge). Core templates stay untouched so `specify` upgrades apply cleanly.
+- **Specs are committed and public** under `specs/NNN-name/`, numbered sequentially from `006`; `specs/005-phases-0-5` records that Phases 0–5 predate spec-kit. A feature folder is a working contract until its PR merges, then a historical record; durable truth stays in this document, `README.md` and the constitution.
+- **`PLAN.md` stays the roadmap**; a phase can span several features. Decisions continue as D129+, durable ones become ADR-050+. Deviations are logged in the feature's `implementation-notes.md` and summarised here at close-out, as before.
+- **No spec-kit git extension**: branches and worktrees stay as they are; the active feature is the local `.specify/feature.json`.
+
+**Rationale**: The private phase plans worked, but reviewers could not see them and nothing checked the code against them. Committed specs travel with the PR, and `analyze` and `converge` check them against the code. Building the constitution only from existing rules keeps the gates meaningful rather than aspirational.
 
 ---
 

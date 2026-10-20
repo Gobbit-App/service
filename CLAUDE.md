@@ -1,6 +1,6 @@
 # Gobbit — Phase 5 (ingestion)
 
-A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 added the Reader PWA (offline reading, favorites, share previews); Phase 3B adds a personal deck at `/d/me` (created on every sign-in) and a minimal card editor. Phase 4 adds hybrid search (pg_trgm + pgvector, RRF), an optional cited Ask answer and an embeddings worker. Phase 5 adds ingestion: shares (Android share target, iPhone Shortcut with ingest tokens, paste box, flagged email-in) become `ingest_jobs` that the worker fetches (SSRF-guarded), extracts with an LLM into a **proposed** card and dedups; publishers approve them in a review queue (plan: `plans/phase5 implementation plan.md`, local, gitignored).
+A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 added the Reader PWA (offline reading, favorites, share previews); Phase 3B adds a personal deck at `/d/me` (created on every sign-in) and a minimal card editor. Phase 4 adds hybrid search (pg_trgm + pgvector, RRF), an optional cited Ask answer and an embeddings worker. Phase 5 adds ingestion: shares (Android share target, iPhone Shortcut with ingest tokens, paste box, flagged email-in) become `ingest_jobs` that the worker fetches (SSRF-guarded), extracts with an LLM into a **proposed** card and dedups; publishers approve them in a review queue. From Phase 6 on, work is specified and planned with spec-kit under `specs/` (see Planning below).
 
 ## Repo Layout
 
@@ -15,6 +15,8 @@ infra/           — Docker Compose (base = deployed, docker-compose.local.yml =
 apps/api/Dockerfile — API image (also used by Compose)
 apps/web/Dockerfile + Caddyfile — web image (static PWA; routes /api and /s to the API)
 docs/            — architecture.md (keep synced), shortcut/README.md (iPhone Shortcut + email-in)
+specs/           — spec-kit features `NNN-name/` (spec, plan, tasks); README.md = conventions
+.specify/        — spec-kit: constitution (`memory/constitution.md`), templates (+ `templates/overrides/`), scripts
 ```
 
 ## Ground Rules
@@ -37,6 +39,16 @@ docs/            — architecture.md (keep synced), shortcut/README.md (iPhone S
 - **Ingestion**: `POST /ingest` → `ingest_jobs` → worker `jobs/ingest.ts` (fetch → normalize → extract → proposed item → dedup). The agent never publishes; proposals are visible only to publishers and their creator (D96); published items need ≥ 1 category (DB trigger, D95). `ing_` ingest tokens work only on `POST /ingest` (ADR-046); outbound fetches go through `fetch/safe-fetch.ts` only (ADR-048). Email-in (`/webhooks/resend/inbound`) is on only with `INGEST_EMAIL_DOMAIN` + `RESEND_WEBHOOK_SECRET` + `RESEND_API_KEY`
 - **Web**: plain CSS, no UI kit; API data offline via persisted query cache, never the service worker (search queries are not persisted); value imports from `@pb/shared` subpaths (`/search`, `/calc`, …), never the root (bundle budget); same origin everywhere (no CORS)
 - **Docs**: Keep `docs/architecture.md` and `README.md` synced with code
+
+## Planning (spec-kit)
+
+- **Flow**: `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement` → `/speckit-converge` (repeat implement/converge until Converged). Use these instead of the personal `plan-feature` skill in this repo. Small fixes with no new behaviour skip it
+- **Constitution**: `.specify/memory/constitution.md` holds the principles every plan gates on; amend it (versioned) rather than working around it. Customise templates only in `.specify/templates/overrides/` (survives `specify` upgrades)
+- **Numbering**: sequential from `006` (Phases 0–5 are recorded in `specs/005-phases-0-5`); a phase may span several features; `PLAN.md` stays the roadmap and links each feature
+- **Decisions**: `research.md` continues the `D` series (D129+); durable ones become ADRs in `docs/architecture.md` (ADR-050+)
+- **Implementing**: log decisions the plan didn't make and deviations in `specs/NNN-*/implementation-notes.md` (committed with the feature); at close-out copy deviations into the "Deviations" list in `docs/architecture.md`
+- **Public repo**: specs are committed and public — no personal data, private notes, costs or secrets (ADR-023, ADR-049). Private scratch still goes in gitignored `plans/`
+- **spec-kit version**: pinned 1.2.2 (`uvx --from specify-cli==1.2.2 specify …`); upgrade deliberately and review the diff
 
 ## Key Commands
 
