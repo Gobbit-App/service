@@ -130,7 +130,7 @@ description: "Tasks for 006-card-lifecycle"
 - [X] T050 [P] CLAUDE.md ground rules: "lifecycle transitions only through `items.service` with an actor; deck links via `deckHref`"
 - [ ] T051 PLAN.md: link `specs/006-card-lifecycle` under Phase 6; tick demo 2 only after the deployed-instance run (quickstart §5) — spec link and bundle baseline added; demo 2 left unticked until the deployed run
 - [ ] T052 Run quickstart.md — §1–§4 covered locally (int tests, e2e `lifecycle.spec.ts`); §5 needs the deployed instance
-- [ ] T053 `/speckit-converge` until it reports Converged
+- [X] T053 `/speckit-converge` until it reports Converged
 
 ---
 

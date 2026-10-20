@@ -47,6 +47,15 @@ Budget: 150 KB.
   - CI runs the full suite after deploy.
 - **Quickstart (T052)**: §1–§4 were covered locally by the int tests, the e2e and the steps above. §5 needs the deployed instance, so the `PLAN.md` demo 2 tick waits for it.
 
+## Converge (T053)
+
+One run of `/speckit-converge` found nothing to append to `tasks.md`; the feature converged.
+- **Checked**: FR-001–FR-017, SC-001–SC-006, the acceptance scenarios and edge cases of US1–US3, plan decisions D130–D132, D143 and D146, and the constitution.
+- **Notes from the run**:
+  - The spec's Independent Test says "30 days left" right after deletion. Its edge-case rule ("whole days remaining, rounded down") gives 29, and the code follows the rule.
+  - "Reader has no actions" is covered by the `CardActions` unit tests and the int role matrix rather than e2e: the smoke suite only holds an owner session.
+  - Share images (`og_images`) cascade on purge, and `llm_calls.item_id` and `ingest_jobs.result_item_id` are set to null. Cloudinary assets wait for the Phase 7 orphan sweep, as planned.
+
 ## Learnings
 
 - The React Compiler lint rule `react-hooks/refs` rejects assigning a ref during render. Assign the latest-callback ref inside a `useEffect`.
