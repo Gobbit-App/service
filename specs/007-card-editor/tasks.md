@@ -152,11 +152,11 @@ description: "Task list for 007-card-editor"
 ## Phase 8: Close-out
 
 - [X] T060 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`; record the before/after budget in implementation-notes.md (SC-006)
-- [ ] T061 [P] docs/architecture.md: Phase 6 editor section (routes, draft model, registry seam, drafts store, zod-free client validation); D135–D138, D145; deviations from implementation-notes.md
-- [ ] T062 [P] README.md: editor routes, drafts cleared on sign-out
-- [ ] T063 [P] CLAUDE.md ground rules: "editor validation is zod-free; the server is authoritative; value imports via `@pb/shared/card-limits` and `/calc`"
-- [ ] T064 PLAN.md: link specs/007-card-editor under Phase 6; demo 1 stays unticked until 008 and a run on the deployed instance
-- [ ] T065 Run quickstart.md (steps 1–12)
+- [X] T061 [P] docs/architecture.md: Phase 6 editor section (routes, draft model, registry seam, drafts store, zod-free client validation); D135–D138, D145; deviations from implementation-notes.md
+- [X] T062 [P] README.md: editor routes, drafts cleared on sign-out
+- [X] T063 [P] CLAUDE.md ground rules: "editor validation is zod-free; the server is authoritative; value imports via `@pb/shared/card-limits` and `/calc`"
+- [X] T064 PLAN.md: link specs/007-card-editor under Phase 6; demo 1 stays unticked until 008 and a run on the deployed instance
+- [ ] T065 Run quickstart.md (steps 1–12) (needs the deployed instance; local coverage per step in implementation-notes)
 - [ ] T066 `/speckit-converge` until it reports Converged
 
 ---

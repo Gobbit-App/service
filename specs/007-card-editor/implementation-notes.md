@@ -90,3 +90,24 @@ The plan was written against `main` before 006 existed. Differences:
   - **Wait for the save.** The link-card spec now waits for the deck URL after Save, because the preview card's heading matched the title assertion before the save finished.
   - **Inline-category 409 case.** It reuses the exact name: the API slug (`@sindresorhus/slugify`) splits upper-case runs ("SMOKE-88DA31A1" → "smoke-88-da-31-a1"), so an upper-cased name is a different category.
 - **Reader cases of T021 and T034** (reader sees "You can't add cards here" and no Edit) are not in e2e: there is only the owner smoke session. Coverage instead: Edit is covered by the `canEditItem`/`EditLink` unit tests. The new-card guard is `can(role, 'item.create')` (reader → false in `packages/shared` `can.test.ts`); route components have no unit tests in this repo. Both are worth adding to e2e once a reader smoke session exists.
+
+## Quickstart walkthrough (T065, not done)
+
+The manual walkthrough is meant for a phone on the deployed instance, which this branch has not reached, so T065 stays unchecked. Local coverage by step:
+
+| Step | Covered locally by |
+| --- | --- |
+| 1 Text, 601 characters, preview = list | e2e `editor.spec.ts` (text card, 601-character body) |
+| 2 Link | e2e (link card); URL check in `validate.test.ts` |
+| 3 No category | `CardEditor.test.tsx` ("Pick at least one category") |
+| 4 Table limits, reorder, byte meter | e2e (moved row, 12-row stop); `table-ops.test.ts`, `validate.test.ts` |
+| 5 Calc live result, bad expression | e2e (calc card) |
+| 6 Edit, no type picker | e2e (edit from the card page) |
+| 7 Proposal "Edit fully", other editor sees "Card unavailable" | `ReviewCard`/`ReviewEditForm` and `can-edit-item` unit tests, `items.int.test.ts` (D96); not in e2e (single smoke session) |
+| 8 Private category kept on rewrite | `visibility.int.test.ts` (T031) |
+| 9 Inline category, repeat selects existing; reader sees no Add/Edit | e2e (inline category, owner); `CategoryChips.test.tsx`; reader part as T021/T034 |
+| 10 Drafts restore, stale, sign-out | e2e (reload restore, sign-out); `use-draft-autosave.test.ts`, `session.test.ts` |
+| 11 Offline save | `problem-fields.test.ts` (network failure → offline line); no end-to-end offline run |
+| 12 Review inline edit sends only `title` | `ReviewEditForm.test.tsx` ("sends only the changed title") |
+
+`PLAN.md` Phase 6 demo 1 stays unticked: it needs 008 (image) and a run on the deployed instance.
