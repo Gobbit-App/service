@@ -1,6 +1,6 @@
-import { useEffect, useRef, type ReactElement } from 'react';
+import { useEffect, useRef, type ReactElement, type ReactNode } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import type { Category } from '@pb/shared';
+import type { Category, Item } from '@pb/shared';
 import { isNetworkError } from '../api/network-state';
 import { itemsQuery } from '../api/queries';
 import type { ItemFilter } from '../api/query-keys';
@@ -13,10 +13,13 @@ export function ItemList({
   deckSlug,
   filter,
   categories,
+  renderActions,
 }: {
   deckSlug: string;
   filter: ItemFilter;
   categories: readonly Category[];
+  /** Per-card actions under each card (Archived: Restore/Delete, D131). */
+  renderActions?: (item: Item) => ReactNode;
 }): ReactElement {
   const query = useInfiniteQuery(itemsQuery(deckSlug, filter));
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = query;
@@ -62,6 +65,7 @@ export function ItemList({
         {items.map((item) => (
           <li key={item.id}>
             <Card item={item} deckSlug={deckSlug} categories={categories} />
+            {renderActions?.(item)}
           </li>
         ))}
       </ul>

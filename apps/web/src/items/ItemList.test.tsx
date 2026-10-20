@@ -26,6 +26,19 @@ describe('ItemList', () => {
     );
   });
 
+  it('renders per-card actions under each card', async () => {
+    unwrap.mockResolvedValue({ data: [makeItem({ id: 'a', title: 'First' })], nextCursor: null });
+    renderWithClient(
+      <ItemList
+        deckSlug="family"
+        filter={{ kind: 'archived' }}
+        categories={[]}
+        renderActions={(item) => <button type="button">{`Act on ${item.title}`}</button>}
+      />,
+    );
+    expect(await screen.findByRole('button', { name: 'Act on First' })).toBeInTheDocument();
+  });
+
   it('shows the view-specific empty state', async () => {
     unwrap.mockResolvedValue({ data: [], nextCursor: null });
     renderWithClient(<ItemList deckSlug="family" filter={{ kind: 'favorites' }} categories={[]} />);

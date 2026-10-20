@@ -4,6 +4,7 @@ import type { RouterContext } from '../app/router-context';
 import { ServiceWorkerUpdate } from '../app/ServiceWorkerUpdate';
 import { NavLink } from '../ui/NavLink';
 import { EmptyState, OfflineBanner } from '../ui/StatusViews';
+import { ToastHost } from '../ui/UndoToast';
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
@@ -16,6 +17,7 @@ function RootLayout() {
     <div className="app">
       <OfflineBanner visible={offline} />
       <Outlet />
+      <ToastHost />
       <ServiceWorkerUpdate />
     </div>
   );

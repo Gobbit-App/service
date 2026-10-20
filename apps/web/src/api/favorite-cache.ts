@@ -96,3 +96,41 @@ export function removeFromPages(
 
   return { ...data, pages: newPages };
 }
+
+/**
+ * D146: inserts `item` where `rank` orders it (larger first, the API's `desc` sort), or
+ * replaces it in place when already listed. A card that would sort after everything loaded
+ * while more pages exist is left out (the next page brings it). An unloaded list stays
+ * unloaded.
+ */
+export function insertIntoPages(
+  data: PagesData | undefined,
+  item: Item,
+  rank: (item: Item) => string,
+): PagesData | undefined {
+  if (!data) {
+    return undefined;
+  }
+
+  const without = removeFromPages(data, item.id) ?? data;
+  const key = rank(item);
+
+  for (let p = 0; p < without.pages.length; p++) {
+    const page = without.pages[p];
+    const index = page.data.findIndex((other) => rank(other) < key);
+    if (index !== -1) {
+      const newData = [...page.data.slice(0, index), item, ...page.data.slice(index)];
+      const newPages = [...without.pages];
+      newPages[p] = { ...page, data: newData };
+      return { ...without, pages: newPages };
+    }
+  }
+
+  const last = without.pages[without.pages.length - 1];
+  if (!last || last.nextCursor) {
+    return without;
+  }
+  const newPages = [...without.pages];
+  newPages[newPages.length - 1] = { ...last, data: [...last.data, item] };
+  return { ...without, pages: newPages };
+}

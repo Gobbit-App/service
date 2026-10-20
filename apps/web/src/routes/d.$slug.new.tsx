@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { categoriesQuery } from '../api/queries';
 import { CardEditor } from '../items/CardEditor';
+import { deckHref } from '../ui/chip-order';
 import { useNavigateHref } from '../ui/NavLink';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
 
@@ -29,7 +30,7 @@ function NewCard() {
     <CardEditor
       deckSlug={slug}
       categories={categories.data}
-      onSaved={() => navigate(`/d/${encodeURIComponent(slug)}`)}
+      onSaved={() => navigate(deckHref(slug))}
     />
   );
 }

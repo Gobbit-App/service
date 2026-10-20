@@ -3,6 +3,7 @@ import {
   setFavoriteInPages,
   setFavoriteOnItem,
   removeFromPages,
+  insertIntoPages,
   type PagesData,
 } from './favorite-cache';
 import { makeItem } from '../test/fixtures';
@@ -135,5 +136,55 @@ describe('favorite-cache', () => {
       expect(result!.pages[0].nextCursor).toBe('cursor-1');
       expect(result!.pages[1]).toBe(originalPage2);
     });
+  });
+});
+
+describe('insertIntoPages', () => {
+  const rank = (i: { createdAt: string; id: string }) => `${i.createdAt}|${i.id}`;
+  const at = (id: string, day: number) =>
+    makeItem({ id, createdAt: `2026-01-${String(day).padStart(2, '0')}T00:00:00.000Z` });
+  const ids = (d: PagesData | undefined) => d!.pages.map((p) => p.data.map((i) => i.id));
+
+  it('leaves undefined data alone', () => {
+    expect(insertIntoPages(undefined, at('a', 1), rank)).toBeUndefined();
+  });
+
+  it('inserts newest-first before the first older entry, across pages', () => {
+    const data: PagesData = {
+      pages: [
+        { data: [at('d5', 5), at('d4', 4)], nextCursor: 'c1' },
+        { data: [at('d2', 2), at('d1', 1)], nextCursor: null },
+      ],
+      pageParams: [null, 'c1'],
+    };
+    expect(ids(insertIntoPages(data, at('n6', 6), rank))).toEqual([
+      ['n6', 'd5', 'd4'],
+      ['d2', 'd1'],
+    ]);
+    expect(ids(insertIntoPages(data, at('n3', 3), rank))).toEqual([
+      ['d5', 'd4'],
+      ['n3', 'd2', 'd1'],
+    ]);
+  });
+
+  it('moves an already-listed card instead of duplicating it', () => {
+    const data: PagesData = {
+      pages: [{ data: [at('d5', 5), at('d4', 4)], nextCursor: null }],
+      pageParams: [null],
+    };
+    expect(ids(insertIntoPages(data, at('d4', 4), rank))).toEqual([['d5', 'd4']]);
+  });
+
+  it('appends the oldest card only when the list is fully loaded', () => {
+    const full: PagesData = {
+      pages: [{ data: [at('d5', 5)], nextCursor: null }],
+      pageParams: [null],
+    };
+    const partial: PagesData = {
+      pages: [{ data: [at('d5', 5)], nextCursor: 'c1' }],
+      pageParams: [null],
+    };
+    expect(ids(insertIntoPages(full, at('o1', 1), rank))).toEqual([['d5', 'o1']]);
+    expect(ids(insertIntoPages(partial, at('o1', 1), rank))).toEqual([['d5']]);
   });
 });

@@ -4,6 +4,7 @@ import { isNetworkError } from '../api/network-state';
 import { decksQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
 import { pickLanding, readLastDeck } from '../lib/last-deck';
+import { deckHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 
@@ -52,7 +53,7 @@ function Home() {
           <ul className="deck-list">
             {decks.data.map((deck) => (
               <li key={deck.id}>
-                <NavLink href={`/d/${encodeURIComponent(deck.slug)}`} className="deck-list__link">
+                <NavLink href={deckHref(deck.slug)} className="deck-list__link">
                   <span dir="auto">{deck.name}</span>
                 </NavLink>
               </li>

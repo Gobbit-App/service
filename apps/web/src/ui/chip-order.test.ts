@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import type { Category } from '@pb/shared';
-import { orderChips, chipHref, viewFromPath, sameView, type ChipView } from './chip-order';
+import {
+  orderChips,
+  chipHref,
+  deckHref,
+  viewFromPath,
+  sameView,
+  type ChipView,
+} from './chip-order';
 
 describe('orderChips', () => {
   it('places default category first regardless of position', () => {
@@ -125,6 +132,21 @@ describe('orderChips', () => {
     const original = JSON.stringify(categories);
     orderChips(categories);
     expect(JSON.stringify(categories)).toBe(original);
+  });
+});
+
+describe('deckHref (D143)', () => {
+  it('builds the deck root without a path', () => {
+    expect(deckHref('family')).toBe('/d/family');
+  });
+
+  it('joins a path with or without a leading slash', () => {
+    expect(deckHref('family', 'archived')).toBe('/d/family/archived');
+    expect(deckHref('family', '/review')).toBe('/d/family/review');
+  });
+
+  it('encodes the slug but not the path', () => {
+    expect(deckHref('my deck/x', 'c/my%20cat')).toBe('/d/my%20deck%2Fx/c/my%20cat');
   });
 });
 
