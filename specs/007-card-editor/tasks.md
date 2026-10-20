@@ -142,9 +142,9 @@ description: "Task list for 007-card-editor"
 
 **Independent Test**: "School" created and selected; duplicate selects the existing one
 
-- [ ] T056 [P] [US6] [unit] apps/web/src/editor/fields/CategoryChips.test.tsx: "New category" only with `category.create`; success selects; 409 → selects the same-slug category after refetch, else detail shown; name ≤ `NAME_MAX`
-- [ ] T057 [US6] apps/web/src/api/create-category.ts `useCreateCategory` (POST `/decks/{id}/categories` `{ name }`, invalidate `queryKeys.categories`) + [unit] create-category.test.ts
-- [ ] T058 [US6] Inline create in apps/web/src/editor/fields/CategoryChips.tsx
+- [X] T056 [P] [US6] [unit] apps/web/src/editor/fields/CategoryChips.test.tsx: "New category" only with `category.create`; success selects; 409 → selects the same-slug category after refetch, else detail shown; name ≤ `NAME_MAX`
+- [X] T057 [US6] apps/web/src/api/create-category.ts `useCreateCategory` (POST `/decks/{id}/categories` `{ name }`, invalidate `queryKeys.categories`) + [unit] create-category.test.ts
+- [X] T058 [US6] Inline create in apps/web/src/editor/fields/CategoryChips.tsx
 - [ ] T059 [P] [US6] [e2e] e2e/tests/smoke/editor.spec.ts: inline create a category then save the card in it
 
 ---

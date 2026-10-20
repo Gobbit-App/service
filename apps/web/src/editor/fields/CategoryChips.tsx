@@ -1,5 +1,7 @@
 import { useId, type ReactElement } from 'react';
 import type { Category, Deck } from '@pb/shared';
+import { can } from '@pb/shared/authz';
+import { NewCategory } from './NewCategory';
 
 export type CategoryChipsProps = {
   deck: Deck;
@@ -12,8 +14,12 @@ export type CategoryChipsProps = {
   disabled?: boolean;
 };
 
-/** Multi-select category chips (toggle buttons); a card needs at least one. */
+/**
+ * Multi-select category chips (toggle buttons); a published card needs at least one. Members
+ * who may create categories get "New category" inline (US6); the new one is selected.
+ */
 export function CategoryChips({
+  deck,
   categories,
   selected,
   onChange,
@@ -58,6 +64,17 @@ export function CategoryChips({
             </li>
           );
         })}
+        {can(deck.role, 'category.create') && (
+          <li className="category-chips__new">
+            <NewCategory
+              deck={deck}
+              disabled={disabled}
+              onCreated={(category) => {
+                if (!selected.includes(category.id)) onChange([...selected, category.id]);
+              }}
+            />
+          </li>
+        )}
       </ul>
       {error && (
         <p id={errorId} className="field__error">

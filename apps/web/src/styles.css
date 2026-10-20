@@ -775,6 +775,26 @@ h3 {
   list-style: none;
 }
 
+.chip--add {
+  border-style: dashed;
+}
+
+.new-category {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-category input {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.new-category .field__error {
+  flex-basis: 100%;
+}
+
 /* ---------- Share target and paste (Phase 5, D108) ---------- */
 
 .share-notice {

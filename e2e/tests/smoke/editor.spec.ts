@@ -193,3 +193,33 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   await page.waitForTimeout(300);
   await expect(restoreOffer).toHaveCount(0);
 });
+
+test('a category created inline is selected and the card is saved in it @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  const category = `School ${webDeck.slug}`;
+  const title = `Editor category ${webDeck.slug}`;
+  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.getByLabel('Title', { exact: true }).fill(title);
+
+  await page.getByRole('button', { name: 'New category' }).click();
+  await page.getByLabel('New category name').fill(category);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(page.getByRole('button', { name: category })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  // Creating the same name again picks the existing category instead of failing.
+  await page.getByRole('button', { name: 'New category' }).click();
+  await page.getByLabel('New category name').fill(category.toUpperCase());
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(page.getByRole('button', { name: category })).toHaveCount(1);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+
+  await save(page).click();
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  await page.getByRole('link', { name: category }).click();
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});

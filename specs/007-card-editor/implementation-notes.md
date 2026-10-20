@@ -68,3 +68,11 @@ The plan was written against `main` before 006 existed. Differences:
 - **`signOut` clears drafts after the persisted cache, in its own try/catch.** `clearDrafts` is a required `SignOutDeps` member, wired in `main.tsx`.
 - **The e2e sign-out answers `/auth/logout` locally (`page.route`)** so the suite's shared smoke session survives. "Sign in again" is reopening the editor with the same cookie.
 - **`memoryDraftsKv` moved to `src/test/memory-drafts-kv.ts`**, shared by the store, hook and editor tests. `CardEditor.test` mocks `idbDraftsKv` with it.
+
+## Deviations (inline category, US6)
+
+- **Matching on a 409.** The client does not ship the API's slug library (R7: no new deps). It matches a refreshed category by `nameToSlug(name)` (NFKD, accents dropped, lower case, non-alphanumerics → `-`) or by a case-insensitive name. With no visible match (e.g. a private category with that slug), the problem detail is shown.
+- **The 409 resolution lives in `useCreateCategory`.** It refetches `categoriesQuery(deck.id)` with `staleTime: 0`, and the hook result carries `existed`. `onSettled` invalidates the categories by deck id and by slug.
+- **Inline create is a `div`, not a nested `<form>`.** Enter adds and Escape cancels. The name input has `maxLength={NAME_MAX}`, and Add is disabled for a blank name.
+- **"New category" also appears in the review inline edit**, which uses the same `CategoryChips` and the same `can(deck.role, 'category.create')` gate.
+- **New categories are created with the server default visibility (`shared`).** There is no visibility choice inline.
