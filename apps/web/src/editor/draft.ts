@@ -46,13 +46,7 @@ export type Draft = {
   entities: Entities | null;
 };
 
-/** Item types the editor can create; 008 adds `image`. */
-export const CREATABLE_TYPES = ['text', 'link', 'table', 'calc'] as const;
-export type CreatableType = (typeof CREATABLE_TYPES)[number];
-
-export function isCreatableType(v: unknown): v is CreatableType {
-  return typeof v === 'string' && (CREATABLE_TYPES as readonly string[]).includes(v);
-}
+export { CREATABLE_TYPES, isCreatableType, type CreatableType } from './creatable-types';
 
 /** A fresh payload for a type. */
 export function emptyPayload(type: ItemType): DraftPayload {

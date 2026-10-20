@@ -7,6 +7,10 @@ Plan: `specs/007-card-editor/plan.md`, tasks: `tasks.md`. Branch `feat/007-card-
 | | Initial JS (gzip) | Of which `index` |
 | --- | --- | --- |
 | Baseline, 006 head `4ddd2b1` | 111.5 KB | 94.5 KB |
+| 007, first measurement | 114.5 KB | 94.9 KB |
+| 007, creatable types split from `draft.ts`, drafts store loaded on sign-out | 112.5 KB | 94.9 KB |
+
+The first measurement was at the +3 KB limit: `/d/:slug/new` imported `CREATABLE_TYPES` from `draft.ts`, which pulled the draft model into the initial set, and `main.tsx` imported the drafts store (with idb-keyval) statically. `editor/creatable-types.ts` now holds the type list, and `main.tsx` imports the drafts store only when it signs out. Result: +1.0 KB.
 
 Budget: 150 KB. SC-006 target: at most +3 KB.
 

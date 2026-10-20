@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { can } from '@pb/shared/authz';
 import { categoriesQuery, deckQuery } from '../api/queries';
-import { isCreatableType, type CreatableType } from '../editor/draft';
+import { isCreatableType, type CreatableType } from '../editor/creatable-types';
 import { CardEditor } from '../editor/CardEditor';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
 

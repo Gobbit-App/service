@@ -151,7 +151,7 @@ description: "Task list for 007-card-editor"
 
 ## Phase 8: Close-out
 
-- [ ] T060 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`; record the before/after budget in implementation-notes.md (SC-006)
+- [X] T060 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`; record the before/after budget in implementation-notes.md (SC-006)
 - [ ] T061 [P] docs/architecture.md: Phase 6 editor section (routes, draft model, registry seam, drafts store, zod-free client validation); D135–D138, D145; deviations from implementation-notes.md
 - [ ] T062 [P] README.md: editor routes, drafts cleared on sign-out
 - [ ] T063 [P] CLAUDE.md ground rules: "editor validation is zod-free; the server is authoritative; value imports via `@pb/shared/card-limits` and `/calc`"

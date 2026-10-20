@@ -6,7 +6,6 @@ import { createIdbPersister, shouldPersistQuery } from './api/persist';
 import { CACHE_MAX_AGE_MS, createAppQueryClient } from './api/query-client';
 import { signOut, unauthorizedRedirect } from './api/session';
 import { createAppRouter } from './app/router';
-import { clearDrafts } from './editor/drafts-store';
 import { NavigateContext } from './ui/NavLink';
 import './styles.css';
 
@@ -26,7 +25,8 @@ const router = createAppRouter({
       removePersisted: async () => {
         await persister.removeClient();
       },
-      clearDrafts: () => clearDrafts(),
+      // Loaded on demand: the drafts store is not part of the initial bundle.
+      clearDrafts: async () => (await import('./editor/drafts-store')).clearDrafts(),
     }),
 });
 
