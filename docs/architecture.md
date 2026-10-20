@@ -913,6 +913,8 @@ Image cards from the editor (upload a photo, or take one on a phone) and "Fetch 
 - **Fetch preview only in the card editor**, not in the review queue's inline edit (which keeps plain `LinkFields`).
 - **E2E fakes Cloudinary**: the smoke specs answer `/api/config` (cloud name), `/api/decks/*/media/sign`, `api.cloudinary.com` and `res.cloudinary.com` with `page.route`, so no test talks to Cloudinary or needs credentials. The happy-path preview is faked too, because `safe-fetch` refuses the local fixture server the task described; the no-preview path goes through the real API with a private-IP URL.
 - **Caddy's `Permissions-Policy: camera=()`** stays: it doesn't affect `<input capture>`, which opens the system camera.
+- **`use-image-upload.ts` is not a TanStack mutation**: sign and upload are one sequence with progress, cancel and one re-sign, so the hook keeps its own state behind an injectable `Signer` and upload function.
+- **`ImageCard` is keyed by `publicId`** in `CardBody`, so a replaced photo in the editor preview doesn't inherit the previous photo's load error.
 
 ---
 

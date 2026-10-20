@@ -119,7 +119,7 @@ description: "Task list for 008-card-media"
 - [X] T053 [P] CLAUDE.md ground rules: editor uploads are signed per deck (`gobbit/items/<deckId>`, tags `editor`,`deck:`); link preview only via `safe-fetch`
 - [X] T054 PLAN.md: link this spec under Phase 6; tick demo 1 only after it has been run on the deployed instance with 007 (spec linked and 008 bundle noted; demo 1 left unticked: not yet run on the deployed instance)
 - [ ] T055 Run quickstart.md validation (including the iPhone HEIC step) — not done: section 3 needs the deployed instance, real Cloudinary credentials and an iPhone; local coverage in implementation-notes.md
-- [ ] T056 `/speckit-converge` until it reports Converged
+- [X] T056 `/speckit-converge` until it reports Converged
 
 ---
 
@@ -144,3 +144,11 @@ description: "Task list for 008-card-media"
 - Log decisions the plan did not make, and deviations, in implementation-notes.md as you go
 - Commit after each task or logical group (e.g. `feat(api): signed media uploads`)
 - Never route the preview fetch around `safe-fetch`; never return the Cloudinary secret or the fetch failure reason
+
+---
+
+## Phase 6: Convergence
+
+- [X] T057 Reset the image renderer when the photo changes (key `ImageCard` by `publicId` in `CardBody`), so a replaced photo shows in the editor preview after an earlier delivery error, per US1/AC3 (partial)
+- [X] T058 Assert in the image e2e happy path that the editor preview shows the uploaded photo with its alt text before saving, per FR-008 / US1/AC1 (partial)
+- [X] T059 Record in implementation-notes.md that `use-image-upload.ts` signs through the injectable `Signer` with local state instead of a TanStack mutation, per plan: project structure (partial)

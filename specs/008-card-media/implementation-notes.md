@@ -39,12 +39,14 @@ The image fields, upload helper and Fetch preview live in the editor's lazy chun
 - **No width/height** in the image payload; the card stores `{ publicId, alt }` as the existing schema does.
 - **No `siteName`** in the preview: the link payload has no field for it.
 - **The fetch failure reason is not returned**, only logged (`[link-preview] no preview: …`).
+- **`use-image-upload.ts` is not a TanStack mutation** (the plan's structure said "sign (TanStack mutation)"). Sign and upload are one sequence with progress, cancel and a single re-sign, so the hook keeps its own state and takes an injectable `Signer` (`cachedSigner` over `signMediaUpload`) and upload function, which the field tests replace. "Fetch preview" (`use-link-preview.ts`) is a mutation as planned.
+- **`ImageCard` is keyed by `publicId`** in `CardBody` (convergence T057), so a replaced photo in the editor preview starts without the previous photo's load error.
 - **E2E fakes (T015, T033)**: the smoke specs answer `/api/config` (with a cloud name), `/api/decks/*/media/sign`, `https://api.cloudinary.com/**` and `https://res.cloudinary.com/**` through `page.route`, so no test talks to Cloudinary or needs credentials, and T015 runs instead of being skipped without a cloud name. The happy-path preview (T033) is also faked with `page.route`: `safe-fetch` refuses the loopback fixture server the task described, by design. The no-preview path goes through the real API with a private-IP URL (`http://10.0.0.1/private`).
 
 ## Gates (T050)
 
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck`: pass.
-- `pnpm test:unit`: 2010 passed (baseline 1929).
+- `pnpm test:unit`: 2010 passed (baseline 1929); 2011 after convergence (T057).
 - `pnpm test:int`: 44 files, 396 passed (baseline 381).
 - `pnpm build:web && pnpm budget`: 112.5 KB of 150 KB.
 - `pnpm api:openapi`: no drift after regeneration.
@@ -74,3 +76,11 @@ Section 3 needs a phone on the deployed instance with real Cloudinary credential
 | 3.7 Demo 1 | not run; `PLAN.md` Phase 6 demo 1 stays unticked |
 
 `PLAN.md` Phase 6 demo 1 stays unticked (T054): it needs a run on the deployed instance with 007.
+
+## Convergence (T056)
+
+One `/speckit-converge` run. It checked FR-001 to FR-016, SC-001 to SC-005, the acceptance scenarios of US1 to US3, the edge cases, D129, D133, D134 and the constitution principles. Nothing contradicts the spec and nothing unrequested was found. Three LOW partial gaps were appended and done:
+
+- **T057** (US1/AC3): `ImageCard` kept its load error when the photo changed, so a replaced photo could stay "Image unavailable" in the editor preview. It is now keyed by `publicId` (`CardBody.test.tsx` covers it).
+- **T058** (FR-008, US1/AC1): the image e2e happy path now checks the photo in the editor preview before saving, not only in the list. `editor.spec.ts` 15 / 15 passed again locally.
+- **T059** (plan structure): the `use-image-upload.ts` deviation (no TanStack mutation) is recorded above.
