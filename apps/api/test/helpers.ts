@@ -9,6 +9,7 @@ import { SESSION_COOKIE } from '../src/lib/cookies';
 import type { ShareWiring } from '../src/share/wiring';
 import type { SearchWiring } from '../src/services/search-wiring';
 import type { IngestWiring } from '../src/services/ingest-wiring';
+import type { MediaWiring } from '../src/services/media-wiring';
 import {
   createSampleWorld,
   fixtureId,
@@ -63,6 +64,8 @@ export interface SetupApiTestOptions {
   search?: SearchWiring;
   /** Ingest uploads/queue/enabled fakes (Phase 5); default is enabled-off by env keys. */
   ingest?: IngestWiring;
+  /** Link preview fetcher override (Phase 6), e.g. one that allows a local fixture server. */
+  media?: MediaWiring;
 }
 
 export interface ApiTestContext {
@@ -122,6 +125,7 @@ export function setupApiTest(opts: SetupApiTestOptions = {}): ApiTestContext {
       share: opts.share,
       search: opts.search,
       ingest: opts.ingest,
+      media: opts.media,
     });
   });
 

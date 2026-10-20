@@ -27,6 +27,7 @@ import {
   type SearchWiring,
 } from './search-wiring';
 import { buildIngestServices, type IngestWiring } from './ingest-wiring';
+import { buildMediaServices, type MediaWiring } from './media-wiring';
 
 export interface ServiceDeps {
   db: Db;
@@ -39,6 +40,8 @@ export interface ServiceDeps {
   search?: SearchWiring;
   /** Ingest uploads/queue/enabled overrides (Phase 5); production builds them from env. */
   ingest?: IngestWiring;
+  /** Link preview fetcher override (Phase 6); production uses `createSafeFetch()`. */
+  media?: MediaWiring;
 }
 
 /** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
@@ -63,6 +66,7 @@ export function buildServices({
   share,
   search,
   ingest,
+  media,
 }: ServiceDeps) {
   const users = createUsersRepo(db);
   const decks = createDecksRepo(db);
@@ -97,6 +101,14 @@ export function buildServices({
     embedder: resolveEmbedder(env, search),
     now,
     wiring: ingest,
+  });
+  const mediaServices = buildMediaServices({
+    env,
+    decks,
+    memberships,
+    rateLimits,
+    now,
+    wiring: media,
   });
   const transaction: CallbackTransaction = (fn) =>
     db.transaction((tx) => fn(buildCallbackRepos(tx)));
@@ -141,6 +153,8 @@ export function buildServices({
     ingest: ingestServices.ingest,
     ingestTokens: ingestServices.ingestTokens,
     review: ingestServices.review,
+    media: mediaServices.media,
+    linkPreview: mediaServices.linkPreview,
   };
 }
 
