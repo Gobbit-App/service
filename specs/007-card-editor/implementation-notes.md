@@ -111,3 +111,7 @@ The manual walkthrough is meant for a phone on the deployed instance, which this
 | 12 Review inline edit sends only `title` | `ReviewEditForm.test.tsx` ("sends only the changed title") |
 
 `PLAN.md` Phase 6 demo 1 stays unticked: it needs 008 (image) and a run on the deployed instance.
+
+## Convergence (T066)
+
+One `/speckit-converge` run. It checked FR-001 to FR-017, SC-001 to SC-006, the edge cases and D135 to D138, D145 and R6 to R9, and found one gap: FR-005 (partial, LOW). Calc payloads were size-checked in `validate.ts`, which disables Save, but the calc fields showed no live byte meter. Appended as T067: `CalcFields` now shows the same meter as the table fields. The run found nothing that contradicts the spec, and no unrequested work beyond the deviations above.

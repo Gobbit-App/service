@@ -157,7 +157,7 @@ description: "Task list for 007-card-editor"
 - [X] T063 [P] CLAUDE.md ground rules: "editor validation is zod-free; the server is authoritative; value imports via `@pb/shared/card-limits` and `/calc`"
 - [X] T064 PLAN.md: link specs/007-card-editor under Phase 6; demo 1 stays unticked until 008 and a run on the deployed instance
 - [ ] T065 Run quickstart.md (steps 1–12) (needs the deployed instance; local coverage per step in implementation-notes)
-- [ ] T066 `/speckit-converge` until it reports Converged
+- [X] T066 `/speckit-converge` until it reports Converged (one run: one LOW finding, appended as T067 and done)
 
 ---
 
@@ -179,3 +179,7 @@ Tests are written first and must be failing. Then pure ops → components → ro
 - No API, DB or `api:openapi` work. The int tasks (T030, T031) pin down existing behaviour the UI now relies on.
 - Log deviations (e.g. if 006 isn't merged and Edit lands in `Card` first) in implementation-notes.md.
 - Conventional commits, e.g. `feat(web): card editor table fields`.
+
+## Phase 9: Convergence
+
+- [X] T067 Show the live payload byte meter (used / 8192 bytes) in apps/web/src/editor/fields/CalcFields.tsx, as TableFields does, with a unit test, per FR-005 (partial)
