@@ -229,3 +229,137 @@ test('a category created inline is selected and the card is saved in it @smoke',
   await page.getByRole('link', { name: category }).click();
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
+
+const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64',
+);
+const photoFile = { name: 'photo.png', mimeType: 'image/png', buffer: TINY_PNG };
+
+/** 008: `/config` as the real API answers it, with the cloud name overridden for this page. */
+async function routeCloudName(page: Page, cloudName: string | null) {
+  await page.route('**/api/config', async (route) => {
+    const response = await route.fetch();
+    const config = (await response.json()) as Record<string, unknown>;
+    await route.fulfill({ response, json: { ...config, cloudinaryCloudName: cloudName } });
+  });
+}
+
+/** 008: Cloudinary image delivery, answered locally. */
+async function routeImageDelivery(page: Page) {
+  await page.route('https://res.cloudinary.com/**', (route) =>
+    route.fulfill({ contentType: 'image/png', body: TINY_PNG }),
+  );
+}
+
+/** 008: a fake upload permission and Cloudinary; tests never reach the real service (D133). */
+async function routeFakeCloudinary(page: Page, publicId: string) {
+  const cloud = 'e2e-cloud';
+  await routeCloudName(page, cloud);
+  await page.route('**/api/decks/*/media/sign', (route) =>
+    route.fulfill({
+      json: {
+        uploadUrl: `https://api.cloudinary.com/v1_1/${cloud}/image/upload`,
+        apiKey: 'e2e-key',
+        timestamp: Math.floor(Date.now() / 1000),
+        signature: 'e2e-signature',
+        folder: 'gobbit/items/e2e',
+        tags: 'editor,deck:e2e',
+        allowedFormats: 'jpg,png,webp,heic,heif',
+        maxBytes: 8 * 1024 * 1024,
+        expiresAt: new Date(Date.now() + 50 * 60_000).toISOString(),
+      },
+    }),
+  );
+  const uploads: string[] = [];
+  await page.route('https://api.cloudinary.com/**', (route) => {
+    uploads.push(route.request().url());
+    return route.fulfill({ json: { public_id: publicId } });
+  });
+  await routeImageDelivery(page);
+  return uploads;
+}
+
+test('an image card is uploaded, described and listed @smoke', async ({ page, webDeck }) => {
+  const title = `Editor image ${webDeck.slug}`;
+  const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+
+  await expect(page.getByRole('radio', { name: 'Image' })).toBeChecked();
+  await page.getByLabel('Title', { exact: true }).fill(title);
+  await page.getByLabel('Choose photo').setInputFiles(photoFile);
+  await expect(page.getByRole('button', { name: 'Replace photo' })).toBeVisible();
+  expect(uploads).toHaveLength(1);
+  await page.getByLabel('Alt text', { exact: true }).fill('A test photo');
+  await save(page).click();
+
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  const listed = page.getByRole('article').filter({ hasText: title });
+  await expect(listed.getByRole('img', { name: 'A test photo' })).toBeVisible();
+});
+
+test('an image card cannot be saved without alt text @smoke', async ({ page, webDeck }) => {
+  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+
+  await page.getByLabel('Title', { exact: true }).fill('No alt');
+  await expect(save(page)).toBeDisabled();
+  await expect(page.getByText('Add a photo')).toBeVisible();
+  await page.getByLabel('Take photo').setInputFiles(photoFile);
+  await expect(page.getByRole('button', { name: 'Remove photo' })).toBeVisible();
+  await expect(save(page)).toBeDisabled();
+  await expect(page.getByText('Alt text is required')).toBeVisible();
+  await expect(page.getByText('Fix 1 field')).toBeVisible();
+});
+
+test('the image type is unavailable without image storage @smoke', async ({ page, webDeck }) => {
+  await routeCloudName(page, null);
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+
+  // `?type=image` opens a text card, and the picker says why image is off.
+  await expect(page.getByRole('radio', { name: 'Text' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Image' })).toBeDisabled();
+  await expect(page.getByText("image storage isn't set up here")).toBeVisible();
+});
+
+test('Fetch preview fills a link card @smoke', async ({ page, webDeck }) => {
+  const fetchedTitle = `Fetched ${webDeck.slug}`;
+  // The API's guarded fetcher refuses local addresses, so a page served by this test can't be
+  // fetched; the lookup is faked here and covered for real by link-preview.int.test.ts (D134).
+  await page.route('**/api/decks/*/link-preview', (route) =>
+    route.fulfill({
+      json: {
+        preview: {
+          title: fetchedTitle,
+          description: 'A page about bread',
+          image: 'https://res.cloudinary.com/e2e-cloud/image/upload/og.png',
+        },
+      },
+    }),
+  );
+  await routeImageDelivery(page);
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=link`));
+  await page.getByLabel('URL', { exact: true }).fill('https://example.com/bread');
+  await page.getByRole('button', { name: 'Fetch preview' }).click();
+
+  await expect(page.getByLabel('Preview title', { exact: true })).toHaveValue(fetchedTitle);
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue(fetchedTitle);
+  await save(page).click();
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  await expect(page.getByRole('heading', { name: fetchedTitle })).toBeVisible();
+});
+
+test('a link without a preview still saves @smoke', async ({ page, webDeck }) => {
+  const title = `No preview ${webDeck.slug}`;
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=link`));
+  await page.getByLabel('Title', { exact: true }).fill(title);
+  // A private address: the API's guarded fetcher never contacts it and answers no preview.
+  await page.getByLabel('URL', { exact: true }).fill('http://10.0.0.1/private');
+  await page.getByRole('button', { name: 'Fetch preview' }).click();
+
+  await expect(page.getByText('No preview available')).toBeVisible();
+  await expect(save(page)).toBeEnabled();
+  await save(page).click();
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});
