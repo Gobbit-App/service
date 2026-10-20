@@ -45,7 +45,7 @@ specs/           — spec-kit features `NNN-name/` (spec, plan, tasks); README.m
 - **Flow**: `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement` → `/speckit-converge` (repeat implement/converge until Converged). Use these instead of the personal `plan-feature` skill in this repo. Small fixes with no new behaviour skip it
 - **Constitution**: `.specify/memory/constitution.md` holds the principles every plan gates on; amend it (versioned) rather than working around it. Customise templates only in `.specify/templates/overrides/` (survives `specify` upgrades)
 - **Numbering**: sequential from `006` (Phases 0–5 are recorded in `specs/005-phases-0-5`); a phase may span several features; `PLAN.md` stays the roadmap and links each feature
-- **Decisions**: `research.md` continues the `D` series (D129+); durable ones become ADRs in `docs/architecture.md` (ADR-050+)
+- **Decisions**: `research.md` continues the `D` series (next free number across `docs/architecture.md` and `specs/*/research.md`; Phase 6 reserves D129–D147); durable ones become the next ADR in `docs/architecture.md`
 - **Implementing**: log decisions the plan didn't make and deviations in `specs/NNN-*/implementation-notes.md` (committed with the feature); at close-out copy deviations into the "Deviations" list in `docs/architecture.md`
 - **Public repo**: specs are committed and public — no personal data, private notes, costs or secrets (ADR-023, ADR-049). Private scratch still goes in gitignored `plans/`
 - **spec-kit version**: pinned 1.2.2 (`uvx --from specify-cli==1.2.2 specify …`); upgrade deliberately and review the diff

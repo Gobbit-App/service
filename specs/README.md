@@ -25,8 +25,9 @@ specs/NNN-short-name/
 - **Branches**: spec-kit's git extension is not installed; branch as usual (`feat/006-…` or a
   worktree). The active feature is tracked in `.specify/feature.json` (local only).
 - **Decision IDs**: decisions in `research.md` continue the project-wide `D` numbering used in
-  `docs/architecture.md` (D129 onward). Decisions that outlive the feature become ADRs there
-  (ADR-050 onward; ADR-049 records the spec-kit adoption itself).
+  `docs/architecture.md`: take the next free number across `docs/architecture.md` and
+  `specs/*/research.md` (Phase 6 reserves D129–D147). Decisions that outlive the feature become
+  the next ADR there (ADR-049 records the spec-kit adoption itself).
 - **Ageing**: a feature folder is a working contract until its PR merges, then a historical record.
   Later changes get a new feature, not edits to a merged spec. Durable truth lives in
   `docs/architecture.md`, `README.md` and the constitution.
