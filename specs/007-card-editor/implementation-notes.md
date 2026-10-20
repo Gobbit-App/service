@@ -28,3 +28,16 @@ The plan was written against `main` before 006 existed. Differences:
 - **PATCH payload error paths**: the service validates the payload on its own (`payloadSchemaFor(type).parse`), so its paths have no `payload.` prefix. `problem-fields.ts` prefixes any path whose first segment is not a top-level item key.
 - **A network failure on save** shows the offline line ("your draft is saved on this device").
 - **Calc keys that are function names** (`round`, `min`, `max`, `abs`, `floor`, `ceil`) are refused on the client (spec edge case). The server schema doesn't check this, so the parity test leaves that case out.
+
+## Deviations (editor UI)
+
+- **Calc expression check via `useCalcCheck`**: rather than `CalcFields` handing the check to `validate.ts`, `CardEditor` loads `@pb/shared/calc` through a dynamic import while the type is calc (`editor/use-calc-check.ts`) and passes `validateCalcExpression` as `ValidateOptions.calcExpression`. Save stays disabled ("Loading the calculator…") until it has loaded; a failed load shows a form error. mathjs stays in the calc async chunk.
+- **`setTitleIfEmpty` lives on `FieldsProps`** (optional) instead of only on `LinkFieldsProps`, so the registry can pass one prop shape to every type.
+- **Field styles in `styles.css`**: `.field`, `.limit-meter` and the pressed-chip style are global because the review queue's inline edit uses the same field components. Editor layout stays in `editor/editor.css`.
+- **Client errors show once the draft is dirty**: an untouched new card doesn't open with "Title is required"; Save is disabled with the count from the start. Server errors always show.
+- **`TextInput`** is the shared labelled input/textarea (hint, error, `aria-describedby`, `dir="auto"`) under the Title, Body, Source URL, link, calc fields.
+- **`TextFields` renders nothing**: a text card has only the shared Title/Body/Categories/Source fields.
+- **Category select → chips**: the old `<select>` is replaced by `CategoryChips` (toggle buttons with `aria-pressed`), so a card can have several categories.
+- **`?type=` follows during render**: when the URL type changes (back button), the editor applies `withType` while rendering instead of in an effect (`react-hooks/set-state-in-effect`).
+- **e2e 601-char case** now checks that Save is disabled with "Fix 1 field" and the meter at 601 / 600; the client never sends the request, so the old server alert can't appear.
+- **Reader guard e2e not added (T021)**: the smoke suite has a single session (the owner's `SMOKE_SESSION_TOKEN`) and no way to sign in as a reader, so "You can't add cards here" for a reader is not covered end to end. The route checks `can(role, 'item.create')`, and `can` is covered by the shared authz unit tests.

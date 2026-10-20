@@ -48,20 +48,20 @@ description: "Task list for 007-card-editor"
 
 ### Tests for User Story 1
 
-- [ ] T019 [P] [US1] [unit] apps/web/src/editor/CardEditor.test.tsx: Save disabled over 600 code points / with 0 categories; default category preselected; server 422 shown on categories and draft kept
-- [ ] T020 [P] [US1] [unit] apps/web/src/editor/fields/LinkFields.test.tsx: URL check, preview title/description edits, `payload.preview.image` preserved, `previewSlot` rendered with ctx
+- [X] T019 [P] [US1] [unit] apps/web/src/editor/CardEditor.test.tsx: Save disabled over 600 code points / with 0 categories; default category preselected; server 422 shown on categories and draft kept
+- [X] T020 [P] [US1] [unit] apps/web/src/editor/fields/LinkFields.test.tsx: URL check, preview title/description edits, `payload.preview.image` preserved, `previewSlot` rendered with ctx
 - [ ] T021 [P] [US1] [e2e] e2e/tests/smoke/editor.spec.ts: update the existing text/link/601-char cases to the new labels; add preview text = list text; reader opening `/d/<slug>/new` sees "You can't add cards here"
 
 ### Implementation for User Story 1
 
-- [ ] T022 [US1] apps/web/src/editor/fields/{TitleField,BodyField,SourceUrlField,LimitMeter}.tsx
-- [ ] T023 [US1] apps/web/src/editor/fields/LinkFields.tsx with the `previewSlot` seam (contracts/editor-ui.md)
-- [ ] T024 [US1] apps/web/src/editor/fields/CategoryChips.tsx (select only; create comes in US6)
-- [ ] T025 [US1] apps/web/src/editor/fields/registry.ts (text, link; image → `ReadOnlyImage.tsx`)
-- [ ] T026 [US1] apps/web/src/editor/{EditorTabs,EditorPreview,CardEditor}.tsx + editor.css (D136)
-- [ ] T027 [US1] apps/web/src/editor/use-save-card.ts (create path via `useCreateItem`, `problem-fields`, offline message via `api/offline.ts` `useOnline`)
-- [ ] T028 [US1] apps/web/src/routes/d.$slug.new.tsx: `validateSearch { type }`, permission guard, render `CardEditor`, navigate with `deckHref` (006); copy says "card", not "pocketbook"
-- [ ] T029 [US1] Delete apps/web/src/items/CardEditor.tsx and apps/web/src/items/card-input.ts (+ tests); apps/web/src/items/AddCardLink.tsx href via `deckHref`
+- [X] T022 [US1] apps/web/src/editor/fields/{TitleField,BodyField,SourceUrlField,LimitMeter}.tsx
+- [X] T023 [US1] apps/web/src/editor/fields/LinkFields.tsx with the `previewSlot` seam (contracts/editor-ui.md)
+- [X] T024 [US1] apps/web/src/editor/fields/CategoryChips.tsx (select only; create comes in US6)
+- [X] T025 [US1] apps/web/src/editor/fields/registry.ts (text, link; image → `ReadOnlyImage.tsx`)
+- [X] T026 [US1] apps/web/src/editor/{EditorTabs,EditorPreview,CardEditor}.tsx + editor.css (D136)
+- [X] T027 [US1] apps/web/src/editor/use-save-card.ts (create path via `useCreateItem`, `problem-fields`, offline message via `api/offline.ts` `useOnline`)
+- [X] T028 [US1] apps/web/src/routes/d.$slug.new.tsx: `validateSearch { type }`, permission guard, render `CardEditor`, navigate with `deckHref` (006); copy says "card", not "pocketbook"
+- [X] T029 [US1] Delete apps/web/src/items/CardEditor.tsx and apps/web/src/items/card-input.ts (+ tests); apps/web/src/items/AddCardLink.tsx href via `deckHref`
 
 **Checkpoint**: US1 is fully functional. The MVP replaces the 3B editor.
 
@@ -88,7 +88,7 @@ description: "Task list for 007-card-editor"
 - [ ] T037 [US2] Edit mode in apps/web/src/editor/CardEditor.tsx + use-save-card.ts (`toPatch` → `useUpdateItem`; no-op when null; navigate back or to the review queue)
 - [ ] T038 [US2] apps/web/src/review/ReviewEditForm.tsx onto `editor/draft.ts` + shared fields; delete apps/web/src/review/review-edit.ts (+ test, ported in T005); "Edit fully" link in apps/web/src/review/ReviewCard.tsx → `/i/$id/edit?from=review`
 - [ ] T039 [US2] Entities in the editor: `cards/EntityChips` with `onRemove` → draft `entities` (FR-012)
-- [ ] T040 [US2] apps/web/src/routes/i.$itemId.tsx back link via `deckHref` (if not already done by 006)
+- [X] T040 [US2] apps/web/src/routes/i.$itemId.tsx back link via `deckHref` (if not already done by 006)
 
 **Checkpoint**: US1 and US2 both work. All existing cards can be edited (images read-only).
 
@@ -100,10 +100,10 @@ description: "Task list for 007-card-editor"
 
 **Independent Test**: create a 3×4 table, reorder rows, save; the list matches the preview
 
-- [ ] T041 [P] [US3] [unit] apps/web/src/editor/fields/table-ops.test.ts: add/remove row/column within limits, move up/down at edges, rows stay aligned with columns
-- [ ] T042 [US3] apps/web/src/editor/fields/table-ops.ts to pass T041
-- [ ] T043 [US3] apps/web/src/editor/fields/TableFields.tsx (lazy in registry; byte meter; horizontal scroll; empty-heading errors)
-- [ ] T044 [US3] Add `table` to the `?type=` enum and the type picker
+- [X] T041 [P] [US3] [unit] apps/web/src/editor/fields/table-ops.test.ts: add/remove row/column within limits, move up/down at edges, rows stay aligned with columns
+- [X] T042 [US3] apps/web/src/editor/fields/table-ops.ts to pass T041
+- [X] T043 [US3] apps/web/src/editor/fields/TableFields.tsx (lazy in registry; byte meter; horizontal scroll; empty-heading errors)
+- [X] T044 [US3] Add `table` to the `?type=` enum and the type picker
 - [ ] T045 [P] [US3] [e2e] e2e/tests/smoke/editor.spec.ts: table card with a row move; preview text = list text; Add row disabled at 12
 
 ---
@@ -114,9 +114,9 @@ description: "Task list for 007-card-editor"
 
 **Independent Test**: `a * b` evaluates live; `a * c` is refused inline
 
-- [ ] T046 [P] [US4] [unit] apps/web/src/editor/fields/calc-ops.test.ts: add/remove field (≤ 6), key regex, duplicate key, default parsing, key rename updates nothing else silently
-- [ ] T047 [US4] apps/web/src/editor/fields/calc-ops.ts to pass T046
-- [ ] T048 [US4] apps/web/src/editor/fields/CalcFields.tsx (lazy; imports `validateCalcExpression` from `@pb/shared/calc` only; feeds `validate.ts` the expression check)
+- [X] T046 [P] [US4] [unit] apps/web/src/editor/fields/calc-ops.test.ts: add/remove field (≤ 6), key regex, duplicate key, default parsing, key rename updates nothing else silently
+- [X] T047 [US4] apps/web/src/editor/fields/calc-ops.ts to pass T046
+- [X] T048 [US4] apps/web/src/editor/fields/CalcFields.tsx (lazy; imports `validateCalcExpression` from `@pb/shared/calc` only; feeds `validate.ts` the expression check)
 - [ ] T049 [US4] Add `calc` to the `?type=` enum and the type picker; verify in the `vite build` manifest that mathjs stays in one shared async chunk
 - [ ] T050 [P] [US4] [e2e] e2e/tests/smoke/editor.spec.ts: calc card `a * b` live result; invalid expression disables Save
 

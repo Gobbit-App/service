@@ -1,0 +1,187 @@
+/* Card editor layout (D136). Imported only by CardEditor so it stays in the lazy chunk. */
+
+.editor {
+  gap: var(--gap);
+}
+
+.editor__heading {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.editor__fields {
+  display: grid;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.editor__type {
+  margin: 0;
+}
+
+.editor__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.editor__types legend {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* Tabs below 768px; both panels stay mounted, the inactive one is `hidden`. */
+.editor__tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.editor__tab {
+  min-height: var(--tap);
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.editor__tab[aria-selected='true'] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.editor__panel {
+  min-width: 0;
+  padding-top: var(--gap);
+}
+
+.editor__preview {
+  display: grid;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .editor__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: calc(var(--gutter) * 1.5);
+    align-items: start;
+  }
+
+  .editor__tabs {
+    display: none;
+  }
+
+  .editor__panel,
+  .editor__panel[hidden] {
+    display: block;
+    padding-top: 0;
+  }
+
+  .editor__panel--preview {
+    position: sticky;
+    top: var(--gutter);
+  }
+}
+
+.editor__save {
+  display: grid;
+  gap: 8px;
+}
+
+.editor__save-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.editor__save-reason {
+  color: var(--color-muted);
+}
+
+.editor__banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px var(--gap);
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--color-accent-soft);
+}
+
+.editor__banner p {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+
+/* Table grid (US3): scrolls sideways on a phone. */
+.table-fields {
+  overflow-x: auto;
+}
+
+.table-fields table {
+  border-collapse: collapse;
+}
+
+.table-fields th,
+.table-fields td {
+  padding: 4px;
+  vertical-align: top;
+}
+
+.table-fields input {
+  width: 9rem;
+}
+
+.table-fields__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.icon-button {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.icon-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Calc fields (US4). */
+.calc-fields__field {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.calc-fields__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 8px;
+}
+
+.calc-fields__result {
+  margin: 0;
+  font-weight: 600;
+}
