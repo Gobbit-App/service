@@ -9,6 +9,28 @@
   font-size: 1.25rem;
 }
 
+.draft-restore {
+  display: grid;
+  gap: calc(var(--gap) / 2);
+  padding: var(--gap);
+  border-radius: var(--radius);
+  background: var(--color-banner);
+  color: var(--color-banner-text);
+}
+
+.draft-restore p {
+  margin: 0;
+}
+
+.draft-restore__title {
+  font-weight: 600;
+}
+
+.draft-restore__actions {
+  display: flex;
+  gap: var(--gap);
+}
+
 .editor__fields {
   display: grid;
   gap: var(--gap);

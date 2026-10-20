@@ -24,17 +24,20 @@ export type SignOutDeps = {
   queryClient: QueryClient;
   /** Removes the persisted cache from IndexedDB. */
   removePersisted: () => Promise<void>;
+  /** D145: removes every unsaved editor draft (FR-013). */
+  clearDrafts: () => Promise<void>;
   logout?: () => Promise<unknown>;
   log?: (message: string, err: unknown) => void;
 };
 
 /**
- * D66: end the session, then forget everything this user saw. Local data is cleared even
+ * D66 / D145: end the session, then forget everything this user saw (cache, last deck, drafts). Local data is cleared even
  * when the logout call fails (offline), so a shared phone never keeps the previous user's cards.
  */
 export async function signOut({
   queryClient,
   removePersisted,
+  clearDrafts,
   logout = () => unwrap(api.POST('/auth/logout')),
   log = (message, err) => console.error(message, err),
 }: SignOutDeps): Promise<void> {
@@ -49,5 +52,10 @@ export async function signOut({
     await removePersisted();
   } catch (err) {
     log('[session] could not clear the persisted cache', err);
+  }
+  try {
+    await clearDrafts();
+  } catch (err) {
+    log('[session] could not clear the editor drafts', err);
   }
 }

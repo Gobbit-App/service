@@ -3,10 +3,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/api-error';
 import { requests, respond } from '../test/api-mock';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
+import type { memoryDraftsKv } from '../test/memory-drafts-kv';
+import { emptyDraft, withType } from './draft';
 import { renderWithClient } from '../test/render';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
+// jsdom has no IndexedDB: every draft goes to one in-memory store.
+vi.mock('./drafts-store', async (importOriginal) => {
+  const { memoryDraftsKv } = await import('../test/memory-drafts-kv');
+  const kv = memoryDraftsKv();
+  return { ...(await importOriginal<typeof import('./drafts-store')>()), idbDraftsKv: () => kv };
+});
 const { CardEditor } = await import('./CardEditor');
+const { editDraftKey, idbDraftsKv, newDraftKey, writeDraft } = await import('./drafts-store');
+const draftsKv = idbDraftsKv() as MemoryDraftsKv;
 
 const deck = makeDeck({ slug: 'family' });
 const categories = [
@@ -33,9 +43,12 @@ const type = (label: string, value: string) =>
 const bodyOf = (request: string) =>
   (requests.mock.calls.find(([r]) => r === request)?.[1] as { body: unknown } | undefined)?.body;
 
-beforeEach(() => {
+type MemoryDraftsKv = ReturnType<typeof memoryDraftsKv>;
+
+beforeEach(async () => {
   respond.mockReset();
   requests.mockReset();
+  await draftsKv.clear();
 });
 
 describe('CardEditor: create', () => {
@@ -198,5 +211,76 @@ describe('CardEditor: edit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Phone 555-1234' }));
     fireEvent.click(saveButton());
     await waitFor(() => expect(bodyOf('PATCH /items/{id}')).toEqual({ entities: {} }));
+  });
+});
+
+describe('CardEditor: unsaved drafts (D145)', () => {
+  const STAMP = new Date('2026-05-01T10:00:00.000Z');
+  const newKey = () => newDraftKey(deck.id, 'text');
+
+  it('autosaves while typing and offers the draft when reopened', async () => {
+    const first = renderCreate();
+    type('Title', 'Half-written');
+    await waitFor(() => expect(draftsKv.map.has(newKey())).toBe(true));
+    first.unmount();
+
+    renderCreate();
+    expect(await screen.findByText('Restore unsaved draft?')).toBeInTheDocument();
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+    fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('Half-written');
+    expect(screen.queryByText('Restore unsaved draft?')).toBeNull();
+  });
+
+  it('restoring a draft of another type switches the picker and the URL', async () => {
+    const draft = { ...withType(emptyDraft('text', 'cat-general'), 'link'), title: 'Saved link' };
+    await writeDraft(newKey(), draft, null, STAMP, draftsKv);
+    const { onTypeChange } = renderCreate();
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore' }));
+    expect(onTypeChange).toHaveBeenCalledWith('link');
+    expect(screen.getByLabelText('URL')).toBeInTheDocument();
+  });
+
+  it('Discard starts fresh and forgets the draft', async () => {
+    await writeDraft(
+      newKey(),
+      { ...emptyDraft('text', 'cat-general'), title: 'Old' },
+      null,
+      STAMP,
+      draftsKv,
+    );
+    renderCreate();
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard' }));
+    expect(screen.queryByRole('status', { name: /restore/i })).toBeNull();
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+    await waitFor(() => expect(draftsKv.map.has(newKey())).toBe(false));
+  });
+
+  it('warns when the card changed since the draft began', async () => {
+    const item = makeItem({ id: 'i9', title: 'Server', updatedAt: '2026-05-02T00:00:00.000Z' });
+    const { draftFromItem } = await import('./draft');
+    await writeDraft(
+      editDraftKey('i9'),
+      { ...draftFromItem(item), title: 'Mine' },
+      '2026-05-01T00:00:00.000Z',
+      STAMP,
+      draftsKv,
+    );
+    renderWithClient(<CardEditor mode="edit" deck={deck} item={item} categories={categories} />);
+    expect(
+      await screen.findByText(
+        'This card has changed since — restoring will overwrite those changes when you save.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('a successful save removes the draft', async () => {
+    respond.mockResolvedValueOnce(makeItem());
+    const { navigate } = renderCreate();
+    type('Title', 'Plumber');
+    await waitFor(() => expect(draftsKv.map.has(newKey())).toBe(true));
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/d/family'));
+    expect(draftsKv.map.has(newKey())).toBe(false);
   });
 });

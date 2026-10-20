@@ -159,3 +159,37 @@ test('list cards link to the editor @smoke', async ({ page, webDeck }) => {
   await expect(page).toHaveURL(new RegExp(`/i/${card.id}/edit$`));
   await expect(page.getByLabel('Column 1 heading')).toHaveValue('Day');
 });
+
+test('an unsaved card comes back after a reload; sign-out forgets it @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  const newCard = webUrl(`/d/${webDeck.slug}/new`);
+  const restoreOffer = page.getByText('Restore unsaved draft?');
+  await page.goto(newCard);
+  await page.getByLabel('Title', { exact: true }).fill('Half-written');
+  await page.getByLabel('Body', { exact: true }).fill('Not saved yet');
+  // Autosave is debounced (500 ms); wait for it before leaving.
+  await page.waitForTimeout(800);
+
+  await page.reload();
+  await expect(restoreOffer).toBeVisible();
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('');
+  await page.getByRole('button', { name: 'Restore' }).click();
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Half-written');
+  await expect(page.getByLabel('Body', { exact: true })).toHaveValue('Not saved yet');
+  await page.waitForTimeout(800);
+
+  // The smoke session is shared by the suite: answer the logout call locally so the server
+  // session survives, while the app still runs its sign-out cleanup (drafts included).
+  await page.route('**/auth/logout', (route) => route.fulfill({ status: 204 }));
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page).toHaveURL(/\/sign-in/);
+  await page.unroute('**/auth/logout');
+
+  await page.goto(newCard);
+  await expect(page.getByRole('heading', { name: 'New card' })).toBeVisible();
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('');
+  await page.waitForTimeout(300);
+  await expect(restoreOffer).toHaveCount(0);
+});

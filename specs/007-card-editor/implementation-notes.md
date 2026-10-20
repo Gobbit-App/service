@@ -52,3 +52,19 @@ The plan was written against `main` before 006 existed. Differences:
 - **List Edit link**: `DeckItems` renders `EditLink` with `row` (its own `.card-actions` wrapper) when the route passes no `renderActions`; the archived list and the card page put it inside `CardActions`.
 - **Edit route guard**: besides 404/deleted, the route shows "Card unavailable" ("You can't edit this card.") when `canEditItem` fails, e.g. a reader opening the URL directly.
 - **Reader-sees-no-Edit e2e (T034) not added**, for the same reason as T021: the smoke suite has only the owner session. `EditLink.test.tsx` and `can-edit-item.test.ts` cover it.
+
+## Calc chunk check (T049)
+
+- `calc` was already in `CREATABLE_TYPES` (`?type=`) and the type picker. In `vite build`, mathjs is in a single async chunk (`evaluate-*.js`). `CardEditor` loads it with a dynamic `import()` (`useCalcCheck`), and `CalcFields`/`CalcCard` (both lazy chunks) import it statically. The entry chunk only lists it in the preload map.
+
+## Deviations (drafts, US5)
+
+- **No writes while a restore offer is open.** If the user types before answering, the stored draft is not overwritten. Writing resumes after Restore or Discard.
+- **A stored draft equal to the opening state is dropped silently**, with no offer.
+- **Create drafts follow the type.** The key is `new:<deckId>:<type>`. When the type changes, the draft moves to the new key and the old key is deleted. Restoring a draft of another type switches the picker and `?type=`.
+- **Reverting to the opening state deletes the stored draft.**
+- **After a stale restore, the original `baseUpdatedAt` is kept**, so the warning returns if the draft is offered again.
+- **Storage failures are logged (`[drafts] …`) and never block editing or saving.** This covers private mode and missing IndexedDB.
+- **`signOut` clears drafts after the persisted cache, in its own try/catch.** `clearDrafts` is a required `SignOutDeps` member, wired in `main.tsx`.
+- **The e2e sign-out answers `/auth/logout` locally (`page.route`)** so the suite's shared smoke session survives. "Sign in again" is reopening the editor with the same cookie.
+- **`memoryDraftsKv` moved to `src/test/memory-drafts-kv.ts`**, shared by the store, hook and editor tests. `CardEditor.test` mocks `idbDraftsKv` with it.

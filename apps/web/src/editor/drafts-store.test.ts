@@ -7,25 +7,8 @@ import {
   newDraftKey,
   readDraft,
   writeDraft,
-  type DraftsKv,
 } from './drafts-store';
-
-export function memoryDraftsKv(): DraftsKv & { map: Map<string, unknown> } {
-  const map = new Map<string, unknown>();
-  return {
-    map,
-    get: async (k) => map.get(k),
-    set: async (k, v) => {
-      map.set(k, v);
-    },
-    del: async (k) => {
-      map.delete(k);
-    },
-    clear: async () => {
-      map.clear();
-    },
-  };
-}
+import { memoryDraftsKv } from '../test/memory-drafts-kv';
 
 const NOW = new Date('2026-05-01T10:00:00.000Z');
 

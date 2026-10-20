@@ -4,11 +4,14 @@ import { EntityChips, removeEntity } from '../cards/EntityChips';
 import {
   draftFromItem,
   emptyDraft,
+  isCreatableType,
   isDirty,
   withType,
   type CreatableType,
   type Draft,
 } from './draft';
+import { DraftRestoreBanner } from './DraftRestoreBanner';
+import { editDraftKey, newDraftKey } from './drafts-store';
 import { EditorPreview } from './EditorPreview';
 import { EditorTabs } from './EditorTabs';
 import { BodyField } from './fields/BodyField';
@@ -19,6 +22,7 @@ import { TitleField } from './fields/TitleField';
 import { SaveBar, saveBlockedReason } from './SaveBar';
 import { TYPE_LABELS, TypePicker } from './TypePicker';
 import { useCalcCheck } from './use-calc-check';
+import { useDraftAutosave } from './use-draft-autosave';
 import { useSaveCard, type SaveTarget } from './use-save-card';
 import { errorCount, validateDraft, type FieldErrors } from './validate';
 import './editor.css';
@@ -56,7 +60,19 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   const [initial] = useState(() => initialDraft(props));
   const [draft, setDraft] = useState(initial);
   const calc = useCalcCheck(draft.type);
-  const { save, saving, errors: saveErrors, clearErrors } = useSaveCard(saveTarget(props));
+  const autosave = useDraftAutosave({
+    storageKey:
+      props.mode === 'create' ? newDraftKey(deck.id, draft.type) : editDraftKey(props.item.id),
+    draft,
+    initial,
+    baseUpdatedAt: props.mode === 'edit' ? props.item.updatedAt : null,
+  });
+  const {
+    save,
+    saving,
+    errors: saveErrors,
+    clearErrors,
+  } = useSaveCard(saveTarget(props), autosave.clear);
 
   // The URL's `?type=` changed outside the picker (e.g. back button): follow it during render.
   const urlType = props.mode === 'create' ? props.type : null;
@@ -87,6 +103,15 @@ export function CardEditor(props: CardEditorProps): ReactElement {
     if (props.mode === 'create') props.onTypeChange?.(type);
   };
 
+  const restoreDraft = () => {
+    const restored = autosave.restore();
+    if (!restored) return;
+    setDraft(restored);
+    if (props.mode === 'create' && restored.type !== draft.type && isCreatableType(restored.type)) {
+      props.onTypeChange?.(restored.type);
+    }
+  };
+
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (errorCount(clientErrors) > 0 || !calc.ready) return;
@@ -99,6 +124,13 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   return (
     <form className="card-editor editor" onSubmit={onSubmit} noValidate>
       <h2 className="editor__heading">{props.mode === 'create' ? 'New card' : 'Edit card'}</h2>
+      {autosave.offer && (
+        <DraftRestoreBanner
+          stale={autosave.offer.stale}
+          onRestore={restoreDraft}
+          onDiscard={autosave.discard}
+        />
+      )}
       <EditorTabs
         edit={
           <div className="editor__fields">

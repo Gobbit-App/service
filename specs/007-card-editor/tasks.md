@@ -117,7 +117,7 @@ description: "Task list for 007-card-editor"
 - [X] T046 [P] [US4] [unit] apps/web/src/editor/fields/calc-ops.test.ts: add/remove field (≤ 6), key regex, duplicate key, default parsing, key rename updates nothing else silently
 - [X] T047 [US4] apps/web/src/editor/fields/calc-ops.ts to pass T046
 - [X] T048 [US4] apps/web/src/editor/fields/CalcFields.tsx (lazy; imports `validateCalcExpression` from `@pb/shared/calc` only; feeds `validate.ts` the expression check)
-- [ ] T049 [US4] Add `calc` to the `?type=` enum and the type picker; verify in the `vite build` manifest that mathjs stays in one shared async chunk
+- [X] T049 [US4] Add `calc` to the `?type=` enum and the type picker; verify in the `vite build` manifest that mathjs stays in one shared async chunk
 - [ ] T050 [P] [US4] [e2e] e2e/tests/smoke/editor.spec.ts: calc card `a * b` live result; invalid expression disables Save
 
 ---
@@ -128,10 +128,10 @@ description: "Task list for 007-card-editor"
 
 **Independent Test**: type, reload, restore
 
-- [ ] T051 [P] [US5] [unit] apps/web/src/editor/use-draft-autosave.test.ts (fake timers): 500 ms debounce, no write when clean, restore offer, stale when `updatedAt > baseUpdatedAt`, delete on save/discard
-- [ ] T052 [US5] apps/web/src/editor/use-draft-autosave.ts + restore banner in CardEditor.tsx (create key needs `deckId` from `deckQuery`)
-- [ ] T053 [P] [US5] [unit] apps/web/src/api/session.test.ts: `signOut` calls `clearDrafts`
-- [ ] T054 [US5] apps/web/src/api/session.ts: add `clearDrafts` dependency to `signOut` (with the persisted cache and last deck)
+- [X] T051 [P] [US5] [unit] apps/web/src/editor/use-draft-autosave.test.ts (fake timers): 500 ms debounce, no write when clean, restore offer, stale when `updatedAt > baseUpdatedAt`, delete on save/discard
+- [X] T052 [US5] apps/web/src/editor/use-draft-autosave.ts + restore banner in CardEditor.tsx (create key needs `deckId` from `deckQuery`)
+- [X] T053 [P] [US5] [unit] apps/web/src/api/session.test.ts: `signOut` calls `clearDrafts`
+- [X] T054 [US5] apps/web/src/api/session.ts: add `clearDrafts` dependency to `signOut` (with the persisted cache and last deck)
 - [ ] T055 [P] [US5] [e2e] e2e/tests/smoke/editor.spec.ts: type → reload → Restore brings content back; sign-out → sign-in → no offer
 
 ---
