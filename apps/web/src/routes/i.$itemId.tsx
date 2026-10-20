@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { categoriesQuery, deckQuery, itemQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
 import { Card } from '../cards/Card';
+import { EditLink } from '../cards/EditLink';
 import { CardActions } from '../items/CardActions';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { deckHref } from '../ui/chip-order';
@@ -57,7 +58,9 @@ function ItemPage() {
               // D146: back to the deck, where the toast offers Undo
               if (action === 'archive' || action === 'delete') navigate(deckHref(deckSlug));
             }}
-          />
+          >
+            <EditLink item={item.data} role={deck.data.role} />
+          </CardActions>
         )}
         <p className="page__back">
           <NavLink href={deckHref(deckSlug)}>

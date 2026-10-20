@@ -41,3 +41,14 @@ The plan was written against `main` before 006 existed. Differences:
 - **`?type=` follows during render**: when the URL type changes (back button), the editor applies `withType` while rendering instead of in an effect (`react-hooks/set-state-in-effect`).
 - **e2e 601-char case** now checks that Save is disabled with "Fix 1 field" and the meter at 601 / 600; the client never sends the request, so the old server alert can't appear.
 - **Reader guard e2e not added (T021)**: the smoke suite has a single session (the owner's `SMOKE_SESSION_TOKEN`) and no way to sign in as a reader, so "You can't add cards here" for a reader is not covered end to end. The route checks `can(role, 'item.create')`, and `can` is covered by the shared authz unit tests.
+
+## Deviations (edit, US2)
+
+- **T031 private-category case lives in `visibility.int.test.ts`**, which already sets up a private category, readers and editors; `items.int.test.ts` has no private category fixture. The type-change 400 and empty-categories 422 cases were already in `items.int.test.ts`.
+- **Proposals may have no category in the editor**: `ValidateOptions.categoriesOptional` is set when editing a proposal (full editor and review inline edit). The server only requires a category for published cards (D6) and publishing assigns one, so blocking Save there would stop reviewers fixing an ingested proposal's title.
+- **`ReviewQueue` takes the `deck`** (not just its slug) so the inline form can pass it to the shared fields (`FieldsProps.deck`, `CategoryChips`).
+- **"Edit fully"** is in the review card's button row and in the inline form, both to `/i/$id/edit?from=review`.
+- **Review inline edit label "Text" → "Body"**: it now uses the shared `BodyField`.
+- **List Edit link**: `DeckItems` renders `EditLink` with `row` (its own `.card-actions` wrapper) when the route passes no `renderActions`; the archived list and the card page put it inside `CardActions`.
+- **Edit route guard**: besides 404/deleted, the route shows "Card unavailable" ("You can't edit this card.") when `canEditItem` fails, e.g. a reader opening the URL directly.
+- **Reader-sees-no-Edit e2e (T034) not added**, for the same reason as T021: the smoke suite has only the owner session. `EditLink.test.tsx` and `can-edit-item.test.ts` cover it.

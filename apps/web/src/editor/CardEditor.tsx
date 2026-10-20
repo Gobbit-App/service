@@ -66,9 +66,10 @@ export function CardEditor(props: CardEditorProps): ReactElement {
     if (urlType && urlType !== draft.type) setDraft(withType(draft, urlType));
   }
 
+  const isProposal = props.mode === 'edit' && props.item.status === 'proposed';
   const clientErrors = useMemo(
-    () => validateDraft(draft, { calcExpression: calc.check }),
-    [draft, calc.check],
+    () => validateDraft(draft, { calcExpression: calc.check, categoriesOptional: isProposal }),
+    [draft, calc.check, isProposal],
   );
   // Client errors show once the user has changed something; server errors always.
   const shown: FieldErrors = {

@@ -8,143 +8,152 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ShareRouteImport } from './routes/share'
-import { Route as SignInRouteImport } from './routes/sign-in'
-import { Route as AuthErrorRouteImport } from './routes/auth.error'
-import { Route as DSlugRouteImport } from './routes/d.$slug'
-import { Route as IItemIdRouteImport } from './routes/i.$itemId'
-import { Route as DSlugIndexRouteImport } from './routes/d.$slug.index'
-import { Route as DSlugArchivedRouteImport } from './routes/d.$slug.archived'
-import { Route as DSlugFavoritesRouteImport } from './routes/d.$slug.favorites'
-import { Route as DSlugNewRouteImport } from './routes/d.$slug.new'
-import { Route as DSlugReviewRouteImport } from './routes/d.$slug.review'
-import { Route as DSlugSearchRouteImport } from './routes/d.$slug.search'
-import { Route as DSlugCCategoryRouteImport } from './routes/d.$slug.c.$category'
+import { Route as rootRouteImport } from './routes/__root';
+import { Route as IndexRouteImport } from './routes/index';
+import { Route as SettingsRouteImport } from './routes/settings';
+import { Route as ShareRouteImport } from './routes/share';
+import { Route as SignInRouteImport } from './routes/sign-in';
+import { Route as AuthErrorRouteImport } from './routes/auth.error';
+import { Route as DSlugRouteImport } from './routes/d.$slug';
+import { Route as IItemIdRouteImport } from './routes/i.$itemId';
+import { Route as DSlugIndexRouteImport } from './routes/d.$slug.index';
+import { Route as DSlugArchivedRouteImport } from './routes/d.$slug.archived';
+import { Route as DSlugFavoritesRouteImport } from './routes/d.$slug.favorites';
+import { Route as DSlugNewRouteImport } from './routes/d.$slug.new';
+import { Route as DSlugReviewRouteImport } from './routes/d.$slug.review';
+import { Route as DSlugSearchRouteImport } from './routes/d.$slug.search';
+import { Route as IItemIdEditRouteImport } from './routes/i.$itemId_.edit';
+import { Route as DSlugCCategoryRouteImport } from './routes/d.$slug.c.$category';
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ShareRoute = ShareRouteImport.update({
   id: '/share',
   path: '/share',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AuthErrorRoute = AuthErrorRouteImport.update({
   id: '/auth/error',
   path: '/auth/error',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const DSlugRoute = DSlugRouteImport.update({
   id: '/d/$slug',
   path: '/d/$slug',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IItemIdRoute = IItemIdRouteImport.update({
   id: '/i/$itemId',
   path: '/i/$itemId',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const DSlugIndexRoute = DSlugIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DSlugRoute,
-} as any)
+} as any);
 const DSlugArchivedRoute = DSlugArchivedRouteImport.update({
   id: '/archived',
   path: '/archived',
   getParentRoute: () => DSlugRoute,
-} as any)
+} as any);
 const DSlugFavoritesRoute = DSlugFavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
   getParentRoute: () => DSlugRoute,
-} as any)
+} as any);
 const DSlugNewRoute = DSlugNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => DSlugRoute,
-} as any)
+} as any);
 const DSlugReviewRoute = DSlugReviewRouteImport.update({
   id: '/review',
   path: '/review',
   getParentRoute: () => DSlugRoute,
-} as any)
+} as any);
 const DSlugSearchRoute = DSlugSearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => DSlugRoute,
-} as any)
+} as any);
+const IItemIdEditRoute = IItemIdEditRouteImport.update({
+  id: '/i/$itemId_/edit',
+  path: '/i/$itemId/edit',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const DSlugCCategoryRoute = DSlugCCategoryRouteImport.update({
   id: '/c/$category',
   path: '/c/$category',
   getParentRoute: () => DSlugRoute,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
-  '/share': typeof ShareRoute
-  '/sign-in': typeof SignInRoute
-  '/auth/error': typeof AuthErrorRoute
-  '/d/$slug': typeof DSlugRouteWithChildren
-  '/i/$itemId': typeof IItemIdRoute
-  '/d/$slug/archived': typeof DSlugArchivedRoute
-  '/d/$slug/favorites': typeof DSlugFavoritesRoute
-  '/d/$slug/new': typeof DSlugNewRoute
-  '/d/$slug/review': typeof DSlugReviewRoute
-  '/d/$slug/search': typeof DSlugSearchRoute
-  '/d/$slug/': typeof DSlugIndexRoute
-  '/d/$slug/c/$category': typeof DSlugCCategoryRoute
+  '/': typeof IndexRoute;
+  '/settings': typeof SettingsRoute;
+  '/share': typeof ShareRoute;
+  '/sign-in': typeof SignInRoute;
+  '/auth/error': typeof AuthErrorRoute;
+  '/d/$slug': typeof DSlugRouteWithChildren;
+  '/i/$itemId': typeof IItemIdRoute;
+  '/d/$slug/archived': typeof DSlugArchivedRoute;
+  '/d/$slug/favorites': typeof DSlugFavoritesRoute;
+  '/d/$slug/new': typeof DSlugNewRoute;
+  '/d/$slug/review': typeof DSlugReviewRoute;
+  '/d/$slug/search': typeof DSlugSearchRoute;
+  '/i/$itemId/edit': typeof IItemIdEditRoute;
+  '/d/$slug/': typeof DSlugIndexRoute;
+  '/d/$slug/c/$category': typeof DSlugCCategoryRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
-  '/share': typeof ShareRoute
-  '/sign-in': typeof SignInRoute
-  '/auth/error': typeof AuthErrorRoute
-  '/i/$itemId': typeof IItemIdRoute
-  '/d/$slug/archived': typeof DSlugArchivedRoute
-  '/d/$slug/favorites': typeof DSlugFavoritesRoute
-  '/d/$slug/new': typeof DSlugNewRoute
-  '/d/$slug/review': typeof DSlugReviewRoute
-  '/d/$slug/search': typeof DSlugSearchRoute
-  '/d/$slug': typeof DSlugIndexRoute
-  '/d/$slug/c/$category': typeof DSlugCCategoryRoute
+  '/': typeof IndexRoute;
+  '/settings': typeof SettingsRoute;
+  '/share': typeof ShareRoute;
+  '/sign-in': typeof SignInRoute;
+  '/auth/error': typeof AuthErrorRoute;
+  '/i/$itemId': typeof IItemIdRoute;
+  '/d/$slug/archived': typeof DSlugArchivedRoute;
+  '/d/$slug/favorites': typeof DSlugFavoritesRoute;
+  '/d/$slug/new': typeof DSlugNewRoute;
+  '/d/$slug/review': typeof DSlugReviewRoute;
+  '/d/$slug/search': typeof DSlugSearchRoute;
+  '/i/$itemId/edit': typeof IItemIdEditRoute;
+  '/d/$slug': typeof DSlugIndexRoute;
+  '/d/$slug/c/$category': typeof DSlugCCategoryRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
-  '/share': typeof ShareRoute
-  '/sign-in': typeof SignInRoute
-  '/auth/error': typeof AuthErrorRoute
-  '/d/$slug': typeof DSlugRouteWithChildren
-  '/i/$itemId': typeof IItemIdRoute
-  '/d/$slug/archived': typeof DSlugArchivedRoute
-  '/d/$slug/favorites': typeof DSlugFavoritesRoute
-  '/d/$slug/new': typeof DSlugNewRoute
-  '/d/$slug/review': typeof DSlugReviewRoute
-  '/d/$slug/search': typeof DSlugSearchRoute
-  '/d/$slug/': typeof DSlugIndexRoute
-  '/d/$slug/c/$category': typeof DSlugCCategoryRoute
+  __root__: typeof rootRouteImport;
+  '/': typeof IndexRoute;
+  '/settings': typeof SettingsRoute;
+  '/share': typeof ShareRoute;
+  '/sign-in': typeof SignInRoute;
+  '/auth/error': typeof AuthErrorRoute;
+  '/d/$slug': typeof DSlugRouteWithChildren;
+  '/i/$itemId': typeof IItemIdRoute;
+  '/d/$slug/archived': typeof DSlugArchivedRoute;
+  '/d/$slug/favorites': typeof DSlugFavoritesRoute;
+  '/d/$slug/new': typeof DSlugNewRoute;
+  '/d/$slug/review': typeof DSlugReviewRoute;
+  '/d/$slug/search': typeof DSlugSearchRoute;
+  '/i/$itemId_/edit': typeof IItemIdEditRoute;
+  '/d/$slug/': typeof DSlugIndexRoute;
+  '/d/$slug/c/$category': typeof DSlugCCategoryRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/'
     | '/settings'
@@ -158,9 +167,10 @@ export interface FileRouteTypes {
     | '/d/$slug/new'
     | '/d/$slug/review'
     | '/d/$slug/search'
+    | '/i/$itemId/edit'
     | '/d/$slug/'
-    | '/d/$slug/c/$category'
-  fileRoutesByTo: FileRoutesByTo
+    | '/d/$slug/c/$category';
+  fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
     | '/settings'
@@ -173,8 +183,9 @@ export interface FileRouteTypes {
     | '/d/$slug/new'
     | '/d/$slug/review'
     | '/d/$slug/search'
+    | '/i/$itemId/edit'
     | '/d/$slug'
-    | '/d/$slug/c/$category'
+    | '/d/$slug/c/$category';
   id:
     | '__root__'
     | '/'
@@ -189,131 +200,140 @@ export interface FileRouteTypes {
     | '/d/$slug/new'
     | '/d/$slug/review'
     | '/d/$slug/search'
+    | '/i/$itemId_/edit'
     | '/d/$slug/'
-    | '/d/$slug/c/$category'
-  fileRoutesById: FileRoutesById
+    | '/d/$slug/c/$category';
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SettingsRoute: typeof SettingsRoute
-  ShareRoute: typeof ShareRoute
-  SignInRoute: typeof SignInRoute
-  AuthErrorRoute: typeof AuthErrorRoute
-  DSlugRoute: typeof DSlugRouteWithChildren
-  IItemIdRoute: typeof IItemIdRoute
+  IndexRoute: typeof IndexRoute;
+  SettingsRoute: typeof SettingsRoute;
+  ShareRoute: typeof ShareRoute;
+  SignInRoute: typeof SignInRoute;
+  AuthErrorRoute: typeof AuthErrorRoute;
+  DSlugRoute: typeof DSlugRouteWithChildren;
+  IItemIdRoute: typeof IItemIdRoute;
+  IItemIdEditRoute: typeof IItemIdEditRoute;
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/settings';
+      path: '/settings';
+      fullPath: '/settings';
+      preLoaderRoute: typeof SettingsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/share': {
-      id: '/share'
-      path: '/share'
-      fullPath: '/share'
-      preLoaderRoute: typeof ShareRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/share';
+      path: '/share';
+      fullPath: '/share';
+      preLoaderRoute: typeof ShareRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/sign-in': {
-      id: '/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof SignInRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/sign-in';
+      path: '/sign-in';
+      fullPath: '/sign-in';
+      preLoaderRoute: typeof SignInRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/auth/error': {
-      id: '/auth/error'
-      path: '/auth/error'
-      fullPath: '/auth/error'
-      preLoaderRoute: typeof AuthErrorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/auth/error';
+      path: '/auth/error';
+      fullPath: '/auth/error';
+      preLoaderRoute: typeof AuthErrorRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/d/$slug': {
-      id: '/d/$slug'
-      path: '/d/$slug'
-      fullPath: '/d/$slug'
-      preLoaderRoute: typeof DSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/d/$slug';
+      path: '/d/$slug';
+      fullPath: '/d/$slug';
+      preLoaderRoute: typeof DSlugRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/i/$itemId': {
-      id: '/i/$itemId'
-      path: '/i/$itemId'
-      fullPath: '/i/$itemId'
-      preLoaderRoute: typeof IItemIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/i/$itemId';
+      path: '/i/$itemId';
+      fullPath: '/i/$itemId';
+      preLoaderRoute: typeof IItemIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/d/$slug/': {
-      id: '/d/$slug/'
-      path: '/'
-      fullPath: '/d/$slug/'
-      preLoaderRoute: typeof DSlugIndexRouteImport
-      parentRoute: typeof DSlugRoute
-    }
+      id: '/d/$slug/';
+      path: '/';
+      fullPath: '/d/$slug/';
+      preLoaderRoute: typeof DSlugIndexRouteImport;
+      parentRoute: typeof DSlugRoute;
+    };
     '/d/$slug/archived': {
-      id: '/d/$slug/archived'
-      path: '/archived'
-      fullPath: '/d/$slug/archived'
-      preLoaderRoute: typeof DSlugArchivedRouteImport
-      parentRoute: typeof DSlugRoute
-    }
+      id: '/d/$slug/archived';
+      path: '/archived';
+      fullPath: '/d/$slug/archived';
+      preLoaderRoute: typeof DSlugArchivedRouteImport;
+      parentRoute: typeof DSlugRoute;
+    };
     '/d/$slug/favorites': {
-      id: '/d/$slug/favorites'
-      path: '/favorites'
-      fullPath: '/d/$slug/favorites'
-      preLoaderRoute: typeof DSlugFavoritesRouteImport
-      parentRoute: typeof DSlugRoute
-    }
+      id: '/d/$slug/favorites';
+      path: '/favorites';
+      fullPath: '/d/$slug/favorites';
+      preLoaderRoute: typeof DSlugFavoritesRouteImport;
+      parentRoute: typeof DSlugRoute;
+    };
     '/d/$slug/new': {
-      id: '/d/$slug/new'
-      path: '/new'
-      fullPath: '/d/$slug/new'
-      preLoaderRoute: typeof DSlugNewRouteImport
-      parentRoute: typeof DSlugRoute
-    }
+      id: '/d/$slug/new';
+      path: '/new';
+      fullPath: '/d/$slug/new';
+      preLoaderRoute: typeof DSlugNewRouteImport;
+      parentRoute: typeof DSlugRoute;
+    };
     '/d/$slug/review': {
-      id: '/d/$slug/review'
-      path: '/review'
-      fullPath: '/d/$slug/review'
-      preLoaderRoute: typeof DSlugReviewRouteImport
-      parentRoute: typeof DSlugRoute
-    }
+      id: '/d/$slug/review';
+      path: '/review';
+      fullPath: '/d/$slug/review';
+      preLoaderRoute: typeof DSlugReviewRouteImport;
+      parentRoute: typeof DSlugRoute;
+    };
     '/d/$slug/search': {
-      id: '/d/$slug/search'
-      path: '/search'
-      fullPath: '/d/$slug/search'
-      preLoaderRoute: typeof DSlugSearchRouteImport
-      parentRoute: typeof DSlugRoute
-    }
+      id: '/d/$slug/search';
+      path: '/search';
+      fullPath: '/d/$slug/search';
+      preLoaderRoute: typeof DSlugSearchRouteImport;
+      parentRoute: typeof DSlugRoute;
+    };
+    '/i/$itemId_/edit': {
+      id: '/i/$itemId_/edit';
+      path: '/i/$itemId/edit';
+      fullPath: '/i/$itemId/edit';
+      preLoaderRoute: typeof IItemIdEditRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/d/$slug/c/$category': {
-      id: '/d/$slug/c/$category'
-      path: '/c/$category'
-      fullPath: '/d/$slug/c/$category'
-      preLoaderRoute: typeof DSlugCCategoryRouteImport
-      parentRoute: typeof DSlugRoute
-    }
+      id: '/d/$slug/c/$category';
+      path: '/c/$category';
+      fullPath: '/d/$slug/c/$category';
+      preLoaderRoute: typeof DSlugCCategoryRouteImport;
+      parentRoute: typeof DSlugRoute;
+    };
   }
 }
 
 interface DSlugRouteChildren {
-  DSlugArchivedRoute: typeof DSlugArchivedRoute
-  DSlugFavoritesRoute: typeof DSlugFavoritesRoute
-  DSlugNewRoute: typeof DSlugNewRoute
-  DSlugReviewRoute: typeof DSlugReviewRoute
-  DSlugSearchRoute: typeof DSlugSearchRoute
-  DSlugIndexRoute: typeof DSlugIndexRoute
-  DSlugCCategoryRoute: typeof DSlugCCategoryRoute
+  DSlugArchivedRoute: typeof DSlugArchivedRoute;
+  DSlugFavoritesRoute: typeof DSlugFavoritesRoute;
+  DSlugNewRoute: typeof DSlugNewRoute;
+  DSlugReviewRoute: typeof DSlugReviewRoute;
+  DSlugSearchRoute: typeof DSlugSearchRoute;
+  DSlugIndexRoute: typeof DSlugIndexRoute;
+  DSlugCCategoryRoute: typeof DSlugCCategoryRoute;
 }
 
 const DSlugRouteChildren: DSlugRouteChildren = {
@@ -324,9 +344,9 @@ const DSlugRouteChildren: DSlugRouteChildren = {
   DSlugSearchRoute: DSlugSearchRoute,
   DSlugIndexRoute: DSlugIndexRoute,
   DSlugCCategoryRoute: DSlugCCategoryRoute,
-}
+};
 
-const DSlugRouteWithChildren = DSlugRoute._addFileChildren(DSlugRouteChildren)
+const DSlugRouteWithChildren = DSlugRoute._addFileChildren(DSlugRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -336,7 +356,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthErrorRoute: AuthErrorRoute,
   DSlugRoute: DSlugRouteWithChildren,
   IItemIdRoute: IItemIdRoute,
-}
+  IItemIdEditRoute: IItemIdEditRoute,
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

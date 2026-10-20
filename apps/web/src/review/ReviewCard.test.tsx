@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReviewEntry } from '@pb/shared';
-import { makeCategory, makeItem } from '../test/fixtures';
+import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import { renderWithClient } from '../test/render';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
@@ -48,6 +48,7 @@ function renderCard(value: ReviewEntry, { canCreateCategory = true, busy = false
   renderWithClient(
     <ReviewCard
       entry={value}
+      deck={makeDeck({ slug: 'family' })}
       categories={[general]}
       canCreateCategory={canCreateCategory}
       busy={busy}
@@ -143,7 +144,7 @@ describe('ReviewCard', () => {
     const { onSaveEdit } = renderCard(entry());
     onSaveEdit.mockRejectedValueOnce(new Error('boom'));
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    fireEvent.change(screen.getByLabelText('Text'), { target: { value: 'Changed' } });
+    fireEvent.change(screen.getByLabelText('Body'), { target: { value: 'Changed' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();

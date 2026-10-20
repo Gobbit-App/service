@@ -75,19 +75,19 @@ description: "Task list for 007-card-editor"
 
 ### Tests for User Story 2
 
-- [ ] T030 [P] [US2] [int] apps/api/test/proposal-visibility.int.test.ts: creator PATCH of own proposal → 200 and `status` stays `proposed`; publisher PATCH ok; other editor GET/PATCH → 404
-- [ ] T031 [P] [US2] [int] apps/api/test/items.int.test.ts: PATCH with a different `type` → 400; editor rewriting `categoryIds` keeps a private category; PATCH `categoryIds: []` on a published item → 422 `/problems/item-needs-category` (assert existing behaviour the UI relies on)
-- [ ] T032 [P] [US2] [unit] apps/web/src/cards/can-edit-item.test.ts + EditLink.test.tsx: reader no; editor yes for published; proposal → creator or publisher only
-- [ ] T033 [P] [US2] [unit] apps/web/src/review/ReviewEditForm.test.tsx: sends `toPatch` result (title-only edit → `{ title }`), unchanged → no request
+- [X] T030 [P] [US2] [int] apps/api/test/proposal-visibility.int.test.ts: creator PATCH of own proposal → 200 and `status` stays `proposed`; publisher PATCH ok; other editor GET/PATCH → 404
+- [X] T031 [P] [US2] [int] apps/api/test/items.int.test.ts: PATCH with a different `type` → 400; editor rewriting `categoryIds` keeps a private category; PATCH `categoryIds: []` on a published item → 422 `/problems/item-needs-category` (assert existing behaviour the UI relies on)
+- [X] T032 [P] [US2] [unit] apps/web/src/cards/can-edit-item.test.ts + EditLink.test.tsx: reader no; editor yes for published; proposal → creator or publisher only
+- [X] T033 [P] [US2] [unit] apps/web/src/review/ReviewEditForm.test.tsx: sends `toPatch` result (title-only edit → `{ title }`), unchanged → no request
 - [ ] T034 [P] [US2] [e2e] e2e/tests/smoke/editor.spec.ts: edit title from `/i/$id` → Edit; no type picker on edit; reader sees no Edit
 
 ### Implementation for User Story 2
 
-- [ ] T035 [US2] apps/web/src/cards/can-edit-item.ts + apps/web/src/cards/EditLink.tsx; render in 006's `CardActions` on apps/web/src/routes/i.$itemId.tsx and list cards
-- [ ] T036 [US2] apps/web/src/routes/i.$itemId_.edit.tsx (D135): load `itemQuery`, `deckQuery(item.deckId)`, `categoriesQuery`, `meQuery`; guard → "Card unavailable"; `?from=review`
-- [ ] T037 [US2] Edit mode in apps/web/src/editor/CardEditor.tsx + use-save-card.ts (`toPatch` → `useUpdateItem`; no-op when null; navigate back or to the review queue)
-- [ ] T038 [US2] apps/web/src/review/ReviewEditForm.tsx onto `editor/draft.ts` + shared fields; delete apps/web/src/review/review-edit.ts (+ test, ported in T005); "Edit fully" link in apps/web/src/review/ReviewCard.tsx → `/i/$id/edit?from=review`
-- [ ] T039 [US2] Entities in the editor: `cards/EntityChips` with `onRemove` → draft `entities` (FR-012)
+- [X] T035 [US2] apps/web/src/cards/can-edit-item.ts + apps/web/src/cards/EditLink.tsx; render in 006's `CardActions` on apps/web/src/routes/i.$itemId.tsx and list cards
+- [X] T036 [US2] apps/web/src/routes/i.$itemId_.edit.tsx (D135): load `itemQuery`, `deckQuery(item.deckId)`, `categoriesQuery`, `meQuery`; guard → "Card unavailable"; `?from=review`
+- [X] T037 [US2] Edit mode in apps/web/src/editor/CardEditor.tsx + use-save-card.ts (`toPatch` → `useUpdateItem`; no-op when null; navigate back or to the review queue)
+- [X] T038 [US2] apps/web/src/review/ReviewEditForm.tsx onto `editor/draft.ts` + shared fields; delete apps/web/src/review/review-edit.ts (+ test, ported in T005); "Edit fully" link in apps/web/src/review/ReviewCard.tsx → `/i/$id/edit?from=review`
+- [X] T039 [US2] Entities in the editor: `cards/EntityChips` with `onRemove` → draft `entities` (FR-012)
 - [X] T040 [US2] apps/web/src/routes/i.$itemId.tsx back link via `deckHref` (if not already done by 006)
 
 **Checkpoint**: US1 and US2 both work. All existing cards can be edited (images read-only).

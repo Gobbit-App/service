@@ -26,7 +26,11 @@ export type CalcExpressionCheck = (
   keys: readonly string[],
 ) => { ok: true } | { ok: false; message: string };
 
-export type ValidateOptions = { calcExpression?: CalcExpressionCheck };
+export type ValidateOptions = {
+  calcExpression?: CalcExpressionCheck;
+  /** A proposal may have no category yet; publishing assigns one (D6 applies to published). */
+  categoriesOptional?: boolean;
+};
 
 export const CATEGORY_REQUIRED = 'Pick at least one category';
 
@@ -45,7 +49,7 @@ export function isHttpUrl(value: string): boolean {
   }
 }
 
-function checkCommon(draft: Draft, errors: FieldErrors): void {
+function checkCommon(draft: Draft, errors: FieldErrors, categoriesOptional: boolean): void {
   const title = draft.title.trim();
   if (title === '') errors['title'] = 'Title is required';
   else if (codePointLength(title) > CARD_TITLE_MAX) {
@@ -54,7 +58,9 @@ function checkCommon(draft: Draft, errors: FieldErrors): void {
   if (codePointLength(draft.body) > CARD_BODY_MAX) {
     errors['body'] = `Body must be at most ${CARD_BODY_MAX} characters`;
   }
-  if (draft.categoryIds.length === 0) errors['categoryIds'] = CATEGORY_REQUIRED;
+  if (!categoriesOptional && draft.categoryIds.length === 0) {
+    errors['categoryIds'] = CATEGORY_REQUIRED;
+  }
   const sourceUrl = draft.sourceUrl.trim();
   if (sourceUrl !== '' && !isHttpUrl(sourceUrl)) {
     errors['sourceUrl'] = 'Enter a full http:// or https:// address';
@@ -138,7 +144,7 @@ export function payloadBytes(draft: Pick<Draft, 'type' | 'payload'>): number {
  */
 export function validateDraft(draft: Draft, options: ValidateOptions = {}): FieldErrors {
   const errors: FieldErrors = {};
-  checkCommon(draft, errors);
+  checkCommon(draft, errors, options.categoriesOptional ?? false);
   switch (draft.type) {
     case 'link':
       checkLink(draft.payload as LinkDraftPayload, errors);

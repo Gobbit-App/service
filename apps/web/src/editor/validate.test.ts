@@ -56,6 +56,10 @@ describe('validateDraft: common fields', () => {
     );
   });
 
+  it('lets a proposal have no category', () => {
+    expect(validateDraft(draft({ categoryIds: [] }), { categoriesOptional: true })).toEqual({});
+  });
+
   it('checks an optional source url', () => {
     expect(validateDraft(draft({ sourceUrl: '' }))).toEqual({});
     expect(validateDraft(draft({ sourceUrl: 'ftp://x.example' }))).toHaveProperty('sourceUrl');
