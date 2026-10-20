@@ -15,7 +15,9 @@
     "./ingest": "./src/ingest/index.ts",
     "./ingest-constants": "./src/ingest/constants.ts",
     "./item-constants": "./src/items/constants.ts",
-    "./card-limits": "./src/card-limits.ts"
+    "./card-limits": "./src/card-limits.ts",
+    "./media": "./src/media/index.ts",
+    "./media-constants": "./src/media/constants.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
