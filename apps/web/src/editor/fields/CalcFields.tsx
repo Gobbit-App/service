@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { evaluateCalc, formatCalcResult } from '@pb/shared/calc';
+import { PAYLOAD_MAX_BYTES } from '@pb/shared/card-limits';
 import type { CalcDraftField } from '../draft';
 import {
   addField,
@@ -9,6 +10,8 @@ import {
   removeField,
   setField,
 } from './calc-ops';
+import { payloadBytes } from '../validate';
+import { LimitMeter } from './LimitMeter';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
 
@@ -116,6 +119,13 @@ export function CalcFields({
         disabled={disabled}
       />
       <LiveResult payload={payload} />
+      <p className="muted">
+        <LimitMeter
+          used={payloadBytes({ type: 'calc', payload })}
+          max={PAYLOAD_MAX_BYTES}
+          unit="bytes"
+        />
+      </p>
     </div>
   );
 }
