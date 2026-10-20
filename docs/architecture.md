@@ -331,6 +331,10 @@ All errors (except 5xx) follow the Problem schema:
 | Check constraint (pg 23514) | 422 | /problems/constraint-violation | Constraint violation | "Constraint violation" |
 | Immutable field (type) in PATCH | 400 | /problems/bad-request | Bad Request | "Item type is immutable" |
 | Published item no categories | 422 | /problems/item-needs-category | (custom) | "A published item needs at least one category" |
+| PATCH archived → published (Phase 6, D131) | 409 | /problems/use-restore | Conflict | Points to `POST /items/{id}/restore` |
+| Archive/restore a proposal (D131) | 409 | /problems/invalid-transition | Conflict | "A proposal can't be archived/restored; …" |
+| Undelete after 30 days (D132) | 410 | /problems/undo-expired | Gone | "Deleted cards can be brought back for 30 days" |
+| `?status=deleted` without `item.delete` (D132) | 403 | /problems/forbidden | Forbidden | Names the permission |
 | 5xx (unhandled) | 500 | /problems/internal | Internal Server Error | (omit internals from response) |
 
 ### Error handler middleware
@@ -549,11 +553,11 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
 | Folder | Holds |
 | --- | --- |
 | `routes/` | File routes (D65): `/`, `/sign-in?next=`, `/auth/error?reason=`, `/d/$slug`, `/d/$slug/c/$category`, `/d/$slug/favorites`, `/d/$slug/archived`, `/d/$slug/new` (Phase 3B card editor), `/d/$slug/search?q=&mode=` (Phase 4), `/i/$itemId` |
-| `api/` | Typed client, query keys and queries, session and 401 redirect, favorites with optimistic cache updates, network state and offline detection, persistence, card creation (`create-item.ts`) and form error messages (`problem-messages.ts`) |
+| `api/` | Typed client, query keys and queries, session and 401 redirect, favorites with optimistic cache updates, network state and offline detection, persistence, card creation (`create-item.ts`), form error messages (`problem-messages.ts`) and the optimistic lifecycle actions (`item-lifecycle.ts`, Phase 6) |
 | `cards/` | One renderer per card type. `CalcCard` is a `React.lazy` chunk because the evaluator pulls `mathjs` (D57) |
-| `items/` | The item list for a deck/category/favorites/archived view and its empty-state copy; Phase 3B `CardEditor`, the role-gated `AddCardLink` and `card-input.ts` (request body builder) |
+| `items/` | The item list for a deck/category/favorites/archived view and its empty-state copy; Phase 3B `CardEditor`, the role-gated `AddCardLink` and `card-input.ts` (request body builder); Phase 6 `CardActions` (archive/restore/delete/undelete) and `DeletedSection` (Recently deleted) |
 | `search/` | Phase 4: `SearchBox`, `SearchResults`, `ModeToggle`, the lazy `AskView`, URL params, recent searches and the debounce hook |
-| `ui/`, `lib/`, `app/` | Shared components (chips, status views, `NavLink`), copy tables, header and the service-worker update prompt |
+| `ui/`, `lib/`, `app/` | Shared components (chips, status views, `NavLink`, the app-wide Undo toast), `deckHref(slug, path)` (D143), copy tables, header and the service-worker update prompt |
 
 - Session (D66): the app calls `GET /api/me` on boot; any 401 sends the user to `/sign-in?next=<path>`. The magic-link request carries `next`; the API callback redirects to `APP_URL + next` only for same-origin paths (`//host` and absolute URLs are dropped). Sign-out navigates to `/sign-in` first, then calls `POST /api/auth/logout` and clears the persisted cache, so no route re-fetches with a dead cookie.
 - Runtime config (D55): `GET /api/config` → `{ cloudinaryCloudName, commit }`, cached for the session in the persisted query cache. One web image works in every environment.
@@ -763,6 +767,53 @@ Non-session tokens are listed in `lib/token-prefixes.ts` (today `ing_`; Phase 13
 
 ---
 
+## Card lifecycle (Phase 6, `specs/006-card-lifecycle`)
+
+Archive, restore, delete and undelete for cards, through one set of service methods that every client shares.
+
+**State machine** (status × `deleted_at`):
+
+```
+proposed ──publish (PATCH)──▶ published ──archive──▶ archived
+                                  ▲                    │
+                                  └──────restore───────┘
+published | archived ──delete──▶ deleted (deleted_at set) ──undelete (≤ 30 days)──▶ previous status
+deleted > 30 days ──prune-deleted-items (weekly)──▶ hard-deleted
+```
+
+**Routes** (session cookie or bearer; `ing_` tokens get 401):
+
+| Route | Permission | Result |
+| --- | --- | --- |
+| `POST /items/{id}/archive` | `item.archive` (owner, maintainer, editor) | 200 Item, status `archived`; a repeat is a no-op 200 |
+| `POST /items/{id}/restore` | `item.archive` | 200 Item, status `published`, `verifiedAt` kept; a repeat is a no-op 200 |
+| `DELETE /items/{id}` | `item.delete` (owner, maintainer) | 204; a repeat is 404 (the card is hidden) |
+| `POST /items/{id}/undelete` | `item.delete` | 200 Item with its previous status; 410 `undo-expired` after 30 days |
+| `GET /decks/{id}/items?status=deleted` | `item.delete` | Cards deleted in the last 30 days, newest deletion first, cursor on `(deleted_at, id)`; no proposals; category visibility applies |
+
+**Decisions**:
+- **D130 / ADR-050**: every lifecycle method in `items.service` takes `actor: { user, via: 'session' }` first; routes build it with `getActor(c)`.
+- **D131**: `verified_at` is set on the first publication only; restore keeps it. PATCH archived → published is 409 `/problems/use-restore`; archive or restore of a proposal is 409 `/problems/invalid-transition`.
+- **D132**: soft delete. Undelete within `ITEM_UNDELETE_DAYS` (30), else 410 `/problems/undo-expired`; a deleted proposal is 404. The worker's weekly `prune-deleted-items` (`DELETED_ITEM_PRUNE_CRON`, Sundays 05:00 UTC) hard-deletes older rows. Migration `0011_item_lifecycle` only adds the partial index `items_deleted_idx (deck_id, deleted_at DESC, id DESC) WHERE deleted_at IS NOT NULL`.
+- **D143**: `deckHref(slug, path)` (`apps/web/src/ui/chip-order.ts`) builds every deck-scoped href in the web app.
+- **D146**: the web actions are optimistic on the cached lists, roll back on error, invalidate search, and show a 6-second Undo toast after archive and delete. Delete asks first (`window.confirm`). Actions are disabled offline.
+
+**Web**: the card view (`/i/$itemId`) shows Archive/Restore and Delete by role. The Archived view (`/d/$slug/archived`) lists archived cards with Restore and, for `item.delete` roles, a **Recently deleted** section with days left and Undelete. A deleted card's permalink shows "Card unavailable".
+
+### Deviations from the 006 plan
+
+- **`deletedAt` is optional on the Item DTO**, present only on deleted rows (the data model said nullable), so live responses are unchanged.
+- **The deleted-list cursor reuses `encodeCursor`** with `deletedAt` in the `createdAt` slot.
+- **PATCH proposed → published sets `verifiedAt` only when it is null**; PATCH `status: 'archived'` checks for a proposal before the permission check.
+- **Private-category hiding in the deleted listing is tested at the repository level**: every `item.delete` role can read private categories, so no route-level case exists.
+- **One web hook (`useLifecycle`) replaces four** (`useArchive`/`useRestore`/`useDelete`/`useUndelete`). The toast store is app-wide (`useSyncExternalStore`) so the toast survives navigation; no new dependency.
+- **Optimistic inserts go into every list whose filter decides the card** (all, favorites, archived, deleted) by rank, not only "all"; category lists wait for the refetch. Undoing a restore or undelete shows no toast.
+- **The card view navigates back to the deck** after archive or delete.
+- **Days left are floored**, so seconds after a deletion the label reads "29 days left".
+- **E2E ran locally** against `pnpm dev`; the deployed-instance run (quickstart §5) and the `PLAN.md` demo 2 tick wait for the deploy.
+
+---
+
 ## Test Pyramid
 
 ### Unit tests
@@ -812,7 +863,7 @@ Tagging: every test title includes `@smoke`
 
 **Search smoke (Phase 4)**: `search.spec.ts` checks three API cases: a phone number searched as digits without the dash, a query with no results, and the 400 for a blank `q`. `web.spec.ts` checks that typing in the search box opens `/search` with highlighted, tagged results, and checks the empty state.
 
-**Browser smoke (`web-smoke` project, D62)**: `web.spec.ts` and `share.spec.ts` run in Chromium with a Pixel 7 viewport against `WEB_BASE_URL`. The browser is signed in by setting the `gobbit_session` cookie to the smoke token (sessions are looked up by token hash whatever the transport). Each test seeds a smoke deck with one card per type and checks: the deck list, no horizontal overflow at 360 px, the calc result, category switching via the URL, favorites surviving a reload, and the private share preview. The page itself never gets the bearer header.
+**Browser smoke (`web-smoke` project, D62)**: `web.spec.ts`, `share.spec.ts` and `lifecycle.spec.ts` (Phase 6: demo 2 archive → Undo → search miss → restore → search hit; delete with confirm, Undo and Undelete; unavailable deck/card links) run in Chromium with a Pixel 7 viewport against `WEB_BASE_URL`. The browser is signed in by setting the `gobbit_session` cookie to the smoke token (sessions are looked up by token hash whatever the transport). Each test seeds a smoke deck with one card per type and checks: the deck list, no horizontal overflow at 360 px, the calc result, category switching via the URL, favorites surviving a reload, and the private share preview. The page itself never gets the bearer header.
 
 ---
 
@@ -1317,8 +1368,14 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 
 **Rationale**: The private phase plans worked, but reviewers could not see them and nothing checked the code against them. Committed specs travel with the PR, and `analyze` and `converge` check them against the code. Building the constitution only from existing rules keeps the gates meaningful rather than aspirational.
 
+### ADR-050: Lifecycle rules in services, called with an actor (D130)
+
+**Decision**: Archive, restore, delete and undelete live only in `items.service`. Each method takes `actor: { user, via }` as its first argument; HTTP routes build it with `getActor(c)` (`via: 'session'`, whether the session came from the cookie or a bearer). Routes only parse and map; transition rules, permissions and problem types are decided once, in the service.
+
+**Rationale**: Phase 8 records history in `item_events` from these same methods, storing `actor.user` and `actor.via`. Phase 13's MCP server calls them with `via: 'mcp'` plus the connection id. Every client gets the same rules and the same audit trail, without duplicating checks per transport.
+
 ---
 
 ## Summary
 
-Gobbit is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 adds the Reader PWA: a static React app in its own Caddy image that also routes `/api` and `/s` to the API on one origin, a generated typed client, offline reading through a persisted query cache, and share previews with lazily rendered Open Graph images. Phase 3B gives every account a personal deck at `/d/me`, created on sign-in, and a minimal text and link card editor. Phase 4 adds hybrid search: trigram and pgvector arms fused with RRF, limited to what the reader can see. It also adds an optional Ask answer with citations, an embeddings worker on pg-boss, and a recall eval backed by a committed embedding cache. Phase 5 adds ingestion: shares from Android, an iPhone Shortcut, a paste box or (optionally) email become jobs that the worker fetches safely, extracts into a proposed card with an LLM, and checks for duplicates; publishers approve them in a review queue.
+Gobbit is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 adds the Reader PWA: a static React app in its own Caddy image that also routes `/api` and `/s` to the API on one origin, a generated typed client, offline reading through a persisted query cache, and share previews with lazily rendered Open Graph images. Phase 3B gives every account a personal deck at `/d/me`, created on sign-in, and a minimal text and link card editor. Phase 4 adds hybrid search: trigram and pgvector arms fused with RRF, limited to what the reader can see. It also adds an optional Ask answer with citations, an embeddings worker on pg-boss, and a recall eval backed by a committed embedding cache. Phase 5 adds ingestion: shares from Android, an iPhone Shortcut, a paste box or (optionally) email become jobs that the worker fetches safely, extracts into a proposed card with an LLM, and checks for duplicates; publishers approve them in a review queue. Phase 6 adds the card lifecycle: archive and restore, delete with a 30-day undelete and a weekly purge, all through service methods called with an actor, with optimistic Undo in the web app.
