@@ -73,4 +73,20 @@ describe('proposal visibility (D96)', () => {
   it('a maintainer reads any proposal', async () => {
     expect((await get(`/items/${editorsProposal.id}`, maintainer.email)).status).toBe(200);
   });
+
+  it('the creator edits their own proposal and it stays proposed (editor round trip)', async () => {
+    const res = await patch(`/items/${editorsProposal.id}`, editor.email, {
+      title: 'Editor proposal, edited',
+    });
+    expect(res.status).toBe(200);
+    expect(await json(res)).toMatchObject({ title: 'Editor proposal, edited', status: 'proposed' });
+  });
+
+  it('a publisher edits a proposal and it stays proposed', async () => {
+    const res = await patch(`/items/${editorsProposal.id}`, maintainer.email, {
+      body: 'Tidied by a maintainer',
+    });
+    expect(res.status).toBe(200);
+    expect(await json(res)).toMatchObject({ body: 'Tidied by a maintainer', status: 'proposed' });
+  });
 });

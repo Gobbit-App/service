@@ -135,7 +135,7 @@ Oct 17 addendum, **P5.9 MCP readiness** (planned, not implemented; details in `p
 
 Specs (in order): [`006-card-lifecycle`](specs/006-card-lifecycle/spec.md) (demo 2) → [`007-card-editor`](specs/007-card-editor/spec.md) + [`008-card-media`](specs/008-card-media/spec.md) (demo 1) → [`009-browse-mode`](specs/009-browse-mode/spec.md) (demos 3–5).
 
-Bundle baseline before Phase 6 (main at `154a7c1`): initial JS 111.0 KB gzip of the 150 KB budget. After `006-card-lifecycle`: 111.5 KB.
+Bundle baseline before Phase 6 (main at `154a7c1`): initial JS 111.0 KB gzip of the 150 KB budget. After `006-card-lifecycle`: 111.5 KB. After [`007-card-editor`](specs/007-card-editor/spec.md) (editor for text, link, table and calc, drafts, inline categories; demo 1 waits for 008 images and a run on the deployed instance): 112.5 KB.
 
 - MCP (Phase 13): keep the edit, archive, restore and delete rules (and the undo window) in services, not in the UI, so the MCP tools reuse them unchanged.
 

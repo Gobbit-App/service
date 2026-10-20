@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ItemCreateInput } from '@pb/shared';
 import { api, unwrap } from './client';
-import { queryKeys } from './query-keys';
+import { queryKeys, SEARCH_KEY } from './query-keys';
 
-/** Creates a card in a deck; every item list refetches on success (Phase 3B editor). */
+/** Creates a card in a deck; every item list and search refetch on success (R9). */
 export function useCreateItem(deckSlug: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -14,6 +14,10 @@ export function useCreateItem(deckSlug: string) {
           body: input,
         }),
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.itemLists }),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.itemLists }),
+        qc.invalidateQueries({ queryKey: [SEARCH_KEY] }),
+      ]),
   });
 }

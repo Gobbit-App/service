@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { testQueryClient } from '../test/render';
-import { queryKeys } from './query-keys';
+import { queryKeys, SEARCH_KEY } from './query-keys';
 
 const { postMock } = vi.hoisted(() => ({ postMock: vi.fn() }));
 vi.mock('./client', () => ({
@@ -13,7 +13,7 @@ vi.mock('./client', () => ({
 const { useCreateItem } = await import('./create-item');
 
 describe('useCreateItem', () => {
-  it('posts the card to the deck and invalidates every item list on success', async () => {
+  it('posts the card to the deck and invalidates every item list and search on success', async () => {
     postMock.mockResolvedValueOnce({ data: { id: 'item-1' } });
     const queryClient = testQueryClient();
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
@@ -25,6 +25,7 @@ describe('useCreateItem', () => {
     result.current.mutate(input);
 
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.itemLists }));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: [SEARCH_KEY] });
     expect(postMock).toHaveBeenCalledWith('/decks/{id}/items', {
       params: { path: { id: 'me' } },
       body: input,

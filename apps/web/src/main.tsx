@@ -25,6 +25,8 @@ const router = createAppRouter({
       removePersisted: async () => {
         await persister.removeClient();
       },
+      // Loaded on demand: the drafts store is not part of the initial bundle.
+      clearDrafts: async () => (await import('./editor/drafts-store')).clearDrafts(),
     }),
 });
 

@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReviewList } from '@pb/shared';
 import { queryKeys } from '../api/query-keys';
-import { makeItem } from '../test/fixtures';
+import { makeDeck, makeItem } from '../test/fixtures';
 import { renderWithClient, testQueryClient } from '../test/render';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
@@ -22,7 +22,7 @@ function renderQueue() {
   const queryClient = testQueryClient();
   queryClient.setQueryData(queryKeys.reviewCount('family'), { count: 2 });
   return renderWithClient(
-    <ReviewQueue deckSlug="family" categories={[]} canCreateCategory={false} />,
+    <ReviewQueue deck={makeDeck({ slug: 'family' })} categories={[]} canCreateCategory={false} />,
     { queryClient },
   );
 }

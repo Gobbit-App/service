@@ -314,6 +314,10 @@ Shares become **proposed** cards; a publisher approves them under **Review** in 
 - **iPhone**: create an ingest token in **Settings** (gear in the header), then add the *Share to Gobbit* Shortcut and paste the token when asked. Building and publishing the Shortcut (and setting `SHORTCUT_URL`): [`docs/shortcut/README.md`](./docs/shortcut/README.md).
 - **Email (optional)**: each token also has an address `<token without ing_>@INGEST_EMAIL_DOMAIN`, shown once with the new token. Setup: Resend → *Receiving* (domain + MX records) → *Webhooks*: endpoint `https://<host>/api/webhooks/resend/inbound`, event `email.received`; set `INGEST_EMAIL_DOMAIN`, `RESEND_WEBHOOK_SECRET` (the `whsec_…` signing secret) and `RESEND_API_KEY`, then redeploy. Details in the same doc.
 
+### Writing cards (Phase 6)
+
+Members who can edit (owner, maintainer, editor) get **Add card** in a deck (`/d/<slug>/new?type=text|link|table|calc`) and **Edit** on cards (`/i/<id>/edit`; "Edit fully" from the review queue). The editor shows a live preview with the same renderer as the list, checks limits as you type (the API stays authoritative) and can create a category inline. Unsaved changes are kept as a local draft in the browser (IndexedDB) and offered on reopen; drafts are deleted on save and on sign-out. Image cards are read-only in the editor until uploads land.
+
 ### Interactive API
 
 - **OpenAPI Schema:** `GET /openapi.json` (OpenAPI 3.1.0)

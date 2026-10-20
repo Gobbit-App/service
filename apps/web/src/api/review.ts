@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type { Item, ItemPatch, PublishRequest, ReviewCount, ReviewList } from '@pb/shared';
-import { decrementCount, removeReviewEntry, replaceReviewItem } from '../review/review-cache';
+import type { PublishRequest, ReviewCount, ReviewList } from '@pb/shared';
+import { decrementCount, removeReviewEntry } from '../review/review-cache';
 import { api, unwrap } from './client';
 import { queryKeys } from './query-keys';
 
@@ -83,17 +83,4 @@ export function useDiscardProposal(deckSlug: string) {
   return useReviewAction(deckSlug, ({ itemId }: { itemId: string }) =>
     unwrap(api.POST('/items/{id}/discard', { params: { path: { id: itemId } } })),
   );
-}
-
-/** D107 inline edit: PATCH the proposal, then swap it into the queue. */
-export function useUpdateProposal(deckSlug: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ itemId, patch }: { itemId: string; patch: ItemPatch }): Promise<Item> =>
-      unwrap(api.PATCH('/items/{id}', { params: { path: { id: itemId } }, body: patch })),
-    onSuccess: (item) =>
-      qc.setQueryData<ReviewList | undefined>(queryKeys.review(deckSlug), (list) =>
-        replaceReviewItem(list, item),
-      ),
-  });
 }

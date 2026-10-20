@@ -1,10 +1,12 @@
 import { useMemo, useState, type ReactElement } from 'react';
-import type { Category, ItemPatch, PublishRequest, ReviewEntry } from '@pb/shared';
+import type { Category, Deck, ItemPatch, PublishRequest, ReviewEntry } from '@pb/shared';
 import { problemMessages } from '../api/problem-messages';
+import { editHref } from '../cards/can-edit-item';
 import { CardBody } from '../cards/CardBody';
 import { itemCategories } from '../cards/Card';
 import { useCloudName } from '../cards/use-cloud-name';
-import { EntityChips } from './EntityChips';
+import { EntityChips } from '../cards/EntityChips';
+import { NavLink } from '../ui/NavLink';
 import { ReviewDiff } from './ReviewDiff';
 import { ReviewEditForm } from './ReviewEditForm';
 import { reviewDiff } from './review-diff';
@@ -19,6 +21,7 @@ const BANNERS = {
 /** D106/D107: one proposal with its source, extracted details and the publish decision. */
 export function ReviewCard({
   entry,
+  deck,
   categories,
   canCreateCategory,
   busy,
@@ -28,6 +31,7 @@ export function ReviewCard({
   onSaveEdit,
 }: {
   entry: ReviewEntry;
+  deck: Deck;
   categories: readonly Category[];
   canCreateCategory: boolean;
   busy: boolean;
@@ -78,6 +82,7 @@ export function ReviewCard({
       {editing ? (
         <ReviewEditForm
           item={item}
+          deck={deck}
           categories={categories}
           saving={saving}
           errors={editErrors}
@@ -162,6 +167,9 @@ export function ReviewCard({
           >
             Edit
           </button>
+          <NavLink href={editHref(item.id, 'review')} className="button button--ghost">
+            Edit fully
+          </NavLink>
           <button
             type="button"
             className="button button--ghost review-card__discard"

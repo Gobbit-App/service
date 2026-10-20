@@ -29,13 +29,15 @@ describe('signOut', () => {
     localStorage.setItem(LAST_DECK_KEY, 'family');
     const removePersisted = vi.fn().mockResolvedValue(undefined);
     const logout = vi.fn().mockResolvedValue(undefined);
+    const clearDrafts = vi.fn().mockResolvedValue(undefined);
 
-    await signOut({ queryClient, removePersisted, logout });
+    await signOut({ queryClient, removePersisted, clearDrafts, logout });
 
     expect(logout).toHaveBeenCalled();
     expect(queryClient.getQueryData(['me'])).toBeUndefined();
     expect(localStorage.getItem(LAST_DECK_KEY)).toBeNull();
     expect(removePersisted).toHaveBeenCalled();
+    expect(clearDrafts).toHaveBeenCalled();
   });
 
   it('still clears local data when logout fails', async () => {
@@ -44,9 +46,11 @@ describe('signOut', () => {
     const removePersisted = vi.fn().mockResolvedValue(undefined);
     const log = vi.fn();
 
+    const clearDrafts = vi.fn().mockResolvedValue(undefined);
     await signOut({
       queryClient,
       removePersisted,
+      clearDrafts,
       logout: () => Promise.reject(new TypeError('offline')),
       log,
     });
@@ -54,5 +58,25 @@ describe('signOut', () => {
     expect(log).toHaveBeenCalled();
     expect(queryClient.getQueryData(['me'])).toBeUndefined();
     expect(removePersisted).toHaveBeenCalled();
+    expect(clearDrafts).toHaveBeenCalled();
+  });
+
+  it('clears the drafts even when the persisted cache cannot be removed', async () => {
+    const clearDrafts = vi.fn().mockResolvedValue(undefined);
+    const log = vi.fn();
+
+    await signOut({
+      queryClient: new QueryClient(),
+      removePersisted: () => Promise.reject(new Error('idb blocked')),
+      clearDrafts,
+      logout: vi.fn().mockResolvedValue(undefined),
+      log,
+    });
+
+    expect(clearDrafts).toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith(
+      '[session] could not clear the persisted cache',
+      expect.any(Error),
+    );
   });
 });

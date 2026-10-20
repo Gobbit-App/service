@@ -719,6 +719,82 @@ h3 {
   justify-self: start;
 }
 
+/* ---------- Editor fields (Phase 6, D136): shared by the card editor and review edit ---------- */
+
+.chip[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+
+.field__label {
+  font-weight: 600;
+}
+
+.field__hint {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.field__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.875rem;
+}
+
+[aria-invalid='true'] {
+  border-color: var(--color-danger) !important;
+}
+
+.limit-meter {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.limit-meter--near {
+  color: var(--color-text);
+}
+
+.limit-meter--over {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.category-chips__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip--add {
+  border-style: dashed;
+}
+
+.new-category {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-category input {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.new-category .field__error {
+  flex-basis: 100%;
+}
+
 /* ---------- Share target and paste (Phase 5, D108) ---------- */
 
 .share-notice {

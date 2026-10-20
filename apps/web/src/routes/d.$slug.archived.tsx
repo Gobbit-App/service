@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { can } from '@pb/shared/authz';
 import { deckQuery } from '../api/queries';
+import { EditLink } from '../cards/EditLink';
 import { CardActions } from '../items/CardActions';
 import { DeckItems } from '../items/DeckItems';
 import { DeletedSection } from '../items/DeletedSection';
@@ -21,7 +22,13 @@ export const Route = createFileRoute('/d/$slug/archived')({
           slug={slug}
           filter={{ kind: 'archived' }}
           renderActions={
-            role ? (item) => <CardActions item={item} deckSlug={slug} role={role} /> : undefined
+            role
+              ? (item) => (
+                  <CardActions item={item} deckSlug={slug} role={role}>
+                    <EditLink item={item} role={role} />
+                  </CardActions>
+                )
+              : undefined
           }
         />
         {role && can(role, 'item.delete') && <DeletedSection deckSlug={slug} role={role} />}

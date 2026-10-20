@@ -23,7 +23,7 @@ function Review() {
 
   return (
     <ReviewQueue
-      deckSlug={slug}
+      deck={deck.data}
       categories={categories.data ?? []}
       canCreateCategory={can(deck.data.role, 'category.create')}
     />

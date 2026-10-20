@@ -1,30 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import type { Category } from '@pb/shared';
+import type { Category, Deck } from '@pb/shared';
 import { problemMessages } from '../api/problem-messages';
-import {
-  reviewQuery,
-  useDiscardProposal,
-  usePublishProposal,
-  useUpdateProposal,
-} from '../api/review';
+import { reviewQuery, useDiscardProposal, usePublishProposal } from '../api/review';
+import { useUpdateItem } from '../api/update-item';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { ReviewCard } from './ReviewCard';
 
 /** D107: the deck's proposals, newest first, each with publish / edit / discard. */
 export function ReviewQueue({
-  deckSlug,
+  deck,
   categories,
   canCreateCategory,
 }: {
-  deckSlug: string;
+  deck: Deck;
   categories: readonly Category[];
   canCreateCategory: boolean;
 }): ReactElement {
+  const deckSlug = deck.slug;
   const queue = useQuery(reviewQuery(deckSlug));
   const publish = usePublishProposal(deckSlug);
   const discard = useDiscardProposal(deckSlug);
-  const update = useUpdateProposal(deckSlug);
+  const update = useUpdateItem(deckSlug);
   const failure = publish.error ?? discard.error;
 
   if (queue.isPending) return <LoadingState label="Loading proposals…" />;
@@ -54,6 +51,7 @@ export function ReviewQueue({
         <ReviewCard
           key={entry.item.id}
           entry={entry}
+          deck={deck}
           categories={categories}
           canCreateCategory={canCreateCategory}
           busy={publish.isPending || discard.isPending}

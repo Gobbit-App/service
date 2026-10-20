@@ -66,4 +66,20 @@ describe('Card', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add to favorites' }));
     await waitFor(() => expect(unwrap).toHaveBeenCalled());
   });
+
+  it('preview hides favorite and share and renders title and chips without links', () => {
+    unwrap.mockReturnValue(new Promise(() => undefined));
+    renderWithClient(
+      <Card
+        item={makeItem({ id: 'preview', title: 'Draft', categoryIds: ['c-school'] })}
+        deckSlug="family"
+        categories={[school]}
+        preview
+      />,
+    );
+    expect(screen.getByRole('article', { name: 'Draft' })).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Categories' })).toHaveTextContent('School');
+  });
 });
