@@ -1,0 +1,304 @@
+/*
+ * Browse (D139–D144). Imported only by BrowseScreen, so it stays in the Browse chunk.
+ * Paging is native scroll-snap; only transform/opacity ever transition (SC-004).
+ */
+
+.browse {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--color-bg);
+}
+
+.browse__stage {
+  height: 100%;
+}
+
+/* The snap container: one card per screen; the page never scroll-chains past it. */
+.browse__pages {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+
+.browse__pages::-webkit-scrollbar {
+  display: none;
+}
+
+.browse-page {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* The middle zone: horizontal swipes do nothing; long cards scroll, then chain to the next. */
+.browse-page__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  overflow-y: auto;
+  overscroll-behavior: auto;
+}
+
+.browse-page__content:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.browse-page__content .card {
+  margin: 0;
+}
+
+.browse-page--state .browse-page__content {
+  display: grid;
+  align-content: center;
+}
+
+/* Header/footer zones (contract §2): a quarter of the screen, at least 88 px; vertical stays native. */
+.browse-band {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: max(25dvh, 88px);
+  padding: 0 calc(var(--gutter) + var(--safe-right)) 0 calc(var(--gutter) + var(--safe-left));
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.browse-band--header {
+  padding-top: var(--safe-top);
+  background: linear-gradient(var(--color-surface), var(--color-bg));
+}
+
+.browse-band--footer {
+  padding-bottom: var(--safe-bottom);
+  background: linear-gradient(var(--color-bg), var(--color-surface));
+}
+
+.browse-band__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+}
+
+.browse-band__position {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.browse-band .icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Category name + menu. */
+.browse-category {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+}
+
+.browse-category__name {
+  max-width: 100%;
+  min-height: var(--tap);
+  padding: 0 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.browse-category__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  z-index: 2;
+  min-width: 200px;
+  max-height: 50dvh;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+  list-style: none;
+  transform: translateX(-50%);
+}
+
+.browse-category__menu button {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border: 0;
+  border-radius: calc(var(--radius) - 4px);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.browse-category__menu button[aria-checked='true'] {
+  background: var(--color-accent-soft);
+  font-weight: 600;
+}
+
+/* Pane tabs and dots. */
+.browse-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 4px;
+  justify-content: center;
+}
+
+.browse-tabs__tab {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.browse-tabs__tab[aria-selected='true'] {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.browse-tabs__tab:disabled {
+  cursor: default;
+}
+
+.browse-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.browse-dots__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition: transform 150ms ease-out;
+}
+
+.browse-dots__dot.is-active {
+  background: var(--color-accent);
+  transform: scale(1.4);
+}
+
+/* Details/Source panes. */
+.browse-pane__heading {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.browse-pane__line {
+  margin: 0;
+}
+
+.browse-pane__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px var(--gap);
+  margin: 0;
+}
+
+.browse-pane__facts dt {
+  color: var(--color-muted);
+}
+
+.browse-pane__facts dd {
+  margin: 0;
+}
+
+.browse__notice {
+  position: fixed;
+  bottom: calc(max(25dvh, 88px) + 8px);
+  left: 50%;
+  z-index: 11;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-banner);
+  color: var(--color-banner-text);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* First-run hint (FR-012): the three zones, labelled over the screen. */
+.browse-hint {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  background: rgb(0 0 0 / 70%);
+  color: #fff;
+  text-align: center;
+}
+
+.browse-hint__zone {
+  display: grid;
+  place-content: center;
+  gap: var(--gap);
+  padding: var(--gutter);
+}
+
+.browse-hint__zone--header,
+.browse-hint__zone--footer {
+  min-height: max(25dvh, 88px);
+  border: 2px dashed rgb(255 255 255 / 60%);
+  border-width: 0 0 2px;
+}
+
+.browse-hint__zone--footer {
+  border-width: 2px 0 0;
+}
+
+.browse-hint__zone--middle {
+  flex: 1 1 auto;
+}
+
+.browse-hint h2,
+.browse-hint p {
+  margin: 0;
+}
+
+/* Reduced motion: paging is instant (motion.ts) and nothing animates. */
+@media (prefers-reduced-motion: reduce) {
+  .browse__pages {
+    scroll-behavior: auto;
+  }
+
+  .browse-dots__dot {
+    transition: none;
+  }
+}

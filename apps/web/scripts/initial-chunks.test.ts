@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { initialChunkFiles, checkBudget, type ViteManifest } from './initial-chunks';
+import {
+  checkBudget,
+  initialChunkFiles,
+  lazyOnlyViolations,
+  type ViteManifest,
+} from './initial-chunks';
 
 describe('initialChunkFiles', () => {
   it('follows static import chain and excludes dynamic imports', () => {
@@ -103,5 +108,19 @@ describe('checkBudget', () => {
 
     const result = checkBudget(entries, 100);
     expect(result).toEqual({ totalBytes: 110, ok: false });
+  });
+});
+
+describe('lazyOnlyViolations', () => {
+  it('flags an initial chunk that bundles @use-gesture', () => {
+    const chunks = [
+      { file: 'index.js', code: 'const a={preventScrollAxis:"y"}' },
+      { file: 'react.js', code: 'export{}' },
+    ];
+    expect(lazyOnlyViolations(chunks)).toEqual(['@use-gesture in index.js']);
+  });
+
+  it('passes clean chunks', () => {
+    expect(lazyOnlyViolations([{ file: 'index.js', code: 'el.setPointerCapture(1)' }])).toEqual([]);
   });
 });

@@ -916,6 +916,79 @@ Image cards from the editor (upload a photo, or take one on a phone) and "Fetch 
 - **`use-image-upload.ts` is not a TanStack mutation**: sign and upload are one sequence with progress, cancel and one re-sign, so the hook keeps its own state behind an injectable `Signer` and upload function.
 - **`ImageCard` is keyed by `publicId`** in `CardBody`, so a replaced photo in the editor preview doesn't inherit the previous photo's load error.
 
+## Browse mode (Phase 6, `specs/009-browse-mode`)
+
+Browse shows one card per screen. Readers swipe vertically between cards, across the header to change category, and across the footer to switch between the Content, Details and Source panes. Every gesture has a button and a key. Nothing changes in the API or the DB. The one new web dependency is `@use-gesture/react`, and it loads only in the Browse chunk.
+
+**Route and address (D141)**:
+- The route is `/d/$slug/browse?c=<all|category>&i=<itemId>&pane=<content|details|source>` (`routes/d.$slug.browse.tsx`).
+- `browse/browse-params.ts` parses the search params leniently and has no zod: unknown values fall back to the defaults.
+- While browsing, `DeckLayout` renders only its `<Outlet>`. `isBrowsePath()` detects the route.
+- Card, category and pane changes `replace` the history entry, so only opening Browse adds one.
+- The "Browse" button sits on the All and category lists (`items/BrowseButton.tsx`). It opens Browse on the first card visible in the list (`items/first-visible.ts`) and pushes with `state.fromList`, which carries the list's category.
+- Closing (button or Escape):
+  - from the same category, `history.back()`;
+  - after a category change, the list of the new category replaces the Browse entry;
+  - from a deep link, the list is pushed.
+- The system back action after a category change (FR-005): Browse records the opening list and its history index (`__TSR_index` − 1) in `sessionStorage` (`gobbit:browse-opener`). When that exact entry mounts again and the return entry names another category, `ItemList` replaces it with the current category's list, which then scrolls to the card.
+
+**Data**:
+- `browse/use-browse-items.ts` runs `useInfiniteQuery(itemsQuery(slug, filter))` with the list's own filter. Browse and the list share the cache and the persisted offline copy.
+- The next page is fetched 3 cards before the end.
+- A deep-linked `i` is searched for across up to 5 pages. If it isn't found, Browse opens on the first card with "That card isn't available here".
+- Archived, deleted, proposed and hidden cards are never in the list query.
+
+**Paging (D139, D144)**:
+- `.browse__pages` is a native CSS scroll-snap container: `y mandatory`, with `overscroll-behavior-y: contain`.
+- Every page is `100dvh`. Only the current card ±1 render content; the rest are empty placeholders of the same height.
+- One IntersectionObserver at threshold 0.6 (`use-current-card.ts`) tracks the current card. After 300 ms of settle it writes `i`.
+- Only the current page is exposed to assistive tech; the others are `inert` + `aria-hidden`. Focus moves to the card title on change, and one live region announces the position.
+- **Scroll restoration is disabled for this route** (`app/router.ts`). Router scroll restoration would otherwise restore the snap container from an earlier Browse visit in the tab, and again after every settle `replace`. Browse positions itself only from `i`.
+
+**Zones (D140)**:
+- The header band (`max(25dvh, 88px)`) and the footer band take horizontal swipes through `use-zone-swipe.ts` (`useDrag`, `axis: 'x'`, `filterTaps`, `touch-action: pan-y`).
+- `swipe.ts` classifies a swipe: at least 40 px or 0.3 px/ms, on the dominant axis, with leftward meaning next.
+- The 24 px at each screen edge are ignored (`edge-guard.ts`), so the system back gesture keeps working.
+- The middle zone only scrolls.
+- Category order is All, then the chip-row order (`category-cycle.ts`), with no wrap-around.
+- The footer selects the pane, and the pane stays the same across cards. The Content pane is the list's card (favorite, share, and the title links to `/i/<id>`).
+
+**Without gestures (D142)**:
+- Buttons: ↑/↓ card buttons, ‹ › category chevrons named after their target, a category menu, a `tablist` for the panes, and a close button.
+- Keys: PageUp/PageDown/ArrowUp/ArrowDown for cards, ArrowLeft/ArrowRight for categories, Escape to close. The pure classifier in `browse-keys.ts` skips inputs and card bodies that can still scroll.
+- A first-run dialog ("How to browse") explains the zones. Its dismissal is remembered in `localStorage` `gobbit:browse-hint:v1`.
+- Under `prefers-reduced-motion`, card changes scroll with `behavior: 'auto'`.
+
+**Return to the list (FR-005)**:
+- Every card change writes `{ deckSlug, filterKey, itemId }` to `sessionStorage` (`browse-return.ts`).
+- `ItemList` reads the entry once on mount. If it matches the list's deck and filter, it scrolls that card into view and clears the entry. This overrides the pathname-keyed restore (D65) only for that one return.
+
+**Images and motion (D144)**:
+- `ImageCard` has optional `sizes` and `priority` props. Browse passes a viewport-based `sizes` (`use-image-sizes.ts`).
+- The current card gets `loading="eager"` + `fetchpriority="high"`; its neighbours stay lazy.
+- The only CSS transition is a `transform` on the footer dots, so there is no `will-change`. Styles live in `browse/browse.css`, which is part of the lazy chunk.
+
+**Bundle**:
+- Initial JS is 113.7 KB gzip (was 112.5).
+- The Browse route chunk is 13.1 KB gzip, including use-gesture's `useDrag` (~8.5 KB).
+- `pnpm budget` fails if an initial chunk contains `@use-gesture` code. `scripts/initial-chunks.ts` `lazyOnlyViolations` checks for content markers.
+
+### Deviations from the 009 plan
+
+- **The return entry is written immediately** on each current-card change, not debounced to 300 ms. `current` already trails scrolling through the observer.
+- **CSS is in `browse/browse.css`**, with its own reduced-motion block, not in `styles.css`. It stays out of the initial CSS.
+- **Scroll restoration is disabled on `/d/$slug/browse`**. The plan assumed D65 only affected the list.
+- **`isBrowsePath()` is a regex**, not `pathname.endsWith('/browse')`, which would misfire on a category whose slug is `browse`.
+- **Close after a category change replaces the entry with the new category's list.** The system back action lands on the opening list, which redirects (`replace`) to the current category's list via the opener record and history index (convergence T052).
+- **The not-found notice stays** while the reader is on the card Browse opened on, even after `i` is written.
+- **The lazy-only check matches content markers**, because production chunks carry no module paths.
+- **E2E swipes use CDP `Input.dispatchTouchEvent`** (`e2e/tests/smoke/helpers/swipe.ts`), because Playwright's touchscreen API only taps.
+- **Accessible names are asserted with `getByRole`**; there is no axe dependency. The research also recorded plan-vs-code resolutions, all resolved in favour of the code:
+  - an auto-split file route instead of an explicit lazy import;
+  - reusing `cards/cloudinary.ts` widths;
+  - the `gobbit:browse-hint:v1` key;
+  - a Source pane built from `sourceKind`/`sourceUrl`/ages.
+
 ---
 
 ## Test Pyramid
@@ -1484,8 +1557,19 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 
 **Rationale**: Photos from a phone are several MB; proxying them would tie up the API and its memory for no benefit, and an unsigned preset would let anyone with the cloud name upload. Signing keeps the secret on the server and scopes every upload to a deck, so Phase 7's `assets` table and orphan sweep can find uploads by tag without a schema change now. The size cap is checked in the browser, with Cloudinary's account limit as the backstop; a signed preset can add a server-side cap later without changing the client.
 
+### ADR-052: Browse: native scroll-snap + use-gesture (D139, D140, D144)
+
+**Decision**: Browse pages cards with native CSS scroll-snap and one IntersectionObserver. `@use-gesture/react` (`useDrag`) is used only for horizontal swipes on the header and footer bands, with `touch-action: pan-y` and a 24 px edge guard. Only the current card ±1 is mounted. The gesture library lives only in the lazy Browse route chunk, and `pnpm budget` enforces that.
+
+**Rationale**:
+- Native snapping keeps vertical paging on the compositor, with platform physics and no JS per frame, and it works with keyboard and assistive tech.
+- A small drag library for the two bands covers what CSS can't do (tap filtering, axis locking) without a carousel framework.
+- The edge guard leaves the OS back gestures alone.
+- Mounting ±1 bounds the DOM and image decoding regardless of category size.
+- The cost is about 8.5 KB gzip, and only for readers who open Browse.
+
 ---
 
 ## Summary
 
-Gobbit is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 adds the Reader PWA: a static React app in its own Caddy image that also routes `/api` and `/s` to the API on one origin, a generated typed client, offline reading through a persisted query cache, and share previews with lazily rendered Open Graph images. Phase 3B gives every account a personal deck at `/d/me`, created on sign-in, and a minimal text and link card editor. Phase 4 adds hybrid search: trigram and pgvector arms fused with RRF, limited to what the reader can see. It also adds an optional Ask answer with citations, an embeddings worker on pg-boss, and a recall eval backed by a committed embedding cache. Phase 5 adds ingestion: shares from Android, an iPhone Shortcut, a paste box or (optionally) email become jobs that the worker fetches safely, extracts into a proposed card with an LLM, and checks for duplicates; publishers approve them in a review queue. Phase 6 adds the card lifecycle: archive and restore, delete with a 30-day undelete and a weekly purge, all through service methods called with an actor, with optimistic Undo in the web app. It also adds the card editor for every type, with a live preview through the list renderer, zod-free client checks, local drafts and inline category creation.
+Gobbit is a layered REST API with OpenAPI documentation, magic-link sessions, per-deck roles and category visibility, and comprehensive error handling. Data lives in PostgreSQL with invariants enforced at multiple levels (Zod schemas, database triggers, service checks). Pagination uses keyset cursors for stability. The seed creates only the owner user; tests build their data with factories. Testing spans unit (mocked), integration (Testcontainers), and e2e (Playwright smoke). Migrations are versioned with rollback support. Architecture emphasizes single source of truth (@pb/shared), type safety (strict TypeScript), and explicit error codes (RFC 9457). Phase 3 adds the Reader PWA: a static React app in its own Caddy image that also routes `/api` and `/s` to the API on one origin, a generated typed client, offline reading through a persisted query cache, and share previews with lazily rendered Open Graph images. Phase 3B gives every account a personal deck at `/d/me`, created on sign-in, and a minimal text and link card editor. Phase 4 adds hybrid search: trigram and pgvector arms fused with RRF, limited to what the reader can see. It also adds an optional Ask answer with citations, an embeddings worker on pg-boss, and a recall eval backed by a committed embedding cache. Phase 5 adds ingestion: shares from Android, an iPhone Shortcut, a paste box or (optionally) email become jobs that the worker fetches safely, extracts into a proposed card with an LLM, and checks for duplicates; publishers approve them in a review queue. Phase 6 adds the card lifecycle: archive and restore, delete with a 30-day undelete and a weekly purge, all through service methods called with an actor, with optimistic Undo in the web app. It also adds the card editor for every type, with a live preview through the list renderer, zod-free client checks, local drafts and inline category creation. Image cards upload photos straight from the browser to Cloudinary with a signature from the API, and link cards can fetch a preview through the safe fetcher. Browse mode shows one card per screen: readers swipe through a category, across the header to change category and across the footer to change pane, and every gesture also has a button and a key.

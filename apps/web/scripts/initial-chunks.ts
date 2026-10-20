@@ -58,3 +58,23 @@ export function checkBudget(
   const totalBytes = entries.reduce((sum, entry) => sum + entry.gzipBytes, 0);
   return { totalBytes, ok: totalBytes <= limitBytes };
 }
+
+/**
+ * D139: lazy-only libraries, found by config keys that survive minification. `@use-gesture`
+ * belongs to the Browse chunk; in an initial chunk it would cost every page load.
+ */
+export const LAZY_ONLY_MARKERS: readonly { library: string; markers: readonly string[] }[] = [
+  { library: '@use-gesture', markers: ['preventScrollAxis', 'lockDirection'] },
+];
+
+/** The lazy-only libraries found in initial chunks, as `library in file` strings. */
+export function lazyOnlyViolations(
+  chunks: readonly { file: string; code: string }[],
+  rules = LAZY_ONLY_MARKERS,
+): string[] {
+  return chunks.flatMap(({ file, code }) =>
+    rules
+      .filter(({ markers }) => markers.some((marker) => code.includes(marker)))
+      .map(({ library }) => `${library} in ${file}`),
+  );
+}

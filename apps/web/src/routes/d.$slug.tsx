@@ -12,7 +12,9 @@ import { categoriesQuery, deckQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { writeLastDeck } from '../lib/last-deck';
+import { categoryFromFilter, isBrowsePath } from '../browse/browse-params';
 import { AddCardLink } from '../items/AddCardLink';
+import { BrowseButton } from '../items/BrowseButton';
 import { ReviewPill } from '../review/ReviewPill';
 import { PasteLink } from '../share/PasteLink';
 import { SearchBox } from '../search/SearchBox';
@@ -39,6 +41,10 @@ function DeckLayout() {
   const adding = pathname.endsWith('/new');
   const searching = pathname.endsWith('/search');
   const reviewing = pathname.endsWith('/review');
+  const browsing = isBrowsePath(pathname);
+  const view = viewFromPath(pathname)?.view ?? null;
+  // Browse cycles All + categories only, so the button shows on those lists (contract §1).
+  const browseC = view ? categoryFromFilter(view) : null;
   const { q, mode } = parseSearchParams(useSearch({ strict: false }));
   const routerNavigate = useNavigate();
 
@@ -73,17 +79,25 @@ function DeckLayout() {
     );
   }
 
+  // D139: Browse is full screen; the deck chrome steps aside.
+  if (browsing) return <Outlet />;
+
   return (
     <>
       <AppHeader
         title={deck.data.name}
-        actions={can(deck.data.role, 'item.publish') && <ReviewPill deckSlug={slug} />}
+        actions={
+          <>
+            {browseC !== null && <BrowseButton deckSlug={slug} c={browseC} />}
+            {can(deck.data.role, 'item.publish') && <ReviewPill deckSlug={slug} />}
+          </>
+        }
       />
       <SearchBox initialQuery={searching ? q : ''} onSearch={onSearch} />
       <ChipRow
         deckSlug={slug}
         categories={categories.data ?? []}
-        active={viewFromPath(pathname)?.view ?? ALL}
+        active={view ?? ALL}
         showArchived={can(deck.data.role, 'item.archive')}
         onNavigate={navigate}
       />

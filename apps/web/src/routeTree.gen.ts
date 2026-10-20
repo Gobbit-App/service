@@ -18,6 +18,7 @@ import { Route as DSlugRouteImport } from './routes/d.$slug'
 import { Route as IItemIdRouteImport } from './routes/i.$itemId'
 import { Route as DSlugIndexRouteImport } from './routes/d.$slug.index'
 import { Route as DSlugArchivedRouteImport } from './routes/d.$slug.archived'
+import { Route as DSlugBrowseRouteImport } from './routes/d.$slug.browse'
 import { Route as DSlugFavoritesRouteImport } from './routes/d.$slug.favorites'
 import { Route as DSlugNewRouteImport } from './routes/d.$slug.new'
 import { Route as DSlugReviewRouteImport } from './routes/d.$slug.review'
@@ -70,6 +71,11 @@ const DSlugArchivedRoute = DSlugArchivedRouteImport.update({
   path: '/archived',
   getParentRoute: () => DSlugRoute,
 } as any)
+const DSlugBrowseRoute = DSlugBrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
+  getParentRoute: () => DSlugRoute,
+} as any)
 const DSlugFavoritesRoute = DSlugFavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/d/$slug': typeof DSlugRouteWithChildren
   '/i/$itemId': typeof IItemIdRoute
   '/d/$slug/archived': typeof DSlugArchivedRoute
+  '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
   '/d/$slug/new': typeof DSlugNewRoute
   '/d/$slug/review': typeof DSlugReviewRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/auth/error': typeof AuthErrorRoute
   '/i/$itemId': typeof IItemIdRoute
   '/d/$slug/archived': typeof DSlugArchivedRoute
+  '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
   '/d/$slug/new': typeof DSlugNewRoute
   '/d/$slug/review': typeof DSlugReviewRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/d/$slug': typeof DSlugRouteWithChildren
   '/i/$itemId': typeof IItemIdRoute
   '/d/$slug/archived': typeof DSlugArchivedRoute
+  '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
   '/d/$slug/new': typeof DSlugNewRoute
   '/d/$slug/review': typeof DSlugReviewRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/d/$slug'
     | '/i/$itemId'
     | '/d/$slug/archived'
+    | '/d/$slug/browse'
     | '/d/$slug/favorites'
     | '/d/$slug/new'
     | '/d/$slug/review'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/auth/error'
     | '/i/$itemId'
     | '/d/$slug/archived'
+    | '/d/$slug/browse'
     | '/d/$slug/favorites'
     | '/d/$slug/new'
     | '/d/$slug/review'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/d/$slug'
     | '/i/$itemId'
     | '/d/$slug/archived'
+    | '/d/$slug/browse'
     | '/d/$slug/favorites'
     | '/d/$slug/new'
     | '/d/$slug/review'
@@ -281,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DSlugArchivedRouteImport
       parentRoute: typeof DSlugRoute
     }
+    '/d/$slug/browse': {
+      id: '/d/$slug/browse'
+      path: '/browse'
+      fullPath: '/d/$slug/browse'
+      preLoaderRoute: typeof DSlugBrowseRouteImport
+      parentRoute: typeof DSlugRoute
+    }
     '/d/$slug/favorites': {
       id: '/d/$slug/favorites'
       path: '/favorites'
@@ -328,6 +347,7 @@ declare module '@tanstack/react-router' {
 
 interface DSlugRouteChildren {
   DSlugArchivedRoute: typeof DSlugArchivedRoute
+  DSlugBrowseRoute: typeof DSlugBrowseRoute
   DSlugFavoritesRoute: typeof DSlugFavoritesRoute
   DSlugNewRoute: typeof DSlugNewRoute
   DSlugReviewRoute: typeof DSlugReviewRoute
@@ -338,6 +358,7 @@ interface DSlugRouteChildren {
 
 const DSlugRouteChildren: DSlugRouteChildren = {
   DSlugArchivedRoute: DSlugArchivedRoute,
+  DSlugBrowseRoute: DSlugBrowseRoute,
   DSlugFavoritesRoute: DSlugFavoritesRoute,
   DSlugNewRoute: DSlugNewRoute,
   DSlugReviewRoute: DSlugReviewRoute,

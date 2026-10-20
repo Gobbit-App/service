@@ -48,4 +48,25 @@ describe('ImageCard', () => {
     expect(screen.getByText('Image unavailable')).toBeInTheDocument();
     expect(screen.queryByAltText('Test image alt text')).not.toBeInTheDocument();
   });
+
+  it('loads lazily by default', () => {
+    render(<ImageCard payload={payload} cloudName="demo" />);
+    const img = screen.getByAltText('Test image alt text');
+    expect(img).toHaveAttribute('loading', 'lazy');
+    expect(img).not.toHaveAttribute('fetchpriority');
+  });
+
+  it('loads a priority image eagerly with high fetch priority', () => {
+    render(<ImageCard payload={payload} cloudName="demo" priority />);
+    const img = screen.getByAltText('Test image alt text');
+    expect(img).toHaveAttribute('loading', 'eager');
+    expect(img).toHaveAttribute('fetchpriority', 'high');
+  });
+
+  it('passes a custom sizes through and keeps the srcset', () => {
+    render(<ImageCard payload={payload} cloudName="demo" sizes="412px" />);
+    const img = screen.getByAltText('Test image alt text');
+    expect(img).toHaveAttribute('sizes', '412px');
+    expect(img.getAttribute('srcset')).toContain('1080w');
+  });
 });
