@@ -49,7 +49,7 @@ The job's unit test covers the cutoff, and `items-lifecycle.int.test.ts` runs th
 1. Signed in as owner, open a card (`/i/<id>`): Archive, Delete are shown (Edit arrives with `specs/007-card-editor`).
 2. Archive → back on the deck list the card is gone without a reload, and the toast shows **Undo**. Tap it: the card is back in place.
 3. Archive again, open the Archived chip: the card has **Restore**. Restore it, then search its title: one hit, same "Added … ago".
-4. Delete (confirm) → toast with Undo. Let it expire. Archived → **Recently deleted** lists the card with "30 days left"; Undelete returns it.
+4. Delete (confirm) → toast with Undo. Let it expire. Archived → **Recently deleted** lists the card with "29 days left" (days left are floored, so a just-deleted card already reads 29); Undelete returns it.
 5. Go offline (DevTools): the actions are disabled with the offline hint.
 6. As an editor: Archive and Restore only, no Recently deleted. As a reader: no actions.
 7. Every deck link (header, Add card, review pill, share confirmation) still opens the right deck (`deckHref`).

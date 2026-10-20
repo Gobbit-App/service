@@ -1,6 +1,35 @@
 import { describe, it, expect } from 'vitest';
 import { ApiError } from './api-error';
-import { GENERIC_SAVE_ERROR, problemMessages } from './problem-messages';
+import { GENERIC_SAVE_ERROR, lifecycleErrorMessage, problemMessages } from './problem-messages';
+
+describe('lifecycleErrorMessage', () => {
+  it.each([
+    ['/problems/use-restore', 'Restore'],
+    ['/problems/invalid-transition', 'Proposals'],
+    ['/problems/undo-expired', '30 days'],
+    ['/problems/item-needs-category', 'categories'],
+  ])('maps %s to its copy', (type, fragment) => {
+    const err = new ApiError(409, { type, title: 'Conflict' });
+    expect(lifecycleErrorMessage(err, "Couldn't archive the card.")).toContain(fragment);
+  });
+
+  it('uses role and availability copy for 403 and 404', () => {
+    expect(lifecycleErrorMessage(new ApiError(403, { title: 'Forbidden' }), 'x')).toMatch(
+      /permission/,
+    );
+    expect(lifecycleErrorMessage(new ApiError(404, { title: 'Not found' }), 'x')).toMatch(
+      /no longer available/,
+    );
+  });
+
+  it('falls back to the detail, then the given line; network errors mention the connection', () => {
+    expect(lifecycleErrorMessage(new ApiError(500, { detail: 'Boom' }), 'Failed.')).toBe('Boom');
+    expect(lifecycleErrorMessage(new ApiError(500, null), 'Failed.')).toBe('Failed.');
+    expect(lifecycleErrorMessage(new TypeError('Failed to fetch'), 'Failed.')).toMatch(
+      /connection/,
+    );
+  });
+});
 
 describe('problemMessages', () => {
   it('returns the field messages of a validation problem', () => {

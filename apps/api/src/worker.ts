@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import type { Job } from 'pg-boss';
 import { createDb, createPool } from '@pb/db';
 import {
+  DELETED_ITEM_PRUNE_CRON,
   EMBED_SWEEP_CRON,
   INGEST_PRUNE_CRON,
   INGEST_SWEEP_CRON,
@@ -29,6 +30,7 @@ import { createEmbedSweep } from './jobs/embed-sweep';
 import { ensureQueues } from './jobs/ensure-queues';
 import { createPruneSearchQueries } from './jobs/prune-search-queries';
 import { createPruneIngestJobs } from './jobs/prune-ingest-jobs';
+import { createPruneDeletedItems } from './jobs/prune-deleted-items';
 import { createIngestJobsRepo } from './repositories/ingest-jobs.repo';
 import { createCloudinaryIngestUploads } from './media/ingest-uploads';
 import { QUEUES, type EmbedItemJob, type IngestJobData } from './jobs/queues';
@@ -68,6 +70,13 @@ async function main() {
   await boss.work(QUEUES.pruneIngestJobs, async () => {
     const { pruned, uploadsDeleted } = await pruneIngest();
     console.log(`[worker] pruned ${pruned} ingest jobs (${uploadsDeleted} upload sets deleted)`);
+  });
+
+  // D132: cards deleted more than ITEM_UNDELETE_DAYS ago are purged weekly
+  const pruneDeletedItems = createPruneDeletedItems({ items: createItemsRepo(db) });
+  await boss.schedule(QUEUES.pruneDeletedItems, DELETED_ITEM_PRUNE_CRON);
+  await boss.work(QUEUES.pruneDeletedItems, async () => {
+    await pruneDeletedItems();
   });
   const embedder = defaultEmbedder(env);
   const extract = defaultExtractor(env);

@@ -37,7 +37,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    ```bash
    pnpm dev
    ```
-   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). The API side also starts the embeddings worker (`dev:server` + `dev:worker`), which only embeds when `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is set. `pnpm dev:api` / `pnpm dev:web` run one side only.
+   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). The API side also starts the worker (`dev:server` + `dev:worker`), which only embeds when `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is set. Its retention jobs always run: `search_queries` and `ingest_jobs` pruning, and `prune-deleted-items` (Sundays 05:00 UTC, hard-deletes cards soft-deleted more than 30 days ago). `pnpm dev:api` / `pnpm dev:web` run one side only.
 
 6. **Verify health:**
    ```bash
@@ -280,12 +280,14 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `GET` | `/decks/{id}/categories` | List categories |
 | `POST` | `/decks/{id}/categories` | Create category |
 | **Items** |
-| `GET` | `/decks/{id}/items` | List items (with cursor pagination) |
+| `GET` | `/decks/{id}/items` | List items (with cursor pagination); `?status=deleted` lists cards deleted in the last 30 days (owner/maintainer) |
 | `POST` | `/decks/{id}/items` | Create item |
 | `GET` | `/items/{id}` | Get item |
 | `PATCH` | `/items/{id}` | Update item |
-| `DELETE` | `/items/{id}` | Soft-delete item |
-| `POST` | `/items/{id}/archive` | Archive item |
+| `DELETE` | `/items/{id}` | Soft-delete item (owner/maintainer; undo within 30 days) |
+| `POST` | `/items/{id}/archive` | Archive item (owner/maintainer/editor; hidden from lists and search) |
+| `POST` | `/items/{id}/restore` | Restore an archived item to published (keeps `verifiedAt`) |
+| `POST` | `/items/{id}/undelete` | Undo a delete within 30 days (410 `/problems/undo-expired` after) |
 | **Search** |
 | `GET` | `/decks/{id}/search?q=&limit=` | Hybrid search over visible, published cards (`why`: text / semantic / both) |
 | `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |

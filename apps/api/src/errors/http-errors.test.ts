@@ -6,6 +6,7 @@ import {
   unauthorized,
   notFound,
   conflict,
+  gone,
   unprocessable,
   problemFromZodError,
   problemResponse,
@@ -64,6 +65,23 @@ describe('http-errors', () => {
       const problem = err.toProblem();
 
       expect(problem.type).toBe('/problems/custom-conflict');
+    });
+  });
+
+  describe('gone', () => {
+    it('is a 410 with the given type', () => {
+      const problem = gone('Undo window closed', '/problems/undo-expired').toProblem();
+
+      expect(problem).toEqual({
+        type: '/problems/undo-expired',
+        title: 'Gone',
+        status: 410,
+        detail: 'Undo window closed',
+      });
+    });
+
+    it('defaults the type to /problems/gone', () => {
+      expect(gone().toProblem().type).toBe('/problems/gone');
     });
   });
 

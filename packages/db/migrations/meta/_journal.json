@@ -78,6 +78,13 @@
       "when": 1792277709958,
       "tag": "0010_mcp_readiness",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792508005597,
+      "tag": "0011_item_lifecycle",
+      "breakpoints": true
     }
   ]
 }

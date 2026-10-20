@@ -15,11 +15,14 @@ describe('ensureQueues', () => {
 
     await ensureQueues(boss as never);
 
-    expect(boss.getQueue).toHaveBeenCalledTimes(6);
-    expect(boss.createQueue).toHaveBeenCalledTimes(6);
+    expect(boss.getQueue).toHaveBeenCalledTimes(7);
+    expect(boss.createQueue).toHaveBeenCalledTimes(7);
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedItem, { policy: 'stately' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedSweep, { policy: 'singleton' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.pruneSearchQueries, {
+      policy: 'singleton',
+    });
+    expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.pruneDeletedItems, {
       policy: 'singleton',
     });
   });
@@ -35,6 +38,7 @@ describe('ensureQueues', () => {
     expect(boss.getQueue).toHaveBeenCalledWith('ingest');
     expect(boss.getQueue).toHaveBeenCalledWith('ingest-sweep');
     expect(boss.getQueue).toHaveBeenCalledWith('prune-ingest-jobs');
+    expect(boss.getQueue).toHaveBeenCalledWith('prune-deleted-items');
   });
 
   it('creates the ingest queue stately (one queued + one active per job)', async () => {
@@ -54,11 +58,12 @@ describe('ensureQueues', () => {
       [QUEUES.ingest]: { name: QUEUES.ingest },
       [QUEUES.ingestSweep]: { name: QUEUES.ingestSweep },
       [QUEUES.pruneIngestJobs]: { name: QUEUES.pruneIngestJobs },
+      [QUEUES.pruneDeletedItems]: { name: QUEUES.pruneDeletedItems },
     });
 
     await ensureQueues(boss as never);
 
-    expect(boss.getQueue).toHaveBeenCalledTimes(6);
+    expect(boss.getQueue).toHaveBeenCalledTimes(7);
     expect(boss.createQueue).not.toHaveBeenCalled();
   });
 
@@ -69,7 +74,7 @@ describe('ensureQueues', () => {
 
     await ensureQueues(boss as never);
 
-    expect(boss.createQueue).toHaveBeenCalledTimes(5);
+    expect(boss.createQueue).toHaveBeenCalledTimes(6);
     expect(boss.createQueue).not.toHaveBeenCalledWith(QUEUES.embedItem, expect.anything());
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedSweep, { policy: 'singleton' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.pruneSearchQueries, {

@@ -10,6 +10,10 @@ export type ItemType = (typeof itemTypes)[number];
 export const itemStatuses = ['proposed', 'published', 'archived'] as const;
 export type ItemStatus = (typeof itemStatuses)[number];
 
+/** D132: `status` values the item list accepts; `deleted` is list-only, not a DB status. */
+export const itemListStatuses = [...itemStatuses, 'deleted'] as const;
+export type ItemListStatus = (typeof itemListStatuses)[number];
+
 export const sourceKinds = [
   'manual',
   'link',

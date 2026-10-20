@@ -1,19 +1,20 @@
 import type { ReactElement } from 'react';
 import type { Deck } from '@pb/shared';
 import { can } from '@pb/shared/authz';
+import { deckHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { EmptyState } from '../ui/StatusViews';
 
 /** D108: after "Send to Gobbit"; publishers get a link straight to the review queue. */
 export function ShareSent({ deck }: { deck: Deck }): ReactElement {
-  const base = `/d/${encodeURIComponent(deck.slug)}`;
+  const base = deckHref(deck.slug);
   return (
     <EmptyState
       title="Sent — it'll appear in Review"
       action={
         <div className="share-sent__links">
           {can(deck.role, 'item.publish') && (
-            <NavLink href={`${base}/review`} className="button">
+            <NavLink href={deckHref(deck.slug, 'review')} className="button">
               Open review
             </NavLink>
           )}

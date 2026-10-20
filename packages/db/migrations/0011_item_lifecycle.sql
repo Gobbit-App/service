@@ -1,0 +1,1 @@
+CREATE INDEX "items_deleted_idx" ON "items" USING btree ("deck_id","deleted_at" DESC NULLS LAST,"id" DESC NULLS LAST) WHERE "items"."deleted_at" IS NOT NULL;

@@ -10,6 +10,7 @@ export * from './schemas/problem';
 export * from './schemas/category';
 export * from './schemas/deck';
 export * from './schemas/item';
+export * from './items/constants';
 export * from './schemas/auth';
 export * from './schemas/config';
 export * from './schemas/membership';

@@ -128,6 +128,11 @@ export function conflict(detail?: string, type = '/problems/conflict'): HttpErro
   return new HttpError(409, type, 'Conflict', detail);
 }
 
+/** D132: the resource existed but the window to act on it has closed (e.g. undo expired). */
+export function gone(detail?: string, type = '/problems/gone'): HttpError {
+  return new HttpError(410, type, 'Gone', detail);
+}
+
 /** Phase 3B: problem type for refusals that protect the personal deck. */
 export const PERSONAL_DECK_PROBLEM = '/problems/personal-deck';
 

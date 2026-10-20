@@ -569,6 +569,79 @@ h3 {
   box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
 }
 
+/* ---------- Toast and card actions (D146) ---------- */
+
+.toast {
+  position: fixed;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: calc(var(--safe-bottom) + var(--gutter));
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 8px 8px 8px var(--gutter);
+  border-radius: var(--radius);
+  background: var(--color-banner);
+  color: var(--color-banner-text);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+}
+
+.toast__action {
+  border-color: var(--color-banner-text);
+  color: var(--color-banner-text);
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--gap);
+}
+
+.card-actions__hint {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.button--danger {
+  border-color: var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+}
+
+.deleted-section {
+  margin-top: calc(var(--gutter) * 2);
+}
+
+.deleted-section h2 {
+  font-size: 1.125rem;
+}
+
+.deleted-section__list {
+  display: grid;
+  gap: var(--gap);
+  margin: var(--gap) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deleted-section__item {
+  padding: var(--gap) var(--gutter);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.deleted-section__meta {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
 /* ---------- Sign in ---------- */
 
 .sign-in-form {

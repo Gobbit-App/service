@@ -132,6 +132,7 @@ export function buildServices({
       favorites,
       memberships,
       embedQueue: resolveEmbedQueue(search),
+      now,
     }),
     favorites: createFavoritesService({ decks, items, favorites, memberships }),
     share: buildShareService(db, env, share),

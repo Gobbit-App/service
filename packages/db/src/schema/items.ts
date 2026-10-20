@@ -53,6 +53,10 @@ export const items = pgTable(
   (t) => [
     unique('items_id_deck_uq').on(t.id, t.deckId),
     index('items_list_idx').on(t.deckId, t.status, t.createdAt.desc(), t.id.desc()),
+    // D132: the deleted listing (per deck, newest first) and the weekly purge.
+    index('items_deleted_idx')
+      .on(t.deckId, t.deletedAt.desc(), t.id.desc())
+      .where(sql`${t.deletedAt} IS NOT NULL`),
     index('items_search_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
     index('items_embedding_hnsw_idx')
       .using('hnsw', t.embedding.op('vector_cosine_ops'))

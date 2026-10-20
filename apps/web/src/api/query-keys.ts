@@ -11,7 +11,9 @@ export type ItemFilter =
   | { kind: 'all' }
   | { kind: 'category'; slug: string }
   | { kind: 'favorites' }
-  | { kind: 'archived' };
+  | { kind: 'archived' }
+  /** D132: Recently deleted (item.delete roles); never shown as a chip. */
+  | { kind: 'deleted' };
 
 /** Cards per page for the infinite list (P3.3). */
 export const ITEM_PAGE_SIZE = 20;
@@ -26,6 +28,8 @@ export const queryKeys = {
   /** Prefix of every item list; favorite toggles update all of them. */
   itemLists: ['items'] as const,
   items: (deckSlug: string, filter: ItemFilter) => ['items', deckSlug, filter] as const,
+  /** Every list of one deck (lifecycle actions invalidate them all). */
+  deckItemLists: (deckSlug: string) => ['items', deckSlug] as const,
   item: (itemId: string) => ['item', itemId] as const,
   /** D79: never persisted (see `persist.ts`). */
   search: (deckSlug: string, q: string) => [SEARCH_KEY, deckSlug, q] as const,
@@ -53,6 +57,9 @@ export function itemListQuery(
       break;
     case 'archived':
       query.status = 'archived';
+      break;
+    case 'deleted':
+      query.status = 'deleted';
       break;
     case 'all':
       break;
