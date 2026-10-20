@@ -1863,7 +1863,7 @@ export interface paths {
             parameters: {
                 query?: {
                     category?: string;
-                    status?: "proposed" | "published" | "archived";
+                    status?: "proposed" | "published" | "archived" | "deleted";
                     type?: "text" | "link" | "image" | "table" | "calc";
                     favorite?: "true";
                     cursor?: string;
@@ -1877,7 +1877,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Items listed successfully */
+                /** @description Items listed successfully; status=deleted lists the undo window's deleted cards (D132) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1916,6 +1916,7 @@ export interface paths {
                                 updatedAt: string;
                                 categoryIds: string[];
                                 isFavorite: boolean;
+                                deletedAt?: string;
                             }[];
                             nextCursor: string | null;
                         };
@@ -2210,6 +2211,7 @@ export interface paths {
                             updatedAt: string;
                             categoryIds: string[];
                             isFavorite: boolean;
+                            deletedAt?: string;
                         };
                     };
                 };
@@ -2409,6 +2411,7 @@ export interface paths {
                             updatedAt: string;
                             categoryIds: string[];
                             isFavorite: boolean;
+                            deletedAt?: string;
                         };
                     };
                 };
@@ -2644,6 +2647,7 @@ export interface paths {
                             updatedAt: string;
                             categoryIds: string[];
                             isFavorite: boolean;
+                            deletedAt?: string;
                         };
                     };
                 };
@@ -2803,7 +2807,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Item archived successfully */
+                /** @description Item archived (idempotent); 409 invalid-transition on a proposal (D131) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2841,6 +2845,7 @@ export interface paths {
                             updatedAt: string;
                             categoryIds: string[];
                             isFavorite: boolean;
+                            deletedAt?: string;
                         };
                     };
                 };
@@ -2890,6 +2895,366 @@ export interface paths {
                 };
                 /** @description Not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Archived card published again, verifiedAt kept (idempotent); 409 invalid-transition on a proposal (D131) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            deckId: string;
+                            /** @enum {string} */
+                            type: "text" | "link" | "image" | "table" | "calc";
+                            /** @enum {string} */
+                            status: "proposed" | "published" | "archived";
+                            title: string;
+                            body: string;
+                            payload: {
+                                [key: string]: unknown;
+                            };
+                            entities: {
+                                phones?: string[];
+                                addresses?: string[];
+                                hours?: string[];
+                                prices?: string[];
+                                dates?: string[];
+                                people?: string[];
+                                urls?: string[];
+                            };
+                            sourceUrl: string | null;
+                            /** @enum {string} */
+                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
+                            verifiedAt: string | null;
+                            createdBy: string | null;
+                            createdAt: string;
+                            updatedAt: string;
+                            categoryIds: string[];
+                            isFavorite: boolean;
+                            deletedAt?: string;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{id}/undelete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted card brought back with its previous status (idempotent); 410 undo-expired after ITEM_UNDELETE_DAYS (D132) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            deckId: string;
+                            /** @enum {string} */
+                            type: "text" | "link" | "image" | "table" | "calc";
+                            /** @enum {string} */
+                            status: "proposed" | "published" | "archived";
+                            title: string;
+                            body: string;
+                            payload: {
+                                [key: string]: unknown;
+                            };
+                            entities: {
+                                phones?: string[];
+                                addresses?: string[];
+                                hours?: string[];
+                                prices?: string[];
+                                dates?: string[];
+                                people?: string[];
+                                urls?: string[];
+                            };
+                            sourceUrl: string | null;
+                            /** @enum {string} */
+                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
+                            verifiedAt: string | null;
+                            createdBy: string | null;
+                            createdAt: string;
+                            updatedAt: string;
+                            categoryIds: string[];
+                            isFavorite: boolean;
+                            deletedAt?: string;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Gone */
+                410: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3122,6 +3487,7 @@ export interface paths {
                                     updatedAt: string;
                                     categoryIds: string[];
                                     isFavorite: boolean;
+                                    deletedAt?: string;
                                 };
                                 /** @enum {string} */
                                 why: "text" | "semantic" | "both";
@@ -4128,6 +4494,7 @@ export interface paths {
                                     updatedAt: string;
                                     categoryIds: string[];
                                     isFavorite: boolean;
+                                    deletedAt?: string;
                                 };
                                 job: {
                                     /** Format: uuid */
@@ -4185,6 +4552,7 @@ export interface paths {
                                     updatedAt: string;
                                     categoryIds: string[];
                                     isFavorite: boolean;
+                                    deletedAt?: string;
                                 } | null;
                             }[];
                             count: number;
@@ -4441,6 +4809,7 @@ export interface paths {
                             updatedAt: string;
                             categoryIds: string[];
                             isFavorite: boolean;
+                            deletedAt?: string;
                         };
                     };
                 };

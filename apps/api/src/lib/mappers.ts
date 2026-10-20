@@ -55,5 +55,7 @@ export function toItemDto(r: ItemRow, categoryIds: string[], isFavorite: boolean
     updatedAt: r.updatedAt.toISOString(),
     categoryIds,
     isFavorite,
+    // D132: only deleted rows (the deleted listing / undelete) carry deletedAt
+    ...(r.deletedAt ? { deletedAt: r.deletedAt.toISOString() } : {}),
   };
 }

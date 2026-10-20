@@ -1,6 +1,6 @@
 import { INGEST_JOB_RETRIES } from '@pb/shared';
 
-/** Queue names shared by the API (sender) and the worker (D72, D80, D93). */
+/** Queue names shared by the API (sender) and the worker (D72, D80, D93, D132). */
 export const QUEUES = {
   embedItem: 'embed-item',
   embedSweep: 'embed-sweep',
@@ -8,6 +8,8 @@ export const QUEUES = {
   ingest: 'ingest',
   ingestSweep: 'ingest-sweep',
   pruneIngestJobs: 'prune-ingest-jobs',
+  /** D132: weekly hard purge of cards deleted more than 30 days ago. */
+  pruneDeletedItems: 'prune-deleted-items',
 } as const;
 
 export interface EmbedItemJob {

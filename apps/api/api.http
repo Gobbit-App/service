@@ -109,8 +109,12 @@ Content-Type: application/json
   "body": "Updated body"
 }
 
-### Archive the created item
+### Archive the created item (D131; 409 invalid-transition on a proposal)
 POST {{baseUrl}}/items/{{created.response.body.id}}/archive
+Authorization: Bearer {{token}}
+
+### Restore the archived item (D131; keeps verifiedAt, no-op on a published card)
+POST {{baseUrl}}/items/{{created.response.body.id}}/restore
 Authorization: Bearer {{token}}
 
 ### Add the item to favorites
@@ -123,6 +127,14 @@ Authorization: Bearer {{token}}
 
 ### Delete the created item
 DELETE {{baseUrl}}/items/{{created.response.body.id}}
+Authorization: Bearer {{token}}
+
+### Recently deleted cards (D132; needs item.delete, last 30 days, newest first)
+GET {{baseUrl}}/decks/test-deck/items?status=deleted
+Authorization: Bearer {{token}}
+
+### Undelete the item (D132; 410 undo-expired after 30 days, 422 if it lost its categories)
+POST {{baseUrl}}/items/{{created.response.body.id}}/undelete
 Authorization: Bearer {{token}}
 
 ### Negative test: body exceeds CARD_BODY_MAX (600 characters)

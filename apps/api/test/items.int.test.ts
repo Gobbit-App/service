@@ -365,6 +365,65 @@ describe('Items Integration Tests', () => {
     expect(found).toBeDefined();
   });
 
+  // D131: lifecycle transitions go through archive/restore, not PATCH
+  async function createScratchItem(title: string, status?: 'proposed') {
+    const res = await ctx.app.request('/decks/scratch/items', {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({ type: 'text', title, body: 'Content', ...(status ? { status } : {}) }),
+    });
+    expect(res.status).toBe(201);
+    return itemSchema.parse(await res.json());
+  }
+
+  it('POST /items/:id/archive on a proposal → 409 invalid-transition, still proposed', async () => {
+    const created = await createScratchItem('ArchiveProposal', 'proposed');
+
+    const res = await ctx.app.request(`/items/${created.id}/archive`, {
+      method: 'POST',
+      headers: ctx.as(),
+    });
+    expect(res.status).toBe(409);
+    expect((await res.json()).type).toBe('/problems/invalid-transition');
+
+    const after = await ctx.app.request(`/items/${created.id}`, { headers: ctx.as() });
+    expect((await after.json()).status).toBe('proposed');
+  });
+
+  it('PATCH status archived → published → 409 use-restore; PATCH status archived archives', async () => {
+    const created = await createScratchItem('PatchLifecycle');
+
+    const archived = await ctx.app.request(`/items/${created.id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify({ status: 'archived' }),
+    });
+    expect(archived.status).toBe(200);
+    expect((await archived.json()).status).toBe('archived');
+
+    const republish = await ctx.app.request(`/items/${created.id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify({ status: 'published' }),
+    });
+    expect(republish.status).toBe(409);
+    expect((await republish.json()).type).toBe('/problems/use-restore');
+  });
+
+  it('POST /items/:id/restore → published with the original verifiedAt', async () => {
+    const created = await createScratchItem('RestoreKeepsAge');
+    await ctx.app.request(`/items/${created.id}/archive`, { method: 'POST', headers: ctx.as() });
+
+    const res = await ctx.app.request(`/items/${created.id}/restore`, {
+      method: 'POST',
+      headers: ctx.as(),
+    });
+    expect(res.status).toBe(200);
+    const restored = itemSchema.parse(await res.json());
+    expect(restored.status).toBe('published');
+    expect(restored.verifiedAt).toBe(created.verifiedAt);
+  });
+
   it('DELETE /items/:id → 204; GET → 404; not in any list', async () => {
     const createRes = await ctx.app.request('/decks/scratch/items', {
       method: 'POST',
