@@ -10,7 +10,7 @@ import {
 } from './payloads';
 import { pageSchema, limitSchema } from './pagination';
 import { CARD_BODY_MAX, CARD_TITLE_MAX, PAYLOAD_MAX_BYTES } from '../limits';
-import { itemTypes, itemStatuses, sourceKinds } from '../enums';
+import { itemTypes, itemStatuses, itemListStatuses, sourceKinds } from '../enums';
 import { codePointLength } from '../utils/utf8-bytes';
 import { entitiesSchema } from '../ingest/entities';
 
@@ -140,13 +140,16 @@ export const itemSchema = z.object({
   updatedAt: isoDateTimeSchema,
   categoryIds: z.array(z.string()),
   isFavorite: z.boolean(),
+  /** D132: when the card was deleted; present only in the `status=deleted` listing. */
+  deletedAt: isoDateTimeSchema.optional(),
 });
 
 export type Item = z.infer<typeof itemSchema>;
 
 export const itemListQuerySchema = z.object({
   category: slugSchema.optional(),
-  status: z.enum(itemStatuses).default('published'),
+  /** D132: `deleted` lists the deck's recently deleted cards (owner/maintainer). */
+  status: z.enum(itemListStatuses).default('published'),
   type: z.enum(itemTypes).optional(),
   /** P3: `favorite=true` narrows the list to the caller's favorites. */
   favorite: z.enum(['true']).optional(),

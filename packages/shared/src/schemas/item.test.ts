@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { itemCreateSchema, itemPatchSchema, itemListQuerySchema } from './item';
+import { itemCreateSchema, itemPatchSchema, itemListQuerySchema, itemSchema } from './item';
 import { TABLE_MAX_ROWS, TABLE_MAX_COLUMNS } from '../limits';
 import { codePointLength } from '../utils/utf8-bytes';
 
@@ -196,5 +196,47 @@ describe('itemListQuerySchema', () => {
 
   it.each(['false', '1', 'yes', ''])('{favorite:%j} rejected', (favorite) => {
     expect(itemListQuerySchema.safeParse({ favorite }).success).toBe(false);
+  });
+
+  it.each(['proposed', 'published', 'archived', 'deleted'])('D132: status %j ok', (status) => {
+    expect(itemListQuerySchema.parse({ status }).status).toBe(status);
+  });
+
+  it.each(['removed', 'trash', ''])('D132: status %j rejected', (status) => {
+    expect(itemListQuerySchema.safeParse({ status }).success).toBe(false);
+  });
+});
+
+describe('itemSchema.deletedAt (D132)', () => {
+  const base = {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    deckId: '550e8400-e29b-41d4-a716-446655440001',
+    type: 'text',
+    status: 'published',
+    title: 'Bin day',
+    body: '',
+    payload: {},
+    entities: {},
+    sourceUrl: null,
+    sourceKind: 'manual',
+    verifiedAt: null,
+    createdBy: null,
+    createdAt: '2026-10-01T08:00:00.000Z',
+    updatedAt: '2026-10-01T08:00:00.000Z',
+    categoryIds: [],
+    isFavorite: false,
+  };
+
+  it('is optional', () => {
+    expect(itemSchema.parse(base).deletedAt).toBeUndefined();
+  });
+
+  it('accepts an ISO timestamp', () => {
+    const at = '2026-10-17T19:02:11.412Z';
+    expect(itemSchema.parse({ ...base, deletedAt: at }).deletedAt).toBe(at);
+  });
+
+  it('rejects null (absent on live cards, not null)', () => {
+    expect(itemSchema.safeParse({ ...base, deletedAt: null }).success).toBe(false);
   });
 });
