@@ -4,9 +4,46 @@ import type { Category, Item } from '@pb/shared';
 import { isNetworkError } from '../api/network-state';
 import { itemsQuery } from '../api/queries';
 import type { ItemFilter } from '../api/query-keys';
+import { categoryFromFilterKey, filterKey, listHref } from '../browse/browse-params';
+import {
+  browseReturnRedirect,
+  clearBrowseReturn,
+  historyIndex,
+  readBrowseReturn,
+} from '../browse/browse-return';
 import { Card } from '../cards/Card';
+import { useNavigateHref } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { emptyListCopy } from './empty-copy';
+
+/**
+ * Data-model §3: back from Browse, scroll to the card Browse was on (once, then forget it). It
+ * runs a frame after the list renders so it wins over the router's pathname-keyed restore (D65).
+ */
+function useReturnFromBrowse(deckSlug: string, filter: ItemFilter, ready: boolean): void {
+  const key = filterKey(filter);
+  const navigateHref = useNavigateHref();
+
+  // FR-005: back after a category change in Browse lands here, on the list it was opened from.
+  useEffect(() => {
+    const target = browseReturnRedirect(deckSlug, key, historyIndex(window.history.state));
+    const c = target === null ? null : categoryFromFilterKey(target);
+    if (c !== null) navigateHref(listHref(deckSlug, c), { replace: true });
+  }, [deckSlug, key, navigateHref]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const entry = readBrowseReturn(deckSlug, key);
+    if (!entry) return;
+    const frame = requestAnimationFrame(() => {
+      // Cleared here, not before: a cancelled frame (Strict Mode re-run) must not lose it.
+      clearBrowseReturn();
+      const title = document.getElementById(`card-title-${entry.itemId}`);
+      title?.closest('article')?.scrollIntoView({ block: 'center' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [deckSlug, key, ready]);
+}
 
 /** P3.3: cursor-paged list; the next page loads when the sentinel nears the viewport. */
 export function ItemList({
@@ -37,6 +74,8 @@ export function ItemList({
     observer.observe(node);
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useReturnFromBrowse(deckSlug, filter, (query.data?.pages.length ?? 0) > 0);
 
   if (query.isPending) return <LoadingState label="Loading cards…" />;
 

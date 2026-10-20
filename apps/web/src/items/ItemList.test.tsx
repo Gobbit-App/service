@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { ApiError } from '../api/api-error';
+import { BROWSE_RETURN_KEY, writeBrowseOpener, writeBrowseReturn } from '../browse/browse-return';
 import { makeItem } from '../test/fixtures';
 import { renderWithClient } from '../test/render';
 
@@ -59,5 +60,74 @@ describe('ItemList', () => {
     unwrap.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     renderWithClient(<ItemList deckSlug="family" filter={{ kind: 'all' }} categories={[]} />);
     expect(await screen.findByText(/You're offline/)).toBeInTheDocument();
+  });
+
+  describe('back from Browse', () => {
+    const scrolled: Element[] = [];
+    beforeEach(() => {
+      scrolled.length = 0;
+      sessionStorage.clear();
+      Element.prototype.scrollIntoView = vi.fn(function (this: Element) {
+        scrolled.push(this);
+      });
+    });
+    afterEach(() => sessionStorage.clear());
+
+    const twoCards = () =>
+      unwrap.mockResolvedValue({
+        data: [makeItem({ id: 'a', title: 'First' }), makeItem({ id: 'b', title: 'Second' })],
+        nextCursor: null,
+      });
+
+    it('scrolls the matching card into view and clears the entry', async () => {
+      twoCards();
+      writeBrowseReturn({ deckSlug: 'family', filterKey: 'category:food', itemId: 'b' });
+      renderWithClient(
+        <ItemList deckSlug="family" filter={{ kind: 'category', slug: 'food' }} categories={[]} />,
+      );
+      await waitFor(() => expect(scrolled).toHaveLength(1));
+      expect(scrolled[0]).toBe(screen.getByRole('article', { name: 'Second' }));
+      expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ block: 'center' });
+      expect(sessionStorage.getItem(BROWSE_RETURN_KEY)).toBeNull();
+    });
+
+    it('does nothing without an entry or for another filter', async () => {
+      twoCards();
+      writeBrowseReturn({ deckSlug: 'family', filterKey: 'category:food', itemId: 'b' });
+      renderWithClient(<ItemList deckSlug="family" filter={{ kind: 'all' }} categories={[]} />);
+      expect(await screen.findByText('Second')).toBeInTheDocument();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      expect(scrolled).toHaveLength(0);
+      expect(sessionStorage.getItem(BROWSE_RETURN_KEY)).not.toBeNull();
+    });
+
+    describe('back after a category change (FR-005)', () => {
+      beforeEach(() => window.history.replaceState({ __TSR_index: 4 }, ''));
+      afterEach(() => window.history.replaceState(null, ''));
+
+      it('replaces the opening list with the category Browse ended on', async () => {
+        twoCards();
+        writeBrowseOpener({ deckSlug: 'family', filterKey: 'all', historyIndex: 4 });
+        writeBrowseReturn({ deckSlug: 'family', filterKey: 'category:food', itemId: 'b' });
+        const { navigate } = renderWithClient(
+          <ItemList deckSlug="family" filter={{ kind: 'all' }} categories={[]} />,
+        );
+        await waitFor(() =>
+          expect(navigate).toHaveBeenCalledWith('/d/family/c/food', { replace: true }),
+        );
+        expect(sessionStorage.getItem(BROWSE_RETURN_KEY)).not.toBeNull();
+      });
+
+      it('stays on a later visit to the same list', async () => {
+        twoCards();
+        writeBrowseOpener({ deckSlug: 'family', filterKey: 'all', historyIndex: 2 });
+        writeBrowseReturn({ deckSlug: 'family', filterKey: 'category:food', itemId: 'b' });
+        const { navigate } = renderWithClient(
+          <ItemList deckSlug="family" filter={{ kind: 'all' }} categories={[]} />,
+        );
+        expect(await screen.findByText('Second')).toBeInTheDocument();
+        expect(navigate).not.toHaveBeenCalled();
+      });
+    });
   });
 });

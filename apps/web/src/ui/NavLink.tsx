@@ -7,11 +7,19 @@ import {
 } from 'react';
 
 /** Client-side navigation; main.tsx provides the router's history, tests a spy. */
-export const NavigateContext = createContext<(href: string) => void>((href) => {
-  window.location.assign(href);
+export interface NavigateOptions {
+  /** Replace the current history entry instead of pushing one. */
+  replace?: boolean;
+}
+
+export type NavigateHref = (href: string, options?: NavigateOptions) => void;
+
+export const NavigateContext = createContext<NavigateHref>((href, options) => {
+  if (options?.replace) window.location.replace(href);
+  else window.location.assign(href);
 });
 
-export function useNavigateHref(): (href: string) => void {
+export function useNavigateHref(): NavigateHref {
   return useContext(NavigateContext);
 }
 

@@ -6,7 +6,7 @@ import { createIdbPersister, shouldPersistQuery } from './api/persist';
 import { CACHE_MAX_AGE_MS, createAppQueryClient } from './api/query-client';
 import { signOut, unauthorizedRedirect } from './api/session';
 import { createAppRouter } from './app/router';
-import { NavigateContext } from './ui/NavLink';
+import { NavigateContext, type NavigateHref } from './ui/NavLink';
 import './styles.css';
 
 const persister = createIdbPersister();
@@ -30,7 +30,8 @@ const router = createAppRouter({
     }),
 });
 
-const navigate = (href: string) => router.history.push(href);
+const navigate: NavigateHref = (href, options) =>
+  options?.replace ? router.history.replace(href) : router.history.push(href);
 
 const root = document.getElementById('root');
 if (!root) throw new Error('index.html is missing #root');
