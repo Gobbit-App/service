@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from 'react';
 import type { ItemType } from '@pb/shared';
-import { LinkFields } from './LinkFields';
+import { LinkEditorFields } from './LinkEditorFields';
 import { ImageFields } from './ImageFields';
 import { TextFields } from './TextFields';
 import type { FieldsProps } from './types';
@@ -16,7 +16,7 @@ const CalcFields = lazy(async () => ({ default: (await import('./CalcFields')).C
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const fieldsByType: Record<ItemType, ComponentType<FieldsProps<any>>> = {
   text: TextFields,
-  link: LinkFields,
+  link: LinkEditorFields,
   image: ImageFields,
   table: TableFields,
   calc: CalcFields,

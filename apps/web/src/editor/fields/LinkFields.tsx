@@ -7,6 +7,8 @@ export type LinkPreview = NonNullable<LinkDraftPayload['preview']>;
 
 export type LinkPreviewSlotContext = {
   url: string;
+  /** The preview as it is now, member edits included. */
+  preview: LinkPreview;
   setPreview: (preview: LinkPreview) => void;
   setTitleIfEmpty: (title: string) => void;
 };
@@ -42,6 +44,7 @@ export function LinkFields({
       />
       {previewSlot?.({
         url: payload.url.trim(),
+        preview,
         setPreview,
         setTitleIfEmpty: setTitleIfEmpty ?? (() => undefined),
       })}
