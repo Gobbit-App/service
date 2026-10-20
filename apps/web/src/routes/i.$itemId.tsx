@@ -23,13 +23,15 @@ function ItemPage() {
   const navigate = useNavigateHref();
 
   if (item.isPending) return <LoadingState label="Loading card…" />;
-  if (item.isError && !item.data) {
+  // D132: a deleted card (still in this device's cache after Delete) is unavailable too
+  const deleted = item.data?.deletedAt !== undefined;
+  if ((item.isError && !item.data) || deleted) {
     return (
       <main className="page">
         <ErrorState
           title="Card unavailable"
-          message={accessErrorCopy(item.error, 'card')}
-          onRetry={isRetryable(item.error) ? () => void item.refetch() : undefined}
+          message={deleted ? 'This card was deleted.' : accessErrorCopy(item.error, 'card')}
+          onRetry={!deleted && isRetryable(item.error) ? () => void item.refetch() : undefined}
         />
       </main>
     );
