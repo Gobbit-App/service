@@ -15,7 +15,7 @@ import {
   type Draft,
   type LinkDraftPayload,
 } from './draft';
-import type { TablePayload } from '../cards/payload-guards';
+import type { ImagePayload, TablePayload } from '../cards/payload-guards';
 
 /** Errors keyed by dotted path, the same syntax as `problem.errors[].path` (e.g. `payload.rows.3.1`). */
 export type FieldErrors = Partial<Record<string, string>>;
@@ -75,6 +75,15 @@ function checkLink(payload: LinkDraftPayload, errors: FieldErrors): void {
   if (image !== undefined && image !== '' && !isHttpUrl(image)) {
     errors['payload.preview.image'] = 'Preview image must be an http(s) address';
   }
+}
+
+export const PHOTO_REQUIRED = 'Add a photo';
+export const ALT_REQUIRED = 'Alt text is required';
+
+/** D133: the photo must have finished uploading (a `publicId`) and needs alt text. */
+function checkImage(payload: ImagePayload, errors: FieldErrors): void {
+  if (payload.publicId === '') errors['payload.publicId'] = PHOTO_REQUIRED;
+  if (payload.alt.trim() === '') errors['payload.alt'] = ALT_REQUIRED;
 }
 
 function checkTable(payload: TablePayload, errors: FieldErrors): void {
@@ -140,7 +149,7 @@ export function payloadBytes(draft: Pick<Draft, 'type' | 'payload'>): number {
 
 /**
  * R6: client mirror of the server rules, zod- and mathjs-free. The server stays authoritative;
- * this only blocks a save that would certainly fail. Image payloads are read-only in 007.
+ * this only blocks a save that would certainly fail.
  */
 export function validateDraft(draft: Draft, options: ValidateOptions = {}): FieldErrors {
   const errors: FieldErrors = {};
@@ -155,8 +164,10 @@ export function validateDraft(draft: Draft, options: ValidateOptions = {}): Fiel
     case 'calc':
       checkCalc(draft.payload as CalcDraftPayload, errors, options.calcExpression);
       break;
-    case 'text':
     case 'image':
+      checkImage(draft.payload as ImagePayload, errors);
+      break;
+    case 'text':
       break;
   }
   const bytes = payloadBytes(draft);
