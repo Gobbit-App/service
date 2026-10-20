@@ -50,7 +50,7 @@ description: "Task list for 007-card-editor"
 
 - [X] T019 [P] [US1] [unit] apps/web/src/editor/CardEditor.test.tsx: Save disabled over 600 code points / with 0 categories; default category preselected; server 422 shown on categories and draft kept
 - [X] T020 [P] [US1] [unit] apps/web/src/editor/fields/LinkFields.test.tsx: URL check, preview title/description edits, `payload.preview.image` preserved, `previewSlot` rendered with ctx
-- [X] T021 [P] [US1] [e2e] e2e/tests/smoke/editor.spec.ts: update the existing text/link/601-char cases to the new labels; add preview text = list text; reader opening `/d/<slug>/new` sees "You can't add cards here" (reader case: unit tests only, single smoke session; see implementation-notes)
+- [X] T021 [P] [US1] [e2e] e2e/tests/smoke/editor.spec.ts: update the existing text/link/601-char cases to the new labels; add preview text = list text; reader opening `/d/<slug>/new` sees "You can't add cards here" (reader case not in e2e: single smoke session; see implementation-notes)
 
 ### Implementation for User Story 1
 
@@ -79,7 +79,7 @@ description: "Task list for 007-card-editor"
 - [X] T031 [P] [US2] [int] apps/api/test/items.int.test.ts: PATCH with a different `type` → 400; editor rewriting `categoryIds` keeps a private category; PATCH `categoryIds: []` on a published item → 422 `/problems/item-needs-category` (assert existing behaviour the UI relies on)
 - [X] T032 [P] [US2] [unit] apps/web/src/cards/can-edit-item.test.ts + EditLink.test.tsx: reader no; editor yes for published; proposal → creator or publisher only
 - [X] T033 [P] [US2] [unit] apps/web/src/review/ReviewEditForm.test.tsx: sends `toPatch` result (title-only edit → `{ title }`), unchanged → no request
-- [X] T034 [P] [US2] [e2e] e2e/tests/smoke/editor.spec.ts: edit title from `/i/$id` → Edit; no type picker on edit; reader sees no Edit (reader case: unit tests only, single smoke session; see implementation-notes)
+- [X] T034 [P] [US2] [e2e] e2e/tests/smoke/editor.spec.ts: edit title from `/i/$id` → Edit; no type picker on edit; reader sees no Edit (reader case not in e2e: single smoke session; see implementation-notes)
 
 ### Implementation for User Story 2
 
