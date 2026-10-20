@@ -76,3 +76,13 @@ The plan was written against `main` before 006 existed. Differences:
 - **Inline create is a `div`, not a nested `<form>`.** Enter adds and Escape cancels. The name input has `maxLength={NAME_MAX}`, and Add is disabled for a blank name.
 - **"New category" also appears in the review inline edit**, which uses the same `CategoryChips` and the same `can(deck.role, 'category.create')` gate.
 - **New categories are created with the server default visibility (`shared`).** There is no visibility choice inline.
+
+## E2E run (local)
+
+- Run against `pnpm dev` (API :3000, web :5173) and a throwaway pgvector Postgres, migrated and seeded with a local smoke token: `--grep @smoke` → 43 passed, 2 failed. The two failures are `web.spec` (`/version.json`) and `share.spec` (failed-share redirect); both need Caddy and fail the same way on the base branch.
+- Fixes found by the run:
+  - **Preview tab.** On the Pixel 7 viewport the preview is behind the Preview tab, so specs open it before reading the region.
+  - **Text card comparison.** The preview hides the card actions (the favorite star), so the text-card check compares title and body, not whole lines.
+  - **Wait for the save.** The link-card spec now waits for the deck URL after Save, because the preview card's heading matched the title assertion before the save finished.
+  - **Inline-category 409 case.** It reuses the exact name: the API slug (`@sindresorhus/slugify`) splits upper-case runs ("SMOKE-88DA31A1" → "smoke-88-da-31-a1"), so an upper-cased name is a different category.
+- **Reader cases of T021 and T034** (reader sees "You can't add cards here" and no Edit) are not in e2e: there is only the owner smoke session. They are covered by the `canEditItem`/`EditLink` and new-card route unit tests.

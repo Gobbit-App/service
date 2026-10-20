@@ -1,7 +1,11 @@
 import type { Page } from '@playwright/test';
 import { expect, test, webUrl } from '../../fixtures/web';
 
-const preview = (page: Page) => page.getByRole('region', { name: 'Preview' });
+/** Below 768px (Pixel 7) the preview is a tab: open it, then read the preview region. */
+async function showPreview(page: Page) {
+  await page.getByRole('tab', { name: 'Preview' }).click();
+  return page.getByRole('region', { name: 'Preview' });
+}
 const save = (page: Page) => page.getByRole('button', { name: 'Save card' });
 
 test('a text card added from the editor shows in the list and survives a reload @smoke', async ({
@@ -16,16 +20,17 @@ test('a text card added from the editor shows in the list and survives a reload 
 
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Body', { exact: true }).fill('Written from the editor');
-  const previewText = await preview(page).getByRole('article').innerText();
+  const previewText = await (await showPreview(page)).getByRole('article').innerText();
   await save(page).click();
 
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   const listed = page.getByRole('article').filter({ hasText: title });
   await expect(listed).toBeVisible();
-  // The preview is the same Card component as the list (D136).
-  expect((await listed.innerText()).split('\n').slice(0, 2)).toEqual(
-    previewText.split('\n').slice(0, 2),
-  );
+  // The preview is the same Card component as the list (D136), minus its actions.
+  for (const text of [title, 'Written from the editor']) {
+    expect(previewText).toContain(text);
+    await expect(listed).toContainText(text);
+  }
 
   await page.reload();
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
@@ -43,9 +48,10 @@ test('a link card added from the editor is listed with its url @smoke', async ({
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('URL', { exact: true }).fill('https://example.com/recipes');
   await page.getByLabel('Preview title', { exact: true }).fill('Recipes');
-  await expect(preview(page)).toContainText('Recipes');
+  await expect(await showPreview(page)).toContainText('Recipes');
   await save(page).click();
 
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
@@ -211,9 +217,9 @@ test('a category created inline is selected and the card is saved in it @smoke',
     'true',
   );
 
-  // Creating the same name again picks the existing category instead of failing.
+  // Creating the same name again (409) picks the existing category instead of failing.
   await page.getByRole('button', { name: 'New category' }).click();
-  await page.getByLabel('New category name').fill(category.toUpperCase());
+  await page.getByLabel('New category name').fill(category);
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByRole('button', { name: category })).toHaveCount(1);
   await expect(page.getByRole('alert')).toHaveCount(0);

@@ -50,7 +50,7 @@ description: "Task list for 007-card-editor"
 
 - [X] T019 [P] [US1] [unit] apps/web/src/editor/CardEditor.test.tsx: Save disabled over 600 code points / with 0 categories; default category preselected; server 422 shown on categories and draft kept
 - [X] T020 [P] [US1] [unit] apps/web/src/editor/fields/LinkFields.test.tsx: URL check, preview title/description edits, `payload.preview.image` preserved, `previewSlot` rendered with ctx
-- [ ] T021 [P] [US1] [e2e] e2e/tests/smoke/editor.spec.ts: update the existing text/link/601-char cases to the new labels; add preview text = list text; reader opening `/d/<slug>/new` sees "You can't add cards here"
+- [X] T021 [P] [US1] [e2e] e2e/tests/smoke/editor.spec.ts: update the existing text/link/601-char cases to the new labels; add preview text = list text; reader opening `/d/<slug>/new` sees "You can't add cards here" (reader case: unit tests only, single smoke session; see implementation-notes)
 
 ### Implementation for User Story 1
 
@@ -79,7 +79,7 @@ description: "Task list for 007-card-editor"
 - [X] T031 [P] [US2] [int] apps/api/test/items.int.test.ts: PATCH with a different `type` → 400; editor rewriting `categoryIds` keeps a private category; PATCH `categoryIds: []` on a published item → 422 `/problems/item-needs-category` (assert existing behaviour the UI relies on)
 - [X] T032 [P] [US2] [unit] apps/web/src/cards/can-edit-item.test.ts + EditLink.test.tsx: reader no; editor yes for published; proposal → creator or publisher only
 - [X] T033 [P] [US2] [unit] apps/web/src/review/ReviewEditForm.test.tsx: sends `toPatch` result (title-only edit → `{ title }`), unchanged → no request
-- [ ] T034 [P] [US2] [e2e] e2e/tests/smoke/editor.spec.ts: edit title from `/i/$id` → Edit; no type picker on edit; reader sees no Edit
+- [X] T034 [P] [US2] [e2e] e2e/tests/smoke/editor.spec.ts: edit title from `/i/$id` → Edit; no type picker on edit; reader sees no Edit (reader case: unit tests only, single smoke session; see implementation-notes)
 
 ### Implementation for User Story 2
 
@@ -104,7 +104,7 @@ description: "Task list for 007-card-editor"
 - [X] T042 [US3] apps/web/src/editor/fields/table-ops.ts to pass T041
 - [X] T043 [US3] apps/web/src/editor/fields/TableFields.tsx (lazy in registry; byte meter; horizontal scroll; empty-heading errors)
 - [X] T044 [US3] Add `table` to the `?type=` enum and the type picker
-- [ ] T045 [P] [US3] [e2e] e2e/tests/smoke/editor.spec.ts: table card with a row move; preview text = list text; Add row disabled at 12
+- [X] T045 [P] [US3] [e2e] e2e/tests/smoke/editor.spec.ts: table card with a row move; preview text = list text; Add row disabled at 12
 
 ---
 
@@ -118,7 +118,7 @@ description: "Task list for 007-card-editor"
 - [X] T047 [US4] apps/web/src/editor/fields/calc-ops.ts to pass T046
 - [X] T048 [US4] apps/web/src/editor/fields/CalcFields.tsx (lazy; imports `validateCalcExpression` from `@pb/shared/calc` only; feeds `validate.ts` the expression check)
 - [X] T049 [US4] Add `calc` to the `?type=` enum and the type picker; verify in the `vite build` manifest that mathjs stays in one shared async chunk
-- [ ] T050 [P] [US4] [e2e] e2e/tests/smoke/editor.spec.ts: calc card `a * b` live result; invalid expression disables Save
+- [X] T050 [P] [US4] [e2e] e2e/tests/smoke/editor.spec.ts: calc card `a * b` live result; invalid expression disables Save
 
 ---
 
@@ -132,7 +132,7 @@ description: "Task list for 007-card-editor"
 - [X] T052 [US5] apps/web/src/editor/use-draft-autosave.ts + restore banner in CardEditor.tsx (create key needs `deckId` from `deckQuery`)
 - [X] T053 [P] [US5] [unit] apps/web/src/api/session.test.ts: `signOut` calls `clearDrafts`
 - [X] T054 [US5] apps/web/src/api/session.ts: add `clearDrafts` dependency to `signOut` (with the persisted cache and last deck)
-- [ ] T055 [P] [US5] [e2e] e2e/tests/smoke/editor.spec.ts: type → reload → Restore brings content back; sign-out → sign-in → no offer
+- [X] T055 [P] [US5] [e2e] e2e/tests/smoke/editor.spec.ts: type → reload → Restore brings content back; sign-out → sign-in → no offer
 
 ---
 
@@ -145,7 +145,7 @@ description: "Task list for 007-card-editor"
 - [X] T056 [P] [US6] [unit] apps/web/src/editor/fields/CategoryChips.test.tsx: "New category" only with `category.create`; success selects; 409 → selects the same-slug category after refetch, else detail shown; name ≤ `NAME_MAX`
 - [X] T057 [US6] apps/web/src/api/create-category.ts `useCreateCategory` (POST `/decks/{id}/categories` `{ name }`, invalidate `queryKeys.categories`) + [unit] create-category.test.ts
 - [X] T058 [US6] Inline create in apps/web/src/editor/fields/CategoryChips.tsx
-- [ ] T059 [P] [US6] [e2e] e2e/tests/smoke/editor.spec.ts: inline create a category then save the card in it
+- [X] T059 [P] [US6] [e2e] e2e/tests/smoke/editor.spec.ts: inline create a category then save the card in it
 
 ---
 
