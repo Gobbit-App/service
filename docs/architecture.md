@@ -454,7 +454,7 @@ Supersedes D25's "no deck is auto-created": every account gets exactly one perso
 
 ## Rate limits (D39–D40)
 
-Postgres table `rate_limit_counters`, fixed one-hour windows, `INSERT … ON CONFLICT DO UPDATE SET count = count + 1 RETURNING count`. Keys and limits (from `@pb/shared`): `magic-link:email:<sha256>` 5, `magic-link:ip:<ip>` 20, `callback:ip:<ip>` 30. The email counter is checked before any user lookup, so a `429 /problems/rate-limited` (with `Retry-After`) reveals nothing. Rows older than two windows are purged on ~1% of increments. The client IP is the socket address unless `CLIENT_IP_HEADER` names a trusted header; `X-Forwarded-For` is never trusted implicitly.
+Postgres table `rate_limit_counters`, fixed one-hour windows, `INSERT … ON CONFLICT DO UPDATE SET count = count + 1 RETURNING count`. Keys and limits (from `@pb/shared`): `magic-link:email:<sha256>` 5, `magic-link:ip:<ip>` 20, `callback:ip:<ip>` 30; Phase 6 adds `media-sign:user:<id>` 60 and `link-preview:user:<id>` 30 (008). The email counter is checked before any user lookup, so a `429 /problems/rate-limited` (with `Retry-After`) reveals nothing. Rows older than two windows are purged on ~1% of increments. The client IP is the socket address unless `CLIENT_IP_HEADER` names a trusted header; `X-Forwarded-For` is never trusted implicitly.
 
 ---
 
@@ -825,7 +825,7 @@ Create and edit every card type (text, link, table, calc; image is read-only unt
 
 **Draft model (D137)**: `editor/draft.ts`: `Draft`, `emptyDraft(type, defaultCategoryId)`, `draftFromItem(item)`, `withType`, `toCreateBody(draft)` and `toPatch(original, draft)` (minimal diff, whole `payload`/`entities` when changed, `null` when unchanged). The review queue's inline edit (`ReviewEditForm`) uses the same model and fields; `review-edit.ts` is gone. Saving goes through `use-save-card.ts` → `api/create-item.ts` / `api/update-item.ts` (one PATCH hook for the editor and the review queue; R9 cache rules: set the item (and its review-queue entry), invalidate the item lists and search, and the review queue when a proposal was saved). Server field errors map back to fields through `problem-fields.ts`.
 
-**Field registry (D138)**: `editor/fields/registry.ts` maps each type to a lazy fields component (`TextFields`, `LinkFields` with a `previewSlot` seam for 008, `TableFields` up to 12 × 6 with up/down reorder and a byte meter, `CalcFields` up to 6 fields with a live result, `ReadOnlyImage`). Shared fields: `TitleField`, `BodyField` (with `LimitMeter`), `CategoryChips` (at least one; inline **New category** when `can(role, 'category.create')`, which posts with the default `shared` visibility and selects the same-named visible category on a 409), `SourceUrlField` and remove-only `EntityChips`.
+**Field registry (D138)**: `editor/fields/registry.ts` maps each type to a lazy fields component (`TextFields`, `LinkFields` with a `previewSlot` seam for 008, `TableFields` up to 12 × 6 with up/down reorder and a byte meter, `CalcFields` up to 6 fields with a live result, `ReadOnlyImage`, replaced by `ImageFields` in 008). Shared fields: `TitleField`, `BodyField` (with `LimitMeter`), `CategoryChips` (at least one; inline **New category** when `can(role, 'category.create')`, which posts with the default `shared` visibility and selects the same-named visible category on a 409), `SourceUrlField` and remove-only `EntityChips`.
 
 **Client validation (R6)**: `editor/validate.ts` mirrors the server limits without zod (title, body ≤ 600 code points, payload ≤ 8192 UTF-8 bytes, URLs, table and calc shapes) using value imports from `@pb/shared/card-limits` only. Calc expressions are checked by `@pb/shared/calc`, loaded with a dynamic import while the type is calc (`use-calc-check.ts`), so mathjs stays in its async chunk. The server stays authoritative; its problem details are shown as they come.
 
@@ -881,6 +881,38 @@ Create and edit every card type (text, link, table, calc; image is read-only unt
 - **Inline create is a `div`, not a nested `<form>`.** Enter adds and Escape cancels. The name input has `maxLength={NAME_MAX}`, and Add is disabled for a blank name.
 - **"New category" also appears in the review inline edit**, which uses the same `CategoryChips` and the same `can(deck.role, 'category.create')` gate.
 - **New categories are created with the server default visibility (`shared`).** There is no visibility choice inline.
+
+## Card media (Phase 6, `specs/008-card-media`)
+
+Image cards from the editor (upload a photo, or take one on a phone) and "Fetch preview" for link cards. Two new routes, no migration, no new env vars and no new dependencies (`cloudinary` and `lru-cache` were already in the API).
+
+**Boundary with Phase 7 (D129)**: Phase 6 ships signed browser uploads and a synchronous link preview, both as services. The `assets` table, the orphan sweep, remote-URL upload, preview snapshots, link checks and `CloudImage` stay in Phase 7. An image card stores only `{ publicId, alt }`; an upload whose card is never saved stays in Cloudinary until Phase 7's sweep, which can find it by tag.
+
+**Signed direct uploads (D133, ADR-051)**: `POST /decks/{id}/media/sign` (`media.service` → `media/sign-upload.ts`). Access: `resolveDeck` + `authorize(..., 'item.create')`; then 503 `/problems/unavailable` without `CLOUDINARY_URL`; then `rateKeys.mediaSignUser` at 60/user/hour. The response holds the upload URL, `apiKey`, `timestamp`, `signature`, `folder`, `tags`, `allowedFormats`, `maxBytes` and `expiresAt` (50 min, inside Cloudinary's one-hour signature window), with `Cache-Control: no-store`. The API secret never leaves `signEditorUpload`. The browser posts the file straight to `https://api.cloudinary.com/v1_1/<cloud>/image/upload` (`editor/upload.ts`, XHR for progress and abort); the API never sees the bytes. The web CSP `connect-src` adds `https://api.cloudinary.com` (`apps/web/Caddyfile`).
+
+**Storage conventions**: folder `gobbit/items/<deckId>` (ingest uses `gobbit/ingest/<deckId>`), tags `editor` and `deck:<deckId>`, formats jpg/png/webp/heic/heif. All of them are covered by the signature, so the browser can't change them. 8 MB (`MEDIA_IMAGE_MAX_BYTES`, the same as ingest) is checked in the browser before the upload; Cloudinary's account upload limit is the server-side backstop (no signed preset, see Deviations).
+
+**Editor image fields**: `editor/fields/ImageFields.tsx` replaces `ReadOnlyImage`; image is in `CREATABLE_TYPES`. "Take photo" (`capture="environment"`) and "Choose photo" are labelled file inputs; `image-file.ts` checks the type (MIME, or the extension when the browser reports none, e.g. HEIC) and size. `use-image-upload.ts` runs sign → upload with states idle / signing / uploading (percent) / failed (with retry), cancel through `AbortController`, and maps 429/503/403/404 to messages. `cachedSigner` reuses a signature until it expires; a stale signature is re-signed once. `validate.ts` requires a finished upload ("Add a photo") and alt text ("Alt text is required"). Without a cloud name (`GET /config`) the type picker disables Image with "Image cards aren't available: image storage isn't set up here." and `?type=image` falls back to text. Offline, picking is disabled.
+
+**Link preview (D134)**: `POST /decks/{id}/link-preview` (`link-preview.service`): `item.create`, then `rateKeys.linkPreviewUser` at 30/user/hour, then an `lru-cache` (200 entries, 1 h, keyed by the parsed URL; empty results are cached too). The page is fetched only through `fetch/safe-fetch.ts` (ADR-048) and read by `extract-page`: OG title (else `<title>`, ≤ 200 code points), OG description (≤ 500), absolute http(s) OG image (≤ 2048 chars). Any failure answers `200 { preview: null }`; the reason is only logged. In the editor, `LinkEditorFields` puts `FetchPreview` in the 007 `previewSlot`: text the member already wrote wins over fetched text, a fetched image replaces the old one, and an empty card title takes the fetched title. Any failure reads "No preview available" and Save stays on.
+
+**Bundle**: initial JS unchanged at 112.5 KB gzip; the image and preview code sits in the editor's lazy chunks (`CardEditor` chunk 7.4 KB gzip). Web code imports the zod-free `@pb/shared/media-constants`.
+
+### Deviations from the 008 plan
+
+- **8 MB, not 10 MB**: the same cap as ingest images (`INGEST_IMAGE_MAX_BYTES`).
+- **No width/height** in the image payload: the card stores `{ publicId, alt }` only, as the existing schema does.
+- **No `siteName`** in the preview: the link payload has no field for it, so it is dropped.
+- **The fetch failure reason is not returned** (`{ preview: null }`), only logged, so the route can't be used to probe hosts.
+- **No signed upload preset**: signed params alone (folder, tags, formats) plus the client-side 8 MB check; Cloudinary's account limit is the backstop. A signed preset with a size cap can be added later by signing its name.
+- **Schemas in `schemas/media.ts`**, exported from `@pb/shared` and `@pb/shared/media`; the web imports the zod-free `@pb/shared/media-constants` (research named `@pb/shared/media`).
+- **`LINK_PREVIEW_IMAGE_URL_MAX` = 2048** is new: longer image URLs are dropped.
+- **Order of checks**: access before the rate limit on both routes; the sign route's 503 comes after the access check and before the rate limit, so a server without Cloudinary doesn't use up a member's hourly count. The preview rate limit counts cache hits too.
+- **Upload state**: starting an upload clears the stored `publicId`, so cancelling or failing a replacement leaves no photo (Save then asks for one). A restored draft keeps only a finished `publicId`.
+- **Alt text has no client maximum**: the server has none either; the 8192-byte payload limit covers it.
+- **Fetch preview only in the card editor**, not in the review queue's inline edit (which keeps plain `LinkFields`).
+- **E2E fakes Cloudinary**: the smoke specs answer `/api/config` (cloud name), `/api/decks/*/media/sign`, `api.cloudinary.com` and `res.cloudinary.com` with `page.route`, so no test talks to Cloudinary or needs credentials. The happy-path preview is faked too, because `safe-fetch` refuses the local fixture server the task described; the no-preview path goes through the real API with a private-IP URL.
+- **Caddy's `Permissions-Policy: camera=()`** stays: it doesn't affect `<input capture>`, which opens the system camera.
 
 ---
 
@@ -1443,6 +1475,12 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 **Decision**: Archive, restore, delete and undelete live only in `items.service`. Each method takes `actor: { user, via }` as its first argument; HTTP routes build it with `getActor(c)` (`via: 'session'`, whether the session came from the cookie or a bearer). Routes only parse and map; transition rules, permissions and problem types are decided once, in the service.
 
 **Rationale**: Phase 8 records history in `item_events` from these same methods, storing `actor.user` and `actor.via`. Phase 13's MCP server calls them with `via: 'mcp'` plus the connection id. Every client gets the same rules and the same audit trail, without duplicating checks per transport.
+
+### ADR-051: Signed direct uploads from the browser (D133)
+
+**Decision**: The editor uploads photos straight from the browser to Cloudinary with a short-lived signature from `POST /decks/{id}/media/sign`. The API signs only for members who may create cards in that deck, and the signature fixes the folder (`gobbit/items/<deckId>`), the tags (`editor`, `deck:<deckId>`) and the allowed formats. The card stores `{ publicId, alt }`. No unsigned preset and no proxying through the API.
+
+**Rationale**: Photos from a phone are several MB; proxying them would tie up the API and its memory for no benefit, and an unsigned preset would let anyone with the cloud name upload. Signing keeps the secret on the server and scopes every upload to a deck, so Phase 7's `assets` table and orphan sweep can find uploads by tag without a schema change now. The size cap is checked in the browser, with Cloudinary's account limit as the backstop; a signed preset can add a server-side cap later without changing the client.
 
 ---
 
