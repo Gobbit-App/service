@@ -17,24 +17,24 @@ description: "Task list for 007-card-editor"
 
 **Purpose**: Zod-free limits, the shared draft model, stores and hooks that every story uses
 
-- [ ] T001 Record the baseline `pnpm build:web && pnpm budget` figure in specs/007-card-editor/implementation-notes.md (SC-006 baseline)
-- [ ] T002 [P] Add zod-free subpath: packages/shared/src/card-limits.ts (re-export `CARD_TITLE_MAX`, `CARD_BODY_MAX`, `PAYLOAD_MAX_BYTES`, `TABLE_MAX_ROWS`, `TABLE_MAX_COLUMNS`, `CALC_MAX_FIELDS`, `NAME_MAX` from `limits.ts`, `codePointLength`/`utf8Bytes` from `utils/utf8-bytes.ts`) + `"./card-limits"` in packages/shared/package.json
-- [ ] T003 [P] Re-export `validateCalcExpression` from packages/shared/src/calc/evaluate.ts (the `./calc` subpath)
-- [ ] T004 [P] [unit] packages/shared/src/card-limits.test.ts: values equal `limits.ts`; module graph imports no `zod` (assert via a static import scan)
-- [ ] T005 [P] [unit] apps/web/src/editor/draft.test.ts: `emptyDraft`, `draftFromItem` (pads short table rows), `toCreateBody`, `toPatch` (null when unchanged; order-insensitive categories; whole payload on any payload change; whole entities after removal; `sourceUrl: null` when cleared; never `type`/`status`). Port all cases from apps/web/src/review/review-edit.test.ts
-- [ ] T006 apps/web/src/editor/draft.ts (D137) to pass T005
-- [ ] T007 [P] [unit] apps/web/src/editor/validate.test.ts: title/body code points (emoji, Hebrew, combining marks), payload bytes, link http(s), table shape and empty headings, calc key regex/uniqueness/≤ 6, ≥ 1 category; parity cases fed to both `validate.ts` and the `@pb/shared` Zod item/payload schemas (Node test, zod allowed) must agree
-- [ ] T008 apps/web/src/editor/validate.ts (R6) to pass T007; text/link/table checks import only `@pb/shared/card-limits`; calc expression check injected by `CalcFields` (keeps mathjs out)
-- [ ] T009 [P] [unit] apps/web/src/editor/problem-fields.test.ts: validation `errors[].path` → field; 400 `categoryIds`; 422 `/problems/item-needs-category` → `categoryIds`; 409; constraint-violation / payload-too-large / 403 / network → form-level
-- [ ] T010 apps/web/src/editor/problem-fields.ts to pass T009 (falls back to `api/problem-messages.ts`)
-- [ ] T011 [P] [unit] apps/web/src/editor/drafts-store.test.ts (in-memory `DraftsKv`): key builders, set/get/del, unknown `v` discarded, `clear()`
-- [ ] T012 apps/web/src/editor/drafts-store.ts (D145) on `createStore('gobbit-drafts','drafts')`, following share/share-store.ts
-- [ ] T013 [P] [unit] apps/web/src/cards/Card.test.tsx: `preview` hides favorite/share/actions and renders title/chips without links
-- [ ] T014 Add `preview` prop to apps/web/src/cards/Card.tsx
-- [ ] T015 Move apps/web/src/review/EntityChips.tsx (+ test) → apps/web/src/cards/EntityChips.tsx; add optional `onRemove`; update imports in apps/web/src/review/ReviewCard.tsx
-- [ ] T016 [P] [unit] apps/web/src/cards/EntityChips.test.tsx: remove buttons only with `onRemove`, label per kind
-- [ ] T017 [P] apps/web/src/api/update-item.ts `useUpdateItem` (PATCH `/items/{id}`; set `queryKeys.item`, invalidate `itemLists` + `SEARCH_KEY`, proposals → `replaceReviewItem` / invalidate `REVIEW_KEY`) + [unit] apps/web/src/api/update-item.test.ts
-- [ ] T018 [P] apps/web/src/api/create-item.ts: also invalidate `SEARCH_KEY`; extend apps/web/src/api/create-item.test.ts [unit]
+- [X] T001 Record the baseline `pnpm build:web && pnpm budget` figure in specs/007-card-editor/implementation-notes.md (SC-006 baseline)
+- [X] T002 [P] Add zod-free subpath: packages/shared/src/card-limits.ts (re-export `CARD_TITLE_MAX`, `CARD_BODY_MAX`, `PAYLOAD_MAX_BYTES`, `TABLE_MAX_ROWS`, `TABLE_MAX_COLUMNS`, `CALC_MAX_FIELDS`, `NAME_MAX` from `limits.ts`, `codePointLength`/`utf8Bytes` from `utils/utf8-bytes.ts`) + `"./card-limits"` in packages/shared/package.json
+- [X] T003 [P] Re-export `validateCalcExpression` from packages/shared/src/calc/evaluate.ts (the `./calc` subpath)
+- [X] T004 [P] [unit] packages/shared/src/card-limits.test.ts: values equal `limits.ts`; module graph imports no `zod` (assert via a static import scan)
+- [X] T005 [P] [unit] apps/web/src/editor/draft.test.ts: `emptyDraft`, `draftFromItem` (pads short table rows), `toCreateBody`, `toPatch` (null when unchanged; order-insensitive categories; whole payload on any payload change; whole entities after removal; `sourceUrl: null` when cleared; never `type`/`status`). Port all cases from apps/web/src/review/review-edit.test.ts
+- [X] T006 apps/web/src/editor/draft.ts (D137) to pass T005
+- [X] T007 [P] [unit] apps/web/src/editor/validate.test.ts: title/body code points (emoji, Hebrew, combining marks), payload bytes, link http(s), table shape and empty headings, calc key regex/uniqueness/≤ 6, ≥ 1 category; parity cases fed to both `validate.ts` and the `@pb/shared` Zod item/payload schemas (Node test, zod allowed) must agree
+- [X] T008 apps/web/src/editor/validate.ts (R6) to pass T007; text/link/table checks import only `@pb/shared/card-limits`; calc expression check injected by `CalcFields` (keeps mathjs out)
+- [X] T009 [P] [unit] apps/web/src/editor/problem-fields.test.ts: validation `errors[].path` → field; 400 `categoryIds`; 422 `/problems/item-needs-category` → `categoryIds`; 409; constraint-violation / payload-too-large / 403 / network → form-level
+- [X] T010 apps/web/src/editor/problem-fields.ts to pass T009 (falls back to `api/problem-messages.ts`)
+- [X] T011 [P] [unit] apps/web/src/editor/drafts-store.test.ts (in-memory `DraftsKv`): key builders, set/get/del, unknown `v` discarded, `clear()`
+- [X] T012 apps/web/src/editor/drafts-store.ts (D145) on `createStore('gobbit-drafts','drafts')`, following share/share-store.ts
+- [X] T013 [P] [unit] apps/web/src/cards/Card.test.tsx: `preview` hides favorite/share/actions and renders title/chips without links
+- [X] T014 Add `preview` prop to apps/web/src/cards/Card.tsx
+- [X] T015 Move apps/web/src/review/EntityChips.tsx (+ test) → apps/web/src/cards/EntityChips.tsx; add optional `onRemove`; update imports in apps/web/src/review/ReviewCard.tsx
+- [X] T016 [P] [unit] apps/web/src/cards/EntityChips.test.tsx: remove buttons only with `onRemove`, label per kind
+- [X] T017 [P] apps/web/src/api/update-item.ts `useUpdateItem` (PATCH `/items/{id}`; set `queryKeys.item`, invalidate `itemLists` + `SEARCH_KEY`, proposals → `replaceReviewItem` / invalidate `REVIEW_KEY`) + [unit] apps/web/src/api/update-item.test.ts
+- [X] T018 [P] apps/web/src/api/create-item.ts: also invalidate `SEARCH_KEY`; extend apps/web/src/api/create-item.test.ts [unit]
 
 **Checkpoint**: Foundation ready. The draft model, validation, error mapping, stores and cache hooks are tested.
 

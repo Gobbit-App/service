@@ -4,7 +4,7 @@ import { problemMessages } from '../api/problem-messages';
 import { CardBody } from '../cards/CardBody';
 import { itemCategories } from '../cards/Card';
 import { useCloudName } from '../cards/use-cloud-name';
-import { EntityChips } from './EntityChips';
+import { EntityChips } from '../cards/EntityChips';
 import { ReviewDiff } from './ReviewDiff';
 import { ReviewEditForm } from './ReviewEditForm';
 import { reviewDiff } from './review-diff';

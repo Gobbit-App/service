@@ -1,4 +1,5 @@
 import { validateCalcExpression } from '../schemas/calc-expression';
+export { validateCalcExpression } from '../schemas/calc-expression';
 import { evaluate } from 'mathjs';
 
 /** Result of evaluating a calc expression: either a finite number or an error. */

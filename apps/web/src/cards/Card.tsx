@@ -24,6 +24,7 @@ export function Card({
   linkTitle = true,
   highlight = '',
   now = new Date(),
+  preview = false,
 }: {
   item: Item;
   deckSlug: string;
@@ -33,6 +34,8 @@ export function Card({
   /** Search query whose words are marked in the title (D79). */
   highlight?: string;
   now?: Date;
+  /** D136: the editor's preview: no favorite/share, title and chips as plain text. */
+  preview?: boolean;
 }): ReactElement {
   const cloudName = useCloudName();
   const toggle = useToggleFavorite();
@@ -44,7 +47,7 @@ export function Card({
     <article className="card" aria-labelledby={titleId}>
       <header className="card__header">
         <h2 className="card__title" id={titleId} dir="auto">
-          {linkTitle ? (
+          {linkTitle && !preview ? (
             <NavLink href={`/i/${item.id}`}>
               <Highlighted text={item.title} query={highlight} />
             </NavLink>
@@ -52,14 +55,16 @@ export function Card({
             <Highlighted text={item.title} query={highlight} />
           )}
         </h2>
-        <div className="card__actions">
-          <FavoriteButton
-            isFavorite={item.isFavorite}
-            disabled={toggle.isPending}
-            onToggle={() => toggle.mutate({ itemId: item.id, isFavorite: !item.isFavorite })}
-          />
-          <ShareButton itemId={item.id} title={item.title} />
-        </div>
+        {!preview && (
+          <div className="card__actions">
+            <FavoriteButton
+              isFavorite={item.isFavorite}
+              disabled={toggle.isPending}
+              onToggle={() => toggle.mutate({ itemId: item.id, isFavorite: !item.isFavorite })}
+            />
+            <ShareButton itemId={item.id} title={item.title} />
+          </div>
+        )}
       </header>
       <CardBody item={item} cloudName={cloudName} />
       {(chips.length > 0 || age) && (
@@ -68,12 +73,16 @@ export function Card({
             <ul className="card__chips" aria-label="Categories">
               {chips.map((c) => (
                 <li key={c.id}>
-                  <NavLink
-                    className="chip chip--small"
-                    href={chipHref(deckSlug, { kind: 'category', slug: c.slug })}
-                  >
-                    {c.name}
-                  </NavLink>
+                  {preview ? (
+                    <span className="chip chip--small">{c.name}</span>
+                  ) : (
+                    <NavLink
+                      className="chip chip--small"
+                      href={chipHref(deckSlug, { kind: 'category', slug: c.slug })}
+                    >
+                      {c.name}
+                    </NavLink>
+                  )}
                 </li>
               ))}
             </ul>

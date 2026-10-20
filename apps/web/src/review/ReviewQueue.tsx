@@ -2,12 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import type { Category } from '@pb/shared';
 import { problemMessages } from '../api/problem-messages';
-import {
-  reviewQuery,
-  useDiscardProposal,
-  usePublishProposal,
-  useUpdateProposal,
-} from '../api/review';
+import { reviewQuery, useDiscardProposal, usePublishProposal } from '../api/review';
+import { useUpdateItem } from '../api/update-item';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { ReviewCard } from './ReviewCard';
 
@@ -24,7 +20,7 @@ export function ReviewQueue({
   const queue = useQuery(reviewQuery(deckSlug));
   const publish = usePublishProposal(deckSlug);
   const discard = useDiscardProposal(deckSlug);
-  const update = useUpdateProposal(deckSlug);
+  const update = useUpdateItem(deckSlug);
   const failure = publish.error ?? discard.error;
 
   if (queue.isPending) return <LoadingState label="Loading proposals…" />;
