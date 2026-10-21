@@ -19,7 +19,8 @@ right tier (unit / int / search / e2e), and every row of the plan's traceability
 - **[P]**: Can run in parallel (different files, no dependencies)
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - **[Tier]**: For test tasks: `[unit]` `*.test.ts` next to code, `[int]` `*.int.test.ts` in `apps/api/test/` or `packages/db/test/` (Docker),
-  `[search]` `*.search.test.ts`, `[e2e]` Playwright `@smoke` in `e2e/tests/smoke/`
+  `[search]` `*.search.test.ts`, `[e2e:smoke]` Playwright `@smoke` journey in `e2e/tests/smoke/`,
+  `[e2e:full]` Playwright `@full` spec in `e2e/tests/full/` (tier from the plan's "E2E tier" line, constitution V)
 - Include exact file paths in descriptions
 
 ## Path Conventions
@@ -27,7 +28,7 @@ right tier (unit / int / search / e2e), and every row of the plan's traceability
 - API: `apps/api/src/{routes,services,repositories,jobs}/` + feature folders; integration tests in `apps/api/test/`
 - Web: `apps/web/src/routes/` (file routes) + feature folders (`cards/`, `search/`, …), shared UI in `ui/`
 - DTOs: `packages/shared/src/`; schema and migrations: `packages/db/src/schema/`, `packages/db/migrations/` (+ `down/`)
-- E2E: `e2e/tests/smoke/`
+- E2E: `e2e/tests/smoke/` (journeys) and `e2e/tests/full/` (nightly)
 
 <!--
   ============================================================================
@@ -74,7 +75,7 @@ right tier (unit / int / search / e2e), and every row of the plan's traceability
 
 - [ ] T010 [P] [US1] [int] Access and visibility rules for [action] in apps/api/test/[area].int.test.ts
 - [ ] T011 [P] [US1] [unit] Service rules for [behaviour] in apps/api/src/services/[service].test.ts
-- [ ] T012 [P] [US1] [e2e] Happy and negative path for [journey] in e2e/tests/smoke/[name].spec.ts
+- [ ] T012 [P] [US1] [e2e:smoke] Happy and negative path for [journey] in e2e/tests/smoke/[name].spec.ts (or [e2e:full] in e2e/tests/full/[area].spec.ts)
 
 ### Implementation for User Story 1
 
@@ -97,6 +98,7 @@ right tier (unit / int / search / e2e), and every row of the plan's traceability
 **Purpose**: Keep the repository's docs and gates true
 
 - [ ] TXXX `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` (+ `pnpm test:search` / `pnpm budget` if touched)
+- [ ] TXXX e2e at the plan's tier: `@smoke` passes in CI's `e2e` job; `@full` specs pass with `pnpm test:e2e --grep @full` (until the nightly workflow exists)
 - [ ] TXXX [P] docs/architecture.md: feature section, new ADRs from plan decisions, "Deviations from the plan" list (from implementation-notes.md)
 - [ ] TXXX [P] README.md: env vars, commands, routes, setup steps
 - [ ] TXXX [P] CLAUDE.md ground rules if a new convention was introduced

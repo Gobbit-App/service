@@ -53,8 +53,21 @@ detail (commands, env vars, layout) lives in `CLAUDE.md`, `README.md` and `docs/
   - unit `*.test.ts` next to the code;
   - integration `*.int.test.ts` (Testcontainers) for SQL, migrations, triggers and access rules;
   - search eval `*.search.test.ts` for ranking changes (committed embedding cache) [ADR-043];
-  - Playwright `@smoke` for new UI and API flows, happy and negative paths.
-- Tests build their own data with factories; the seed creates only the owner [ADR-032]. Each smoke
+  - Playwright e2e for new UI and flows, happy and negative paths, in one of two tiers [ADR-053]:
+    `@smoke` (critical journeys; every PR and after every deploy; ≤ 5 min) or `@full` (everything
+    else; nightly; ≤ 30 min).
+- Choose the e2e tier per change, and record it in the plan ("E2E tier") and the PR:
+  - **smoke** if the change touches a critical journey (sign-in, reading a deck, creating or editing
+    a card, photo upload, search, share/ingest submit, review publish), if a regression would block
+    core use, or if it crosses a deployment boundary (proxy, CSP, env or secret, a third-party call);
+  - **full** for secondary paths, role variants, extra negatives and edge cases, async or costly
+    third-party work, and cross-browser or offline variants;
+  - **none** for pure logic with no new UI or flow (unit and integration tests only), with the reason.
+- Smoke tests are journeys: a member's task through the UI, with nothing inside Gobbit faked; only
+  third-party hosts may be replaced, at the network edge [D149, D151].
+- A bug that reached production gets its regression test at the tier and in the environment that
+  would have caught it.
+- Tests build their own data with factories; the seed creates only the owner [ADR-032]. Each e2e
   test creates and deletes its own `smoke-<id>` deck [D50].
 - Each invariant named in a spec maps to at least one test (traceability table in the plan).
 
@@ -108,4 +121,4 @@ detail (commands, env vars, layout) lives in `CLAUDE.md`, `README.md` and `docs/
 - Amendments are PRs that edit this file and, if needed, the matching ADR. Versioning: MAJOR when a
   principle is removed or redefined, MINOR when one is added or materially expanded, PATCH for wording.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-20
+**Version**: 1.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-21

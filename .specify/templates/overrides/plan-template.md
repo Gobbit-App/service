@@ -35,7 +35,9 @@ repository is public (constitution, Constraints).
 
 **Storage**: PostgreSQL 17 (pg_trgm, pgvector) [new tables/columns → data-model.md]
 
-**Testing**: Vitest (unit, integration with Testcontainers, search eval), Playwright `@smoke`
+**Testing**: Vitest (unit, integration with Testcontainers, search eval), Playwright `@smoke` / `@full`
+
+**E2E tier**: [smoke | full | none] — [reason, per constitution V: smoke = critical journey, blocks core use, or crosses a deployment boundary; full = secondary/variant/async/cross-browser; none = no new UI or flow]
 
 **Target Platform**: Docker Compose on Dokploy; PWA on Android Chrome (iOS where stated)
 
@@ -57,7 +59,7 @@ repository is public (constitution, Constraints).
 | II. One source of truth for contracts | [schemas in @pb/shared; `pnpm api:openapi`] |
 | III. Invariants live in the database | [migration + down file; CHECK/trigger for new invariants] |
 | IV. Private by default | [visibility filters on every read; tokens scoped; safe-fetch] |
-| V. Tests at the right tier | [tiers used; traceability table below] |
+| V. Tests at the right tier | [tiers used; e2e tier (smoke/full/none) and why; traceability table below] |
 | VI. Lean, offline-first web | [bundle impact; query cache; subpath imports] |
 | VII. Simple, optional, deployable | [new deps justified; works without AI keys; deploy impact] |
 
@@ -114,7 +116,8 @@ packages/db/
 ├── src/schema/          # Drizzle tables
 └── migrations/          # generated SQL + down/ (hand-written)
 
-e2e/tests/smoke/         # Playwright @smoke specs
+e2e/tests/smoke/         # Playwright @smoke journeys (every PR + post-deploy)
+e2e/tests/full/          # Playwright @full specs (nightly)
 ```
 
 **Structure Decision**: [Which packages change and why]
