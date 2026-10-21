@@ -21,6 +21,7 @@ import { safeNextPath } from '../lib/next-path';
 import { cookieSessionRequired } from '../errors/http-errors';
 import { normalizeEmail, type UsersService } from './users.service';
 import type { RateLimitService } from './rate-limit.service';
+import { lineSink } from '../lib/logger';
 
 const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;
@@ -66,8 +67,9 @@ export function createAuthService(deps: {
   magicLinks: MagicLinksRepo;
   transaction: CallbackTransaction;
   rateLimits: RateLimitService;
+  log?: (message: string, err?: unknown) => void;
 }) {
-  const { env, now, mailer, sessions, magicLinks, transaction } = deps;
+  const { env, now, mailer, sessions, magicLinks, transaction, log = lineSink('auth') } = deps;
   const sessionTtlMs = env.SESSION_TTL_DAYS * DAY_MS;
 
   async function openSessionWith(
@@ -116,7 +118,7 @@ export function createAuthService(deps: {
     try {
       await usersService.ensurePersonalDeck(user);
     } catch (err) {
-      console.error('[auth] onboarding failed', err);
+      log('onboarding failed', err);
       throw new MagicLinkFailure('onboarding');
     }
   }

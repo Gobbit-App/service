@@ -1,5 +1,6 @@
 import { ITEM_UNDELETE_DAYS } from '@pb/shared';
 import type { ItemsRepo } from '../repositories/items.repo';
+import { lineSink } from '../lib/logger';
 
 const DAY_MS = 86_400_000;
 
@@ -18,7 +19,7 @@ export function createPruneDeletedItems(deps: {
     items,
     now = () => new Date(),
     undeleteDays = ITEM_UNDELETE_DAYS,
-    log = (msg) => console.log(msg),
+    log = lineSink('worker', 'info'),
   } = deps;
 
   return async function pruneDeletedItems(): Promise<number> {

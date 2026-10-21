@@ -1,5 +1,6 @@
 import type { EmbeddingsRepo } from '../repositories/embeddings.repo';
 import { EMBED_ITEM_SEND_OPTIONS, QUEUES, type EmbedItemJob, type JobSender } from './queues';
+import { lineSink } from '../lib/logger';
 
 /** Called by the items service after a write commits (D72). Never throws. */
 export interface EmbedQueue {
@@ -17,7 +18,7 @@ export function createEmbedQueue(deps: {
   model: string;
   log?: (message: string) => void;
 }): EmbedQueue {
-  const { sender, embeddings, model, log = (m) => console.error(m) } = deps;
+  const { sender, embeddings, model, log = lineSink('embed-queue') } = deps;
 
   return {
     async enqueueIfStale(itemId) {

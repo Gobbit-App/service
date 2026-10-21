@@ -43,6 +43,7 @@ describe('createAuthService', () => {
   let magicLinks: any;
   let rateLimits: any;
   let mailer: any;
+  let log: ReturnType<typeof vi.fn<(message: string, err?: unknown) => void>>;
   let usersService: any;
   let memberships: any;
   let decks: any;
@@ -77,6 +78,7 @@ describe('createAuthService', () => {
     const repos = { sessions, magicLinks, memberships, decks, users, usersService };
     transaction = vi.fn((fn) => fn(repos));
 
+    log = vi.fn();
     service = createAuthService({
       env: { API_URL: 'https://api.test', MAGIC_LINK_TTL_MINUTES: 15, SESSION_TTL_DAYS: 30 },
       now: () => NOW,
@@ -85,6 +87,7 @@ describe('createAuthService', () => {
       magicLinks,
       transaction,
       rateLimits,
+      log,
     });
   });
 
@@ -273,7 +276,6 @@ describe('createAuthService', () => {
     it('fails with onboarding and opens no session when the personal deck cannot be ensured', async () => {
       magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'a@b.co', next: null });
       usersService.ensurePersonalDeck.mockRejectedValue(new Error('db down'));
-      const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const err = await service
         .consumeMagicLink({ token: 't', ip: 'ip', userAgent: null })
@@ -282,8 +284,7 @@ describe('createAuthService', () => {
       expect(err).toBeInstanceOf(MagicLinkFailure);
       expect(err.reason).toBe('onboarding');
       expect(sessions.create).not.toHaveBeenCalled();
-      expect(logSpy).toHaveBeenCalledWith('[auth] onboarding failed', expect.any(Error));
-      logSpy.mockRestore();
+      expect(log).toHaveBeenCalledWith('onboarding failed', expect.any(Error));
     });
 
     it('ensures the personal deck before the session is created', async () => {

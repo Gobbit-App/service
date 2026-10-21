@@ -1,4 +1,5 @@
 import { PgBoss } from 'pg-boss';
+import { childLogger, type Logger } from '../lib/logger';
 
 /** pg-boss keeps its tables in its own schema; the app role owns the DB, so it can create it (D72). */
 export const BOSS_SCHEMA = 'pgboss';
@@ -8,6 +9,11 @@ export const BOSS_SCHEMA = 'pgboss';
  * maintenance, cron and the handlers. Both migrate the pg-boss schema on start.
  */
 export type BossRole = 'sender' | 'worker';
+
+/** pg-boss background failures as one JSON line each (connection errors keep their `code`). */
+export function bossErrorHandler(role: BossRole, log: Logger = childLogger('pg-boss')) {
+  return (err: unknown) => log.error({ err, role }, 'pg-boss error');
+}
 
 export function createBoss(databaseUrl: string, role: BossRole): PgBoss {
   const isWorker = role === 'worker';
@@ -21,8 +27,6 @@ export function createBoss(databaseUrl: string, role: BossRole): PgBoss {
     max: isWorker ? 4 : 2,
   });
   // pg-boss emits `error` for background failures; an unhandled `error` event would crash.
-  boss.on('error', (err: unknown) => {
-    console.error(`[pg-boss:${role}]`, err instanceof Error ? err.message : err);
-  });
+  boss.on('error', bossErrorHandler(role));
   return boss;
 }

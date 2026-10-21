@@ -2,6 +2,7 @@ import { LRUCache } from 'lru-cache';
 import { QUERY_EMBEDDING_CACHE_MAX, QUERY_EMBEDDING_CACHE_TTL_MS } from '@pb/shared';
 import type { Embedder } from './embedder';
 import { recordLlmCall, type LlmCallSink } from './llm-calls';
+import { lineSink } from '../lib/logger';
 
 export interface QueryEmbedder {
   readonly model: string;
@@ -29,7 +30,7 @@ export function createQueryEmbedder(deps: {
     max: deps.cacheMax ?? QUERY_EMBEDDING_CACHE_MAX,
     ttl: deps.ttlMs ?? QUERY_EMBEDDING_CACHE_TTL_MS,
   });
-  const log = deps.log ?? ((message: string) => console.error(message));
+  const log = deps.log ?? lineSink('search', 'warn');
 
   return {
     model: embedder.model,

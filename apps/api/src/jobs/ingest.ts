@@ -13,6 +13,7 @@ import { runExtraction, type RunExtractionDeps } from '../ingest/run-extraction'
 import type { RunDedupInput } from '../ingest/run-dedup';
 import { proposeItem } from '../ingest/propose';
 import type { EmbedQueue } from './embed-queue';
+import { lineSink } from '../lib/logger';
 
 export type IngestOutcome = 'proposed' | 'failed' | 'skipped';
 
@@ -45,7 +46,7 @@ export function isLastAttempt(attempts: number): boolean {
 export function createIngestHandler(deps: IngestHandlerDeps) {
   const { jobs, categories, items, embedQueue } = deps;
   const now = deps.now ?? (() => new Date());
-  const log = deps.log ?? ((m: string) => console.error(m));
+  const log = deps.log ?? lineSink('ingest');
 
   async function fail(jobId: string, error: string): Promise<IngestOutcome> {
     await jobs.setStatus(jobId, 'failed', error.slice(0, 500), now());

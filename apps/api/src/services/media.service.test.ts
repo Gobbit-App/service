@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type { DeckRow } from '@pb/db';
-import { MEDIA_SIGN_RATE_PER_HOUR } from '@pb/shared';
+import { MEDIA_SIGN_RATE_PER_HOUR, MEDIA_UPLOAD_FAILURE_RATE_PER_HOUR } from '@pb/shared';
 import { HttpError, rateLimited } from '../errors/http-errors';
 import type { CurrentUser } from '../types';
 import { createMediaService } from './media.service';
+import { captureLogger } from '../../test/capture-logger';
+import type { Logger } from '../lib/logger';
 
 const deckId = '0b6f3a52-5d0e-4c55-9f43-2f1d8f6a7b10';
 const deck = { id: deckId, ownerAccountId: 'account-owner', slug: 'family' } as DeckRow;
@@ -34,13 +36,14 @@ describe('media.service signUpload', () => {
     findDefaultForAccount: vi.fn(async () => null),
   };
 
-  const build = (cloudinary: typeof creds | null = creds) =>
+  const build = (cloudinary: typeof creds | null = creds, log?: Logger) =>
     createMediaService({
       decks,
       memberships,
       rateLimits,
       cloudinary,
       now: () => new Date('2026-03-01T10:00:00Z'),
+      log,
     });
 
   const role = (r: 'reader' | 'editor' | 'owner' | null) =>
@@ -94,5 +97,57 @@ describe('media.service signUpload', () => {
     role('editor');
     rateLimits.enforce.mockRejectedValue(rateLimited(120));
     expect(await statusOf(build().signUpload({ user, deckId }))).toBe(429);
+  });
+
+  describe('reportUploadFailure', () => {
+    const report = {
+      status: 401,
+      message: 'Invalid Signature abc',
+      fileType: 'image/jpeg',
+      fileBytes: 1234,
+    };
+
+    it('logs the report as a warn line with deck and user', async () => {
+      role('editor');
+      const { lines, logger, flush } = captureLogger();
+
+      await build(creds, logger).reportUploadFailure({ user, deckId: 'family', report });
+      await flush();
+
+      expect(rateLimits.enforce).toHaveBeenCalledWith(
+        `media-upload-failure:user:${user.id}`,
+        MEDIA_UPLOAD_FAILURE_RATE_PER_HOUR,
+      );
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toMatchObject({
+        level: 'warn',
+        deckId,
+        userId: user.id,
+        cloudName: 'test-cloud',
+        uploadStatus: 401,
+        uploadError: 'Invalid Signature abc',
+        fileType: 'image/jpeg',
+        fileBytes: 1234,
+      });
+      expect(JSON.stringify(lines)).not.toContain('test-secret');
+    });
+
+    it('refuses a reader (403) without logging', async () => {
+      role('reader');
+      const { lines, logger, flush } = captureLogger();
+
+      expect(
+        await statusOf(build(creds, logger).reportUploadFailure({ user, deckId, report })),
+      ).toBe(403);
+      await flush();
+
+      expect(lines).toEqual([]);
+    });
+
+    it('passes the rate limiter’s 429 through', async () => {
+      role('editor');
+      rateLimits.enforce.mockRejectedValue(rateLimited(120));
+      expect(await statusOf(build().reportUploadFailure({ user, deckId, report }))).toBe(429);
+    });
   });
 });

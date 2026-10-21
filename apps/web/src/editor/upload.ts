@@ -1,4 +1,5 @@
-import type { MediaSignResponse } from '@pb/shared';
+import type { MediaSignResponse, MediaUploadFailureRequest } from '@pb/shared';
+import { MEDIA_UPLOAD_FAILURE_MESSAGE_MAX } from '@pb/shared/media-constants';
 
 /** Why an upload ended without a photo. */
 export type UploadFailure =
@@ -13,6 +14,10 @@ export class UploadError extends Error {
   constructor(
     readonly reason: UploadFailure,
     message: string,
+    /** Cloudinary's HTTP status; 0 when no answer came back, null when no request was made. */
+    readonly status: number | null = null,
+    /** Cloudinary's own `error.message`, kept for the failure report. */
+    readonly detail: string | null = null,
   ) {
     super(message);
     this.name = 'UploadError';
@@ -28,6 +33,28 @@ export type UploadOptions = {
 };
 
 const STALE_RE = /stale request/i;
+const DETAIL_SHOWN_MAX = 120;
+
+/** What the member reads for a refused upload, from Cloudinary's status and message. */
+export function failureMessage(status: number, detail: string | null): string {
+  if (status === 0) return 'The upload failed. Check your connection and retry.';
+  const text = detail ?? '';
+  if (/file size too large/i.test(text)) {
+    return 'This photo is too large to upload. Try a smaller copy.';
+  }
+  if (/resolution too high|megapixels/i.test(text)) {
+    return "This photo's resolution is too high. Try a smaller or cropped copy.";
+  }
+  if (/format|not allowed/i.test(text)) {
+    return "This file type isn't supported. Use a JPG, PNG, WebP or HEIC photo.";
+  }
+  if (status === 401 || /invalid signature|api_key/i.test(text)) {
+    return 'Photo uploads are misconfigured on the server. Ask the pocketbook owner to check them.';
+  }
+  if (!detail) return "The photo couldn't be uploaded.";
+  const shown = detail.length > DETAIL_SHOWN_MAX ? `${detail.slice(0, DETAIL_SHOWN_MAX)}…` : detail;
+  return `The photo couldn't be uploaded (${shown}).`;
+}
 
 function errorMessage(responseText: string): string | null {
   try {
@@ -93,14 +120,14 @@ export function uploadImage(
       }
       const message = errorMessage(xhr.responseText);
       if ((xhr.status === 400 || xhr.status === 401) && message && STALE_RE.test(message)) {
-        reject(new UploadError('stale', message));
+        reject(new UploadError('stale', message, xhr.status, message));
         return;
       }
-      reject(new UploadError('failed', "The photo couldn't be uploaded."));
+      reject(new UploadError('failed', failureMessage(xhr.status, message), xhr.status, message));
     };
     xhr.onerror = () => {
       done();
-      reject(new UploadError('failed', 'The upload failed. Check your connection and retry.'));
+      reject(new UploadError('failed', failureMessage(0, null), 0, null));
     };
     xhr.onabort = () => {
       done();
@@ -144,4 +171,15 @@ export async function signAndUpload(
     if (!(error instanceof UploadError) || error.reason !== 'stale') throw error;
     return uploadImage(file, await signer({ fresh: true }), options);
   }
+}
+
+/** The API report for a failed upload; null for cancels and stale retries (nothing to fix). */
+export function uploadFailureReport(error: unknown, file: Blob): MediaUploadFailureRequest | null {
+  if (!(error instanceof UploadError) || error.reason !== 'failed') return null;
+  return {
+    status: error.status ?? 0,
+    message: error.detail?.slice(0, MEDIA_UPLOAD_FAILURE_MESSAGE_MAX) ?? null,
+    fileType: file.type ? file.type.slice(0, 100) : null,
+    fileBytes: file.size,
+  };
 }

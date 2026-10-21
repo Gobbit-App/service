@@ -38,6 +38,9 @@ import { createEmbeddingsRepo } from './repositories/embeddings.repo';
 import { createLlmCallsRepo } from './repositories/llm-calls.repo';
 import { createSearchQueriesRepo } from './repositories/search-queries.repo';
 import { defaultEmbedder, defaultExtractor } from './ai/providers';
+import { childLogger, logDbIdleError } from './lib/logger';
+
+const log = childLogger('worker');
 
 /** Compose healthcheck: the file's mtime must be fresh (D72, see infra/docker-compose.yml). */
 export const HEARTBEAT_FILE = process.env.WORKER_HEARTBEAT_FILE ?? '/tmp/worker-heartbeat';
@@ -45,7 +48,7 @@ const HEARTBEAT_MS = 30_000;
 
 async function main() {
   const env = parseEnv();
-  const pool = createPool(env.DATABASE_URL);
+  const pool = createPool(env.DATABASE_URL, { onIdleError: logDbIdleError });
   const db = createDb(pool);
   const boss = createBoss(env.DATABASE_URL, 'worker');
 
@@ -56,7 +59,7 @@ async function main() {
   await boss.schedule(QUEUES.pruneSearchQueries, SEARCH_QUERY_PRUNE_CRON);
   await boss.work(QUEUES.pruneSearchQueries, async () => {
     const removed = await prune();
-    console.log(`[worker] pruned ${removed} search_queries rows`);
+    log.info({ removed }, 'pruned search_queries rows');
   });
 
   const ingestUploads = env.CLOUDINARY_URL
@@ -69,7 +72,7 @@ async function main() {
   await boss.schedule(QUEUES.pruneIngestJobs, INGEST_PRUNE_CRON);
   await boss.work(QUEUES.pruneIngestJobs, async () => {
     const { pruned, uploadsDeleted } = await pruneIngest();
-    console.log(`[worker] pruned ${pruned} ingest jobs (${uploadsDeleted} upload sets deleted)`);
+    log.info({ pruned, uploadsDeleted }, 'pruned ingest jobs');
   });
 
   // D132: cards deleted more than ITEM_UNDELETE_DAYS ago are purged weekly
@@ -124,7 +127,7 @@ async function main() {
     await boss.work(QUEUES.ingestSweep, async () => {
       const { requeued, failed } = await ingestSweep();
       if (requeued + failed > 0) {
-        console.log(`[worker] ingest sweep requeued ${requeued}, failed ${failed} stale jobs`);
+        log.info({ requeued, failed }, 'ingest sweep handled stale jobs');
       }
     });
     await boss.work(
@@ -133,15 +136,18 @@ async function main() {
       async (jobs: Job<IngestJobData>[]) => {
         for (const job of jobs) {
           const outcome = await ingest(job.data.jobId, { signal: job.signal });
-          console.log(`[worker] ingest ${job.data.jobId}: ${outcome}`);
+          log.info({ ingestJobId: job.data.jobId, outcome }, 'ingest job');
         }
       },
     );
-    console.log(`[worker] ingesting with ${extract.model} (escalation ${extract.escalationModel})`);
+    log.info(
+      { model: extract.model, escalationModel: extract.escalationModel },
+      'ingestion enabled',
+    );
   } else {
     // D93: without a chat key POST /ingest is 503, so there is nothing to extract.
     await boss.unschedule(QUEUES.ingestSweep);
-    console.log('[worker] OPENROUTER_API_KEY / ANTHROPIC_API_KEY not set — ingestion disabled');
+    log.warn('OPENROUTER_API_KEY / ANTHROPIC_API_KEY not set; ingestion disabled');
   }
 
   if (embedder) {
@@ -158,7 +164,7 @@ async function main() {
     await boss.schedule(QUEUES.embedSweep, EMBED_SWEEP_CRON);
     await boss.work(QUEUES.embedSweep, async () => {
       const queued = await sweep();
-      if (queued > 0) console.log(`[worker] sweep queued ${queued} stale items`);
+      if (queued > 0) log.info({ queued }, 'embed sweep queued stale items');
     });
     await boss.work(
       QUEUES.embedItem,
@@ -169,13 +175,11 @@ async function main() {
         }
       },
     );
-    console.log(
-      `[worker] embedding with ${embedder.model} (concurrency ${env.WORKER_CONCURRENCY})`,
-    );
+    log.info({ model: embedder.model, concurrency: env.WORKER_CONCURRENCY }, 'embedding enabled');
   } else {
     // D73: without a key nothing is embedded; drop the sweep so it doesn't spin.
     await boss.unschedule(QUEUES.embedSweep);
-    console.log('[worker] OPENROUTER_API_KEY / OPENAI_API_KEY not set — embedding disabled');
+    log.warn('OPENROUTER_API_KEY / OPENAI_API_KEY not set; embedding disabled');
   }
 
   const heartbeat = async () => {
@@ -183,7 +187,7 @@ async function main() {
       await pool.query('select 1');
       await writeFile(HEARTBEAT_FILE, new Date().toISOString());
     } catch (err) {
-      console.error('[worker] heartbeat failed:', err instanceof Error ? err.message : err);
+      log.error({ err }, 'heartbeat failed');
     }
   };
   await heartbeat();
@@ -194,17 +198,17 @@ async function main() {
     if (stopping) return;
     stopping = true;
     clearInterval(timer);
-    console.log('[worker] draining…');
+    log.info('draining');
     boss
       .stop({ graceful: true, timeout: 20_000 })
-      .catch((err: unknown) => console.error('[worker] stop failed:', err))
+      .catch((err: unknown) => log.error({ err }, 'stop failed'))
       .finally(() => pool.end().finally(() => process.exit(0)));
   };
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch((err: unknown) => {
+  log.fatal({ err }, 'worker failed to start');
   process.exit(1);
 });

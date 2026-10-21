@@ -57,17 +57,13 @@ describe('ConsoleMailer', () => {
     expect(logged[1]).toBe(testMsg.text);
   });
 
-  it('uses console.log by default', async () => {
-    const originalLog = console.log;
-    const logged: string[] = [];
-    console.log = (line: string) => logged.push(line);
-
+  it('logs through the structured logger by default, not console.log', async () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     try {
-      const mailer = new ConsoleMailer();
-      await mailer.send(testMsg);
-      expect(logged).toHaveLength(2);
+      await expect(new ConsoleMailer().send(testMsg)).resolves.toBeUndefined();
+      expect(spy).not.toHaveBeenCalled();
     } finally {
-      console.log = originalLog;
+      spy.mockRestore();
     }
   });
 });

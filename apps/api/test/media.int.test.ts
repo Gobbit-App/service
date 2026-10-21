@@ -123,3 +123,41 @@ describe('media without CLOUDINARY_URL (US3)', () => {
     expect(await json(res)).toEqual({ preview: null });
   });
 });
+
+describe('POST /decks/{id}/media/upload-failures', () => {
+  const ctx = setupApiTest({ env: { CLOUDINARY_URL } });
+  let deck: DeckRow;
+  const report = {
+    status: 401,
+    message: 'Invalid Signature',
+    fileType: 'image/jpeg',
+    fileBytes: 10,
+  };
+
+  const send = (deckRef: string, body: unknown, headers: Record<string, string> = ctx.as()) =>
+    ctx.app.request(`/decks/${deckRef}/media/upload-failures`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+  beforeAll(async () => {
+    deck = await createDeck(ctx.t.db, ctx.world.owner);
+  });
+
+  it('accepts a report from a member who may add cards (204)', async () => {
+    expect((await send(deck.id, report)).status).toBe(204);
+  });
+
+  it('refuses readers (403) and anonymous callers (401)', async () => {
+    const reader = await member(ctx, deck, 'reader');
+    expect((await send(deck.id, report, ctx.as(reader.email))).status).toBe(403);
+    expect((await send(deck.id, report, ctx.anon())).status).toBe(401);
+  });
+
+  it('validates the body (400)', async () => {
+    const res = await send(deck.id, { ...report, status: 900, extra: true });
+    expect(res.status).toBe(400);
+    expect((await json(res)).type).toBe('/problems/validation');
+  });
+});

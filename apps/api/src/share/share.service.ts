@@ -13,6 +13,7 @@ import {
   renderSharePage,
   type ShareMeta,
 } from './share-page';
+import { lineSink } from '../lib/logger';
 
 /** D61: a first share waits at most this long for its image before falling back. */
 export const OG_RENDER_BUDGET_MS = 3000;
@@ -67,7 +68,7 @@ export function createShareService(deps: ShareServiceDeps) {
     origin,
     store,
     renderer,
-    log = (message, err) => console.error(`[share] ${message}`, err ?? ''),
+    log = lineSink('share'),
     renderBudgetMs = OG_RENDER_BUDGET_MS,
   } = deps;
 

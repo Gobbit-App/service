@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { MediaSignResponse } from '@pb/shared';
-import { cachedSigner, signAndUpload, uploadForm, uploadImage, UploadError } from './upload';
+import {
+  cachedSigner,
+  failureMessage,
+  signAndUpload,
+  uploadFailureReport,
+  uploadForm,
+  uploadImage,
+  UploadError,
+} from './upload';
 
 function signed(overrides: Partial<MediaSignResponse> = {}): MediaSignResponse {
   return {
@@ -113,7 +121,18 @@ describe('uploadImage', () => {
     last().respond(500, { error: { message: 'Server error' } });
     const error = await promise.catch((e: unknown) => e);
     expect(error).toBeInstanceOf(UploadError);
-    expect(error).toMatchObject({ reason: 'failed' });
+    expect(error).toMatchObject({ reason: 'failed', status: 500, detail: 'Server error' });
+    expect((error as UploadError).message).toBe("The photo couldn't be uploaded (Server error).");
+  });
+
+  it("keeps Cloudinary's refusal on the error", async () => {
+    const promise = uploadImage(file, signed(), { createXhr: fakeXhr() });
+    last().respond(401, { error: { message: 'Invalid Signature 0123. String to sign - x' } });
+    await expect(promise).rejects.toMatchObject({
+      reason: 'failed',
+      status: 401,
+      detail: 'Invalid Signature 0123. String to sign - x',
+    });
   });
 
   it('a 200 without a public_id is a failure', async () => {
@@ -125,7 +144,7 @@ describe('uploadImage', () => {
   it('a network error is a retryable failure', async () => {
     const promise = uploadImage(file, signed(), { createXhr: fakeXhr() });
     last().onerror?.();
-    await expect(promise).rejects.toMatchObject({ reason: 'failed' });
+    await expect(promise).rejects.toMatchObject({ reason: 'failed', status: 0, detail: null });
   });
 
   it('a stale-timestamp refusal is reported as stale', async () => {
@@ -188,5 +207,52 @@ describe('signAndUpload', () => {
     last().respond(500, {});
     await expect(promise).rejects.toMatchObject({ reason: 'failed' });
     expect(signer).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('failureMessage', () => {
+  it.each([
+    [0, null, /connection/],
+    [400, 'File size too large. Got 12000000. Maximum is 10485760.', /too large/],
+    [400, 'Resolution too high. Max is 25 megapixels', /resolution is too high/],
+    [400, 'Image file format bmp not allowed', /file type isn't supported/],
+    [401, 'Invalid Signature abc. String to sign - x', /misconfigured/],
+    [401, 'Invalid api_key 123', /misconfigured/],
+    [500, null, /^The photo couldn't be uploaded\.$/],
+  ])('status %i / %s', (status, detail, expected) => {
+    expect(failureMessage(status, detail)).toMatch(expected);
+  });
+
+  it('shows an unknown refusal, cut to length', () => {
+    const message = failureMessage(400, 'x'.repeat(300));
+    expect(message.length).toBeLessThan(160);
+    expect(message).toContain('…');
+  });
+});
+
+describe('uploadFailureReport', () => {
+  it("carries Cloudinary's status and message plus the file's type and size", () => {
+    const error = new UploadError('failed', 'shown', 400, 'Resolution too high');
+    expect(uploadFailureReport(error, file)).toEqual({
+      status: 400,
+      message: 'Resolution too high',
+      fileType: 'image/jpeg',
+      fileBytes: 1,
+    });
+  });
+
+  it('cuts long messages and reports a missing type as null', () => {
+    const error = new UploadError('failed', 'shown', 400, 'x'.repeat(900));
+    const report = uploadFailureReport(error, new Blob(['ab']));
+    expect(report?.message).toHaveLength(500);
+    expect(report?.fileType).toBeNull();
+  });
+
+  it('skips cancels, stale refusals and non-upload errors', () => {
+    expect(uploadFailureReport(new UploadError('aborted', 'x'), file)).toBeNull();
+    expect(
+      uploadFailureReport(new UploadError('stale', 'x', 401, 'Stale request'), file),
+    ).toBeNull();
+    expect(uploadFailureReport(new Error('sign failed'), file)).toBeNull();
   });
 });

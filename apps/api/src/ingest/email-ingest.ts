@@ -6,6 +6,7 @@ import type { IngestTokensService } from '../services/ingest-tokens.service';
 import { mapInboundEmail, tokenLocalPart } from './email-mapping';
 import { isIngestToken } from './ingest-token';
 import type { ResendInbound } from './resend-inbound';
+import { lineSink } from '../lib/logger';
 
 /** What happened to one webhook event; logged, never echoed to the sender (no token oracle). */
 export type EmailIngestOutcome = 'ignored' | 'unknown-token' | 'rejected' | 'accepted';
@@ -36,7 +37,7 @@ export function createEmailIngest(deps: {
   ingest: Pick<IngestService, 'submit'>;
   log?: (line: string) => void;
 }) {
-  const { domain, inbound, tokens, ingest, log = (line) => console.info(line) } = deps;
+  const { domain, inbound, tokens, ingest, log = lineSink('email-in', 'info') } = deps;
 
   return {
     async handle(event: unknown): Promise<EmailIngestOutcome> {

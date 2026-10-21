@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isApiError } from '../api/api-error';
-import { signMediaUpload } from '../api/media';
-import { cachedSigner, signAndUpload, UploadError, type Signer } from './upload';
+import { reportUploadFailure, signMediaUpload } from '../api/media';
+import type { MediaUploadFailureRequest } from '@pb/shared';
+import {
+  cachedSigner,
+  signAndUpload,
+  uploadFailureReport,
+  UploadError,
+  type Signer,
+} from './upload';
 
 /** idle → signing → uploading(percent) → idle (done or cancelled) | failed. */
 export type ImageUploadState =
@@ -17,6 +24,8 @@ export type UseImageUploadOptions = {
   /** Tests inject these; production signs through the API and uploads with XHR. */
   signer?: Signer;
   upload?: typeof signAndUpload;
+  /** Sends a failed upload's details to the API log (Cloudinary answers only the browser). */
+  report?: (deckId: string, report: MediaUploadFailureRequest) => Promise<void>;
 };
 
 function failure(error: unknown): { message: string; canRetry: boolean } {
@@ -47,6 +56,7 @@ export function useImageUpload({
   onUploaded,
   signer: injectedSigner,
   upload = signAndUpload,
+  report = reportUploadFailure,
 }: UseImageUploadOptions) {
   const [state, setState] = useState<ImageUploadState>({ status: 'idle' });
   const [signer] = useState(() => injectedSigner ?? cachedSigner(() => signMediaUpload(deckId)));
@@ -85,9 +95,16 @@ export function useImageUpload({
           return;
         }
         setState({ status: 'failed', ...failure(error) });
+        const failed = uploadFailureReport(error, picked);
+        if (failed) {
+          // Best effort: the member already sees the failure; a lost report only costs a log line.
+          report(deckId, failed).catch((reportError: unknown) => {
+            console.warn('Upload failure report not sent', reportError);
+          });
+        }
       }
     },
-    [signer, upload],
+    [deckId, report, signer, upload],
   );
 
   return {

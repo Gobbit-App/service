@@ -15,6 +15,7 @@ import { rateKeys } from '../lib/rate-window';
 import type { CurrentUser } from '../types';
 import type { RateLimitService } from './rate-limit.service';
 import type { SearchService } from './search.service';
+import { lineSink } from '../lib/logger';
 
 export function createAskService(deps: {
   /** Null without an Ask key (`OPENROUTER_API_KEY`/`ANTHROPIC_API_KEY`) → 503 (D73). */
@@ -31,7 +32,7 @@ export function createAskService(deps: {
     rateLimits,
     llmCalls,
     timeoutMs = ASK_TIMEOUT_MS,
-    log = (m) => console.error(m),
+    log = lineSink('ask'),
   } = deps;
 
   /** Calls the model under a deadline; maps abort → 504 and any provider failure → 503. */

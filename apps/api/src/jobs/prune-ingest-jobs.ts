@@ -1,6 +1,7 @@
 import { INGEST_RAW_RETENTION_DAYS } from '@pb/shared';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { IngestUploadStore } from '../media/ingest-uploads';
+import { lineSink } from '../lib/logger';
 
 const DAY_MS = 86_400_000;
 
@@ -26,7 +27,7 @@ export function createPruneIngestJobs(deps: {
     uploads,
     now = () => new Date(),
     retentionDays = INGEST_RAW_RETENTION_DAYS,
-    log = (msg) => console.error(msg),
+    log = lineSink('worker'),
   } = deps;
 
   return async function prune(): Promise<PruneIngestResult> {

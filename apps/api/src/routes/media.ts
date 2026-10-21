@@ -3,6 +3,7 @@ import {
   linkPreviewRequestSchema,
   linkPreviewResponseSchema,
   mediaSignResponseSchema,
+  mediaUploadFailureRequestSchema,
 } from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
@@ -35,6 +36,33 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, services: Services
     const signed = await services.media.signUpload({ user, deckId: id });
     c.header('Cache-Control', 'no-store');
     return c.json(signed, 200);
+  });
+
+  const failureRoute = createRoute({
+    method: 'post',
+    path: '/decks/{id}/media/upload-failures',
+    tags: ['media'],
+    summary: "Report a failed direct upload so Cloudinary's refusal reaches the API log",
+    request: {
+      params: deckParams,
+      body: {
+        content: { 'application/json': { schema: mediaUploadFailureRequestSchema } },
+        required: true,
+      },
+    },
+    responses: {
+      204: { description: 'Logged; nothing is stored' },
+      ...problems('validation', 'unauthorized', 'forbidden', 'not-found', 'rate-limited'),
+    },
+    security: AUTH_SECURITY,
+  });
+
+  app.openapi(failureRoute, async (c) => {
+    const user = getUser(c);
+    const { id } = c.req.valid('param');
+    const report = c.req.valid('json');
+    await services.media.reportUploadFailure({ user, deckId: id, report });
+    return c.body(null, 204);
   });
 
   const previewRoute = createRoute({

@@ -10,6 +10,10 @@ import { createIngestQueue, noopIngestQueue, type IngestQueue } from './jobs/ing
 import { ensureQueues } from './jobs/ensure-queues';
 import { createEmbeddingsRepo } from './repositories/embeddings.repo';
 import { hasEmbeddingProvider, hasExtractProvider } from './ai/providers';
+import { childLogger, logDbIdleError } from './lib/logger';
+import { checkCloudinaryCredentials } from './media/cloudinary-check';
+
+const log = childLogger('api');
 
 interface Queues {
   embedQueue: EmbedQueue;
@@ -32,7 +36,7 @@ async function startQueues(env: Env, db: Db): Promise<Queues> {
     await boss.start();
     await ensureQueues(boss);
   } catch (err) {
-    console.error('[api] pg-boss unavailable, relying on the sweepers:', err);
+    log.error({ err }, 'pg-boss unavailable, relying on the sweepers');
     return NO_QUEUES;
   }
   return {
@@ -51,7 +55,7 @@ async function startQueues(env: Env, db: Db): Promise<Queues> {
 async function main() {
   const env = parseEnv();
 
-  const pool = createPool(env.DATABASE_URL);
+  const pool = createPool(env.DATABASE_URL, { onIdleError: logDbIdleError });
   const db = createDb(pool);
   const { embedQueue, ingestQueue, boss } = await startQueues(env, db);
 
@@ -69,13 +73,23 @@ async function main() {
     port: env.PORT,
   });
 
-  console.log(`API listening on :${env.PORT} (mail: ${env.MAIL_PROVIDER}, url: ${env.API_URL})`);
+  log.info(
+    {
+      port: env.PORT,
+      mail: env.MAIL_PROVIDER,
+      apiUrl: env.API_URL ?? null,
+      gitSha: env.GIT_SHA ?? null,
+    },
+    'api listening',
+  );
+  if (env.CLOUDINARY_URL) void checkCloudinaryCredentials(env.CLOUDINARY_URL);
+  else log.warn('CLOUDINARY_URL not set; image uploads and OG images are disabled');
 
   const handleShutdown = () => {
     server.close();
     const stopBoss = boss ? boss.stop({ graceful: false }) : Promise.resolve();
     stopBoss
-      .catch((err: unknown) => console.error('[api] pg-boss stop failed:', err))
+      .catch((err: unknown) => log.error({ err }, 'pg-boss stop failed'))
       .finally(() => pool.end().finally(() => process.exit(0)));
   };
 
@@ -83,7 +97,7 @@ async function main() {
   process.on('SIGINT', handleShutdown);
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch((err: unknown) => {
+  log.fatal({ err }, 'api failed to start');
   process.exit(1);
 });
