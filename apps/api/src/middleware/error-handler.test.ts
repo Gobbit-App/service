@@ -1,22 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { InvalidCursorError } from '@pb/shared';
-import { errorHandler, notFoundHandler } from './error-handler';
+import { createErrorHandler, errorHandler, notFoundHandler } from './error-handler';
+import { captureLogger } from '../../test/capture-logger';
 import { notFound } from '../errors/http-errors';
 import type { AppEnv } from '../types';
 
 describe('errorHandler', () => {
   let app: Hono<AppEnv>;
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     app = new Hono<AppEnv>();
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore();
   });
 
   it('handles HttpError notFound', async () => {
@@ -91,7 +86,8 @@ describe('errorHandler', () => {
       c.set('requestId', 'test-id');
       throw new Error('secret SQL here');
     });
-    app.onError((err, c) => errorHandler(err, c));
+    const { lines, logger, flush } = captureLogger();
+    app.onError(createErrorHandler(logger));
 
     const res = await app.request('/test');
     expect(res.status).toBe(500);
@@ -102,7 +98,16 @@ describe('errorHandler', () => {
     expect(body.status).toBe(500);
     expect(JSON.stringify(body)).not.toContain('secret SQL');
 
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    await flush();
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatchObject({
+      level: 'error',
+      msg: 'unhandled error',
+      requestId: 'test-id',
+      method: 'GET',
+      path: '/test',
+      err: { message: 'secret SQL here' },
+    });
   });
 
   it('notFoundHandler returns 404', async () => {

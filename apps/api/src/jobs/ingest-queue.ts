@@ -1,4 +1,5 @@
 import { INGEST_SEND_OPTIONS, QUEUES, type IngestJobData, type JobSender } from './queues';
+import { lineSink } from '../lib/logger';
 
 /** Called after an ingest job row is inserted (D93). Never throws. */
 export interface IngestQueue {
@@ -14,7 +15,7 @@ export function createIngestQueue(deps: {
   sender: JobSender;
   log?: (message: string) => void;
 }): IngestQueue {
-  const { sender, log = (m) => console.error(m) } = deps;
+  const { sender, log = lineSink('ingest-queue') } = deps;
 
   return {
     async enqueue(jobId) {

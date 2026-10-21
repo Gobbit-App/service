@@ -1,5 +1,6 @@
 import type { NewLlmCallRow } from '@pb/db';
 import type { LlmPurpose } from '@pb/shared';
+import { lineSink } from '../lib/logger';
 
 /**
  * USD per 1M tokens, keyed by the id the provider is called with (OpenRouter ids carry a
@@ -67,7 +68,7 @@ async function insertRow(
  * Runs `fn`, measures latency with `now()` (default Date.now), then inserts ONE row:
  * success → status 'ok', tokens from the result, costUsd = formatCostUsd(llmCostUsd(...)), error null.
  * failure → status 'error', tokens 0, cost '0.000000', error = message truncated to 500 chars; then rethrows the ORIGINAL error.
- * A failing sink.insert is caught and reported via `log` (default console.error) and never masks the result or the original error.
+ * A failing sink.insert is caught and reported via `log` (default: an error JSON log line) and never masks the result or the original error.
  */
 export async function recordLlmCall<T extends LlmUsage>(
   sink: LlmCallSink,
@@ -76,7 +77,7 @@ export async function recordLlmCall<T extends LlmUsage>(
   opts?: { now?: () => number; log?: (message: string) => void },
 ): Promise<T> {
   const now = opts?.now ?? Date.now;
-  const log = opts?.log ?? ((message: string) => console.error(message));
+  const log = opts?.log ?? lineSink('llm-calls');
   const started = now();
 
   let result: T;

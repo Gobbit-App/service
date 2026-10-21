@@ -16,6 +16,7 @@ import { resolveDeck } from '../lib/resolve-deck';
 import type { CurrentUser } from '../types';
 import type { DeckLookup } from './media.service';
 import type { RateLimitService } from './rate-limit.service';
+import { lineSink } from '../lib/logger';
 
 /** One line, at most `max` code points (never splits a surrogate pair). */
 function clip(value: string | null | undefined, max: number): string | undefined {
@@ -72,7 +73,7 @@ export function createLinkPreviewService(deps: {
   log?: (message: string) => void;
 }) {
   const { decks, memberships, rateLimits, safeFetch, extract } = deps;
-  const log = deps.log ?? ((message: string) => console.error(message));
+  const log = deps.log ?? lineSink('link-preview', 'warn');
   // Wrapped, because lru-cache can't hold null and failures are cached too.
   const cache = new LRUCache<string, { preview: LinkPreview | null }>({
     max: deps.cacheMax ?? LINK_PREVIEW_CACHE_MAX,

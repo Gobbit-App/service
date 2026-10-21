@@ -9,6 +9,7 @@ import { resolveDeck } from '../lib/resolve-deck';
 import { fuseRrf, type FusedRow } from '../lib/rrf';
 import type { CurrentUser } from '../types';
 import type { ItemDtoMapper } from './item-dtos';
+import { lineSink } from '../lib/logger';
 
 export interface Retrieval {
   deckId: string;
@@ -42,7 +43,7 @@ export function createSearchService(deps: {
     embeddingModel,
     toDtos,
     now = Date.now,
-    log = (m) => console.error(m),
+    log = lineSink('search'),
   } = deps;
 
   /** D80: fire-and-forget; a logging failure must never fail the request. */

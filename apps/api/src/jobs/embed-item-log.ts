@@ -1,3 +1,4 @@
+import { childLogger, type Logger } from '../lib/logger';
 import type { EmbedItemOutcome } from './embed-item';
 
 type EmbedItem = (
@@ -6,35 +7,28 @@ type EmbedItem = (
 ) => Promise<EmbedItemOutcome>;
 
 /**
- * Wraps the embed-item handler with one line per job (outcome + duration), and a line for
- * failures before they propagate to pg-boss for retry — otherwise retries are silent.
+ * Wraps the embed-item handler with one JSON line per job (outcome + duration), and an error line
+ * for failures before they propagate to pg-boss for retry — otherwise retries are silent.
  */
 export function withEmbedItemLog(
   embedItem: EmbedItem,
-  deps: {
-    log?: (line: string) => void;
-    logError?: (line: string) => void;
-    now?: () => number;
-  } = {},
+  deps: { log?: Logger; now?: () => number } = {},
 ): EmbedItem {
-  const {
-    log = (line) => console.log(line),
-    logError = (line) => console.error(line),
-    now = () => performance.now(),
-  } = deps;
+  const { log = childLogger('worker'), now = () => performance.now() } = deps;
 
   return async (itemId, job) => {
     const start = now();
-    const elapsed = () => `${Math.round(now() - start)}ms`;
+    const fields = () => ({
+      itemId,
+      jobId: job?.id ?? null,
+      durationMs: Math.round(now() - start),
+    });
     try {
       const outcome = await embedItem(itemId, job);
-      log(`[worker] embed ${itemId} → ${outcome} (${elapsed()})`);
+      log.info({ ...fields(), outcome }, 'embed item');
       return outcome;
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      logError(
-        `[worker] embed ${itemId} failed after ${elapsed()}, pg-boss will retry: ${message}`,
-      );
+      log.error({ ...fields(), err }, 'embed item failed, pg-boss will retry');
       throw err;
     }
   };

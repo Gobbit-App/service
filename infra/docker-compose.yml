@@ -25,6 +25,8 @@ x-api-env: &api-env
   RESEND_API_KEY: ${RESEND_API_KEY:-}
   MAIL_FROM: ${MAIL_FROM:-Gobbit <hello@gobbit.niranhome.win>}
   CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
+  # JSON logs (pino): trace|debug|info|warn|error|fatal|silent.
+  LOG_LEVEL: ${LOG_LEVEL:-info}
   # Image delivery and the OG image cache (D55, D60); required in production.
   CLOUDINARY_URL: ${CLOUDINARY_URL:-}
   # Phase 4 search (D73, D77, ADR-044): all keys optional Dokploy secrets. OPENROUTER_API_KEY

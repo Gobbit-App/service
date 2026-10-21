@@ -1,4 +1,4 @@
-import type { LinkPreview, MediaSignResponse } from '@pb/shared';
+import type { LinkPreview, MediaSignResponse, MediaUploadFailureRequest } from '@pb/shared';
 import { api, unwrap } from './client';
 
 /** D133: a signed permission for one direct upload to Cloudinary (never cached). */
@@ -12,4 +12,17 @@ export async function fetchLinkPreview(deckId: string, url: string): Promise<Lin
     api.POST('/decks/{id}/link-preview', { params: { path: { id: deckId } }, body: { url } }),
   );
   return preview;
+}
+
+/** Tells the API why a direct upload failed, so Cloudinary's refusal shows up in its logs. */
+export async function reportUploadFailure(
+  deckId: string,
+  report: MediaUploadFailureRequest,
+): Promise<void> {
+  await unwrap(
+    api.POST('/decks/{id}/media/upload-failures', {
+      params: { path: { id: deckId } },
+      body: report,
+    }),
+  );
 }

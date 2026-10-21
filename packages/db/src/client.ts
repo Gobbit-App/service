@@ -5,12 +5,31 @@ import * as schema from './schema';
 // 57P01 admin_shutdown: server terminated the backend (restart, DROP DATABASE ... WITH (FORCE)).
 const ADMIN_SHUTDOWN = '57P01';
 
-export function createPool(connectionString: string): pg.Pool {
+export type PoolErrorHandler = (err: Error & { code?: string }) => void;
+
+/** Default for scripts: one JSON line on stderr, matching the API's log shape. */
+const logIdleError: PoolErrorHandler = (err) => {
+  console.error(
+    JSON.stringify({
+      level: 'error',
+      time: new Date().toISOString(),
+      component: 'db',
+      msg: 'idle client error',
+      err: { type: err.name, message: err.message, code: err.code ?? null, stack: err.stack },
+    }),
+  );
+};
+
+export function createPool(
+  connectionString: string,
+  options: { onIdleError?: PoolErrorHandler } = {},
+): pg.Pool {
+  const { onIdleError = logIdleError } = options;
   const pool = new pg.Pool({ connectionString });
   // Idle clients can be killed server-side; without a listener pg re-emits that as an
   // uncaught exception. The pool discards the broken client on its own.
   pool.on('error', (err: Error & { code?: string }) => {
-    if (err.code !== ADMIN_SHUTDOWN) console.error('[db] idle client error', err);
+    if (err.code !== ADMIN_SHUTDOWN) onIdleError(err);
   });
   return pool;
 }

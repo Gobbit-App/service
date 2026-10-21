@@ -20,7 +20,7 @@ All packages are private, ES modules, strict TypeScript. Runtime via `tsx` (no b
 Root: typescript 6.0, vitest 5, eslint 10, typescript-eslint 8, prettier 3, tsx 4.
 @pb/shared: zod 4.6, mathjs 15.
 @pb/db: drizzle-orm 0.45, pg 8.23, uuid 14, drizzle-kit 0.31, @testcontainers/postgresql 12.
-@pb/api: hono 4.13, @hono/zod-openapi 1.6, @hono/node-server 2, @sindresorhus/slugify 3.
+@pb/api: hono 4.13, @hono/zod-openapi 1.6, @hono/node-server 2, @sindresorhus/slugify 3, pino 10 (JSON logs).
 @pb/api (share previews): satori 0.35, @resvg/resvg-js 2.6, cloudinary 2, @fontsource/inter + @fontsource/noto-sans-hebrew.
 @pb/api (ingestion): undici 8 (SSRF-guarded fetch), ipaddr.js 2, linkedom 0.18 + @mozilla/readability 0.6, svix 2 (Resend webhook signatures).
 @pb/api-client: openapi-fetch 0.17, openapi-react-query 0.5, openapi-typescript 7.
@@ -345,7 +345,11 @@ All errors (except 5xx) follow the Problem schema:
 - `instanceof InvalidCursorError`: 400 /problems/invalid-cursor
 - `mapPgError(err)` detects pg codes (23505, 23514, 23503, P0001); non-null → respond with mapped Problem
 - All other errors: log with requestId, respond 500 /problems/internal (no stack trace to client)
-- Request log (`middleware/request-log.ts`): one stdout line per request, `[api] METHOD /path STATUS 12ms <requestId>`. It is registered first, so CSRF rejections are logged too. The query string is never logged (search text stays out of logs), `/health` is skipped, and it is off when `NODE_ENV=test`.
+- Request log (`middleware/request-log.ts`): one JSON line per request, `{"component":"http","msg":"request","requestId","method","path","status","durationMs"}`, at `error` for 5xx, `warn` for 4xx and `info` otherwise. It is registered first, so CSRF rejections are logged too. The query string is never logged (search text stays out of logs), `/health` is skipped, and it is off when `NODE_ENV=test`.
+
+### Logging
+
+The API and the worker write JSON lines to stdout through pino (`lib/logger.ts`). Each line is `{"level":"info","time":"<ISO>","component":"<area>","msg":"…", …fields}`, and errors go under `err` (`type`, `message`, `stack`, `code`). Modules take a child logger (`childLogger('media')`). The older string sinks (`log(message, err?)` deps used by mailers, queues and services) default to `lineSink(component, level)`, which writes the same JSON shape, so tests still inject plain functions. `@pb/db`'s idle-client error handler writes one JSON line by default, and the API and worker pass `logDbIdleError`. `LOG_LEVEL` (`trace`…`fatal`, `silent`) defaults to `info`, or `silent` under Vitest. Filter with `jq`, e.g. `docker logs <api> | jq 'select(.level=="error")'`.
 
 ---
 
@@ -889,6 +893,12 @@ Image cards from the editor (upload a photo, or take one on a phone) and "Fetch 
 **Boundary with Phase 7 (D129)**: Phase 6 ships signed browser uploads and a synchronous link preview, both as services. The `assets` table, the orphan sweep, remote-URL upload, preview snapshots, link checks and `CloudImage` stay in Phase 7. An image card stores only `{ publicId, alt }`; an upload whose card is never saved stays in Cloudinary until Phase 7's sweep, which can find it by tag.
 
 **Signed direct uploads (D133, ADR-051)**: `POST /decks/{id}/media/sign` (`media.service` → `media/sign-upload.ts`). Access: `resolveDeck` + `authorize(..., 'item.create')`; then 503 `/problems/unavailable` without `CLOUDINARY_URL`; then `rateKeys.mediaSignUser` at 60/user/hour. The response holds the upload URL, `apiKey`, `timestamp`, `signature`, `folder`, `tags`, `allowedFormats`, `maxBytes` and `expiresAt` (50 min, inside Cloudinary's one-hour signature window), with `Cache-Control: no-store`. The API secret never leaves `signEditorUpload`. The browser posts the file straight to `https://api.cloudinary.com/v1_1/<cloud>/image/upload` (`editor/upload.ts`, XHR for progress and abort); the API never sees the bytes. The web CSP `connect-src` adds `https://api.cloudinary.com` (`apps/web/Caddyfile`).
+
+**Upload diagnostics**: Cloudinary's answer goes only to the browser, so a refused upload used to leave nothing in the API log. Now:
+- `upload.ts` keeps Cloudinary's status and `error.message` on `UploadError`. `failureMessage()` turns them into a specific message: connection, file too large, resolution too high (the Free plan caps images at 25 MP), unsupported type, or server misconfigured (401 / invalid signature). Anything else is shown truncated.
+- `use-image-upload` sends `POST /decks/{id}/media/upload-failures` `{ status, message, fileType, fileBytes }` (`uploadFailureReport()`, best effort; cancels and stale retries aren't sent).
+- `media.service.reportUploadFailure` checks `item.create`, rate-limits at 30/user/hour (`rateKeys.mediaUploadFailureUser`) and logs a `warn` line with msg `browser upload to cloudinary failed`. Nothing is stored; the route answers 204.
+- At boot the API runs `media/cloudinary-check.ts`, which calls Cloudinary's Admin API `ping` with `CLOUDINARY_URL`. It logs `cloudinary credentials ok` or an `error` line `cloudinary credentials rejected; image uploads will fail`, and never blocks startup.
 
 **Storage conventions**: folder `gobbit/items/<deckId>` (ingest uses `gobbit/ingest/<deckId>`), tags `editor` and `deck:<deckId>`, formats jpg/png/webp/heic/heif. All of them are covered by the signature, so the browser can't change them. 8 MB (`MEDIA_IMAGE_MAX_BYTES`, the same as ingest) is checked in the browser before the upload; Cloudinary's account upload limit is the server-side backstop (no signed preset, see Deviations).
 

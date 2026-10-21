@@ -4,6 +4,7 @@ import { recordLlmCall, type LlmCallSink } from '../ai/llm-calls';
 import type { DedupRepo } from '../repositories/dedup.repo';
 import type { EmbeddingsRepo } from '../repositories/embeddings.repo';
 import { dedupVerdict, normalizeSourceUrl } from './dedup-verdict';
+import { lineSink } from '../lib/logger';
 
 export interface RunDedupDeps {
   dedup: DedupRepo;
@@ -38,7 +39,7 @@ function hostOf(url: string): string | null {
  * degrades to the keyless signals instead of retrying the whole job.
  */
 export async function runDedup(deps: RunDedupDeps, input: RunDedupInput): Promise<DedupVerdict> {
-  const log = deps.log ?? ((m: string) => console.error(m));
+  const log = deps.log ?? lineSink('ingest', 'warn');
 
   async function sourceUrlMatch(): Promise<string | null> {
     const host = input.sourceUrl ? hostOf(input.sourceUrl) : null;

@@ -56,6 +56,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `API_URL` | `http://localhost:${PORT}` | Public API address used in magic links (**required in production**). Local `.env`: `http://localhost:5173/api` (through the Vite proxy) |
 | `APP_URL` | — | Web app origin; sign-in/invite callbacks redirect here (falls back to `${API_URL}/me`) and share links/private OG image use it. Local `.env`: `http://localhost:5173` |
 | `CLOUDINARY_URL` | — | The "API environment variable" URL from the Cloudinary console; **required in production**. Uploads generated share images and signs the card editor's direct photo uploads (`POST /decks/{id}/media/sign`; without it image cards are off in the editor); only the cloud name reaches clients (`GET /config`). No upload preset is needed: the API signs folder, tags and formats itself (an optional signed preset with a size cap is not used yet) |
+| `LOG_LEVEL` | `info` | API + worker log level (`trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent`). Logs are JSON lines on stdout: `level`, ISO `time`, `component`, `msg`, extra fields and `err` (with stack) |
 | `OPENROUTER_API_KEY` | — | Optional (API + worker), preferred. One key for embeddings and Ask through OpenRouter; wins over the two direct keys below (ADR-044) |
 | `OPENAI_API_KEY` | — | Optional (API + worker). Direct OpenAI fallback: enables the semantic arm of search and the embeddings worker; without it search is text-only |
 | `ANTHROPIC_API_KEY` | — | Optional (API). Direct Anthropic fallback: enables Ask (`POST /decks/{id}/ask`); without it Ask answers 503 and the PWA hides it |
@@ -228,7 +229,9 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 - `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden
 - `RESEND_WEBHOOK_SECRET` – only for email-in, together with `INGEST_EMAIL_DOMAIN` (a plain value; see *Sharing into Gobbit*)
 
-Optional overrides: `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`.
+**Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
+
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`.
 
 ### GitHub Actions
 
@@ -293,6 +296,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
 | **Media** |
 | `POST` | `/decks/{id}/media/sign` | Signed parameters for one direct browser → Cloudinary photo upload (`item.create`; folder `gobbit/items/<deckId>`; 60/hour per user; 503 without `CLOUDINARY_URL`) |
+| `POST` | `/decks/{id}/media/upload-failures` | The browser reports a refused Cloudinary upload (`status`, `message`, `fileType`, `fileBytes`); logged as a `warn` line, nothing stored (`item.create`; 30/hour per user; 204) |
 | `POST` | `/decks/{id}/link-preview` | Title, description and image of a URL through the SSRF-guarded fetcher; `{ preview: null }` on any failure (`item.create`; 30/hour per user; cached 1 h) |
 | **Ingestion** |
 | `POST` | `/ingest` | Share a URL/text/≤ 3 images (JSON or multipart) into a deck; `202 { id, status }`. Session or `ing_` ingest token |

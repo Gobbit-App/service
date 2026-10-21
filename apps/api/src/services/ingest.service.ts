@@ -35,6 +35,7 @@ import { toIngestJobDto } from '../lib/ingest-mappers';
 import { isUuid, resolveDeck } from '../lib/resolve-deck';
 import type { IngestUploadStore } from '../media/ingest-uploads';
 import type { CurrentUser } from '../types';
+import { lineSink } from '../lib/logger';
 
 /** An uploaded image as received (before Cloudinary). */
 export interface IngestFile {
@@ -153,11 +154,11 @@ export function createIngestService(deps: {
   embedQueue: EmbedQueue;
   now: () => Date;
   newId?: () => string;
-  log?: (message: string) => void;
+  log?: (message: string, err?: unknown) => void;
 }) {
   const { enabled, decks, memberships, jobs, uploads, queue, now } = deps;
   const newId = deps.newId ?? randomUUID;
-  const log = deps.log ?? ((m: string) => console.error(m));
+  const log = deps.log ?? lineSink('ingest');
 
   /** D110: the channel's cap and the combined ceiling, over a rolling day. */
   async function assertWithinCaps(userId: string, channel: IngestChannel): Promise<void> {
@@ -208,10 +209,7 @@ export function createIngestService(deps: {
         images.push({ publicId, bytes: f.bytes.byteLength, mime: f.mime });
       }
     } catch (err) {
-      console.error(
-        `[ingest] upload failed for job ${jobId}:`,
-        err instanceof Error ? err.message : err,
-      );
+      log(`upload failed for job ${jobId}`, err);
       await uploads.deleteForJob(jobId).catch(() => undefined);
       throw serviceUnavailable('Image upload failed, try again');
     }

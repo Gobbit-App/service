@@ -22,6 +22,9 @@ import type { UsersRepo } from '../repositories/users.repo';
 import { dedupTargetId, mergeProposalPatch, sourcePreview } from '../review/review-helpers';
 import type { CurrentUser } from '../types';
 import type { ItemDtoMapper } from './item-dtos';
+import { childLogger } from '../lib/logger';
+
+const log = childLogger('review');
 
 const ITEM_NOT_FOUND = 'Item not found';
 
@@ -240,10 +243,7 @@ export function createReviewService(deps: {
       if (job && deps.uploads && (job.raw?.images.length ?? 0) > 0) {
         await deps.uploads.deleteForJob(job.id).catch((err: unknown) => {
           // The prune job removes leftovers by tag; a failed delete must not undo the discard.
-          console.error(
-            `[review] deleting uploads of job ${job.id} failed:`,
-            err instanceof Error ? err.message : err,
-          );
+          log.error({ err, jobId: job.id }, 'deleting job uploads failed');
         });
       }
     },

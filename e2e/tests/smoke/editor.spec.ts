@@ -301,6 +301,33 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   await expect(listed.getByRole('img', { name: 'A test photo' })).toBeVisible();
 });
 
+test('a photo Cloudinary refuses shows why and is reported to the API @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  // Registered last, so it wins over the accepting fake above.
+  await page.route('https://api.cloudinary.com/**', (route) =>
+    route.fulfill({
+      status: 400,
+      json: { error: { message: 'Resolution too high. Maximum allowed is 25 Megapixels' } },
+    }),
+  );
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+
+  const reported = page.waitForResponse(
+    (res) => res.url().includes('/media/upload-failures') && res.request().method() === 'POST',
+  );
+  await page.getByLabel('Choose photo').setInputFiles(photoFile);
+  await expect(
+    page.getByText("This photo's resolution is too high.", { exact: false }),
+  ).toBeVisible();
+  const response = await reported;
+  expect(response.status()).toBe(204);
+  expect(response.request().postDataJSON()).toMatchObject({ status: 400, fileType: 'image/png' });
+  await expect(save(page)).toBeDisabled();
+});
+
 test('an image card cannot be saved without alt text @smoke', async ({ page, webDeck }) => {
   await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));

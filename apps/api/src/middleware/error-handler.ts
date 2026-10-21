@@ -4,9 +4,17 @@ import { ZodError } from 'zod';
 import { InvalidCursorError } from '@pb/shared';
 import { HttpError, problemFromZodError, problemResponse } from '../errors/http-errors';
 import { mapPgError } from '../errors/pg-error-map';
+import { childLogger, type Logger } from '../lib/logger';
 import type { AppEnv } from '../types';
 
-export function errorHandler(err: Error, c: Context<AppEnv>): Response {
+/** Central error → problem+json mapping; only unexpected errors are logged (with stack). */
+export function createErrorHandler(log: Logger = childLogger('http')) {
+  return (err: Error, c: Context<AppEnv>): Response => handleError(err, c, log);
+}
+
+export const errorHandler = createErrorHandler();
+
+function handleError(err: Error, c: Context<AppEnv>, log: Logger): Response {
   if (err instanceof HttpError) {
     return problemResponse(c, err.toProblem(), err.headers);
   }
@@ -36,8 +44,10 @@ export function errorHandler(err: Error, c: Context<AppEnv>): Response {
     return problemResponse(c, pgError);
   }
 
-  const requestId = c.get('requestId');
-  console.error(`[${requestId}]`, err);
+  log.error(
+    { err, requestId: c.get('requestId') ?? null, method: c.req.method, path: c.req.path },
+    'unhandled error',
+  );
 
   return problemResponse(c, {
     type: '/problems/internal',
