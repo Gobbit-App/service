@@ -4,8 +4,8 @@ export type LinkPayload = {
   preview?: { title?: string; description?: string; image?: string };
 };
 
-/** Image payload with public ID and alt text. */
-export type ImagePayload = { publicId: string; alt: string };
+/** Image payload with public ID, alt text and, since 012, the stored dimensions. */
+export type ImagePayload = { publicId: string; alt: string; width?: number; height?: number };
 
 /** Table payload with columns and rows. */
 export type TablePayload = { columns: string[]; rows: string[][] };
@@ -57,6 +57,10 @@ export function asLinkPayload(p: unknown): LinkPayload | null {
   return result;
 }
 
+function isDimension(v: unknown): v is number {
+  return typeof v === 'number' && Number.isInteger(v) && v > 0;
+}
+
 /**
  * Narrows unknown payload into ImagePayload or null.
  */
@@ -65,7 +69,13 @@ export function asImagePayload(p: unknown): ImagePayload | null {
   if (typeof p.publicId !== 'string' || p.publicId === '') return null;
   if (typeof p.alt !== 'string') return null;
 
-  return { publicId: p.publicId, alt: p.alt };
+  const result: ImagePayload = { publicId: p.publicId, alt: p.alt };
+  // Both or neither: one dimension alone can't reserve a box.
+  if (isDimension(p.width) && isDimension(p.height)) {
+    result.width = p.width;
+    result.height = p.height;
+  }
+  return result;
 }
 
 /**

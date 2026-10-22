@@ -48,7 +48,7 @@ Browse shows one card per screen. Readers swipe vertically between cards, across
 - `ItemList` reads the entry once on mount. If it matches the list's deck and filter, it scrolls that card into view and clears the entry. This overrides the pathname-keyed restore (D65) only for that one return.
 
 **Images and motion (D144)**:
-- `ImageCard` has optional `sizes` and `priority` props. Browse passes a viewport-based `sizes` (`use-image-sizes.ts`).
+- `ImageCard` takes an optional `priority` prop. `sizes` comes from `CloudImage`, which measures its own width (013, D161); the old viewport-based `use-image-sizes.ts` is gone.
 - The current card gets `loading="eager"` + `fetchpriority="high"`; its neighbours stay lazy.
 - The only CSS transition is a `transform` on the footer dots, so there is no `will-change`. Styles live in `browse/browse.css`, which is part of the lazy chunk.
 

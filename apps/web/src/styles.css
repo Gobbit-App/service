@@ -430,10 +430,43 @@ h3 {
   margin: 0;
 }
 
-.image-card__img {
+/* CloudImage (D161): the box comes from the payload dimensions; the blurred placeholder fills it until the sharp image loads. */
+.cloud-image {
+  position: relative;
+  display: block;
+}
+
+.cloud-image__placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.cloud-image__img {
+  display: block;
   width: 100%;
   height: auto;
+  max-height: min(70vh, 640px);
+  object-fit: contain;
   border-radius: calc(var(--radius) - 4px);
+  opacity: 0;
+}
+
+.cloud-image--unknown .cloud-image__img {
+  aspect-ratio: 4 / 3;
+}
+
+.cloud-image--loaded .cloud-image__img {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cloud-image__img {
+    transition: opacity 0.2s ease-out;
+  }
 }
 
 .table-card {

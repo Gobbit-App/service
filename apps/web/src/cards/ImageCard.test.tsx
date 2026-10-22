@@ -35,10 +35,17 @@ describe('ImageCard', () => {
     expect(srcset).toContain('1080w');
   });
 
-  it('renders img with sizes 100vw', () => {
-    render(<ImageCard payload={payload} cloudName="demo" />);
-    const img = screen.getByAltText('Test image alt text') as HTMLImageElement;
-    expect(img).toHaveAttribute('sizes', '100vw');
+  it('reserves the box from the payload dimensions (D161)', () => {
+    render(<ImageCard payload={{ ...payload, width: 1200, height: 800 }} cloudName="demo" />);
+    const img = screen.getByAltText('Test image alt text');
+    expect(img).toHaveAttribute('width', '1200');
+    expect(img).toHaveAttribute('height', '800');
+  });
+
+  it('still renders a payload saved before 012 (no dimensions)', () => {
+    const { container } = render(<ImageCard payload={payload} cloudName="demo" />);
+    expect(screen.getByAltText('Test image alt text')).not.toHaveAttribute('width');
+    expect(container.querySelector('.cloud-image--unknown')).not.toBeNull();
   });
 
   it('shows Image unavailable when img errors', () => {
@@ -61,12 +68,5 @@ describe('ImageCard', () => {
     const img = screen.getByAltText('Test image alt text');
     expect(img).toHaveAttribute('loading', 'eager');
     expect(img).toHaveAttribute('fetchpriority', 'high');
-  });
-
-  it('passes a custom sizes through and keeps the srcset', () => {
-    render(<ImageCard payload={payload} cloudName="demo" sizes="412px" />);
-    const img = screen.getByAltText('Test image alt text');
-    expect(img).toHaveAttribute('sizes', '412px');
-    expect(img.getAttribute('srcset')).toContain('1080w');
   });
 });

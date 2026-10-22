@@ -3,6 +3,7 @@ import { ImageCard } from '../../cards/ImageCard';
 import { useCloudName } from '../../cards/use-cloud-name';
 import { useOnline } from '../../api/offline';
 import { checkImageFile, IMAGE_ACCEPT } from '../image-file';
+import { withoutPhoto, withPhoto } from '../image-payload';
 import { useImageUpload, type UseImageUploadOptions } from '../use-image-upload';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
@@ -62,7 +63,7 @@ export function ImageFields({
   const [fileError, setFileError] = useState<string | null>(null);
   const upload = useImageUpload({
     deckId: deck.id,
-    onUploaded: (publicId) => onChange({ ...payload, publicId }),
+    onUploaded: (asset) => onChange(withPhoto(payload, asset)),
     ...uploadDeps,
   });
 
@@ -78,7 +79,7 @@ export function ImageFields({
     setFileError(refused);
     if (refused) return;
     setLocalUrl(URL.createObjectURL(file));
-    if (payload.publicId !== '') onChange({ ...payload, publicId: '' });
+    if (payload.publicId !== '') onChange(withoutPhoto(payload));
     upload.start(file);
   };
 
@@ -91,7 +92,7 @@ export function ImageFields({
     upload.reset();
     setLocalUrl(null);
     setFileError(null);
-    onChange({ ...payload, publicId: '' });
+    onChange(withoutPhoto(payload));
   };
 
   const { state } = upload;

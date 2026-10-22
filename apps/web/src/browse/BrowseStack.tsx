@@ -17,7 +17,6 @@ import { pagingBehavior, scrollToPage } from './motion';
 import { useBrowseKeys } from './use-browse-keys';
 import { usePrefetchAhead } from './use-browse-items';
 import { useCurrentCard } from './use-current-card';
-import { useImageSizes } from './use-image-sizes';
 
 export const NOT_FOUND_COPY = "That card isn't available here";
 
@@ -83,7 +82,6 @@ export function BrowseStack({
   const found = items.findIndex((item) => item.id === currentId);
   const index = found >= 0 ? found : 0;
   const current = items[index];
-  const imageSizes = useImageSizes();
 
   // The notice stays until the reader moves off the card it opened on.
   const [notice, setNotice] = useState(notFound ? startId : null);
@@ -156,7 +154,6 @@ export function BrowseStack({
             onPane={onPane}
             current={i === index}
             mounted={Math.abs(i - index) <= 1}
-            imageSizes={imageSizes}
             header={{
               ...header,
               position: { index: i, total },

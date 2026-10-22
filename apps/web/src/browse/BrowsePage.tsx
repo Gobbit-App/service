@@ -18,8 +18,6 @@ export interface BrowsePageProps {
   current: boolean;
   /** Current ±1: renders its card; the rest are empty 100dvh placeholders (D144). */
   mounted: boolean;
-  /** Measured content width for the image `sizes` (contract §5). */
-  imageSizes: string;
   header: Omit<HeaderBandProps, 'active'>;
   onNextCard: (() => void) | null;
 }
@@ -52,7 +50,6 @@ export function BrowsePage({
   onPane,
   current,
   mounted,
-  imageSizes,
   header,
   onNextCard,
 }: BrowsePageProps): ReactElement {
@@ -79,7 +76,7 @@ export function BrowsePage({
           deckSlug={deckSlug}
           categories={categories}
           pane={pane}
-          image={{ sizes: imageSizes, priority: current }}
+          image={{ priority: current }}
         />
       </div>
       <FooterBand

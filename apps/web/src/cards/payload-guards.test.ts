@@ -78,6 +78,23 @@ describe('payload-guards', () => {
       expect(result).toEqual({ publicId: 'my-image', alt: 'An image' });
     });
 
+    it('keeps the stored dimensions only when both are positive integers', () => {
+      expect(asImagePayload({ publicId: 'p', alt: 'a', width: 1200, height: 800 })).toEqual({
+        publicId: 'p',
+        alt: 'a',
+        width: 1200,
+        height: 800,
+      });
+      expect(asImagePayload({ publicId: 'p', alt: 'a', width: 1200 })).toEqual({
+        publicId: 'p',
+        alt: 'a',
+      });
+      expect(asImagePayload({ publicId: 'p', alt: 'a', width: 0, height: 'x' })).toEqual({
+        publicId: 'p',
+        alt: 'a',
+      });
+    });
+
     it('returns null for empty publicId', () => {
       expect(asImagePayload({ publicId: '', alt: 'An image' })).toBeNull();
     });

@@ -353,7 +353,11 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   expect(((await response.json()) as { payload: { width?: number } }).payload.width).toBe(1);
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   const listed = page.getByRole('article').filter({ hasText: title });
-  await expect(listed.getByRole('img', { name: 'A test photo' })).toBeVisible();
+  const listedImage = listed.getByRole('img', { name: 'A test photo' });
+  await expect(listedImage).toBeVisible();
+  // CloudImage sizes from the measured column (D161) and keeps the three-width srcset.
+  await expect(listedImage).toHaveAttribute('sizes', /^\d+px$/);
+  expect((await listedImage.getAttribute('srcset'))?.split(', ')).toHaveLength(3);
 });
 
 test('a photo Cloudinary refuses shows why and is reported to the API @smoke', async ({

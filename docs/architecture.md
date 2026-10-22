@@ -87,7 +87,7 @@ only on `POST /ingest`.
 | Ingestion | Shares (Android, Shortcut, paste, email-in) → `ingest_jobs` → SSRF-guarded fetch → LLM extract → **proposed** card → dedup → publisher review queue. The agent never publishes | [ingestion](design/ingestion.md) · ADR-046–048 |
 | Card lifecycle | archive / restore / delete / undelete (30 days, weekly purge) in `items.service`, optimistic Undo in the web | [card-lifecycle](design/card-lifecycle.md) · ADR-050 |
 | Card editor | All types, live preview through the list renderer, zod-free client checks, IndexedDB drafts, inline category create | [card-editor](design/card-editor.md) |
-| Card media | Signed browser → Cloudinary uploads confirmed into the `assets` registry; cards reference only recorded assets; daily orphan sweep; link preview via `safe-fetch` | [card-media](design/card-media.md) · ADR-051, 054 |
+| Card media | Signed browser → Cloudinary uploads confirmed into the `assets` registry; cards reference only recorded assets; daily orphan sweep; every stored image renders through `CloudImage` (measured `sizes`, reserved box, blurred placeholder); link preview via `safe-fetch` | [card-media](design/card-media.md) · ADR-051, 054 |
 | Browse mode | One card per screen: native scroll-snap, `@use-gesture` only in the lazy chunk | [browse-mode](design/browse-mode.md) · ADR-052 |
 
 ## Testing

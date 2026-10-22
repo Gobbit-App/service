@@ -4,7 +4,7 @@ _Overview: [architecture.md](../architecture.md). Decisions: [adr.md](../adr.md)
 
 Image cards from the editor (upload a photo, or take one on a phone) and "Fetch preview" for link cards. Two new routes, no migration, no new env vars and no new dependencies (`cloudinary` and `lru-cache` were already in the API).
 
-**Boundary with Phase 7 (D129)**: Phase 6 ships signed browser uploads and a synchronous link preview, both as services. The `assets` table, the orphan sweep, remote-URL upload, preview snapshots, link checks and `CloudImage` stay in Phase 7 (see Media assets below).
+**Boundary with Phase 7 (D129)**: Phase 6 ships signed browser uploads and a synchronous link preview, both as services. The `assets` table, the orphan sweep, remote-URL upload, preview snapshots, link checks and `CloudImage` stay in Phase 7 (see Media assets and Responsive images below).
 
 **Signed direct uploads (D133, ADR-051)**: `POST /decks/{id}/media/sign` (`media.service` → `media/sign-upload.ts`). Access: `resolveDeck` + `authorize(..., 'item.create')`; then 503 `/problems/unavailable` without `CLOUDINARY_URL`; then `rateKeys.mediaSignUser` at 60/user/hour. The response holds the upload URL, `apiKey`, `timestamp`, `signature`, `folder`, `tags`, `allowedFormats`, `maxBytes` and `expiresAt` (50 min, inside Cloudinary's one-hour signature window), with `Cache-Control: no-store`. The API secret never leaves `signEditorUpload`. The browser posts the file straight to `https://api.cloudinary.com/v1_1/<cloud>/image/upload` (`editor/upload.ts`, XHR for progress and abort); the API never sees the bytes. The web CSP `connect-src` adds `https://api.cloudinary.com` (`apps/web/Caddyfile`).
 
@@ -50,6 +50,22 @@ Image cards from the editor (upload a photo, or take one on a phone) and "Fetch 
 - **Deck delete keeps the `assets` rows** of the soft-deleted deck; they cascade if the deck is purged.
 - **Backfilled rows get `created_at = now()`** and no dimensions; there is no `media:backfill-dimensions` script.
 - **Photo smoke**: the fixture deck has no image card any more, and the save step needs the `CLOUDINARY_API_SECRET` CI secret to sign the faked Cloudinary answer (skipped without it).
+
+## Responsive images (Phase 7, `specs/013-cloud-image`, D161–D162)
+
+Every stored image renders through `cards/CloudImage.tsx` (image cards today, link previews from 014). Web only: no migration, route or API change.
+
+- **Sizes**: `useElementWidth` (`cards/use-element-width.ts`) measures the wrapper with one shared `ResizeObserver` (a `WeakMap` of callbacks; changes under 8 px and hidden 0 widths are ignored). Until the first measurement, `sizes` is the viewport estimate `imageSizesFor(innerWidth)` (column ≤ 640 px minus padding). `src` is the 720 px URL; `srcset` stays 360/720/1080 (`f_auto,q_auto,c_limit,w_N`).
+- **Box**: `width`/`height` attributes from the payload (012 records them on the asset; the editor copies them from the confirmed asset with `withPhoto`). Without both, the wrapper gets `cloud-image--unknown` and a 4:3 `contain` box. `max-height: min(70vh, 640px)`.
+- **Placeholder**: a 32 px `f_auto,q_1,e_blur:2000` image (`cloudinaryPlaceholderUrl`), `aria-hidden` with an empty alt, stacked under the sharp image. The sharp image fades in on `load` (`cloud-image--loaded`); the fade sits inside `prefers-reduced-motion: no-preference`. On error the placeholder goes and `ImageCard` shows "Image unavailable".
+- **Loading**: lazy by default; `priority` (the current Browse card, D144) makes both images eager and the sharp one `fetchpriority="high"`.
+- **Cache (D162)**: placeholders share the service worker's `cloudinary-images` cache, so `maxEntries` went from 300 to 600.
+
+### Deviations from the 013 plan
+
+- **The placeholder loads like the sharp image** (lazy unless `priority`), rather than always eagerly, so off-screen cards cost nothing.
+- **No `BrowseStack.test.tsx`**: the "priority only on the current card" test is in `BrowseScreen.test.tsx`.
+- **The list-image smoke** (`sizes` in px, three-width `srcset`) is in the photo test of `editor.spec.ts`, the only list image the smoke can create since the fixture deck lost its image card (012). It runs only with `CLOUDINARY_API_SECRET`.
 
 ## Deviations from the 008 plan
 

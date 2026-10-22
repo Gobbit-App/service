@@ -21,8 +21,8 @@ export type ImageUploadState =
 
 export type UseImageUploadOptions = {
   deckId: string;
-  /** Called once per finished and confirmed upload with the recorded `publicId`. */
-  onUploaded: (publicId: string) => void;
+  /** Called once per finished and confirmed upload with the recorded asset. */
+  onUploaded: (asset: MediaAsset) => void;
   /** Tests inject these; production signs through the API and uploads with XHR. */
   signer?: Signer;
   upload?: typeof signAndUpload;
@@ -97,7 +97,7 @@ export function useImageUpload({
         if (attempt.signal.aborted) return;
         controller.current = null;
         setState({ status: 'idle' });
-        latestOnUploaded.current(asset.publicId);
+        latestOnUploaded.current(asset);
       } catch (error) {
         if (controller.current !== attempt) return;
         controller.current = null;

@@ -138,10 +138,10 @@ describe('ImageFields', () => {
     expect(screen.getByText('Uploading… 40%')).toBeInTheDocument();
     expect(screen.getByLabelText('Upload progress')).toHaveAttribute('value', '40');
     await act(async () => calls[0]!.resolve({ publicId: 'gobbit/items/d/p1' }));
-    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: '' });
+    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: '', width: 10, height: 10 });
     expect(screen.getByText('Alt text is required')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'A loaf' } });
-    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: 'A loaf' });
+    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: 'A loaf', width: 10, height: 10 });
     expect(screen.queryByText('Alt text is required')).not.toBeInTheDocument();
   });
 
@@ -150,7 +150,7 @@ describe('ImageFields', () => {
     pickFile('Choose photo', photo());
     fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'Bread' } });
     await act(async () => calls[0]!.resolve({ publicId: 'p1' }));
-    expect(latest).toEqual({ publicId: 'p1', alt: 'Bread' });
+    expect(latest).toEqual({ publicId: 'p1', alt: 'Bread', width: 10, height: 10 });
   });
 
   it('cancelling leaves no photo (FR-005)', async () => {
@@ -184,7 +184,7 @@ describe('ImageFields', () => {
     pickFile('Replace photo', photo());
     expect(latest).toEqual({ publicId: '', alt: 'Old' });
     await act(async () => calls[0]!.resolve({ publicId: 'new' }));
-    expect(latest).toEqual({ publicId: 'new', alt: 'Old' });
+    expect(latest).toEqual({ publicId: 'new', alt: 'Old', width: 10, height: 10 });
     fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
     expect(latest).toEqual({ publicId: '', alt: 'Old' });
     expect(screen.getByLabelText('Choose photo')).toBeInTheDocument();
