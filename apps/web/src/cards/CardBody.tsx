@@ -30,7 +30,11 @@ function TypedBody({
       return null;
     case 'link': {
       const payload = asLinkPayload(item.payload);
-      return payload ? <LinkCard payload={payload} /> : <Invalid />;
+      return payload ? (
+        <LinkCard payload={payload} cloudName={cloudName} health={item.linkHealth} />
+      ) : (
+        <Invalid />
+      );
     }
     case 'image': {
       const payload = asImagePayload(item.payload);

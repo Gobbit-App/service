@@ -19,6 +19,13 @@ export const linkPayloadSchema = z
         title: z.string().optional(),
         description: z.string().optional(),
         image: httpUrlSchema.optional(),
+        /**
+         * D163: stored copy of `image` (server-owned), or a recorded asset of the deck (D160).
+         * `null` in a write removes the photo (015); it is never stored.
+         */
+        publicId: z.string().min(1).nullable().optional(),
+        width: imageDimensionSchema.optional(),
+        height: imageDimensionSchema.optional(),
       })
       .strict()
       .optional(),

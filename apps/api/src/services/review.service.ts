@@ -11,6 +11,7 @@ import {
 import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
 import { badRequest, conflict, notFound } from '../errors/http-errors';
 import type { EmbedQueue } from '../jobs/embed-queue';
+import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import { resolveDeck } from '../lib/resolve-deck';
 import { toSlug } from '../lib/slug';
 import type { IngestUploadStore } from '../media/ingest-uploads';
@@ -48,6 +49,8 @@ export function createReviewService(deps: {
   transaction: ReviewTransaction;
   uploads: IngestUploadStore | null;
   embedQueue: EmbedQueue;
+  /** D163: a published link (or a merged target) gets its preview image copied. */
+  linkSnapshotQueue?: LinkSnapshotQueue;
   /** D160: a published image card references a recorded asset of its deck. */
   imageReference: ImageReferenceCheck;
   now: () => Date;
@@ -234,6 +237,10 @@ export function createReviewService(deps: {
       });
 
       await embedQueue.enqueueIfStale(resultId);
+      if (deps.linkSnapshotQueue) {
+        const published = await items.findById(resultId);
+        if (published) await deps.linkSnapshotQueue.enqueueIfNeeded(published);
+      }
       return toDto(user, resultId, role);
     },
 

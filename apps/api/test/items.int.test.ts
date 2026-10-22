@@ -545,3 +545,107 @@ describe('image cards reference recorded assets (D160)', () => {
     await expectUnknownImage(swapped);
   });
 });
+
+describe('link previews: server-owned copy fields (D163)', () => {
+  let deck: DeckRow;
+  let other: DeckRow;
+  const url = 'https://bakery.example/';
+  const image = 'https://bakery.example/og.jpg';
+
+  beforeAll(async () => {
+    deck = await createDeck(ctx.t.db, ctx.world.owner);
+    other = await createDeck(ctx.t.db, ctx.world.owner);
+  });
+
+  const createLink = (payload: Record<string, unknown>) =>
+    ctx.app.request(`/decks/${deck.id}/items`, {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({ type: 'link', title: 'Bakery', payload }),
+    });
+
+  const patchLink = (id: string, payload: Record<string, unknown>) =>
+    ctx.app.request(`/items/${id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify({ payload }),
+    });
+
+  /** A link card whose preview already has a stored copy (as the job or the editor left it). */
+  async function cardWithCopy(source: 'link_snapshot' | 'editor') {
+    const asset = await createAsset(ctx.t.db, deck, { source, width: 800, height: 600 });
+    const preview = { title: 'Bakery', image, publicId: asset.publicId, width: 800, height: 600 };
+    const res = await createLink({ url, preview });
+    expect(res.status).toBe(201);
+    return { item: await res.json(), asset, preview };
+  }
+
+  it("ignores the client's dimensions; a chosen photo brings its own", async () => {
+    const res = await createLink({ url, preview: { title: 'Bakery', width: 5, height: 5 } });
+    expect(res.status).toBe(201);
+    const item = await res.json();
+    expect(item.payload).toEqual({ url, preview: { title: 'Bakery' } });
+
+    const asset = await createAsset(ctx.t.db, deck, { width: 1200, height: 900 });
+    const patched = await patchLink(item.id, {
+      url,
+      preview: { title: 'Bakery', publicId: asset.publicId, width: 1 },
+    });
+    expect(patched.status).toBe(200);
+    expect((await patched.json()).payload.preview).toEqual({
+      title: 'Bakery',
+      publicId: asset.publicId,
+      width: 1200,
+      height: 900,
+    });
+  });
+
+  it('keeps the stored copy on an edit that omits it', async () => {
+    const { item, preview } = await cardWithCopy('link_snapshot');
+    const patched = await patchLink(item.id, { url, preview: { title: 'Bakery & cafe', image } });
+    expect(patched.status).toBe(200);
+    expect((await patched.json()).payload.preview).toEqual({ ...preview, title: 'Bakery & cafe' });
+  });
+
+  it('drops a link_snapshot copy when the URL or the image changes', async () => {
+    const first = await cardWithCopy('link_snapshot');
+    const newImage = await patchLink(first.item.id, {
+      url,
+      preview: { ...first.preview, image: 'https://bakery.example/new.jpg' },
+    });
+    expect((await newImage.json()).payload.preview).toEqual({
+      title: 'Bakery',
+      image: 'https://bakery.example/new.jpg',
+    });
+
+    const second = await cardWithCopy('link_snapshot');
+    const newUrl = await patchLink(second.item.id, {
+      url: 'https://bakery.example/moved',
+      preview: { title: 'Bakery', image },
+    });
+    expect((await newUrl.json()).payload).toEqual({
+      url: 'https://bakery.example/moved',
+      preview: { title: 'Bakery', image },
+    });
+  });
+
+  it('keeps a photo a member added when the URL changes', async () => {
+    const { item, preview } = await cardWithCopy('editor');
+    const patched = await patchLink(item.id, { url: 'https://bakery.example/moved', preview });
+    expect(patched.status).toBe(200);
+    expect((await patched.json()).payload.preview).toEqual(preview);
+  });
+
+  it('refuses a preview.publicId not recorded for the deck', async () => {
+    const foreign = await createAsset(ctx.t.db, other);
+    for (const publicId of ['samples/nope', foreign.publicId]) {
+      const res = await createLink({ url, preview: { title: 'Bakery', publicId } });
+      expect(res.status).toBe(422);
+      const problem = await res.json();
+      expect(problem.type).toBe('/problems/validation');
+      expect(problem.errors).toEqual([
+        { path: 'payload.preview.publicId', message: 'Unknown image' },
+      ]);
+    }
+  });
+});

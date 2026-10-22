@@ -225,6 +225,7 @@ describe('itemSchema.deletedAt (D132)', () => {
     updatedAt: '2026-10-01T08:00:00.000Z',
     categoryIds: [],
     isFavorite: false,
+    linkHealth: null,
   };
 
   it('is optional', () => {
@@ -238,5 +239,23 @@ describe('itemSchema.deletedAt (D132)', () => {
 
   it('rejects null (absent on live cards, not null)', () => {
     expect(itemSchema.safeParse({ ...base, deletedAt: null }).success).toBe(false);
+  });
+});
+
+describe('link checks (D164/D165)', () => {
+  it('flag=link parses; other flag values are rejected', () => {
+    expect(itemListQuerySchema.parse({ flag: 'link' }).flag).toBe('link');
+    expect(itemListQuerySchema.parse({}).flag).toBeUndefined();
+    expect(itemListQuerySchema.safeParse({ flag: 'dead' }).success).toBe(false);
+  });
+
+  it('linkHealth is required and nullable; only dead/changed are flags', () => {
+    const health = { status: 'dead', checkedAt: '2026-10-20T06:30:00.000Z' };
+    const shape = itemSchema.shape.linkHealth;
+    expect(shape.parse(null)).toBeNull();
+    expect(shape.parse(health)).toEqual(health);
+    expect(shape.safeParse({ ...health, status: 'changed' }).success).toBe(true);
+    expect(shape.safeParse({ ...health, status: 'ok' }).success).toBe(false);
+    expect(shape.safeParse(undefined).success).toBe(false);
   });
 });

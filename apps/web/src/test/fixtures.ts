@@ -21,6 +21,7 @@ export function makeItem(overrides: Partial<Item> = {}): Item {
     updatedAt: STAMP,
     categoryIds: [],
     isFavorite: false,
+    linkHealth: null,
     ...overrides,
   } as Item;
 }

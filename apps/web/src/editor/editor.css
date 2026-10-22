@@ -213,6 +213,18 @@
   font-weight: 600;
 }
 
+/* Link card "Add photo" (015): the result shows in the editor preview. */
+.link-photo {
+  display: grid;
+  gap: 8px;
+}
+
+.link-photo__thumb {
+  display: block;
+  max-width: 160px;
+  border-radius: var(--radius);
+}
+
 /* Image card photo picker and upload progress (D133). */
 .image-fields__photo {
   max-width: 360px;

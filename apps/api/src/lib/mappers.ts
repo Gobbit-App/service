@@ -2,6 +2,7 @@ import {
   RESERVED_DECK_SLUG,
   type Category,
   type Item,
+  type LinkHealth,
   type Deck,
   type MemberRole,
 } from '@pb/shared';
@@ -37,7 +38,12 @@ export function toCategoryDto(r: CategoryRow): Category {
   };
 }
 
-export function toItemDto(r: ItemRow, categoryIds: string[], isFavorite: boolean): Item {
+export function toItemDto(
+  r: ItemRow,
+  categoryIds: string[],
+  isFavorite: boolean,
+  linkHealth: LinkHealth | null = null,
+): Item {
   return {
     id: r.id,
     deckId: r.deckId,
@@ -55,6 +61,7 @@ export function toItemDto(r: ItemRow, categoryIds: string[], isFavorite: boolean
     updatedAt: r.updatedAt.toISOString(),
     categoryIds,
     isFavorite,
+    linkHealth,
     // D132: only deleted rows (the deleted listing / undelete) carry deletedAt
     ...(r.deletedAt ? { deletedAt: r.deletedAt.toISOString() } : {}),
   };

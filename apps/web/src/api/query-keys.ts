@@ -12,6 +12,8 @@ export type ItemFilter =
   | { kind: 'category'; slug: string }
   | { kind: 'favorites' }
   | { kind: 'archived' }
+  /** D165: flagged link cards ("Links to check", `item.update` roles). */
+  | { kind: 'links' }
   /** D132: Recently deleted (item.delete roles); never shown as a chip. */
   | { kind: 'deleted' };
 
@@ -60,6 +62,9 @@ export function itemListQuery(
       break;
     case 'deleted':
       query.status = 'deleted';
+      break;
+    case 'links':
+      query.flag = 'link';
       break;
     case 'all':
       break;

@@ -3,6 +3,22 @@ import { asLinkPayload, asImagePayload, asTablePayload, asCalcPayload } from './
 
 describe('payload-guards', () => {
   describe('asLinkPayload', () => {
+    it('D163: keeps the stored snapshot with both dimensions or neither', () => {
+      const preview = { image: 'https://e.com/a.jpg', publicId: 'gobbit/links/d/a' };
+      expect(
+        asLinkPayload({ url: 'https://e.com', preview: { ...preview, width: 1200, height: 630 } }),
+      ).toEqual({ url: 'https://e.com', preview: { ...preview, width: 1200, height: 630 } });
+      expect(asLinkPayload({ url: 'https://e.com', preview: { ...preview, width: 1200 } })).toEqual(
+        {
+          url: 'https://e.com',
+          preview,
+        },
+      );
+      expect(asLinkPayload({ url: 'https://e.com', preview: { publicId: '' } })).toEqual({
+        url: 'https://e.com',
+      });
+    });
+
     it('returns valid link payload with url only', () => {
       const result = asLinkPayload({ url: 'https://example.com' });
       expect(result).toEqual({ url: 'https://example.com' });

@@ -17,6 +17,7 @@ export * from './search-queries';
 export * from './ingest-jobs';
 export * from './ingest-tokens';
 export * from './assets';
+export * from './link-checks';
 
 import { accounts } from './accounts';
 import { users } from './users';
@@ -34,6 +35,7 @@ import { searchQueries } from './search-queries';
 import { ingestJobs } from './ingest-jobs';
 import { ingestTokens } from './ingest-tokens';
 import { assets } from './assets';
+import { linkChecks } from './link-checks';
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -52,6 +54,7 @@ export type SearchQueryRow = typeof searchQueries.$inferSelect;
 export type IngestJobRow = typeof ingestJobs.$inferSelect;
 export type IngestTokenRow = typeof ingestTokens.$inferSelect;
 export type AssetRow = typeof assets.$inferSelect;
+export type LinkCheckRow = typeof linkChecks.$inferSelect;
 
 export type NewDeckRow = typeof decks.$inferInsert;
 export type NewCategoryRow = typeof categories.$inferInsert;
@@ -64,3 +67,4 @@ export type NewSearchQueryRow = typeof searchQueries.$inferInsert;
 export type NewIngestJobRow = typeof ingestJobs.$inferInsert;
 export type NewIngestTokenRow = typeof ingestTokens.$inferInsert;
 export type NewAssetRow = typeof assets.$inferInsert;
+export type NewLinkCheckRow = typeof linkChecks.$inferInsert;

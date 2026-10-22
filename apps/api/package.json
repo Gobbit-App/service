@@ -16,7 +16,8 @@
     "search:load": "tsx --env-file-if-exists=../../.env scripts/search-load.ts",
     "search:query": "tsx --env-file-if-exists=../../.env scripts/search-query.ts",
     "media:reconcile": "tsx --env-file-if-exists=../../.env scripts/media-reconcile.ts",
-    "job:run": "tsx --env-file-if-exists=../../.env scripts/run-job.ts"
+    "job:run": "tsx --env-file-if-exists=../../.env scripts/run-job.ts",
+    "links:snapshot-backfill": "tsx --env-file-if-exists=../../.env scripts/links-snapshot-backfill.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

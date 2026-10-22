@@ -5266,6 +5266,17 @@
           {
             "schema": {
               "type": "string",
+              "enum": [
+                "link"
+              ]
+            },
+            "required": false,
+            "name": "flag",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
               "minLength": 1
             },
             "required": false,
@@ -5449,6 +5460,28 @@
                           },
                           "deletedAt": {
                             "type": "string"
+                          },
+                          "linkHealth": {
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "dead",
+                                  "changed"
+                                ]
+                              },
+                              "checkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "status",
+                              "checkedAt"
+                            ]
                           }
                         },
                         "required": [
@@ -5467,7 +5500,8 @@
                           "createdAt",
                           "updatedAt",
                           "categoryIds",
-                          "isFavorite"
+                          "isFavorite",
+                          "linkHealth"
                         ]
                       }
                     },
@@ -5976,6 +6010,23 @@
                               "image": {
                                 "type": "string",
                                 "format": "uri"
+                              },
+                              "publicId": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 1
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
                               }
                             },
                             "additionalProperties": false
@@ -6704,6 +6755,28 @@
                     },
                     "deletedAt": {
                       "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
                     }
                   },
                   "required": [
@@ -6722,7 +6795,8 @@
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
-                    "isFavorite"
+                    "isFavorite",
+                    "linkHealth"
                   ]
                 }
               }
@@ -7383,6 +7457,28 @@
                     },
                     "deletedAt": {
                       "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
                     }
                   },
                   "required": [
@@ -7401,7 +7497,8 @@
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
-                    "isFavorite"
+                    "isFavorite",
+                    "linkHealth"
                   ]
                 }
               }
@@ -7942,6 +8039,28 @@
                     },
                     "deletedAt": {
                       "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
                     }
                   },
                   "required": [
@@ -7960,7 +8079,8 @@
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
-                    "isFavorite"
+                    "isFavorite",
+                    "linkHealth"
                   ]
                 }
               }
@@ -8884,6 +9004,28 @@
                     },
                     "deletedAt": {
                       "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
                     }
                   },
                   "required": [
@@ -8902,7 +9044,8 @@
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
-                    "isFavorite"
+                    "isFavorite",
+                    "linkHealth"
                   ]
                 }
               }
@@ -9407,6 +9550,28 @@
                     },
                     "deletedAt": {
                       "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
                     }
                   },
                   "required": [
@@ -9425,7 +9590,8 @@
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
-                    "isFavorite"
+                    "isFavorite",
+                    "linkHealth"
                   ]
                 }
               }
@@ -9930,6 +10096,28 @@
                     },
                     "deletedAt": {
                       "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
                     }
                   },
                   "required": [
@@ -9948,7 +10136,8 @@
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
-                    "isFavorite"
+                    "isFavorite",
+                    "linkHealth"
                   ]
                 }
               }
@@ -10268,6 +10457,895 @@
           },
           "422": {
             "description": "Unprocessable Content",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items/{id}/link-check": {
+      "post": {
+        "tags": [
+          "items"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link checked now (publishers); the card with its fresh linkHealth. 422 when not a live link card (D164)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "deckId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "link",
+                        "image",
+                        "table",
+                        "calc"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "proposed",
+                        "published",
+                        "archived"
+                      ]
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "type": "string"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "entities": {
+                      "type": "object",
+                      "properties": {
+                        "phones": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "hours": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "prices": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "dates": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "people": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "urls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "sourceUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sourceKind": {
+                      "type": "string",
+                      "enum": [
+                        "manual",
+                        "link",
+                        "share",
+                        "email",
+                        "telegram",
+                        "import",
+                        "mcp"
+                      ]
+                    },
+                    "verifiedAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "createdBy": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "categoryIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "isFavorite": {
+                      "type": "boolean"
+                    },
+                    "deletedAt": {
+                      "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "deckId",
+                    "type",
+                    "status",
+                    "title",
+                    "body",
+                    "payload",
+                    "entities",
+                    "sourceUrl",
+                    "sourceKind",
+                    "verifiedAt",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "categoryIds",
+                    "isFavorite",
+                    "linkHealth"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items/{id}/link-check/flag": {
+      "delete": {
+        "tags": [
+          "items"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Link flag dismissed until the result changes (D164)"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10933,6 +12011,28 @@
                               },
                               "deletedAt": {
                                 "type": "string"
+                              },
+                              "linkHealth": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "dead",
+                                      "changed"
+                                    ]
+                                  },
+                                  "checkedAt": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "checkedAt"
+                                ]
                               }
                             },
                             "required": [
@@ -10951,7 +12051,8 @@
                               "createdAt",
                               "updatedAt",
                               "categoryIds",
-                              "isFavorite"
+                              "isFavorite",
+                              "linkHealth"
                             ]
                           },
                           "why": {
@@ -16226,6 +17327,28 @@
                               },
                               "deletedAt": {
                                 "type": "string"
+                              },
+                              "linkHealth": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "dead",
+                                      "changed"
+                                    ]
+                                  },
+                                  "checkedAt": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "checkedAt"
+                                ]
                               }
                             },
                             "required": [
@@ -16244,7 +17367,8 @@
                               "createdAt",
                               "updatedAt",
                               "categoryIds",
-                              "isFavorite"
+                              "isFavorite",
+                              "linkHealth"
                             ]
                           },
                           "job": {
@@ -16522,6 +17646,28 @@
                               },
                               "deletedAt": {
                                 "type": "string"
+                              },
+                              "linkHealth": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "dead",
+                                      "changed"
+                                    ]
+                                  },
+                                  "checkedAt": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "status",
+                                  "checkedAt"
+                                ]
                               }
                             },
                             "required": [
@@ -16540,7 +17686,8 @@
                               "createdAt",
                               "updatedAt",
                               "categoryIds",
-                              "isFavorite"
+                              "isFavorite",
+                              "linkHealth"
                             ]
                           }
                         },
@@ -17290,6 +18437,28 @@
                     },
                     "deletedAt": {
                       "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
                     }
                   },
                   "required": [
@@ -17308,7 +18477,8 @@
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
-                    "isFavorite"
+                    "isFavorite",
+                    "linkHealth"
                   ]
                 }
               }

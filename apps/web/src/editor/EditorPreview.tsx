@@ -20,6 +20,7 @@ export function previewItem(draft: Draft, base: Item | null, deckId: string): It
       createdAt: now,
       updatedAt: now,
       isFavorite: false,
+      linkHealth: null,
     }),
     type: draft.type,
     title: draft.title.trim(),

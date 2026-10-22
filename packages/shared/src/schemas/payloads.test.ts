@@ -96,6 +96,26 @@ describe('payloads', () => {
       expect(result.success).toBe(false);
     });
 
+    it('D163: old payloads without the snapshot fields still parse', () => {
+      const schema = payloadSchemaFor('link');
+      const old = {
+        url: 'https://example.com',
+        preview: { title: 'T', image: 'https://e.com/a.jpg' },
+      };
+      expect(schema.parse(old)).toEqual(old);
+    });
+
+    it('D163: accepts the server-owned snapshot fields within the dimension bounds', () => {
+      const schema = payloadSchemaFor('link');
+      const preview = { publicId: 'gobbit/links/d/a', width: 1200, height: 630 };
+      expect(schema.safeParse({ url: 'https://example.com', preview }).success).toBe(true);
+      for (const bad of [{ width: 0 }, { height: -1 }, { width: 1.5 }, { publicId: '' }]) {
+        expect(
+          schema.safeParse({ url: 'https://example.com', preview: { ...preview, ...bad } }).success,
+        ).toBe(false);
+      }
+    });
+
     it('rejects unknown key (strict)', () => {
       const schema = payloadSchemaFor('link');
 

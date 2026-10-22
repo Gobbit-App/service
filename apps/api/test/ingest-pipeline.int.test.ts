@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { ingestJobs, itemCategories, items, llmCalls, type UserRow } from '@pb/db';
-import { addMember, createAccountUser } from '@pb/db/test';
+import { addMember, createAccountUser, createAsset } from '@pb/db/test';
 import { ARTICLE_PAGE, INJECTION_PAGE } from '@pb/db/test/ingest-pages';
 import { createFakeExtractor } from '../src/ai/fake-extractor';
 import type { SafeFetch } from '../src/fetch/safe-fetch';
@@ -9,10 +9,13 @@ import { normalizeRaw } from '../src/ingest/normalize-raw';
 import { createSharerRole } from '../src/ingest/sharer-role';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
 import { createIngestHandler, type IngestHandlerDeps } from '../src/jobs/ingest';
+import { createLinkSnapshotQueue } from '../src/jobs/link-snapshot-queue';
+import { QUEUES, type JobSender } from '../src/jobs/queues';
 import { runDedup } from '../src/ingest/run-dedup';
 import { createDedupRepo } from '../src/repositories/dedup.repo';
 import { createEmbeddingsRepo } from '../src/repositories/embeddings.repo';
 import type { IngestQueue } from '../src/jobs/ingest-queue';
+import { createAssetsRepo } from '../src/repositories/assets.repo';
 import { createCategoriesRepo } from '../src/repositories/categories.repo';
 import { createDecksRepo } from '../src/repositories/decks.repo';
 import { createIngestJobsRepo } from '../src/repositories/ingest-jobs.repo';
@@ -26,6 +29,14 @@ class RecordingQueue implements IngestQueue {
   readonly ids: string[] = [];
   async enqueue(jobId: string): Promise<void> {
     this.ids.push(jobId);
+  }
+}
+
+class RecordingSender implements JobSender {
+  readonly sent: { name: string; data: object; options?: object }[] = [];
+  async send(name: string, data: object, options?: object): Promise<string | null> {
+    this.sent.push({ name, data, options });
+    return 'job-id';
   }
 }
 
@@ -60,7 +71,11 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
     await ctx.sessionFor(editor);
   });
 
-  function handler(script?: unknown[], dedup?: IngestHandlerDeps['dedup']) {
+  function handler(
+    script?: unknown[],
+    dedup?: IngestHandlerDeps['dedup'],
+    linkSnapshotQueue?: IngestHandlerDeps['linkSnapshotQueue'],
+  ) {
     const db = ctx.t.db;
     const extractor = createFakeExtractor(script ? { script } : undefined);
     const embedQueue = new RecordingEmbedQueue();
@@ -83,6 +98,8 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
       embedQueue,
       log: () => undefined,
       dedup,
+      linkSnapshotQueue,
+      assets: createAssetsRepo(db),
     });
     return { run, extractor, embedQueue };
   }
@@ -141,6 +158,102 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
     const view = await json(res);
     expect(view).toMatchObject({ status: 'proposed', resultItemId: item.id });
     expect(view.normalized.text).toContain('050-123-4567');
+  });
+
+  it('keeps the page preview on a shared link and asks for its image copy (D163)', async () => {
+    const jobId = await share({ url: 'https://dan.example/' });
+    const sender = new RecordingSender();
+    const { run } = handler(
+      undefined,
+      undefined,
+      createLinkSnapshotQueue({ sender, log: () => {} }),
+    );
+
+    expect(await run(jobId)).toBe('proposed');
+
+    const job = await jobRow(jobId);
+    const [item] = await ctx.t.db.select().from(items).where(eq(items.id, job.resultItemId!));
+    expect(item.payload).toMatchObject({
+      url: 'https://dan.example/',
+      preview: { title: 'Dan the Plumber', image: 'https://cdn.example.com/dan.jpg' },
+    });
+    expect(sender.sent).toEqual([
+      {
+        name: QUEUES.linkSnapshot,
+        data: { itemId: item.id },
+        options: expect.objectContaining({ singletonKey: item.id }),
+      },
+    ]);
+  });
+
+  describe('locked social hosts (D167)', () => {
+    const post = 'https://www.instagram.com/p/abc/';
+
+    async function lockedJob(raw: Record<string, unknown>) {
+      const [job] = await ctx.t.db
+        .insert(ingestJobs)
+        .values({
+          userId: editor.id,
+          deckId: ctx.world.decks.family.id,
+          channel: 'shortcut',
+          raw: { url: post, images: [], ...raw },
+        })
+        .returning();
+      return job!.id;
+    }
+
+    async function resultItem(jobId: string) {
+      const job = await jobRow(jobId);
+      expect(job.status).toBe('proposed');
+      return (await ctx.t.db.select().from(items).where(eq(items.id, job.resultItemId!)))[0]!;
+    }
+
+    it('makes a link with the caption and the shared image as its stored copy', async () => {
+      const asset = await createAsset(ctx.t.db, ctx.world.decks.family, {
+        publicId: `gobbit/ingest/${ctx.world.decks.family.id}/post`,
+        source: 'ingest',
+        width: 1080,
+        height: 1350,
+      });
+      const jobId = await lockedJob({
+        text: `Dan fixed our sink in an hour ${post}`,
+        images: [{ publicId: asset.publicId, bytes: 1024, mime: 'image/jpeg' }],
+      });
+      const sender = new RecordingSender();
+      const { run } = handler(
+        undefined,
+        undefined,
+        createLinkSnapshotQueue({ sender, log: () => {} }),
+      );
+
+      expect(await run(jobId)).toBe('proposed');
+      const item = await resultItem(jobId);
+      expect(item.type).toBe('link');
+      expect(item.payload).toEqual({
+        url: post,
+        preview: {
+          title: item.title,
+          description: 'Dan fixed our sink in an hour',
+          publicId: asset.publicId,
+          width: 1080,
+          height: 1350,
+        },
+      });
+      // The shared image is already stored: nothing to copy.
+      expect(sender.sent).toEqual([]);
+    });
+
+    it('keeps only the caption for a text-only share', async () => {
+      const jobId = await lockedJob({ text: 'Best hummus in town' });
+      const { run } = handler();
+
+      expect(await run(jobId)).toBe('proposed');
+      const item = await resultItem(jobId);
+      expect(item.payload).toEqual({
+        url: post,
+        preview: { title: item.title, description: 'Best hummus in town' },
+      });
+    });
   });
 
   it('skips a job that already finished (re-delivered message)', async () => {

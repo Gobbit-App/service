@@ -1,7 +1,15 @@
 /** Link payload with optional preview metadata. */
 export type LinkPayload = {
   url: string;
-  preview?: { title?: string; description?: string; image?: string };
+  preview?: {
+    title?: string;
+    description?: string;
+    image?: string;
+    /** D163: the stored copy of `image` (server-owned) and its dimensions. */
+    publicId?: string;
+    width?: number;
+    height?: number;
+  };
 };
 
 /** Image payload with public ID, alt text and, since 012, the stored dimensions. */
@@ -48,6 +56,14 @@ export function asLinkPayload(p: unknown): LinkPayload | null {
       preview.description = p.preview.description;
     }
     if (typeof p.preview.image === 'string') preview.image = p.preview.image;
+    if (typeof p.preview.publicId === 'string' && p.preview.publicId !== '') {
+      preview.publicId = p.preview.publicId;
+      // Both or neither, as for image cards.
+      if (isDimension(p.preview.width) && isDimension(p.preview.height)) {
+        preview.width = p.preview.width;
+        preview.height = p.preview.height;
+      }
+    }
 
     if (Object.keys(preview).length > 0) {
       result.preview = preview;

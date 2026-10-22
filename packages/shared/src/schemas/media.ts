@@ -47,11 +47,17 @@ export type MediaUploadFailureRequest = z.infer<typeof mediaUploadFailureRequest
 export const linkPreviewRequestSchema = z.object({ url: httpUrlSchema });
 export type LinkPreviewRequest = z.infer<typeof linkPreviewRequestSchema>;
 
-/** The link payload's `preview` object, with the lookup's length caps. */
-export const linkPreviewSchema = linkPayloadSchema.shape.preview.unwrap().extend({
-  title: z.string().max(LINK_PREVIEW_TITLE_MAX).optional(),
-  description: z.string().max(LINK_PREVIEW_DESCRIPTION_MAX).optional(),
-});
+/**
+ * The link payload's `preview` object, with the lookup's length caps and without the stored
+ * copy's fields (server-owned, D163).
+ */
+export const linkPreviewSchema = linkPayloadSchema.shape.preview
+  .unwrap()
+  .omit({ publicId: true, width: true, height: true })
+  .extend({
+    title: z.string().max(LINK_PREVIEW_TITLE_MAX).optional(),
+    description: z.string().max(LINK_PREVIEW_DESCRIPTION_MAX).optional(),
+  });
 export type LinkPreview = z.infer<typeof linkPreviewSchema>;
 
 /** `preview: null` covers every failure; the reason is never returned (FR-012). */

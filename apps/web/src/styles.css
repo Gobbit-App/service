@@ -422,8 +422,37 @@ h3 {
   word-break: break-all;
 }
 
+/* D168: a locked social host's name in place of the domain line. */
+.link-card__host {
+  margin: 0;
+  justify-self: start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
 .link-card__open {
   justify-self: start;
+}
+
+/* D163: the stored snapshot keeps the 16:9 crop of the remote preview. */
+.link-card__image--stored .cloud-image__img {
+  aspect-ratio: 16 / 9;
+  max-height: none;
+  object-fit: cover;
+}
+
+/* D165: a quiet note on a flagged link; the check date is the title. */
+.link-health {
+  justify-self: start;
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-muted);
+  font-size: 0.8125rem;
 }
 
 .image-card {

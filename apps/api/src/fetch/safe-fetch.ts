@@ -37,6 +37,11 @@ export interface SafeFetchOptions {
   maxBytes?: number;
   maxRedirects?: number;
   now?: () => number;
+  /**
+   * `html` (default): a non-HTML answer is the `not_html` error. `any` (link checks, D164): a
+   * non-HTML 2xx is a success with `html: null` and its body is not read.
+   */
+  accept?: 'html' | 'any';
 }
 
 /** What a guarded image download produced (D159); never throws. */
@@ -246,10 +251,11 @@ function createGuardedClient(opts: SafeFetchOptions): GuardedClient {
   };
 }
 
-/** HTML pages for link previews and ingest (D102). */
+/** HTML pages for link previews and ingest (D102), or any 2xx answer for link checks (D164). */
 export function createSafeFetch(opts: SafeFetchOptions = {}): SafeFetch {
   const client = createGuardedClient(opts);
   const maxBytes = opts.maxBytes ?? FETCH_MAX_BYTES;
+  const acceptAny = opts.accept === 'any';
 
   return async function safeFetch(url: string): Promise<SafeFetchResult> {
     const { started, ctx } = client.start();
@@ -267,7 +273,7 @@ export function createSafeFetch(opts: SafeFetchOptions = {}): SafeFetch {
       const contentType = headerOf(res, 'content-type');
       if (!HTML_TYPES.some((t) => contentType.toLowerCase().startsWith(t))) {
         discard(res.body);
-        return done(null, 'not_html');
+        return done(null, acceptAny ? null : 'not_html');
       }
       const bytes = await readCapped(res.body, maxBytes);
       return done(decode(bytes, charsetOf(contentType)), null);

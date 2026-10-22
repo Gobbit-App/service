@@ -35,6 +35,7 @@ describe('media sweep against the database (D158)', () => {
     // Earlier tests' leftovers would join the batch; each test starts from a clean registry.
     await ctx.t.db.delete(assets);
     store.images.clear();
+    store.deleteCalls.length = 0;
   });
 
   /** An asset that also exists in the store, `createdAt` as given. */
@@ -60,6 +61,35 @@ describe('media sweep against the database (D158)', () => {
 
   const remaining = async (ids: string[]) =>
     (await ctx.t.db.select().from(assets).where(inArray(assets.id, ids))).map((a) => a.publicId);
+
+  const linkPayload = (asset: AssetRow) => ({
+    url: 'https://bakery.example/',
+    preview: { title: 'Bakery', image: 'https://bakery.example/og.jpg', publicId: asset.publicId },
+  });
+
+  it("keeps a link card's stored preview and deletes one it no longer points at (D163)", async () => {
+    const kept = await stored(old);
+    await createItem(ctx.t.db, deck, {
+      card: { type: 'link', title: 'Bakery', payload: linkPayload(kept) },
+    });
+    const replaced = await stored(old);
+    const card = await createItem(ctx.t.db, deck, {
+      card: { type: 'link', title: 'Bakery', payload: linkPayload(replaced) },
+    });
+    const replacement = await stored(old);
+    await ctx.t.db
+      .update(items)
+      .set({ payload: linkPayload(replacement) })
+      .where(eq(items.id, card.id));
+
+    const summary = await sweeper.sweepOrphans({ now });
+    expect(summary).toEqual({ deleted: 1, notFound: 0, failed: 0 });
+    expect((await remaining([kept.id, replaced.id, replacement.id])).sort()).toEqual(
+      [kept.publicId, replacement.publicId].sort(),
+    );
+    expect(store.images.has(replaced.publicId)).toBe(false);
+    expect(store.images.has(kept.publicId)).toBe(true);
+  });
 
   it('keeps every referenced asset whatever the card status, including deleted in window', async () => {
     const kept: AssetRow[] = [];

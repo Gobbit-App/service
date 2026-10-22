@@ -8,6 +8,11 @@ import { createBoss } from './jobs/boss';
 import { createEmbedQueue, noopEmbedQueue, type EmbedQueue } from './jobs/embed-queue';
 import { createIngestQueue, noopIngestQueue, type IngestQueue } from './jobs/ingest-queue';
 import { ensureQueues } from './jobs/ensure-queues';
+import {
+  createLinkSnapshotQueue,
+  noopLinkSnapshotQueue,
+  type LinkSnapshotQueue,
+} from './jobs/link-snapshot-queue';
 import { createEmbeddingsRepo } from './repositories/embeddings.repo';
 import { hasEmbeddingProvider, hasExtractProvider } from './ai/providers';
 import { childLogger, logDbIdleError } from './lib/logger';
@@ -18,19 +23,26 @@ const log = childLogger('api');
 interface Queues {
   embedQueue: EmbedQueue;
   ingestQueue: IngestQueue;
+  linkSnapshotQueue: LinkSnapshotQueue;
   boss?: PgBoss;
 }
 
-const NO_QUEUES: Queues = { embedQueue: noopEmbedQueue, ingestQueue: noopIngestQueue };
+const NO_QUEUES: Queues = {
+  embedQueue: noopEmbedQueue,
+  ingestQueue: noopIngestQueue,
+  linkSnapshotQueue: noopLinkSnapshotQueue,
+};
 
 /**
- * D72/D73/D93: send-only pg-boss when embedding or extraction is configured; a queue outage
- * never blocks startup (the worker's sweeps pick up what wasn't sent).
+ * D72/D73/D93/D163: send-only pg-boss when embedding, extraction or image storage is configured;
+ * a queue outage never blocks startup (the worker's sweeps and the backfill pick up what wasn't
+ * sent).
  */
 async function startQueues(env: Env, db: Db): Promise<Queues> {
   const embeds = hasEmbeddingProvider(env);
   const extracts = hasExtractProvider(env);
-  if (!embeds && !extracts) return NO_QUEUES;
+  const snapshots = Boolean(env.CLOUDINARY_URL);
+  if (!embeds && !extracts && !snapshots) return NO_QUEUES;
   const boss = createBoss(env.DATABASE_URL, 'sender');
   try {
     await boss.start();
@@ -48,6 +60,9 @@ async function startQueues(env: Env, db: Db): Promise<Queues> {
         })
       : noopEmbedQueue,
     ingestQueue: extracts ? createIngestQueue({ sender: boss }) : noopIngestQueue,
+    linkSnapshotQueue: snapshots
+      ? createLinkSnapshotQueue({ sender: boss })
+      : noopLinkSnapshotQueue,
     boss,
   };
 }
@@ -57,7 +72,7 @@ async function main() {
 
   const pool = createPool(env.DATABASE_URL, { onIdleError: logDbIdleError });
   const db = createDb(pool);
-  const { embedQueue, ingestQueue, boss } = await startQueues(env, db);
+  const { embedQueue, ingestQueue, linkSnapshotQueue, boss } = await startQueues(env, db);
 
   const app = createApp({
     db,
@@ -66,6 +81,7 @@ async function main() {
     mailer: createMailer(env),
     search: { embedQueue },
     ingest: { queue: ingestQueue },
+    media: { linkSnapshotQueue },
   });
 
   const server = serve({

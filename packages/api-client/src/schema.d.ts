@@ -1866,6 +1866,7 @@ export interface paths {
                     status?: "proposed" | "published" | "archived" | "deleted";
                     type?: "text" | "link" | "image" | "table" | "calc";
                     favorite?: "true";
+                    flag?: "link";
                     cursor?: string;
                     limit?: number;
                 };
@@ -1917,6 +1918,11 @@ export interface paths {
                                 categoryIds: string[];
                                 isFavorite: boolean;
                                 deletedAt?: string;
+                                linkHealth: {
+                                    /** @enum {string} */
+                                    status: "dead" | "changed";
+                                    checkedAt: string;
+                                } | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -2060,6 +2066,9 @@ export interface paths {
                                 description?: string;
                                 /** Format: uri */
                                 image?: string;
+                                publicId?: string | null;
+                                width?: number;
+                                height?: number;
                             };
                         };
                         title: string;
@@ -2214,6 +2223,11 @@ export interface paths {
                             categoryIds: string[];
                             isFavorite: boolean;
                             deletedAt?: string;
+                            linkHealth: {
+                                /** @enum {string} */
+                                status: "dead" | "changed";
+                                checkedAt: string;
+                            } | null;
                         };
                     };
                 };
@@ -2414,6 +2428,11 @@ export interface paths {
                             categoryIds: string[];
                             isFavorite: boolean;
                             deletedAt?: string;
+                            linkHealth: {
+                                /** @enum {string} */
+                                status: "dead" | "changed";
+                                checkedAt: string;
+                            } | null;
                         };
                     };
                 };
@@ -2650,6 +2669,11 @@ export interface paths {
                             categoryIds: string[];
                             isFavorite: boolean;
                             deletedAt?: string;
+                            linkHealth: {
+                                /** @enum {string} */
+                                status: "dead" | "changed";
+                                checkedAt: string;
+                            } | null;
                         };
                     };
                 };
@@ -2848,6 +2872,11 @@ export interface paths {
                             categoryIds: string[];
                             isFavorite: boolean;
                             deletedAt?: string;
+                            linkHealth: {
+                                /** @enum {string} */
+                                status: "dead" | "changed";
+                                checkedAt: string;
+                            } | null;
                         };
                     };
                 };
@@ -3006,6 +3035,11 @@ export interface paths {
                             categoryIds: string[];
                             isFavorite: boolean;
                             deletedAt?: string;
+                            linkHealth: {
+                                /** @enum {string} */
+                                status: "dead" | "changed";
+                                checkedAt: string;
+                            } | null;
                         };
                     };
                 };
@@ -3164,6 +3198,11 @@ export interface paths {
                             categoryIds: string[];
                             isFavorite: boolean;
                             deletedAt?: string;
+                            linkHealth: {
+                                /** @enum {string} */
+                                status: "dead" | "changed";
+                                checkedAt: string;
+                            } | null;
                         };
                     };
                 };
@@ -3280,6 +3319,292 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{id}/link-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Link checked now (publishers); the card with its fresh linkHealth. 422 when not a live link card (D164) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            deckId: string;
+                            /** @enum {string} */
+                            type: "text" | "link" | "image" | "table" | "calc";
+                            /** @enum {string} */
+                            status: "proposed" | "published" | "archived";
+                            title: string;
+                            body: string;
+                            payload: {
+                                [key: string]: unknown;
+                            };
+                            entities: {
+                                phones?: string[];
+                                addresses?: string[];
+                                hours?: string[];
+                                prices?: string[];
+                                dates?: string[];
+                                people?: string[];
+                                urls?: string[];
+                            };
+                            sourceUrl: string | null;
+                            /** @enum {string} */
+                            sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
+                            verifiedAt: string | null;
+                            createdBy: string | null;
+                            createdAt: string;
+                            updatedAt: string;
+                            categoryIds: string[];
+                            isFavorite: boolean;
+                            deletedAt?: string;
+                            linkHealth: {
+                                /** @enum {string} */
+                                status: "dead" | "changed";
+                                checkedAt: string;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{id}/link-check/flag": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Link flag dismissed until the result changes (D164) */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -3490,6 +3815,11 @@ export interface paths {
                                     categoryIds: string[];
                                     isFavorite: boolean;
                                     deletedAt?: string;
+                                    linkHealth: {
+                                        /** @enum {string} */
+                                        status: "dead" | "changed";
+                                        checkedAt: string;
+                                    } | null;
                                 };
                                 /** @enum {string} */
                                 why: "text" | "semantic" | "both";
@@ -5203,6 +5533,11 @@ export interface paths {
                                     categoryIds: string[];
                                     isFavorite: boolean;
                                     deletedAt?: string;
+                                    linkHealth: {
+                                        /** @enum {string} */
+                                        status: "dead" | "changed";
+                                        checkedAt: string;
+                                    } | null;
                                 };
                                 job: {
                                     /** Format: uuid */
@@ -5261,6 +5596,11 @@ export interface paths {
                                     categoryIds: string[];
                                     isFavorite: boolean;
                                     deletedAt?: string;
+                                    linkHealth: {
+                                        /** @enum {string} */
+                                        status: "dead" | "changed";
+                                        checkedAt: string;
+                                    } | null;
                                 } | null;
                             }[];
                             count: number;
@@ -5518,6 +5858,11 @@ export interface paths {
                             categoryIds: string[];
                             isFavorite: boolean;
                             deletedAt?: string;
+                            linkHealth: {
+                                /** @enum {string} */
+                                status: "dead" | "changed";
+                                checkedAt: string;
+                            } | null;
                         };
                     };
                 };

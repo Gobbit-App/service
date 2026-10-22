@@ -11,6 +11,8 @@ import { createSessionsRepo } from '../repositories/sessions.repo';
 import { createMagicLinksRepo } from '../repositories/magic-links.repo';
 import { createRateLimitsRepo } from '../repositories/rate-limits.repo';
 import { createAssetsRepo } from '../repositories/assets.repo';
+import { createLinkChecksRepo } from '../repositories/link-checks.repo';
+import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
 import { createCategoriesService } from './categories.service';
 import { createItemsService } from './items.service';
@@ -22,6 +24,8 @@ import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
 import { createItemDtoMapper } from './item-dtos';
 import { createImageReferenceCheck } from './image-reference';
+import { createLinkPreviewFields } from './link-preview-fields';
+import { createLinkChecksService, createLinkProbe } from './link-checks.service';
 import {
   buildSearchServices,
   resolveEmbedder,
@@ -29,7 +33,12 @@ import {
   type SearchWiring,
 } from './search-wiring';
 import { buildIngestServices, type IngestWiring } from './ingest-wiring';
-import { buildMediaServices, type MediaWiring } from './media-wiring';
+import {
+  buildMediaServices,
+  resolveLinkCheckFetch,
+  resolveLinkSnapshotQueue,
+  type MediaWiring,
+} from './media-wiring';
 
 export interface ServiceDeps {
   db: Db;
@@ -80,10 +89,11 @@ export function buildServices({
   const magicLinks = createMagicLinksRepo(db);
   const assets = createAssetsRepo(db);
   const imageReference = createImageReferenceCheck(assets);
+  const linkChecks = createLinkChecksRepo(db);
 
   const usersService = createUsersService({ users, decks });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
-  const toDtos = createItemDtoMapper({ items, favorites });
+  const toDtos = createItemDtoMapper({ items, favorites, linkChecks });
   const searchServices = buildSearchServices({
     db,
     env,
@@ -102,6 +112,7 @@ export function buildServices({
     users,
     toDtos,
     embedQueue: resolveEmbedQueue(search),
+    linkSnapshotQueue: resolveLinkSnapshotQueue(media),
     embedder: resolveEmbedder(env, search),
     assets,
     imageReference,
@@ -157,6 +168,17 @@ export function buildServices({
       memberships,
       embedQueue: resolveEmbedQueue(search),
       imageReference,
+      links: {
+        checks: linkChecks,
+        checker: createLinkChecksService({
+          linkChecks,
+          probe: createLinkProbe({ safeFetch: resolveLinkCheckFetch(media), extract: extractPage }),
+          now,
+        }),
+        previewFields: createLinkPreviewFields(assets),
+        snapshotQueue: resolveLinkSnapshotQueue(media),
+        rateLimits,
+      },
       now,
     }),
     favorites: createFavoritesService({ decks, items, favorites, memberships }),

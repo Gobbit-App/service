@@ -197,6 +197,8 @@ export interface CreateAssetOptions {
   publicId?: string;
   width?: number | null;
   height?: number | null;
+  /** Defaults to `editor`; `link_snapshot` for a link card's stored preview (D163). */
+  source?: AssetRow['source'];
   createdAt?: Date;
 }
 
@@ -211,7 +213,7 @@ export async function createAsset(
     .values({
       deckId: deck.id,
       publicId: opts.publicId ?? `gobbit/items/${deck.id}/${randomBytes(6).toString('hex')}`,
-      source: 'editor',
+      source: opts.source ?? 'editor',
       width: opts.width === undefined ? 640 : opts.width,
       height: opts.height === undefined ? 480 : opts.height,
       bytes: 1024,

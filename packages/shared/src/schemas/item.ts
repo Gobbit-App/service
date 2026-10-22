@@ -10,7 +10,7 @@ import {
 } from './payloads';
 import { pageSchema, limitSchema } from './pagination';
 import { CARD_BODY_MAX, CARD_TITLE_MAX, PAYLOAD_MAX_BYTES } from '../limits';
-import { itemTypes, itemStatuses, itemListStatuses, sourceKinds } from '../enums';
+import { itemTypes, itemStatuses, itemListStatuses, linkFlagStatuses, sourceKinds } from '../enums';
 import { codePointLength } from '../utils/utf8-bytes';
 import { entitiesSchema } from '../ingest/entities';
 
@@ -123,6 +123,14 @@ export const itemPatchSchema = z
 
 export type ItemPatch = z.infer<typeof itemPatchSchema>;
 
+/** D165: an active (not dismissed) link check flag; null for other cards and healthy links. */
+export const linkHealthSchema = z.object({
+  status: z.enum(linkFlagStatuses),
+  checkedAt: isoDateTimeSchema,
+});
+
+export type LinkHealth = z.infer<typeof linkHealthSchema>;
+
 export const itemSchema = z.object({
   id: uuidSchema,
   deckId: uuidSchema,
@@ -142,6 +150,7 @@ export const itemSchema = z.object({
   isFavorite: z.boolean(),
   /** D132: when the card was deleted; present only in the `status=deleted` listing. */
   deletedAt: isoDateTimeSchema.optional(),
+  linkHealth: linkHealthSchema.nullable(),
 });
 
 export type Item = z.infer<typeof itemSchema>;
@@ -153,6 +162,8 @@ export const itemListQuerySchema = z.object({
   type: z.enum(itemTypes).optional(),
   /** P3: `favorite=true` narrows the list to the caller's favorites. */
   favorite: z.enum(['true']).optional(),
+  /** D165: `flag=link` lists flagged link cards (needs `item.update`; published only). */
+  flag: z.enum(['link']).optional(),
   cursor: z.string().min(1).optional(),
   limit: limitSchema,
 });

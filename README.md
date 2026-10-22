@@ -37,7 +37,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    ```bash
    pnpm dev
    ```
-   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). The API side also starts the worker (`dev:server` + `dev:worker`), which only embeds when `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is set. Its retention jobs always run: `search_queries` and `ingest_jobs` pruning, and `prune-deleted-items` (Sundays 05:00 UTC, hard-deletes cards soft-deleted more than 30 days ago). With `CLOUDINARY_URL` set it also runs `media-sweep` (daily 06:00 UTC): stored images older than 7 days that no card references (never saved, or their card was purged) are deleted from Cloudinary and from the `assets` table. `pnpm dev:api` / `pnpm dev:web` run one side only.
+   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). The API side also starts the worker (`dev:server` + `dev:worker`), which only embeds when `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is set. Its retention jobs always run: `search_queries` and `ingest_jobs` pruning, and `prune-deleted-items` (Sundays 05:00 UTC, hard-deletes cards soft-deleted more than 30 days ago). With `CLOUDINARY_URL` set it also runs `media-sweep` (daily 06:00 UTC): stored images older than 7 days that no card references (never saved, or their card was purged) are deleted from Cloudinary and from the `assets` table, and it works `link-snapshot` (copies a link card's preview image into Cloudinary after each save). `link-check-sweep` (daily 06:30 UTC, always on) checks up to 100 published link cards whose monthly check is due and flags links that look dead (two failed checks in a row) or changed (different page title). `pnpm dev:api` / `pnpm dev:web` run one side only.
 
 6. **Verify health:**
    ```bash
@@ -109,7 +109,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm test:search` | Search recall eval over the fixture deck (requires Docker; hybrid part needs the committed embedding cache) |
 | `pnpm test:search:update` | Same, filling missing vectors in `search-embeddings.json` with the real API (needs `OPENROUTER_API_KEY` or `OPENAI_API_KEY`; commit the file) |
 | `pnpm media:reconcile` | List Cloudinary images tagged `editor`/`ingest` that have no `assets` row (dry run; `-- --delete` removes them). Needs `CLOUDINARY_URL` and `DATABASE_URL` |
-| `pnpm job:run <queue>` | Enqueue one job on a named pg-boss queue (e.g. `media-sweep`) for the running worker |
+| `pnpm job:run <queue>` | Enqueue one job on a named pg-boss queue (e.g. `media-sweep`, `link-check-sweep`) for the running worker |
+| `pnpm links:snapshot-backfill` | Enqueue `link-snapshot` for existing link cards whose preview image isn't stored yet (run once after deploying 014; needs `DATABASE_URL`, the worker needs `CLOUDINARY_URL`) |
 | `pnpm search:load` | Create/fill a `search-demo` deck with the fixture cards through the API (`--deck`, `--base-url`/`BASE_URL`, `--token`/`SMOKE_SESSION_TOKEN`) |
 | `pnpm search:query "<q>"` | Print search hits (why, score) for a deck, same options |
 | `pnpm db:generate` | Generate migrations with drizzle-kit |
@@ -286,7 +287,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `GET` | `/decks/{id}/categories` | List categories |
 | `POST` | `/decks/{id}/categories` | Create category |
 | **Items** |
-| `GET` | `/decks/{id}/items` | List items (with cursor pagination); `?status=deleted` lists cards deleted in the last 30 days (owner/maintainer) |
+| `GET` | `/decks/{id}/items` | List items (with cursor pagination); `?status=deleted` lists cards deleted in the last 30 days (owner/maintainer); `?flag=link` lists link cards flagged dead or changed (`item.update`) |
 | `POST` | `/decks/{id}/items` | Create item |
 | `GET` | `/items/{id}` | Get item |
 | `PATCH` | `/items/{id}` | Update item |
@@ -294,6 +295,8 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `POST` | `/items/{id}/archive` | Archive item (owner/maintainer/editor; hidden from lists and search) |
 | `POST` | `/items/{id}/restore` | Restore an archived item to published (keeps `verifiedAt`) |
 | `POST` | `/items/{id}/undelete` | Undo a delete within 30 days (410 `/problems/undo-expired` after) |
+| `POST` | `/items/{id}/link-check` | Check a link card now and return it (`item.update`; 10/hour per user; never marks a link dead on its own) |
+| `DELETE` | `/items/{id}/link-check/flag` | Dismiss a link card's dead/changed note until its status changes (`item.update`; 404 without a flag) |
 | **Search** |
 | `GET` | `/decks/{id}/search?q=&limit=` | Hybrid search over visible, published cards (`why`: text / semantic / both) |
 | `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
@@ -323,6 +326,7 @@ Shares become **proposed** cards; a publisher approves them under **Review** in 
 
 - **Android**: install the PWA, then share from any app to *Gobbit*; pick the deck and send. The deck page's **Paste** button does the same for copied text or links.
 - **iPhone**: create an ingest token in **Settings** (gear in the header), then add the *Share to Gobbit* Shortcut and paste the token when asked. Building and publishing the Shortcut (and setting `SHORTCUT_URL`): [`docs/shortcut/README.md`](./docs/shortcut/README.md).
+- **Social posts**: Instagram, Facebook, Threads, TikTok, X and LinkedIn hide their pages from servers, so share the post's **caption and image** along with the link (the share sheet usually does). The card keeps them, shows the site's name, and is never link-checked. In the editor, **Add photo** puts your own picture on any link card.
 - **Email (optional)**: each token also has an address `<token without ing_>@INGEST_EMAIL_DOMAIN`, shown once with the new token. Setup: Resend → *Receiving* (domain + MX records) → *Webhooks*: endpoint `https://<host>/api/webhooks/resend/inbound`, event `email.received`; set `INGEST_EMAIL_DOMAIN`, `RESEND_WEBHOOK_SECRET` (the `whsec_…` signing secret) and `RESEND_API_KEY`, then redeploy. Details in the same doc.
 
 ### Writing cards (Phase 6)

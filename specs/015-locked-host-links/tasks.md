@@ -25,8 +25,8 @@ description: "Task list for 015-locked-host-links"
 
 **Purpose**: The registry every story uses.
 
-- [ ] T001 [unit] Registry tests (contract §1 table, uppercase, trailing dot, ports, look-alikes, non-http) in packages/shared/src/links/locked-hosts.test.ts
-- [ ] T002 `LOCKED_HOSTS`, `lockedHostOf` in packages/shared/src/links/locked-hosts.ts; `LOCKED_CAPTION_MAX` in packages/shared/src/links/constants.ts; re-export from packages/shared/src/links/index.ts (no zod import)
+- [x] T001 [unit] Registry tests (contract §1 table, uppercase, trailing dot, ports, look-alikes, non-http) in packages/shared/src/links/locked-hosts.test.ts
+- [x] T002 `LOCKED_HOSTS`, `lockedHostOf` in packages/shared/src/links/locked-hosts.ts; `LOCKED_CAPTION_MAX` in packages/shared/src/links/constants.ts; re-export from packages/shared/src/links/index.ts (no zod import)
 
 **Checkpoint**: `@pb/shared/links` exports the registry
 
@@ -40,15 +40,15 @@ description: "Task list for 015-locked-host-links"
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] [unit] `validateProposal` with `ctx.lockedHost`: model `image`/`text` → `link`; generic OG title ignored; caption trimmed at 500 on a sentence boundary; `preview.publicId` from ctx and no `image`; non-locked URL unchanged, in apps/api/src/ai/extract-validate.test.ts
-- [ ] T011 [P] [US1] [int] Ingest pipeline: locked URL + text + image → link proposal, `preview.publicId` = the ingest asset with `width`/`height`; no snapshot copy enqueued for the image; text-only share → caption only, in apps/api/test/ingest-pipeline.int.test.ts
-- [ ] T012 [P] [US1] [unit] Snapshot job for locked hosts: one try, no requeue on failure, generic OG discarded, set `publicId` never replaced, in apps/api/src/jobs/link-snapshot.test.ts
+- [x] T010 [P] [US1] [unit] `validateProposal` with `ctx.lockedHost`: model `image`/`text` → `link`; generic OG title ignored; caption trimmed at 500 on a sentence boundary; `preview.publicId` from ctx and no `image`; non-locked URL unchanged, in apps/api/src/ai/extract-validate.test.ts
+- [x] T011 [P] [US1] [int] Ingest pipeline: locked URL + text + image → link proposal, `preview.publicId` = the ingest asset with `width`/`height`; no snapshot copy enqueued for the image; text-only share → caption only, in apps/api/test/ingest-pipeline.int.test.ts
+- [x] T012 [P] [US1] [unit] Snapshot job for locked hosts: one try, no requeue on failure, generic OG discarded, set `publicId` never replaced, in apps/api/src/jobs/link-snapshot.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] `ctx.lockedHost`, `ctx.sharedText` and the locked-host branch in apps/api/src/ai/extract-validate.ts
-- [ ] T014 [US1] Pass `lockedHostOf(sourceUrl)` and `job.raw.text` in apps/api/src/jobs/ingest.ts (and the extractor-off direct draft path)
-- [ ] T015 [US1] Locked-host handling and the "skip when `publicId` is set" rule in apps/api/src/jobs/link-snapshot.ts and `enqueueIfNeeded` in apps/api/src/jobs/link-snapshot-queue.ts
+- [x] T013 [US1] `ctx.lockedHost`, `ctx.sharedText` and the locked-host branch in apps/api/src/ai/extract-validate.ts
+- [x] T014 [US1] Pass `lockedHostOf(sourceUrl)` and `job.raw.text` in apps/api/src/jobs/ingest.ts (and the extractor-off direct draft path)
+- [x] T015 [US1] Locked-host handling and the "skip when `publicId` is set" rule in apps/api/src/jobs/link-snapshot.ts and `enqueueIfNeeded` in apps/api/src/jobs/link-snapshot-queue.ts
 
 **Checkpoint**: Demo 4 works locally with a test share
 
@@ -60,8 +60,8 @@ description: "Task list for 015-locked-host-links"
 
 **Independent Test**: Each listed host shows its label; other sites don't.
 
-- [ ] T020 [P] [US2] [unit] `LinkCard` label for locked hosts (incl. subdomains), domain line otherwise, in apps/web/src/cards/LinkCard.test.tsx
-- [ ] T021 [US2] Label in apps/web/src/cards/LinkCard.tsx (import from `@pb/shared/links`); `.link-card__host` in apps/web/src/styles.css
+- [x] T020 [P] [US2] [unit] `LinkCard` label for locked hosts (incl. subdomains), domain line otherwise, in apps/web/src/cards/LinkCard.test.tsx
+- [x] T021 [US2] Label in apps/web/src/cards/LinkCard.tsx (import from `@pb/shared/links`); `.link-card__host` in apps/web/src/styles.css
 
 ---
 
@@ -73,14 +73,14 @@ description: "Task list for 015-locked-host-links"
 
 ### Tests for User Story 3
 
-- [ ] T030 [P] [US3] [unit] `LinkPhoto`: fake uploader → `preview.publicId`; cancel/fail leaves none; remove clears `publicId`/`width`/`height`, in apps/web/src/editor/fields/LinkPhoto.test.tsx
-- [ ] T031 [P] [US3] [int] Update rule: URL change keeps an `editor`/`ingest` preview asset, drops a `link_snapshot` one; foreign `preview.publicId` → 422, in apps/api/test/items.int.test.ts
+- [x] T030 [P] [US3] [unit] `LinkPhoto`: fake uploader → `preview.publicId`; cancel/fail leaves none; remove clears `publicId`/`width`/`height`, in apps/web/src/editor/fields/LinkPhoto.test.tsx
+- [x] T031 [P] [US3] [int] Update rule: URL change keeps an `editor`/`ingest` preview asset, drops a `link_snapshot` one; foreign `preview.publicId` → 422, in apps/api/test/items.int.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Asset source lookup for the update rule (`assets.repo` `sourceOf`, if 012 doesn't expose one) in apps/api/src/repositories/assets.repo.ts
-- [ ] T033 [US3] Drop only `link_snapshot` previews in apps/api/src/services/items.service.ts
-- [ ] T034 [US3] `LinkPhoto` in apps/web/src/editor/fields/LinkPhoto.tsx (reuses `useImageUpload`); render in `previewSlot` in apps/web/src/editor/fields/LinkEditorFields.tsx; CSS in apps/web/src/styles.css
+- [x] T032 [US3] Asset source lookup for the update rule (`assets.repo` `sourceOf`, if 012 doesn't expose one) in apps/api/src/repositories/assets.repo.ts
+- [x] T033 [US3] Drop only `link_snapshot` previews in apps/api/src/services/items.service.ts
+- [x] T034 [US3] `LinkPhoto` in apps/web/src/editor/fields/LinkPhoto.tsx (reuses `useImageUpload`); render in `previewSlot` in apps/web/src/editor/fields/LinkEditorFields.tsx; CSS in apps/web/src/styles.css
 
 **Checkpoint**: Hand-made locked-host cards can have an image
 
@@ -92,18 +92,18 @@ description: "Task list for 015-locked-host-links"
 
 **Independent Test**: A due locked-host card ends up `unchecked`, and the host is never contacted.
 
-- [ ] T040 [P] [US4] [unit] `sweep` with a fake fetch: locked host never fetched, row `unchecked`, flags null, `next_check_at` in the window; `checkNow` → validation error before the rate limit, in apps/api/src/services/link-checks.service.test.ts
-- [ ] T041 [P] [US4] [int] Sweep row and `POST /items/{id}/link-check` 422 with the label in `detail`; rate counter unchanged; not listed in `?flag=link`, in apps/api/test/link-checks.int.test.ts
-- [ ] T042 [US4] Locked-host branch in `sweep` and `checkNow` in apps/api/src/services/link-checks.service.ts
+- [x] T040 [P] [US4] [unit] `sweep` with a fake fetch: locked host never fetched, row `unchecked`, flags null, `next_check_at` in the window; `checkNow` → validation error before the rate limit, in apps/api/src/services/link-checks.service.test.ts
+- [x] T041 [P] [US4] [int] Sweep row and `POST /items/{id}/link-check` 422 with the label in `detail`; rate counter unchanged; not listed in `?flag=link`, in apps/api/test/link-checks.int.test.ts
+- [x] T042 [US4] Locked-host branch in `sweep` and `checkNow` in apps/api/src/services/link-checks.service.ts
 
 ---
 
 ## Phase 6: Close-out
 
-- [ ] T050 [P] [e2e:full] Label on a locked-host link card; Add photo → saved card shows it; Remove photo, in e2e/tests/full/links.spec.ts
-- [ ] T051 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm budget`
-- [ ] T052 [P] docs/design/links.md: "Locked social hosts" section (D166–D168, extends ADR-055) and Deviations; docs/design/ingestion.md: the locked-host rule in extraction; docs/architecture.md: no change beyond the Links row
-- [ ] T053 [P] README.md: the host list and what members should share (caption + image)
+- [x] T050 [P] [e2e:full] Label on a locked-host link card; Add photo → saved card shows it; Remove photo, in e2e/tests/full/links.spec.ts
+- [x] T051 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm budget`
+- [x] T052 [P] docs/design/links.md: "Locked social hosts" section (D166–D168, extends ADR-055) and Deviations; docs/design/ingestion.md: the locked-host rule in extraction; docs/architecture.md: no change beyond the Links row
+- [x] T053 [P] README.md: the host list and what members should share (caption + image)
 - [ ] T054 PLAN.md: link this spec under Phase 7; tick demo 4 only after quickstart section 4 step 4 has run on the deployed instance
 - [ ] T055 Run quickstart.md validation
 - [ ] T056 `/speckit-converge` until it reports Converged

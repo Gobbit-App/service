@@ -28,6 +28,7 @@ import type { ItemsRepo } from '../repositories/items.repo';
 import { authorize, resolveRole, type MembershipLookup } from '../access/authorize';
 import { badRequest, notFound, rateLimited, serviceUnavailable } from '../errors/http-errors';
 import type { EmbedQueue } from '../jobs/embed-queue';
+import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { IngestQueue } from '../jobs/ingest-queue';
 import { proposeItem } from '../ingest/propose';
 import type { RunDedupInput } from '../ingest/run-dedup';
@@ -155,6 +156,8 @@ export function createIngestService(deps: {
   /** D103 for direct proposals (bound `runDedup`); omitted → no verdict. */
   dedup?: (input: RunDedupInput) => Promise<DedupVerdict>;
   embedQueue: EmbedQueue;
+  /** D163: snapshot a proposed link's preview image; omitted → none. */
+  linkSnapshotQueue?: LinkSnapshotQueue;
   now: () => Date;
   newId?: () => string;
   log?: (message: string, err?: unknown) => void;
@@ -291,6 +294,7 @@ export function createIngestService(deps: {
             jobs,
             dedup: deps.dedup,
             embedQueue: deps.embedQueue,
+            linkSnapshotQueue: deps.linkSnapshotQueue,
             now,
             log,
           },

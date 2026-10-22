@@ -216,6 +216,27 @@ describe('createSafeFetch (D102)', () => {
   });
 });
 
+describe("createSafeFetch accept: 'any' (D164)", () => {
+  it('treats a non-HTML 2xx as alive without reading a body', async () => {
+    const res = await local({ accept: 'any' })(`${base}/pdf`);
+    expect(res).toMatchObject({ status: 200, html: null, error: null });
+  });
+
+  it('still reads HTML, capped', async () => {
+    const res = await local({ accept: 'any', maxBytes: 1000 })(`${base}/big`);
+    expect(res.error).toBeNull();
+    expect(res.html?.length).toBe(1000);
+  });
+
+  it('keeps the guard and the HTTP errors', async () => {
+    expect((await local({ accept: 'any' })(`${base}/to-metadata`)).error).toBe('blocked');
+    expect(
+      (await createSafeFetch({ accept: 'any', allowedPorts: null })(`${base}/pdf`)).error,
+    ).toBe('blocked');
+    expect((await local({ accept: 'any' })(`${base}/missing`)).error).toBe('http_404');
+  });
+});
+
 describe('createSafeImageFetch (D159)', () => {
   const image = (extra: Parameters<typeof createSafeImageFetch>[0] = {}) =>
     createSafeImageFetch({ isBlocked: allowLoopback, allowedPorts: null, lookupAll, ...extra });
