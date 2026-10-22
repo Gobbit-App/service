@@ -355,7 +355,7 @@ curl -X POST http://localhost:3000/auth/magic-link \
 curl -H "Authorization: Bearer $SMOKE_SESSION_TOKEN" http://localhost:3000/me
 ```
 
-Every account has one personal deck, created on sign-in and addressed as `me` (`decks/me` in the API, `/d/me` in the PWA); it can't be deleted or shared. Access is per deck: the account owner is implicitly `owner` of its decks; invited members get `reader` (default), `editor`, `maintainer` or `owner` (co-admins, e.g. the Phase 8 communal deck; everything the account owner can do except delete the deck). Re-inviting a pending member replaces the invite: the new role applies and older links stop working. Decks a user cannot see return 404; forbidden actions return 403 `/problems/forbidden`. Categories marked `private` (and cards filed only under them) are hidden from readers and editors. See `docs/architecture.md` for details.
+Every account has one personal deck, created on sign-in and addressed as `me` (`decks/me` in the API, `/d/me` in the PWA); it can't be deleted or shared. Access is per deck: the account owner is implicitly `owner` of its decks; invited members get `reader` (default), `editor`, `maintainer` or `owner` (co-admins, e.g. the Phase 8 communal deck; everything the account owner can do except delete the deck). Re-inviting a pending member replaces the invite: the new role applies and older links stop working. Decks a user cannot see return 404; forbidden actions return 403 `/problems/forbidden`. Categories marked `private` (and cards filed only under them) are hidden from readers and editors. See `docs/design/auth.md` for details.
 
 ### First run (empty instance)
 
@@ -402,7 +402,7 @@ community-pocketbook/
 
 ## Documentation
 
-- **[Architecture & Decisions](./docs/architecture.md)** – System design, schema patterns, API conventions
+- **[Architecture](./docs/architecture.md)** – Compact system map; per-area detail in [`docs/design/`](./docs/design/), decisions in [`docs/adr.md`](./docs/adr.md)
 - **[Roadmap](./PLAN.md)** – Phase demos and progress
 - **[Specs](./specs/README.md)** – Feature specs, plans and tasks (spec-kit) · **[Constitution](./.specify/memory/constitution.md)** – principles every plan is checked against
 - **[iPhone Shortcut and email-in](./docs/shortcut/README.md)** – Building/publishing the Shortcut, inbound mail setup

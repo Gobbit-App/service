@@ -5,7 +5,7 @@ Thanks for your interest in Gobbit (the `community-pocketbook` repository). Bug 
 ## Before you start
 
 - For anything bigger than a small fix, open an issue first so the approach can be agreed on. Features are then specified under [`specs/`](./specs/README.md) with spec-kit and must pass the [constitution](./.specify/memory/constitution.md).
-- Check [PLAN.md](./PLAN.md) for the roadmap and [docs/architecture.md](./docs/architecture.md) for design decisions (ADRs).
+- Check [PLAN.md](./PLAN.md) for the roadmap and [docs/architecture.md](./docs/architecture.md) for the system map (detail in `docs/design/`, decisions in `docs/adr.md`).
 - Security problems: do **not** open a public issue — see [SECURITY.md](./SECURITY.md).
 
 ## Development setup
@@ -41,7 +41,7 @@ Every change with logic needs tests:
 
 1. Fork and branch from `main`.
 2. Make sure these pass locally: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int`.
-3. Update `docs/architecture.md` / `README.md` when behaviour, setup or architecture changes.
+3. Update `README.md` / `docs/design/` when behaviour, setup or architecture changes; keep `docs/architecture.md` a compact map (a line or two per feature).
 4. Keep PRs focused; describe the *why* in the PR description.
 
 By contributing you agree that your contributions are licensed under the project's [license](./LICENSE).
