@@ -2,7 +2,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createIdbPersister, shouldPersistQuery } from './api/persist';
+import { createIdbPersister, revalidateRestored, shouldPersistQuery } from './api/persist';
 import { CACHE_MAX_AGE_MS, createAppQueryClient } from './api/query-client';
 import { signOut, unauthorizedRedirect } from './api/session';
 import { createAppRouter } from './app/router';
@@ -46,6 +46,7 @@ createRoot(root).render(
         buster: __APP_COMMIT__,
         dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
       }}
+      onSuccess={() => revalidateRestored(queryClient)}
     >
       <NavigateContext.Provider value={navigate}>
         <RouterProvider router={router} />

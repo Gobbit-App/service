@@ -33,8 +33,9 @@ api / worker ─▶ Cloudinary (images), OpenRouter / OpenAI / Anthropic (option
 ```
 
 One origin everywhere (no CORS in practice): Caddy owns routing, headers and CSP; only `web` faces
-Traefik. CI builds `ghcr.io/gobbit-app/service/{api,web}` with `GIT_SHA`, a `deploy` job calls the
-Dokploy webhook, and smoke waits for `/health` and `/version.json` to report the commit.
+Traefik. CI runs `@smoke` against a Compose stack built from the commit (every PR), builds
+`ghcr.io/gobbit-app/service/{api,web}` with `GIT_SHA`, a `deploy` job calls the Dokploy webhook,
+and smoke waits for `/health` and `/version.json` to report the commit.
 → [design/deployment.md](design/deployment.md), [`infra/README.md`](../infra/README.md)
 (ADR-033, 034, 038, 039).
 
