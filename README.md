@@ -147,10 +147,11 @@ SMOKE_SESSION_TOKEN=<token> pnpm test:e2e
 
 Each spec creates its own `smoke-<id>` deck and removes it (and any memberships) afterwards. The members spec invites the one standing user `smoke-invitee@example.test`; its user row stays, only the membership is removed.
 
-or just smoke tests:
+or just one tier:
 
 ```bash
 pnpm test:e2e --grep @smoke
+pnpm test:e2e --grep @full   # nightly tier; run by hand until specs/011-e2e-nightly adds the workflow
 ```
 
 ### Deployed
@@ -456,9 +457,18 @@ uvx --from specify-cli==1.2.2 specify init --here --force --non-interactive --in
 | Unit | Vitest | `*.test.ts` next to code | Node |
 | Integration | Vitest + Testcontainers | `*.int.test.ts` in `test/` | Docker (PostgreSQL) |
 | Search eval | Vitest + Testcontainers | `*.search.test.ts` in `apps/api/test` | Docker (PostgreSQL) |
-| E2E / Smoke | Playwright | `e2e/tests/**/*.spec.ts` | Live API |
+| E2E / Smoke | Playwright `@smoke` | `e2e/tests/smoke/` — critical journeys | Live API (post-deploy; every PR once 010 lands) |
+| E2E / Full | Playwright `@full` | `e2e/tests/full/` — everything else | Live API (nightly once 011 lands) |
 
 Run with `pnpm test`, `pnpm test:unit`, `pnpm test:int`, `pnpm test:search`, or `pnpm test:e2e`.
+
+**Which e2e tier?** Every feature or fix picks one and states it in its plan and PR (constitution V, ADR-053):
+
+- **smoke**: it is on a critical journey (sign-in, reading a deck, creating or editing a card, photo upload, search, share/ingest submit, review publish), a regression would block core use, or it crosses a deployment boundary (proxy, CSP, env or secret, a third-party call);
+- **full**: secondary paths, role variants, extra negatives, async or costly third-party work, cross-browser or offline variants;
+- **none**: pure logic with no new UI or flow (unit/integration only).
+
+A bug that reached production gets its regression test at the tier that would have caught it. Plans: [`specs/010-e2e-journeys`](./specs/010-e2e-journeys/plan.md) (smoke as real-usage journeys on every PR) and [`specs/011-e2e-nightly`](./specs/011-e2e-nightly/plan.md) (nightly full suite).
 
 ### Formatting & Linting
 

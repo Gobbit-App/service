@@ -31,6 +31,8 @@ specs/NNN-short-name/
 - **Ageing**: a feature folder is a working contract until its PR merges, then a historical record.
   Later changes get a new feature, not edits to a merged spec. Durable truth lives in
   `docs/architecture.md`, `README.md` and the constitution.
+- **E2E tier**: every plan records "E2E tier: smoke | full | none — reason" (constitution V,
+  ADR-053) and tags e2e tasks `[e2e:smoke]` or `[e2e:full]`.
 - **Public**: this repository is public. Write specs for outside readers: no personal data, private
   notes, costs or credentials (ADR-023, ADR-049).
 

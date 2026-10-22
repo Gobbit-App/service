@@ -1035,6 +1035,20 @@ Gate: recall@5 ≥ 0.9 (see Search → Evaluation)
 
 ### E2E tests (smoke)
 
+#### Choosing the tier: smoke vs full (constitution V, ADR-053)
+
+Every feature and fix decides where its end-to-end coverage lives, records it in the plan ("E2E tier") and states it in the PR:
+
+| Tier | Put it here when | Runs |
+|------|------------------|------|
+| `@smoke` (`e2e/tests/smoke/`) | It is on a critical journey (sign-in, reading a deck, creating or editing a card, photo upload, search, share/ingest submit, review publish), a regression would block core use, or it crosses a deployment boundary (proxy, CSP, env/secret, third-party call) | Every PR (planned, 010) and after every deploy; ≤ 5 min |
+| `@full` (`e2e/tests/full/`) | Secondary paths, role variants, extra negatives and edge cases, async or costly third-party work, cross-browser and offline variants | Nightly (planned, 011); until then `pnpm test:e2e --grep @full` |
+| none | Pure logic with no new UI or flow | Unit / integration tests only |
+
+A bug that reached production gets its regression test at the tier and in the environment that would have caught it. Smoke tests are being rewritten as real-usage journeys (magic-link sign-in through a test mailbox, real `media/sign`, real worker; only third-party hosts faked on the PR stack): see [`specs/010-e2e-journeys`](../specs/010-e2e-journeys/plan.md). The nightly full suite is outlined in [`specs/011-e2e-nightly`](../specs/011-e2e-nightly/plan.md).
+
+#### Current suite
+
 Location: `e2e/tests/smoke/*.spec.ts`  
 Environment: Playwright  
 Base URL: `http://localhost:3000` (or BASE_URL env)  
@@ -1577,6 +1591,12 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 - The edge guard leaves the OS back gestures alone.
 - Mounting ±1 bounds the DOM and image decoding regardless of category size.
 - The cost is about 8.5 KB gzip, and only for readers who open Browse.
+
+### ADR-053: Two e2e tiers; smoke tests are journeys (D148, D149, D155)
+
+**Decision**: Playwright tests carry one tier tag. `@smoke` holds a few critical journeys (a member's task through the UI, nothing inside Gobbit faked, only third-party hosts replaced at the network edge) and runs on every PR and after every deploy within 5 minutes. `@full` holds everything else that needs a browser or a running stack and runs nightly within 30 minutes. Every plan and PR records its tier (smoke / full / none, with a reason) by the rule in constitution V, and a bug that reached production gets its regression test at the tier that would have caught it. CI retries once; a test flaky twice in a week is fixed or tagged `@quarantine` within a week; no fixed sleeps.
+
+**Rationale**: The feature-level smoke checks stubbed the API's own `media/sign` and passed while every production photo upload failed. Journeys can't stub inside the product, and a separate nightly tier keeps breadth without slowing the PR gate. Details and rejected alternatives: [`specs/010-e2e-journeys/research.md`](../specs/010-e2e-journeys/research.md).
 
 ---
 

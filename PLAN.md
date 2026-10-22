@@ -137,6 +137,8 @@ Specs (in order): [`006-card-lifecycle`](specs/006-card-lifecycle/spec.md) (demo
 
 Bundle baseline before Phase 6 (main at `154a7c1`): initial JS 111.0 KB gzip of the 150 KB budget. After `006-card-lifecycle`: 111.5 KB. After [`007-card-editor`](specs/007-card-editor/spec.md) (editor for text, link, table and calc, drafts, inline categories; demo 1 waits for 008 images and a run on the deployed instance): 112.5 KB. After [`008-card-media`](specs/008-card-media/spec.md) (image cards with signed direct uploads, "Fetch preview" for links): 112.5 KB, unchanged (the new code is in the editor's lazy chunks). After [`009-browse-mode`](specs/009-browse-mode/spec.md) (one card per screen with swipe zones, buttons and keys): 113.7 KB; the Browse route chunk, including `@use-gesture/react`, is 13.1 KB. Demos 1–5 are ticked once they have been run on the deployed instance (demos 3–5 also need real iOS and Android phones and a device trace).
 
+Cross-cutting: e2e tiers. [`010-e2e-journeys`](specs/010-e2e-journeys/spec.md) turns `@smoke` into real-usage journeys that gate every PR; [`011-e2e-nightly`](specs/011-e2e-nightly/spec.md) adds the nightly `@full` suite. The smoke-vs-full rule is constitution V (v1.1.0) and ADR-053.
+
 - MCP (Phase 13): keep the edit, archive, restore and delete rules (and the undo window) in services, not in the UI, so the MCP tools reuse them unchanged.
 
 - [ ] **1. Card editor** — create one card of each type on the phone; each renders identically in the list and in the editor preview. (Phase 3B ships a minimal text/link create form; this extends it.)
