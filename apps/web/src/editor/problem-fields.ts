@@ -8,6 +8,9 @@ export type SaveErrors = { fields: FieldErrors; form: string | null };
 export const OFFLINE_SAVE = "You're offline — your draft is saved on this device.";
 export const FORBIDDEN_SAVE = "You can't edit this card.";
 export const NOT_FOUND_SAVE = 'This card is no longer available.';
+/** D160: the API no longer knows the photo (swept after a long-kept draft). */
+export const PHOTO_EXPIRED = 'Photo expired, add it again';
+const UNKNOWN_IMAGE = 'Unknown image';
 
 /** Top-level keys of the item create/patch bodies; any other path is relative to `payload`. */
 const TOP_LEVEL = new Set(['title', 'body', 'payload', 'categoryIds', 'sourceUrl', 'entities']);
@@ -48,6 +51,7 @@ export function problemToErrors(err: unknown): SaveErrors {
   }
   if (type === '/problems/validation' || type === '/problems/bad-request') {
     const { fields, unmapped } = mapFieldErrors(err.problem?.errors);
+    if (fields['payload.publicId'] === UNKNOWN_IMAGE) fields['payload.publicId'] = PHOTO_EXPIRED;
     if (Object.keys(fields).length > 0) {
       return { fields, form: unmapped.length > 0 ? unmapped.join(' ') : null };
     }

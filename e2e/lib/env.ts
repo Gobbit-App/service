@@ -9,6 +9,11 @@ export interface E2eEnv {
    * `/api` suffix (the deployed layout, D51), else the Vite dev server.
    */
   webBaseURL: string;
+  /**
+   * The API's Cloudinary API secret, optional. With it the image smoke signs its fake upload
+   * answer so the real API confirms it (D157) without the test reaching Cloudinary (D133).
+   */
+  cloudinaryApiSecret?: string;
 }
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
@@ -46,6 +51,7 @@ export function resolveE2eEnv(env: EnvSource = process.env): E2eEnv {
     token: read(env, 'SMOKE_SESSION_TOKEN') ?? '',
     expectedSha: read(env, 'EXPECTED_SHA'),
     webBaseURL,
+    cloudinaryApiSecret: read(env, 'CLOUDINARY_API_SECRET'),
   };
 }
 

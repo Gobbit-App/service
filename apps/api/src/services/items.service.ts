@@ -30,6 +30,7 @@ import {
 } from '../errors/http-errors';
 import { resolveDeck } from '../lib/resolve-deck';
 import type { EmbedQueue } from '../jobs/embed-queue';
+import type { ImageReferenceCheck } from './image-reference';
 import { createItemDtoMapper } from './item-dtos';
 import type { Actor, CurrentUser } from '../types';
 
@@ -52,6 +53,8 @@ export function createItemsService(deps: {
   memberships: MembershipLookup;
   /** D72: after each committed write, queue a re-embed when the text changed. */
   embedQueue: EmbedQueue;
+  /** D160: image cards reference recorded assets of their deck; dimensions come from them. */
+  imageReference: ImageReferenceCheck;
   /** D132: clock for publish/delete timestamps and the undo window (tests inject one). */
   now?: () => Date;
   undeleteDays?: number;
@@ -63,6 +66,7 @@ export function createItemsService(deps: {
     favorites,
     memberships,
     embedQueue,
+    imageReference,
     now = () => new Date(),
     undeleteDays = ITEM_UNDELETE_DAYS,
   } = deps;
@@ -251,6 +255,7 @@ export function createItemsService(deps: {
       const status = input.status ?? 'published';
       const verifiedAt = status === 'published' ? now() : null;
       const sourceKind = input.type === 'link' || input.sourceUrl ? 'link' : 'manual';
+      const payload = await imageReference(deck.id, input.type, input.payload);
 
       const createdItem = await items.create(
         {
@@ -259,7 +264,7 @@ export function createItemsService(deps: {
           status,
           title: input.title,
           body: input.body,
-          payload: input.payload,
+          payload,
           entities: compactEntities(input.entities ?? {}),
           sourceUrl: input.sourceUrl ?? null,
           sourceKind,
@@ -307,10 +312,14 @@ export function createItemsService(deps: {
         throw badRequest('Item type is immutable');
       }
 
-      // Validate payload if provided
+      // Validate payload if provided; D160 for image cards
       if (patch.payload !== undefined) {
         payloadSchemaFor(item.type).parse(patch.payload);
       }
+      const payload =
+        patch.payload === undefined
+          ? undefined
+          : await imageReference(item.deckId, item.type, patch.payload);
 
       // Compute resulting status and categories before writing
       const resultingStatus = patch.status ?? item.status;
@@ -337,7 +346,7 @@ export function createItemsService(deps: {
       const updatePatch: Parameters<ItemsRepo['update']>[1] = {};
       if (patch.title !== undefined) updatePatch.title = patch.title;
       if (patch.body !== undefined) updatePatch.body = patch.body;
-      if (patch.payload !== undefined) updatePatch.payload = patch.payload;
+      if (payload !== undefined) updatePatch.payload = payload;
       if (patch.entities !== undefined) updatePatch.entities = compactEntities(patch.entities);
       if (patch.sourceUrl !== undefined) updatePatch.sourceUrl = patch.sourceUrl;
       if (patch.status !== undefined) updatePatch.status = patch.status;

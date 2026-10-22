@@ -13,6 +13,7 @@ import {
 import type { Db } from '../src/client';
 import {
   accounts,
+  assets,
   categories,
   decks,
   favorites,
@@ -21,6 +22,7 @@ import {
   memberships,
   sessions,
   users,
+  type AssetRow,
   type CategoryRow,
   type DeckRow,
   type ItemRow,
@@ -189,6 +191,35 @@ export async function createItem(
     }
     return item;
   });
+}
+
+export interface CreateAssetOptions {
+  publicId?: string;
+  width?: number | null;
+  height?: number | null;
+  createdAt?: Date;
+}
+
+/** Records an image for `deck` (D156), as the editor confirm step or ingest would. */
+export async function createAsset(
+  db: Db,
+  deck: Pick<DeckRow, 'id'>,
+  opts: CreateAssetOptions = {},
+): Promise<AssetRow> {
+  const [row] = await db
+    .insert(assets)
+    .values({
+      deckId: deck.id,
+      publicId: opts.publicId ?? `gobbit/items/${deck.id}/${randomBytes(6).toString('hex')}`,
+      source: 'editor',
+      width: opts.width === undefined ? 640 : opts.width,
+      height: opts.height === undefined ? 480 : opts.height,
+      bytes: 1024,
+      format: 'jpg',
+      createdAt: opts.createdAt,
+    })
+    .returning();
+  return row!;
 }
 
 export async function addFavorite(

@@ -14,6 +14,7 @@ import type { EmbedQueue } from '../jobs/embed-queue';
 import { resolveDeck } from '../lib/resolve-deck';
 import { toSlug } from '../lib/slug';
 import type { IngestUploadStore } from '../media/ingest-uploads';
+import type { ImageReferenceCheck } from './image-reference';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
@@ -47,6 +48,8 @@ export function createReviewService(deps: {
   transaction: ReviewTransaction;
   uploads: IngestUploadStore | null;
   embedQueue: EmbedQueue;
+  /** D160: a published image card references a recorded asset of its deck. */
+  imageReference: ImageReferenceCheck;
   now: () => Date;
 }) {
   const { decks, memberships, users, items, jobs, toDtos, transaction, embedQueue, now } = deps;
@@ -168,7 +171,14 @@ export function createReviewService(deps: {
      * the proposal. Category, item and job changes commit together (D95 is checked at commit).
      */
     async publish(user: CurrentUser, itemId: string, req: PublishRequest): Promise<Item> {
-      const { item, role, job } = await loadProposal(user, itemId);
+      const loaded = await loadProposal(user, itemId);
+      const { role, job } = loaded;
+      const payload = await deps.imageReference(
+        loaded.item.deckId,
+        loaded.item.type,
+        loaded.item.payload as Record<string, unknown>,
+      );
+      const item = { ...loaded.item, payload };
       const suggested = req.createCategory ? (job?.extraction?.newCategory ?? null) : null;
       if (req.createCategory) {
         if (!suggested) throw badRequest('This proposal has no suggested category');
@@ -206,7 +216,9 @@ export function createReviewService(deps: {
         } else {
           await tx.items.update(
             item.id,
-            { status: 'published', verifiedAt: at },
+            item.type === 'image'
+              ? { status: 'published', verifiedAt: at, payload }
+              : { status: 'published', verifiedAt: at },
             extra.length > 0 ? categoryIds : undefined,
           );
         }

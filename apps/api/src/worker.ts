@@ -6,6 +6,7 @@ import {
   EMBED_SWEEP_CRON,
   INGEST_PRUNE_CRON,
   INGEST_SWEEP_CRON,
+  MEDIA_SWEEP_CRON,
   SEARCH_QUERY_PRUNE_CRON,
 } from '@pb/shared';
 import { parseEnv } from './env';
@@ -33,6 +34,11 @@ import { createPruneIngestJobs } from './jobs/prune-ingest-jobs';
 import { createPruneDeletedItems } from './jobs/prune-deleted-items';
 import { createIngestJobsRepo } from './repositories/ingest-jobs.repo';
 import { createCloudinaryIngestUploads } from './media/ingest-uploads';
+import { createCloudinaryMediaStore } from './media/media-store';
+import { createMediaSweepJob } from './jobs/media-sweep';
+import { createOrphanSweeper } from './services/media-sweep';
+import { createAssetsRepo } from './repositories/assets.repo';
+import { parseCloudinaryUrl } from './lib/cloudinary-url';
 import { QUEUES, type EmbedItemJob, type IngestJobData } from './jobs/queues';
 import { createEmbeddingsRepo } from './repositories/embeddings.repo';
 import { createLlmCallsRepo } from './repositories/llm-calls.repo';
@@ -81,6 +87,24 @@ async function main() {
   await boss.work(QUEUES.pruneDeletedItems, async () => {
     await pruneDeletedItems();
   });
+
+  if (env.CLOUDINARY_URL) {
+    // D158: the database decides what is an orphan; Cloudinary is only asked to delete by id.
+    const mediaSweep = createMediaSweepJob({
+      sweeper: createOrphanSweeper({
+        assets: createAssetsRepo(db),
+        store: createCloudinaryMediaStore(parseCloudinaryUrl(env.CLOUDINARY_URL)),
+        log,
+      }),
+    });
+    await boss.schedule(QUEUES.mediaSweep, MEDIA_SWEEP_CRON);
+    await boss.work(QUEUES.mediaSweep, async () => {
+      await mediaSweep();
+    });
+  } else {
+    await boss.unschedule(QUEUES.mediaSweep);
+  }
+
   const embedder = defaultEmbedder(env);
   const extract = defaultExtractor(env);
   if (extract) {

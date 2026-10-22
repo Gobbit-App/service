@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { ingestJobs, type UserRow } from '@pb/db';
+import { assets, ingestJobs, type UserRow } from '@pb/db';
 import { addMember, createAccountUser } from '@pb/db/test';
 import type { IngestQueue } from '../src/jobs/ingest-queue';
 import { MemoryIngestUploads } from '../src/media/ingest-uploads';
@@ -102,6 +102,19 @@ describe('POST /ingest + GET /ingest/{id} (D93, D101, D109, D110)', () => {
       new RegExp(`^gobbit/ingest/${ctx.world.decks.family.id}/`),
     );
     expect([...uploads.uploads.values()].filter((u) => u.jobId === id)).toHaveLength(2);
+
+    // D157: each ingest upload is recorded as an asset of the deck, with its dimensions.
+    const [recorded] = await ctx.t.db
+      .select()
+      .from(assets)
+      .where(eq(assets.publicId, row.raw!.images[0]!.publicId));
+    expect(recorded).toMatchObject({
+      deckId: ctx.world.decks.family.id,
+      source: 'ingest',
+      uploadedBy: editor.id,
+      format: expect.any(String),
+    });
+    expect(recorded!.width).toBeGreaterThan(0);
   });
 
   it('rejects an empty share (400)', async () => {

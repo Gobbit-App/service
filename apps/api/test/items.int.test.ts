@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
+import type { DeckRow } from '@pb/db';
+import { createAsset, createDeck } from '@pb/db/test';
 import { setupApiTest, fixtureId } from './helpers';
 import { itemSchema } from '@pb/shared';
 
@@ -487,5 +489,59 @@ describe('Items Integration Tests', () => {
       headers: ctx.as(),
     });
     expect(res.status).toBe(404);
+  });
+});
+
+describe('image cards reference recorded assets (D160)', () => {
+  let deck: DeckRow;
+  let other: DeckRow;
+
+  beforeAll(async () => {
+    deck = await createDeck(ctx.t.db, ctx.world.owner);
+    other = await createDeck(ctx.t.db, ctx.world.owner);
+  });
+
+  const createImage = (payload: Record<string, unknown>) =>
+    ctx.app.request(`/decks/${deck.id}/items`, {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({ type: 'image', title: 'Photo', payload }),
+    });
+
+  async function expectUnknownImage(res: Response) {
+    expect(res.status).toBe(422);
+    const problem = await res.json();
+    expect(problem.type).toBe('/problems/validation');
+    expect(problem.errors).toEqual([{ path: 'payload.publicId', message: 'Unknown image' }]);
+  }
+
+  it('refuses an unrecorded image and one recorded for another deck', async () => {
+    await expectUnknownImage(await createImage({ publicId: 'samples/nope', alt: 'x' }));
+    const foreign = await createAsset(ctx.t.db, other);
+    await expectUnknownImage(await createImage({ publicId: foreign.publicId, alt: 'x' }));
+  });
+
+  it("writes the asset's dimensions over the client's, on create and update", async () => {
+    const asset = await createAsset(ctx.t.db, deck, { width: 1200, height: 900 });
+    const res = await createImage({ publicId: asset.publicId, alt: 'x', width: 5, height: 5 });
+    expect(res.status).toBe(201);
+    const item = await res.json();
+    expect(item.payload).toEqual({ publicId: asset.publicId, alt: 'x', width: 1200, height: 900 });
+
+    const unknownSize = await createAsset(ctx.t.db, deck, { width: null, height: null });
+    const patched = await ctx.app.request(`/items/${item.id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify({ payload: { publicId: unknownSize.publicId, alt: 'y', width: 7 } }),
+    });
+    expect(patched.status).toBe(200);
+    expect((await patched.json()).payload).toEqual({ publicId: unknownSize.publicId, alt: 'y' });
+
+    const swapped = await ctx.app.request(`/items/${item.id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify({ payload: { publicId: 'samples/nope', alt: 'y' } }),
+    });
+    await expectUnknownImage(swapped);
   });
 });

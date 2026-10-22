@@ -1,29 +1,33 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isApiError } from '../api/api-error';
-import { reportUploadFailure, signMediaUpload } from '../api/media';
-import type { MediaUploadFailureRequest } from '@pb/shared';
+import { confirmMediaAsset, reportUploadFailure, signMediaUpload } from '../api/media';
+import type { MediaAsset, MediaUploadFailureRequest } from '@pb/shared';
 import {
   cachedSigner,
   signAndUpload,
   uploadFailureReport,
   UploadError,
   type Signer,
+  type UploadedImage,
 } from './upload';
 
-/** idle → signing → uploading(percent) → idle (done or cancelled) | failed. */
+/** idle → signing → uploading(percent) → confirming → idle (done or cancelled) | failed. */
 export type ImageUploadState =
   | { status: 'idle' }
   | { status: 'signing' }
   | { status: 'uploading'; percent: number }
+  | { status: 'confirming' }
   | { status: 'failed'; message: string; canRetry: boolean };
 
 export type UseImageUploadOptions = {
   deckId: string;
-  /** Called once per finished upload with Cloudinary's `public_id`. */
+  /** Called once per finished and confirmed upload with the recorded `publicId`. */
   onUploaded: (publicId: string) => void;
   /** Tests inject these; production signs through the API and uploads with XHR. */
   signer?: Signer;
   upload?: typeof signAndUpload;
+  /** Records the upload with the API (D157); a photo is attached only once this succeeds. */
+  confirm?: (deckId: string, uploaded: UploadedImage) => Promise<MediaAsset>;
   /** Sends a failed upload's details to the API log (Cloudinary answers only the browser). */
   report?: (deckId: string, report: MediaUploadFailureRequest) => Promise<void>;
 };
@@ -39,6 +43,9 @@ function failure(error: unknown): { message: string; canRetry: boolean } {
     }
     if (error.status === 403 || error.status === 404) {
       return { message: "You can't add photos to this pocketbook.", canRetry: false };
+    }
+    if (error.status === 422) {
+      return { message: "The photo couldn't be verified. Try adding it again.", canRetry: true };
     }
   }
   return {
@@ -56,6 +63,7 @@ export function useImageUpload({
   onUploaded,
   signer: injectedSigner,
   upload = signAndUpload,
+  confirm = confirmMediaAsset,
   report = reportUploadFailure,
 }: UseImageUploadOptions) {
   const [state, setState] = useState<ImageUploadState>({ status: 'idle' });
@@ -77,16 +85,19 @@ export function useImageUpload({
       controller.current = attempt;
       setState({ status: 'signing' });
       try {
-        const { publicId } = await upload(picked, signer, {
+        const uploaded = await upload(picked, signer, {
           signal: attempt.signal,
           onProgress: (percent) => {
             if (!attempt.signal.aborted) setState({ status: 'uploading', percent });
           },
         });
         if (attempt.signal.aborted) return;
+        setState({ status: 'confirming' });
+        const asset = await confirm(deckId, uploaded);
+        if (attempt.signal.aborted) return;
         controller.current = null;
         setState({ status: 'idle' });
-        latestOnUploaded.current(publicId);
+        latestOnUploaded.current(asset.publicId);
       } catch (error) {
         if (controller.current !== attempt) return;
         controller.current = null;
@@ -104,12 +115,13 @@ export function useImageUpload({
         }
       }
     },
-    [deckId, report, signer, upload],
+    [confirm, deckId, report, signer, upload],
   );
 
   return {
     state,
-    busy: state.status === 'signing' || state.status === 'uploading',
+    busy:
+      state.status === 'signing' || state.status === 'uploading' || state.status === 'confirming',
     start: (picked: File) => {
       file.current = picked;
       void run(picked);

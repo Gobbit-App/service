@@ -23,10 +23,13 @@ export function createDecksService({
   decks,
   categories,
   memberships,
+  deleteMedia = async () => undefined,
 }: {
   decks: DecksRepo;
   categories: CategoriesRepo;
   memberships: MembershipLookup;
+  /** D158: drops the deck's stored images once the delete has committed; never throws. */
+  deleteMedia?: (deckId: string) => Promise<void>;
 }) {
   return {
     /** D33: owned ∪ member-of, each with the caller's role. */
@@ -97,7 +100,7 @@ export function createDecksService({
       }
       // D50: co-owners (owner memberships) may not delete; only the owner account's users.
       if (deck.ownerAccountId !== user.accountId) throw accountOwnerRequired('deck.delete');
-      await decks.softDelete(deck.id);
+      if (await decks.softDelete(deck.id)) await deleteMedia(deck.id);
     },
   };
 }

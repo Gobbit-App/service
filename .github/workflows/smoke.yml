@@ -61,6 +61,8 @@ jobs:
           # Optional; defaults to API_BASE_URL without its /api suffix (D51).
           WEB_BASE_URL: ${{ vars.WEB_BASE_URL }}
           SMOKE_SESSION_TOKEN: ${{ secrets.SMOKE_SESSION_TOKEN }}
+          # Optional (012): signs the faked upload answer so the image save smoke runs; skipped without it.
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
           # Wait until /health and /version.json report the commit CI just built and shipped.
           EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
           CI: 'true'

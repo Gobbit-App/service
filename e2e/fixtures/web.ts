@@ -14,7 +14,10 @@ export function webUrl(path: string): string {
 
 export const SMOKE_CATEGORY = { name: 'Smoke chips', slug: 'smoke-chips' } as const;
 
-/** One card of each type (D62), small enough for any payload budget. */
+/**
+ * One card of each type (D62), small enough for any payload budget. No image card: an image must
+ * reference an asset recorded for its deck (D160); editor.spec.ts covers the image journey.
+ */
 function cardsFor(categoryId: string): Record<string, unknown>[] {
   const categoryIds = [categoryId];
   return [
@@ -24,11 +27,6 @@ function cardsFor(categoryId: string): Record<string, unknown>[] {
       title: 'Smoke link',
       body: 'A link without a preview image',
       payload: { url: 'https://example.com/a-very-long-path/that-should-wrap-on-small-screens' },
-    },
-    {
-      type: 'image',
-      title: 'Smoke image',
-      payload: { publicId: 'samples/smoke/does-not-exist', alt: 'Smoke image' },
     },
     {
       type: 'table',

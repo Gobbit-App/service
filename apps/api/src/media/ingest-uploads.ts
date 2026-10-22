@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { INGEST_IMAGE_LLM_WIDTH } from '@pb/shared';
 import { cloudinaryDeliveryUrl, parseCloudinaryUrl } from '../lib/cloudinary-url';
+import type { StoredImage } from './media-store';
 
 /** One image from a POST /ingest multipart body (D101). */
 export interface IngestUploadFile {
@@ -23,7 +24,8 @@ export const INGEST_LLM_TRANSFORMATION = `f_jpg,w_${INGEST_IMAGE_LLM_WIDTH},c_li
 
 /** Where ingest uploads live; Cloudinary in production, memory in tests. */
 export interface IngestUploadStore {
-  upload(jobId: string, deckId: string, file: IngestUploadFile): Promise<{ publicId: string }>;
+  /** The stored image with Cloudinary's dimensions, recorded as an asset (D157). */
+  upload(jobId: string, deckId: string, file: IngestUploadFile): Promise<StoredImage>;
   /** Deletes every upload tagged with the job (failed/discarded jobs). */
   deleteForJob(jobId: string): Promise<void>;
   /** Absolute URL of the derived JPEG for the extractor. */
@@ -48,7 +50,13 @@ export function createCloudinaryIngestUploads(cloudinaryUrl: string): IngestUplo
         resource_type: 'image',
         tags: ['ingest', ingestJobTag(jobId)],
       });
-      return { publicId: res.public_id };
+      return {
+        publicId: res.public_id,
+        width: res.width,
+        height: res.height,
+        bytes: res.bytes,
+        format: res.format,
+      };
     },
     async deleteForJob(jobId) {
       await cloudinary.api.delete_resources_by_tag(ingestJobTag(jobId));
@@ -69,7 +77,7 @@ export class MemoryIngestUploads implements IngestUploadStore {
     this.seq += 1;
     const publicId = `${ingestFolder(deckId)}/upload-${this.seq}`;
     this.uploads.set(publicId, { jobId, file });
-    return { publicId };
+    return { publicId, width: 1200, height: 900, bytes: file.bytes.byteLength, format: 'jpg' };
   }
 
   async deleteForJob(jobId: string) {

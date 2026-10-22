@@ -126,6 +126,21 @@ describe('payloads', () => {
       };
       expect(schema.safeParse(validPayload).success).toBe(true);
     });
+
+    it('accepts optional dimensions within 1..20000 (D160)', () => {
+      const schema = payloadSchemaFor('image');
+      const base = { publicId: 'abc123', alt: 'A' };
+      expect(schema.safeParse({ ...base, width: 3024, height: 4032 }).success).toBe(true);
+      expect(schema.safeParse({ ...base, width: 1, height: 20000 }).success).toBe(true);
+      expect(schema.safeParse({ ...base, width: 0 }).success).toBe(false);
+      expect(schema.safeParse({ ...base, height: 20001 }).success).toBe(false);
+      expect(schema.safeParse({ ...base, width: 1.5 }).success).toBe(false);
+    });
+
+    it('stays strict', () => {
+      const schema = payloadSchemaFor('image');
+      expect(schema.safeParse({ publicId: 'abc123', alt: 'A', format: 'jpg' }).success).toBe(false);
+    });
   });
 
   describe('table payload', () => {

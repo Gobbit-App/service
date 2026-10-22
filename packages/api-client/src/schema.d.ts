@@ -2088,6 +2088,8 @@ export interface paths {
                         payload: {
                             publicId: string;
                             alt: string;
+                            width?: number;
+                            height?: number;
                         };
                         title: string;
                         /**
@@ -3887,6 +3889,237 @@ export interface paths {
                 };
                 /** @description Not Found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decks/{id}/media/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a finished editor upload from its signed Cloudinary response (D157) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        publicId: string;
+                        version: number;
+                        signature: string;
+                        width: number;
+                        height: number;
+                        bytes: number;
+                        format: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Already recorded for this deck (idempotent) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            publicId: string;
+                            width: number | null;
+                            height: number | null;
+                            bytes: number | null;
+                            format: string | null;
+                            /** @enum {string} */
+                            source: "editor" | "ingest" | "link_snapshot" | "remote";
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description Recorded */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            publicId: string;
+                            width: number | null;
+                            height: number | null;
+                            bytes: number | null;
+                            format: string | null;
+                            /** @enum {string} */
+                            source: "editor" | "ingest" | "link_snapshot" | "remote";
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };

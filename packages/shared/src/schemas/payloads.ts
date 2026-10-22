@@ -4,6 +4,10 @@ import type { ItemType } from '../enums';
 import { utf8Bytes } from '../utils/utf8-bytes';
 import { httpUrlSchema } from './common';
 import { validateCalcExpression } from './calc-expression';
+import { MEDIA_IMAGE_DIMENSION_MAX } from '../media/constants';
+
+/** D160: pixel size of a recorded image; server-owned (copied from the asset). */
+export const imageDimensionSchema = z.number().int().min(1).max(MEDIA_IMAGE_DIMENSION_MAX);
 
 export const textPayloadSchema = z.object({}).strict();
 
@@ -25,6 +29,8 @@ export const imagePayloadSchema = z
   .object({
     publicId: z.string().min(1),
     alt: z.string().min(1),
+    width: imageDimensionSchema.optional(),
+    height: imageDimensionSchema.optional(),
   })
   .strict();
 

@@ -25,6 +25,27 @@ function signed(overrides: Partial<MediaSignResponse> = {}): MediaSignResponse {
   };
 }
 
+/** Cloudinary's signed 200 answer for `public_id` and the confirm body it becomes. */
+const answer = (id: string) => ({
+  public_id: id,
+  version: 1_700_000_001,
+  signature: 'resp-sig',
+  width: 1200,
+  height: 900,
+  bytes: 2048,
+  format: 'jpg',
+  secure_url: 'https://res.cloudinary.com/x.jpg',
+});
+const uploaded = (publicId: string) => ({
+  publicId,
+  version: 1_700_000_001,
+  signature: 'resp-sig',
+  width: 1200,
+  height: 900,
+  bytes: 2048,
+  format: 'jpg',
+});
+
 /** Just enough XMLHttpRequest for `uploadImage`; the test drives its events. */
 class FakeXhr {
   static instances: FakeXhr[] = [];
@@ -82,7 +103,7 @@ describe('uploadForm', () => {
 });
 
 describe('uploadImage', () => {
-  it('reports progress and resolves with the public_id', async () => {
+  it('reports progress and resolves with the signed answer', async () => {
     const onProgress = vi.fn<(p: number) => void>();
     const promise = uploadImage(file, signed(), { onProgress, createXhr: fakeXhr() });
     const xhr = last();
@@ -90,8 +111,8 @@ describe('uploadImage', () => {
     expect(xhr.url).toBe(signed().uploadUrl);
     xhr.progress(25, 100);
     xhr.progress(50, 100);
-    xhr.respond(200, { public_id: 'gobbit/items/deck-1/abc' });
-    await expect(promise).resolves.toEqual({ publicId: 'gobbit/items/deck-1/abc' });
+    xhr.respond(200, answer('gobbit/items/deck-1/abc'));
+    await expect(promise).resolves.toEqual(uploaded('gobbit/items/deck-1/abc'));
     expect(onProgress.mock.calls.map(([p]) => p)).toEqual([25, 50, 100]);
   });
 
@@ -141,6 +162,13 @@ describe('uploadImage', () => {
     await expect(promise).rejects.toMatchObject({ reason: 'failed' });
   });
 
+  it('a 200 without the signed version is a failure (nothing to confirm)', async () => {
+    const promise = uploadImage(file, signed(), { createXhr: fakeXhr() });
+    const { version: _v, ...unsigned } = answer('p1');
+    last().respond(200, unsigned);
+    await expect(promise).rejects.toMatchObject({ reason: 'failed' });
+  });
+
   it('a network error is a retryable failure', async () => {
     const promise = uploadImage(file, signed(), { createXhr: fakeXhr() });
     last().onerror?.();
@@ -180,8 +208,8 @@ describe('signAndUpload', () => {
     await vi.waitFor(() => expect(FakeXhr.instances).toHaveLength(1));
     last().respond(401, { error: { message: 'Stale request' } });
     await vi.waitFor(() => expect(FakeXhr.instances).toHaveLength(2));
-    last().respond(200, { public_id: 'p1' });
-    await expect(promise).resolves.toEqual({ publicId: 'p1' });
+    last().respond(200, answer('p1'));
+    await expect(promise).resolves.toEqual(uploaded('p1'));
     expect(signer.mock.calls.map(([o]) => o.fresh)).toEqual([false, true]);
   });
 

@@ -22,6 +22,8 @@ import type { EmbedQueue } from '../jobs/embed-queue';
 import { createCategoriesRepo } from '../repositories/categories.repo';
 import { createItemsRepo, type ItemsRepo } from '../repositories/items.repo';
 import type { UsersRepo } from '../repositories/users.repo';
+import type { AssetsRepo } from '../repositories/assets.repo';
+import type { ImageReferenceCheck } from './image-reference';
 
 /** Overrides for tests; production builds everything from env (D93). */
 export interface IngestWiring {
@@ -52,6 +54,8 @@ export function buildIngestServices(deps: {
   embedQueue: EmbedQueue;
   /** Embeds direct proposals for dedup (D103); null → the keyless signals only. */
   embedder: Embedder | null;
+  assets: Pick<AssetsRepo, 'upsert'>;
+  imageReference: ImageReferenceCheck;
   now: () => Date;
   wiring?: IngestWiring;
 }) {
@@ -73,6 +77,7 @@ export function buildIngestServices(deps: {
       categories: createCategoriesRepo(db),
       items: deps.items,
       uploads,
+      assets: deps.assets,
       queue: wiring.queue ?? noopIngestQueue,
       dailyCaps: ingestDailyCaps(env.INGEST_DAILY_CAP),
       combinedCap: INGEST_COMBINED_DAILY_CAP,
@@ -113,6 +118,7 @@ export function buildIngestServices(deps: {
         ),
       uploads,
       embedQueue: deps.embedQueue,
+      imageReference: deps.imageReference,
       now,
     }),
   };

@@ -16,6 +16,7 @@ export * from './llm-calls';
 export * from './search-queries';
 export * from './ingest-jobs';
 export * from './ingest-tokens';
+export * from './assets';
 
 import { accounts } from './accounts';
 import { users } from './users';
@@ -32,6 +33,7 @@ import { llmCalls } from './llm-calls';
 import { searchQueries } from './search-queries';
 import { ingestJobs } from './ingest-jobs';
 import { ingestTokens } from './ingest-tokens';
+import { assets } from './assets';
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -49,6 +51,7 @@ export type LlmCallRow = typeof llmCalls.$inferSelect;
 export type SearchQueryRow = typeof searchQueries.$inferSelect;
 export type IngestJobRow = typeof ingestJobs.$inferSelect;
 export type IngestTokenRow = typeof ingestTokens.$inferSelect;
+export type AssetRow = typeof assets.$inferSelect;
 
 export type NewDeckRow = typeof decks.$inferInsert;
 export type NewCategoryRow = typeof categories.$inferInsert;
@@ -60,3 +63,4 @@ export type NewLlmCallRow = typeof llmCalls.$inferInsert;
 export type NewSearchQueryRow = typeof searchQueries.$inferInsert;
 export type NewIngestJobRow = typeof ingestJobs.$inferInsert;
 export type NewIngestTokenRow = typeof ingestTokens.$inferInsert;
+export type NewAssetRow = typeof assets.$inferInsert;

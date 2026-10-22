@@ -1,4 +1,8 @@
-import type { MediaSignResponse, MediaUploadFailureRequest } from '@pb/shared';
+import type {
+  MediaAssetConfirmRequest,
+  MediaSignResponse,
+  MediaUploadFailureRequest,
+} from '@pb/shared';
 import { MEDIA_UPLOAD_FAILURE_MESSAGE_MAX } from '@pb/shared/media-constants';
 
 /** Why an upload ended without a photo. */
@@ -65,13 +69,24 @@ function errorMessage(responseText: string): string | null {
   }
 }
 
-function publicIdOf(responseText: string): string | null {
+/** What a finished upload hands to the API's confirm step (D157): Cloudinary's signed answer. */
+export type UploadedImage = MediaAssetConfirmRequest;
+
+const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const isText = (v: unknown): v is string => typeof v === 'string' && v !== '';
+
+/** The signed fields of Cloudinary's 200 answer; null when any is missing. */
+export function uploadedImageOf(responseText: string): UploadedImage | null {
+  let body: Record<string, unknown>;
   try {
-    const body = JSON.parse(responseText) as { public_id?: unknown };
-    return typeof body.public_id === 'string' && body.public_id !== '' ? body.public_id : null;
+    body = JSON.parse(responseText) as Record<string, unknown>;
   } catch {
     return null;
   }
+  const { public_id, version, signature, width, height, bytes, format } = body;
+  if (!isText(public_id) || !isNumber(version) || !isText(signature)) return null;
+  if (!isNumber(width) || !isNumber(height) || !isNumber(bytes) || !isText(format)) return null;
+  return { publicId: public_id, version, signature, width, height, bytes, format };
 }
 
 /** The multipart body contracts/media-sign.md lists: the file plus every signed parameter. */
@@ -89,13 +104,13 @@ export function uploadForm(file: Blob, signed: MediaSignResponse): FormData {
 
 /**
  * D133: POSTs the file straight to Cloudinary with the signed parameters and resolves with
- * its `public_id`. Rejects with an `UploadError`; never leaves a half-attached photo.
+ * its signed answer (`public_id`, `version`, `signature`, size). Rejects with an `UploadError`; never leaves a half-attached photo.
  */
 export function uploadImage(
   file: Blob,
   signed: MediaSignResponse,
   { onProgress, signal, createXhr = () => new XMLHttpRequest() }: UploadOptions = {},
-): Promise<{ publicId: string }> {
+): Promise<UploadedImage> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
       reject(new UploadError('aborted', 'Upload cancelled'));
@@ -112,10 +127,10 @@ export function uploadImage(
     };
     xhr.onload = () => {
       done();
-      const publicId = xhr.status === 200 ? publicIdOf(xhr.responseText) : null;
-      if (publicId) {
+      const uploaded = xhr.status === 200 ? uploadedImageOf(xhr.responseText) : null;
+      if (uploaded) {
         onProgress?.(100);
-        resolve({ publicId });
+        resolve(uploaded);
         return;
       }
       const message = errorMessage(xhr.responseText);
@@ -164,7 +179,7 @@ export async function signAndUpload(
   file: Blob,
   signer: Signer,
   options: UploadOptions = {},
-): Promise<{ publicId: string }> {
+): Promise<UploadedImage> {
   try {
     return await uploadImage(file, await signer({ fresh: false }), options);
   } catch (error) {

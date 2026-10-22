@@ -106,6 +106,7 @@ describe('createItemsService', () => {
       favorites,
       memberships,
       embedQueue,
+      imageReference: async (_deckId, _type, payload) => payload,
       now: () => NOW,
     });
   });

@@ -1,5 +1,9 @@
+import { createHash } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import { expect, test, webUrl } from '../../fixtures/web';
+import { resolveE2eEnv } from '../../lib/env';
+
+const { cloudinaryApiSecret } = resolveE2eEnv();
 
 /** Below 768px (Pixel 7) the preview is a tab: open it, then read the preview region. */
 async function showPreview(page: Page) {
@@ -252,7 +256,21 @@ async function routeImageDelivery(page: Page) {
   );
 }
 
-/** 008: a fake upload permission and Cloudinary; tests never reach the real service (D133). */
+/**
+ * 012: Cloudinary's upload answer is signed `sha1("public_id=…&version=…" + api secret)`. With the
+ * API's secret the fake answer verifies, so the real API confirms and records the asset (D157).
+ */
+function signUploadAnswer(publicId: string, version: number, secret: string): string {
+  return createHash('sha1')
+    .update(`public_id=${publicId}&version=${version}${secret}`)
+    .digest('hex');
+}
+
+/**
+ * 008: a fake upload permission and Cloudinary; tests never reach the real service (D133).
+ * The upload answer is signed when the secret is known; otherwise the confirm step (012) is
+ * answered locally too, which is enough for journeys that never save.
+ */
 async function routeFakeCloudinary(page: Page, publicId: string) {
   const cloud = 'e2e-cloud';
   await routeCloudName(page, cloud);
@@ -271,16 +289,46 @@ async function routeFakeCloudinary(page: Page, publicId: string) {
       },
     }),
   );
+  const version = Math.floor(Date.now() / 1000);
+  const answer = {
+    public_id: publicId,
+    version,
+    signature: cloudinaryApiSecret
+      ? signUploadAnswer(publicId, version, cloudinaryApiSecret)
+      : 'e2e-signature',
+    width: 1,
+    height: 1,
+    bytes: TINY_PNG.length,
+    format: 'png',
+  };
   const uploads: string[] = [];
   await page.route('https://api.cloudinary.com/**', (route) => {
     uploads.push(route.request().url());
-    return route.fulfill({ json: { public_id: publicId } });
+    return route.fulfill({ json: answer });
   });
+  if (!cloudinaryApiSecret) {
+    await page.route('**/api/decks/*/media/assets', (route) =>
+      route.fulfill({
+        status: 201,
+        json: {
+          publicId,
+          width: 1,
+          height: 1,
+          bytes: TINY_PNG.length,
+          format: 'png',
+          source: 'editor',
+          createdAt: new Date().toISOString(),
+        },
+      }),
+    );
+  }
   await routeImageDelivery(page);
   return uploads;
 }
 
 test('an image card is uploaded, described and listed @smoke', async ({ page, webDeck }) => {
+  // Saving needs the asset recorded by the real API (D160), so the upload answer must verify.
+  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `Editor image ${webDeck.slug}`;
   const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
@@ -294,8 +342,15 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   // The preview renders the photo through the same Card as the list (FR-008).
   const preview = await showPreview(page);
   await expect(preview.getByRole('img', { name: 'A test photo' })).toBeVisible();
+  const created = page.waitForResponse(
+    (res) => /\/api\/decks\/[^/]+\/items$/.test(res.url()) && res.request().method() === 'POST',
+  );
   await save(page).click();
 
+  // The API wrote the dimensions it recorded at confirm time (D160).
+  const response = await created;
+  expect(response.status()).toBe(201);
+  expect(((await response.json()) as { payload: { width?: number } }).payload.width).toBe(1);
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   const listed = page.getByRole('article').filter({ hasText: title });
   await expect(listed.getByRole('img', { name: 'A test photo' })).toBeVisible();

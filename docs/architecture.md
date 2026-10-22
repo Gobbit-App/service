@@ -83,11 +83,11 @@ only on `POST /ingest`.
 | --- | --- | --- |
 | Reader PWA | File routes, persisted TanStack Query cache for offline (never the SW for API data), share target in a hand-written SW, share previews at `/s/:id` with lazily rendered OG images, 150 KB gzip initial-JS budget | [web-pwa](design/web-pwa.md) · ADR-036, 037, 045 |
 | Search & Ask | `searchRepo.hybrid()`: trigram + pgvector arms, both filtered by deck, status and visibility, fused with RRF (`lib/rrf.ts`). Optional cited Ask answer. Provider keys optional (text-only / Ask off) | [search](design/search.md) · ADR-041–044 |
-| Worker | pg-boss: `embed-item` (+ minute sweep), `ingest`, prune jobs. Writes enqueue after commit, sweeps heal misses. Heartbeat file for health | [search](design/search.md#embeddings-worker-appsapisrcworkerts), [ingestion](design/ingestion.md#worker-pipeline-jobsingestts) |
+| Worker | pg-boss: `embed-item` (+ minute sweep), `ingest`, `media-sweep` (daily orphan images), prune jobs. Writes enqueue after commit, sweeps heal misses. Heartbeat file for health | [search](design/search.md#embeddings-worker-appsapisrcworkerts), [ingestion](design/ingestion.md#worker-pipeline-jobsingestts) |
 | Ingestion | Shares (Android, Shortcut, paste, email-in) → `ingest_jobs` → SSRF-guarded fetch → LLM extract → **proposed** card → dedup → publisher review queue. The agent never publishes | [ingestion](design/ingestion.md) · ADR-046–048 |
 | Card lifecycle | archive / restore / delete / undelete (30 days, weekly purge) in `items.service`, optimistic Undo in the web | [card-lifecycle](design/card-lifecycle.md) · ADR-050 |
 | Card editor | All types, live preview through the list renderer, zod-free client checks, IndexedDB drafts, inline category create | [card-editor](design/card-editor.md) |
-| Card media | Signed browser → Cloudinary uploads; link preview via `safe-fetch` | [card-media](design/card-media.md) · ADR-051 |
+| Card media | Signed browser → Cloudinary uploads confirmed into the `assets` registry; cards reference only recorded assets; daily orphan sweep; link preview via `safe-fetch` | [card-media](design/card-media.md) · ADR-051, 054 |
 | Browse mode | One card per screen: native scroll-snap, `@use-gesture` only in the lazy chunk | [browse-mode](design/browse-mode.md) · ADR-052 |
 
 ## Testing
@@ -161,3 +161,4 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [051](adr.md#adr-051-signed-direct-uploads-from-the-browser-d133) | Signed direct browser uploads |
 | [052](adr.md#adr-052-browse-native-scroll-snap--use-gesture-d139-d140-d144) | Browse: native scroll-snap + use-gesture |
 | [053](adr.md#adr-053-two-e2e-tiers-smoke-tests-are-journeys-d148-d149-d155) | Two e2e tiers; smoke tests are journeys |
+| [054](adr.md#adr-054-asset-registry-with-a-database-driven-orphan-sweep-d156-d158) | Asset registry, database-driven orphan sweep |

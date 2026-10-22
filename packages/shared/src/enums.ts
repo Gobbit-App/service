@@ -33,3 +33,7 @@ export type MagicLinkPurpose = (typeof magicLinkPurposes)[number];
 
 export const sessionKinds = ['cookie', 'bearer'] as const;
 export type SessionKind = (typeof sessionKinds)[number];
+
+/** D156: where a recorded image came from. */
+export const assetSources = ['editor', 'ingest', 'link_snapshot', 'remote'] as const;
+export type AssetSource = (typeof assetSources)[number];

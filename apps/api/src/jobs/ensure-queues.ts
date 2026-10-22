@@ -10,6 +10,7 @@ const QUEUE_POLICIES = {
   [QUEUES.ingestSweep]: 'singleton',
   [QUEUES.pruneIngestJobs]: 'singleton',
   [QUEUES.pruneDeletedItems]: 'singleton',
+  [QUEUES.mediaSweep]: 'singleton',
 } as const;
 
 /** pg-boss v10+ refuses `send` to a queue that was never created; idempotent. */

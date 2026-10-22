@@ -9,10 +9,11 @@ import {
   type ItemRow,
   type UserRow,
 } from '@pb/db';
-import { addMember, createAccountUser, createDeck, createItem } from '@pb/db/test';
+import { addMember, createAccountUser, createAsset, createDeck, createItem } from '@pb/db/test';
 import type { DedupVerdict } from '@pb/shared';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
 import type { IngestUploadStore } from '../src/media/ingest-uploads';
+import type { StoredImage } from '../src/media/media-store';
 import { json, setupApiTest } from './helpers';
 
 class RecordingEmbedQueue implements EmbedQueue {
@@ -24,8 +25,8 @@ class RecordingEmbedQueue implements EmbedQueue {
 
 class RecordingUploads implements IngestUploadStore {
   readonly deleted: string[] = [];
-  async upload(): Promise<{ publicId: string }> {
-    return { publicId: 'unused' };
+  async upload(): Promise<StoredImage> {
+    return { publicId: 'unused', width: 1, height: 1, bytes: 1, format: 'jpg' };
   }
   async deleteForJob(jobId: string): Promise<void> {
     this.deleted.push(jobId);
@@ -181,6 +182,30 @@ describe('review queue (D106, D107)', () => {
 
       const again = await post(`/items/${item.id}/publish`, {});
       expect(again.status).toBe(409);
+    });
+
+    it('publishes an image proposal only for a recorded image, with its dimensions (D160)', async () => {
+      const image = (publicId: string) => ({
+        type: 'image',
+        title: 'Receipt',
+        payload: { publicId, alt: 'A receipt', width: 1, height: 1 },
+      });
+      const unknown = await proposal({}, image(`gobbit/ingest/${deck.id}/missing`));
+      const refused = await post(`/items/${unknown.item.id}/publish`, {});
+      expect(refused.status).toBe(422);
+      expect((await json(refused)).errors).toEqual([
+        expect.objectContaining({ path: 'payload.publicId', message: 'Unknown image' }),
+      ]);
+
+      const asset = await createAsset(ctx.t.db, deck, {
+        publicId: `gobbit/ingest/${deck.id}/receipt`,
+        width: 900,
+        height: 1600,
+      });
+      const { item } = await proposal({}, image(asset.publicId));
+      const res = await post(`/items/${item.id}/publish`, {});
+      expect(res.status).toBe(200);
+      expect((await itemRow(item.id)).payload).toMatchObject({ width: 900, height: 1600 });
     });
 
     it('creates the suggested category on demand and reuses it by slug', async () => {

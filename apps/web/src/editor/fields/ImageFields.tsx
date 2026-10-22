@@ -9,7 +9,7 @@ import type { FieldsProps } from './types';
 
 export type ImageFieldsProps = FieldsProps<'image'> & {
   /** Tests inject a fake signer/uploader. */
-  uploadDeps?: Pick<UseImageUploadOptions, 'signer' | 'upload'>;
+  uploadDeps?: Pick<UseImageUploadOptions, 'signer' | 'upload' | 'confirm'>;
 };
 
 /** A file input styled as a button; `capture` opens the camera on phones. */
@@ -119,7 +119,11 @@ export function ImageFields({
             aria-label="Upload progress"
           />
           <span>
-            {state.status === 'uploading' ? `Uploading… ${state.percent}%` : 'Preparing upload…'}
+            {state.status === 'uploading'
+              ? `Uploading… ${state.percent}%`
+              : state.status === 'confirming'
+                ? 'Saving photo…'
+                : 'Preparing upload…'}
           </span>
           <button type="button" className="button button--ghost" onClick={cancel}>
             Cancel upload

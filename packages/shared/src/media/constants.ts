@@ -24,3 +24,16 @@ export const LINK_PREVIEW_DESCRIPTION_MAX = 500;
 export const LINK_PREVIEW_IMAGE_URL_MAX = 2048;
 export const LINK_PREVIEW_CACHE_MAX = 200;
 export const LINK_PREVIEW_CACHE_TTL_MS = 3_600_000;
+
+/** D158: an unreferenced asset is deleted once it is older than this. */
+export const MEDIA_ORPHAN_GRACE_DAYS = 7;
+/** D158: the daily orphan sweep (UTC). */
+export const MEDIA_SWEEP_CRON = '0 6 * * *';
+/** Most assets one sweep run deletes. */
+export const MEDIA_SWEEP_BATCH = 500;
+/** Cloudinary's per-call limit for `delete_resources`. */
+export const MEDIA_DELETE_CHUNK = 100;
+/** D157: recorded upload confirmations per user per hour. */
+export const MEDIA_CONFIRM_RATE_PER_HOUR = 60;
+/** D160: largest width/height an image payload may carry. */
+export const MEDIA_IMAGE_DIMENSION_MAX = 20000;

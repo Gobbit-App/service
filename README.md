@@ -37,7 +37,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    ```bash
    pnpm dev
    ```
-   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). The API side also starts the worker (`dev:server` + `dev:worker`), which only embeds when `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is set. Its retention jobs always run: `search_queries` and `ingest_jobs` pruning, and `prune-deleted-items` (Sundays 05:00 UTC, hard-deletes cards soft-deleted more than 30 days ago). `pnpm dev:api` / `pnpm dev:web` run one side only.
+   Runs the API on `http://localhost:3000` and the Reader PWA (Vite) on `http://localhost:5173`. Vite proxies `/api` (prefix stripped) and `/s` to the API, the same paths the web image's Caddyfile routes, so open the app at **http://localhost:5173** and everything — magic links, the session cookie, API calls — lives on that one origin (D64). The API side also starts the worker (`dev:server` + `dev:worker`), which only embeds when `OPENROUTER_API_KEY` or `OPENAI_API_KEY` is set. Its retention jobs always run: `search_queries` and `ingest_jobs` pruning, and `prune-deleted-items` (Sundays 05:00 UTC, hard-deletes cards soft-deleted more than 30 days ago). With `CLOUDINARY_URL` set it also runs `media-sweep` (daily 06:00 UTC): stored images older than 7 days that no card references (never saved, or their card was purged) are deleted from Cloudinary and from the `assets` table. `pnpm dev:api` / `pnpm dev:web` run one side only.
 
 6. **Verify health:**
    ```bash
@@ -108,6 +108,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm test:e2e` | Playwright smoke tests |
 | `pnpm test:search` | Search recall eval over the fixture deck (requires Docker; hybrid part needs the committed embedding cache) |
 | `pnpm test:search:update` | Same, filling missing vectors in `search-embeddings.json` with the real API (needs `OPENROUTER_API_KEY` or `OPENAI_API_KEY`; commit the file) |
+| `pnpm media:reconcile` | List Cloudinary images tagged `editor`/`ingest` that have no `assets` row (dry run; `-- --delete` removes them). Needs `CLOUDINARY_URL` and `DATABASE_URL` |
+| `pnpm job:run <queue>` | Enqueue one job on a named pg-boss queue (e.g. `media-sweep`) for the running worker |
 | `pnpm search:load` | Create/fill a `search-demo` deck with the fixture cards through the API (`--deck`, `--base-url`/`BASE_URL`, `--token`/`SMOKE_SESSION_TOKEN`) |
 | `pnpm search:query "<q>"` | Print search hits (why, score) for a deck, same options |
 | `pnpm db:generate` | Generate migrations with drizzle-kit |
@@ -247,7 +249,7 @@ Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`
   run: pnpm test:e2e --grep @smoke
 ```
 
-Required secrets: `SMOKE_SESSION_TOKEN` (an owner bearer on the deployed instance — see "Smoke token" below). Optional: `DOKPLOY_DEPLOY_WEBHOOK` (the Compose service's deploy webhook URL; without it the image is pushed but Dokploy is not told). The Dokploy Compose service must have **Autodeploy** enabled, otherwise the webhook answers 400 "Automatic deployments are disabled for this compose" and the deploy job fails.  
+Required secrets: `SMOKE_SESSION_TOKEN` (an owner bearer on the deployed instance — see "Smoke token" below). Optional: `CLOUDINARY_API_SECRET` (the API secret from the deployed `CLOUDINARY_URL`; the photo smoke signs its faked Cloudinary answer with it so the real API accepts the save — without it that step is skipped), `DOKPLOY_DEPLOY_WEBHOOK` (the Compose service's deploy webhook URL; without it the image is pushed but Dokploy is not told). The Dokploy Compose service must have **Autodeploy** enabled, otherwise the webhook answers 400 "Automatic deployments are disabled for this compose" and the deploy job fails.  
 Required variables: `API_BASE_URL` (`https://gobbit.niranhome.win/api`). Optional: `WEB_BASE_URL` (defaults to `API_BASE_URL` without `/api`), `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
 
 The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, a blank `BASE_URL` falls back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` or `SMOKE_SESSION_TOKEN` is missing.
@@ -297,6 +299,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
 | **Media** |
 | `POST` | `/decks/{id}/media/sign` | Signed parameters for one direct browser → Cloudinary photo upload (`item.create`; folder `gobbit/items/<deckId>`; 60/hour per user; 503 without `CLOUDINARY_URL`) |
+| `POST` | `/decks/{id}/media/assets` | Record a finished browser upload: Cloudinary's signed answer (`publicId`, `version`, `signature`, dimensions, bytes, format) is verified and the image is registered for the deck (`item.create`; 60/hour per user; 201 new, 200 repeat, 422 bad signature / wrong folder / other deck; 503 without `CLOUDINARY_URL`). Image cards may only reference recorded images |
 | `POST` | `/decks/{id}/media/upload-failures` | The browser reports a refused Cloudinary upload (`status`, `message`, `fileType`, `fileBytes`); logged as a `warn` line, nothing stored (`item.create`; 30/hour per user; 204) |
 | `POST` | `/decks/{id}/link-preview` | Title, description and image of a URL through the SSRF-guarded fetcher; `{ preview: null }` on any failure (`item.create`; 30/hour per user; cached 1 h) |
 | **Ingestion** |

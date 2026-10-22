@@ -31,6 +31,11 @@ describe('resolveE2eEnv', () => {
     });
   });
 
+  it('reads the optional Cloudinary API secret; blank counts as unset', () => {
+    expect(resolveE2eEnv({ CLOUDINARY_API_SECRET: 'sec' }).cloudinaryApiSecret).toBe('sec');
+    expect(resolveE2eEnv({ CLOUDINARY_API_SECRET: ' ' }).cloudinaryApiSecret).toBeUndefined();
+  });
+
   it('fails fast in CI when BASE_URL is missing', () => {
     expect(() => resolveE2eEnv({ CI: 'true', BASE_URL: '' })).toThrow(/API_BASE_URL/);
   });

@@ -6110,6 +6110,16 @@
                           "alt": {
                             "type": "string",
                             "minLength": 1
+                          },
+                          "width": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20000
+                          },
+                          "height": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20000
                           }
                         },
                         "required": [
@@ -12162,6 +12172,758 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decks/{id}/media/assets": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "Record a finished editor upload from its signed Cloudinary response (D157)",
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "publicId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "signature": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "width": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20000
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "format": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20
+                  }
+                },
+                "required": [
+                  "publicId",
+                  "version",
+                  "signature",
+                  "width",
+                  "height",
+                  "bytes",
+                  "format"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Already recorded for this deck (idempotent)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "publicId": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "height": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "bytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "format": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "editor",
+                        "ingest",
+                        "link_snapshot",
+                        "remote"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "publicId",
+                    "width",
+                    "height",
+                    "bytes",
+                    "format",
+                    "source",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "publicId": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "height": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "bytes": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "format": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "editor",
+                        "ingest",
+                        "link_snapshot",
+                        "remote"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "publicId",
+                    "width",
+                    "height",
+                    "bytes",
+                    "format",
+                    "source",
+                    "createdAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
             "content": {
               "application/problem+json": {
                 "schema": {

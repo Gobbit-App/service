@@ -5,6 +5,7 @@ import {
   FORBIDDEN_SAVE,
   NOT_FOUND_SAVE,
   OFFLINE_SAVE,
+  PHOTO_EXPIRED,
   fieldPath,
   problemToErrors,
 } from './problem-fields';
@@ -31,6 +32,17 @@ describe('problemToErrors', () => {
     });
     expect(problemToErrors(err)).toEqual({
       fields: { title: 'Too long', 'payload.rows.3.1': 'Bad cell' },
+      form: null,
+    });
+  });
+
+  it('turns the 422 "Unknown image" into "Photo expired" on the photo (D160)', () => {
+    const err = problem(422, {
+      type: '/problems/validation',
+      errors: [{ path: 'payload.publicId', message: 'Unknown image' }],
+    });
+    expect(problemToErrors(err)).toEqual({
+      fields: { 'payload.publicId': PHOTO_EXPIRED },
       form: null,
     });
   });

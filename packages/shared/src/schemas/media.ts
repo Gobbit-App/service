@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { httpUrlSchema } from './common';
-import { linkPayloadSchema } from './payloads';
+import { imageDimensionSchema, linkPayloadSchema } from './payloads';
+import { assetSources } from '../enums';
 import {
   LINK_PREVIEW_DESCRIPTION_MAX,
   LINK_PREVIEW_TITLE_MAX,
@@ -58,3 +59,34 @@ export const linkPreviewResponseSchema = z
   .object({ preview: linkPreviewSchema.nullable() })
   .strict();
 export type LinkPreviewResponse = z.infer<typeof linkPreviewResponseSchema>;
+
+/**
+ * D157: POST /decks/:id/media/assets — a finished editor upload, built from Cloudinary's upload
+ * response. `signature` is Cloudinary's response signature over `public_id` + `version`.
+ */
+export const mediaAssetConfirmRequestSchema = z
+  .object({
+    publicId: z.string().min(1).max(255),
+    version: z.number().int().nonnegative(),
+    signature: z.string().min(1).max(128),
+    width: imageDimensionSchema,
+    height: imageDimensionSchema,
+    bytes: z.number().int().nonnegative(),
+    format: z.string().min(1).max(20),
+  })
+  .strict();
+export type MediaAssetConfirmRequest = z.infer<typeof mediaAssetConfirmRequestSchema>;
+
+/** D156: one recorded image. */
+export const mediaAssetSchema = z
+  .object({
+    publicId: z.string(),
+    width: z.number().int().nullable(),
+    height: z.number().int().nullable(),
+    bytes: z.number().int().nullable(),
+    format: z.string().nullable(),
+    source: z.enum(assetSources),
+    createdAt: z.string(),
+  })
+  .strict();
+export type MediaAsset = z.infer<typeof mediaAssetSchema>;
