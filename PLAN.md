@@ -148,6 +148,10 @@ Cross-cutting: e2e tiers. [`010-e2e-journeys`](specs/010-e2e-journeys/spec.md) t
 - [ ] **5. Performance** — trace shows no long frames while swiping through 20 cards with images.
 ## Phase 7 — Media and links
 
+Specs (in order): [`012-media-assets`](specs/012-media-assets/spec.md) (demo 1) → [`013-cloud-image`](specs/013-cloud-image/spec.md) (demo 2) ∥ [`014-link-snapshots`](specs/014-link-snapshots/spec.md) (demo 3) → [`015-locked-host-links`](specs/015-locked-host-links/spec.md) (demo 4). Decisions D156–D168; ADR-054 (media assets) and ADR-055 (link snapshots and checks).
+
+Already in place from Phase 6: the per-deck signed upload route (`POST /decks/{id}/media/sign`, 8 MB, `item.create`, no upload preset) and `f_auto,q_auto,c_limit,w_720` delivery shipped in [`008-card-media`](specs/008-card-media/spec.md); the 360/720/1080 `srcset` shipped in [`009-browse-mode`](specs/009-browse-mode/spec.md). Phase 7 adds the asset registry, orphan sweep and image dimensions (012), measured `sizes` and placeholders (013), and preview snapshots — ingest stored no link preview until 014 — plus daily link checks (014).
+
 - MCP (Phase 13): image upload goes through a media service that can also take a remote URL, and the link-snapshot step runs from the service, so link cards proposed through MCP get the same preview and dead-link checks.
 
 - [ ] **1. Cloudinary integration** — upload from the phone camera; the card shows the image via `f_auto,q_auto,c_limit,w_720`; the orphan job removes an unreferenced test upload.
