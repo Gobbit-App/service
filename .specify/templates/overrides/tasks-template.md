@@ -99,7 +99,8 @@ right tier (unit / int / search / e2e), and every row of the plan's traceability
 
 - [ ] TXXX `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` (+ `pnpm test:search` / `pnpm budget` if touched)
 - [ ] TXXX e2e at the plan's tier: `@smoke` passes in CI's `e2e` job; `@full` specs pass with `pnpm test:e2e --grep @full` (until the nightly workflow exists)
-- [ ] TXXX [P] docs/architecture.md: feature section, new ADRs from plan decisions, "Deviations from the plan" list (from implementation-notes.md)
+- [ ] TXXX [P] docs/design/<area>.md (new or existing): feature detail and "Deviations from the plan" list (from implementation-notes.md)
+- [ ] TXXX [P] docs/adr.md: new ADRs from plan decisions; docs/architecture.md: one index row per ADR and at most a line or two in the area summary (keep it < 250 lines)
 - [ ] TXXX [P] README.md: env vars, commands, routes, setup steps
 - [ ] TXXX [P] CLAUDE.md ground rules if a new convention was introduced
 - [ ] TXXX PLAN.md: link this spec under its phase; tick demos only once run on the deployed instance

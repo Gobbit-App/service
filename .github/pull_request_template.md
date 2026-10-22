@@ -13,4 +13,5 @@
 
 ## Docs
 
-- [ ] `docs/architecture.md` and `README.md` reflect the change (Deviations list if the code departs from the plan)
+- [ ] `README.md` and `docs/design/<area>.md` reflect the change (Deviations list there if the code departs from the plan); new ADRs in `docs/adr.md`
+- [ ] `docs/architecture.md` changed by at most a line or two (plus ADR index rows); detail stays in `docs/design/`

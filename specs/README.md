@@ -25,12 +25,12 @@ specs/NNN-short-name/
 - **Branches**: spec-kit's git extension is not installed; branch as usual (`feat/006-…` or a
   worktree). The active feature is tracked in `.specify/feature.json` (local only).
 - **Decision IDs**: decisions in `research.md` continue the project-wide `D` numbering used in
-  `docs/architecture.md`: take the next free number across `docs/architecture.md` and
+  `docs/`: take the next free number across `docs/` and
   `specs/*/research.md` (Phase 6 reserves D129–D147). Decisions that outlive the feature become
-  the next ADR there (ADR-049 records the spec-kit adoption itself).
+  the next ADR in `docs/adr.md` (ADR-049 records the spec-kit adoption itself).
 - **Ageing**: a feature folder is a working contract until its PR merges, then a historical record.
   Later changes get a new feature, not edits to a merged spec. Durable truth lives in
-  `docs/architecture.md`, `README.md` and the constitution.
+  `docs/architecture.md` (compact map), `docs/design/`, `docs/adr.md`, `README.md` and the constitution.
 - **E2E tier**: every plan records "E2E tier: smoke | full | none — reason" (constitution V,
   ADR-053) and tags e2e tasks `[e2e:smoke]` or `[e2e:full]`.
 - **Public**: this repository is public. Write specs for outside readers: no personal data, private

@@ -16,7 +16,7 @@ repository is public (constitution, Constraints).
 
 <!--
   What main looks like before this feature: last merged phase/feature, latest migration name
-  (packages/db/migrations), relevant ADRs, deployed or not. Read docs/architecture.md and the code,
+  (packages/db/migrations), relevant ADRs, deployed or not. Read docs/architecture.md, the docs/design/ doc for the area and the code,
   not memory.
 -->
 
@@ -66,7 +66,7 @@ repository is public (constitution, Constraints).
 ## Decisions this plan pins down
 
 <!--
-  Continue the project-wide D numbering (find the highest D-number in docs/architecture.md and
+  Continue the project-wide D numbering (find the highest D-number in docs/ and
   specs/*/research.md). Full reasoning lives in research.md; list the outcome here. Mark decisions
   that should become an ADR.
 -->

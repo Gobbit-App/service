@@ -14,7 +14,7 @@ e2e/             — Playwright smoke tests
 infra/           — Docker Compose (base = deployed, docker-compose.local.yml = local ports/dev defaults)
 apps/api/Dockerfile — API image (also used by Compose)
 apps/web/Dockerfile + Caddyfile — web image (static PWA; routes /api and /s to the API)
-docs/            — architecture.md (keep synced), shortcut/README.md (iPhone Shortcut + email-in)
+docs/            — architecture.md (compact map), design/*.md (per-area detail), adr.md (full ADRs), shortcut/README.md (iPhone Shortcut + email-in)
 specs/           — spec-kit features `NNN-name/` (spec, plan, tasks); README.md = conventions
 .specify/        — spec-kit: constitution (`memory/constitution.md`), templates (+ `templates/overrides/`), scripts
 ```
@@ -41,16 +41,16 @@ specs/           — spec-kit features `NNN-name/` (spec, plan, tasks); README.m
 - **Media**: editor photo uploads go browser → Cloudinary with a per-deck signature from `POST /decks/{id}/media/sign` (`item.create`; folder `gobbit/items/<deckId>`, tags `editor`,`deck:<deckId>`; secret never leaves the API, ADR-051); `POST /decks/{id}/link-preview` fetches only via `safe-fetch` and answers `{ preview: null }` on any failure without the reason (D134). Tests never call Cloudinary or real sites Email-in (`/webhooks/resend/inbound`) is on only with `INGEST_EMAIL_DOMAIN` + `RESEND_WEBHOOK_SECRET` + `RESEND_API_KEY`
 - **Web**: plain CSS, no UI kit; API data offline via persisted query cache, never the service worker (search queries are not persisted); value imports from `@pb/shared` subpaths (`/search`, `/calc`, …), never the root (bundle budget); same origin everywhere (no CORS); gestures live only in `browse/` (`@use-gesture/react` stays out of initial chunks, `pnpm budget` checks)
 - **Editor**: editor validation is zod-free; the server is authoritative; value imports via `@pb/shared/card-limits` and `/calc` (calc loaded on demand); drafts live in IndexedDB and are cleared on save and sign-out (D145)
-- **Docs**: Keep `docs/architecture.md` and `README.md` synced with code
+- **Docs**: Keep `README.md` and `docs/` synced with code. `docs/architecture.md` stays a compact map (< 250 lines): a feature adds at most a line or two and one ADR index row there; its detail and "Deviations" list go in `docs/design/<area>.md`, full ADRs in `docs/adr.md`. Never paste route tables, step lists, bundle numbers or deviation lists into `architecture.md`
 
 ## Planning (spec-kit)
 
 - **Flow**: `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement` → `/speckit-converge` (repeat implement/converge until Converged). Use these instead of the personal `plan-feature` skill in this repo. Small fixes with no new behaviour skip it
 - **Constitution**: `.specify/memory/constitution.md` holds the principles every plan gates on; amend it (versioned) rather than working around it. Customise templates only in `.specify/templates/overrides/` (survives `specify` upgrades)
 - **Numbering**: sequential from `006` (Phases 0–5 are recorded in `specs/005-phases-0-5`); a phase may span several features; `PLAN.md` stays the roadmap and links each feature
-- **Decisions**: `research.md` continues the `D` series (next free number across `docs/architecture.md` and `specs/*/research.md`; Phase 6 reserves D129–D147); durable ones become the next ADR in `docs/architecture.md`
+- **Decisions**: `research.md` continues the `D` series (next free number across `docs/` and `specs/*/research.md`; Phase 6 reserves D129–D147); durable ones become the next ADR in `docs/adr.md` plus a one-line row in the `docs/architecture.md` index
 - **E2E tier**: decide it in `/speckit-plan` (Technical Context "E2E tier" line) and tag tasks `[e2e:smoke]` / `[e2e:full]`; small fixes state it in the PR template
-- **Implementing**: log decisions the plan didn't make and deviations in `specs/NNN-*/implementation-notes.md` (committed with the feature); at close-out copy deviations into the "Deviations" list in `docs/architecture.md`
+- **Implementing**: log decisions the plan didn't make and deviations in `specs/NNN-*/implementation-notes.md` (committed with the feature); at close-out copy deviations into the "Deviations" list of the matching `docs/design/<area>.md`
 - **Public repo**: specs are committed and public — no personal data, private notes, costs or secrets (ADR-023, ADR-049). Private scratch still goes in gitignored `plans/`
 - **spec-kit version**: pinned 1.2.2 (`uvx --from specify-cli==1.2.2 specify …`); upgrade deliberately and review the diff
 
@@ -67,4 +67,4 @@ pnpm build:web / budget / og:static # Web build, 150 KB gzip budget, static OG/i
 pnpm compose:{up,down}             # Docker (Postgres + API + worker + web on 127.0.0.1:8080)
 ```
 
-See `docs/architecture.md` and `README.md` for detailed setup.
+See `README.md` for setup, `docs/architecture.md` for the system map (links to `docs/design/` and `docs/adr.md`).

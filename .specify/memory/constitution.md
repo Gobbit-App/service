@@ -2,7 +2,8 @@
 
 Principles every spec, plan and task in this repository must satisfy. Each rule is already true of the
 codebase (Phases 0–5) or was agreed in an ADR; the ADR in brackets holds the rationale. Operational
-detail (commands, env vars, layout) lives in `CLAUDE.md`, `README.md` and `docs/architecture.md`.
+detail (commands, env vars, layout) lives in `CLAUDE.md`, `README.md`, `docs/architecture.md` (a compact
+map) and `docs/design/` (per-area detail).
 
 ## Core Principles
 
@@ -107,10 +108,11 @@ detail (commands, env vars, layout) lives in `CLAUDE.md`, `README.md` and `docs/
   (one obvious change, no new behaviour) may skip the workflow.
 - `PLAN.md` is the roadmap; each phase becomes one or more features under `specs/NNN-name/`.
 - Decisions in `research.md` continue the project-wide `D` numbering; any that will outlive the
-  feature become an ADR in `docs/architecture.md`.
+  feature become an ADR in `docs/adr.md`, with a one-line row in the `docs/architecture.md` index.
 - Before merge: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int`
-  pass; `docs/architecture.md` and `README.md` reflect the change, including a "Deviations" list
-  when the code departs from the plan.
+  pass; `README.md` and `docs/` reflect the change. Feature detail and its "Deviations" list (when
+  the code departs from the plan) go in `docs/design/<area>.md`; `docs/architecture.md` stays a
+  compact map and gains at most a line or two per feature.
 
 ## Governance
 
@@ -121,4 +123,4 @@ detail (commands, env vars, layout) lives in `CLAUDE.md`, `README.md` and `docs/
 - Amendments are PRs that edit this file and, if needed, the matching ADR. Versioning: MAJOR when a
   principle is removed or redefined, MINOR when one is added or materially expanded, PATCH for wording.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-21
+**Version**: 1.1.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-22

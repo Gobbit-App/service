@@ -90,7 +90,7 @@ Oct 12: demos reworded to match the code as built through Phase 3B (details and 
 - The hybrid query lives in the repository and reuses the single visibility predicate (D38). There is no `search_items()` SQL function, and psql can't embed a query, so demo 3 uses `pnpm search:query`.
 - "Job log" is the new `llm_calls` table, which Phase 5 reuses.
 
-Oct 12: implemented on branch `worktree-p4-implementation` (P4.0–P4.6; see "Search (Phase 4)" in `docs/architecture.md`, including its deviations). Boxes stay open until the demos are run on the deployed box:
+Oct 12: implemented on branch `worktree-p4-implementation` (P4.0–P4.6; see `docs/design/search.md`, including its deviations). Boxes stay open until the demos are run on the deployed box:
 - Needs `OPENROUTER_API_KEY` (or `OPENAI_API_KEY` + `ANTHROPIC_API_KEY`) in Dokploy (API + worker). Without them search is text-only and Ask is hidden.
 - `search-embeddings.json` is still empty: run `pnpm test:search:update` once with `OPENROUTER_API_KEY` or `OPENAI_API_KEY` and commit it, otherwise demo 6 only gates the text arm (26 pairs, recall 1.0 today).
 - Demo 5: no LLM call only when retrieval finds nothing; a question with weak matches still calls the model, which then answers "not found" (`grounded: false`).
@@ -106,7 +106,7 @@ Oct 12: implemented on branch `worktree-p4-implementation` (P4.0–P4.6; see "Se
 - Scheduled (Oct 1): enforce "a published item has ≥ 1 category" in the database (a deferred constraint trigger on `items` status → published and on `item_categories` deletes), before the review queue starts publishing agent proposals. Today it is service-only.
 - MCP (Phase 13): add the direct-proposal path (`proposeDirect`, channel `mcp`, an explicit `update` target) and the shared token-prefix rule, so Phase 13 plugs in without reshaping ingestion. See the P5.9 addendum on the `p5-implementation` branch.
 
-Oct 17: implemented on branch `p5-implementation` (P5.0–P5.8, decisions D92–D111, ADR-045–048; see "Ingestion (Phase 5)" in `docs/architecture.md`, including its deviations). The Android share target is its own PR (`p5-share-target`). The published-needs-a-category trigger above shipped as D95. Boxes stay open until the demos are run on the deployed box:
+Oct 17: implemented on branch `p5-implementation` (P5.0–P5.8, decisions D92–D111, ADR-045–048; see `docs/design/ingestion.md`, including its deviations). The Android share target is its own PR (`p5-share-target`). The published-needs-a-category trigger above shipped as D95. Boxes stay open until the demos are run on the deployed box:
 - Needs `OPENROUTER_API_KEY` (or `ANTHROPIC_API_KEY`) in Dokploy for the API and the worker; without it sharing is hidden and `POST /ingest` answers 503. Dedup by meaning also needs an embedding key; without one it falls back to the source URL and title similarity.
 - Demo 3's iPhone path needs the Shortcut built and published once (`docs/shortcut/README.md`, then `SHORTCUT_URL`). The email half needs email-in turned on: Resend Receiving + MX for `INGEST_EMAIL_DOMAIN`, the webhook, `RESEND_WEBHOOK_SECRET`.
 - Demo 8's real-model check has no `pnpm test:ingest` yet; run it by hand on the deployed box (CI covers the prompt with a fake extractor).
@@ -120,7 +120,7 @@ Oct 17 addendum, **P5.9 MCP readiness** (planned, not implemented; details in `p
 - **A5.** The 24 h proposal cap is per channel, so MCP gets its own limit without changing the share limit.
 - **A6.** Publishing as an update already refuses a target in another deck. It should also refuse a target that is no longer `published` (archived or deleted between the proposal and the review), which MCP makes more likely.
 - **A7.** Split Settings into sections (Sharing tokens now, "Connected AI apps" in Phase 13).
-- **A8.** Docs: note the readiness hooks in the Ingestion section of `docs/architecture.md`.
+- **A8.** Docs: note the readiness hooks in `docs/design/ingestion.md`.
 
 
 - [ ] **1. Ingest endpoint and job table** — `curl` a URL to `/ingest` with an ingest token; the job row appears; `GET /ingest/:id` shows status moving from `queued` to `proposed` (or `failed` with an error).
