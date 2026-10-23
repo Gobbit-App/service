@@ -98,7 +98,7 @@ The owner runs one command with a file and a deck to import a large note archive
 ### Measurable Outcomes
 
 - **SC-001**: 40 lines of existing notes become 40 proposed cards and are reviewed and published in one sitting of under ten minutes (PLAN.md Phase 8 demo 6).
-- **SC-002**: Importing 200 rows completes in under 30 seconds.
+- **SC-002**: Importing 100 rows (one request) completes in under 15 seconds.
 - **SC-003**: Parsing rules are covered by unit tests on fixtures for each format, including Hebrew text.
 - **SC-004**: An import makes zero AI model calls.
 

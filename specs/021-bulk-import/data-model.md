@@ -14,9 +14,9 @@ No new tables. Imported proposals are `ingest_jobs` rows (`channel = 'import'`, 
 |------|-------|-----|
 | `ingestChannels` | + `'import'` | |
 | `IMPORT_ROWS_PER_REQUEST` | 100 | Rows per `POST /imports` |
-| `IMPORT_ROWS_PER_PREVIEW` | 500 | Rows the screen will parse before asking to split |
+| `IMPORT_ROWS_PER_PREVIEW` | 150 | Rows the screen will parse before asking to split (= the daily cap) |
 | `IMPORT_TITLE_SPLIT_MAX` | 80 | Longest title taken from a line |
-| `INGEST_CHANNEL_DAILY_CAPS.import` | 500 | Imported rows per user per day |
+| `INGEST_CHANNEL_DAILY_CAPS.import` | 150 | Imported rows per user per day (start low; revisit with real use) |
 | `BULK_PUBLISH_MAX` | 50 | Ids per bulk publish |
 | `IMPORT_LABEL_MAX` | `INGEST_CLIENT_LABEL_MAX` (60) | |
 

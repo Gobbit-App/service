@@ -21,7 +21,7 @@ Project override of the core template. Written for outside readers: the reposito
 
 Caps:
 
-- The `import` channel has its own daily cap of 500 rows (`INGEST_CHANNEL_DAILY_CAPS.import`).
+- The `import` channel has its own daily cap of 150 rows (`INGEST_CHANNEL_DAILY_CAPS.import`).
 - `import` is excluded from the combined cross-channel cap, so one import can't lock its admin out of sharing.
 
 A migration adds `import` to the `ingest_channel` enum.
@@ -90,7 +90,7 @@ Full reasoning in [research.md](./research.md).
 | ID | Decision | ADR? |
 |----|----------|------|
 | D189 | Deterministic import parser in `@pb/shared/import` (`parseNotes(text, format)`, formats `lines`, `markdown`, `csv`, auto-detect by extension/content); line rules: URL-only → link card, `title — body` / `title: body` split, else first sentence (≤ 80 chars) as title; markdown: heading → category name, list item/paragraph → card; CSV header `title,body,category,url` via `papaparse`; rows validated against card limits; no LLM | no |
-| D190 | `POST /decks/{id}/imports` `{ label, rows ≤ IMPORT_ROWS_PER_REQUEST (100) }`, `item.publish`; per row `proposeDirect` with channel `import` (migration adds the enum value), `clientLabel = label`; `import` daily cap 500 rows, excluded from the combined cap; 200 `{ imported, duplicates, failed: [{ index, problem }] }`; stops at the cap and reports the rest; CLI `pnpm import:notes <file> --deck <slug> [--dry-run]` with `GOBBIT_API_URL` + `GOBBIT_TOKEN` (session bearer) | no |
+| D190 | `POST /decks/{id}/imports` `{ label, rows ≤ IMPORT_ROWS_PER_REQUEST (100) }`, `item.publish`; per row `proposeDirect` with channel `import` (migration adds the enum value), `clientLabel = label`; `import` daily cap 150 rows, excluded from the combined cap; 200 `{ imported, duplicates, failed: [{ index, problem }] }`; stops at the cap and reports the rest; CLI `pnpm import:notes <file> --deck <slug> [--dry-run]` with `GOBBIT_API_URL` + `GOBBIT_TOKEN` (session bearer) | no |
 | D191 | `POST /decks/{id}/review/publish` `{ ids ≤ 50 }`, `item.publish`; publishes `new`-verdict proposals as is, one transaction each; skips `possible_duplicate`/`update` (`needs-decision`) and non-proposed (`already-handled`); 200 `{ published: [id], skipped: [{ id, reason }] }`; review queue select mode + `source` filter (`clientLabel`) | no |
 
 ## Project Structure
@@ -119,7 +119,7 @@ packages/shared/src/
 ├── import/fixtures/*.txt|md|csv             # NEW: test fixtures (synthetic, incl. Hebrew)
 ├── schemas/import.ts                        # NEW: importRowSchema, importRequestSchema, importResultSchema, bulkPublishSchema, bulkPublishResultSchema
 ├── ingest/constants.ts                      # ingestChannels + 'import'; IMPORT_* limits
-└── limits.ts                                # INGEST_CHANNEL_DAILY_CAPS.import = 500
+└── limits.ts                                # INGEST_CHANNEL_DAILY_CAPS.import = 150
 
 packages/db/migrations/00NN_import_channel.sql   # ALTER TYPE … ADD VALUE 'import' (down: documented no-op + data note)
 
@@ -177,8 +177,9 @@ e2e/tests/full/import.spec.ts                # NEW
 
 ## Settle before starting
 
-- [ ] Allow editors to import into the review queue (larger audience, more review load)? The plan says admins only.
-- [ ] Is 500 imported rows per admin per day enough for the first community load?
+- [x] Who can import: owners and maintainers only (settled 2026-10-23); editors keep sharing one card at a time.
+- [x] Daily cap: 150 imported rows per admin per day for now (settled 2026-10-23); revisit after the first real loads.
+- [x] No AI in import: deterministic parsing only (settled 2026-10-23).
 
 ## Complexity Tracking
 

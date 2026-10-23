@@ -23,7 +23,7 @@ description: "Task list for 021-bulk-import"
 
 ## Phase 1: Foundational (Blocking Prerequisites)
 
-- [ ] T001 `'import'` in `ingestChannels`; `IMPORT_*`, `BULK_PUBLISH_MAX` in packages/shared/src/ingest/constants.ts; `INGEST_CHANNEL_DAILY_CAPS.import = 500` in packages/shared/src/limits.ts (+ limits.test.ts row)
+- [ ] T001 `'import'` in `ingestChannels`; `IMPORT_*`, `BULK_PUBLISH_MAX` in packages/shared/src/ingest/constants.ts; `INGEST_CHANNEL_DAILY_CAPS.import = 150` in packages/shared/src/limits.ts (+ limits.test.ts row)
 - [ ] T002 Migration packages/db/migrations/00NN_import_channel.sql + down file; [int] round trip in apps/api/test/imports.int.test.ts
 - [ ] T003 [P] packages/shared/src/schemas/import.ts (`importRowSchema`, `importRequestSchema`, `importResultSchema`, `bulkPublishSchema`, `bulkPublishResultSchema`); `./import` subpath export
 - [ ] T004 [P] `CHANNEL_LABELS.import = 'Imported'` in apps/web/src/review/source-line.ts (+ test row)
