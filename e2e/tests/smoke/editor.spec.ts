@@ -198,6 +198,9 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   await page.route('**/auth/logout', (route) => route.fulfill({ status: 204 }));
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/sign-in/);
+  // The app leaves for /sign-in first and clears local data afterwards; navigating away before
+  // that finishes would abort it.
+  await expect.poll(() => storedDraftCount(page)).toBe(0);
   await page.unroute('**/auth/logout');
 
   await page.goto(newCard);
@@ -233,9 +236,40 @@ test('a category created inline is selected and the card is saved in it @smoke',
 
   await save(page).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
-  await page.getByRole('link', { name: category }).click();
+  // Cards in the list show their category chips too; open it from the deck's category nav.
+  await page
+    .getByRole('navigation', { name: 'Categories' })
+    .getByRole('link', { name: category })
+    .click();
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
+
+/** Drafts in the editor's IndexedDB store (`gobbit-drafts`, D145). */
+function storedDraftCount(page: Page): Promise<number> {
+  return page.evaluate(async () => {
+    // Opening a missing database would create it without its store and break idb-keyval later.
+    const databases = await indexedDB.databases();
+    if (!databases.some((db) => db.name === 'gobbit-drafts')) return 0;
+    return new Promise<number>((resolve, reject) => {
+      const open = indexedDB.open('gobbit-drafts');
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        if (!db.objectStoreNames.contains('drafts')) {
+          db.close();
+          resolve(0);
+          return;
+        }
+        const count = db.transaction('drafts').objectStore('drafts').count();
+        count.onsuccess = () => {
+          db.close();
+          resolve(count.result);
+        };
+        count.onerror = () => reject(count.error);
+      };
+    });
+  });
+}
 
 test('an image card is uploaded, described and listed @smoke', async ({ page, webDeck }) => {
   // Saving needs the asset recorded by the real API (D160), so the upload answer must verify.

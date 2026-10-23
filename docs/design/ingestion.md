@@ -73,5 +73,5 @@ Non-session tokens are listed in `lib/token-prefixes.ts` (today `ing_`; Phase 13
 - **Email-in needs `RESEND_API_KEY`**: Resend's `email.received` webhook carries metadata only. No `email_id` dedupe yet; the token local part is case-sensitive.
 - **The Shortcut ships as documented build steps** (a signed `.shortcut` can't be generated in CI); token and server are Import Questions, so the published link holds no secret.
 - **No `pnpm test:ingest`** real-model injection check yet: prompt-injection handling is covered by `extract-prompt` unit tests and the fake extractor.
-- **E2E** (`review`, `share`, `settings` specs) runs in the post-deploy smoke workflow, not locally.
+- **E2E** (`review`, `share`, `settings` specs) runs in CI's `e2e` job (Compose stack, every PR) and the post-deploy smoke workflow.
 - **P5.9 (MCP readiness) is migration `0010_mcp_readiness`**, not part of `0009_ingest`: 0009 was already merged and deployed when the addendum landed. The down file recreates `source_kind` and `ingest_channel` without `mcp` (existing `mcp` items become `share`, `mcp` jobs are deleted).

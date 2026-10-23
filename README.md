@@ -140,6 +140,19 @@ The app is at `http://localhost:8080`; the API is also published directly at `ht
 
 ## Smoke Tests
 
+### On every PR (CI)
+
+The `e2e` job in `ci.yml` builds both images from the PR and starts the local Compose stack (Postgres, API, worker, web on `:8080`). The API gets dummy Cloudinary credentials (the specs fake every Cloudinary host and sign the fake upload answer with that secret). It seeds the owner with a fresh `SMOKE_SESSION_TOKEN` and runs `playwright test --grep @smoke` against `http://localhost:8080/api`. It runs whenever `test` runs (docs-only changes skip both), and on `main` the image and deploy jobs wait for it. On failure the run uploads `e2e-report`: the Playwright report, traces and the `api`/`worker`/`web` logs.
+
+To reproduce it locally (stop anything already on ports 5432/3000/8080 first):
+
+```bash
+CLOUDINARY_URL=cloudinary://e2e-key:e2e-secret@e2e-cloud pnpm compose:up
+TOKEN=$(openssl rand -hex 32)
+DATABASE_URL=postgres://pb:pb@localhost:5432/pb SEED_OWNER_EMAIL=owner@example.test SMOKE_SESSION_TOKEN=$TOKEN pnpm db:seed
+BASE_URL=http://localhost:8080/api SMOKE_SESSION_TOKEN=$TOKEN CLOUDINARY_API_SECRET=e2e-secret pnpm test:e2e --grep @smoke
+```
+
 ### Locally
 
 With the dev server running and the seed run with `SMOKE_SESSION_TOKEN` set:
@@ -180,14 +193,14 @@ pnpm --filter e2e exec playwright install chromium
 ### How a push reaches the box
 
 ```
-push to main → CI (tests, client drift, web build + budget)
+push to main → CI (tests, client drift, web build + budget; e2e: @smoke against the Compose stack built from the commit)
              → image job (matrix api, web): build with GIT_SHA, push ghcr.io/gobbit-app/service/{api,web}:{latest,<sha>}
              → deploy job: POST $DOKPLOY_DEPLOY_WEBHOOK (titled "<commit subject> — <sha7>") → Dokploy pulls both images, restarts the Compose project
              → smoke.yml waits until /api/health and /version.json report commit = <sha>, then runs the API and web-smoke projects
 ```
 
 - **Manual deploy:** Actions → **CI** → **Run workflow** on `main` (or `gh workflow run ci.yml --ref main`). It runs the same pipeline for the current `main` head: tests, images, Dokploy webhook, then smoke. Run on any other branch, it only runs the tests.
-- **Docs-only changes skip CI:** a `changes` job (`dorny/paths-filter`) runs first. If every changed file is `*.md`, under `docs/`, `LICENSE` or `apps/api/api.http`, then test, image and deploy are skipped (reported as skipped, which passes required checks), and smoke is skipped because nothing was deployed. PRs compare against their base; pushes to `main` compare against the last commit CI passed on `main`, so code from a cancelled or failed run still ships with the next push. Manual runs always do everything.
+- **Docs-only changes skip CI:** a `changes` job (`dorny/paths-filter`) runs first. If every changed file is `*.md`, under `docs/`, `LICENSE` or `apps/api/api.http`, then test, e2e, image and deploy are skipped (reported as skipped, which passes required checks), and smoke is skipped because nothing was deployed. PRs compare against their base; pushes to `main` compare against the last commit CI passed on `main`, so code from a cancelled or failed run still ships with the next push. Manual runs always do everything.
 
 - **Images:** `ghcr.io/gobbit-app/service/api` and `ghcr.io/gobbit-app/service/web`, tagged `latest` and the full commit SHA. The base Compose file runs `${API_IMAGE_TAG:-latest}` / `${WEB_IMAGE_TAG:-latest}` with `pull_policy: always`. If the GHCR packages are private, give Dokploy registry credentials for `ghcr.io`.
 - **Base images:** API `node:22-slim`; web built on `node:22-slim`, served by `caddy:2-alpine` (`apps/web/Caddyfile`: routing, cache headers, CSP). The web image serves `/version.json` with its commit.
@@ -464,7 +477,7 @@ uvx --from specify-cli==1.2.2 specify init --here --force --non-interactive --in
 | Unit | Vitest | `*.test.ts` next to code | Node |
 | Integration | Vitest + Testcontainers | `*.int.test.ts` in `test/` | Docker (PostgreSQL) |
 | Search eval | Vitest + Testcontainers | `*.search.test.ts` in `apps/api/test` | Docker (PostgreSQL) |
-| E2E / Smoke | Playwright `@smoke` | `e2e/tests/smoke/` — critical journeys | Live API (post-deploy; every PR once 010 lands) |
+| E2E / Smoke | Playwright `@smoke` | `e2e/tests/smoke/` — critical journeys | Compose stack built from the PR (CI `e2e` job), then the live API post-deploy |
 | E2E / Full | Playwright `@full` | `e2e/tests/full/` — everything else | Live API (nightly once 011 lands) |
 
 Run with `pnpm test`, `pnpm test:unit`, `pnpm test:int`, `pnpm test:search`, or `pnpm test:e2e`.

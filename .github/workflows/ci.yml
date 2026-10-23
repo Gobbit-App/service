@@ -130,8 +130,73 @@ jobs:
             exit 1
           }
 
+  # D153: the Playwright @smoke suite against a Compose stack built from this commit (both images,
+  # local Postgres, console mailer), so broken journeys fail the PR instead of the deploy.
+  e2e:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      COMPOSE: docker compose -p gobbit-e2e -f infra/docker-compose.yml -f infra/docker-compose.local.yml
+      # Dummy credentials, never a real account: the specs answer every Cloudinary host with
+      # page.route, and sign the fake upload answer with this secret so the API's confirm step
+      # (012) verifies it.
+      CLOUDINARY_URL: cloudinary://e2e-key:e2e-secret@e2e-cloud
+      CLOUDINARY_API_SECRET: e2e-secret
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # docker-compose.yml attaches web to Dokploy's external network; create an empty one.
+      - name: Start the stack
+        run: |
+          docker network create dokploy-network
+          $COMPOSE up -d --build --wait --wait-timeout 300
+
+      # The API ran the migrations on boot; the seed adds the owner and a fresh smoke bearer.
+      - name: Seed the owner and smoke session
+        env:
+          DATABASE_URL: postgres://pb:pb@localhost:5432/pb
+          SEED_OWNER_EMAIL: owner@example.test
+        run: |
+          token=$(openssl rand -hex 32)
+          echo "::add-mask::$token"
+          echo "SMOKE_SESSION_TOKEN=$token" >> "$GITHUB_ENV"
+          SMOKE_SESSION_TOKEN="$token" pnpm db:seed
+
+      - run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      - run: pnpm --filter e2e exec playwright test --grep @smoke
+        env:
+          # The web image serves the app on :8080 and proxies /api to the API (D64).
+          BASE_URL: http://localhost:8080/api
+          CI: 'true'
+
+      - name: Collect stack logs
+        if: failure()
+        run: $COMPOSE logs --no-color api worker web > e2e/stack.log 2>&1
+
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+            e2e/stack.log
+
   image:
-    needs: test
+    # Main deploys only what passed both the test suites and the e2e smoke run.
+    needs: [test, e2e]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
