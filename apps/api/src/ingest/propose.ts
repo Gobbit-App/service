@@ -7,6 +7,7 @@ import type {
   SourceKind,
 } from '@pb/shared';
 import type { EmbedQueue } from '../jobs/embed-queue';
+import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
@@ -20,6 +21,8 @@ export interface ProposeDeps {
   /** D103: the dedup verdict for the new proposal (bound `runDedup`); omitted → no verdict. */
   dedup?: (input: RunDedupInput) => Promise<DedupVerdict>;
   embedQueue: EmbedQueue;
+  /** D163: copy a proposed link's preview image; omitted → no snapshot. */
+  linkSnapshotQueue?: LinkSnapshotQueue;
   now: () => Date;
   log: (message: string) => void;
 }
@@ -100,6 +103,7 @@ export async function proposeItem(deps: ProposeDeps, input: ProposeInput): Promi
     finishedAt: deps.now(),
   });
   await deps.embedQueue.enqueueIfStale(created.id);
+  await deps.linkSnapshotQueue?.enqueueIfNeeded(created);
   return { item: created, dedup };
 }
 

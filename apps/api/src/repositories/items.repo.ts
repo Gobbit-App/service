@@ -18,6 +18,7 @@ import {
   itemCategories,
   itemColumns,
   items,
+  linkChecks,
   type DbExecutor,
   type ItemRow,
 } from '@pb/db';
@@ -160,6 +161,78 @@ export function createItemsRepo(db: DbExecutor) {
         .where(and(...conditions))
         .orderBy(desc(items.createdAt), desc(items.id))
         .limit(q.limit);
+    },
+
+    /**
+     * D165: published live link cards with an active (not dismissed) check flag, newest flag first.
+     * Each row carries its `flaggedAt` for the cursor.
+     */
+    async listLinkFlagged(
+      q: ItemListFilters & { after?: { flaggedAt: string; id: string }; limit: number },
+    ): Promise<(ItemRow & { flaggedAt: Date })[]> {
+      const conditions = [
+        ...filterConditions(q),
+        eq(items.type, 'link'),
+        eq(items.status, 'published'),
+        isNull(items.deletedAt),
+        inArray(linkChecks.status, ['dead', 'changed']),
+        isNotNull(linkChecks.flaggedAt),
+        isNull(linkChecks.dismissedAt),
+      ];
+
+      if (q.after) {
+        conditions.push(
+          sql`(${linkChecks.flaggedAt}, ${items.id}) < (${q.after.flaggedAt}::timestamptz, ${q.after.id}::uuid)`,
+        );
+      }
+
+      const rows = await db
+        .select({ ...itemColumns, flaggedAt: linkChecks.flaggedAt })
+        .from(items)
+        .innerJoin(linkChecks, eq(linkChecks.itemId, items.id))
+        .where(and(...conditions))
+        .orderBy(desc(linkChecks.flaggedAt), desc(items.id))
+        .limit(q.limit);
+      return rows.map((r) => ({ ...r, flaggedAt: r.flaggedAt! }));
+    },
+
+    /**
+     * D163: writes `payload` only if the row still has `updatedAt` (no edit since it was read).
+     * Returns the updated row, or null when the row changed or is gone.
+     */
+    async updatePayloadIf(
+      id: string,
+      updatedAt: Date,
+      payload: Record<string, unknown>,
+    ): Promise<ItemRow | null> {
+      const [row] = await db
+        .update(items)
+        .set({ payload })
+        .where(and(eq(items.id, id), eq(items.updatedAt, updatedAt), isNull(items.deletedAt)))
+        .returning(itemColumns);
+      return row ?? null;
+    },
+
+    /**
+     * D163 backfill: live link cards with a remote `preview.image` and no stored copy, by id
+     * (keyset after `afterId`).
+     */
+    async linkSnapshotCandidates(afterId: string | null, limit: number): Promise<ItemRow[]> {
+      return db
+        .select(itemColumns)
+        .from(items)
+        .where(
+          and(
+            eq(items.type, 'link'),
+            inArray(items.status, ['proposed', 'published']),
+            isNull(items.deletedAt),
+            sql`${items.payload} #>> '{preview,image}' is not null`,
+            sql`${items.payload} #>> '{preview,publicId}' is null`,
+            afterId ? sql`${items.id} > ${afterId}` : undefined,
+          ),
+        )
+        .orderBy(items.id)
+        .limit(limit);
     },
 
     /** D132: a row even when soft-deleted (undelete); callers decide what a deleted row means. */

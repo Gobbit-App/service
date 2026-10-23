@@ -9,9 +9,11 @@ import {
   useLifecycle,
   type LifecycleAction,
 } from '../api/item-lifecycle';
+import { linkCheckActions } from '../api/link-checks';
 import { useOnline } from '../api/offline';
 import { lifecycleErrorMessage } from '../api/problem-messages';
 import { showToast } from '../ui/toast-store';
+import { LinkCheckButtons } from './LinkCheckButtons';
 
 export const DELETE_CONFIRM = 'Delete this card? You can undo it for 30 days.';
 
@@ -72,8 +74,9 @@ export function CardActions({
   const online = useOnline();
   const lifecycle = useLifecycle();
   const actions = availableActions(item, role);
+  const linkActions = linkCheckActions(item, role);
 
-  if (actions.length === 0 && !children) return null;
+  if (actions.length === 0 && linkActions.length === 0 && !children) return null;
 
   function fail(action: LifecycleAction, error: unknown): void {
     showToast({ message: lifecycleErrorMessage(error, FAILED[action]) });
@@ -103,6 +106,7 @@ export function CardActions({
   return (
     <div className="card-actions">
       {children}
+      <LinkCheckButtons item={item} deckSlug={deckSlug} actions={linkActions} disabled={!online} />
       {actions.map((action) => (
         <button
           key={action}

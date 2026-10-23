@@ -52,7 +52,7 @@ registerRoute(
   new CacheFirst({
     cacheName: 'cloudinary-images',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 300, maxAgeSeconds: THIRTY_DAYS }),
+      new ExpirationPlugin({ maxEntries: 600, maxAgeSeconds: THIRTY_DAYS }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
   }),

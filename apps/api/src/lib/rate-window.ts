@@ -31,4 +31,6 @@ export const rateKeys = {
   mediaSignUser: (userId: string) => `media-sign:user:${userId}`,
   mediaUploadFailureUser: (userId: string) => `media-upload-failure:user:${userId}`,
   linkPreviewUser: (userId: string) => `link-preview:user:${userId}`,
+  mediaConfirmUser: (userId: string) => `media-confirm:user:${userId}`,
+  linkCheckUser: (userId: string) => `link-check:user:${userId}`,
 };

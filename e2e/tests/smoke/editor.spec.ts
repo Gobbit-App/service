@@ -1,4 +1,11 @@
 import type { Page } from '@playwright/test';
+import {
+  cloudinaryApiSecret,
+  photoFile,
+  routeCloudName,
+  routeFakeCloudinary,
+  routeImageDelivery,
+} from '../../fixtures/cloudinary';
 import { expect, test, webUrl } from '../../fixtures/web';
 
 /** Below 768px (Pixel 7) the preview is a tab: open it, then read the preview region. */
@@ -230,57 +237,9 @@ test('a category created inline is selected and the card is saved in it @smoke',
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
 
-const TINY_PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-  'base64',
-);
-const photoFile = { name: 'photo.png', mimeType: 'image/png', buffer: TINY_PNG };
-
-/** 008: `/config` as the real API answers it, with the cloud name overridden for this page. */
-async function routeCloudName(page: Page, cloudName: string | null) {
-  await page.route('**/api/config', async (route) => {
-    const response = await route.fetch();
-    const config = (await response.json()) as Record<string, unknown>;
-    await route.fulfill({ response, json: { ...config, cloudinaryCloudName: cloudName } });
-  });
-}
-
-/** 008: Cloudinary image delivery, answered locally. */
-async function routeImageDelivery(page: Page) {
-  await page.route('https://res.cloudinary.com/**', (route) =>
-    route.fulfill({ contentType: 'image/png', body: TINY_PNG }),
-  );
-}
-
-/** 008: a fake upload permission and Cloudinary; tests never reach the real service (D133). */
-async function routeFakeCloudinary(page: Page, publicId: string) {
-  const cloud = 'e2e-cloud';
-  await routeCloudName(page, cloud);
-  await page.route('**/api/decks/*/media/sign', (route) =>
-    route.fulfill({
-      json: {
-        uploadUrl: `https://api.cloudinary.com/v1_1/${cloud}/image/upload`,
-        apiKey: 'e2e-key',
-        timestamp: Math.floor(Date.now() / 1000),
-        signature: 'e2e-signature',
-        folder: 'gobbit/items/e2e',
-        tags: 'editor,deck:e2e',
-        allowedFormats: 'jpg,png,webp,heic,heif',
-        maxBytes: 8 * 1024 * 1024,
-        expiresAt: new Date(Date.now() + 50 * 60_000).toISOString(),
-      },
-    }),
-  );
-  const uploads: string[] = [];
-  await page.route('https://api.cloudinary.com/**', (route) => {
-    uploads.push(route.request().url());
-    return route.fulfill({ json: { public_id: publicId } });
-  });
-  await routeImageDelivery(page);
-  return uploads;
-}
-
 test('an image card is uploaded, described and listed @smoke', async ({ page, webDeck }) => {
+  // Saving needs the asset recorded by the real API (D160), so the upload answer must verify.
+  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `Editor image ${webDeck.slug}`;
   const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
@@ -294,11 +253,22 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   // The preview renders the photo through the same Card as the list (FR-008).
   const preview = await showPreview(page);
   await expect(preview.getByRole('img', { name: 'A test photo' })).toBeVisible();
+  const created = page.waitForResponse(
+    (res) => /\/api\/decks\/[^/]+\/items$/.test(res.url()) && res.request().method() === 'POST',
+  );
   await save(page).click();
 
+  // The API wrote the dimensions it recorded at confirm time (D160).
+  const response = await created;
+  expect(response.status()).toBe(201);
+  expect(((await response.json()) as { payload: { width?: number } }).payload.width).toBe(1);
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   const listed = page.getByRole('article').filter({ hasText: title });
-  await expect(listed.getByRole('img', { name: 'A test photo' })).toBeVisible();
+  const listedImage = listed.getByRole('img', { name: 'A test photo' });
+  await expect(listedImage).toBeVisible();
+  // CloudImage sizes from the measured column (D161) and keeps the three-width srcset.
+  await expect(listedImage).toHaveAttribute('sizes', /^\d+px$/);
+  expect((await listedImage.getAttribute('srcset'))?.split(', ')).toHaveLength(3);
 });
 
 test('a photo Cloudinary refuses shows why and is reported to the API @smoke', async ({

@@ -398,4 +398,50 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
     const item = await services.items.undelete(actor, id);
     return c.json(item, 200);
   });
+
+  const linkCheckRoute = createRoute({
+    method: 'post',
+    path: '/items/{id}/link-check',
+    tags: ['items'],
+    security: AUTH_SECURITY,
+    request: {
+      params: z.object({ id: z.string().min(1) }),
+    },
+    responses: {
+      ...problems('unauthorized', 'forbidden', 'not-found', 'unprocessable', 'rate-limited'),
+      200: {
+        content: { 'application/json': { schema: itemSchema } },
+        description:
+          'Link checked now (publishers); the card with its fresh linkHealth. 422 when not a live link card (D164)',
+      },
+    },
+  });
+
+  app.openapi(linkCheckRoute, async (c) => {
+    const actor = getActor(c);
+    const { id } = c.req.valid('param');
+    const item = await services.items.checkLink(actor, id);
+    return c.json(item, 200);
+  });
+
+  const dismissLinkFlagRoute = createRoute({
+    method: 'delete',
+    path: '/items/{id}/link-check/flag',
+    tags: ['items'],
+    security: AUTH_SECURITY,
+    request: {
+      params: z.object({ id: z.string().min(1) }),
+    },
+    responses: {
+      ...problems('unauthorized', 'forbidden', 'not-found'),
+      204: { description: 'Link flag dismissed until the result changes (D164)' },
+    },
+  });
+
+  app.openapi(dismissLinkFlagRoute, async (c) => {
+    const actor = getActor(c);
+    const { id } = c.req.valid('param');
+    await services.items.dismissLinkFlag(actor, id);
+    return c.body(null, 204);
+  });
 }

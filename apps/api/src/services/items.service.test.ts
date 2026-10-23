@@ -65,6 +65,7 @@ describe('createItemsService', () => {
   let favorites: any;
   let memberships: any;
   let embedQueue: { enqueueIfStale: ReturnType<typeof vi.fn<(id: string) => Promise<void>>> };
+  let links: any;
 
   beforeEach(() => {
     decks = {
@@ -98,6 +99,17 @@ describe('createItemsService', () => {
 
     memberships = { findActive: vi.fn().mockResolvedValue(null) };
     embedQueue = { enqueueIfStale: vi.fn().mockResolvedValue(undefined) };
+    links = {
+      checks: {
+        flagsFor: vi.fn().mockResolvedValue(new Map()),
+        find: vi.fn().mockResolvedValue(null),
+        dismiss: vi.fn().mockResolvedValue(true),
+      },
+      checker: { checkOne: vi.fn().mockResolvedValue(undefined) },
+      previewFields: vi.fn(async (_deckId: string, payload: unknown) => payload),
+      snapshotQueue: { enqueueIfNeeded: vi.fn().mockResolvedValue(undefined) },
+      rateLimits: { enforce: vi.fn().mockResolvedValue(undefined) },
+    };
 
     service = createItemsService({
       decks,
@@ -106,6 +118,8 @@ describe('createItemsService', () => {
       favorites,
       memberships,
       embedQueue,
+      imageReference: async (_deckId, _type, payload) => payload,
+      links,
       now: () => NOW,
     });
   });
@@ -472,6 +486,84 @@ describe('createItemsService', () => {
       expect(items.listDeleted).toHaveBeenLastCalledWith(
         expect.objectContaining({ after: { deletedAt: deletedAt.toISOString(), id: ID_A } }),
       );
+    });
+  });
+
+  describe('link checks (D164/D165)', () => {
+    const LINK = createItemRow({
+      type: 'link',
+      payload: { url: 'https://x.test/', preview: { title: 'T' } },
+    });
+
+    it('checks a live link now, rate limited per user', async () => {
+      items.findById.mockResolvedValue(LINK);
+      await service.checkLink(ACTOR, LINK.id);
+      expect(links.rateLimits.enforce).toHaveBeenCalledWith(expect.stringContaining(USER.id), 10);
+      expect(links.checker.checkOne).toHaveBeenCalledWith(
+        { itemId: LINK.id, url: 'https://x.test/', previewTitle: 'T', check: null },
+        { manual: true },
+      );
+    });
+
+    it.each([
+      ['not a link', createItemRow()],
+      ['archived', { ...LINK, status: 'archived' }],
+    ])('422 when the card is %s', async (_label, row) => {
+      items.findById.mockResolvedValue(row);
+      await expect(service.checkLink(ACTOR, LINK.id)).rejects.toMatchObject({ status: 422 });
+      expect(links.checker.checkOne).not.toHaveBeenCalled();
+    });
+
+    it('422 for a locked host before the rate limit, without a probe (D168)', async () => {
+      items.findById.mockResolvedValue({
+        ...LINK,
+        payload: { url: 'https://www.instagram.com/p/abc/' },
+      });
+      await expect(service.checkLink(ACTOR, LINK.id)).rejects.toMatchObject({
+        status: 422,
+        detail: "Links to Instagram can't be checked automatically",
+      });
+      expect(links.rateLimits.enforce).not.toHaveBeenCalled();
+      expect(links.checker.checkOne).not.toHaveBeenCalled();
+    });
+
+    it('a viewer cannot check or dismiss', async () => {
+      actAs('viewer');
+      items.findById.mockResolvedValue(LINK);
+      await expect(service.checkLink(ACTOR, LINK.id)).rejects.toMatchObject({ status: 403 });
+      await expect(service.dismissLinkFlag(ACTOR, LINK.id)).rejects.toMatchObject({ status: 403 });
+    });
+
+    it('dismisses a flag, 404 without one', async () => {
+      items.findById.mockResolvedValue(LINK);
+      await expect(service.dismissLinkFlag(ACTOR, LINK.id)).resolves.toBeUndefined();
+      expect(links.checks.dismiss).toHaveBeenCalledWith(LINK.id, NOW);
+      links.checks.dismiss.mockResolvedValueOnce(false);
+      await expect(service.dismissLinkFlag(ACTOR, LINK.id)).rejects.toMatchObject({ status: 404 });
+    });
+
+    it('flag=link lists published link cards only', async () => {
+      const base = { status: 'published', limit: 20, flag: 'link' };
+      await expect(
+        service.list(ACTOR, PB_ID, { ...base, status: 'proposed' }),
+      ).rejects.toMatchObject({
+        status: 400,
+      });
+      await expect(service.list(ACTOR, PB_ID, { ...base, type: 'text' })).rejects.toMatchObject({
+        status: 400,
+      });
+    });
+
+    it('a saved link card is offered to the snapshot queue', async () => {
+      items.create.mockResolvedValue(LINK);
+      await service.create(ACTOR, PB_ID, {
+        type: 'link',
+        title: 'Plumber',
+        body: '',
+        payload: { url: 'https://x.test/' },
+      });
+      expect(links.previewFields).toHaveBeenCalledWith(PB_ID, { url: 'https://x.test/' }, null);
+      expect(links.snapshotQueue.enqueueIfNeeded).toHaveBeenCalledWith(LINK);
     });
   });
 });

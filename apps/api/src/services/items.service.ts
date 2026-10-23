@@ -1,4 +1,5 @@
 import type { ItemRow } from '@pb/db';
+import { lockedHostOf } from '@pb/shared/links';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
@@ -7,6 +8,7 @@ import {
   type MemberRole,
   type Permission,
   ITEM_UNDELETE_DAYS,
+  LINK_CHECK_RATE_PER_HOUR,
   decodeCursor,
   encodeCursor,
   type Item,
@@ -14,6 +16,8 @@ import {
   type ItemListQuery,
   type ItemPage,
   type ItemPatch,
+  type ItemType,
+  type LinkPayload,
   can,
   compactEntities,
   payloadSchemaFor,
@@ -27,13 +31,30 @@ import {
   gone,
   notFound,
   unprocessable,
+  unprocessableField,
 } from '../errors/http-errors';
 import { resolveDeck } from '../lib/resolve-deck';
 import type { EmbedQueue } from '../jobs/embed-queue';
+import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
+import { rateKeys } from '../lib/rate-window';
+import type { LinkChecksRepo } from '../repositories/link-checks.repo';
+import type { ImageReferenceCheck } from './image-reference';
 import { createItemDtoMapper } from './item-dtos';
+import type { LinkChecksService } from './link-checks.service';
+import type { LinkPreviewFields } from './link-preview-fields';
+import type { RateLimitService } from './rate-limit.service';
 import type { Actor, CurrentUser } from '../types';
 
 const DAY_MS = 86_400_000;
+
+/** D163–D165: link snapshots, check state and the member actions on flags. */
+export interface ItemLinkDeps {
+  checks: Pick<LinkChecksRepo, 'flagsFor' | 'find' | 'dismiss'>;
+  checker: Pick<LinkChecksService, 'checkOne'>;
+  previewFields: LinkPreviewFields;
+  snapshotQueue: LinkSnapshotQueue;
+  rateLimits: Pick<RateLimitService, 'enforce'>;
+}
 
 /** D131/D132 problem types (contracts/items-lifecycle.md). */
 export const INVALID_TRANSITION_PROBLEM = '/problems/invalid-transition';
@@ -52,6 +73,9 @@ export function createItemsService(deps: {
   memberships: MembershipLookup;
   /** D72: after each committed write, queue a re-embed when the text changed. */
   embedQueue: EmbedQueue;
+  /** D160: image cards reference recorded assets of their deck; dimensions come from them. */
+  imageReference: ImageReferenceCheck;
+  links: ItemLinkDeps;
   /** D132: clock for publish/delete timestamps and the undo window (tests inject one). */
   now?: () => Date;
   undeleteDays?: number;
@@ -63,10 +87,12 @@ export function createItemsService(deps: {
     favorites,
     memberships,
     embedQueue,
+    imageReference,
+    links,
     now = () => new Date(),
     undeleteDays = ITEM_UNDELETE_DAYS,
   } = deps;
-  const toDtos = createItemDtoMapper({ items, favorites });
+  const toDtos = createItemDtoMapper({ items, favorites, linkChecks: links.checks });
   const ITEM_NOT_FOUND = 'Item not found';
 
   // Private helpers
@@ -160,6 +186,32 @@ export function createItemsService(deps: {
     return dto;
   }
 
+  /** D160 image references, D163 server-owned link preview fields. */
+  async function referencedPayload(
+    deckId: string,
+    type: ItemType,
+    payload: Record<string, unknown>,
+    stored: Record<string, unknown> | null,
+  ): Promise<Record<string, unknown>> {
+    if (type !== 'link') return imageReference(deckId, type, payload);
+    return links.previewFields(deckId, payload as LinkPayload, stored as LinkPayload | null);
+  }
+
+  /** After each committed write: re-embed when the text changed (D72), snapshot links (D163). */
+  async function afterWrite(row: ItemRow): Promise<void> {
+    await embedQueue.enqueueIfStale(row.id);
+    await links.snapshotQueue.enqueueIfNeeded(row);
+  }
+
+  /** D165: a member action on a live link card. */
+  async function loadLink(user: CurrentUser, itemId: string) {
+    const loaded = await loadItem(user, itemId, 'item.update');
+    if (loaded.item.type !== 'link' || loaded.item.status === 'archived') {
+      throw unprocessableField('type', 'Only link cards can be checked');
+    }
+    return loaded;
+  }
+
   /** D131: archive/restore move published ⇄ archived only; proposals belong to the review queue. */
   function assertNotProposal(item: ItemRow, action: 'archived' | 'restored'): void {
     if (item.status === 'proposed') {
@@ -175,6 +227,7 @@ export function createItemsService(deps: {
   const service = {
     async list(actor: Actor, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
       if (q.status === 'deleted') return service.listDeleted(actor, idOrSlug, q);
+      if (q.flag === 'link') return service.listLinkFlagged(actor, idOrSlug, q);
 
       const { user } = actor;
       const deck = await resolveDeck(decks, idOrSlug, user);
@@ -231,6 +284,42 @@ export function createItemsService(deps: {
       return { data: await toDtos(user, page.rows, role), nextCursor: page.nextCursor };
     },
 
+    /** D165: flagged, not dismissed published link cards, newest flag first (`item.update`). */
+    async listLinkFlagged(actor: Actor, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
+      if (q.status !== 'published') {
+        throw badRequest('flag=link lists published cards only', [
+          { path: 'status', message: 'must be published' },
+        ]);
+      }
+      if (q.type && q.type !== 'link') {
+        throw badRequest('flag=link lists link cards only', [
+          { path: 'type', message: 'must be link' },
+        ]);
+      }
+
+      const { user } = actor;
+      const deck = await resolveDeck(decks, idOrSlug, user);
+      const role = await authorize(user, deck, 'item.read', memberships);
+      assertPermission(role, 'item.update');
+
+      // The shared cursor format carries the sort timestamp in `createdAt`.
+      const cursor = q.cursor ? decodeCursor(q.cursor) : undefined;
+      const rows = await items.listLinkFlagged({
+        role,
+        deckId: deck.id,
+        categoryId: await categoryIdForSlug(deck.id, q.category, role),
+        favoriteOf: q.favorite === 'true' ? user.id : undefined,
+        after: cursor ? { flaggedAt: cursor.createdAt, id: cursor.id } : undefined,
+        limit: q.limit + 1,
+      });
+
+      const page = paginate(rows, q.limit, (last) => ({
+        createdAt: (last as (typeof rows)[number]).flaggedAt,
+        id: last.id,
+      }));
+      return { data: await toDtos(user, page.rows, role), nextCursor: page.nextCursor };
+    },
+
     async create(actor: Actor, idOrSlug: string, input: ItemCreate): Promise<Item> {
       const { user } = actor;
       const deck = await resolveDeck(decks, idOrSlug, user);
@@ -251,6 +340,7 @@ export function createItemsService(deps: {
       const status = input.status ?? 'published';
       const verifiedAt = status === 'published' ? now() : null;
       const sourceKind = input.type === 'link' || input.sourceUrl ? 'link' : 'manual';
+      const payload = await referencedPayload(deck.id, input.type, input.payload, null);
 
       const createdItem = await items.create(
         {
@@ -259,7 +349,7 @@ export function createItemsService(deps: {
           status,
           title: input.title,
           body: input.body,
-          payload: input.payload,
+          payload,
           entities: compactEntities(input.entities ?? {}),
           sourceUrl: input.sourceUrl ?? null,
           sourceKind,
@@ -268,7 +358,7 @@ export function createItemsService(deps: {
         },
         categoryIds,
       );
-      await embedQueue.enqueueIfStale(createdItem.id);
+      await afterWrite(createdItem);
 
       return toDto(user, createdItem, role);
     },
@@ -307,10 +397,14 @@ export function createItemsService(deps: {
         throw badRequest('Item type is immutable');
       }
 
-      // Validate payload if provided
+      // Validate payload if provided; D160 for image cards
       if (patch.payload !== undefined) {
         payloadSchemaFor(item.type).parse(patch.payload);
       }
+      const payload =
+        patch.payload === undefined
+          ? undefined
+          : await referencedPayload(item.deckId, item.type, patch.payload, item.payload);
 
       // Compute resulting status and categories before writing
       const resultingStatus = patch.status ?? item.status;
@@ -337,7 +431,7 @@ export function createItemsService(deps: {
       const updatePatch: Parameters<ItemsRepo['update']>[1] = {};
       if (patch.title !== undefined) updatePatch.title = patch.title;
       if (patch.body !== undefined) updatePatch.body = patch.body;
-      if (patch.payload !== undefined) updatePatch.payload = patch.payload;
+      if (payload !== undefined) updatePatch.payload = payload;
       if (patch.entities !== undefined) updatePatch.entities = compactEntities(patch.entities);
       if (patch.sourceUrl !== undefined) updatePatch.sourceUrl = patch.sourceUrl;
       if (patch.status !== undefined) updatePatch.status = patch.status;
@@ -352,7 +446,7 @@ export function createItemsService(deps: {
         updatePatch,
         patch.categoryIds !== undefined ? resultingCategoryIds : undefined,
       );
-      await embedQueue.enqueueIfStale(updatedItem.id);
+      await afterWrite(updatedItem);
 
       return toDto(user, updatedItem, role);
     },
@@ -384,7 +478,7 @@ export function createItemsService(deps: {
       if (item.status === 'published') return toDto(user, item, role);
 
       const restored = await items.update(item.id, { status: 'published' });
-      await embedQueue.enqueueIfStale(restored.id);
+      await afterWrite(restored);
       return toDto(user, restored, role);
     },
 
@@ -410,8 +504,40 @@ export function createItemsService(deps: {
       }
 
       const restored = await items.undelete(item.id);
-      await embedQueue.enqueueIfStale(restored.id);
+      await afterWrite(restored);
       return toDto(user, restored, role);
+    },
+
+    /**
+     * D165: check one link now (10 per user per hour). A manual definite failure counts as a
+     * strike but never makes a link dead; it can confirm `ok` and clear a flag.
+     */
+    async checkLink(actor: Actor, itemId: string): Promise<Item> {
+      const { user } = actor;
+      const { item, role } = await loadLink(user, itemId);
+      const payload = item.payload as LinkPayload;
+      const locked = lockedHostOf(payload.url);
+      if (locked) {
+        // D168: no probe and no rate-limit use for hosts that only show a login wall.
+        throw unprocessableField('url', `Links to ${locked.label} can't be checked automatically`);
+      }
+      await links.rateLimits.enforce(rateKeys.linkCheckUser(user.id), LINK_CHECK_RATE_PER_HOUR);
+      await links.checker.checkOne(
+        {
+          itemId: item.id,
+          url: payload.url,
+          previewTitle: payload.preview?.title ?? null,
+          check: await links.checks.find(item.id),
+        },
+        { manual: true },
+      );
+      return toDto(user, item, role);
+    },
+
+    /** D165: hide the active flag for everyone until the status changes; 404 without one. */
+    async dismissLinkFlag(actor: Actor, itemId: string): Promise<void> {
+      const { item } = await loadLink(actor.user, itemId);
+      if (!(await links.checks.dismiss(item.id, now()))) throw notFound('No link flag to dismiss');
     },
   };
 

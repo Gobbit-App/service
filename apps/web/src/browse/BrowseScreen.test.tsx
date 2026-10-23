@@ -10,7 +10,7 @@ import type { BrowseSearch } from './browse-params';
 import { BROWSE_HINT_KEY, dismissHint } from './hint-store';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
-const { respond } = await import('../test/api-mock');
+const { respond, mockConfig } = await import('../test/api-mock');
 const { BrowseScreen } = await import('./BrowseScreen');
 const { NOT_FOUND_COPY } = await import('./BrowseStack');
 
@@ -64,6 +64,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
+  mockConfig.cloudinaryCloudName = null;
 });
 
 describe('BrowseScreen', () => {
@@ -75,6 +76,30 @@ describe('BrowseScreen', () => {
     expect(pageOf('i1')).not.toHaveAttribute('aria-hidden');
     expect(pageOf('i2')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByText('Card 1 of 6')).toBeInTheDocument();
+  });
+
+  it('gives only the current card image priority, sized by CloudImage (D144, D161)', async () => {
+    mockConfig.cloudinaryCloudName = 'demo';
+    const photos = items.map((item, n) =>
+      makeItem({
+        ...item,
+        type: 'image',
+        payload: { publicId: `p${n + 1}`, alt: `Photo ${n + 1}`, width: 4, height: 3 },
+      }),
+    );
+    respond.mockImplementation((request) => {
+      if (request.endsWith('/categories')) return Promise.resolve({ data: categories });
+      if (request.endsWith('/items')) return Promise.resolve({ data: photos, nextCursor: null });
+      return Promise.reject(new Error(`unexpected ${request}`));
+    });
+    renderScreen();
+    const current = await screen.findByAltText('Photo 1');
+    expect(current).toHaveAttribute('fetchpriority', 'high');
+    expect(current).toHaveAttribute('width', '4');
+    expect(current.getAttribute('sizes')).toMatch(/^\d+px$/);
+    const next = pageOf('i2').querySelector('.cloud-image__img');
+    expect(next).toHaveAttribute('loading', 'lazy');
+    expect(next).not.toHaveAttribute('fetchpriority');
   });
 
   it('opens on the deep-linked card', async () => {

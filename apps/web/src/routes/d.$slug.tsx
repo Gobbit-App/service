@@ -99,6 +99,7 @@ function DeckLayout() {
         categories={categories.data ?? []}
         active={view ?? ALL}
         showArchived={can(deck.data.role, 'item.archive')}
+        showLinks={can(deck.data.role, 'item.update')}
         onNavigate={navigate}
       />
       <main className="page">

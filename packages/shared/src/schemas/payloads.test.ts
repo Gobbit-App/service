@@ -96,6 +96,26 @@ describe('payloads', () => {
       expect(result.success).toBe(false);
     });
 
+    it('D163: old payloads without the snapshot fields still parse', () => {
+      const schema = payloadSchemaFor('link');
+      const old = {
+        url: 'https://example.com',
+        preview: { title: 'T', image: 'https://e.com/a.jpg' },
+      };
+      expect(schema.parse(old)).toEqual(old);
+    });
+
+    it('D163: accepts the server-owned snapshot fields within the dimension bounds', () => {
+      const schema = payloadSchemaFor('link');
+      const preview = { publicId: 'gobbit/links/d/a', width: 1200, height: 630 };
+      expect(schema.safeParse({ url: 'https://example.com', preview }).success).toBe(true);
+      for (const bad of [{ width: 0 }, { height: -1 }, { width: 1.5 }, { publicId: '' }]) {
+        expect(
+          schema.safeParse({ url: 'https://example.com', preview: { ...preview, ...bad } }).success,
+        ).toBe(false);
+      }
+    });
+
     it('rejects unknown key (strict)', () => {
       const schema = payloadSchemaFor('link');
 
@@ -125,6 +145,21 @@ describe('payloads', () => {
         alt: 'A beautiful image',
       };
       expect(schema.safeParse(validPayload).success).toBe(true);
+    });
+
+    it('accepts optional dimensions within 1..20000 (D160)', () => {
+      const schema = payloadSchemaFor('image');
+      const base = { publicId: 'abc123', alt: 'A' };
+      expect(schema.safeParse({ ...base, width: 3024, height: 4032 }).success).toBe(true);
+      expect(schema.safeParse({ ...base, width: 1, height: 20000 }).success).toBe(true);
+      expect(schema.safeParse({ ...base, width: 0 }).success).toBe(false);
+      expect(schema.safeParse({ ...base, height: 20001 }).success).toBe(false);
+      expect(schema.safeParse({ ...base, width: 1.5 }).success).toBe(false);
+    });
+
+    it('stays strict', () => {
+      const schema = payloadSchemaFor('image');
+      expect(schema.safeParse({ publicId: 'abc123', alt: 'A', format: 'jpg' }).success).toBe(false);
     });
   });
 

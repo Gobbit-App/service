@@ -7,6 +7,11 @@ export function emptyListCopy(filter: ItemFilter): { title: string; body: string
       return { title: 'No favorites yet', body: 'Tap the star on a card to keep it here.' };
     case 'archived':
       return { title: 'Nothing archived', body: 'Archived cards show up here.' };
+    case 'links':
+      return {
+        title: 'No links to check',
+        body: 'Links that may be dead or changed show up here.',
+      };
     case 'deleted':
       return { title: 'Nothing deleted', body: 'Deleted cards stay here for 30 days.' };
     case 'category':

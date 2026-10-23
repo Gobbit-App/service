@@ -1,10 +1,10 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import { useState, type ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MediaSignResponse } from '@pb/shared';
+import type { MediaAsset, MediaSignResponse } from '@pb/shared';
 import { makeDeck } from '../../test/fixtures';
 import { renderWithClient } from '../../test/render';
-import { UploadError, type signAndUpload, type UploadOptions } from '../upload';
+import { UploadError, type signAndUpload, type UploadedImage, type UploadOptions } from '../upload';
 import { validateDraft } from '../validate';
 import { emptyDraft } from '../draft';
 
@@ -15,7 +15,7 @@ type Payload = { publicId: string; alt: string };
 type UploadCall = {
   file: Blob;
   options: UploadOptions;
-  resolve: (r: { publicId: string }) => void;
+  resolve: (r: Pick<UploadedImage, 'publicId'>) => void;
   reject: (e: unknown) => void;
 };
 
@@ -28,13 +28,39 @@ let latest: Payload;
 const fakeUpload = vi.fn<typeof signAndUpload>(
   (file, _signer, options = {}) =>
     new Promise((resolve, reject) => {
-      calls.push({ file, options, resolve, reject });
+      calls.push({
+        file,
+        options,
+        resolve: ({ publicId }) =>
+          resolve({
+            publicId,
+            version: 1,
+            signature: 's',
+            width: 10,
+            height: 10,
+            bytes: 1,
+            format: 'jpg',
+          }),
+        reject,
+      });
       options.signal?.addEventListener('abort', () =>
         reject(new UploadError('aborted', 'Upload cancelled')),
       );
     }),
 );
 const signer = vi.fn<(o: { fresh: boolean }) => Promise<MediaSignResponse>>();
+/** The API's confirm step: records the upload and answers with the asset (D157). */
+const confirm = vi.fn<(deckId: string, uploaded: UploadedImage) => Promise<MediaAsset>>(
+  async (_deckId, { publicId, width, height, bytes, format }) => ({
+    publicId,
+    width,
+    height,
+    bytes,
+    format,
+    source: 'editor',
+    createdAt: '2026-03-01T00:00:00.000Z',
+  }),
+);
 
 function Harness({ initial }: { initial: Payload }): ReactElement {
   const [payload, setPayload] = useState(initial);
@@ -50,7 +76,7 @@ function Harness({ initial }: { initial: Payload }): ReactElement {
       errors={validateDraft(draft)}
       deck={deck}
       disabled={false}
-      uploadDeps={{ signer, upload: fakeUpload }}
+      uploadDeps={{ signer, upload: fakeUpload, confirm }}
     />
   );
 }
@@ -112,10 +138,10 @@ describe('ImageFields', () => {
     expect(screen.getByText('Uploading… 40%')).toBeInTheDocument();
     expect(screen.getByLabelText('Upload progress')).toHaveAttribute('value', '40');
     await act(async () => calls[0]!.resolve({ publicId: 'gobbit/items/d/p1' }));
-    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: '' });
+    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: '', width: 10, height: 10 });
     expect(screen.getByText('Alt text is required')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'A loaf' } });
-    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: 'A loaf' });
+    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: 'A loaf', width: 10, height: 10 });
     expect(screen.queryByText('Alt text is required')).not.toBeInTheDocument();
   });
 
@@ -124,7 +150,7 @@ describe('ImageFields', () => {
     pickFile('Choose photo', photo());
     fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'Bread' } });
     await act(async () => calls[0]!.resolve({ publicId: 'p1' }));
-    expect(latest).toEqual({ publicId: 'p1', alt: 'Bread' });
+    expect(latest).toEqual({ publicId: 'p1', alt: 'Bread', width: 10, height: 10 });
   });
 
   it('cancelling leaves no photo (FR-005)', async () => {
@@ -158,10 +184,57 @@ describe('ImageFields', () => {
     pickFile('Replace photo', photo());
     expect(latest).toEqual({ publicId: '', alt: 'Old' });
     await act(async () => calls[0]!.resolve({ publicId: 'new' }));
-    expect(latest).toEqual({ publicId: 'new', alt: 'Old' });
+    expect(latest).toEqual({ publicId: 'new', alt: 'Old', width: 10, height: 10 });
     fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
     expect(latest).toEqual({ publicId: '', alt: 'Old' });
     expect(screen.getByLabelText('Choose photo')).toBeInTheDocument();
+  });
+
+  it('attaches the photo only after the API confirms it (D157)', async () => {
+    let finish: (asset: MediaAsset) => void = () => {};
+    confirm.mockImplementationOnce(
+      (_deckId, { publicId }) =>
+        new Promise((resolve) => {
+          finish = (asset) => resolve({ ...asset, publicId });
+        }),
+    );
+    renderFields();
+    pickFile('Choose photo', photo());
+    await act(async () => calls[0]!.resolve({ publicId: 'gobbit/items/d/p1' }));
+
+    expect(screen.getByText('Saving photo…')).toBeInTheDocument();
+    expect(latest.publicId).toBe('');
+    expect(confirm).toHaveBeenLastCalledWith(
+      deck.id,
+      expect.objectContaining({ publicId: 'gobbit/items/d/p1', version: 1, signature: 's' }),
+    );
+
+    await act(async () =>
+      finish({
+        publicId: '',
+        width: 10,
+        height: 10,
+        bytes: 1,
+        format: 'jpg',
+        source: 'editor',
+        createdAt: '2026-03-01T00:00:00.000Z',
+      }),
+    );
+    expect(latest.publicId).toBe('gobbit/items/d/p1');
+  });
+
+  it('a refused confirm leaves no photo and offers a retry', async () => {
+    const { ApiError } = await import('../../api/api-error');
+    confirm.mockRejectedValueOnce(
+      new ApiError(422, { type: '/problems/validation', status: 422, title: 'Validation failed' }),
+    );
+    renderFields();
+    pickFile('Choose photo', photo());
+    await act(async () => calls[0]!.resolve({ publicId: 'p1' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/couldn't be verified/);
+    expect(latest.publicId).toBe('');
+    expect(screen.getByRole('button', { name: 'Retry upload' })).toBeInTheDocument();
   });
 
   it('frees the local thumbnail when the photo is removed', async () => {

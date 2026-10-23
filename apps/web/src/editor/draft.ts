@@ -10,7 +10,15 @@ import { jsonEqual, sameIds } from './equal';
 /** Link payload while editing; unknown keys (e.g. `preview.image` from ingest) are kept. */
 export type LinkDraftPayload = {
   url: string;
-  preview?: { title?: string; description?: string; image?: string };
+  preview?: {
+    title?: string;
+    description?: string;
+    image?: string;
+    /** 015 "Add photo": a recorded asset of the deck; `null` asks the server to remove it. */
+    publicId?: string | null;
+    width?: number;
+    height?: number;
+  };
   [key: string]: unknown;
 };
 
@@ -146,10 +154,12 @@ export function parseCalcDefault(text: string): number | undefined {
 function linkPayload(p: LinkDraftPayload): Record<string, unknown> {
   const { preview, ...rest } = p;
   const out: Record<string, unknown> = { ...rest, url: p.url.trim() };
-  const cleaned: Record<string, string> = {};
+  const cleaned: Record<string, string | null> = {};
   for (const [key, value] of Object.entries(preview ?? {})) {
     if (typeof value === 'string' && value.trim() !== '') cleaned[key] = value;
   }
+  // Dimensions are server-owned; an explicit `publicId: null` removes the photo (015).
+  if (preview?.publicId === null) cleaned['publicId'] = null;
   if (Object.keys(cleaned).length > 0) out['preview'] = cleaned;
   return out;
 }

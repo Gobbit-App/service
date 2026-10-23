@@ -28,12 +28,14 @@ import type { ItemsRepo } from '../repositories/items.repo';
 import { authorize, resolveRole, type MembershipLookup } from '../access/authorize';
 import { badRequest, notFound, rateLimited, serviceUnavailable } from '../errors/http-errors';
 import type { EmbedQueue } from '../jobs/embed-queue';
+import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { IngestQueue } from '../jobs/ingest-queue';
 import { proposeItem } from '../ingest/propose';
 import type { RunDedupInput } from '../ingest/run-dedup';
 import { toIngestJobDto } from '../lib/ingest-mappers';
 import { isUuid, resolveDeck } from '../lib/resolve-deck';
 import type { IngestUploadStore } from '../media/ingest-uploads';
+import type { AssetsRepo } from '../repositories/assets.repo';
 import type { CurrentUser } from '../types';
 import { lineSink } from '../lib/logger';
 
@@ -144,6 +146,8 @@ export function createIngestService(deps: {
   categories: Pick<CategoriesRepo, 'listByDeck' | 'findDefault'>;
   items: Pick<ItemsRepo, 'create' | 'findById' | 'isVisibleTo'>;
   uploads: IngestUploadStore | null;
+  /** D157: every upload is recorded as an asset of the deck. */
+  assets: Pick<AssetsRepo, 'upsert'>;
   queue: IngestQueue;
   /** D110: jobs per user and channel per rolling day. */
   dailyCaps: Record<IngestChannel, number>;
@@ -152,6 +156,8 @@ export function createIngestService(deps: {
   /** D103 for direct proposals (bound `runDedup`); omitted → no verdict. */
   dedup?: (input: RunDedupInput) => Promise<DedupVerdict>;
   embedQueue: EmbedQueue;
+  /** D163: snapshot a proposed link's preview image; omitted → none. */
+  linkSnapshotQueue?: LinkSnapshotQueue;
   now: () => Date;
   newId?: () => string;
   log?: (message: string, err?: unknown) => void;
@@ -197,7 +203,7 @@ export function createIngestService(deps: {
     return [...ids];
   }
 
-  async function uploadAll(jobId: string, deckId: string, files: IngestFile[]) {
+  async function uploadAll(jobId: string, deckId: string, userId: string, files: IngestFile[]) {
     if (files.length === 0) return [];
     if (!uploads) {
       throw serviceUnavailable('Image uploads are not configured');
@@ -205,7 +211,9 @@ export function createIngestService(deps: {
     const images: IngestImage[] = [];
     try {
       for (const f of files) {
-        const { publicId } = await uploads.upload(jobId, deckId, f);
+        const stored = await uploads.upload(jobId, deckId, f);
+        const { publicId } = stored;
+        await deps.assets.upsert({ deckId, source: 'ingest', uploadedBy: userId, ...stored });
         images.push({ publicId, bytes: f.bytes.byteLength, mime: f.mime });
       }
     } catch (err) {
@@ -233,7 +241,7 @@ export function createIngestService(deps: {
       await assertWithinCaps(user.id, channel);
 
       const id = newId();
-      const images = await uploadAll(id, deck.id, s.files);
+      const images = await uploadAll(id, deck.id, user.id, s.files);
       const raw: IngestRaw = { images };
       if (s.text?.trim()) raw.text = s.text;
       if (s.url) raw.url = s.url;
@@ -286,6 +294,7 @@ export function createIngestService(deps: {
             jobs,
             dedup: deps.dedup,
             embedQueue: deps.embedQueue,
+            linkSnapshotQueue: deps.linkSnapshotQueue,
             now,
             log,
           },

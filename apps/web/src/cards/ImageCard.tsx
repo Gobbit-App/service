@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import type { ImagePayload } from './payload-guards';
-import { cloudinaryImageUrl, cloudinarySrcSet } from './cloudinary';
+import { CloudImage } from './CloudImage';
 
-/** Image loading hints (D144): Browse gives the current card priority and its measured width. */
+/** Image loading hints (D144): Browse gives the current card priority. */
 export interface ImageLoading {
-  /** The `sizes` attribute; defaults to `100vw`. */
-  sizes?: string;
   /** Load now with high fetch priority instead of lazily. */
   priority?: boolean;
 }
@@ -15,7 +13,6 @@ export interface ImageLoading {
 export function ImageCard({
   payload,
   cloudName,
-  sizes = '100vw',
   priority = false,
 }: {
   payload: ImagePayload;
@@ -29,15 +26,13 @@ export function ImageCard({
 
   return (
     <figure className="image-card">
-      <img
-        className="image-card__img"
-        src={cloudinaryImageUrl(cloudName, payload.publicId, 720)}
-        srcSet={cloudinarySrcSet(cloudName, payload.publicId)}
-        sizes={sizes}
+      <CloudImage
+        cloudName={cloudName}
+        publicId={payload.publicId}
         alt={payload.alt}
-        loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : undefined}
-        decoding="async"
+        width={payload.width}
+        height={payload.height}
+        priority={priority}
         onError={() => setHasError(true)}
       />
     </figure>

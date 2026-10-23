@@ -304,4 +304,12 @@ describe('sameView', () => {
   it('returns false for category and non-category', () => {
     expect(sameView({ kind: 'all' }, { kind: 'category', slug: 'tech' })).toBe(false);
   });
+
+  it('D165: links view round-trips', () => {
+    expect(chipHref('my-deck', { kind: 'links' })).toBe('/d/my-deck/links');
+    expect(viewFromPath('/d/my-deck/links')).toEqual({
+      deckSlug: 'my-deck',
+      view: { kind: 'links' },
+    });
+  });
 });

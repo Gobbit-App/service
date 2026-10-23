@@ -61,6 +61,9 @@ export function belongsTo(filter: ItemFilter, item: Item): boolean | null {
       return !deleted && item.status === 'published' && item.isFavorite;
     case 'category':
       return !deleted && item.status === 'published' ? null : false;
+    case 'links':
+      // Ordered by when the flag was raised, which the card doesn't carry: refetch settles it.
+      return !deleted && item.status === 'published' && item.linkHealth !== null ? null : false;
   }
 }
 

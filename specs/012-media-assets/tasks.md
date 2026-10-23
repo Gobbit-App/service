@@ -25,14 +25,14 @@ description: "Task list for 012-media-assets"
 
 **Purpose**: Schema, migration, shared DTOs, Cloudinary port.
 
-- [ ] T001 `assets` table + `asset_source` enum in packages/db/src/schema/assets.ts; export from packages/db/src/schema/index.ts
-- [ ] T002 `pnpm db:generate` → packages/db/migrations/0012_media_assets.sql; append the backfill INSERT (one row per distinct image `payload->>'publicId'`, source by folder prefix) and `items_image_public_id_idx`; hand-write packages/db/migrations/down/0012_media_assets.sql
-- [ ] T003 [P] Constants (`MEDIA_ORPHAN_GRACE_DAYS`, `MEDIA_SWEEP_CRON`, `MEDIA_SWEEP_BATCH`, `MEDIA_DELETE_CHUNK`, `MEDIA_CONFIRM_RATE_PER_HOUR`, `MEDIA_IMAGE_DIMENSION_MAX`) in packages/shared/src/media/constants.ts
-- [ ] T004 [P] `mediaAssetConfirmRequestSchema`, `mediaAssetSchema` in packages/shared/src/schemas/media.ts; image payload `width?`/`height?` in packages/shared/src/schemas/payloads.ts
-- [ ] T005 [P] [unit] Schema tests (strict confirm body, dimension bounds, image payload still strict and backwards compatible) in packages/shared/src/schemas/payloads.test.ts and packages/shared/src/media/index.test.ts
-- [ ] T006 [P] `assets.repo.ts` (`upsert`, `byPublicId`, `orphans(graceDays, limit)`, `deleteByIds`) in apps/api/src/repositories/assets.repo.ts
-- [ ] T007 [P] `MediaStore` port (`uploadBuffer`, `deleteMany` → per-id `deleted|not_found|failed`, `deleteByPrefix`, `verifyResponse`) with the Cloudinary adapter and `MemoryMediaStore` in apps/api/src/media/media-store.ts
-- [ ] T008 Wire `assets` repo + `MediaStore` in apps/api/src/services/media-wiring.ts
+- [x] T001 `assets` table + `asset_source` enum in packages/db/src/schema/assets.ts; export from packages/db/src/schema/index.ts
+- [x] T002 `pnpm db:generate` → packages/db/migrations/0012_media_assets.sql; append the backfill INSERT (one row per distinct image `payload->>'publicId'`, source by folder prefix) and `items_image_public_id_idx`; hand-write packages/db/migrations/down/0012_media_assets.sql
+- [x] T003 [P] Constants (`MEDIA_ORPHAN_GRACE_DAYS`, `MEDIA_SWEEP_CRON`, `MEDIA_SWEEP_BATCH`, `MEDIA_DELETE_CHUNK`, `MEDIA_CONFIRM_RATE_PER_HOUR`, `MEDIA_IMAGE_DIMENSION_MAX`) in packages/shared/src/media/constants.ts
+- [x] T004 [P] `mediaAssetConfirmRequestSchema`, `mediaAssetSchema` in packages/shared/src/schemas/media.ts; image payload `width?`/`height?` in packages/shared/src/schemas/payloads.ts
+- [x] T005 [P] [unit] Schema tests (strict confirm body, dimension bounds, image payload still strict and backwards compatible) in packages/shared/src/schemas/payloads.test.ts and packages/shared/src/media/index.test.ts
+- [x] T006 [P] `assets.repo.ts` (`upsert`, `byPublicId`, `orphans(graceDays, limit)`, `deleteByIds`) in apps/api/src/repositories/assets.repo.ts
+- [x] T007 [P] `MediaStore` port (`uploadBuffer`, `deleteMany` → per-id `deleted|not_found|failed`, `deleteByPrefix`, `verifyResponse`) with the Cloudinary adapter and `MemoryMediaStore` in apps/api/src/media/media-store.ts
+- [x] T008 Wire `assets` repo + `MediaStore` in apps/api/src/services/media-wiring.ts
 
 **Checkpoint**: Migration applies and rolls back; the services can be built
 
@@ -48,21 +48,21 @@ description: "Task list for 012-media-assets"
 
 > Write these first and make sure they FAIL before implementation.
 
-- [ ] T010 [P] [US1] [unit] `confirmUpload`: signature verified via the store, folder prefix per deck, other-deck conflict, idempotent upsert, rate key in apps/api/src/services/media.service.test.ts
-- [ ] T011 [P] [US1] [int] `POST /decks/{id}/media/assets`: 201, 200 repeat, 403 reader, 404 invisible deck, 422 bad signature / wrong folder / other deck, 429, 503 without Cloudinary, `no-store` in apps/api/test/media-assets.int.test.ts
-- [ ] T012 [P] [US1] [int] Reference rule: create/update image card with unknown or foreign `publicId` → 422 pointer `/payload/publicId`; client dimensions overwritten by the asset's in apps/api/test/items.int.test.ts; publish with the same rule in apps/api/test/review.int.test.ts
-- [ ] T013 [P] [US1] [int] Ingest image proposal records an asset (`source = ingest`, dimensions) in apps/api/test/ingest.int.test.ts
-- [ ] T014 [P] [US1] [unit] `use-image-upload` state machine: uploading → confirming → done; confirm failure → retryable error in apps/web/src/editor/use-image-upload.test.ts
+- [x] T010 [P] [US1] [unit] `confirmUpload`: signature verified via the store, folder prefix per deck, other-deck conflict, idempotent upsert, rate key in apps/api/src/services/media.service.test.ts
+- [x] T011 [P] [US1] [int] `POST /decks/{id}/media/assets`: 201, 200 repeat, 403 reader, 404 invisible deck, 422 bad signature / wrong folder / other deck, 429, 503 without Cloudinary, `no-store` in apps/api/test/media-assets.int.test.ts
+- [x] T012 [P] [US1] [int] Reference rule: create/update image card with unknown or foreign `publicId` → 422 pointer `/payload/publicId`; client dimensions overwritten by the asset's in apps/api/test/items.int.test.ts; publish with the same rule in apps/api/test/review.int.test.ts
+- [x] T013 [P] [US1] [int] Ingest image proposal records an asset (`source = ingest`, dimensions) in apps/api/test/ingest.int.test.ts
+- [x] T014 [P] [US1] [unit] `use-image-upload` state machine: uploading → confirming → done; confirm failure → retryable error in apps/web/src/editor/use-image-upload.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] `media.service.confirmUpload({ user, deckId, body })` + `rateKeys.mediaConfirmUser` in apps/api/src/services/media.service.ts and apps/api/src/lib/rate-window.ts
-- [ ] T016 [US1] Route + OpenAPI `POST /decks/{id}/media/assets` per contracts/media-assets.md in apps/api/src/routes/media.ts
-- [ ] T017 [US1] D160 reference rule + dimension fill in apps/api/src/services/items.service.ts (create, update) and apps/api/src/services/review.service.ts (publish)
-- [ ] T018 [US1] Record ingest uploads after `uploads.upload` in apps/api/src/services/ingest.service.ts (dimensions from the upload result; extend `IngestUploadStore.upload` to return them)
-- [ ] T019 [US1] `pnpm api:openapi`
-- [ ] T020 [US1] Confirm step in apps/web/src/editor/use-image-upload.ts + client call in apps/web/src/api/media.ts; 422 "Unknown image" on save → "Photo expired, add it again"
-- [ ] T021 [US1] [e2e:smoke] The photo journey (from [`010-e2e-journeys`](../010-e2e-journeys/spec.md); e2e/tests/smoke/editor.spec.ts until it lands) asserts the saved card has `payload.width`
+- [x] T015 [US1] `media.service.confirmUpload({ user, deckId, body })` + `rateKeys.mediaConfirmUser` in apps/api/src/services/media.service.ts and apps/api/src/lib/rate-window.ts
+- [x] T016 [US1] Route + OpenAPI `POST /decks/{id}/media/assets` per contracts/media-assets.md in apps/api/src/routes/media.ts
+- [x] T017 [US1] D160 reference rule + dimension fill in apps/api/src/services/items.service.ts (create, update) and apps/api/src/services/review.service.ts (publish)
+- [x] T018 [US1] Record ingest uploads after `uploads.upload` in apps/api/src/services/ingest.service.ts (dimensions from the upload result; extend `IngestUploadStore.upload` to return them)
+- [x] T019 [US1] `pnpm api:openapi`
+- [x] T020 [US1] Confirm step in apps/web/src/editor/use-image-upload.ts + client call in apps/web/src/api/media.ts; 422 "Unknown image" on save → "Photo expired, add it again"
+- [x] T021 [US1] [e2e:smoke] The photo journey (from [`010-e2e-journeys`](../010-e2e-journeys/spec.md); e2e/tests/smoke/editor.spec.ts until it lands) asserts the saved card has `payload.width`
 
 **Checkpoint**: Uploads are recorded; arbitrary image ids can't be saved
 
@@ -76,17 +76,17 @@ description: "Task list for 012-media-assets"
 
 ### Tests for User Story 2
 
-- [ ] T030 [P] [US2] [unit] `sweepOrphans`: chunks of 100, max 500, `not_found` counts as deleted, failed ids kept, summary log; the store sees only `deleteMany` (never a list call) in apps/api/src/jobs/media-sweep.test.ts
-- [ ] T031 [P] [US2] [int] Orphan query across statuses (proposed, published, archived, deleted in window kept; purged and never-saved deleted; younger than grace kept); backfill statement protects existing references in apps/api/test/media-sweep.int.test.ts
-- [ ] T032 [P] [US2] [int] Deck delete → `deleteByPrefix` for the three `gobbit/*/<deckId>/` prefixes after commit in apps/api/test/decks.int.test.ts
+- [x] T030 [P] [US2] [unit] `sweepOrphans`: chunks of 100, max 500, `not_found` counts as deleted, failed ids kept, summary log; the store sees only `deleteMany` (never a list call) in apps/api/src/jobs/media-sweep.test.ts
+- [x] T031 [P] [US2] [int] Orphan query across statuses (proposed, published, archived, deleted in window kept; purged and never-saved deleted; younger than grace kept); backfill statement protects existing references in apps/api/test/media-sweep.int.test.ts
+- [x] T032 [P] [US2] [int] Deck delete → `deleteByPrefix` for the three `gobbit/*/<deckId>/` prefixes after commit in apps/api/test/decks.int.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T033 [US2] `media.service.sweepOrphans({ now })` in apps/api/src/services/media.service.ts
-- [ ] T034 [US2] `QUEUES.MEDIA_SWEEP` in apps/api/src/jobs/queues.ts; handler apps/api/src/jobs/media-sweep.ts; schedule in apps/api/src/worker.ts only when `CLOUDINARY_URL` is set
-- [ ] T035 [US2] `media.deleteForDeck(deckId)` called after commit from apps/api/src/services/decks.service.ts (logged, never fails the delete)
-- [ ] T036 [P] [US2] Dev helper apps/api/scripts/run-job.ts (enqueue a named queue once) for quickstart section 3
-- [ ] T037 [P] [US2] `pnpm media:reconcile` (dry run by default, `--delete` explicit) in apps/api/scripts/media-reconcile.ts; scripts in apps/api/package.json and root package.json
+- [x] T033 [US2] `media.service.sweepOrphans({ now })` in apps/api/src/services/media.service.ts
+- [x] T034 [US2] `QUEUES.MEDIA_SWEEP` in apps/api/src/jobs/queues.ts; handler apps/api/src/jobs/media-sweep.ts; schedule in apps/api/src/worker.ts only when `CLOUDINARY_URL` is set
+- [x] T035 [US2] `media.deleteForDeck(deckId)` called after commit from apps/api/src/services/decks.service.ts (logged, never fails the delete)
+- [x] T036 [P] [US2] Dev helper apps/api/scripts/run-job.ts (enqueue a named queue once) for quickstart section 3
+- [x] T037 [P] [US2] `pnpm media:reconcile` (dry run by default, `--delete` explicit) in apps/api/scripts/media-reconcile.ts; scripts in apps/api/package.json and root package.json
 
 **Checkpoint**: PLAN.md demo 1 cleanup works locally
 
@@ -100,14 +100,14 @@ description: "Task list for 012-media-assets"
 
 ### Tests for User Story 3
 
-- [ ] T040 [P] [US3] [unit] `safe-fetch` binary mode: image MIME allow-list, magic-byte mismatch → `not_image`, cap → `too_large`, private IP → `blocked`, HTML mode unchanged, in apps/api/src/fetch/safe-fetch.test.ts and apps/api/src/fetch/image-sniff.test.ts
-- [ ] T041 [P] [US3] [unit] `uploadFromUrl`: folder and tags by source, asset recorded with returned dimensions, `unavailable` without Cloudinary, never throws in apps/api/src/services/media.service.test.ts
-- [ ] T042 [P] [US3] [int] `uploadFromUrl` against a local fixture server (test wiring `allowedPorts: null`) in apps/api/test/media-assets.int.test.ts
+- [x] T040 [P] [US3] [unit] `safe-fetch` binary mode: image MIME allow-list, magic-byte mismatch → `not_image`, cap → `too_large`, private IP → `blocked`, HTML mode unchanged, in apps/api/src/fetch/safe-fetch.test.ts and apps/api/src/fetch/image-sniff.test.ts
+- [x] T041 [P] [US3] [unit] `uploadFromUrl`: folder and tags by source, asset recorded with returned dimensions, `unavailable` without Cloudinary, never throws in apps/api/src/services/media.service.test.ts
+- [x] T042 [P] [US3] [int] `uploadFromUrl` against a local fixture server (test wiring `allowedPorts: null`) in apps/api/test/media-assets.int.test.ts
 
 ### Implementation for User Story 3
 
-- [ ] T043 [US3] `accept: 'image'` option in apps/api/src/fetch/safe-fetch.ts + apps/api/src/fetch/image-sniff.ts
-- [ ] T044 [US3] `media.service.uploadFromUrl({ deckId, url, source, uploadedBy? })` in apps/api/src/services/media.service.ts
+- [x] T043 [US3] `accept: 'image'` option in apps/api/src/fetch/safe-fetch.ts + apps/api/src/fetch/image-sniff.ts
+- [x] T044 [US3] `media.service.uploadFromUrl({ deckId, url, source, uploadedBy? })` in apps/api/src/services/media.service.ts
 
 **Checkpoint**: All three stories work independently
 
@@ -115,10 +115,10 @@ description: "Task list for 012-media-assets"
 
 ## Phase 5: Close-out
 
-- [ ] T050 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm budget`
-- [ ] T051 [P] docs/adr.md: **ADR-054**; docs/architecture.md: one ADR index row and `media-sweep` in the Worker row (map stays < 250 lines); docs/design/card-media.md: "Media assets" section (D156–D160, storage conventions table, `safe-fetch` binary mode) and its Deviations list from implementation-notes.md
-- [ ] T052 [P] README.md: the sweep and its grace period, `pnpm media:reconcile`, the new route
-- [ ] T053 [P] CLAUDE.md ground rules: images are referenced only through recorded assets; outbound image downloads only through `safe-fetch` `accept: 'image'`
+- [x] T050 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm budget`
+- [x] T051 [P] docs/adr.md: **ADR-054**; docs/architecture.md: one ADR index row and `media-sweep` in the Worker row (map stays < 250 lines); docs/design/card-media.md: "Media assets" section (D156–D160, storage conventions table, `safe-fetch` binary mode) and its Deviations list from implementation-notes.md
+- [x] T052 [P] README.md: the sweep and its grace period, `pnpm media:reconcile`, the new route
+- [x] T053 [P] CLAUDE.md ground rules: images are referenced only through recorded assets; outbound image downloads only through `safe-fetch` `accept: 'image'`
 - [ ] T054 PLAN.md: link this spec under Phase 7; tick demo 1 only after quickstart section 3 has run on the deployed instance
 - [ ] T055 Run quickstart.md validation
 - [ ] T056 `/speckit-converge` until it reports Converged

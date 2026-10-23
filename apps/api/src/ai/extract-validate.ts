@@ -11,13 +11,25 @@ import {
   type Entities,
   type IngestCardType,
   type ItemCreate,
+  type LinkPayload,
+  type LinkPreview,
 } from '@pb/shared';
+import { LOCKED_CAPTION_MAX, type LockedHostMatch } from '@pb/shared/links';
+import { isGenericLockedTitle } from '../fetch/locked-host-preview';
 import { proposeCardInputSchema } from './extract-prompt';
 
 /** Context the validator needs from the deck and the shared item. */
 export interface ValidateContext {
   sourceUrl?: string;
   imagePublicId?: string;
+  /** D163: the shared page's clipped OG preview; used when the card links to `sourceUrl`. */
+  linkPreview?: LinkPreview;
+  /** D167: `sourceUrl` is on a locked social host; the card links to it with the shared content. */
+  lockedHost?: LockedHostMatch | null;
+  /** D167: the raw shared text (the post's caption for locked hosts). */
+  sharedText?: string;
+  /** D160: the recorded dimensions of `imagePublicId`, when known. */
+  imageDimensions?: { width: number; height: number } | null;
   categoryIds: readonly string[];
 }
 
@@ -86,6 +98,38 @@ export function correctionMessage(error: string): string {
   return `Your previous propose_card call was invalid: ${error}. Call propose_card again with corrected fields.`;
 }
 
+/** The shared text without the shared URL in it, trimmed to the caption limit. */
+function captionOf(text: string | undefined, url: string): string | undefined {
+  const caption = text?.replaceAll(url, ' ').replace(/\s+/gu, ' ').trim();
+  return caption ? truncateAtSentence(caption, LOCKED_CAPTION_MAX) : undefined;
+}
+
+/**
+ * D167: a locked host's page tells the server nothing, so the preview is what the member shared:
+ * the OG title unless it only names the site (else the card title), the OG description or the
+ * caption, and the first shared image as the stored copy (no remote `image` to snapshot then).
+ */
+function lockedPreview(
+  url: string,
+  title: string,
+  ctx: ValidateContext & { lockedHost: LockedHostMatch },
+): NonNullable<LinkPayload['preview']> {
+  const og = ctx.linkPreview;
+  const genericOg = isGenericLockedTitle(og?.title, ctx.lockedHost);
+  const previewTitle = !genericOg && og?.title ? og.title : title;
+  const description = (!genericOg && og?.description) || captionOf(ctx.sharedText, url);
+  const image = ctx.imagePublicId
+    ? { publicId: ctx.imagePublicId, ...(ctx.imageDimensions ?? {}) }
+    : !genericOg && og?.image
+      ? { image: og.image }
+      : {};
+  return {
+    ...(previewTitle ? { title: previewTitle } : {}),
+    ...(description ? { description } : {}),
+    ...image,
+  };
+}
+
 /** Validates and normalizes a raw `propose_card` tool input into an `ItemCreate`. */
 export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedProposal {
   const parsed = proposeCardInputSchema.safeParse(raw);
@@ -121,8 +165,9 @@ export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedP
   }
   const compacted = compactEntities(entities);
 
-  const url = input.link?.url || ctx.sourceUrl || undefined;
-  let type: IngestCardType = input.type;
+  const lockedHost = ctx.sourceUrl ? (ctx.lockedHost ?? null) : null;
+  const url = (lockedHost && ctx.sourceUrl) || input.link?.url || ctx.sourceUrl || undefined;
+  let type: IngestCardType = lockedHost ? 'link' : input.type;
   if (type === 'link' && !url) {
     type = 'text';
   }
@@ -131,8 +176,11 @@ export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedP
   }
 
   let payload: Record<string, unknown> = {};
-  if (type === 'link' && url) {
-    payload = { url };
+  if (type === 'link' && url && lockedHost) {
+    payload = { url, preview: lockedPreview(url, title, { ...ctx, lockedHost }) };
+  } else if (type === 'link' && url) {
+    payload =
+      ctx.linkPreview && url === ctx.sourceUrl ? { url, preview: ctx.linkPreview } : { url };
   } else if (type === 'image' && ctx.imagePublicId) {
     payload = { publicId: ctx.imagePublicId, alt: title || 'Shared image' };
   }

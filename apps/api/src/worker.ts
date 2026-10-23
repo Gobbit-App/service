@@ -6,6 +6,8 @@ import {
   EMBED_SWEEP_CRON,
   INGEST_PRUNE_CRON,
   INGEST_SWEEP_CRON,
+  LINK_CHECK_READ_BYTES,
+  MEDIA_SWEEP_CRON,
   SEARCH_QUERY_PRUNE_CRON,
 } from '@pb/shared';
 import { parseEnv } from './env';
@@ -14,7 +16,15 @@ import { createEmbedQueue, noopEmbedQueue } from './jobs/embed-queue';
 import { createIngestHandler } from './jobs/ingest';
 import { createIngestQueue } from './jobs/ingest-queue';
 import { createIngestSweep } from './jobs/ingest-sweep';
-import { createSafeFetch } from './fetch/safe-fetch';
+import { createSafeFetch, createSafeImageFetch } from './fetch/safe-fetch';
+import { extractPage } from './fetch/extract-page';
+import { fetchLinkPreview } from './fetch/link-preview';
+import { createLinkSnapshotHandler } from './jobs/link-snapshot';
+import { createLinkSnapshotQueue, noopLinkSnapshotQueue } from './jobs/link-snapshot-queue';
+import { scheduleLinkCheckSweep } from './jobs/link-check-sweep';
+import { createLinkChecksRepo } from './repositories/link-checks.repo';
+import { createLinkChecksService, createLinkProbe } from './services/link-checks.service';
+import { createAssetUploader } from './services/media-upload-from-url';
 import { normalizeRaw } from './ingest/normalize-raw';
 import { createSharerRole } from './ingest/sharer-role';
 import { runDedup } from './ingest/run-dedup';
@@ -33,7 +43,12 @@ import { createPruneIngestJobs } from './jobs/prune-ingest-jobs';
 import { createPruneDeletedItems } from './jobs/prune-deleted-items';
 import { createIngestJobsRepo } from './repositories/ingest-jobs.repo';
 import { createCloudinaryIngestUploads } from './media/ingest-uploads';
-import { QUEUES, type EmbedItemJob, type IngestJobData } from './jobs/queues';
+import { createCloudinaryMediaStore } from './media/media-store';
+import { createMediaSweepJob } from './jobs/media-sweep';
+import { createOrphanSweeper } from './services/media-sweep';
+import { createAssetsRepo } from './repositories/assets.repo';
+import { parseCloudinaryUrl } from './lib/cloudinary-url';
+import { QUEUES, type EmbedItemJob, type IngestJobData, type LinkSnapshotJob } from './jobs/queues';
 import { createEmbeddingsRepo } from './repositories/embeddings.repo';
 import { createLlmCallsRepo } from './repositories/llm-calls.repo';
 import { createSearchQueriesRepo } from './repositories/search-queries.repo';
@@ -81,7 +96,76 @@ async function main() {
   await boss.work(QUEUES.pruneDeletedItems, async () => {
     await pruneDeletedItems();
   });
+
   const embedder = defaultEmbedder(env);
+  const workerEmbedQueue = embedder
+    ? createEmbedQueue({
+        sender: boss,
+        embeddings: createEmbeddingsRepo(db),
+        model: embedder.model,
+      })
+    : noopEmbedQueue;
+
+  // D164: link checks need no image storage; one request per host at a time.
+  await scheduleLinkCheckSweep(
+    boss,
+    createLinkChecksService({
+      linkChecks: createLinkChecksRepo(db),
+      probe: createLinkProbe({
+        safeFetch: createSafeFetch({ accept: 'any', maxBytes: LINK_CHECK_READ_BYTES }),
+        extract: extractPage,
+      }),
+    }),
+  );
+
+  if (env.CLOUDINARY_URL) {
+    const mediaStore = createCloudinaryMediaStore(parseCloudinaryUrl(env.CLOUDINARY_URL));
+    // D158: the database decides what is an orphan; Cloudinary is only asked to delete by id.
+    const mediaSweep = createMediaSweepJob({
+      sweeper: createOrphanSweeper({
+        assets: createAssetsRepo(db),
+        store: mediaStore,
+        log,
+      }),
+    });
+    await boss.schedule(QUEUES.mediaSweep, MEDIA_SWEEP_CRON);
+    await boss.work(QUEUES.mediaSweep, async () => {
+      await mediaSweep();
+    });
+
+    // D163: the API enqueues after commit only when CLOUDINARY_URL is set, so the queue is
+    // worked under the same condition.
+    const linkSnapshot = createLinkSnapshotHandler({
+      items: createItemsRepo(db),
+      fetchPreview: (url) =>
+        fetchLinkPreview(
+          { safeFetch: createSafeFetch(), extract: extractPage, log: log.info.bind(log) },
+          url,
+        ),
+      uploadFromUrl: createAssetUploader({
+        assets: createAssetsRepo(db),
+        store: mediaStore,
+        imageFetch: createSafeImageFetch(),
+        log,
+      }).uploadFromUrl,
+      sender: boss,
+      embedQueue: workerEmbedQueue,
+      log,
+    });
+    await boss.work(
+      QUEUES.linkSnapshot,
+      { batchSize: 1, localConcurrency: env.WORKER_CONCURRENCY },
+      async (jobs: Job<LinkSnapshotJob>[]) => {
+        for (const job of jobs) {
+          const outcome = await linkSnapshot(job.data);
+          log.info({ itemId: job.data.itemId, outcome }, 'link snapshot job');
+        }
+      },
+    );
+  } else {
+    await boss.unschedule(QUEUES.mediaSweep);
+  }
+
   const extract = defaultExtractor(env);
   if (extract) {
     const ingestJobs = createIngestJobsRepo(db);
@@ -100,13 +184,11 @@ async function main() {
           imageUrl: ingestUploads ? (id) => ingestUploads.llmUrl(id) : (id) => id,
         }),
       extraction: { ...extract, llmCalls: createLlmCallsRepo(db) },
-      embedQueue: embedder
-        ? createEmbedQueue({
-            sender: boss,
-            embeddings: createEmbeddingsRepo(db),
-            model: embedder.model,
-          })
-        : noopEmbedQueue,
+      embedQueue: workerEmbedQueue,
+      linkSnapshotQueue: env.CLOUDINARY_URL
+        ? createLinkSnapshotQueue({ sender: boss })
+        : noopLinkSnapshotQueue,
+      assets: createAssetsRepo(db),
       dedup: (input) =>
         runDedup(
           {

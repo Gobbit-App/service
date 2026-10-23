@@ -152,3 +152,65 @@ describe('deck search without an embedder (D73)', () => {
     expect(body.data.map((h: Hit) => h.item.id)).toEqual([item.id]);
   });
 });
+
+describe('link preview copies in search text (D163)', () => {
+  const ctx = setupApiTest({ search: { embedder: null } });
+
+  const search = async (deck: DeckRow, q: string) => {
+    const res = await ctx.app.request(`/decks/${deck.slug}/search?q=${encodeURIComponent(q)}`, {
+      headers: ctx.as(),
+    });
+    expect(res.status).toBe(200);
+    return (await json(res)).data.map((h: Hit) => h.item.id) as string[];
+  };
+
+  const searchText = async (id: string): Promise<string> =>
+    (
+      await ctx.t.pool.query<{ s: string }>('select search_text as s from items where id = $1', [
+        id,
+      ])
+    ).rows[0]!.s;
+
+  it("finds a link card by its title but not by its stored copy's public id", async () => {
+    const deck = await createDeck(ctx.t.db, ctx.world.owner);
+    const preview = { title: 'Bakery opening hours', image: 'https://bakery.example/og.jpg' };
+    const withCopy = await createItem(ctx.t.db, deck, {
+      card: {
+        type: 'link',
+        title: 'Bakery',
+        payload: {
+          url: 'https://bakery.example/',
+          preview: { ...preview, publicId: `gobbit/links/${deck.id}/zebracopy42`, width: 800 },
+        },
+      },
+    });
+    const withoutCopy = await createItem(ctx.t.db, deck, {
+      card: { type: 'link', title: 'Bakery', payload: { url: 'https://bakery.example/', preview } },
+    });
+
+    expect(await search(deck, 'zebracopy42')).toEqual([]);
+    expect(await search(deck, 'opening hours')).toEqual(
+      expect.arrayContaining([withCopy.id, withoutCopy.id]),
+    );
+    // The copy's width is a number, so the two rows search the same text.
+    expect(await searchText(withCopy.id)).toBe(await searchText(withoutCopy.id));
+  });
+
+  it('leaves the search text of rows without a stored copy as the 0009 function made it', async () => {
+    // The pre-0013 expression, inline; rows without preview.publicId must match it exactly.
+    const { rows } = await ctx.t.pool.query<{ n: number; total: number }>(`
+      select count(*) filter (where search_text <> search_normalize(concat_ws(' ', title, body, (
+        select string_agg(v #>> '{}', ' ') from jsonb_path_query(
+          case type when 'image' then payload - 'publicId'
+                    when 'calc' then payload - 'expression'
+                    else payload end,
+          'strict $.** ? (@.type() == "string")') as v
+      ), (
+        select string_agg(v #>> '{}', ' ')
+        from jsonb_path_query(coalesce(entities, '{}'::jsonb), 'strict $.** ? (@.type() == "string")') as v
+      ))))::int as n, count(*)::int as total
+      from items where payload #>> '{preview,publicId}' is null`);
+    expect(rows[0]!.total).toBeGreaterThan(0);
+    expect(rows[0]!.n).toBe(0);
+  });
+});

@@ -5,6 +5,7 @@ export type ChipView =
   | { kind: 'all' }
   | { kind: 'favorites' }
   | { kind: 'archived' }
+  | { kind: 'links' }
   | { kind: 'category'; slug: string };
 
 /** Sort categories: default first, then by position, then by name. */
@@ -41,6 +42,8 @@ export function chipHref(deckSlug: string, view: ChipView): string {
       return deckHref(deckSlug, 'favorites');
     case 'archived':
       return deckHref(deckSlug, 'archived');
+    case 'links':
+      return deckHref(deckSlug, 'links');
     case 'category':
       return deckHref(deckSlug, `c/${encodeURIComponent(view.slug)}`);
   }
@@ -72,6 +75,11 @@ export function viewFromPath(pathname: string): { deckSlug: string; view: ChipVi
       deckSlug: decodeURIComponent(archMatch[1]),
       view: { kind: 'archived' },
     };
+  }
+
+  const linksMatch = path.match(/^d\/([^/]+)\/links$/);
+  if (linksMatch) {
+    return { deckSlug: decodeURIComponent(linksMatch[1]), view: { kind: 'links' } };
   }
 
   const catMatch = path.match(/^d\/([^/]+)\/c\/([^/]+)$/);

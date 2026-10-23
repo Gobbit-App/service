@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type { DeckRow } from '@pb/db';
-import { MEDIA_SIGN_RATE_PER_HOUR, MEDIA_UPLOAD_FAILURE_RATE_PER_HOUR } from '@pb/shared';
+import type { AssetRow } from '@pb/db';
+import {
+  MEDIA_CONFIRM_RATE_PER_HOUR,
+  MEDIA_SIGN_RATE_PER_HOUR,
+  MEDIA_UPLOAD_FAILURE_RATE_PER_HOUR,
+} from '@pb/shared';
+import { MemoryMediaStore } from '../media/media-store';
+import { editorUploadFolder } from '../media/sign-upload';
+import type { AssetsRepo, NewAsset } from '../repositories/assets.repo';
 import { HttpError, rateLimited } from '../errors/http-errors';
 import type { CurrentUser } from '../types';
 import { createMediaService } from './media.service';
@@ -36,12 +44,18 @@ describe('media.service signUpload', () => {
     findDefaultForAccount: vi.fn(async () => null),
   };
 
+  let store: MemoryMediaStore;
+  let upsert: Mock<AssetsRepo['upsert']>;
+
   const build = (cloudinary: typeof creds | null = creds, log?: Logger) =>
     createMediaService({
       decks,
       memberships,
       rateLimits,
       cloudinary,
+      assets: { upsert } as unknown as AssetsRepo,
+      store: cloudinary ? store : null,
+      imageFetch: vi.fn(),
       now: () => new Date('2026-03-01T10:00:00Z'),
       log,
     });
@@ -54,6 +68,11 @@ describe('media.service signUpload', () => {
   beforeEach(() => {
     memberships = { findActive: vi.fn<Deps['memberships']['findActive']>() };
     rateLimits = { enforce: vi.fn<Deps['rateLimits']['enforce']>().mockResolvedValue(undefined) };
+    store = new MemoryMediaStore();
+    upsert = vi.fn<AssetsRepo['upsert']>(async (v: NewAsset) => ({
+      row: { ...v, id: 'asset-1', createdAt: new Date('2026-03-01T10:00:00Z') } as AssetRow,
+      created: true,
+    }));
   });
 
   it('signs for an editor without any HTTP layer (FR-016)', async () => {
@@ -148,6 +167,90 @@ describe('media.service signUpload', () => {
       role('editor');
       rateLimits.enforce.mockRejectedValue(rateLimited(120));
       expect(await statusOf(build().reportUploadFailure({ user, deckId, report }))).toBe(429);
+    });
+  });
+
+  describe('confirmUpload (D157)', () => {
+    const publicId = `${editorUploadFolder(deckId)}/abc123`;
+    const body = (over: Partial<Record<string, unknown>> = {}) => ({
+      publicId,
+      version: 1700000000,
+      signature: store.sign(publicId, 1700000000),
+      width: 1200,
+      height: 900,
+      bytes: 2048,
+      format: 'jpg',
+      ...over,
+    });
+
+    it('records a verified upload as an editor asset of the deck', async () => {
+      role('editor');
+      const result = await build().confirmUpload({ user, deckId: 'family', body: body() });
+
+      expect(result.created).toBe(true);
+      expect(result.asset).toMatchObject({ publicId, width: 1200, height: 900, source: 'editor' });
+      expect(upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ deckId, publicId, source: 'editor', uploadedBy: user.id }),
+      );
+      expect(rateLimits.enforce).toHaveBeenCalledWith(
+        `media-confirm:user:${user.id}`,
+        MEDIA_CONFIRM_RATE_PER_HOUR,
+      );
+    });
+
+    it('passes a repeat through as created: false', async () => {
+      role('editor');
+      upsert.mockImplementationOnce(async (v) => ({
+        row: { ...v, id: 'asset-1', createdAt: new Date() } as AssetRow,
+        created: false,
+      }));
+      const result = await build().confirmUpload({ user, deckId, body: body() });
+      expect(result.created).toBe(false);
+    });
+
+    it('refuses a signature that does not verify (422)', async () => {
+      role('editor');
+      const err = await build()
+        .confirmUpload({ user, deckId, body: body({ signature: 'forged' }) })
+        .catch((e: unknown) => e as HttpError);
+      expect((err as HttpError).status).toBe(422);
+      expect(upsert).not.toHaveBeenCalled();
+    });
+
+    it("refuses an image outside the deck's editor folder (422)", async () => {
+      role('editor');
+      const other = 'gobbit/decks/another/editor/abc';
+      const err = await build()
+        .confirmUpload({
+          user,
+          deckId,
+          body: body({ publicId: other, signature: store.sign(other, 1700000000) }),
+        })
+        .catch((e: unknown) => e as HttpError);
+      expect((err as HttpError).status).toBe(422);
+      expect(upsert).not.toHaveBeenCalled();
+    });
+
+    it('refuses an image recorded for another deck (422)', async () => {
+      role('editor');
+      upsert.mockResolvedValueOnce(null);
+      expect(await statusOf(build().confirmUpload({ user, deckId, body: body() }))).toBe(422);
+    });
+
+    it('refuses a reader (403), hides an unknown deck (404), 503 without a store', async () => {
+      role('reader');
+      expect(await statusOf(build().confirmUpload({ user, deckId, body: body() }))).toBe(403);
+      role(null);
+      expect(await statusOf(build().confirmUpload({ user, deckId, body: body() }))).toBe(404);
+      role('editor');
+      expect(await statusOf(build(null).confirmUpload({ user, deckId, body: body() }))).toBe(503);
+    });
+
+    it('passes the rate limiter’s 429 through before verifying', async () => {
+      role('editor');
+      rateLimits.enforce.mockRejectedValue(rateLimited(60));
+      expect(await statusOf(build().confirmUpload({ user, deckId, body: body() }))).toBe(429);
+      expect(upsert).not.toHaveBeenCalled();
     });
   });
 });

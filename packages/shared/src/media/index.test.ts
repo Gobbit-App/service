@@ -9,9 +9,12 @@ import {
   LINK_PREVIEW_TITLE_MAX,
   MEDIA_IMAGE_MAX_BYTES,
   MEDIA_IMAGE_MIMES,
+  MEDIA_IMAGE_DIMENSION_MAX,
   MEDIA_SIGN_TTL_MS,
   linkPreviewRequestSchema,
   linkPreviewResponseSchema,
+  mediaAssetConfirmRequestSchema,
+  mediaAssetSchema,
   mediaSignResponseSchema,
 } from './index';
 
@@ -96,5 +99,47 @@ describe('linkPreviewResponseSchema', () => {
   it('produces previews the link payload accepts', () => {
     const preview = { title: 'T', image: 'https://example.com/i.png' };
     expect(linkPayloadSchema.safeParse({ url: 'https://example.com', preview }).success).toBe(true);
+  });
+});
+
+describe('mediaAssetConfirmRequestSchema', () => {
+  const body = {
+    publicId: 'gobbit/items/d1/abc',
+    version: 1_792_500_123,
+    signature: 'sig',
+    width: 3024,
+    height: 4032,
+    bytes: 2_481_152,
+    format: 'heic',
+  };
+
+  it('accepts a Cloudinary upload response', () => {
+    expect(mediaAssetConfirmRequestSchema.parse(body)).toEqual(body);
+  });
+
+  it('is strict and bounds the dimensions', () => {
+    expect(mediaAssetConfirmRequestSchema.safeParse({ ...body, extra: 1 }).success).toBe(false);
+    expect(mediaAssetConfirmRequestSchema.safeParse({ ...body, width: 0 }).success).toBe(false);
+    expect(
+      mediaAssetConfirmRequestSchema.safeParse({ ...body, height: MEDIA_IMAGE_DIMENSION_MAX + 1 })
+        .success,
+    ).toBe(false);
+    expect(mediaAssetConfirmRequestSchema.safeParse({ ...body, bytes: -1 }).success).toBe(false);
+  });
+});
+
+describe('mediaAssetSchema', () => {
+  it('allows unknown dimensions for backfilled rows', () => {
+    const asset = {
+      publicId: 'gobbit/items/d1/abc',
+      width: null,
+      height: null,
+      bytes: null,
+      format: null,
+      source: 'editor',
+      createdAt: '2026-10-22T09:12:03.000Z',
+    };
+    expect(mediaAssetSchema.parse(asset)).toEqual(asset);
+    expect(mediaAssetSchema.safeParse({ ...asset, source: 'other' }).success).toBe(false);
   });
 });

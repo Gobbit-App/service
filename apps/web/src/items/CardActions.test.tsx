@@ -125,4 +125,76 @@ describe('CardActions', () => {
     for (const button of screen.getAllByRole('button')) expect(button).toBeDisabled();
     expect(screen.getByText(/these actions need a connection/)).toBeInTheDocument();
   });
+
+  describe('link checks (D165)', () => {
+    const health = { status: 'dead' as const, checkedAt: '2026-10-20T06:30:00.000Z' };
+    const flagged = makeItem({
+      id: 'i1',
+      type: 'link',
+      payload: { url: 'https://e.com' },
+      linkHealth: health,
+    });
+
+    it('offers Check again and Dismiss to editors on flagged links only', () => {
+      renderWithClient(<CardActions item={flagged} deckSlug="family" role="editor" />);
+      expect(buttons()).toEqual(['Check again', 'Dismiss', 'Archive']);
+    });
+
+    it('shows readers nothing, and no link buttons on healthy links', () => {
+      const { container } = renderWithClient(
+        <CardActions item={flagged} deckSlug="family" role="reader" />,
+      );
+      expect(container).toBeEmptyDOMElement();
+      renderWithClient(
+        <CardActions item={{ ...flagged, linkHealth: null }} deckSlug="family" role="editor" />,
+      );
+      expect(buttons()).toEqual(['Archive']);
+    });
+
+    it('Check again posts and toasts the result', async () => {
+      unwrap.mockResolvedValue({ ...flagged, linkHealth: null });
+      renderWithClient(<CardActions item={flagged} deckSlug="family" role="editor" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+
+      await waitFor(() => expect(currentToast()?.message).toBe('Link looks fine'));
+      expect(POST).toHaveBeenCalledWith('/items/{id}/link-check', {
+        params: { path: { id: 'i1' } },
+      });
+    });
+
+    it('Dismiss deletes the flag and clears it from the cached card', async () => {
+      const { queryClient } = renderWithClient(
+        <CardActions item={flagged} deckSlug="family" role="editor" />,
+      );
+      queryClient.setQueryData(['item', 'i1'], flagged);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+
+      await waitFor(() => expect(currentToast()?.message).toBe('Note dismissed'));
+      expect(DELETE).toHaveBeenCalledWith('/items/{id}/link-check/flag', {
+        params: { path: { id: 'i1' } },
+      });
+      expect(
+        queryClient.getQueryData<{ linkHealth: unknown }>(['item', 'i1'])?.linkHealth,
+      ).toBeNull();
+    });
+
+    it('shows the rate limit detail when Check again is refused', async () => {
+      const { ApiError } = await import('../api/api-error');
+      unwrap.mockRejectedValue(
+        new ApiError(429, {
+          type: '/problems/rate-limited',
+          title: 'Too many',
+          status: 429,
+          detail: 'Try again later.',
+        }),
+      );
+      renderWithClient(<CardActions item={flagged} deckSlug="family" role="editor" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+
+      await waitFor(() => expect(currentToast()?.message).toBe('Try again later.'));
+    });
+  });
 });

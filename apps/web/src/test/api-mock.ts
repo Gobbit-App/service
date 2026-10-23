@@ -17,12 +17,15 @@ const tag = (method: string) => (path: string, init?: unknown) => {
   return request;
 };
 
+/** The cloud name `GET /config` answers with; tests that render images set it and reset it. */
+export const mockConfig: { cloudinaryCloudName: string | null } = { cloudinaryCloudName: null };
+
 export const clientModule = {
   api: { GET: tag('GET'), POST: tag('POST'), PATCH: tag('PATCH'), DELETE: tag('DELETE') },
   unwrap: (request: unknown) => {
     if (request === 'GET /config') {
       return Promise.resolve({
-        cloudinaryCloudName: null,
+        cloudinaryCloudName: mockConfig.cloudinaryCloudName,
         commit: 'test',
         search: { semantic: false, ask: false },
         ingest: { enabled: false, emailDomain: null, shortcutUrl: null },

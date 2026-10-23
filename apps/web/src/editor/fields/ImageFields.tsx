@@ -1,48 +1,18 @@
-import { useEffect, useState, type ChangeEvent, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { ImageCard } from '../../cards/ImageCard';
 import { useCloudName } from '../../cards/use-cloud-name';
 import { useOnline } from '../../api/offline';
-import { checkImageFile, IMAGE_ACCEPT } from '../image-file';
+import { checkImageFile } from '../image-file';
+import { withoutPhoto, withPhoto } from '../image-payload';
 import { useImageUpload, type UseImageUploadOptions } from '../use-image-upload';
+import { PickButton } from './PickButton';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
 
 export type ImageFieldsProps = FieldsProps<'image'> & {
   /** Tests inject a fake signer/uploader. */
-  uploadDeps?: Pick<UseImageUploadOptions, 'signer' | 'upload'>;
+  uploadDeps?: Pick<UseImageUploadOptions, 'signer' | 'upload' | 'confirm'>;
 };
-
-/** A file input styled as a button; `capture` opens the camera on phones. */
-function PickButton({
-  label,
-  capture,
-  disabled,
-  onPick,
-}: {
-  label: string;
-  capture?: boolean;
-  disabled: boolean;
-  onPick: (file: File) => void;
-}): ReactElement {
-  const onInput = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = '';
-    if (file) onPick(file);
-  };
-  return (
-    <label className="button button--ghost image-fields__picker">
-      <input
-        type="file"
-        className="visually-hidden"
-        accept={IMAGE_ACCEPT}
-        capture={capture ? 'environment' : undefined}
-        disabled={disabled}
-        onChange={onInput}
-      />
-      {label}
-    </label>
-  );
-}
 
 /**
  * D133: take or pick a photo, upload it straight to Cloudinary with a signed permission, and
@@ -62,7 +32,7 @@ export function ImageFields({
   const [fileError, setFileError] = useState<string | null>(null);
   const upload = useImageUpload({
     deckId: deck.id,
-    onUploaded: (publicId) => onChange({ ...payload, publicId }),
+    onUploaded: (asset) => onChange(withPhoto(payload, asset)),
     ...uploadDeps,
   });
 
@@ -78,7 +48,7 @@ export function ImageFields({
     setFileError(refused);
     if (refused) return;
     setLocalUrl(URL.createObjectURL(file));
-    if (payload.publicId !== '') onChange({ ...payload, publicId: '' });
+    if (payload.publicId !== '') onChange(withoutPhoto(payload));
     upload.start(file);
   };
 
@@ -91,7 +61,7 @@ export function ImageFields({
     upload.reset();
     setLocalUrl(null);
     setFileError(null);
-    onChange({ ...payload, publicId: '' });
+    onChange(withoutPhoto(payload));
   };
 
   const { state } = upload;
@@ -119,7 +89,11 @@ export function ImageFields({
             aria-label="Upload progress"
           />
           <span>
-            {state.status === 'uploading' ? `Uploading… ${state.percent}%` : 'Preparing upload…'}
+            {state.status === 'uploading'
+              ? `Uploading… ${state.percent}%`
+              : state.status === 'confirming'
+                ? 'Saving photo…'
+                : 'Preparing upload…'}
           </span>
           <button type="button" className="button button--ghost" onClick={cancel}>
             Cancel upload

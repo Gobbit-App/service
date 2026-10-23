@@ -9,6 +9,8 @@ export function ChipRow(props: {
   categories: readonly Category[];
   active: ChipView;
   showArchived: boolean;
+  /** D165: "Links to check" for `item.update` roles. */
+  showLinks?: boolean;
   onNavigate: (href: string) => void;
 }): ReactElement {
   const navRef = useRef<HTMLElement>(null);
@@ -24,6 +26,9 @@ export function ChipRow(props: {
 
   if (props.showArchived) {
     views.push({ kind: 'archived' });
+  }
+  if (props.showLinks) {
+    views.push({ kind: 'links' });
   }
 
   useEffect(() => {
@@ -55,6 +60,8 @@ export function ChipRow(props: {
             label = 'Favorites';
           } else if (view.kind === 'archived') {
             label = 'Archived';
+          } else if (view.kind === 'links') {
+            label = 'Links to check';
           } else {
             const category = props.categories.find((c) => c.slug === view.slug);
             label = category?.name ?? view.slug;

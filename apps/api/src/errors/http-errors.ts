@@ -140,6 +140,13 @@ export function unprocessable(detail?: string, type = '/problems/unprocessable')
   return new HttpError(422, type, 'Unprocessable Content', detail);
 }
 
+/** A well-formed body whose value the server refuses (D157, D160): 422 validation with one field. */
+export function unprocessableField(path: string, message: string, detail = message): HttpError {
+  return new HttpError(422, '/problems/validation', 'Validation failed', detail, [
+    { path, message },
+  ]);
+}
+
 /** D39: over a rate limit; `Retry-After` says when the window resets. */
 export function rateLimited(retryAfterSeconds: number): HttpError {
   return new HttpError(

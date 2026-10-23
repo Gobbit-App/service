@@ -6,6 +6,8 @@ import {
   type MemberRole,
   type NormalizedSource,
 } from '@pb/shared';
+import { lockedHostOf } from '@pb/shared/links';
+import type { AssetsRepo } from '../repositories/assets.repo';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
@@ -13,6 +15,8 @@ import { runExtraction, type RunExtractionDeps } from '../ingest/run-extraction'
 import type { RunDedupInput } from '../ingest/run-dedup';
 import { proposeItem } from '../ingest/propose';
 import type { EmbedQueue } from './embed-queue';
+import type { LinkSnapshotQueue } from './link-snapshot-queue';
+import { toLinkPreview } from '../fetch/link-preview';
 import { lineSink } from '../lib/logger';
 
 export type IngestOutcome = 'proposed' | 'failed' | 'skipped';
@@ -28,6 +32,10 @@ export interface IngestHandlerDeps {
   /** D103: the dedup verdict for the new proposal (bound `runDedup`); omitted → no verdict. */
   dedup?: (input: RunDedupInput) => Promise<DedupVerdict>;
   embedQueue: EmbedQueue;
+  /** D163: snapshot a proposed link's preview image; omitted → none. */
+  linkSnapshotQueue?: LinkSnapshotQueue;
+  /** D167: dimensions of the shared image for a locked-host preview; omitted → none. */
+  assets?: Pick<AssetsRepo, 'byPublicId'>;
   now?: () => Date;
   log?: (message: string) => void;
 }
@@ -51,6 +59,11 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
   async function fail(jobId: string, error: string): Promise<IngestOutcome> {
     await jobs.setStatus(jobId, 'failed', error.slice(0, 500), now());
     return 'failed';
+  }
+
+  async function assetDimensions(publicId: string) {
+    const asset = await deps.assets?.byPublicId(publicId);
+    return asset?.width && asset.height ? { width: asset.width, height: asset.height } : null;
   }
 
   return async function ingest(
@@ -80,13 +93,23 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       ]);
 
       const sourceUrl = job.raw.url ?? source.url;
+      const linkPreview = source.og
+        ? toLinkPreview({ title: source.pageTitle ?? null, og: source.og })
+        : null;
+      const lockedHost = sourceUrl ? lockedHostOf(sourceUrl) : null;
+      const imagePublicId = job.raw.images[0]?.publicId;
+      const imageDimensions =
+        lockedHost && imagePublicId ? await assetDimensions(imagePublicId) : null;
       const outcome = await runExtraction(deps.extraction, {
         source,
         categories: deckCategories.map((c) => ({ id: c.id, name: c.name })),
         examples: recent.map((i) => ({ type: i.type, title: i.title, body: i.body })),
         validate: {
           ...(sourceUrl ? { sourceUrl } : {}),
-          ...(job.raw.images[0] ? { imagePublicId: job.raw.images[0].publicId } : {}),
+          ...(linkPreview ? { linkPreview } : {}),
+          ...(imagePublicId ? { imagePublicId } : {}),
+          ...(lockedHost ? { lockedHost, imageDimensions } : {}),
+          ...(job.raw.text ? { sharedText: job.raw.text } : {}),
           categoryIds: deckCategories.map((c) => c.id),
         },
         jobId: job.id,
@@ -97,7 +120,16 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       if (!outcome.ok) return await fail(job.id, outcome.error);
 
       await proposeItem(
-        { categories, items, jobs, dedup: deps.dedup, embedQueue, now, log },
+        {
+          categories,
+          items,
+          jobs,
+          dedup: deps.dedup,
+          embedQueue,
+          linkSnapshotQueue: deps.linkSnapshotQueue,
+          now,
+          log,
+        },
         {
           job: { id: job.id, deckId: job.deckId, userId: job.userId, channel: job.channel },
           item: outcome.item,

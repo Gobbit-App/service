@@ -2,6 +2,8 @@ import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
 import {
   linkPreviewRequestSchema,
   linkPreviewResponseSchema,
+  mediaAssetConfirmRequestSchema,
+  mediaAssetSchema,
   mediaSignResponseSchema,
   mediaUploadFailureRequestSchema,
 } from '@pb/shared';
@@ -36,6 +38,49 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, services: Services
     const signed = await services.media.signUpload({ user, deckId: id });
     c.header('Cache-Control', 'no-store');
     return c.json(signed, 200);
+  });
+
+  const confirmRoute = createRoute({
+    method: 'post',
+    path: '/decks/{id}/media/assets',
+    tags: ['media'],
+    summary: 'Record a finished editor upload from its signed Cloudinary response (D157)',
+    request: {
+      params: deckParams,
+      body: {
+        content: { 'application/json': { schema: mediaAssetConfirmRequestSchema } },
+        required: true,
+      },
+    },
+    responses: {
+      201: {
+        content: { 'application/json': { schema: mediaAssetSchema } },
+        description: 'Recorded',
+      },
+      200: {
+        content: { 'application/json': { schema: mediaAssetSchema } },
+        description: 'Already recorded for this deck (idempotent)',
+      },
+      ...problems(
+        'validation',
+        'unauthorized',
+        'forbidden',
+        'not-found',
+        'unprocessable',
+        'rate-limited',
+        'unavailable',
+      ),
+    },
+    security: AUTH_SECURITY,
+  });
+
+  app.openapi(confirmRoute, async (c) => {
+    const user = getUser(c);
+    const { id } = c.req.valid('param');
+    const body = c.req.valid('json');
+    const { asset, created } = await services.media.confirmUpload({ user, deckId: id, body });
+    c.header('Cache-Control', 'no-store');
+    return created ? c.json(asset, 201) : c.json(asset, 200);
   });
 
   const failureRoute = createRoute({
