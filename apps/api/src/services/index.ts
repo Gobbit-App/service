@@ -13,6 +13,7 @@ import { createRateLimitsRepo } from '../repositories/rate-limits.repo';
 import { createAssetsRepo } from '../repositories/assets.repo';
 import { createLinkChecksRepo } from '../repositories/link-checks.repo';
 import { createSitemapRepo } from '../repositories/sitemap.repo';
+import { createItemEventsRepo } from '../repositories/item-events.repo';
 import { createPageCache } from '../public/page-cache';
 import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
@@ -21,6 +22,7 @@ import { createPublicDeckService } from './public-deck.service';
 import { createPublicPagesService } from './public-pages.service';
 import { createItemsService } from './items.service';
 import { createFavoritesService } from './favorites.service';
+import { createEventsService } from './events.service';
 import { createUsersService } from './users.service';
 import { createRateLimitService } from './rate-limit.service';
 import { createAuthService, type CallbackRepos, type CallbackTransaction } from './auth.service';
@@ -205,6 +207,7 @@ export function buildServices({
       purgeDeck,
     }),
     favorites: createFavoritesService({ decks, items, favorites, memberships }),
+    events: createEventsService({ decks, memberships, events: createItemEventsRepo(db) }),
     share,
     search: searchServices.search,
     ask: searchServices.ask,

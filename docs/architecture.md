@@ -93,6 +93,7 @@ only on `POST /ingest`.
 | Links | Preview images copied to Cloudinary by a `link-snapshot` job; daily `link-check-sweep` flags dead or changed links (`Item.linkHealth`), editors check again or dismiss; locked social hosts use the shared caption and image | [links](design/links.md) · ADR-055 |
 | Browse mode | One card per screen: native scroll-snap, `@use-gesture` only in the lazy chunk | [browse-mode](design/browse-mode.md) · ADR-052 |
 | Public decks | Anonymous `/public/{slug}` reads through `public-deck.service` with `role = null` and an allow-list DTO; per-IP in-process limit; server-rendered `/p/` pages (members → app), sitemap for communal decks, page cache purged per deck; anonymous search with its own embedding budgets | [public](design/public.md) · ADR-056 |
+| Activity log | Card writes append `item_events` lines (actor, client, kind, changed field names) in the same transaction; owners and maintainers read them per deck or per card | [activity-log](design/activity-log.md) · ADR-057 |
 
 ## Testing
 
@@ -168,3 +169,4 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [054](adr.md#adr-054-asset-registry-with-a-database-driven-orphan-sweep-d156-d158) | Asset registry, database-driven orphan sweep |
 | [055](adr.md#adr-055-link-snapshots-and-monthly-link-checks-d163-d164) | Link preview snapshots; monthly link checks in `link_checks` |
 | [056](adr.md#adr-056-a-separate-anonymous-read-surface-for-public-decks-d174-d175) | Separate anonymous read surface for public decks, in-process limiter |
+| [057](adr.md#adr-057-item-events-written-in-the-same-transaction-as-the-card-d186-d187) | Item events written in the card transaction |

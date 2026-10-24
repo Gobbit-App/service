@@ -17,6 +17,9 @@ import {
   type ItemPage,
   type ItemPatch,
   type ItemType,
+  type ItemEventField,
+  type ItemEventKind,
+  type ItemStatus,
   type LinkPayload,
   can,
   compactEntities,
@@ -44,8 +47,17 @@ import type { LinkChecksService } from './link-checks.service';
 import type { LinkPreviewFields } from './link-preview-fields';
 import type { RateLimitService } from './rate-limit.service';
 import type { Actor, CurrentUser } from '../types';
+import { diffFields, itemFields } from '../events/diff-fields';
+import { eventFrom, type ItemEventInput } from '../events/item-event';
 
 const DAY_MS = 86_400_000;
+
+/** D187: a PATCH that moves the status logs it as this kind (a move to `proposed` is an update). */
+const STATUS_MOVE_KINDS: Record<ItemStatus, ItemEventKind | null> = {
+  proposed: null,
+  published: 'published',
+  archived: 'archived',
+};
 
 /** D163–D165: link snapshots, check state and the member actions on flags. */
 export interface ItemLinkDeps {
@@ -226,6 +238,27 @@ export function createItemsService(deps: {
     }
   }
 
+  /**
+   * D187: the lines a PATCH logs. A status move is its own kind (`published`, `archived`); other
+   * field changes are one `updated` line before it. Nothing for a no-op save.
+   */
+  function patchEvents(
+    actor: Actor,
+    from: ItemStatus,
+    to: ItemStatus,
+    changes: ItemEventField[],
+  ): ItemEventInput[] {
+    const statusKind = from === to ? null : STATUS_MOVE_KINDS[to];
+    // The status line says it all; publishing also sets verifiedAt.
+    const fieldChanges = statusKind
+      ? changes.filter((f) => f !== 'status' && f !== 'verifiedAt')
+      : changes;
+    const events: ItemEventInput[] = [];
+    if (fieldChanges.length > 0) events.push(eventFrom(actor, 'updated', fieldChanges));
+    if (statusKind) events.push(eventFrom(actor, statusKind));
+    return events;
+  }
+
   // Service methods
 
   const service = {
@@ -361,6 +394,7 @@ export function createItemsService(deps: {
           createdBy: user.id,
         },
         categoryIds,
+        [eventFrom(actor, 'created')],
       );
       await afterWrite(createdItem);
 
@@ -445,10 +479,19 @@ export function createItemsService(deps: {
         updatePatch.verifiedAt = now();
       }
 
+      // D187: compare the card as it will be written; a no-op save logs nothing.
+      const before = itemFields(item, currentCategoryIds);
+      const changes = diffFields(before, {
+        ...before,
+        ...updatePatch,
+        categoryIds: resultingCategoryIds,
+      });
+
       const updatedItem = await items.update(
         item.id,
         updatePatch,
         patch.categoryIds !== undefined ? resultingCategoryIds : undefined,
+        patchEvents(actor, item.status, resultingStatus, changes),
       );
       await afterWrite(updatedItem);
 
@@ -458,7 +501,7 @@ export function createItemsService(deps: {
     /** Soft delete (ADR-005); the status is kept so undelete returns the card as it was (D132). */
     async remove(actor: Actor, itemId: string): Promise<void> {
       const { item } = await loadItem(actor.user, itemId, 'item.delete');
-      await items.softDelete(item.id, now());
+      await items.softDelete(item.id, now(), [eventFrom(actor, 'deleted')]);
       purgeDeck(item.deckId);
     },
 
@@ -470,7 +513,9 @@ export function createItemsService(deps: {
 
       if (item.status === 'archived') return toDto(user, item, role);
 
-      const archived = await items.update(item.id, { status: 'archived' });
+      const archived = await items.update(item.id, { status: 'archived' }, undefined, [
+        eventFrom(actor, 'archived'),
+      ]);
       purgeDeck(archived.deckId);
       return toDto(user, archived, role);
     },
@@ -483,7 +528,9 @@ export function createItemsService(deps: {
 
       if (item.status === 'published') return toDto(user, item, role);
 
-      const restored = await items.update(item.id, { status: 'published' });
+      const restored = await items.update(item.id, { status: 'published' }, undefined, [
+        eventFrom(actor, 'restored'),
+      ]);
       await afterWrite(restored);
       return toDto(user, restored, role);
     },
@@ -509,7 +556,7 @@ export function createItemsService(deps: {
         );
       }
 
-      const restored = await items.undelete(item.id);
+      const restored = await items.undelete(item.id, [eventFrom(actor, 'undeleted')]);
       await afterWrite(restored);
       return toDto(user, restored, role);
     },

@@ -329,6 +329,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `GET` | `/decks/{id}/review/count` | Number of proposals (header pill) |
 | `POST` | `/items/{id}/publish` | Publish a proposal as new, or apply it as an update to its duplicate |
 | `POST` | `/items/{id}/discard` | Discard a proposal |
+| `GET` | `/decks/{id}/events?itemId=&cursor=&limit=` | Activity log, newest first (owners and maintainers; `limit` ≤ 50) |
 | `POST` | `/webhooks/resend/inbound` | Resend inbound mail (Svix-signed; only when email-in is configured; not in OpenAPI) |
 | **Public (no auth)** |
 | `GET` | `/public/{slug}` | A public deck's name, kind and public categories with card counts |
@@ -355,6 +356,10 @@ A shared or communal deck can publish some of its categories to anyone, without 
 The same content is also server-rendered HTML for people and search engines, with no JavaScript: `/p/<slug>` (the deck), `/p/<slug>/c/<category>` and `/p/<slug>/i/<cardId>`. Signed-in members who open those links are redirected to the app; `?view=public` shows them the public page instead. A shared link (`/s/<cardId>`) to a public card leads to its `/p/` page. Communal public decks are indexable and listed in `/sitemap.xml` (`/robots.txt` points at it); shared public decks are reachable but `noindex`. Pages are cached for 5 minutes, and any edit, publish, archive, category or deck change shows on the next request. To get a communal deck into Google, add the site in Search Console (domain or URL-prefix property for the public host) and submit `https://<host>/sitemap.xml`.
 
 Strangers can search a public deck at `/p/<slug>/search?q=` (a form on every deck and category page) or `GET /public/<slug>/search`. There is no public Ask. Searches are limited to 120 per hour per IP. Semantic matching for strangers is paid from anonymous budgets (30 query embeddings per hour per IP, 300 per hour in total); past them search is text-only. Search pages are never indexed.
+
+### Activity log (Phase 8)
+
+Every change people make to a card (added, proposed, published, edited, archived, restored, deleted, undeleted, discarded, merged) is recorded with who made it, whether it came from the app or a share, and which fields changed (names only, never the old content). Owners and maintainers see it under **Activity** in the deck header (`/d/<slug>/log`), and a single card's history from **History** on the card page. Lines stay after a card is purged or an account is deleted ("Former member"). Background jobs (link checks, snapshots) are not logged, and nothing was recorded before this feature shipped.
 
 ### Writing cards (Phase 6)
 

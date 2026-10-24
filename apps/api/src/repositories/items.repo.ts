@@ -35,6 +35,8 @@ import {
   itemHasVisibleCategory,
   visibleCategoriesWhere,
 } from '../access/visibility';
+import type { ItemEventInput } from '../events/item-event';
+import { insertItemEvents } from './item-events.repo';
 
 /** Filters shared by the live list and the deleted listing (D132). */
 interface ItemListFilters {
@@ -101,6 +103,8 @@ export function createItemsRepo(db: DbExecutor) {
         createdBy: string;
       },
       categoryIds: string[],
+      /** D187: logged in the same transaction. */
+      events: readonly ItemEventInput[] = [],
     ): Promise<ItemRow> {
       return await db.transaction(async (tx) => {
         const [item] = await tx.insert(items).values(v).returning(itemColumns);
@@ -115,6 +119,7 @@ export function createItemsRepo(db: DbExecutor) {
           );
         }
 
+        await insertItemEvents(tx, item, events);
         return item;
       });
     },
@@ -274,13 +279,16 @@ export function createItemsRepo(db: DbExecutor) {
     },
 
     /** D132: clears `deleted_at`; the deferred D95 trigger re-checks the published-has-category rule. */
-    async undelete(id: string): Promise<ItemRow> {
-      const [item] = await db
-        .update(items)
-        .set({ deletedAt: null })
-        .where(eq(items.id, id))
-        .returning(itemColumns);
-      return item!;
+    async undelete(id: string, events: readonly ItemEventInput[] = []): Promise<ItemRow> {
+      return await db.transaction(async (tx) => {
+        const [item] = await tx
+          .update(items)
+          .set({ deletedAt: null })
+          .where(eq(items.id, id))
+          .returning(itemColumns);
+        await insertItemEvents(tx, item!, events);
+        return item!;
+      });
     },
 
     /** D132: hard-deletes cards deleted before `cutoff`; FKs cascade or set null. Returns the count. */
@@ -304,6 +312,8 @@ export function createItemsRepo(db: DbExecutor) {
         verifiedAt: Date | null;
       }>,
       categoryIds?: string[],
+      /** D187: logged in the same transaction. */
+      events: readonly ItemEventInput[] = [],
     ): Promise<ItemRow> {
       return await db.transaction(async (tx) => {
         if (Object.keys(patch).length > 0) {
@@ -338,6 +348,7 @@ export function createItemsRepo(db: DbExecutor) {
           .where(eq(items.id, id))
           .limit(1);
 
+        await insertItemEvents(tx, updatedItem!, events);
         return updatedItem!;
       });
     },
@@ -352,8 +363,19 @@ export function createItemsRepo(db: DbExecutor) {
     },
 
     /** ADR-005 soft delete; `at` comes from the service clock so the D132 undo window is testable. */
-    async softDelete(id: string, at: Date = new Date()): Promise<void> {
-      await db.update(items).set({ deletedAt: at }).where(eq(items.id, id));
+    async softDelete(
+      id: string,
+      at: Date = new Date(),
+      events: readonly ItemEventInput[] = [],
+    ): Promise<void> {
+      await db.transaction(async (tx) => {
+        const [item] = await tx
+          .update(items)
+          .set({ deletedAt: at })
+          .where(eq(items.id, id))
+          .returning({ id: items.id, deckId: items.deckId, title: items.title });
+        if (item) await insertItemEvents(tx, item, events);
+      });
     },
 
     /** D38: only the category ids `role` can see, so private ids never leak via a shared card. */

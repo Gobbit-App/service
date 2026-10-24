@@ -52,8 +52,8 @@ export interface ProposeResult {
 
 /**
  * The steps after extraction, shared by the worker and direct proposals: default-category
- * fallback, the `proposed` item by the sharer (D109), the dedup verdict (D103), the job update
- * and the embedding. A dedup error leaves no verdict, since the proposal already exists.
+ * fallback, the `proposed` item by the sharer (D109) and its log line (D187), the dedup verdict
+ * (D103), the job update and the embedding. A dedup error leaves no verdict, since the proposal already exists.
  */
 export async function proposeItem(deps: ProposeDeps, input: ProposeInput): Promise<ProposeResult> {
   const { job, item, summary } = input;
@@ -80,6 +80,8 @@ export async function proposeItem(deps: ProposeDeps, input: ProposeInput): Promi
       createdBy: job.userId,
     },
     categoryIds,
+    // D187: the sharer proposed it, through a share (never `session`, even for direct proposals).
+    [{ kind: 'proposed', via: 'ingest', actorUserId: job.userId }],
   );
 
   const dedup = input.targetItemId

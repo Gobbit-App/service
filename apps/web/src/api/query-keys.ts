@@ -6,6 +6,9 @@ export const SEARCH_KEY = 'search';
 /** First segment of every review-queue key (D107: never persisted, like search). */
 export const REVIEW_KEY = 'review';
 
+/** First segment of every activity-log key (D188: never persisted). */
+export const EVENTS_KEY = 'events';
+
 /** Which slice of a deck's items a list shows (D65 routes). */
 export type ItemFilter =
   | { kind: 'all' }
@@ -38,6 +41,8 @@ export const queryKeys = {
   /** D107: never persisted (see `persist.ts`). */
   review: (deckSlug: string) => [REVIEW_KEY, deckSlug] as const,
   reviewCount: (deckSlug: string) => [REVIEW_KEY, deckSlug, 'count'] as const,
+  /** D188: never persisted (see `persist.ts`); `itemId` null = the whole deck. */
+  events: (deckSlug: string, itemId: string | null) => [EVENTS_KEY, deckSlug, itemId] as const,
 };
 
 /** Query-string parameters for `GET /decks/{id}/items`. */

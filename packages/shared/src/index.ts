@@ -24,3 +24,5 @@ export * from './ingest';
 export * from './schemas/ingest';
 export * from './media';
 export * from './links';
+export * from './events';
+export * from './schemas/event';

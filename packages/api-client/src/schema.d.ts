@@ -159,7 +159,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -181,7 +181,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -236,7 +236,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -258,7 +258,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -280,7 +280,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -337,7 +337,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -359,7 +359,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -414,7 +414,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -436,7 +436,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -496,7 +496,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -518,7 +518,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -593,7 +593,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -665,7 +665,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -743,7 +743,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -765,7 +765,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -787,7 +787,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -857,7 +857,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -879,7 +879,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -923,7 +923,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -945,7 +945,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -967,7 +967,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1034,7 +1034,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1056,7 +1056,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1078,7 +1078,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1100,7 +1100,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1122,7 +1122,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1186,7 +1186,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1208,7 +1208,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1230,7 +1230,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1291,7 +1291,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1313,7 +1313,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1335,7 +1335,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1357,7 +1357,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1460,7 +1460,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1482,7 +1482,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1504,7 +1504,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1526,7 +1526,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1548,7 +1548,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1618,7 +1618,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1640,7 +1640,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1662,7 +1662,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1728,7 +1728,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1750,7 +1750,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1772,7 +1772,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1794,7 +1794,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1816,7 +1816,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1838,7 +1838,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1922,7 +1922,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1944,7 +1944,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1966,7 +1966,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -1988,7 +1988,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2090,7 +2090,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2112,7 +2112,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2134,7 +2134,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2156,7 +2156,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2393,7 +2393,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2415,7 +2415,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2437,7 +2437,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2459,7 +2459,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2481,7 +2481,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2503,7 +2503,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2598,7 +2598,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2620,7 +2620,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2642,7 +2642,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2686,7 +2686,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2708,7 +2708,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2730,7 +2730,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2839,7 +2839,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2861,7 +2861,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2883,7 +2883,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2905,7 +2905,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2927,7 +2927,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -2949,7 +2949,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3042,7 +3042,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3064,7 +3064,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3086,7 +3086,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3108,7 +3108,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3205,7 +3205,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3227,7 +3227,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3249,7 +3249,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3271,7 +3271,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3368,7 +3368,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3390,7 +3390,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3412,7 +3412,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3434,7 +3434,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3456,7 +3456,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3553,7 +3553,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3575,7 +3575,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3597,7 +3597,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3619,7 +3619,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3641,7 +3641,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3699,7 +3699,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3721,7 +3721,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3743,7 +3743,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3799,7 +3799,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3821,7 +3821,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3863,7 +3863,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3885,7 +3885,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -3991,7 +3991,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4013,7 +4013,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4035,7 +4035,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4057,7 +4057,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4133,7 +4133,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4155,7 +4155,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4177,7 +4177,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4199,7 +4199,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4221,7 +4221,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4243,7 +4243,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4265,7 +4265,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4335,7 +4335,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4357,7 +4357,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4379,7 +4379,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4401,7 +4401,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4423,7 +4423,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4522,7 +4522,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4544,7 +4544,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4566,7 +4566,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4588,7 +4588,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4610,7 +4610,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4632,7 +4632,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4654,7 +4654,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4721,7 +4721,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4743,7 +4743,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4765,7 +4765,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4787,7 +4787,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4809,7 +4809,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4883,7 +4883,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4905,7 +4905,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4927,7 +4927,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4949,7 +4949,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -4971,7 +4971,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5047,7 +5047,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5069,7 +5069,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5091,7 +5091,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5113,7 +5113,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5135,7 +5135,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5157,7 +5157,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5288,7 +5288,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5310,7 +5310,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5378,7 +5378,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5439,7 +5439,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5461,7 +5461,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5483,7 +5483,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5505,7 +5505,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5527,7 +5527,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5585,7 +5585,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5607,7 +5607,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5769,7 +5769,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5791,7 +5791,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5813,7 +5813,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5874,7 +5874,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5896,7 +5896,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -5918,7 +5918,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6028,7 +6028,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6050,7 +6050,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6072,7 +6072,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6094,7 +6094,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6116,7 +6116,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6138,7 +6138,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6195,7 +6195,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6217,7 +6217,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6239,7 +6239,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6261,7 +6261,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6269,6 +6269,152 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decks/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                    itemId?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The deck's card changes, newest first; `itemId` narrows to one card */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                id: string;
+                                itemId: string | null;
+                                title: string;
+                                /** @enum {string} */
+                                kind: "created" | "proposed" | "published" | "updated" | "archived" | "restored" | "deleted" | "undeleted" | "discarded" | "merged";
+                                /** @enum {string} */
+                                via: "session" | "ingest";
+                                actor: {
+                                    userId: string;
+                                    displayName: string;
+                                } | null;
+                                changes: string[];
+                                createdAt: string;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6329,7 +6475,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6351,7 +6497,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6373,7 +6519,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6467,7 +6613,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6489,7 +6635,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6511,7 +6657,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6599,7 +6745,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6621,7 +6767,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6643,7 +6789,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6744,7 +6890,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6766,7 +6912,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };
@@ -6788,7 +6934,7 @@ export interface paths {
                                 message: string;
                             }[];
                             /** @enum {string} */
-                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove";
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
                         };

@@ -18,6 +18,7 @@ export * from './ingest-jobs';
 export * from './ingest-tokens';
 export * from './assets';
 export * from './link-checks';
+export * from './item-events';
 
 import { accounts } from './accounts';
 import { users } from './users';
@@ -36,6 +37,7 @@ import { ingestJobs } from './ingest-jobs';
 import { ingestTokens } from './ingest-tokens';
 import { assets } from './assets';
 import { linkChecks } from './link-checks';
+import { itemEvents } from './item-events';
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -55,6 +57,7 @@ export type IngestJobRow = typeof ingestJobs.$inferSelect;
 export type IngestTokenRow = typeof ingestTokens.$inferSelect;
 export type AssetRow = typeof assets.$inferSelect;
 export type LinkCheckRow = typeof linkChecks.$inferSelect;
+export type ItemEventRow = typeof itemEvents.$inferSelect;
 
 export type NewDeckRow = typeof decks.$inferInsert;
 export type NewCategoryRow = typeof categories.$inferInsert;
@@ -68,3 +71,4 @@ export type NewIngestJobRow = typeof ingestJobs.$inferInsert;
 export type NewIngestTokenRow = typeof ingestTokens.$inferInsert;
 export type NewAssetRow = typeof assets.$inferInsert;
 export type NewLinkCheckRow = typeof linkChecks.$inferInsert;
+export type NewItemEventRow = typeof itemEvents.$inferInsert;

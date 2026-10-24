@@ -1240,3 +1240,50 @@ h3 {
   margin: 0;
   padding-left: 1.25em;
 }
+
+/* D188: activity log */
+.header-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 8px;
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.event-log h2 {
+  font-size: 1.125rem;
+}
+
+.event-log__list {
+  display: grid;
+  gap: var(--gap);
+  margin: var(--gap) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event-row {
+  padding: var(--gap) var(--gutter);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.event-row__action {
+  font-weight: 600;
+}
+
+.event-row__changes,
+.event-row__meta {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.event-row__badge {
+  margin-inline-start: 8px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}

@@ -5,6 +5,7 @@ import { AppHeader } from '../app/AppHeader';
 import { Card } from '../cards/Card';
 import { EditLink } from '../cards/EditLink';
 import { CardActions } from '../items/CardActions';
+import { ItemHistoryLink } from '../items/ItemHistoryLink';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { deckHref } from '../ui/chip-order';
 import { NavLink, useNavigateHref } from '../ui/NavLink';
@@ -60,6 +61,7 @@ function ItemPage() {
             }}
           >
             <EditLink item={item.data} role={deck.data.role} />
+            <ItemHistoryLink deckSlug={deckSlug} itemId={item.data.id} role={deck.data.role} />
           </CardActions>
         )}
         <p className="page__back">

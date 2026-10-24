@@ -17,6 +17,7 @@ export const permissions = [
   'member.list',
   'member.invite',
   'member.remove',
+  'event.list',
 ] as const;
 
 export type Permission = (typeof permissions)[number];

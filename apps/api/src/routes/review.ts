@@ -2,7 +2,7 @@ import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
 import { itemSchema, publishRequestSchema, reviewCountSchema, reviewListSchema } from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
-import { getUser } from '../lib/current-user';
+import { getActor, getUser } from '../lib/current-user';
 import { AUTH_SECURITY, problems } from '../lib/openapi';
 
 const idParams = z.object({ id: z.string().min(1) });
@@ -75,7 +75,7 @@ export function registerReviewRoutes(app: OpenAPIHono<AppEnv>, services: Service
     const { id } = c.req.valid('param');
     // Without a JSON content type the validator yields `{}`: re-parse so `mode` gets its default.
     const body = publishRequestSchema.parse(c.req.valid('json'));
-    return c.json(await services.review.publish(getUser(c), id, body), 200);
+    return c.json(await services.review.publish(getActor(c), id, body), 200);
   });
 
   const discardRoute = createRoute({
@@ -92,7 +92,7 @@ export function registerReviewRoutes(app: OpenAPIHono<AppEnv>, services: Service
 
   app.openapi(discardRoute, async (c) => {
     const { id } = c.req.valid('param');
-    await services.review.discard(getUser(c), id);
+    await services.review.discard(getActor(c), id);
     return c.body(null, 204);
   });
 }

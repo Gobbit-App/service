@@ -18,7 +18,8 @@
     "./card-limits": "./src/card-limits.ts",
     "./media": "./src/media/index.ts",
     "./media-constants": "./src/media/constants.ts",
-    "./links": "./src/links/index.ts"
+    "./links": "./src/links/index.ts",
+    "./events": "./src/events/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
