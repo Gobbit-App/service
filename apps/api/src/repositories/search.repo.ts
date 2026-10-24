@@ -25,7 +25,8 @@ const EMPTY_ARM = sql`select null::uuid as id, null::bigint as rank, false as su
 
 interface HybridQuery {
   deckId: string;
-  role: MemberRole;
+  /** Null = anonymous: public categories only (D182). */
+  role: MemberRole | null;
   /** Output of `search_normalize()`. */
   qNormalized: string;
   /** Query embedding, or null for the text-only path. */
@@ -36,7 +37,7 @@ interface HybridQuery {
 
 export function createSearchRepo(db: Db) {
   /** D75: published, live, in the deck, and (below maintainer) in a visible category. */
-  function baseWhere(deckId: string, role: MemberRole): SQL {
+  function baseWhere(deckId: string, role: MemberRole | null): SQL {
     const visibility = canSeePrivate(role) ? sql`true` : itemHasVisibleCategory(role);
     return sql`${items.deckId} = ${deckId}
       and ${items.status} = 'published'

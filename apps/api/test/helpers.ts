@@ -69,6 +69,8 @@ export interface SetupApiTestOptions {
   media?: MediaWiring;
   /** D175: anonymous read limiter, e.g. one with a low limit. */
   anonLimiter?: AnonRateLimiter;
+  /** D182: anonymous search request limiter. */
+  anonSearchLimiter?: AnonRateLimiter;
 }
 
 export interface ApiTestContext {
@@ -130,6 +132,7 @@ export function setupApiTest(opts: SetupApiTestOptions = {}): ApiTestContext {
       ingest: opts.ingest,
       media: opts.media,
       anonLimiter: opts.anonLimiter,
+      anonSearchLimiter: opts.anonSearchLimiter,
     });
   });
 

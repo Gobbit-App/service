@@ -28,6 +28,9 @@ export const rateKeys = {
   callbackIp: (ip: string) => `callback:ip:${ip}`,
   askUser: (userId: string) => `ask:user:${userId}`,
   queryEmbedUser: (userId: string) => `embed-query:user:${userId}`,
+  /** D182: anonymous public-search embeddings, per IP and across all IPs. */
+  queryEmbedAnon: (ip: string) => `embed-query:anon:ip:${ip}`,
+  queryEmbedAnonGlobal: () => 'embed-query:anon:global',
   mediaSignUser: (userId: string) => `media-sign:user:${userId}`,
   mediaUploadFailureUser: (userId: string) => `media-upload-failure:user:${userId}`,
   linkPreviewUser: (userId: string) => `link-preview:user:${userId}`,

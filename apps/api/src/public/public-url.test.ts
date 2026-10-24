@@ -29,4 +29,11 @@ describe('public URLs (D177, D178)', () => {
       '/sign-in?next=%2Fd%2Fs%2Fc%2Fc',
     );
   });
+
+  it('D182: search pages keep the query; members go to the app search', () => {
+    const target = { kind: 'search', slug: 'our-street', q: 'אמקה & co' } as const;
+    expect(publicPath(target)).toBe('/p/our-street/search?q=%D7%90%D7%9E%D7%A7%D7%94%20%26%20co');
+    expect(appPath(target)).toBe('/d/our-street/search?q=%D7%90%D7%9E%D7%A7%D7%94%20%26%20co');
+    expect(appPath({ kind: 'search', slug: 'our-street', q: '' })).toBe('/d/our-street/search');
+  });
 });

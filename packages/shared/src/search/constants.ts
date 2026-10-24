@@ -56,8 +56,13 @@ export const SEARCH_QUERY_PRUNE_CRON = '0 3 * * 0';
 export const searchWhys = ['text', 'semantic', 'both'] as const;
 export type SearchWhy = (typeof searchWhys)[number];
 
+/** The member search screen's modes (PWA `?mode=`). */
 export const searchModes = ['search', 'ask'] as const;
 export type SearchMode = (typeof searchModes)[number];
+
+/** `search_queries.mode` values; D183: `public` = an anonymous search on a public deck. */
+export const searchLogModes = [...searchModes, 'public'] as const;
+export type SearchLogMode = (typeof searchLogModes)[number];
 
 /** P5 adds the extraction and draft-embedding purposes (D110). */
 export const llmPurposes = [

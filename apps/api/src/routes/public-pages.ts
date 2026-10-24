@@ -1,6 +1,8 @@
 import type { Context } from 'hono';
 import type { OpenAPIHono } from '@hono/zod-openapi';
 import type { AppEnv } from '../types';
+import type { Env } from '../env';
+import { clientIp } from '../lib/client-ip';
 import type { Services } from '../services';
 import type { PageRequest } from '../services/public-pages.service';
 import type { PageResponse } from '../public/responses';
@@ -11,7 +13,12 @@ import { rateLimitedPage } from '../public/pages';
 const VARY = 'Cookie';
 
 function pageRequest(c: Context<AppEnv>): PageRequest {
-  return { user: c.get('user'), view: c.req.query('view'), cursor: c.req.query('cursor') };
+  return {
+    user: c.get('user'),
+    view: c.req.query('view'),
+    cursor: c.req.query('cursor'),
+    q: c.req.query('q'),
+  };
 }
 
 function send(c: Context<AppEnv>, page: PageResponse): Response {
@@ -35,8 +42,24 @@ export function rateLimitedHtml(c: Context<AppEnv>, retryAfterSeconds: number): 
  * D177–D179: server-rendered public pages, the sitemap and robots.txt. HTML for strangers and
  * crawlers, so they are kept out of the OpenAPI document.
  */
-export function registerPublicPagesRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
+export function registerPublicPagesRoutes(
+  app: OpenAPIHono<AppEnv>,
+  services: Services,
+  env: Pick<Env, 'CLIENT_IP_HEADER'>,
+): void {
   const pages = services.publicPages;
+
+  // D182: registered before `/p/:slug/i/:itemId` etc.; `search` is not a valid card or category path.
+  app.get('/p/:slug/search', async (c) =>
+    send(
+      c,
+      await pages.searchPage(
+        c.req.param('slug'),
+        pageRequest(c),
+        clientIp(c, env.CLIENT_IP_HEADER),
+      ),
+    ),
+  );
 
   app.get('/p/:slug', async (c) =>
     send(c, await pages.deckPage(c.req.param('slug'), pageRequest(c))),

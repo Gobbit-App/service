@@ -91,6 +91,18 @@ webTest(
     expect(deckPage).toContain('Smoke table');
     expect(deckPage).not.toContain(sharedCard.title);
 
+    // D182: public search finds the public card and never the shared one.
+    const search = async (q: string) => {
+      const res = await anon.get(webUrl(`/p/${webDeck.slug}/search?q=${q}`), { maxRedirects: 0 });
+      expect(res.status()).toBe(200);
+      expect(res.headers()['x-robots-tag']).toBe('noindex');
+      return await res.text();
+    };
+    expect(await search('porridge')).toContain(`href="/p/${webDeck.slug}/i/${publicCard.id}"`);
+    const sharedSearch = await search('bold');
+    expect(sharedSearch).not.toContain(sharedCard.id);
+    expect(sharedSearch).not.toContain(sharedCard.title);
+
     const { token } = resolveE2eEnv();
     const member = await playwright.request.newContext({
       extraHTTPHeaders: { Cookie: `gobbit_session=${token}` },

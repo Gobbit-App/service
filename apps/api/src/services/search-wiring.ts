@@ -1,12 +1,10 @@
 import type { Db } from '@pb/db';
-import { QUERY_EMBEDDING_BUDGET_PER_HOUR } from '@pb/shared';
 import type { Env } from '../env';
 import type { Asker } from '../ai/asker';
 import type { Embedder } from '../ai/embedder';
 import { defaultAsker, defaultEmbedder } from '../ai/providers';
 import { createQueryEmbedder } from '../ai/query-embedder';
 import { noopEmbedQueue, type EmbedQueue } from '../jobs/embed-queue';
-import { rateKeys } from '../lib/rate-window';
 import { createLlmCallsRepo } from '../repositories/llm-calls.repo';
 import { createSearchQueriesRepo } from '../repositories/search-queries.repo';
 import { createSearchRepo } from '../repositories/search.repo';
@@ -14,6 +12,8 @@ import type { DecksRepo } from '../repositories/decks.repo';
 import type { MembershipLookup } from '../access/authorize';
 import { createAskService } from './ask.service';
 import type { ItemDtoMapper } from './item-dtos';
+import type { PublicDeckService } from './public-deck.service';
+import { createQueryBudget, type QueryBudgetLimits } from './query-budget';
 import type { RateLimitService } from './rate-limit.service';
 import { createSearchService } from './search.service';
 
@@ -24,6 +24,8 @@ export interface SearchWiring {
   embedQueue?: EmbedQueue;
   /** Ask deadline override (tests); defaults to ASK_TIMEOUT_MS. */
   askTimeoutMs?: number;
+  /** Query-embedding budgets (tests lower them); defaults to the shared constants (D182). */
+  queryBudgetLimits?: QueryBudgetLimits;
 }
 
 /** The embedder from the wiring override, else from env keys (null → no embeddings). */
@@ -40,11 +42,12 @@ export function buildSearchServices(deps: {
   env: Env;
   decks: DecksRepo;
   memberships: MembershipLookup;
+  publicDecks: Pick<PublicDeckService, 'resolvePublicDeck' | 'toPublicItems'>;
   rateLimits: RateLimitService;
   toDtos: ItemDtoMapper;
   wiring?: SearchWiring;
 }) {
-  const { db, env, decks, memberships, rateLimits, toDtos, wiring } = deps;
+  const { db, env, decks, memberships, publicDecks, rateLimits, toDtos, wiring } = deps;
   const embedder = resolveEmbedder(env, wiring);
   const asker = wiring?.asker === undefined ? defaultAsker(env) : wiring.asker;
   const llmCalls = createLlmCallsRepo(db);
@@ -53,14 +56,13 @@ export function buildSearchServices(deps: {
     ? createQueryEmbedder({
         embedder,
         llmCalls,
-        withinBudget: async (userId) =>
-          (await rateLimits.check(rateKeys.queryEmbedUser(userId), QUERY_EMBEDDING_BUDGET_PER_HOUR))
-            .allowed,
+        withinBudget: createQueryBudget(rateLimits, wiring?.queryBudgetLimits),
       })
     : null;
 
   const search = createSearchService({
     decks,
+    publicDecks,
     memberships,
     search: createSearchRepo(db),
     searchQueries: createSearchQueriesRepo(db),

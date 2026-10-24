@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { itemSchema } from './item';
+import { publicItemSchema } from './public';
+import { PUBLIC_SEARCH_LIMIT_DEFAULT, PUBLIC_SEARCH_LIMIT_MAX } from '../limits';
 import {
   ASK_QUESTION_MAX,
   ASK_QUESTION_MIN,
@@ -31,6 +33,32 @@ export const searchResponseSchema = z.object({
   semantic: z.boolean(),
 });
 export type SearchResponse = z.infer<typeof searchResponseSchema>;
+
+/** D182: GET /public/{slug}/search query. */
+export const publicSearchQuerySchema = z.object({
+  q: z.string().trim().min(1).max(SEARCH_Q_MAX),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(PUBLIC_SEARCH_LIMIT_MAX)
+    .default(PUBLIC_SEARCH_LIMIT_DEFAULT),
+});
+export type PublicSearchQuery = z.infer<typeof publicSearchQuerySchema>;
+
+export const publicSearchHitSchema = z.object({
+  item: publicItemSchema,
+  why: searchWhySchema,
+  score: z.number(),
+});
+export type PublicSearchHit = z.infer<typeof publicSearchHitSchema>;
+
+/** D182: public search answer; `semantic` as for members. */
+export const publicSearchResponseSchema = z.object({
+  data: z.array(publicSearchHitSchema),
+  semantic: z.boolean(),
+});
+export type PublicSearchResponse = z.infer<typeof publicSearchResponseSchema>;
 
 /** D77: POST /decks/:idOrSlug/ask body. */
 export const askRequestSchema = z.object({

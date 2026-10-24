@@ -1,6 +1,7 @@
 import {
   htmlLang,
   ogLocale,
+  SEARCH_Q_MAX,
   textDirection,
   type PublicCategory,
   type PublicDeck,
@@ -47,8 +48,16 @@ function openInApp(target: PageTarget): Html {
   return h`<footer><a href="${openInAppPath(target)}">Open in ${SITE_NAME}</a></footer>`;
 }
 
-function cardList(deck: DeckRef, items: PublicItem[]): Html {
-  if (items.length === 0) return h`<p class="muted">No cards yet.</p>`;
+/** D182: a plain GET form, so search works without JavaScript. */
+function searchForm(deck: DeckRef, q = ''): Html {
+  return h`<form class="search" method="get" action="/p/${encodeURIComponent(deck.slug)}/search" role="search">
+<input type="search" name="q" value="${q}" maxlength="${SEARCH_Q_MAX}" required aria-label="Search ${deck.name}" placeholder="Search">
+<button type="submit">Search</button>
+</form>`;
+}
+
+function cardList(deck: DeckRef, items: PublicItem[], empty = 'No cards yet.'): Html {
+  if (items.length === 0) return h`<p class="muted">${empty}</p>`;
   return h`<ul class="cards">${items.map((item) => {
     const summary = excerpt(item.body, LIST_EXCERPT_MAX);
     return h`<li><a class="title" href="${publicPath({ kind: 'item', slug: deck.slug, itemId: item.id })}">${item.title}</a>
@@ -82,6 +91,7 @@ export function deckPage(ctx: PageContext, { deck, items, nextCursor }: DeckPage
   return layout(
     head,
     h`${publicViewNote(ctx)}<h1>${deck.name}</h1>
+${searchForm(deck)}
 <nav class="cats" aria-label="Categories">${deck.categories.map(
       (c) =>
         h`<a href="${publicPath({ kind: 'category', slug: deck.slug, category: c.slug })}">${c.name} <span class="muted">${c.itemCount}</span></a>`,
@@ -117,6 +127,7 @@ export function categoryPage(
     head,
     h`${publicViewNote(ctx)}<p class="muted"><a href="${publicPath({ kind: 'deck', slug: deck.slug })}">${deck.name}</a></p>
 <h1>${category.name}</h1>
+${searchForm(deck)}
 ${cardList(deck, items)}
 ${pager(publicPath(target), nextCursor)}
 ${openInApp(target)}`,
@@ -146,6 +157,45 @@ ${
         (c) =>
           h`<a href="${publicPath({ kind: 'category', slug: deck.slug, category: c.slug })}">${c.name}</a>`,
       )}</nav>`
+    : ''
+}
+${openInApp(target)}`,
+  );
+}
+
+export type SearchPageModel = {
+  deck: DeckRef;
+  /** Trimmed query; empty → the form alone. */
+  q: string;
+  items: PublicItem[];
+  /** Whether the meaning arm ran; false → "text matches only". */
+  semantic: boolean;
+};
+
+/** D182: `/p/{slug}/search`. Always `noindex` (queries are unbounded). */
+export function searchPage(
+  ctx: PageContext,
+  { deck, q, items, semantic }: SearchPageModel,
+): string {
+  const target: PageTarget = { kind: 'search', slug: deck.slug, q };
+  const title = q ? `${q} · ${deck.name}` : `Search · ${deck.name}`;
+  const head: PageHead = {
+    title,
+    description: excerpt(`Search ${deck.name}`, OG_DESCRIPTION_MAX),
+    image: ctx.siteImage,
+    ogType: 'website',
+    robots: 'noindex',
+    ...languageOf(`${q} ${deck.name}`),
+  };
+  return layout(
+    head,
+    h`${publicViewNote(ctx)}<p class="muted"><a href="${publicPath({ kind: 'deck', slug: deck.slug })}">${deck.name}</a></p>
+<h1>Search</h1>
+${searchForm(deck, q)}
+${
+  q
+    ? h`${semantic ? '' : h`<p class="muted">Text matches only.</p>`}
+${cardList(deck, items, 'No public cards match.')}`
     : ''
 }
 ${openInApp(target)}`,

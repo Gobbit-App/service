@@ -49,6 +49,10 @@ function setup({ memberRole }: { memberRole?: 'reader' } = {}) {
   }));
   const listFor = vi.fn(async () => ({ data: [item], nextCursor: null }));
   const itemById = vi.fn(async (id: string) => (id === ITEM_ID ? { deck, item } : null));
+  const retrievePublic = vi.fn(async () => ({
+    data: [{ item, why: 'text' as const, score: 0.03 }],
+    semantic: false,
+  }));
   const findActive = vi.fn(async () =>
     memberRole ? { role: memberRole, acceptedAt: new Date(), deletedAt: null } : null,
   );
@@ -64,8 +68,9 @@ function setup({ memberRole }: { memberRole?: 'reader' } = {}) {
       ogImageFor: vi.fn(async () => `${ORIGIN}/og/private.png`),
     },
     cache: createPageCache(),
+    search: { retrievePublic },
   });
-  return { service, summaryFor, findActive };
+  return { service, summaryFor, findActive, retrievePublic };
 }
 
 describe('public pages service (D177, D178, D180)', () => {
@@ -136,5 +141,47 @@ describe('public pages service (D177, D178, D180)', () => {
     expect((await service.deckPage('nope', {})).status).toBe(404);
     expect((await service.categoryPage('our-street', 'nope', {})).status).toBe(404);
     expect((await service.itemPage('our-street', 'nope', {})).status).toBe(404);
+  });
+
+  describe('search page (D182)', () => {
+    const IP = '203.0.113.7';
+
+    it('renders public results, noindex, never from the page cache', async () => {
+      const { service, retrievePublic } = setup();
+      const first = await service.searchPage('our-street', { q: '  water ' }, IP);
+      await service.searchPage('our-street', { q: 'water' }, IP);
+
+      expect(first.status).toBe(200);
+      expect(first.headers['Cache-Control']).toBe('public, max-age=60');
+      expect(first.headers['X-Robots-Tag']).toBe('noindex');
+      expect(first.html).toContain('Water shut-off');
+      expect(first.html).toContain('Text matches only.');
+      expect(retrievePublic).toHaveBeenCalledTimes(2);
+      expect(retrievePublic).toHaveBeenCalledWith(deck, 'water', 10, IP);
+    });
+
+    it('an empty query renders the form only', async () => {
+      const { service, retrievePublic } = setup();
+      const res = await service.searchPage('our-street', {}, IP);
+      expect(res.status).toBe(200);
+      expect(res.html).toContain('role="search"');
+      expect(res.html).not.toContain('Water shut-off');
+      expect(retrievePublic).not.toHaveBeenCalled();
+    });
+
+    it('members go to the app search with the query', async () => {
+      const { service, retrievePublic } = setup({ memberRole: 'reader' });
+      const res = await service.searchPage('our-street', { q: 'a b', user: user('acct-m') }, IP);
+      expect(res.status).toBe(302);
+      expect(res.headers.Location).toBe('/d/our-street/search?q=a%20b');
+      expect(res.headers['Cache-Control']).toBe('private, no-store');
+      expect(retrievePublic).not.toHaveBeenCalled();
+    });
+
+    it('unknown deck → 404; a too-long query → 400', async () => {
+      const { service } = setup();
+      expect((await service.searchPage('nope', { q: 'x' }, IP)).status).toBe(404);
+      expect((await service.searchPage('our-street', { q: 'x'.repeat(201) }, IP)).status).toBe(400);
+    });
   });
 });

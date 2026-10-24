@@ -334,6 +334,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `GET` | `/public/{slug}` | A public deck's name, kind and public categories with card counts |
 | `GET` | `/public/{slug}/items?category=&cursor=&limit=` | Published cards in public categories, newest first (`limit` ≤ 50) |
 | `GET` | `/public/{slug}/items/{itemId}` | One public card (allow-listed fields only) |
+| `GET` | `/public/{slug}/search?q=&limit=` | Hybrid search over public cards (`limit` ≤ 20; 120/hour per IP; `semantic: false` once the anonymous embedding budgets are spent) |
 | **Favorites** |
 | `POST` | `/items/{id}/favorite` | Add to favorites |
 | `DELETE` | `/items/{id}/favorite` | Remove from favorites |
@@ -352,6 +353,8 @@ Shares become **proposed** cards; a publisher approves them under **Review** in 
 A shared or communal deck can publish some of its categories to anyone, without signing in. An owner (or co-owner) sets `isPublic: true` on the deck (`PATCH /decks/{id}`), and an owner or maintainer sets `visibility: "public"` on each category to publish (`PATCH /decks/{id}/categories/{categoryId}`). Strangers then read only published cards in public categories under `/public/{slug}`. Personal decks can't be public, and a private, personal, deleted or unknown deck gets the same 404. Anonymous reads are limited to 600 per hour per IP (in-process, per API instance; 429 with `Retry-After`), and answers carry `Cache-Control: public, max-age=60`.
 
 The same content is also server-rendered HTML for people and search engines, with no JavaScript: `/p/<slug>` (the deck), `/p/<slug>/c/<category>` and `/p/<slug>/i/<cardId>`. Signed-in members who open those links are redirected to the app; `?view=public` shows them the public page instead. A shared link (`/s/<cardId>`) to a public card leads to its `/p/` page. Communal public decks are indexable and listed in `/sitemap.xml` (`/robots.txt` points at it); shared public decks are reachable but `noindex`. Pages are cached for 5 minutes, and any edit, publish, archive, category or deck change shows on the next request. To get a communal deck into Google, add the site in Search Console (domain or URL-prefix property for the public host) and submit `https://<host>/sitemap.xml`.
+
+Strangers can search a public deck at `/p/<slug>/search?q=` (a form on every deck and category page) or `GET /public/<slug>/search`. There is no public Ask. Searches are limited to 120 per hour per IP. Semantic matching for strangers is paid from anonymous budgets (30 query embeddings per hour per IP, 300 per hour in total); past them search is text-only. Search pages are never indexed.
 
 ### Writing cards (Phase 6)
 

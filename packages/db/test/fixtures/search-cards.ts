@@ -221,4 +221,11 @@ export const searchCards: SearchCard[] = [
     'Plant watering',
     'Water the basil every two days and the ficus once a week.',
   ),
+  // 018 (D182): a Latin-script card a Hebrew query must find by meaning.
+  text(
+    'amka',
+    'en',
+    'AMKA',
+    'Greek social security number; needed at the doctor and the pharmacy.',
+  ),
 ];

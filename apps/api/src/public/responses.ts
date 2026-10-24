@@ -2,6 +2,8 @@ import { badRequestPage, notFoundPage } from './pages';
 
 /** D180: pages and permanent redirects; edits reach readers within five minutes. */
 export const PAGE_CACHE_CONTROL = 'public, max-age=300';
+/** D182: search result pages are short-lived in shared caches and never in the page cache. */
+export const SEARCH_PAGE_CACHE_CONTROL = 'public, max-age=60';
 /** A page that becomes public should not stay "not found" for long. */
 export const NOT_FOUND_CACHE_CONTROL = 'public, max-age=60';
 /** D178: member redirects and `?view=public` answers are per caller. */
