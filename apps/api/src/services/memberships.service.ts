@@ -1,4 +1,4 @@
-import type { InviteCreate, Member, Membership } from '@pb/shared';
+import type { InviteCreate, Member, MemberRole, Membership } from '@pb/shared';
 import type { DeckRow, MembershipRow } from '@pb/db';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
@@ -15,6 +15,14 @@ import { badRequest, conflict, notFound, PERSONAL_DECK_PROBLEM } from '../errors
 import type { UsersService } from './users.service';
 
 const DAY_MS = 86_400_000;
+
+/** D185: why a role change is refused (409). */
+export const ROLE_CHANGE_PROBLEMS = {
+  ownRole: '/problems/own-role',
+  implicitOwner: '/problems/implicit-owner',
+  invitePending: '/problems/invite-pending',
+  lastOwner: '/problems/last-owner',
+} as const;
 
 type MemberUser = Pick<CurrentUser, 'id' | 'email' | 'displayName'>;
 
@@ -104,6 +112,64 @@ export function createMembershipsService(deps: {
           implicit: false,
         })),
       ];
+    },
+
+    /**
+     * D185: an owner changes an accepted member's role. Never their own, an implicit owner's or a
+     * pending invite's (re-invite instead); never the last owner when the account has no users.
+     */
+    async changeRole(
+      user: CurrentUser,
+      idOrSlug: string,
+      userId: string,
+      role: MemberRole,
+    ): Promise<Member> {
+      const deck = await resolveDeck(decks, idOrSlug, user);
+      await authorize(user, deck, 'member.invite', memberships);
+
+      if (userId === user.id) {
+        throw conflict('You cannot change your own role', ROLE_CHANGE_PROBLEMS.ownRole);
+      }
+      const target = await users.findById(userId);
+      if (target?.accountId === deck.ownerAccountId) {
+        throw conflict(
+          'Owners of the deck account always stay owners',
+          ROLE_CHANGE_PROBLEMS.implicitOwner,
+        );
+      }
+      const membership = await memberships.findActive(deck.id, userId);
+      if (!membership || !target) {
+        throw notFound('Member not found');
+      }
+      if (!membership.acceptedAt) {
+        throw conflict(
+          'The invite is still pending; invite again with the new role',
+          ROLE_CHANGE_PROBLEMS.invitePending,
+        );
+      }
+
+      let updated = membership;
+      if (membership.role !== role) {
+        const demotesOwner = membership.role === 'owner';
+        const guardLastOwner =
+          demotesOwner && (await users.listByAccount(deck.ownerAccountId)).length === 0;
+        const result = await memberships.updateRole(membership.id, deck.id, role, {
+          guardLastOwner,
+        });
+        if (result === 'last-owner') {
+          throw conflict('A deck needs at least one owner', ROLE_CHANGE_PROBLEMS.lastOwner);
+        }
+        updated = result;
+      }
+      return {
+        userId: target.id,
+        email: target.email,
+        displayName: target.displayName,
+        role: updated.role,
+        invitedAt: updated.invitedAt.toISOString(),
+        acceptedAt: updated.acceptedAt?.toISOString() ?? null,
+        implicit: false,
+      };
     },
 
     async remove(user: CurrentUser, idOrSlug: string, userId: string): Promise<void> {

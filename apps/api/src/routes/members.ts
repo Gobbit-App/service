@@ -1,5 +1,11 @@
 import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
-import { inviteCreateSchema, inviteResponseSchema, memberListSchema } from '@pb/shared';
+import {
+  inviteCreateSchema,
+  inviteResponseSchema,
+  memberListSchema,
+  memberRolePatchSchema,
+  memberSchema,
+} from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';
@@ -47,6 +53,39 @@ export function registerMembersRoutes(app: OpenAPIHono<AppEnv>, services: Servic
     const { id, userId } = c.req.valid('param');
     await services.members.remove(user, id, userId);
     return c.body(null, 204);
+  });
+
+  const roleRoute = createRoute({
+    method: 'patch',
+    path: '/decks/{id}/members/{userId}',
+    tags: ['members'],
+    security: AUTH_SECURITY,
+    request: {
+      params: deckParams.extend({ userId: z.uuid() }),
+      body: { content: { 'application/json': { schema: memberRolePatchSchema } }, required: true },
+    },
+    responses: {
+      200: {
+        content: { 'application/json': { schema: memberSchema } },
+        description:
+          'Role changed (D185; owners only). 409 own-role, implicit-owner, invite-pending or last-owner',
+      },
+      ...problems(
+        'bad-request',
+        'validation',
+        'unauthorized',
+        'forbidden',
+        'not-found',
+        'conflict',
+      ),
+    },
+  });
+
+  app.openapi(roleRoute, async (c) => {
+    const user = getUser(c);
+    const { id, userId } = c.req.valid('param');
+    const { role } = c.req.valid('json');
+    return c.json(await services.members.changeRole(user, id, userId, role), 200);
   });
 
   const inviteRoute = createRoute({

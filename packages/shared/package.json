@@ -7,7 +7,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./enums": "./src/enums.ts",
-    "./authz": "./src/authz/can.ts",
+    "./authz": "./src/authz/index.ts",
     "./decks": "./src/decks.ts",
     "./calc": "./src/calc/evaluate.ts",
     "./text-script": "./src/utils/text-script.ts",

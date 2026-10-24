@@ -25,6 +25,7 @@ import { Route as DSlugLogRouteImport } from './routes/d.$slug.log'
 import { Route as DSlugNewRouteImport } from './routes/d.$slug.new'
 import { Route as DSlugReviewRouteImport } from './routes/d.$slug.review'
 import { Route as DSlugSearchRouteImport } from './routes/d.$slug.search'
+import { Route as DSlugSettingsRouteImport } from './routes/d.$slug.settings'
 import { Route as IItemIdEditRouteImport } from './routes/i.$itemId_.edit'
 import { Route as DSlugCCategoryRouteImport } from './routes/d.$slug.c.$category'
 
@@ -108,6 +109,11 @@ const DSlugSearchRoute = DSlugSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => DSlugRoute,
 } as any)
+const DSlugSettingsRoute = DSlugSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DSlugRoute,
+} as any)
 const IItemIdEditRoute = IItemIdEditRouteImport.update({
   id: '/i/$itemId_/edit',
   path: '/i/$itemId/edit',
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/d/$slug/new': typeof DSlugNewRoute
   '/d/$slug/review': typeof DSlugReviewRoute
   '/d/$slug/search': typeof DSlugSearchRoute
+  '/d/$slug/settings': typeof DSlugSettingsRoute
   '/i/$itemId/edit': typeof IItemIdEditRoute
   '/d/$slug/': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/d/$slug/new': typeof DSlugNewRoute
   '/d/$slug/review': typeof DSlugReviewRoute
   '/d/$slug/search': typeof DSlugSearchRoute
+  '/d/$slug/settings': typeof DSlugSettingsRoute
   '/i/$itemId/edit': typeof IItemIdEditRoute
   '/d/$slug': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/d/$slug/new': typeof DSlugNewRoute
   '/d/$slug/review': typeof DSlugReviewRoute
   '/d/$slug/search': typeof DSlugSearchRoute
+  '/d/$slug/settings': typeof DSlugSettingsRoute
   '/i/$itemId_/edit': typeof IItemIdEditRoute
   '/d/$slug/': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/d/$slug/new'
     | '/d/$slug/review'
     | '/d/$slug/search'
+    | '/d/$slug/settings'
     | '/i/$itemId/edit'
     | '/d/$slug/'
     | '/d/$slug/c/$category'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/d/$slug/new'
     | '/d/$slug/review'
     | '/d/$slug/search'
+    | '/d/$slug/settings'
     | '/i/$itemId/edit'
     | '/d/$slug'
     | '/d/$slug/c/$category'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/d/$slug/new'
     | '/d/$slug/review'
     | '/d/$slug/search'
+    | '/d/$slug/settings'
     | '/i/$itemId_/edit'
     | '/d/$slug/'
     | '/d/$slug/c/$category'
@@ -366,6 +378,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DSlugSearchRouteImport
       parentRoute: typeof DSlugRoute
     }
+    '/d/$slug/settings': {
+      id: '/d/$slug/settings'
+      path: '/settings'
+      fullPath: '/d/$slug/settings'
+      preLoaderRoute: typeof DSlugSettingsRouteImport
+      parentRoute: typeof DSlugRoute
+    }
     '/i/$itemId_/edit': {
       id: '/i/$itemId_/edit'
       path: '/i/$itemId/edit'
@@ -392,6 +411,7 @@ interface DSlugRouteChildren {
   DSlugNewRoute: typeof DSlugNewRoute
   DSlugReviewRoute: typeof DSlugReviewRoute
   DSlugSearchRoute: typeof DSlugSearchRoute
+  DSlugSettingsRoute: typeof DSlugSettingsRoute
   DSlugIndexRoute: typeof DSlugIndexRoute
   DSlugCCategoryRoute: typeof DSlugCCategoryRoute
 }
@@ -405,6 +425,7 @@ const DSlugRouteChildren: DSlugRouteChildren = {
   DSlugNewRoute: DSlugNewRoute,
   DSlugReviewRoute: DSlugReviewRoute,
   DSlugSearchRoute: DSlugSearchRoute,
+  DSlugSettingsRoute: DSlugSettingsRoute,
   DSlugIndexRoute: DSlugIndexRoute,
   DSlugCCategoryRoute: DSlugCCategoryRoute,
 }

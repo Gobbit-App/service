@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
 import type { MemberRole } from '@pb/shared';
 import { memberships, users, type DbExecutor, type MembershipRow } from '@pb/db';
 
@@ -87,6 +87,41 @@ export function createMembershipsRepo(db: DbExecutor) {
         .update(memberships)
         .set({ acceptedAt: now })
         .where(and(eq(memberships.id, id), isNull(memberships.acceptedAt)));
+    },
+
+    /**
+     * D185: sets an accepted member's role. With `guardLastOwner` the deck's accepted owner
+     * memberships are locked first and the change is refused when it would demote the last one.
+     */
+    async updateRole(
+      id: string,
+      deckId: string,
+      role: MemberRole,
+      opts: { guardLastOwner: boolean },
+    ): Promise<MembershipRow | 'last-owner'> {
+      return db.transaction(async (tx) => {
+        if (opts.guardLastOwner) {
+          const owners = await tx
+            .select({ id: memberships.id })
+            .from(memberships)
+            .where(
+              and(
+                eq(memberships.deckId, deckId),
+                eq(memberships.role, 'owner'),
+                isNotNull(memberships.acceptedAt),
+                isNull(memberships.deletedAt),
+              ),
+            )
+            .for('update');
+          if (owners.length <= 1) return 'last-owner';
+        }
+        const [row] = await tx
+          .update(memberships)
+          .set({ role })
+          .where(and(eq(memberships.id, id), isNull(memberships.deletedAt)))
+          .returning();
+        return row;
+      });
     },
 
     async softDelete(id: string, now: Date): Promise<void> {

@@ -32,10 +32,13 @@ export function isPlainClick(event: MouseEvent): boolean {
 export function NavLink({
   href,
   className,
+  label,
   children,
 }: {
   href: string;
   className?: string;
+  /** Accessible name when the visible text is shorter than it. */
+  label?: string;
   children: ReactNode;
 }): ReactElement {
   const navigate = useNavigateHref();
@@ -43,6 +46,7 @@ export function NavLink({
     <a
       href={href}
       className={className}
+      aria-label={label}
       onClick={(event) => {
         if (!isPlainClick(event)) return;
         event.preventDefault();
