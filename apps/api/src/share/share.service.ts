@@ -14,6 +14,7 @@ import {
   type ShareMeta,
 } from './share-page';
 import { lineSink } from '../lib/logger';
+import { publicUrl } from '../public/public-url';
 
 /** D61: a first share waits at most this long for its image before falling back. */
 export const OG_RENDER_BUDGET_MS = 3000;
@@ -60,6 +61,15 @@ function publicCategoryName(record: ShareRecord): string | null {
 function imagePublicIdOf(record: ShareRecord): string | null {
   const id = record.item.type === 'image' ? record.item.payload.publicId : undefined;
   return typeof id === 'string' && id !== '' ? id : null;
+}
+
+function modeOf(record: ShareRecord) {
+  return shareMode({
+    status: record.item.status,
+    deletedAt: record.item.deletedAt,
+    deckIsPublic: record.deck.isPublic,
+    categoryVisibilities: record.categories.map((c) => c.visibility),
+  });
 }
 
 export function createShareService(deps: ShareServiceDeps) {
@@ -125,9 +135,13 @@ export function createShareService(deps: ShareServiceDeps) {
     return store.deliveryUrl(publicId);
   }
 
-  async function publicMeta(record: ShareRecord): Promise<ShareMeta> {
+  /** D59/D60: the card's own picture, else the generated image, else the private one. */
+  async function imageFor(record: ShareRecord): Promise<string> {
     const { item, deck } = record;
     const imagePublicId = imagePublicIdOf(record);
+    if (imagePublicId && store) {
+      return store.deliveryUrl(imagePublicId, IMAGE_CARD_OG_TRANSFORMATION);
+    }
     const content: OgContent = {
       title: item.title,
       excerpt: excerpt(item.body, OG_IMAGE_EXCERPT_MAX),
@@ -135,18 +149,24 @@ export function createShareService(deps: ShareServiceDeps) {
       deckName: deck.name,
       imagePublicId,
     };
+    return (await generatedImageUrl(item.id, content)) ?? `${origin}${PRIVATE_OG_IMAGE_PATH}`;
+  }
 
-    const imageUrl =
-      imagePublicId && store
-        ? store.deliveryUrl(imagePublicId, IMAGE_CARD_OG_TRANSFORMATION)
-        : await generatedImageUrl(item.id, content);
+  /** The record when `itemId` is in public share mode; null otherwise. */
+  async function publicRecord(itemId: string): Promise<ShareRecord | null> {
+    const record = isUuid(itemId) ? await repo.findRecord(itemId) : null;
+    return record && modeOf(record) === 'public' ? record : null;
+  }
 
+  async function publicMeta(record: ShareRecord): Promise<ShareMeta> {
+    const { item } = record;
+    const imageUrl = await imageFor(record);
     const text = `${item.title} ${item.body}`;
     return {
       ...frame(item.id),
       title: item.title,
       description: excerpt(item.body, OG_DESCRIPTION_MAX) || item.title,
-      imageUrl: imageUrl ?? `${origin}${PRIVATE_OG_IMAGE_PATH}`,
+      imageUrl,
       imageWidth: OG_WIDTH,
       imageHeight: OG_HEIGHT,
       locale: ogLocale(text),
@@ -157,19 +177,34 @@ export function createShareService(deps: ShareServiceDeps) {
   return {
     /** HTML for `/s/:itemId`: OG tags for crawlers, a refresh to `/i/:itemId` for humans. */
     async sharePage(itemId: string): Promise<string> {
-      const record = isUuid(itemId) ? await repo.findRecord(itemId) : null;
-      const mode = shareMode(
-        record && {
-          status: record.item.status,
-          deletedAt: record.item.deletedAt,
-          deckIsPublic: record.deck.isPublic,
-          categoryVisibilities: record.categories.map((c) => c.visibility),
-        },
-      );
-
-      const meta = record && mode === 'public' ? await publicMeta(record) : privateMeta(itemId);
-      return renderSharePage(meta);
+      const record = await publicRecord(itemId);
+      return renderSharePage(record ? await publicMeta(record) : privateMeta(itemId));
     },
+
+    /**
+     * D181: where `/s/:itemId` redirects a public card (its public page), or null to render
+     * the preview page. Personal and default decks never have public pages (D174).
+     */
+    async publicTarget(itemId: string): Promise<string | null> {
+      const record = await publicRecord(itemId);
+      if (!record || record.deck.kind === 'personal' || record.deck.isDefault) return null;
+      return publicUrl(origin, { kind: 'item', slug: record.deck.slug, itemId: record.item.id });
+    },
+
+    /** D177: og:image of a card's public page, the same image `/s/` previews use. */
+    async ogImageFor(itemId: string): Promise<string> {
+      const record = await publicRecord(itemId);
+      return record ? await imageFor(record) : `${origin}${PRIVATE_OG_IMAGE_PATH}`;
+    },
+
+    /** Absolute URL of a stored image, or null without a media store (public pages, D177). */
+    imageUrl(publicId: string, transformation: string): string | null {
+      return store ? store.deliveryUrl(publicId, transformation) : null;
+    },
+
+    /** Absolute URL of the static site image (public deck and category pages). */
+    siteImageUrl: `${origin}${PRIVATE_OG_IMAGE_PATH}`,
+    origin,
   };
 }
 

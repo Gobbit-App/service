@@ -57,18 +57,30 @@ describe('GET /s/:itemId (P3.6, D58–D61)', () => {
     }
   });
 
-  it('renders a public card once, records it and reuses the image', async () => {
-    const first = await share(PUBLIC_ITEM);
-    expect(meta(first.html, 'og:title')).toBe(PUBLIC_TITLE);
-    const image = meta(first.html, 'og:image');
+  it('sends a public card to its public page (D181)', async () => {
+    const { res } = await share(PUBLIC_ITEM);
+    expect(res.status).toBe(302);
+    expect(res.headers.get('Location')).toBe(`${APP_URL}/p/family/i/${PUBLIC_ITEM}`);
+    expect(res.headers.get('Cache-Control')).toBe('public, max-age=300');
+  });
+
+  it('renders the public card image once, records it and reuses it', async () => {
+    const page = async () => {
+      const res = await ctx.app.request(`/p/family/i/${PUBLIC_ITEM}`, { headers: ctx.anon() });
+      expect(res.status).toBe(200);
+      return await res.text();
+    };
+    const first = await page();
+    expect(meta(first, 'og:title')).toBe(PUBLIC_TITLE);
+    const image = meta(first, 'og:image');
     expect(image).toMatch(/^https:\/\/res\.cloudinary\.com\/test-cloud\/.+og\//);
     expect(store.uploads.size).toBe(1);
 
     const rows = await ctx.t.db.select().from(ogImages).where(eq(ogImages.itemId, PUBLIC_ITEM));
     expect(rows).toHaveLength(1);
 
-    const second = await share(PUBLIC_ITEM);
-    expect(meta(second.html, 'og:image')).toBe(image);
+    // Served from the page cache or re-rendered: either way the image is not rendered again.
+    expect(meta(await page(), 'og:image')).toBe(image);
     expect(ogRenderer).toHaveBeenCalledTimes(1);
     expect(store.uploads.size).toBe(1);
   });
@@ -80,7 +92,8 @@ describe('GET /s/:itemId (P3.6, D58–D61)', () => {
     });
     expect(archived.status).toBe(200);
 
-    const { html } = await share(PUBLIC_ITEM);
+    const { res, html } = await share(PUBLIC_ITEM);
+    expect(res.status).toBe(200);
     expect(meta(html, 'og:title')).toBe('A card was shared with you');
     expect(html).not.toContain(PUBLIC_TITLE);
   });

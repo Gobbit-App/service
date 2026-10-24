@@ -43,7 +43,15 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 registerRoute(
   new NavigationRoute(createHandlerBoundToURL('/index.html'), {
-    denylist: [/^\/api\//, /^\/s\//, /^\/version\.json$/],
+    // D177: public pages, the sitemap and robots.txt are server-rendered by the API.
+    denylist: [
+      /^\/api\//,
+      /^\/s\//,
+      /^\/p\//,
+      /^\/version\.json$/,
+      /^\/sitemap\.xml$/,
+      /^\/robots\.txt$/,
+    ],
   }),
 );
 

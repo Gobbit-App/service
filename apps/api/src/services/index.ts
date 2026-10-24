@@ -12,10 +12,13 @@ import { createMagicLinksRepo } from '../repositories/magic-links.repo';
 import { createRateLimitsRepo } from '../repositories/rate-limits.repo';
 import { createAssetsRepo } from '../repositories/assets.repo';
 import { createLinkChecksRepo } from '../repositories/link-checks.repo';
+import { createSitemapRepo } from '../repositories/sitemap.repo';
+import { createPageCache } from '../public/page-cache';
 import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
 import { createCategoriesService } from './categories.service';
 import { createPublicDeckService } from './public-deck.service';
+import { createPublicPagesService } from './public-pages.service';
 import { createItemsService } from './items.service';
 import { createFavoritesService } from './favorites.service';
 import { createUsersService } from './users.service';
@@ -75,7 +78,7 @@ export function buildServices({
   env,
   mailer,
   now = () => new Date(),
-  share,
+  share: shareWiring,
   search,
   ingest,
   media,
@@ -91,6 +94,11 @@ export function buildServices({
   const assets = createAssetsRepo(db);
   const imageReference = createImageReferenceCheck(assets);
   const linkChecks = createLinkChecksRepo(db);
+  // D180: rendered public pages; every write that changes public content purges its deck.
+  const pageCache = createPageCache();
+  const purgeDeck = (deckId: string) => pageCache.purgeDeck(deckId);
+  const publicDecks = createPublicDeckService({ decks, categories, items });
+  const share = buildShareService(db, env, shareWiring);
 
   const usersService = createUsersService({ users, decks });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
@@ -118,6 +126,7 @@ export function buildServices({
     assets,
     imageReference,
     now,
+    purgeDeck,
     wiring: ingest,
   });
   const mediaServices = buildMediaServices({
@@ -159,9 +168,18 @@ export function buildServices({
       categories,
       memberships,
       deleteMedia: mediaServices.media.deleteForDeck,
+      purgeDeck,
     }),
-    categories: createCategoriesService({ decks, categories, memberships }),
-    publicDecks: createPublicDeckService({ decks, categories, items }),
+    categories: createCategoriesService({ decks, categories, memberships, purgeDeck }),
+    publicDecks,
+    publicPages: createPublicPagesService({
+      publicDecks,
+      decks,
+      memberships,
+      sitemap: createSitemapRepo(db),
+      share,
+      cache: pageCache,
+    }),
     items: createItemsService({
       decks,
       categories,
@@ -182,9 +200,10 @@ export function buildServices({
         rateLimits,
       },
       now,
+      purgeDeck,
     }),
     favorites: createFavoritesService({ decks, items, favorites, memberships }),
-    share: buildShareService(db, env, share),
+    share,
     search: searchServices.search,
     ask: searchServices.ask,
     ingest: ingestServices.ingest,

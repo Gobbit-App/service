@@ -1,5 +1,6 @@
 # D51: the web image owns the routing for the one public origin.
 #   /api/*  -> API with the prefix stripped     /s/*  -> API unchanged (share previews)
+#   /p/*, /sitemap.xml, /robots.txt -> API unchanged (public pages, D177/D179)
 #   files   -> served from /srv                  else  -> index.html (SPA fallback)
 # D54: response headers (connect-src allows Cloudinary: the service worker fetch()es images to cache them,
 # and the editor uploads photos straight to api.cloudinary.com, D133;
@@ -25,6 +26,15 @@
 	}
 
 	handle /s/* {
+		reverse_proxy {$API_UPSTREAM:api:3000}
+	}
+
+	handle /p/* {
+		reverse_proxy {$API_UPSTREAM:api:3000}
+	}
+
+	@seo path /sitemap.xml /robots.txt
+	handle @seo {
 		reverse_proxy {$API_UPSTREAM:api:3000}
 	}
 

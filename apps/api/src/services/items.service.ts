@@ -79,6 +79,8 @@ export function createItemsService(deps: {
   /** D132: clock for publish/delete timestamps and the undo window (tests inject one). */
   now?: () => Date;
   undeleteDays?: number;
+  /** D180: drop the deck's cached public pages after each committed write. */
+  purgeDeck?: (deckId: string) => void;
 }) {
   const {
     decks,
@@ -91,6 +93,7 @@ export function createItemsService(deps: {
     links,
     now = () => new Date(),
     undeleteDays = ITEM_UNDELETE_DAYS,
+    purgeDeck = () => {},
   } = deps;
   const toDtos = createItemDtoMapper({ items, favorites, linkChecks: links.checks });
   const ITEM_NOT_FOUND = 'Item not found';
@@ -199,6 +202,7 @@ export function createItemsService(deps: {
 
   /** After each committed write: re-embed when the text changed (D72), snapshot links (D163). */
   async function afterWrite(row: ItemRow): Promise<void> {
+    purgeDeck(row.deckId);
     await embedQueue.enqueueIfStale(row.id);
     await links.snapshotQueue.enqueueIfNeeded(row);
   }
@@ -455,6 +459,7 @@ export function createItemsService(deps: {
     async remove(actor: Actor, itemId: string): Promise<void> {
       const { item } = await loadItem(actor.user, itemId, 'item.delete');
       await items.softDelete(item.id, now());
+      purgeDeck(item.deckId);
     },
 
     /** D131: published → archived; idempotent; 409 on a proposal. */
@@ -466,6 +471,7 @@ export function createItemsService(deps: {
       if (item.status === 'archived') return toDto(user, item, role);
 
       const archived = await items.update(item.id, { status: 'archived' });
+      purgeDeck(archived.deckId);
       return toDto(user, archived, role);
     },
 

@@ -77,6 +77,8 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '^/s/.*': { target: API_TARGET, changeOrigin: false },
+      // D177: public pages, sitemap and robots.txt are API-rendered (Caddy does the same).
+      '^/(p/.*|sitemap\\.xml|robots\\.txt)$': { target: API_TARGET, changeOrigin: false },
     },
   },
 });

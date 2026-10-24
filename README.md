@@ -134,7 +134,7 @@ pnpm compose:up
 pnpm db:seed
 ```
 
-The `web` service carries the Traefik labels for the deployed setup (router `gobbit`, ``Host(`${PUBLIC_HOST}`)`` → `web:80`) and joins `dokploy-network`; its Caddy routes `/api/*` (stripped) and `/s/*` to the API. The API is internal only.
+The `web` service carries the Traefik labels for the deployed setup (router `gobbit`, ``Host(`${PUBLIC_HOST}`)`` → `web:80`) and joins `dokploy-network`; its Caddy routes `/api/*` (stripped), `/s/*`, `/p/*`, `/sitemap.xml` and `/robots.txt` to the API. The API is internal only.
 
 The app is at `http://localhost:8080`; the API is also published directly at `http://localhost:3000`.
 
@@ -207,7 +207,7 @@ push to main → CI (tests, client drift, web build + budget; e2e: @smoke agains
 - **Health check:** `GET /health` → `{ ok, db_ms, migration, commit }`; `commit` is the `GIT_SHA` build arg.
 - **Database:** a shared Postgres outside the Compose project (see [Shared database](#shared-database-d67) below).
 - **Migrations:** Automatic on container startup via `docker-entrypoint.sh`, against `DATABASE_URL`. The container exits if it's unset or the database is unreachable, and Docker restarts it.
-- **Networking:** only `web` joins Dokploy's external `dokploy-network` (label `traefik.docker.network=dokploy-network`), where Traefik and the shared `cloudflared` Compose service run. The tunnel's public hostname `gobbit.niranhome.win` points at Traefik; Traefik sends the whole host to `web:80`, and Caddy forwards `/api` and `/s` to `api:3000` on the project network (D51).
+- **Networking:** only `web` joins Dokploy's external `dokploy-network` (label `traefik.docker.network=dokploy-network`), where Traefik and the shared `cloudflared` Compose service run. The tunnel's public hostname `gobbit.niranhome.win` points at Traefik; Traefik sends the whole host to `web:80`, and Caddy forwards `/api`, `/s`, `/p`, `/sitemap.xml` and `/robots.txt` to `api:3000` on the project network (D51).
 - **No seed on the box:** the deployed database starts empty. Sign in by magic link as the owner (the first sign-in creates the user), then mint the smoke token (below).
 - **Logs:** the `api` container logs one line per request (`[api] GET /decks/… 200 12ms <requestId>`; no query strings, `/health` skipped). Embedding activity is in the separate `worker` container: `[worker] embed <itemId> → embedded (Nms)` per job, plus failures and sweep counts.
 - **Backups:** see `infra/README.md`.
@@ -350,6 +350,8 @@ Shares become **proposed** cards; a publisher approves them under **Review** in 
 ### Public decks (Phase 8)
 
 A shared or communal deck can publish some of its categories to anyone, without signing in. An owner (or co-owner) sets `isPublic: true` on the deck (`PATCH /decks/{id}`), and an owner or maintainer sets `visibility: "public"` on each category to publish (`PATCH /decks/{id}/categories/{categoryId}`). Strangers then read only published cards in public categories under `/public/{slug}`. Personal decks can't be public, and a private, personal, deleted or unknown deck gets the same 404. Anonymous reads are limited to 600 per hour per IP (in-process, per API instance; 429 with `Retry-After`), and answers carry `Cache-Control: public, max-age=60`.
+
+The same content is also server-rendered HTML for people and search engines, with no JavaScript: `/p/<slug>` (the deck), `/p/<slug>/c/<category>` and `/p/<slug>/i/<cardId>`. Signed-in members who open those links are redirected to the app; `?view=public` shows them the public page instead. A shared link (`/s/<cardId>`) to a public card leads to its `/p/` page. Communal public decks are indexable and listed in `/sitemap.xml` (`/robots.txt` points at it); shared public decks are reachable but `noindex`. Pages are cached for 5 minutes, and any edit, publish, archive, category or deck change shows on the next request. To get a communal deck into Google, add the site in Search Console (domain or URL-prefix property for the public host) and submit `https://<host>/sitemap.xml`.
 
 ### Writing cards (Phase 6)
 

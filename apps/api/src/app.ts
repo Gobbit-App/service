@@ -36,6 +36,7 @@ import { registerIngestTokensRoutes } from './routes/ingest-tokens';
 import { registerReviewRoutes } from './routes/review';
 import { registerWebhookRoutes } from './routes/webhooks';
 import { registerPublicRoutes } from './routes/public';
+import { rateLimitedHtml, registerPublicPagesRoutes } from './routes/public-pages';
 import { publicRateLimit } from './middleware/public-rate-limit';
 import { createAnonRateLimiter, type AnonRateLimiter } from './lib/anon-rate-limiter';
 import { PUBLIC_READ_PER_HOUR } from '@pb/shared';
@@ -89,15 +90,15 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
     }),
   );
 
-  // D175: anonymous reads are counted per IP in memory, never in the database.
-  app.use(
-    '/public/*',
-    publicRateLimit({
-      limiter: deps.anonLimiter ?? createAnonRateLimiter({ limit: PUBLIC_READ_PER_HOUR }),
-      ipHeader: env.CLIENT_IP_HEADER,
-      now: deps.now ?? (() => new Date()),
-    }),
-  );
+  // D175: anonymous reads (JSON and pages share one budget) are counted per IP in memory,
+  // never in the database.
+  const anonLimit = {
+    limiter: deps.anonLimiter ?? createAnonRateLimiter({ limit: PUBLIC_READ_PER_HOUR }),
+    ipHeader: env.CLIENT_IP_HEADER,
+    now: deps.now ?? (() => new Date()),
+  };
+  app.use('/public/*', publicRateLimit(anonLimit));
+  app.use('/p/*', publicRateLimit({ ...anonLimit, onLimited: rateLimitedHtml }));
 
   registerHealthRoutes(app, { pool: deps.pool, commit: env.GIT_SHA });
   registerConfigRoutes(app, env);
@@ -115,6 +116,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerIngestTokensRoutes(app, services);
   registerReviewRoutes(app, services);
   registerPublicRoutes(app, services);
+  registerPublicPagesRoutes(app, services);
   registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
