@@ -108,6 +108,7 @@ export function buildServices({
     env,
     decks,
     memberships,
+    publicDecks,
     rateLimits,
     toDtos,
     wiring: search,
@@ -179,6 +180,7 @@ export function buildServices({
       sitemap: createSitemapRepo(db),
       share,
       cache: pageCache,
+      search: searchServices.search,
     }),
     items: createItemsService({
       decks,

@@ -33,6 +33,19 @@ export const PUBLIC_PAGE_LIMIT_MAX = 50;
 /** D175: anonymous public reads allowed per client IP per hour (in-process limiter). */
 export const PUBLIC_READ_PER_HOUR = 600;
 
+/** D182: public search requests per client IP per hour (in-process, its own bucket). */
+export const PUBLIC_SEARCH_PER_HOUR = 120;
+
+/** D182: new anonymous query embeddings per client IP per hour (DB-backed); over it, text-only. */
+export const PUBLIC_QUERY_EMBED_PER_HOUR = 30;
+
+/** D182: new anonymous query embeddings per hour across all IPs (DB-backed); over it, text-only. */
+export const PUBLIC_QUERY_EMBED_GLOBAL_PER_HOUR = 300;
+
+/** D182: results per public search (default and maximum). */
+export const PUBLIC_SEARCH_LIMIT_DEFAULT = 10;
+export const PUBLIC_SEARCH_LIMIT_MAX = 20;
+
 /** Maximum character count for name fields. */
 export const NAME_MAX = 80;
 

@@ -39,7 +39,7 @@ import { registerPublicRoutes } from './routes/public';
 import { rateLimitedHtml, registerPublicPagesRoutes } from './routes/public-pages';
 import { publicRateLimit } from './middleware/public-rate-limit';
 import { createAnonRateLimiter, type AnonRateLimiter } from './lib/anon-rate-limiter';
-import { PUBLIC_READ_PER_HOUR } from '@pb/shared';
+import { PUBLIC_READ_PER_HOUR, PUBLIC_SEARCH_PER_HOUR } from '@pb/shared';
 
 export interface AppDeps {
   db: Db;
@@ -58,6 +58,8 @@ export interface AppDeps {
   media?: MediaWiring;
   /** D175: anonymous read limiter; tests pass one with a low limit. */
   anonLimiter?: AnonRateLimiter;
+  /** D182: anonymous search request limiter (its own bucket); tests pass one with a low limit. */
+  anonSearchLimiter?: AnonRateLimiter;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -99,6 +101,13 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   };
   app.use('/public/*', publicRateLimit(anonLimit));
   app.use('/p/*', publicRateLimit({ ...anonLimit, onLimited: rateLimitedHtml }));
+  // D182: searches also count in their own, lower bucket (each may cost an embedding).
+  const searchLimit = {
+    ...anonLimit,
+    limiter: deps.anonSearchLimiter ?? createAnonRateLimiter({ limit: PUBLIC_SEARCH_PER_HOUR }),
+  };
+  app.use('/public/:slug/search', publicRateLimit(searchLimit));
+  app.use('/p/:slug/search', publicRateLimit({ ...searchLimit, onLimited: rateLimitedHtml }));
 
   registerHealthRoutes(app, { pool: deps.pool, commit: env.GIT_SHA });
   registerConfigRoutes(app, env);
@@ -115,8 +124,8 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerIngestRoutes(app, services);
   registerIngestTokensRoutes(app, services);
   registerReviewRoutes(app, services);
-  registerPublicRoutes(app, services);
-  registerPublicPagesRoutes(app, services);
+  registerPublicRoutes(app, services, env);
+  registerPublicPagesRoutes(app, services, env);
   registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {

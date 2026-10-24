@@ -1,4 +1,9 @@
-import { decodeCursor, InvalidCursorError } from '@pb/shared';
+import {
+  decodeCursor,
+  InvalidCursorError,
+  PUBLIC_SEARCH_LIMIT_DEFAULT,
+  SEARCH_Q_MAX,
+} from '@pb/shared';
 import type { CurrentUser } from '../types';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { SitemapRepo } from '../repositories/sitemap.repo';
@@ -11,6 +16,7 @@ import {
   deckPage,
   itemPage,
   PUBLIC_PAGE_SIZE,
+  searchPage,
   type PageContext,
 } from '../public/pages';
 import { appPath, publicPath, publicUrl, type PageTarget } from '../public/public-url';
@@ -21,10 +27,12 @@ import {
   PAGE_CACHE_CONTROL,
   PRIVATE_CACHE_CONTROL,
   redirect,
+  SEARCH_PAGE_CACHE_CONTROL,
   type PageResponse,
 } from '../public/responses';
 import { robotsFor, robotsTxt, sitemapXml, type SitemapEntry } from '../public/seo';
 import { isPublicDeck, type PublicDeckRow, type PublicDeckService } from './public-deck.service';
+import type { SearchService } from './search.service';
 
 /** Who is asking and how (D178). */
 export type PageRequest = {
@@ -33,6 +41,8 @@ export type PageRequest = {
   view?: string;
   /** `?cursor=` of deck and category pages. */
   cursor?: string;
+  /** `?q=` of the search page (D182). */
+  q?: string;
 };
 
 /** How a request is answered once the deck is known. */
@@ -45,6 +55,7 @@ export function createPublicPagesService({
   sitemap,
   share,
   cache,
+  search,
 }: {
   publicDecks: Pick<PublicDeckService, 'summaryFor' | 'listFor' | 'itemById'>;
   decks: Pick<DecksRepo, 'findBySlug'>;
@@ -52,6 +63,7 @@ export function createPublicPagesService({
   sitemap: SitemapRepo;
   share: Pick<ShareService, 'ogImageFor' | 'imageUrl' | 'siteImageUrl' | 'origin'>;
   cache: PageCache;
+  search: Pick<SearchService, 'retrievePublic'>;
 }) {
   const origin = share.origin;
 
@@ -183,6 +195,35 @@ export function createPublicPagesService({
       return await answer(deck, target, req, publicPath(target), async (ctx) =>
         itemPage(ctx, { deck, item, ogImage: await share.ogImageFor(item.id) }),
       );
+    },
+
+    /**
+     * D182: `GET /p/{slug}/search?q=`. Public cards only, always `noindex`, never in the page
+     * cache (queries are unbounded); members go to the app's search. `ip` keys the anonymous
+     * embedding budgets.
+     */
+    async searchPage(slug: string, req: PageRequest, ip: string): Promise<PageResponse> {
+      const deck = await publicDeckBySlug(slug);
+      if (!deck) return notFound();
+      const q = (req.q ?? '').trim();
+      if ([...q].length > SEARCH_Q_MAX) return badRequest();
+
+      const audience = await audienceOf(deck, req);
+      const target: PageTarget = { kind: 'search', slug: deck.slug, q };
+      if (audience === 'member') return redirect(302, appPath(target), PRIVATE_CACHE_CONTROL);
+
+      const results = q
+        ? await search.retrievePublic(deck, q, PUBLIC_SEARCH_LIMIT_DEFAULT, ip)
+        : { data: [], semantic: true };
+      const html = searchPage(contextFor(deck, audience), {
+        deck,
+        q,
+        items: results.data.map((hit) => hit.item),
+        semantic: results.semantic,
+      });
+      const cacheControl =
+        audience === 'member-public-view' ? PRIVATE_CACHE_CONTROL : SEARCH_PAGE_CACHE_CONTROL;
+      return htmlPage(html, cacheControl, true);
     },
 
     /** D179: communal public decks, their public categories and cards. */

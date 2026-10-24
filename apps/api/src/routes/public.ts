@@ -4,9 +4,13 @@ import {
   publicItemListQuerySchema,
   publicItemPageSchema,
   publicItemSchema,
+  publicSearchQuerySchema,
+  publicSearchResponseSchema,
 } from '@pb/shared';
 import type { AppEnv } from '../types';
+import type { Env } from '../env';
 import type { Services } from '../services';
+import { clientIp } from '../lib/client-ip';
 import { problems } from '../lib/openapi';
 
 /** D174: shared caches may hold public answers briefly; the routes never vary by caller. */
@@ -19,7 +23,11 @@ const slugParam = z.object({ slug: z.string().min(1).max(200) });
  * D174: anonymous reads of public decks. These handlers never read `c.var.user`: a signed-in
  * member gets exactly the stranger's answer.
  */
-export function registerPublicRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
+export function registerPublicRoutes(
+  app: OpenAPIHono<AppEnv>,
+  services: Services,
+  env: Pick<Env, 'CLIENT_IP_HEADER'>,
+): void {
   const summaryRoute = createRoute({
     method: 'get',
     path: '/public/{slug}',
@@ -88,5 +96,36 @@ export function registerPublicRoutes(app: OpenAPIHono<AppEnv>, services: Service
     const item = await services.publicDecks.get(slug, itemId);
     c.header('Cache-Control', PUBLIC_CACHE_CONTROL);
     return c.json(item, 200);
+  });
+
+  const searchRoute = createRoute({
+    method: 'get',
+    path: '/public/{slug}/search',
+    tags: [PUBLIC_TAG],
+    summary: 'Search the public cards of a public deck',
+    description:
+      'Hybrid (text + meaning) search over published cards in public categories. `semantic` is false when the meaning arm did not run (no embedding key, anonymous budget used up, provider error). No Ask for strangers.',
+    request: { params: slugParam, query: publicSearchQuerySchema },
+    responses: {
+      ...problems('bad-request', 'not-found', 'rate-limited'),
+      200: {
+        content: { 'application/json': { schema: publicSearchResponseSchema } },
+        description: 'Public cards, best first',
+      },
+    },
+    security: [],
+  });
+
+  app.openapi(searchRoute, async (c) => {
+    const { slug } = c.req.valid('param');
+    const query = c.req.valid('query');
+    // D182: the IP only keys the anonymous embedding budgets; it is never logged.
+    const results = await services.search.searchPublic(
+      slug,
+      query,
+      clientIp(c, env.CLIENT_IP_HEADER),
+    );
+    c.header('Cache-Control', PUBLIC_CACHE_CONTROL);
+    return c.json(results, 200);
   });
 }

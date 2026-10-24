@@ -32,6 +32,9 @@ dl.calc dd{margin:0}
 .result{font-size:1.25rem;font-weight:700}
 .link-host{color:var(--muted);font-size:.85rem}
 .pager{margin-block-start:1.25rem}
+form.search{display:flex;gap:.5rem;margin-block:.75rem}
+form.search input{flex:1;min-width:0;font:inherit;padding:.4rem .6rem;border:1px solid var(--line);border-radius:.5rem;background:var(--card);color:var(--fg)}
+form.search button{font:inherit;padding:.4rem .9rem;border:1px solid var(--accent);border-radius:.5rem;background:var(--accent);color:var(--bg)}
 footer{margin-block-start:2rem;font-size:.85rem;color:var(--muted)}
 `
   .trim()

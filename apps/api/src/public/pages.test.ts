@@ -7,6 +7,7 @@ import {
   itemPage,
   notFoundPage,
   rateLimitedPage,
+  searchPage,
   type PageContext,
 } from './pages';
 
@@ -50,6 +51,7 @@ const allPages = () => [
   deckPage(ctx, { deck, items: [card()], nextCursor: 'abc' }),
   categoryPage(ctx, { deck, category: deck.categories[0]!, items: [card()], nextCursor: null }),
   itemPage(ctx, { deck, item: card(), ogImage: 'https://res.cloudinary.com/demo/og.jpg' }),
+  searchPage(ctx, { deck, q: 'water', items: [card()], semantic: true }),
   notFoundPage(),
   rateLimitedPage(),
   badRequestPage(),
@@ -147,5 +149,44 @@ describe('head tags (D177, D179)', () => {
       deckPage({ ...ctx, robots: 'noindex' }, { deck, items: [], nextCursor: null }),
     ).toContain('<meta name="robots" content="noindex">');
     expect(notFoundPage()).toContain('<meta name="robots" content="noindex">');
+  });
+});
+
+describe('search (D182)', () => {
+  it('deck and category pages carry a GET search form for the deck', () => {
+    const pages = [
+      deckPage(ctx, { deck, items: [], nextCursor: null }),
+      categoryPage(ctx, { deck, category: deck.categories[0]!, items: [], nextCursor: null }),
+    ];
+    for (const page of pages) {
+      expect(page).toContain('<form class="search" method="get" action="/p/our-street/search"');
+      expect(page).toContain('name="q"');
+    }
+  });
+
+  it('escapes the query, lists results and is always noindex', () => {
+    const page = searchPage(ctx, {
+      deck,
+      q: '"><script>x</script>',
+      items: [card()],
+      semantic: true,
+    });
+    expect(page).not.toMatch(/<script/i);
+    expect(page).toContain('value="&quot;&gt;&lt;script&gt;x&lt;/script&gt;"');
+    expect(page).toContain(`href="/p/our-street/i/${card().id}"`);
+    expect(meta(page, 'robots')).toBe('noindex');
+    expect(page).not.toContain('Text matches only.');
+  });
+
+  it('notes text-only results and says when nothing matches', () => {
+    const page = searchPage(ctx, { deck, q: 'zzz', items: [], semantic: false });
+    expect(page).toContain('Text matches only.');
+    expect(page).toContain('No public cards match.');
+  });
+
+  it('an empty query shows only the form', () => {
+    const page = searchPage(ctx, { deck, q: '', items: [], semantic: true });
+    expect(page).toContain('role="search"');
+    expect(page).not.toContain('No public cards match.');
   });
 });

@@ -1,4 +1,4 @@
-# Public decks (Phase 8, `specs/016-public-read-api`, `specs/017-public-pages`, ADR-056)
+# Public decks (Phase 8, `specs/016-public-read-api`, `specs/017-public-pages`, `specs/018-public-search`, ADR-056)
 
 A shared or communal deck can publish some of its categories to anyone. Strangers read them without
 signing in; members keep using `/decks/...`.
@@ -102,6 +102,20 @@ commit. HTTP: `public, max-age=300` for pages, the sitemap and robots.txt.
 `publicUrl(.., /p/{slug}/i/{id})` with the share cache header (`share.publicTarget`). Private mode is
 unchanged.
 
+## Public search (018, D182)
+
+- `GET /public/{slug}/search?q=&limit=` (OpenAPI, `limit` 1–20, default 10) answers
+  `{ data: [{ item: PublicItem, why, score }], semantic }` with `public, max-age=60`; a deck that is not
+  public is the 016 404. `/public/{slug}/ask` doesn't exist.
+- `GET /p/{slug}/search?q=` renders the results (10) under a search form; deck and category pages carry
+  the same GET form. The page is always `noindex`, `public, max-age=60`, `Vary: Cookie`, and never in
+  the page cache. An empty `q` renders the form only; a `q` over 200 code points is the 400 page;
+  members get a 302 to `/d/{slug}/search?q=` (`private, no-store`).
+- Both run `search.retrievePublic(deck, q, limit, ip)`; see [search](search.md#public-search-018-d182-d183)
+  for budgets and logging.
+- Limits: searches count in the read bucket and in their own in-process per-IP bucket
+  (`PUBLIC_SEARCH_PER_HOUR` = 120); over it the JSON route answers the 429 problem and the page the HTML 429.
+
 ## Deviations from the 016 plan
 
 - **404 body**: the contract shows `type: "about:blank"`. The routes use the existing `notFound()`
@@ -132,3 +146,12 @@ unchanged.
   `share.service` gained `publicTarget`, `ogImageFor`, `imageUrl`, `siteImageUrl` and `origin`.
 - **Share test**: the "renders once and reuses the image" case moved to the `/p/` card page, since
   `/s/` now redirects public cards.
+
+## Deviations from the 018 plan
+
+- **Search bucket**: a second `AnonRateLimiter` instance mounted on both search paths, after the read
+  bucket, rather than a per-route limit inside one limiter (the limit is fixed per instance).
+- **Over-long `q` on the page**: the 400 page, like a bad cursor.
+- **Search eval (T012)**: the AMKA card and its two pairs are in the fixtures, but the embedding cache
+  isn't refreshed yet (no key); the hybrid recall check stays skipped until `pnpm test:search:update`
+  runs with a key.

@@ -405,3 +405,6 @@ GET {{baseUrl}}/public/family/items?category=food
 
 ### One public card (allow-listed fields only)
 GET {{baseUrl}}/public/family/items/<itemId>
+
+### Public search (D182; no auth, 120/hour per IP; semantic only within the anonymous embedding budgets, else text-only)
+GET {{baseUrl}}/public/family/search?q=water&limit=10

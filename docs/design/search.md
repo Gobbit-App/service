@@ -26,6 +26,18 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
 - The web highlights matches client-side with `highlight()` from `@pb/shared/search`, which folds text the same way the SQL does.
 - Without an embedding key (`OPENROUTER_API_KEY` or `OPENAI_API_KEY`, ADR-044), search runs text-only and nothing is enqueued.
 
+## Public search (018, D182, D183)
+
+- `search.retrievePublic(deck, q, limit, ip)` runs the same `runHybrid` as member search with
+  `role = null` (public categories only), maps hits with `toPublicItems` and logs `mode = 'public'`
+  with `user_id` null (migration `0014_public_search` widens `search_queries_mode_chk`).
+- Query embeddings are budgeted by key (`services/query-budget.ts`): members `embed-query:user:<id>`,
+  strangers `embed-query:anon:ip:<ip>` (30/hour) and then `embed-query:anon:global` (300/hour), all in
+  the Postgres rate limiter. The global unit is spent only after the per-IP check passes. Over budget →
+  text-only, `semantic: false`.
+- The query-vector LRU is shared by members and strangers; a hit skips the budget. Anonymous
+  `llm_calls` rows (`embed_query`) have no user.
+
 ## Ask (`POST /decks/{id}/ask`)
 
 - Without an Ask key (`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`) Ask answers 503. `/config` then reports `search.ask: false`, and the PWA hides the mode toggle.

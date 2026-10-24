@@ -1,10 +1,16 @@
-/** What a public page links to: the deck itself, one category or one card. */
+/** What a public page links to: the deck itself, one category, one card or a search (D182). */
 export type PageTarget =
   | { kind: 'deck'; slug: string }
   | { kind: 'category'; slug: string; category: string }
-  | { kind: 'item'; slug: string; itemId: string };
+  | { kind: 'item'; slug: string; itemId: string }
+  | { kind: 'search'; slug: string; q: string };
 
 const enc = encodeURIComponent;
+
+/** `?q=…`, or nothing for an empty query. */
+function queryString(q: string): string {
+  return q ? `?q=${enc(q)}` : '';
+}
 
 /** Path of a public page relative to the origin, e.g. `/p/our-street/c/emergency`. */
 export function publicPath(target: PageTarget): string {
@@ -16,6 +22,8 @@ export function publicPath(target: PageTarget): string {
       return `${base}/c/${enc(target.category)}`;
     case 'item':
       return `${base}/i/${enc(target.itemId)}`;
+    case 'search':
+      return `${base}/search${queryString(target.q)}`;
   }
 }
 
@@ -36,6 +44,8 @@ export function appPath(target: PageTarget): string {
       return `/d/${enc(target.slug)}/c/${enc(target.category)}`;
     case 'item':
       return `/i/${enc(target.itemId)}`;
+    case 'search':
+      return `/d/${enc(target.slug)}/search${queryString(target.q)}`;
   }
 }
 

@@ -238,5 +238,17 @@
     "expect": ["rice"],
     "lang": "en",
     "kind": "meaning"
+  },
+  {
+    "q": "amka",
+    "expect": ["amka"],
+    "lang": "en",
+    "kind": "substring"
+  },
+  {
+    "q": "אמקה",
+    "expect": ["amka"],
+    "lang": "he",
+    "kind": "cross-lingual"
   }
 ]
