@@ -8,6 +8,7 @@ export * from './schemas/payloads';
 export * from './schemas/pagination';
 export * from './schemas/problem';
 export * from './schemas/category';
+export * from './schemas/public';
 export * from './schemas/deck';
 export * from './schemas/item';
 export * from './items/constants';

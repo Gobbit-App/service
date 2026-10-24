@@ -3,7 +3,9 @@ import {
   categoryListSchema,
   categorySchema,
   categoryCreateSchema,
+  categoryPatchSchema,
   problemSchema,
+  uuidSchema,
 } from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
@@ -130,5 +132,35 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
     const input = c.req.valid('json');
     const category = await services.categories.create(user, id, input);
     return c.json(category, 201);
+  });
+
+  const updateCategoryRoute = createRoute({
+    method: 'patch',
+    path: '/decks/{id}/categories/{categoryId}',
+    tags: ['categories'],
+    summary: 'Rename a category or change its visibility (D176)',
+    request: {
+      params: z.object({ id: z.string().min(1), categoryId: uuidSchema }),
+      body: {
+        content: { 'application/json': { schema: categoryPatchSchema } },
+        required: true,
+      },
+    },
+    responses: {
+      ...problems('bad-request', 'unauthorized', 'forbidden', 'not-found'),
+      200: {
+        content: { 'application/json': { schema: categorySchema } },
+        description: 'The updated category',
+      },
+    },
+    security: AUTH_SECURITY,
+  });
+
+  app.openapi(updateCategoryRoute, async (c) => {
+    const user = getUser(c);
+    const { id, categoryId } = c.req.valid('param');
+    const patch = c.req.valid('json');
+    const category = await services.categories.update(user, id, categoryId, patch);
+    return c.json(category, 200);
   });
 }

@@ -23,9 +23,19 @@ export const categoryCreateSchema = z
   })
   .strict();
 
+/** D176: rename a category or change its visibility; the slug never changes. */
+export const categoryPatchSchema = z
+  .object({
+    name: nameSchema.optional(),
+    visibility: z.enum(categoryVisibilities).optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, 'At least one field is required');
+
 export const categoryListSchema = z.object({
   data: z.array(categorySchema),
 });
 
 export type Category = z.infer<typeof categorySchema>;
 export type CategoryCreate = z.infer<typeof categoryCreateSchema>;
+export type CategoryPatch = z.infer<typeof categoryPatchSchema>;

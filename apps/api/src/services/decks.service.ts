@@ -16,6 +16,7 @@ import {
   accountOwnerRequired,
   badRequest,
   conflict,
+  ownerRequired,
   PERSONAL_DECK_PROBLEM,
 } from '../errors/http-errors';
 
@@ -86,6 +87,10 @@ export function createDecksService({
           "The personal deck's address and visibility can't be changed",
           PERSONAL_DECK_PROBLEM,
         );
+      }
+      // D176: making a deck public (or private again) is an owner decision.
+      if (patch.isPublic !== undefined && role !== 'owner') {
+        throw ownerRequired();
       }
       const updated = await decks.update(deck.id, patch);
       return toDeckDto(updated, role);

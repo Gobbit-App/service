@@ -27,6 +27,12 @@ export const PAGE_LIMIT_DEFAULT = 20;
 /** Maximum allowed page limit for listings. */
 export const PAGE_LIMIT_MAX = 50;
 
+/** D174: maximum `limit` on public (anonymous) card lists. */
+export const PUBLIC_PAGE_LIMIT_MAX = 50;
+
+/** D175: anonymous public reads allowed per client IP per hour (in-process limiter). */
+export const PUBLIC_READ_PER_HOUR = 600;
+
 /** Maximum character count for name fields. */
 export const NAME_MAX = 80;
 

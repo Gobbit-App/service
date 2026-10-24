@@ -290,7 +290,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `GET` | `/decks` | List user's decks |
 | `POST` | `/decks` | Create deck |
 | `GET` | `/decks/{id}` | Get deck (by id or slug) |
-| `PATCH` | `/decks/{id}` | Update deck |
+| `PATCH` | `/decks/{id}` | Update deck (`isPublic` needs an owner; 403 `/problems/owner-required` for a maintainer) |
 | `DELETE` | `/decks/{id}` | Soft-delete deck (owner) |
 | **Members** |
 | `GET` | `/decks/{id}/members` | List members (owner implicit first, pending included) |
@@ -299,6 +299,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | **Categories** |
 | `GET` | `/decks/{id}/categories` | List categories |
 | `POST` | `/decks/{id}/categories` | Create category |
+| `PATCH` | `/decks/{id}/categories/{categoryId}` | Rename a category or change its visibility (owner/maintainer; the slug never changes) |
 | **Items** |
 | `GET` | `/decks/{id}/items` | List items (with cursor pagination); `?status=deleted` lists cards deleted in the last 30 days (owner/maintainer); `?flag=link` lists link cards flagged dead or changed (`item.update`) |
 | `POST` | `/decks/{id}/items` | Create item |
@@ -329,6 +330,10 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `POST` | `/items/{id}/publish` | Publish a proposal as new, or apply it as an update to its duplicate |
 | `POST` | `/items/{id}/discard` | Discard a proposal |
 | `POST` | `/webhooks/resend/inbound` | Resend inbound mail (Svix-signed; only when email-in is configured; not in OpenAPI) |
+| **Public (no auth)** |
+| `GET` | `/public/{slug}` | A public deck's name, kind and public categories with card counts |
+| `GET` | `/public/{slug}/items?category=&cursor=&limit=` | Published cards in public categories, newest first (`limit` ≤ 50) |
+| `GET` | `/public/{slug}/items/{itemId}` | One public card (allow-listed fields only) |
 | **Favorites** |
 | `POST` | `/items/{id}/favorite` | Add to favorites |
 | `DELETE` | `/items/{id}/favorite` | Remove from favorites |
@@ -341,6 +346,10 @@ Shares become **proposed** cards; a publisher approves them under **Review** in 
 - **iPhone**: create an ingest token in **Settings** (gear in the header), then add the *Share to Gobbit* Shortcut and paste the token when asked. Building and publishing the Shortcut (and setting `SHORTCUT_URL`): [`docs/shortcut/README.md`](./docs/shortcut/README.md).
 - **Social posts**: Instagram, Facebook, Threads, TikTok, X and LinkedIn hide their pages from servers, so share the post's **caption and image** along with the link (the share sheet usually does). The card keeps them, shows the site's name, and is never link-checked. In the editor, **Add photo** puts your own picture on any link card.
 - **Email (optional)**: each token also has an address `<token without ing_>@INGEST_EMAIL_DOMAIN`, shown once with the new token. Setup: Resend → *Receiving* (domain + MX records) → *Webhooks*: endpoint `https://<host>/api/webhooks/resend/inbound`, event `email.received`; set `INGEST_EMAIL_DOMAIN`, `RESEND_WEBHOOK_SECRET` (the `whsec_…` signing secret) and `RESEND_API_KEY`, then redeploy. Details in the same doc.
+
+### Public decks (Phase 8)
+
+A shared or communal deck can publish some of its categories to anyone, without signing in. An owner (or co-owner) sets `isPublic: true` on the deck (`PATCH /decks/{id}`), and an owner or maintainer sets `visibility: "public"` on each category to publish (`PATCH /decks/{id}/categories/{categoryId}`). Strangers then read only published cards in public categories under `/public/{slug}`. Personal decks can't be public, and a private, personal, deleted or unknown deck gets the same 404. Anonymous reads are limited to 600 per hour per IP (in-process, per API instance; 429 with `Retry-After`), and answers carry `Cache-Control: public, max-age=60`.
 
 ### Writing cards (Phase 6)
 

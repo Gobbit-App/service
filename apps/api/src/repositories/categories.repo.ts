@@ -1,13 +1,13 @@
 import { eq, isNull, asc, and, inArray, sql } from 'drizzle-orm';
 import type { CategoryRow, DbExecutor } from '@pb/db';
-import { categories } from '@pb/db';
+import { categories, itemCategories, items } from '@pb/db';
 import type { CategoryVisibility, MemberRole } from '@pb/shared';
 import { visibleCategoriesWhere } from '../access/visibility';
 
 export function createCategoriesRepo(db: DbExecutor) {
   return {
     /** D38: only the categories `role` may see. */
-    async listByDeck(deckId: string, role: MemberRole): Promise<CategoryRow[]> {
+    async listByDeck(deckId: string, role: MemberRole | null): Promise<CategoryRow[]> {
       return db
         .select()
         .from(categories)
@@ -22,7 +22,11 @@ export function createCategoriesRepo(db: DbExecutor) {
     },
 
     /** D38: an invisible slug is indistinguishable from a missing one. */
-    async findBySlug(deckId: string, slug: string, role: MemberRole): Promise<CategoryRow | null> {
+    async findBySlug(
+      deckId: string,
+      slug: string,
+      role: MemberRole | null,
+    ): Promise<CategoryRow | null> {
       const result = await db
         .select()
         .from(categories)
@@ -54,7 +58,11 @@ export function createCategoriesRepo(db: DbExecutor) {
     },
 
     /** D38: ids `role` can't see are reported as unknown by the caller. */
-    async findExistingIds(deckId: string, ids: string[], role: MemberRole): Promise<string[]> {
+    async findExistingIds(
+      deckId: string,
+      ids: string[],
+      role: MemberRole | null,
+    ): Promise<string[]> {
       if (ids.length === 0) return [];
 
       const result = await db
@@ -79,6 +87,39 @@ export function createCategoriesRepo(db: DbExecutor) {
         .from(categories)
         .where(and(eq(categories.deckId, deckId), isNull(categories.deletedAt)));
       return Number(result[0]?.max ?? -1);
+    },
+
+    /** D174: published, live cards per category `role` can see (categories with none are absent). */
+    async countPublished(deckId: string, role: MemberRole | null): Promise<Map<string, number>> {
+      const rows = await db
+        .select({ categoryId: categories.id, n: sql<number>`count(*)::int` })
+        .from(categories)
+        .innerJoin(itemCategories, eq(itemCategories.categoryId, categories.id))
+        .innerJoin(items, eq(items.id, itemCategories.itemId))
+        .where(
+          and(
+            eq(categories.deckId, deckId),
+            isNull(categories.deletedAt),
+            visibleCategoriesWhere(role),
+            eq(items.status, 'published'),
+            isNull(items.deletedAt),
+          ),
+        )
+        .groupBy(categories.id);
+      return new Map(rows.map((r) => [r.categoryId, Number(r.n)]));
+    },
+
+    /** D176: rename or change visibility; the slug never changes. */
+    async update(
+      id: string,
+      patch: { name?: string; visibility?: CategoryVisibility },
+    ): Promise<CategoryRow> {
+      const result = await db
+        .update(categories)
+        .set(patch)
+        .where(eq(categories.id, id))
+        .returning();
+      return result[0]!;
     },
 
     async create(v: {

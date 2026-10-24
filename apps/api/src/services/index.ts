@@ -15,6 +15,7 @@ import { createLinkChecksRepo } from '../repositories/link-checks.repo';
 import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
 import { createCategoriesService } from './categories.service';
+import { createPublicDeckService } from './public-deck.service';
 import { createItemsService } from './items.service';
 import { createFavoritesService } from './favorites.service';
 import { createUsersService } from './users.service';
@@ -160,6 +161,7 @@ export function buildServices({
       deleteMedia: mediaServices.media.deleteForDeck,
     }),
     categories: createCategoriesService({ decks, categories, memberships }),
+    publicDecks: createPublicDeckService({ decks, categories, items }),
     items: createItemsService({
       decks,
       categories,
