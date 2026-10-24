@@ -295,6 +295,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | **Members** |
 | `GET` | `/decks/{id}/members` | List members (owner implicit first, pending included) |
 | `POST` | `/decks/{id}/invites` | Invite by email with a role (201 new / 200 resend) |
+| `PATCH` | `/decks/{id}/members/{userId}` | Change an accepted member's role (owners; 409 for your own role, account owners, pending invites and the last co-owner) |
 | `DELETE` | `/decks/{id}/members/{userId}` | Remove a member |
 | **Categories** |
 | `GET` | `/decks/{id}/categories` | List categories |
@@ -356,6 +357,10 @@ A shared or communal deck can publish some of its categories to anyone, without 
 The same content is also server-rendered HTML for people and search engines, with no JavaScript: `/p/<slug>` (the deck), `/p/<slug>/c/<category>` and `/p/<slug>/i/<cardId>`. Signed-in members who open those links are redirected to the app; `?view=public` shows them the public page instead. A shared link (`/s/<cardId>`) to a public card leads to its `/p/` page. Communal public decks are indexable and listed in `/sitemap.xml` (`/robots.txt` points at it); shared public decks are reachable but `noindex`. Pages are cached for 5 minutes, and any edit, publish, archive, category or deck change shows on the next request. To get a communal deck into Google, add the site in Search Console (domain or URL-prefix property for the public host) and submit `https://<host>/sitemap.xml`.
 
 Strangers can search a public deck at `/p/<slug>/search?q=` (a form on every deck and category page) or `GET /public/<slug>/search`. There is no public Ask. Searches are limited to 120 per hour per IP. Semantic matching for strangers is paid from anonymous budgets (30 query embeddings per hour per IP, 300 per hour in total); past them search is text-only. Search pages are never indexed.
+
+### Deck settings (Phase 8)
+
+Owners and maintainers open **Deck** in the deck header (`/d/<slug>/settings`) to rename the deck and its categories and choose who sees each category (Admins only, Members, Everyone). To make a deck public from the app, set the categories to publish to **Everyone**, then an owner (or co-owner) turns on **Public**: the app lists what will become public, asks to confirm, and shows the `/p/<slug>` address to copy. Owners also invite people with a role (Reader, Editor, Maintainer, Co-owner), change an accepted member's role and remove members or cancel invites. A deck always keeps at least one owner. Everyone else sees the member list. Settings are read-only offline.
 
 ### Activity log (Phase 8)
 

@@ -1287,3 +1287,124 @@ h3 {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
 }
+
+/* ---------- Deck settings (Phase 8, D184) ---------- */
+
+.deck-admin {
+  padding: var(--gap) var(--gutter);
+}
+
+.deck-admin__title {
+  margin: 0 0 var(--gap);
+  font-size: 1.25rem;
+}
+
+.admin-form {
+  margin-bottom: var(--gap);
+}
+
+.admin-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-form__row > input,
+.admin-form__row > select {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.admin-public {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-public__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+  font-weight: 600;
+}
+
+.admin-public__url {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.admin-public__url code {
+  overflow-wrap: anywhere;
+}
+
+.admin-confirm {
+  display: grid;
+  gap: 8px;
+  padding: var(--gap);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.admin-confirm h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.admin-confirm__list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.admin-confirm__warning {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--color-banner);
+  color: var(--color-banner-text);
+}
+
+.admin-confirm__actions,
+.admin-member__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-list {
+  margin: 0 0 var(--gap);
+  padding: 0;
+  list-style: none;
+}
+
+.admin-list__item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px var(--gap);
+}
+
+.admin-member__who {
+  display: grid;
+  min-width: 0;
+}
+
+.admin-member__who .muted {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-member__role {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}

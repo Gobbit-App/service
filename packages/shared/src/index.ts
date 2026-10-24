@@ -17,6 +17,7 @@ export * from './schemas/config';
 export * from './schemas/membership';
 export * from './authz/permissions';
 export * from './authz/can';
+export * from './authz/labels';
 export * from './utils/text-script';
 export * from './search';
 export * from './schemas/search';

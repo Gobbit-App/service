@@ -20,6 +20,9 @@ export const inviteCreateSchema = z
   })
   .strict();
 
+/** D185: `PATCH /decks/{id}/members/{userId}`; the response is the updated `Member`. */
+export const memberRolePatchSchema = z.object({ role: z.enum(memberRoles) }).strict();
+
 export const inviteResponseSchema = z.object({ membership: membershipSchema });
 
 /** A `GET /decks/:id/members` row; `implicit` marks owners by account (D33), who have no membership row. */
@@ -39,3 +42,4 @@ export type Membership = z.infer<typeof membershipSchema>;
 export type InviteCreate = z.infer<typeof inviteCreateSchema>;
 export type InviteCreateInput = z.input<typeof inviteCreateSchema>;
 export type Member = z.infer<typeof memberSchema>;
+export type MemberRolePatch = z.infer<typeof memberRolePatchSchema>;

@@ -13,6 +13,7 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 | `cards/` | One renderer per card type (also the editor preview, D136). `CalcCard` is a `React.lazy` chunk because the evaluator pulls `mathjs` (D57). Phase 6: `EntityChips`, `EditLink` and `canEditItem` |
 | `editor/` | Phase 6 card editor (`CardEditor`, preview, tabs, type picker, save bar), the draft model (`draft.ts`), zod-free validation (`validate.ts`), drafts store and autosave, and `fields/` (the per-type registry and shared fields) |
 | `items/` | The item list for a deck/category/favorites/archived view and its empty-state copy; the role-gated `AddCardLink` (the Phase 3B editor moved to `editor/` in Phase 6); Phase 6 `CardActions` (archive/restore/delete/undelete) and `DeletedSection` (Recently deleted) |
+| `deck-admin/` | Phase 8 deck settings at `/d/$slug/settings` (D184): `DeckSection` (name, public switch with `PublicSwitchDialog`, public address), `CategoriesSection` (rename, visibility), `MembersSection` + `InviteForm` (invite, role, remove), mutations in `deck-admin-queries.ts`, refusal copy in `admin-errors.ts`; `DeckSettingsLink` in the deck header for `deck.update` roles |
 | `search/` | Phase 4: `SearchBox`, `SearchResults`, `ModeToggle`, the lazy `AskView`, URL params, recent searches and the debounce hook |
 | `ui/`, `lib/`, `app/` | Shared components (chips, status views, `NavLink`, the app-wide Undo toast), `deckHref(slug, path)` (D143), copy tables, header and the service-worker update prompt |
 
@@ -50,3 +51,18 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 - **`NavigateContext`** (`ui/NavLink.tsx`) lets components navigate without importing the router, so they render in unit tests without one.
 - **Local Compose runs `NODE_ENV=development`** for the API, so it boots without `CLOUDINARY_URL` (production requires it).
 - **`WEB_BASE_URL`** for e2e defaults to `BASE_URL` without its `/api` suffix.
+
+## Deck settings (Phase 8, D184–D185)
+
+`/d/$slug/settings` is a lazy route. Owners and maintainers (`deck.update`) get **Deck** (name; the public switch, enabled for owners only, asks first and lists the categories that will be public; the `/p/<slug>` address with Copy), **Categories** (rename, "Who sees": Admins only / Members / Everyone) and **Members**. Editors and readers see the member list only; the personal deck shows its name only. Owners also invite (role select with the labels from `@pb/shared/authz` `ROLE_LABELS`), change roles and remove or cancel invites, with an inline confirmation. Offline, every control is disabled. Writes refresh the deck, deck list, categories and members queries under both the slug and id keys.
+
+## Deviations from the 019 plan
+
+- **Header link instead of a deck menu**: the PWA has no deck menu, so admins get a "Deck" link (accessible name "Deck settings") next to Activity; `NavLink` gained an optional `label` (`aria-label`).
+- **`@pb/shared/authz` points at `authz/index.ts`** (re-exports `can` and the new `labels.ts`).
+- **No `countOwners`**: the last-owner guard lives inside `memberships.repo.updateRole` (`{ guardLastOwner }`), which locks the deck's owner rows `FOR UPDATE` and counts them in the same transaction.
+- **Refusal copy** in `deck-admin/admin-errors.ts` + `AdminError`, on top of `problemMessages`.
+- **"Everyone" hint** under Categories shows while the deck is not public.
+- **Inline confirmation** for remove / cancel invite instead of a modal dialog.
+- **Integration test file** is `apps/api/test/member-role.int.test.ts`; two co-owners demoting each other at once may see `403` (the first change already removed the second caller's permission) or `409`.
+- **E2E (T023)**: a second admin can't sign in from e2e, so the owner sets a category public, makes the deck public and invites a co-owner; role changes of accepted members are covered by the integration and component tests.

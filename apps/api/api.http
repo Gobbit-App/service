@@ -164,6 +164,13 @@ Content-Type: application/json
 
 { "email": "reader@example.test", "role": "reader" }
 
+### Change a member's role (owner only; your own role, implicit owners, pending invites, last co-owner → 409 — D185)
+PATCH {{baseUrl}}/decks/test-deck/members/<userId from the members list>
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "role": "maintainer" }
+
 ### Remove a member (owner only; implicit owners and yourself → 400)
 DELETE {{baseUrl}}/decks/test-deck/members/<userId from the members list>
 Authorization: Bearer {{token}}

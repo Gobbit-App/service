@@ -10,6 +10,7 @@ import { can } from '@pb/shared/authz';
 import { useCallback, useEffect } from 'react';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
+import { DeckSettingsLink } from '../deck-admin/DeckSettingsLink';
 import { ActivityLink } from '../events/ActivityLink';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { writeLastDeck } from '../lib/last-deck';
@@ -43,6 +44,7 @@ function DeckLayout() {
   const searching = pathname.endsWith('/search');
   const reviewing = pathname.endsWith('/review');
   const logging = pathname.endsWith('/log');
+  const configuring = pathname.endsWith('/settings');
   const browsing = isBrowsePath(pathname);
   const view = viewFromPath(pathname)?.view ?? null;
   // Browse cycles All + categories only, so the button shows on those lists (contract §1).
@@ -93,6 +95,7 @@ function DeckLayout() {
             {browseC !== null && <BrowseButton deckSlug={slug} c={browseC} />}
             {can(deck.data.role, 'item.publish') && <ReviewPill deckSlug={slug} />}
             <ActivityLink deckSlug={slug} role={deck.data.role} />
+            <DeckSettingsLink deckSlug={slug} role={deck.data.role} />
           </>
         }
       />
@@ -106,12 +109,17 @@ function DeckLayout() {
         onNavigate={navigate}
       />
       <main className="page">
-        {!adding && !searching && !reviewing && !logging && can(deck.data.role, 'item.create') && (
-          <div className="deck-actions">
-            <AddCardLink deckSlug={slug} role={deck.data.role} />
-            <PasteLink deckSlug={slug} role={deck.data.role} />
-          </div>
-        )}
+        {!adding &&
+          !searching &&
+          !reviewing &&
+          !logging &&
+          !configuring &&
+          can(deck.data.role, 'item.create') && (
+            <div className="deck-actions">
+              <AddCardLink deckSlug={slug} role={deck.data.role} />
+              <PasteLink deckSlug={slug} role={deck.data.role} />
+            </div>
+          )}
         <Outlet />
       </main>
     </>

@@ -30,6 +30,8 @@ export const queryKeys = {
   decks: ['decks'] as const,
   deck: (idOrSlug: string) => ['decks', idOrSlug] as const,
   categories: (idOrSlug: string) => ['decks', idOrSlug, 'categories'] as const,
+  /** D184: the deck settings member list. */
+  members: (idOrSlug: string) => ['decks', idOrSlug, 'members'] as const,
   /** Prefix of every item list; favorite toggles update all of them. */
   itemLists: ['items'] as const,
   items: (deckSlug: string, filter: ItemFilter) => ['items', deckSlug, filter] as const,

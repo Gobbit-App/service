@@ -93,6 +93,7 @@ only on `POST /ingest`.
 | Links | Preview images copied to Cloudinary by a `link-snapshot` job; daily `link-check-sweep` flags dead or changed links (`Item.linkHealth`), editors check again or dismiss; locked social hosts use the shared caption and image | [links](design/links.md) · ADR-055 |
 | Browse mode | One card per screen: native scroll-snap, `@use-gesture` only in the lazy chunk | [browse-mode](design/browse-mode.md) · ADR-052 |
 | Public decks | Anonymous `/public/{slug}` reads through `public-deck.service` with `role = null` and an allow-list DTO; per-IP in-process limit; server-rendered `/p/` pages (members → app), sitemap for communal decks, page cache purged per deck; anonymous search with its own embedding budgets | [public](design/public.md) · ADR-056 |
+| Deck admin | `/d/$slug/settings`: name, public switch, category visibility, invites, member roles (`PATCH /decks/{id}/members/{userId}`, last-owner guard) | [web-pwa](design/web-pwa.md#deck-settings-phase-8-d184d185), [auth](design/auth.md#authorization-d33d35) |
 | Activity log | Card writes append `item_events` lines (actor, client, kind, changed field names) in the same transaction; owners and maintainers read them per deck or per card | [activity-log](design/activity-log.md) · ADR-057 |
 
 ## Testing
