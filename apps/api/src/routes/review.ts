@@ -1,5 +1,13 @@
 import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
-import { itemSchema, publishRequestSchema, reviewCountSchema, reviewListSchema } from '@pb/shared';
+import {
+  bulkPublishResultSchema,
+  bulkPublishSchema,
+  itemSchema,
+  publishRequestSchema,
+  reviewCountSchema,
+  reviewListQuerySchema,
+  reviewListSchema,
+} from '@pb/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getActor, getUser } from '../lib/current-user';
@@ -14,9 +22,9 @@ export function registerReviewRoutes(app: OpenAPIHono<AppEnv>, services: Service
     path: '/decks/{id}/review',
     tags: ['review'],
     security: AUTH_SECURITY,
-    request: { params: idParams },
+    request: { params: idParams, query: reviewListQuerySchema },
     responses: {
-      ...problems('unauthorized', 'forbidden', 'not-found'),
+      ...problems('bad-request', 'unauthorized', 'forbidden', 'not-found'),
       200: {
         content: { 'application/json': { schema: reviewListSchema } },
         description: 'Proposals awaiting review, newest first',
@@ -26,7 +34,8 @@ export function registerReviewRoutes(app: OpenAPIHono<AppEnv>, services: Service
 
   app.openapi(listRoute, async (c) => {
     const { id } = c.req.valid('param');
-    return c.json(await services.review.list(getUser(c), id), 200);
+    const { source } = c.req.valid('query');
+    return c.json(await services.review.list(getUser(c), id, source), 200);
   });
 
   const countRoute = createRoute({
@@ -76,6 +85,30 @@ export function registerReviewRoutes(app: OpenAPIHono<AppEnv>, services: Service
     // Without a JSON content type the validator yields `{}`: re-parse so `mode` gets its default.
     const body = publishRequestSchema.parse(c.req.valid('json'));
     return c.json(await services.review.publish(getActor(c), id, body), 200);
+  });
+
+  const bulkPublishRoute = createRoute({
+    method: 'post',
+    path: '/decks/{id}/review/publish',
+    tags: ['review'],
+    security: AUTH_SECURITY,
+    request: {
+      params: idParams,
+      body: { content: { 'application/json': { schema: bulkPublishSchema } }, required: true },
+    },
+    responses: {
+      ...problems('bad-request', 'unauthorized', 'forbidden', 'not-found'),
+      200: {
+        content: { 'application/json': { schema: bulkPublishResultSchema } },
+        description: 'Published proposals; duplicates and handled cards are skipped with a reason',
+      },
+    },
+  });
+
+  app.openapi(bulkPublishRoute, async (c) => {
+    const { id } = c.req.valid('param');
+    const { ids } = c.req.valid('json');
+    return c.json(await services.review.publishMany(getActor(c), id, ids), 200);
   });
 
   const discardRoute = createRoute({

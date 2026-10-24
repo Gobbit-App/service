@@ -112,6 +112,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm job:run <queue>` | Enqueue one job on a named pg-boss queue (e.g. `media-sweep`, `link-check-sweep`) for the running worker |
 | `pnpm links:snapshot-backfill` | Enqueue `link-snapshot` for existing link cards whose preview image isn't stored yet (run once after deploying 014; needs `DATABASE_URL`, the worker needs `CLOUDINARY_URL`) |
 | `pnpm search:load` | Create/fill a `search-demo` deck with the fixture cards through the API (`--deck`, `--base-url`/`BASE_URL`, `--token`/`SMOKE_SESSION_TOKEN`) |
+| `pnpm import:notes <file> --deck <slug>` | Import a notes file (`.txt` lines, `.md`, `.csv`) as proposed cards through the API (`--format`, `--label`, `--dry-run`); needs `GOBBIT_API_URL` and `GOBBIT_TOKEN` (an owner or maintainer session) unless `--dry-run` |
 | `pnpm search:query "<q>"` | Print search hits (why, score) for a deck, same options |
 | `pnpm db:generate` | Generate migrations with drizzle-kit |
 | `pnpm db:migrate` | Run pending migrations |
@@ -326,8 +327,10 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `GET` | `/me/ingest-tokens` | List your ingest tokens (prefix only) |
 | `POST` | `/me/ingest-tokens` | Create an ingest token (shown once; max 5) |
 | `DELETE` | `/me/ingest-tokens/{id}` | Revoke an ingest token |
-| `GET` | `/decks/{id}/review` | Proposals awaiting review (needs `item.publish`) |
+| `GET` | `/decks/{id}/review?source=` | Proposals awaiting review (needs `item.publish`; `source` = an import label) |
 | `GET` | `/decks/{id}/review/count` | Number of proposals (header pill) |
+| `POST` | `/decks/{id}/review/publish` | Publish up to 50 proposals at once; duplicates and updates are skipped (`needs-decision`) |
+| `POST` | `/decks/{id}/imports` | Import ≤ 100 parsed notes as proposals under a label (owners and maintainers; 150 rows a day per user) |
 | `POST` | `/items/{id}/publish` | Publish a proposal as new, or apply it as an update to its duplicate |
 | `POST` | `/items/{id}/discard` | Discard a proposal |
 | `GET` | `/decks/{id}/events?itemId=&cursor=&limit=` | Activity log, newest first (owners and maintainers; `limit` ≤ 50) |
@@ -349,6 +352,10 @@ Shares become **proposed** cards; a publisher approves them under **Review** in 
 - **iPhone**: create an ingest token in **Settings** (gear in the header), then add the *Share to Gobbit* Shortcut and paste the token when asked. Building and publishing the Shortcut (and setting `SHORTCUT_URL`): [`docs/shortcut/README.md`](./docs/shortcut/README.md).
 - **Social posts**: Instagram, Facebook, Threads, TikTok, X and LinkedIn hide their pages from servers, so share the post's **caption and image** along with the link (the share sheet usually does). The card keeps them, shows the site's name, and is never link-checked. In the editor, **Add photo** puts your own picture on any link card.
 - **Email (optional)**: each token also has an address `<token without ing_>@INGEST_EMAIL_DOMAIN`, shown once with the new token. Setup: Resend → *Receiving* (domain + MX records) → *Webhooks*: endpoint `https://<host>/api/webhooks/resend/inbound`, event `email.received`; set `INGEST_EMAIL_DOMAIN`, `RESEND_WEBHOOK_SECRET` (the `whsec_…` signing secret) and `RESEND_API_KEY`, then redeploy. Details in the same doc.
+
+### Importing notes (Phase 8)
+
+Owners and maintainers open **Import** in the deck header (`/d/<slug>/import`) to paste notes or pick a `.txt`, `.md` or `.csv` file: one note per line (`Title — text`, or a lone link), Markdown (headings become categories) or CSV with `title`, `body`, `url` and `category` columns. The preview shows every note; untick the ones to leave out and edit the ones over a card limit. Imported notes become **proposed** cards under the file name (or "Pasted notes"), with no AI involved; **Review them** opens the queue filtered to that import, where **Select** → **Select all shown** → **Publish selected** publishes up to 50 at once (possible duplicates stay for a decision). Up to 150 notes a day per person. From a terminal: `GOBBIT_API_URL=https://<host>/api GOBBIT_TOKEN=<session token> pnpm import:notes notes.csv --deck <slug>` (`--dry-run` only prints what it would import).
 
 ### Public decks (Phase 8)
 

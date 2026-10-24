@@ -1,17 +1,38 @@
-import { queryOptions, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type { PublishRequest, ReviewCount, ReviewList } from '@pb/shared';
-import { decrementCount, removeReviewEntry } from '../review/review-cache';
+import {
+  queryOptions,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+  type QueryFilters,
+  type QueryKey,
+} from '@tanstack/react-query';
+import type { BulkPublishResult, PublishRequest, ReviewCount, ReviewList } from '@pb/shared';
+import { decrementCount, removeReviewEntries } from '../review/review-cache';
 import { api, unwrap } from './client';
 import { queryKeys } from './query-keys';
 
-/** D107: the deck's proposals; never persisted, refetched whenever the app regains focus. */
-export const reviewQuery = (deckSlug: string) =>
+/**
+ * D107: the deck's proposals; never persisted, refetched whenever the app regains focus.
+ * D191: `source` narrows it to one import's label.
+ */
+export const reviewQuery = (deckSlug: string, source?: string) =>
   queryOptions({
-    queryKey: queryKeys.review(deckSlug),
+    queryKey: source ? queryKeys.reviewSource(deckSlug, source) : queryKeys.review(deckSlug),
     queryFn: ({ signal }): Promise<ReviewList> =>
-      unwrap(api.GET('/decks/{id}/review', { params: { path: { id: deckSlug } }, signal })),
+      unwrap(
+        api.GET('/decks/{id}/review', {
+          params: { path: { id: deckSlug }, query: source ? { source } : {} },
+          signal,
+        }),
+      ),
     refetchOnWindowFocus: 'always',
   });
+
+/** Every cached queue of the deck (whole and per source), not the pill count. */
+export const reviewListsFilter = (deckSlug: string): QueryFilters => ({
+  queryKey: queryKeys.review(deckSlug),
+  predicate: (query) => query.queryKey[2] !== 'count',
+});
 
 /** D107: the header pill's count. */
 export const reviewCountQuery = (deckSlug: string) =>
@@ -22,30 +43,46 @@ export const reviewCountQuery = (deckSlug: string) =>
     refetchOnWindowFocus: 'always',
   });
 
-export type ReviewSnapshot = { list: ReviewList | undefined; count: ReviewCount | undefined };
+export type ReviewSnapshot = {
+  lists: [QueryKey, ReviewList | undefined][];
+  count: ReviewCount | undefined;
+};
 
-/** Optimistically drops a proposal from the queue and the pill count. */
+/** Drops proposals from every cached queue of the deck and the pill count (D107, D191). */
 export async function removeFromReview(
   qc: QueryClient,
   deckSlug: string,
-  itemId: string,
+  itemIds: readonly string[],
 ): Promise<ReviewSnapshot> {
   await qc.cancelQueries({ queryKey: queryKeys.review(deckSlug) });
   const snapshot: ReviewSnapshot = {
-    list: qc.getQueryData<ReviewList>(queryKeys.review(deckSlug)),
+    lists: qc.getQueriesData<ReviewList>(reviewListsFilter(deckSlug)),
     count: qc.getQueryData<ReviewCount>(queryKeys.reviewCount(deckSlug)),
   };
-  const list = removeReviewEntry(snapshot.list, itemId);
-  qc.setQueryData(queryKeys.review(deckSlug), list);
-  if (list !== snapshot.list) {
-    qc.setQueryData(queryKeys.reviewCount(deckSlug), decrementCount(snapshot.count));
+  let removed = 0;
+  for (const [key, list] of snapshot.lists) {
+    const next = removeReviewEntries(list, itemIds);
+    if (list && next) removed = Math.max(removed, list.data.length - next.data.length);
+    qc.setQueryData(key, next);
+  }
+  if (removed > 0) {
+    qc.setQueryData(queryKeys.reviewCount(deckSlug), decrementCount(snapshot.count, removed));
   }
   return snapshot;
 }
 
 export function restoreReview(qc: QueryClient, deckSlug: string, snapshot: ReviewSnapshot): void {
-  qc.setQueryData(queryKeys.review(deckSlug), snapshot.list);
+  for (const [key, list] of snapshot.lists) qc.setQueryData(key, list);
   qc.setQueryData(queryKeys.reviewCount(deckSlug), snapshot.count);
+}
+
+/** Refetches the queues and lists after a review action (publishing may create a category). */
+function refreshAfterReview(qc: QueryClient, deckSlug: string): Promise<unknown> {
+  return Promise.all([
+    qc.invalidateQueries({ queryKey: queryKeys.review(deckSlug) }),
+    qc.invalidateQueries({ queryKey: queryKeys.itemLists }),
+    qc.invalidateQueries({ queryKey: queryKeys.categories(deckSlug) }),
+  ]);
 }
 
 /** Shared optimistic lifecycle of publish and discard; settled refetches the queue and lists. */
@@ -56,17 +93,11 @@ function useReviewAction<TVars extends { itemId: string }>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: send,
-    onMutate: (vars) => removeFromReview(qc, deckSlug, vars.itemId),
+    onMutate: (vars) => removeFromReview(qc, deckSlug, [vars.itemId]),
     onError: (_error, _vars, snapshot) => {
       if (snapshot) restoreReview(qc, deckSlug, snapshot);
     },
-    onSettled: () =>
-      Promise.all([
-        qc.invalidateQueries({ queryKey: queryKeys.review(deckSlug) }),
-        qc.invalidateQueries({ queryKey: queryKeys.itemLists }),
-        // Publishing may create the suggested category.
-        qc.invalidateQueries({ queryKey: queryKeys.categories(deckSlug) }),
-      ]),
+    onSettled: () => refreshAfterReview(qc, deckSlug),
   });
 }
 
@@ -83,4 +114,23 @@ export function useDiscardProposal(deckSlug: string) {
   return useReviewAction(deckSlug, ({ itemId }: { itemId: string }) =>
     unwrap(api.POST('/items/{id}/discard', { params: { path: { id: itemId } } })),
   );
+}
+
+/**
+ * D191: publishes up to `BULK_PUBLISH_MAX` selected proposals as new. Not optimistic: skipped
+ * ones stay, so only the published ids leave the queues once the server answers.
+ */
+export function useBulkPublish(deckSlug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: readonly string[]): Promise<BulkPublishResult> =>
+      unwrap(
+        api.POST('/decks/{id}/review/publish', {
+          params: { path: { id: deckSlug } },
+          body: { ids: [...ids] },
+        }),
+      ),
+    onSuccess: (result) => removeFromReview(qc, deckSlug, result.published),
+    onSettled: () => refreshAfterReview(qc, deckSlug),
+  });
 }

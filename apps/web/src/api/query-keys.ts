@@ -43,6 +43,9 @@ export const queryKeys = {
   /** D107: never persisted (see `persist.ts`). */
   review: (deckSlug: string) => [REVIEW_KEY, deckSlug] as const,
   reviewCount: (deckSlug: string) => [REVIEW_KEY, deckSlug, 'count'] as const,
+  /** D191: the queue narrowed to one import (`?source=<label>`). */
+  reviewSource: (deckSlug: string, source: string) =>
+    [REVIEW_KEY, deckSlug, 'source', source] as const,
   /** D188: never persisted (see `persist.ts`); `itemId` null = the whole deck. */
   events: (deckSlug: string, itemId: string | null) => [EVENTS_KEY, deckSlug, itemId] as const,
 };

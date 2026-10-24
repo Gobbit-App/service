@@ -25,6 +25,7 @@ export function ReviewCard({
   categories,
   canCreateCategory,
   busy,
+  selection,
   now = new Date(),
   onPublish,
   onDiscard,
@@ -35,6 +36,8 @@ export function ReviewCard({
   categories: readonly Category[];
   canCreateCategory: boolean;
   busy: boolean;
+  /** D191: select mode's checkbox (absent outside select mode). */
+  selection?: { checked: boolean; onToggle: () => void };
   now?: Date;
   onPublish: (request: Partial<PublishRequest>) => void;
   onDiscard: () => void;
@@ -72,6 +75,12 @@ export function ReviewCard({
 
   return (
     <article className="card review-card" aria-labelledby={titleId}>
+      {selection && (
+        <label className="review-card__select">
+          <input type="checkbox" checked={selection.checked} onChange={selection.onToggle} />
+          Select <span dir="auto">{item.title}</span>
+        </label>
+      )}
       {source && <p className="review-card__source">{source}</p>}
       {job?.sourcePreview && (
         <p className="review-card__preview" dir="auto">

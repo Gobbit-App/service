@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   SOURCE_PREVIEW_CHARS,
+  bulkSkipReason,
   dedupTargetId,
   mergeProposalPatch,
   sourcePreview,
@@ -112,5 +113,39 @@ describe('mergeProposalPatch', () => {
       now,
     );
     expect(result.sourceUrl).toBe('https://old.example/');
+  });
+});
+
+describe('bulkSkipReason (D191)', () => {
+  const deckId = 'deck-1';
+  const proposal = { deckId, status: 'proposed' as const, deletedAt: null };
+  const verdict = (action: 'new' | 'possible_duplicate' | 'update') => ({
+    dedup: {
+      action,
+      itemId: action === 'new' ? null : 'item-2',
+      similarity: 0.9,
+      via: 'vector' as const,
+    },
+  });
+
+  it('publishes a new proposal or one without a job', () => {
+    expect(bulkSkipReason(proposal, deckId, verdict('new'))).toBeNull();
+    expect(bulkSkipReason(proposal, deckId, null)).toBeNull();
+  });
+
+  it('leaves flagged duplicates and updates for a decision', () => {
+    expect(bulkSkipReason(proposal, deckId, verdict('possible_duplicate'))).toBe('needs-decision');
+    expect(bulkSkipReason(proposal, deckId, verdict('update'))).toBe('needs-decision');
+  });
+
+  it('reports missing, published, deleted or other-deck cards as already handled', () => {
+    expect(bulkSkipReason(null, deckId, null)).toBe('already-handled');
+    expect(bulkSkipReason({ ...proposal, status: 'published' }, deckId, null)).toBe(
+      'already-handled',
+    );
+    expect(bulkSkipReason({ ...proposal, deletedAt: new Date() }, deckId, null)).toBe(
+      'already-handled',
+    );
+    expect(bulkSkipReason(proposal, 'deck-2', null)).toBe('already-handled');
   });
 });

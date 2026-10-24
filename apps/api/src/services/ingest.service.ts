@@ -31,6 +31,7 @@ import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { IngestQueue } from '../jobs/ingest-queue';
 import { proposeItem } from '../ingest/propose';
+import { countsTowardCombinedCap, OUTSIDE_COMBINED_CAP, withinCaps } from '../ingest/caps';
 import type { RunDedupInput } from '../ingest/run-dedup';
 import { toIngestJobDto } from '../lib/ingest-mappers';
 import { isUuid, resolveDeck } from '../lib/resolve-deck';
@@ -166,16 +167,23 @@ export function createIngestService(deps: {
   const newId = deps.newId ?? randomUUID;
   const log = deps.log ?? lineSink('ingest');
 
-  /** D110: the channel's cap and the combined ceiling, over a rolling day. */
+  /** D110: the channel's cap and the combined ceiling (which skips imports, D190), over a rolling day. */
   async function assertWithinCaps(userId: string, channel: IngestChannel): Promise<void> {
     const since = new Date(now().getTime() - INGEST_CAP_WINDOW_MS);
-    const [own, all] = await Promise.all([
+    const [own, combined] = await Promise.all([
       jobs.countByUserSince(userId, since, channel),
-      jobs.countByUserSince(userId, since),
+      countsTowardCombinedCap(channel)
+        ? jobs.countByUserSince(userId, since, undefined, OUTSIDE_COMBINED_CAP)
+        : null,
     ]);
-    if (own >= deps.dailyCaps[channel] || all >= deps.combinedCap) {
-      throw rateLimited(CAP_RETRY_AFTER_SECONDS);
-    }
+    const ok = withinCaps({
+      channel,
+      own,
+      combined,
+      dailyCaps: deps.dailyCaps,
+      combinedCap: deps.combinedCap,
+    });
+    if (!ok) throw rateLimited(CAP_RETRY_AFTER_SECONDS);
   }
 
   /** ADR-004: a published card of this deck the caller can see, else 404. */

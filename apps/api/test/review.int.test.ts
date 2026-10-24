@@ -3,6 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import {
   categories,
   ingestJobs,
+  itemEvents,
   items,
   type DeckRow,
   type IngestJobRow,
@@ -332,6 +333,104 @@ describe('review queue (D106, D107)', () => {
       });
       expect((await post(`/items/${live.id}/discard`)).status).toBe(409);
       expect((await itemRow(live.id)).deletedAt).toBeNull();
+    });
+  });
+
+  describe('GET /decks/{id}/review?source= (D191)', () => {
+    it('keeps the proposals of one import', async () => {
+      const imported = await proposal();
+      await proposal();
+      await ctx.t.db
+        .update(ingestJobs)
+        .set({ channel: 'import', clientLabel: 'Street notes.md' })
+        .where(eq(ingestJobs.id, imported.job.id));
+
+      const res = await ctx.app.request(
+        `/decks/${deck.id}/review?source=${encodeURIComponent('Street notes.md')}`,
+        { headers: ctx.as() },
+      );
+      const body = await json(res);
+      expect(body.data.map((e: { item: { id: string } }) => e.item.id)).toEqual([imported.item.id]);
+      expect(body.data[0].job).toMatchObject({ channel: 'import', clientLabel: 'Street notes.md' });
+      expect(body.count).toBe(2);
+
+      const none = await ctx.app.request(`/decks/${deck.id}/review?source=Other`, {
+        headers: ctx.as(),
+      });
+      expect((await json(none)).data).toEqual([]);
+    });
+  });
+
+  describe('POST /decks/{id}/review/publish (D191)', () => {
+    it('publishes new proposals with a published event and skips the rest with a reason', async () => {
+      const fresh = await proposal();
+      const suggested = await proposal({
+        extraction: {
+          model: 'direct',
+          escalated: false,
+          type: 'text',
+          confidence: 1,
+          language: 'und',
+          categoryIds: [],
+          newCategory: 'Bulk Health',
+        },
+      });
+      const existing = await createItem(ctx.t.db, deck, {
+        card: { type: 'text', title: 'Dan (old)', body: 'old' },
+      });
+      const duplicate = await proposal({
+        dedup: {
+          action: 'possible_duplicate',
+          itemId: existing.id,
+          similarity: 0.9,
+          via: 'vector',
+        },
+      });
+      const otherDeck = await createDeck(ctx.t.db, ctx.world.owner);
+      const elsewhere = await createItem(ctx.t.db, otherDeck, {
+        card: { type: 'text', title: 'Elsewhere', body: 'x' },
+        status: 'proposed',
+      });
+
+      const res = await post(`/decks/${deck.id}/review/publish`, {
+        ids: [fresh.item.id, suggested.item.id, duplicate.item.id, existing.id, elsewhere.id],
+      });
+
+      expect(res.status).toBe(200);
+      expect(await json(res)).toEqual({
+        published: [fresh.item.id, suggested.item.id],
+        skipped: [
+          { id: duplicate.item.id, reason: 'needs-decision' },
+          { id: existing.id, reason: 'already-handled' },
+          { id: elsewhere.id, reason: 'already-handled' },
+        ],
+      });
+      expect((await itemRow(fresh.item.id)).status).toBe('published');
+      expect((await itemRow(duplicate.item.id)).status).toBe('proposed');
+      expect(await jobRow(fresh.job.id)).toMatchObject({ status: 'published' });
+
+      const events = await ctx.t.db
+        .select()
+        .from(itemEvents)
+        .where(and(eq(itemEvents.deckId, deck.id), eq(itemEvents.kind, 'published')));
+      expect(events.map((e) => e.itemId).sort()).toEqual([fresh.item.id, suggested.item.id].sort());
+
+      // The suggested category was created, like the single review's default.
+      const [created] = await ctx.t.db
+        .select()
+        .from(categories)
+        .where(and(eq(categories.deckId, deck.id), eq(categories.name, 'Bulk Health')));
+      expect(created).toBeDefined();
+    });
+
+    it('refuses more than 50 ids and non-publishers', async () => {
+      const ids = Array.from({ length: 51 }, () => crypto.randomUUID());
+      expect((await post(`/decks/${deck.id}/review/publish`, { ids })).status).toBe(400);
+
+      const { item } = await proposal();
+      const res = await post(`/decks/${deck.id}/review/publish`, { ids: [item.id] }, editor.email);
+      expect(res.status).toBe(403);
+      expect((await itemRow(item.id)).status).toBe('proposed');
     });
   });
 });

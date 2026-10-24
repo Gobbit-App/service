@@ -59,6 +59,7 @@ describe('propose (D103/D109)', () => {
   it('sourceKindFor maps channels to source kinds', () => {
     expect(sourceKindFor('email')).toBe('email');
     expect(sourceKindFor('mcp')).toBe('mcp');
+    expect(sourceKindFor('import')).toBe('import');
     expect(sourceKindFor('pwa')).toBe('share');
     expect(sourceKindFor('shortcut')).toBe('share');
     expect(sourceKindFor('paste')).toBe('share');

@@ -358,6 +358,30 @@ Content-Type: application/json
 POST {{baseUrl}}/items/<proposedItemId>/discard
 Authorization: Bearer {{token}}
 
+### Import notes as proposals (D190; item.publish, ≤ 100 rows, 150 rows a day per user)
+POST {{baseUrl}}/decks/family/imports
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "label": "Street notes.md",
+  "rows": [
+    { "type": "text", "title": "Clinic", "body": "Open Sun–Thu 8–14", "newCategory": "Health" },
+    { "type": "link", "title": "Municipality forms", "sourceUrl": "https://example.org/forms" }
+  ]
+}
+
+### Review one import (D191; source = the import's label)
+GET {{baseUrl}}/decks/family/review?source=Street%20notes.md
+Authorization: Bearer {{token}}
+
+### Publish many proposals (D191; ≤ 50 ids, duplicates are skipped as needs-decision)
+POST {{baseUrl}}/decks/family/review/publish
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "ids": ["<proposedItemId>"] }
+
 ### Resend inbound webhook (D104; 404 unless email-in is configured)
 # Signed by Resend (Svix headers), so it can't be sent by hand: an unsigned request is a 401.
 POST {{baseUrl}}/webhooks/resend/inbound

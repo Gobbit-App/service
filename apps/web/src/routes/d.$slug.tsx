@@ -15,6 +15,7 @@ import { ActivityLink } from '../events/ActivityLink';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { writeLastDeck } from '../lib/last-deck';
 import { categoryFromFilter, isBrowsePath } from '../browse/browse-params';
+import { ImportLink } from '../import/ImportLink';
 import { AddCardLink } from '../items/AddCardLink';
 import { BrowseButton } from '../items/BrowseButton';
 import { ReviewPill } from '../review/ReviewPill';
@@ -45,6 +46,7 @@ function DeckLayout() {
   const reviewing = pathname.endsWith('/review');
   const logging = pathname.endsWith('/log');
   const configuring = pathname.endsWith('/settings');
+  const importing = pathname.endsWith('/import');
   const browsing = isBrowsePath(pathname);
   const view = viewFromPath(pathname)?.view ?? null;
   // Browse cycles All + categories only, so the button shows on those lists (contract §1).
@@ -114,10 +116,12 @@ function DeckLayout() {
           !reviewing &&
           !logging &&
           !configuring &&
+          !importing &&
           can(deck.data.role, 'item.create') && (
             <div className="deck-actions">
               <AddCardLink deckSlug={slug} role={deck.data.role} />
               <PasteLink deckSlug={slug} role={deck.data.role} />
+              <ImportLink deckSlug={slug} role={deck.data.role} />
             </div>
           )}
         <Outlet />

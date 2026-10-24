@@ -81,9 +81,11 @@ export const MIN_SEEDED_TOKEN_LENGTH = 32;
 
 /**
  * Per-channel overrides of the daily ingest cap (jobs per user per rolling day). Channels not
- * listed use INGEST_DAILY_CAP (env-overridable); Phase 13 sets `mcp` here.
+ * listed use INGEST_DAILY_CAP (env-overridable); Phase 13 sets `mcp` here. `import` counts rows (D190).
  */
-export const INGEST_CHANNEL_DAILY_CAPS: Partial<Record<IngestChannel, number>> = {};
+export const INGEST_CHANNEL_DAILY_CAPS: Partial<Record<IngestChannel, number>> = {
+  import: 150,
+};
 
 /** The daily cap of every channel: its override, else `defaultCap`. */
 export function ingestDailyCaps(defaultCap: number): Record<IngestChannel, number> {

@@ -19,7 +19,8 @@
     "./media": "./src/media/index.ts",
     "./media-constants": "./src/media/constants.ts",
     "./links": "./src/links/index.ts",
-    "./events": "./src/events/index.ts"
+    "./events": "./src/events/index.ts",
+    "./import": "./src/import/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -27,6 +28,10 @@
   },
   "dependencies": {
     "mathjs": "^15.2.0",
+    "papaparse": "^5.7.0",
     "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/papaparse": "^5.5.2"
   }
 }

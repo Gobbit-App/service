@@ -9,9 +9,10 @@ const CHANNEL_LABELS: Record<ReviewJob['channel'], string> = {
   email: 'email',
   paste: 'paste',
   mcp: 'AI app',
+  import: 'Imported',
 };
 
-/** An AI app's own name leads its channel label: "Claude (AI app)". */
+/** An AI app's or import's own name leads its channel label: "Claude (AI app)". */
 function channelLabel(job: ReviewJob): string {
   const label = CHANNEL_LABELS[job.channel];
   return job.clientLabel ? `${job.clientLabel} (${label})` : label;

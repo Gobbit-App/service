@@ -120,6 +120,11 @@ describe('lazyOnlyViolations', () => {
     expect(lazyOnlyViolations(chunks)).toEqual(['@use-gesture in index.js']);
   });
 
+  it('flags an initial chunk that bundles papaparse', () => {
+    const chunks = [{ file: 'index.js', code: 'var c={delimitersToGuess:[",","\\t"]}' }];
+    expect(lazyOnlyViolations(chunks)).toEqual(['papaparse in index.js']);
+  });
+
   it('passes clean chunks', () => {
     expect(lazyOnlyViolations([{ file: 'index.js', code: 'el.setPointerCapture(1)' }])).toEqual([]);
   });

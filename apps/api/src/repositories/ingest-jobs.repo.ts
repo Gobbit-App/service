@@ -1,4 +1,4 @@
-import { and, count, eq, gte, inArray, isNotNull, lt, or, sql } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNotNull, lt, notInArray, or, sql } from 'drizzle-orm';
 import {
   ingestJobs,
   llmCalls,
@@ -51,8 +51,13 @@ export function createIngestJobsRepo(db: DbExecutor) {
       return await db.select().from(ingestJobs).where(inArray(ingestJobs.resultItemId, itemIds));
     },
 
-    /** D110: jobs the user created since `since`, on one channel or all (rolling daily caps). */
-    async countByUserSince(userId: string, since: Date, channel?: IngestChannel): Promise<number> {
+    /** D110: jobs a user created since `since`, of one channel or of every channel but `exclude`. */
+    async countByUserSince(
+      userId: string,
+      since: Date,
+      channel?: IngestChannel,
+      exclude: readonly IngestChannel[] = [],
+    ): Promise<number> {
       const [row] = await db
         .select({ n: count() })
         .from(ingestJobs)
@@ -61,6 +66,7 @@ export function createIngestJobsRepo(db: DbExecutor) {
             eq(ingestJobs.userId, userId),
             gte(ingestJobs.createdAt, since),
             channel ? eq(ingestJobs.channel, channel) : undefined,
+            exclude.length > 0 ? notInArray(ingestJobs.channel, [...exclude]) : undefined,
           ),
         );
       return row?.n ?? 0;
