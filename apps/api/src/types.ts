@@ -1,4 +1,5 @@
 import type { SessionRow } from '@pb/db';
+import type { ActorVia } from '@pb/shared';
 
 export interface CurrentUser {
   id: string;
@@ -11,10 +12,11 @@ export interface CurrentUser {
 export type CredentialSource = 'bearer' | 'cookie';
 
 /**
- * D130: the kind of client behind a service action. `session` covers the web app and API
- * scripts alike (cookie or bearer); Phase 13 adds `'mcp'` together with a connection id.
+ * D130/D186: the kind of client behind a service action (`actorVias`). `session` covers the web
+ * app and API scripts alike (cookie or bearer), `ingest` a proposal made from a share; Phase 13
+ * adds `'mcp'` together with a connection id.
  */
-export type ActorVia = 'session';
+export type { ActorVia };
 
 /** D130 (ADR-050): who performs a service action and through which kind of client. */
 export interface Actor {

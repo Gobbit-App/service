@@ -86,6 +86,7 @@ describe('propose (D103/D109)', () => {
         entities: {},
       }),
       ['c1'],
+      [expect.objectContaining({ kind: 'proposed', via: 'ingest', actorUserId: 'u1' })],
     );
     expect(f.findDefault).not.toHaveBeenCalled();
   });
@@ -95,7 +96,7 @@ describe('propose (D103/D109)', () => {
     await proposeItem(makeDeps(f), inputWith([]));
 
     expect(f.findDefault).toHaveBeenCalledWith('d1');
-    expect(f.create).toHaveBeenCalledWith(expect.anything(), ['cat-default']);
+    expect(f.create).toHaveBeenCalledWith(expect.anything(), ['cat-default'], expect.any(Array));
     expect(f.update).toHaveBeenCalledWith(
       'job1',
       expect.objectContaining({
@@ -179,6 +180,10 @@ describe('propose (D103/D109)', () => {
     const f = makeFakes();
     await proposeItem(makeDeps(f), inputWith(['c1'], { job: { ...job, channel: 'mcp' } }));
 
-    expect(f.create).toHaveBeenCalledWith(expect.objectContaining({ sourceKind: 'mcp' }), ['c1']);
+    expect(f.create).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceKind: 'mcp' }),
+      ['c1'],
+      expect.any(Array),
+    );
   });
 });

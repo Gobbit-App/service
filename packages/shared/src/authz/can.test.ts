@@ -24,13 +24,14 @@ describe('can (authz)', () => {
     'member.list': [true, true, true, true],
     'member.invite': [true, false, false, false],
     'member.remove': [true, false, false, false],
+    'event.list': [true, true, false, false],
   };
 
   console.table(expectedTable);
 
-  it('permissions should have 17 unique entries', () => {
-    expect(permissions).toHaveLength(17);
-    expect(new Set(permissions).size).toBe(17);
+  it('permissions should have 18 unique entries', () => {
+    expect(permissions).toHaveLength(18);
+    expect(new Set(permissions).size).toBe(18);
   });
 
   it('PERMISSION_MATRIX keys should equal permissions', () => {

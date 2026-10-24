@@ -4,7 +4,8 @@ import { resolveE2eEnv } from './lib/env';
 const { baseURL, token } = resolveE2eEnv();
 
 /** Specs that drive the browser against the web origin (D62); the rest are API-only. */
-const WEB_SPECS = /\/(web|share|editor|review|settings|lifecycle|browse|links)\.spec\.ts$/;
+const WEB_SPECS =
+  /\/(web|share|editor|review|settings|lifecycle|browse|links|activity-log)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: './tests',

@@ -22,7 +22,9 @@ import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
 import type { UsersRepo } from '../repositories/users.repo';
 import { dedupTargetId, mergeProposalPatch, sourcePreview } from '../review/review-helpers';
-import type { CurrentUser } from '../types';
+import type { Actor, CurrentUser } from '../types';
+import { diffFields, itemFields } from '../events/diff-fields';
+import { eventFrom } from '../events/item-event';
 import type { ItemDtoMapper } from './item-dtos';
 import { childLogger } from '../lib/logger';
 
@@ -173,9 +175,11 @@ export function createReviewService(deps: {
 
     /**
      * D106: `new` publishes the proposal; `update` copies it onto the dedup target and soft-deletes
-     * the proposal. Category, item and job changes commit together (D95 is checked at commit).
+     * the proposal. Category, item, job and log changes commit together (D95 is checked at commit).
+     * D187: `published` on the new card, or one `merged` line on the target (none for the proposal).
      */
-    async publish(user: CurrentUser, itemId: string, req: PublishRequest): Promise<Item> {
+    async publish(actor: Actor, itemId: string, req: PublishRequest): Promise<Item> {
+      const { user } = actor;
       const loaded = await loadProposal(user, itemId);
       const { role, job } = loaded;
       const payload = await deps.imageReference(
@@ -211,10 +215,20 @@ export function createReviewService(deps: {
           if (target.status !== 'published') {
             throw conflict('The card this proposal updates is archived or deleted');
           }
+          const patch = mergeProposalPatch(item, target, at);
+          const targetCategoryIds =
+            (await tx.items.categoryIdsFor([target.id], 'owner')).get(target.id) ?? [];
+          const before = itemFields(target, targetCategoryIds);
+          const changes = diffFields(before, {
+            ...before,
+            ...patch,
+            categoryIds: categoryIds.length > 0 ? categoryIds : targetCategoryIds,
+          });
           await tx.items.update(
             target.id,
-            mergeProposalPatch(item, target, at),
+            patch,
             categoryIds.length > 0 ? categoryIds : undefined,
+            [eventFrom(actor, 'merged', changes)],
           );
           await tx.items.softDelete(item.id);
           id = target.id;
@@ -225,6 +239,7 @@ export function createReviewService(deps: {
               ? { status: 'published', verifiedAt: at, payload }
               : { status: 'published', verifiedAt: at },
             extra.length > 0 ? categoryIds : undefined,
+            [eventFrom(actor, 'published')],
           );
         }
 
@@ -248,11 +263,12 @@ export function createReviewService(deps: {
     },
 
     /** D106: soft-deletes the proposal, marks the job discarded and removes its uploads. */
-    async discard(user: CurrentUser, itemId: string): Promise<void> {
+    async discard(actor: Actor, itemId: string): Promise<void> {
+      const { user } = actor;
       const { item, job } = await loadProposal(user, itemId);
       const at = now();
       await transaction(async (tx) => {
-        await tx.items.softDelete(item.id);
+        await tx.items.softDelete(item.id, at, [eventFrom(actor, 'discarded')]);
         if (job) {
           await tx.jobs.update(job.id, {
             status: 'discarded',

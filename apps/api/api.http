@@ -408,3 +408,13 @@ GET {{baseUrl}}/public/family/items/<itemId>
 
 ### Public search (D182; no auth, 120/hour per IP; semantic only within the anonymous embedding budgets, else text-only)
 GET {{baseUrl}}/public/family/search?q=water&limit=10
+
+### ─── Activity log (Phase 8, 020) ───
+
+### Deck activity, newest first (D188; owners and maintainers, 403 otherwise; keyset cursor)
+GET {{baseUrl}}/decks/family/events?limit=20
+Authorization: Bearer {{token}}
+
+### One card's history (survives the card being purged)
+GET {{baseUrl}}/decks/family/events?itemId=<itemId>
+Authorization: Bearer {{token}}

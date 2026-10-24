@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { PgDialect, getTableConfig } from 'drizzle-orm/pg-core';
 import {
   deckKindEnum,
   categoryVisibilityEnum,
@@ -11,6 +11,7 @@ import {
   sessionKindEnum,
 } from './common';
 import { items } from './items';
+import { actorViaEnum, itemEventKindEnum, itemEvents } from './item-events';
 import {
   deckKinds,
   categoryVisibilities,
@@ -20,6 +21,9 @@ import {
   memberRoles,
   magicLinkPurposes,
   sessionKinds,
+  actorVias,
+  itemEventKinds,
+  itemEventKindsWithChanges,
 } from '@pb/shared';
 
 describe('schema enums', () => {
@@ -53,6 +57,21 @@ describe('schema enums', () => {
 
   it('sessionKindEnum.enumValues equals sessionKinds', () => {
     expect(sessionKindEnum.enumValues).toEqual(sessionKinds);
+  });
+
+  it('actorViaEnum.enumValues equals actorVias', () => {
+    expect(actorViaEnum.enumValues).toEqual(actorVias);
+  });
+
+  it('itemEventKindEnum.enumValues equals itemEventKinds', () => {
+    expect(itemEventKindEnum.enumValues).toEqual(itemEventKinds);
+  });
+
+  it('item_events_changes_chk names exactly the kinds that carry changes (D186)', () => {
+    const chk = getTableConfig(itemEvents).checks.find((c) => c.name === 'item_events_changes_chk');
+    const sqlText = new PgDialect().sqlToQuery(chk!.value).sql;
+    for (const kind of itemEventKindsWithChanges) expect(sqlText).toContain(`'${kind}'`);
+    expect(sqlText.match(/'[a-z]+'/g)).toHaveLength(itemEventKindsWithChanges.length);
   });
 
   describe('items table checks', () => {

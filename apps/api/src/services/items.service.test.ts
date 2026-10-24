@@ -147,6 +147,7 @@ describe('createItemsService', () => {
           deckId: PB_ID,
         }),
         [DEFAULT_CAT],
+        [expect.objectContaining({ kind: 'created', via: 'session', actorUserId: USER.id })],
       );
       expect(embedQueue.enqueueIfStale).toHaveBeenCalledWith(createItemRow().id);
     });
@@ -189,6 +190,7 @@ describe('createItemsService', () => {
           verifiedAt: expect.any(Date),
         }),
         expect.any(Array),
+        expect.any(Array),
       );
     });
 
@@ -208,6 +210,7 @@ describe('createItemsService', () => {
           status: 'proposed',
           verifiedAt: null,
         }),
+        expect.any(Array),
         expect.any(Array),
       );
     });
@@ -320,7 +323,9 @@ describe('createItemsService', () => {
 
       const dto = await service.restore(ACTOR, itemId);
 
-      expect(items.update).toHaveBeenCalledWith(itemId, { status: 'published' });
+      expect(items.update).toHaveBeenCalledWith(itemId, { status: 'published' }, undefined, [
+        expect.objectContaining({ kind: 'restored', via: 'session', actorUserId: USER.id }),
+      ]);
       expect(dto.verifiedAt).toBe(verifiedAt.toISOString());
       expect(embedQueue.enqueueIfStale).toHaveBeenCalledWith(itemId);
     });
@@ -384,6 +389,7 @@ describe('createItemsService', () => {
         itemId,
         expect.objectContaining({ status: 'published', verifiedAt: NOW }),
         undefined,
+        [expect.objectContaining({ kind: 'published', via: 'session', actorUserId: USER.id })],
       );
     });
   });
@@ -394,7 +400,9 @@ describe('createItemsService', () => {
     it('remove: soft-deletes at the service clock', async () => {
       await service.remove(ACTOR, itemId);
 
-      expect(items.softDelete).toHaveBeenCalledWith(itemId, NOW);
+      expect(items.softDelete).toHaveBeenCalledWith(itemId, NOW, [
+        expect.objectContaining({ kind: 'deleted', via: 'session', actorUserId: USER.id }),
+      ]);
     });
 
     it('undelete: inside the window clears deleted_at and re-embeds if stale', async () => {
@@ -404,7 +412,9 @@ describe('createItemsService', () => {
 
       const dto = await service.undelete(ACTOR, itemId);
 
-      expect(items.undelete).toHaveBeenCalledWith(itemId);
+      expect(items.undelete).toHaveBeenCalledWith(itemId, [
+        expect.objectContaining({ kind: 'undeleted', via: 'session', actorUserId: USER.id }),
+      ]);
       expect(embedQueue.enqueueIfStale).toHaveBeenCalledWith(itemId);
       expect(dto.deletedAt).toBeUndefined();
     });

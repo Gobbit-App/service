@@ -19,6 +19,8 @@ export const PERMISSION_MATRIX: Readonly<Record<Permission, readonly MemberRole[
   'member.list': ['owner', 'maintainer', 'editor', 'reader'],
   'member.invite': ['owner'],
   'member.remove': ['owner'],
+  /** D188: the deck's activity log. */
+  'event.list': ['owner', 'maintainer'],
 };
 
 /** Pure, table-driven permission check. */

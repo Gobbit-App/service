@@ -34,6 +34,7 @@ import { registerIngestRoutes } from './routes/ingest';
 import type { MediaWiring } from './services/media-wiring';
 import { registerIngestTokensRoutes } from './routes/ingest-tokens';
 import { registerReviewRoutes } from './routes/review';
+import { registerEventsRoutes } from './routes/events';
 import { registerWebhookRoutes } from './routes/webhooks';
 import { registerPublicRoutes } from './routes/public';
 import { rateLimitedHtml, registerPublicPagesRoutes } from './routes/public-pages';
@@ -124,6 +125,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerIngestRoutes(app, services);
   registerIngestTokensRoutes(app, services);
   registerReviewRoutes(app, services);
+  registerEventsRoutes(app, services);
   registerPublicRoutes(app, services, env);
   registerPublicPagesRoutes(app, services, env);
   registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });
