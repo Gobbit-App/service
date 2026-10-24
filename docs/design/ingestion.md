@@ -54,10 +54,33 @@ Non-session tokens are listed in `lib/token-prefixes.ts` (today `ing_`; Phase 13
 
 ## Channels
 
+- **Bulk import** (Phase 8): see [Bulk import](#bulk-import-phase-8-d189d191).
+
 - **Android share target** (D98, ADR-045; separate PR `p5-share-target`): the service worker (`src/sw.ts`, `injectManifest`) answers the manifest's `share_target` POST to `/share`, keeps the form in IndexedDB (1 h) and redirects to the `/share` confirm screen (deck picker, thumbnails, "Send to Gobbit"). The deck page's **Paste** button opens the same screen empty. Caddy answers a POST that bypasses the SW with `303 /share?failed=1`.
 - **iPhone Shortcut** (D99, ADR-046): a Shortcut posts to `/api/ingest` with an ingest token. Build and publish steps: `docs/shortcut/README.md`; `SHORTCUT_URL` (the iCloud link) is exposed by `/config` and linked from Settings.
 - **Settings** (`/settings`, gear in the header): an intro ("Add cards from other apps") lists only the ways this server supports — the Shortcut when `SHORTCUT_URL` is set, email-in when it is on, and always plain `POST /api/ingest` with a Bearer token — then "Your tokens": list, create (optionally deck-bound) and revoke ingest tokens. A new token is shown once, with its email address when email-in is on.
 - **Email-in** (D104, off by default): mail to `<token without ing_>@INGEST_EMAIL_DOMAIN` arrives through Resend Receiving. `POST /webhooks/resend/inbound` (plain Hono route, outside OpenAPI, registered only when `INGEST_EMAIL_DOMAIN`, `RESEND_WEBHOOK_SECRET` and `RESEND_API_KEY` are set) verifies the Svix signature, fetches the email and its attachments from the Resend API (`ingest/resend-inbound.ts`), maps subject → title, trimmed text body → text, first link → url, ≤ 3 images (`ingest/email-mapping.ts`), and submits with `channel = email`. Unknown/revoked tokens, ignored events and rejected shares answer 200 (no probing); Resend or DB errors answer 5xx so Resend retries.
+
+## Bulk import (Phase 8, D189–D191)
+
+- **Parser** (`@pb/shared/import`, zod-free, papaparse for CSV): `parseNotes(text, format)` for `lines` (one note per line; `title — body`, ` - ` or `: ` splits; a lone URL is a link card), `markdown` (headings become category names, list items and paragraphs become notes) and `csv` (header columns `title`, `body`, `url`, `category`, any case; BOM stripped). `detectFormat` goes by file extension, then content. Each row carries its source `line` and an `error` when it breaks a card limit. The same parser runs in the web preview and the CLI.
+- **Import** (`POST /decks/{id}/imports { label, rows ≤ 100 }`, `item.publish`): `imports.service` runs `proposeDirect` per row, in order, on channel `import` (migration `0016_import_channel`) with `clientLabel = label`, so proposals land in review as "<label> (Imported)". Category names map to an existing category by id, else to a `newCategory` suggestion. No fetch, no LLM. The `import` cap is 150 rows a day per user, and `import` jobs neither count toward nor are held by the combined cap (`ingest/caps.ts`). A cap hit stops the loop and reports the rest as `failed` with `/problems/rate-limited`, unless it is the first row (429). `importInChunks` (shared) sends larger sets in requests of 100 and re-bases failure indexes.
+- **Bulk publish** (`POST /decks/{id}/review/publish { ids ≤ 50 }`): `review.service.publishMany` publishes each `new` proposal through the single-publish path (one transaction and one `published` event each; the suggested category is created when the role has `category.create`). Possible duplicates and updates are skipped as `needs-decision`; cards that are not live proposals of the deck are skipped as `already-handled`. `GET /decks/{id}/review?source=<label>` filters the queue to one import in SQL; the count stays the deck total.
+- **Web**: `/d/$slug/import` (lazy route; papaparse is a lazy-only budget marker), reached from **Import** in the deck header for owners and maintainers: paste or a `.txt/.md/.csv` file → format picker → preview (tick, edit, invalid rows unticked with the reason, new/existing category chip, more than 150 rows refused) → result (counts, failed rows by source line, "Review them" → `/d/$slug/review?source=<label>`). The review queue has a select mode (Select all shown, Publish selected) and a source chip with "Show all"; skipped cards are listed in an inline notice.
+- **CLI**: `pnpm import:notes <file> --deck <slug> [--format] [--label] [--dry-run]` (`apps/api/scripts/import-notes.ts`, `GOBBIT_API_URL` + `GOBBIT_TOKEN`). Invalid rows are skipped and listed; it exits 1 when any row was not imported.
+
+### Deviations from the 021 plan
+
+- **CLI lives in `apps/api/scripts/`** (with its logic in `scripts/lib/import-notes-cli.ts`, next to the other API CLIs and inside the unit test glob) and uses the bearer `request` helper from `scripts/lib/api-cli.ts` instead of `@pb/api-client` (browser-oriented: same-origin `/api` base, cookies). The root script runs it with `tsx`, so relative file paths resolve from the repo root.
+- **Combined-cap rule in `ingest/caps.ts`** (unit-tested there), not inline in `ingest.service`.
+- **Chunking is shared** (`importInChunks` in `@pb/shared/import`), used by the web screen and the CLI.
+- **Parser rules beyond the research list**: a spaced hyphen ` - ` also splits; list markers are stripped in `lines`; a URL-only title drops the scheme and `www.`, and a URL is removed from the title when it becomes the source; Markdown link-only list items become link cards; a CSV `url` column makes a link card, CSV `line` is the spreadsheet row number, and a CSV needs a `title` or `body` column.
+- **A bad row refuses the whole request** (400 naming "Row N"); only cap hits give a partial result.
+- **Link payload URL = `sourceUrl`** for imported link cards.
+- **Bulk publish**: a 409 race on one card counts as `already-handled`; any other error aborts the rest of the batch (already published cards stay published).
+- **Skipped-cards "toast" is an inline status notice** (stays until dismissed, lists each card with its reason), not the global undo toast.
+- **Optimistic review cache updates cover every cached queue variant** (whole queue and per source) via `reviewListsFilter`.
+- **Invalid preview rows start unticked** and can only be ticked once an edit fixes them; the import label is the file name, or "Pasted notes".
 
 ## Deviations from the Phase 5 plan
 

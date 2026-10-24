@@ -53,7 +53,7 @@ Conventions: snake_case columns / camelCase TS; `timestamptz(3)` everywhere (key
 ADR-001); soft delete via `deleted_at` (ADR-005); `updated_at` and default-category creation and
 protection are DB triggers; card limits (body ≤ 600 code points, payload ≤ 8192 bytes) are Zod rules
 backed by DB CHECKs. Migrations are drizzle-kit generated plus hand-written SQL, each with a
-hand-written `down/` file (ADR-011, ADR-019); latest is `0013_link_checks`.
+hand-written `down/` file (ADR-011, ADR-019); latest is `0016_import_channel`.
 → [design/data-model.md](design/data-model.md) (ER diagram, invariants table, migration notes)
 
 ## API conventions
@@ -86,7 +86,7 @@ only on `POST /ingest`.
 | Reader PWA | File routes, persisted TanStack Query cache for offline (never the SW for API data), share target in a hand-written SW, share previews at `/s/:id` with lazily rendered OG images, 150 KB gzip initial-JS budget | [web-pwa](design/web-pwa.md) · ADR-036, 037, 045 |
 | Search & Ask | `searchRepo.hybrid()`: trigram + pgvector arms, both filtered by deck, status and visibility, fused with RRF (`lib/rrf.ts`). Optional cited Ask answer. Provider keys optional (text-only / Ask off) | [search](design/search.md) · ADR-041–044 |
 | Worker | pg-boss: `embed-item` (+ minute sweep), `ingest`, `media-sweep` (daily orphan images), `link-snapshot`, `link-check-sweep` (daily), prune jobs. Writes enqueue after commit, sweeps heal misses. Heartbeat file for health | [search](design/search.md#embeddings-worker-appsapisrcworkerts), [ingestion](design/ingestion.md#worker-pipeline-jobsingestts) |
-| Ingestion | Shares (Android, Shortcut, paste, email-in) → `ingest_jobs` → SSRF-guarded fetch → LLM extract → **proposed** card → dedup → publisher review queue. The agent never publishes | [ingestion](design/ingestion.md) · ADR-046–048 |
+| Ingestion | Shares (Android, Shortcut, paste, email-in) and bulk imports (paste/file/CLI → `POST /decks/{id}/imports`, no LLM; bulk publish from review) → `ingest_jobs` → SSRF-guarded fetch → LLM extract → **proposed** card → dedup → publisher review queue. The agent never publishes | [ingestion](design/ingestion.md) · ADR-046–048 |
 | Card lifecycle | archive / restore / delete / undelete (30 days, weekly purge) in `items.service`, optimistic Undo in the web | [card-lifecycle](design/card-lifecycle.md) · ADR-050 |
 | Card editor | All types, live preview through the list renderer, zod-free client checks, IndexedDB drafts, inline category create | [card-editor](design/card-editor.md) |
 | Card media | Signed browser → Cloudinary uploads confirmed into the `assets` registry; cards reference only recorded assets; daily orphan sweep; every stored image renders through `CloudImage` (measured `sizes`, reserved box, blurred placeholder); link preview via `safe-fetch` | [card-media](design/card-media.md) · ADR-051, 054 |

@@ -20,6 +20,7 @@ import { Route as DSlugIndexRouteImport } from './routes/d.$slug.index'
 import { Route as DSlugArchivedRouteImport } from './routes/d.$slug.archived'
 import { Route as DSlugBrowseRouteImport } from './routes/d.$slug.browse'
 import { Route as DSlugFavoritesRouteImport } from './routes/d.$slug.favorites'
+import { Route as DSlugImportRouteImport } from './routes/d.$slug.import'
 import { Route as DSlugLinksRouteImport } from './routes/d.$slug.links'
 import { Route as DSlugLogRouteImport } from './routes/d.$slug.log'
 import { Route as DSlugNewRouteImport } from './routes/d.$slug.new'
@@ -84,6 +85,11 @@ const DSlugFavoritesRoute = DSlugFavoritesRouteImport.update({
   path: '/favorites',
   getParentRoute: () => DSlugRoute,
 } as any)
+const DSlugImportRoute = DSlugImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => DSlugRoute,
+} as any)
 const DSlugLinksRoute = DSlugLinksRouteImport.update({
   id: '/links',
   path: '/links',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
+  '/d/$slug/import': typeof DSlugImportRoute
   '/d/$slug/links': typeof DSlugLinksRoute
   '/d/$slug/log': typeof DSlugLogRoute
   '/d/$slug/new': typeof DSlugNewRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
+  '/d/$slug/import': typeof DSlugImportRoute
   '/d/$slug/links': typeof DSlugLinksRoute
   '/d/$slug/log': typeof DSlugLogRoute
   '/d/$slug/new': typeof DSlugNewRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
+  '/d/$slug/import': typeof DSlugImportRoute
   '/d/$slug/links': typeof DSlugLinksRoute
   '/d/$slug/log': typeof DSlugLogRoute
   '/d/$slug/new': typeof DSlugNewRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/d/$slug/archived'
     | '/d/$slug/browse'
     | '/d/$slug/favorites'
+    | '/d/$slug/import'
     | '/d/$slug/links'
     | '/d/$slug/log'
     | '/d/$slug/new'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/d/$slug/archived'
     | '/d/$slug/browse'
     | '/d/$slug/favorites'
+    | '/d/$slug/import'
     | '/d/$slug/links'
     | '/d/$slug/log'
     | '/d/$slug/new'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/d/$slug/archived'
     | '/d/$slug/browse'
     | '/d/$slug/favorites'
+    | '/d/$slug/import'
     | '/d/$slug/links'
     | '/d/$slug/log'
     | '/d/$slug/new'
@@ -343,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DSlugFavoritesRouteImport
       parentRoute: typeof DSlugRoute
     }
+    '/d/$slug/import': {
+      id: '/d/$slug/import'
+      path: '/import'
+      fullPath: '/d/$slug/import'
+      preLoaderRoute: typeof DSlugImportRouteImport
+      parentRoute: typeof DSlugRoute
+    }
     '/d/$slug/links': {
       id: '/d/$slug/links'
       path: '/links'
@@ -406,6 +425,7 @@ interface DSlugRouteChildren {
   DSlugArchivedRoute: typeof DSlugArchivedRoute
   DSlugBrowseRoute: typeof DSlugBrowseRoute
   DSlugFavoritesRoute: typeof DSlugFavoritesRoute
+  DSlugImportRoute: typeof DSlugImportRoute
   DSlugLinksRoute: typeof DSlugLinksRoute
   DSlugLogRoute: typeof DSlugLogRoute
   DSlugNewRoute: typeof DSlugNewRoute
@@ -420,6 +440,7 @@ const DSlugRouteChildren: DSlugRouteChildren = {
   DSlugArchivedRoute: DSlugArchivedRoute,
   DSlugBrowseRoute: DSlugBrowseRoute,
   DSlugFavoritesRoute: DSlugFavoritesRoute,
+  DSlugImportRoute: DSlugImportRoute,
   DSlugLinksRoute: DSlugLinksRoute,
   DSlugLogRoute: DSlugLogRoute,
   DSlugNewRoute: DSlugNewRoute,

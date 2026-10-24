@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Item, ReviewCount, ReviewEntry, ReviewList } from '@pb/shared';
-import { decrementCount, removeReviewEntry, replaceReviewItem } from './review-cache';
+import {
+  decrementCount,
+  removeReviewEntries,
+  removeReviewEntry,
+  replaceReviewItem,
+} from './review-cache';
 
 function item(overrides: Partial<Item> = {}): Item {
   return {
@@ -69,7 +74,31 @@ describe('review-cache', () => {
     });
   });
 
+  describe('removeReviewEntries (D191)', () => {
+    it('removes every listed entry and lowers the count by the number removed', () => {
+      const list: ReviewList = {
+        data: [entry(item({ id: 'p1' })), entry(item({ id: 'p2' })), entry(item({ id: 'p3' }))],
+        count: 7,
+      };
+
+      const result = removeReviewEntries(list, ['p1', 'p3', 'gone']);
+
+      expect(result!.data.map((e) => e.item.id)).toEqual(['p2']);
+      expect(result!.count).toBe(5);
+    });
+
+    it('returns the same reference when nothing matches', () => {
+      const list: ReviewList = { data: [entry(item({ id: 'p1' }))], count: 1 };
+      expect(removeReviewEntries(list, ['x'])).toBe(list);
+    });
+  });
+
   describe('decrementCount', () => {
+    it('decrements by a given amount, never below 0', () => {
+      expect(decrementCount({ count: 3 }, 2)).toEqual({ count: 1 });
+      expect(decrementCount({ count: 3 }, 5)).toEqual({ count: 0 });
+    });
+
     it('returns undefined when count is undefined', () => {
       expect(decrementCount(undefined)).toBeUndefined();
     });

@@ -1,5 +1,5 @@
 import type { IngestJobRow, ItemRow } from '@pb/db';
-import type { DedupVerdict, Entities } from '@pb/shared';
+import type { BulkPublishSkipReason, DedupVerdict, Entities } from '@pb/shared';
 
 /** Characters of shared text shown as the source line when no URL was shared. */
 export const SOURCE_PREVIEW_CHARS = 140;
@@ -20,6 +20,21 @@ export function sourcePreview(job: Pick<IngestJobRow, 'raw' | 'normalized'>): st
 export function dedupTargetId(dedup: DedupVerdict | null | undefined): string | null {
   if (!dedup || dedup.action === 'new') return null;
   return dedup.itemId;
+}
+
+/**
+ * D191: why bulk publish leaves a card alone, or null to publish it. Cards that aren't live
+ * proposals of the deck were handled already; flagged duplicates and updates need a person.
+ */
+export function bulkSkipReason(
+  item: Pick<ItemRow, 'deckId' | 'status' | 'deletedAt'> | null,
+  deckId: string,
+  job: Pick<IngestJobRow, 'dedup'> | null,
+): BulkPublishSkipReason | null {
+  if (!item || item.deckId !== deckId || item.status !== 'proposed' || item.deletedAt) {
+    return 'already-handled';
+  }
+  return dedupTargetId(job?.dedup) ? 'needs-decision' : null;
 }
 
 export interface MergePatch {

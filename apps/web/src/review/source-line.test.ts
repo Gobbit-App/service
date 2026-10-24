@@ -62,6 +62,17 @@ describe('sourceLine (D107)', () => {
     expect(sourceLine(makeJob({ channel: 'mcp' }), NOW)).toContain('via AI app');
   });
 
+  it("leads the Imported label with the import's label (D190)", () => {
+    const job = makeJob({
+      channel: 'import',
+      clientLabel: 'Street notes.md',
+      sharedBy: { id: 'u', displayName: 'Dana' },
+    });
+    expect(sourceLine(job, NOW)).toBe(
+      'shared by Dana via Street notes.md (Imported) · 2 minutes ago',
+    );
+  });
+
   it('omits the time part when createdAt is invalid', () => {
     const job = makeJob({
       channel: 'paste',

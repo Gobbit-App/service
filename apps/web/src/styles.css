@@ -1034,6 +1034,53 @@ h3 {
   gap: 8px;
 }
 
+.review-select-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-select-bar__hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.review-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.review-source__clear {
+  color: var(--color-accent-text);
+  font-size: 0.875rem;
+}
+
+.review-card__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+  font-weight: 600;
+}
+
+.bulk-publish-notice {
+  display: grid;
+  gap: 6px;
+  padding: var(--gap);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.bulk-publish-notice p,
+.bulk-publish-notice ul {
+  margin: 0;
+}
+
 .review-card__discard {
   border-color: var(--color-danger);
   color: var(--color-danger);
@@ -1289,6 +1336,125 @@ h3 {
 }
 
 /* ---------- Deck settings (Phase 8, D184) ---------- */
+
+.import-screen {
+  display: grid;
+  gap: var(--gap);
+  padding: var(--gap) var(--gutter);
+}
+
+.import-input,
+.import-preview,
+.import-result {
+  display: grid;
+  gap: var(--gap);
+}
+
+.import-input textarea,
+.import-input select,
+.import-row__edit input,
+.import-row__edit textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+}
+
+.import-input select,
+.import-row__edit input {
+  min-height: var(--tap);
+}
+
+.import-input .button {
+  justify-self: start;
+}
+
+.import-preview__summary {
+  margin: 0;
+}
+
+.import-preview__rows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.import-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.import-row--invalid {
+  border-color: var(--color-danger);
+}
+
+.import-row__tick {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: var(--tap);
+}
+
+.import-row__line {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.import-row__view,
+.import-row__edit {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+.import-row__edit {
+  justify-items: stretch;
+}
+
+.import-row__title {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.import-row__body,
+.import-row__url,
+.import-row__category {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.import-row__error {
+  grid-column: 2;
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.875rem;
+}
+
+.import-preview__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.import-result p,
+.import-result__failed {
+  margin: 0;
+}
 
 .deck-admin {
   padding: var(--gap) var(--gutter);

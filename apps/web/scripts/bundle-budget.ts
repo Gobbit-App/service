@@ -1,7 +1,7 @@
 /**
  * D57: initial JS ≤ 150 KB gzip. Reads `dist/.vite/manifest.json` (run `pnpm build` first),
  * follows static imports from the entry and fails when the gzipped total is over budget.
- * D139: also fails when a lazy-only library (`@use-gesture`) lands in an initial chunk.
+ * D139: also fails when a lazy-only library (`@use-gesture`, `papaparse`) lands in an initial chunk.
  */
 import { readFile } from 'node:fs/promises';
 import { gzipSync } from 'node:zlib';

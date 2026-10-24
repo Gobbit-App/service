@@ -38,10 +38,11 @@ export interface ProposeInput {
   signal?: AbortSignal;
 }
 
-/** D100: email shares are `email`, AI apps `mcp`; everything else came through a share. */
+/** D100: email shares are `email`, AI apps `mcp`, imports `import`; the rest came through a share. */
 export function sourceKindFor(channel: IngestChannel): SourceKind {
   if (channel === 'email') return 'email';
   if (channel === 'mcp') return 'mcp';
+  if (channel === 'import') return 'import';
   return 'share';
 }
 

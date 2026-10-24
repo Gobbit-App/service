@@ -21,8 +21,11 @@ export const terminalIngestJobStatuses: readonly IngestJobStatus[] = [
   'discarded',
 ];
 
-/** `mcp`: proposals made directly by an AI app (Phase 13), never fetched or extracted. */
-export const ingestChannels = ['pwa', 'shortcut', 'email', 'paste', 'mcp'] as const;
+/**
+ * `mcp`: proposals made directly by an AI app (Phase 13), never fetched or extracted.
+ * `import`: bulk-imported notes (D190), also direct proposals.
+ */
+export const ingestChannels = ['pwa', 'shortcut', 'email', 'paste', 'mcp', 'import'] as const;
 export type IngestChannel = (typeof ingestChannels)[number];
 
 /** D100: the agent proposes only these card types. */
@@ -102,3 +105,13 @@ export const INGEST_TOKEN_DISPLAY_PREFIX = 8;
 
 /** D106: review queue page size. */
 export const REVIEW_LIMIT = 50;
+
+/** D189–D191: bulk import of notes and bulk publish. */
+export const IMPORT_ROWS_PER_REQUEST = 100;
+/** Rows the import screen parses before asking to split the notes (= the daily cap). */
+export const IMPORT_ROWS_PER_PREVIEW = 150;
+/** Longest title taken from the start of a note line. */
+export const IMPORT_TITLE_SPLIT_MAX = 80;
+export const IMPORT_LABEL_MAX = INGEST_CLIENT_LABEL_MAX;
+/** Ids per `POST /decks/{id}/review/publish`. */
+export const BULK_PUBLISH_MAX = 50;

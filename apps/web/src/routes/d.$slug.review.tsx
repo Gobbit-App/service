@@ -3,15 +3,21 @@ import { createFileRoute } from '@tanstack/react-router';
 import { can } from '@pb/shared/authz';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { ReviewQueue } from '../review/ReviewQueue';
+import { parseReviewSearch } from '../review/review-search';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
 
-/** D107: the review queue, inside the deck layout (`/d/:slug/review`); publishers only. */
+/**
+ * D107: the review queue, inside the deck layout (`/d/:slug/review`); publishers only.
+ * D191: `?source=<label>` shows one import's proposals.
+ */
 export const Route = createFileRoute('/d/$slug/review')({
+  validateSearch: parseReviewSearch,
   component: Review,
 });
 
 function Review() {
   const { slug } = Route.useParams();
+  const { source } = Route.useSearch();
   const deck = useQuery(deckQuery(slug));
   const categories = useQuery(categoriesQuery(slug));
 
@@ -26,6 +32,7 @@ function Review() {
       deck={deck.data}
       categories={categories.data ?? []}
       canCreateCategory={can(deck.data.role, 'category.create')}
+      source={source}
     />
   );
 }

@@ -15,6 +15,7 @@ import {
 import {
   categories,
   favorites,
+  ingestJobs,
   itemCategories,
   itemColumns,
   items,
@@ -46,6 +47,8 @@ interface ItemListFilters {
   categoryId?: string;
   /** Only items this user has favorited (P3 favorites view). */
   favoriteOf?: string;
+  /** D191: only proposals whose ingest job carries this client label (an import's label). */
+  clientLabel?: string;
 }
 
 export function createItemsRepo(db: DbExecutor) {
@@ -80,6 +83,19 @@ export function createItemsRepo(db: DbExecutor) {
             .select({ one: sql`1` })
             .from(favorites)
             .where(and(eq(favorites.itemId, items.id), eq(favorites.userId, q.favoriteOf))),
+        ),
+      );
+    }
+
+    if (q.clientLabel !== undefined) {
+      conditions.push(
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(ingestJobs)
+            .where(
+              and(eq(ingestJobs.resultItemId, items.id), eq(ingestJobs.clientLabel, q.clientLabel)),
+            ),
         ),
       );
     }

@@ -51,4 +51,9 @@ describe('ingestDailyCaps (D110)', () => {
       expect(caps[channel]).toBe(INGEST_CHANNEL_DAILY_CAPS[channel] ?? 7);
     }
   });
+
+  it('caps imported rows at 150 a day whatever the default (D190)', () => {
+    expect(ingestDailyCaps(7).import).toBe(150);
+    expect(ingestDailyCaps(7).paste).toBe(7);
+  });
 });

@@ -39,6 +39,7 @@ import {
   type SearchWiring,
 } from './search-wiring';
 import { buildIngestServices, type IngestWiring } from './ingest-wiring';
+import { createImportsService } from './imports.service';
 import {
   buildMediaServices,
   resolveLinkCheckFetch,
@@ -214,6 +215,7 @@ export function buildServices({
     ingest: ingestServices.ingest,
     ingestTokens: ingestServices.ingestTokens,
     review: ingestServices.review,
+    imports: createImportsService({ decks, memberships, ingest: ingestServices.ingest }),
     media: mediaServices.media,
     linkPreview: mediaServices.linkPreview,
   };

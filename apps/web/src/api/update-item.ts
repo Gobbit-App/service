@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-q
 import type { Item, ItemPatch, ReviewList } from '@pb/shared';
 import { replaceReviewItem } from '../review/review-cache';
 import { api, unwrap } from './client';
+import { reviewListsFilter } from './review';
 import { queryKeys, REVIEW_KEY, SEARCH_KEY } from './query-keys';
 
 export type UpdateItemVars = { itemId: string; patch: ItemPatch };
@@ -14,7 +15,7 @@ export async function applyUpdatedItem(
 ): Promise<void> {
   qc.setQueryData(queryKeys.item(item.id), item);
   if (item.status === 'proposed') {
-    qc.setQueryData<ReviewList | undefined>(queryKeys.review(deckSlug), (list) =>
+    qc.setQueriesData<ReviewList | undefined>(reviewListsFilter(deckSlug), (list) =>
       replaceReviewItem(list, item),
     );
   }

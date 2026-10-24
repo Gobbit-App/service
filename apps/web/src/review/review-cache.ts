@@ -5,16 +5,26 @@ export function removeReviewEntry(
   list: ReviewList | undefined,
   itemId: string,
 ): ReviewList | undefined {
+  return removeReviewEntries(list, [itemId]);
+}
+
+/** Drops several proposals (bulk publish, D191); untouched data keeps its identity. */
+export function removeReviewEntries(
+  list: ReviewList | undefined,
+  itemIds: readonly string[],
+): ReviewList | undefined {
   if (!list) return undefined;
-  const data = list.data.filter((entry) => entry.item.id !== itemId);
-  if (data.length === list.data.length) return list;
-  return { data, count: Math.max(0, list.count - 1) };
+  const ids = new Set(itemIds);
+  const data = list.data.filter((entry) => !ids.has(entry.item.id));
+  const removed = list.data.length - data.length;
+  if (removed === 0) return list;
+  return { data, count: Math.max(0, list.count - removed) };
 }
 
 /** Decrements the pill count alongside the queue. */
-export function decrementCount(count: ReviewCount | undefined): ReviewCount | undefined {
+export function decrementCount(count: ReviewCount | undefined, by = 1): ReviewCount | undefined {
   if (!count) return undefined;
-  return { count: Math.max(0, count.count - 1) };
+  return { count: Math.max(0, count.count - by) };
 }
 
 /** Swaps in the proposal returned by an inline edit (PATCH), keeping its job and target. */

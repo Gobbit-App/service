@@ -1,6 +1,8 @@
 import type { IngestJobRow, ItemRow } from '@pb/db';
 import {
+  can,
   REVIEW_LIMIT,
+  type BulkPublishResult,
   type Item,
   type MemberRole,
   type PublishRequest,
@@ -9,7 +11,7 @@ import {
   type ReviewList,
 } from '@pb/shared';
 import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
-import { badRequest, conflict, notFound } from '../errors/http-errors';
+import { badRequest, conflict, HttpError, notFound } from '../errors/http-errors';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import { resolveDeck } from '../lib/resolve-deck';
@@ -21,7 +23,12 @@ import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
 import type { UsersRepo } from '../repositories/users.repo';
-import { dedupTargetId, mergeProposalPatch, sourcePreview } from '../review/review-helpers';
+import {
+  bulkSkipReason,
+  dedupTargetId,
+  mergeProposalPatch,
+  sourcePreview,
+} from '../review/review-helpers';
 import type { Actor, CurrentUser } from '../types';
 import { diffFields, itemFields } from '../events/diff-fields';
 import { eventFrom } from '../events/item-event';
@@ -122,12 +129,21 @@ export function createReviewService(deps: {
     return dto!;
   }
 
-  return {
-    /** D106: newest proposals first (≤ REVIEW_LIMIT) with their job and dedup target. */
-    async list(user: CurrentUser, idOrSlug: string): Promise<ReviewList> {
+  const service = {
+    /**
+     * D106: newest proposals first (≤ REVIEW_LIMIT) with their job and dedup target.
+     * D191: `source` keeps the proposals of one import (their job's client label).
+     */
+    async list(user: CurrentUser, idOrSlug: string, source?: string): Promise<ReviewList> {
       const { deck, role } = await reviewerDeck(user, idOrSlug);
       const [rows, count] = await Promise.all([
-        items.list({ role, deckId: deck.id, status: 'proposed', limit: REVIEW_LIMIT }),
+        items.list({
+          role,
+          deckId: deck.id,
+          status: 'proposed',
+          limit: REVIEW_LIMIT,
+          ...(source !== undefined ? { clientLabel: source } : {}),
+        }),
         items.countByStatus(deck.id, 'proposed'),
       ]);
       const jobRows = await jobs.findByResultItems(rows.map((r) => r.id));
@@ -262,6 +278,36 @@ export function createReviewService(deps: {
       return toDto(user, resultId, role);
     },
 
+    /**
+     * D191: publishes each proposal as is, one transaction per card so one failure keeps the
+     * rest. A suggested category is created like the single review's default; flagged
+     * duplicates and updates are left for a decision.
+     */
+    async publishMany(actor: Actor, idOrSlug: string, ids: string[]): Promise<BulkPublishResult> {
+      const { deck, role } = await reviewerDeck(actor.user, idOrSlug);
+      const result: BulkPublishResult = { published: [], skipped: [] };
+      for (const id of ids) {
+        const item = await items.findById(id);
+        const job = item ? await jobs.findByResultItem(id) : null;
+        const reason = bulkSkipReason(item, deck.id, job);
+        if (reason) {
+          result.skipped.push({ id, reason });
+          continue;
+        }
+        const createCategory =
+          Boolean(job?.extraction?.newCategory) && can(role, 'category.create');
+        try {
+          await service.publish(actor, id, { mode: 'new', createCategory });
+          result.published.push(id);
+        } catch (err) {
+          // Reviewed by someone else in the meantime.
+          if (!(err instanceof HttpError) || err.status !== 409) throw err;
+          result.skipped.push({ id, reason: 'already-handled' });
+        }
+      }
+      return result;
+    },
+
     /** D106: soft-deletes the proposal, marks the job discarded and removes its uploads. */
     async discard(actor: Actor, itemId: string): Promise<void> {
       const { user } = actor;
@@ -286,6 +332,7 @@ export function createReviewService(deps: {
       }
     },
   };
+  return service;
 }
 
 export type ReviewService = ReturnType<typeof createReviewService>;
