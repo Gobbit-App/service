@@ -91,6 +91,7 @@ only on `POST /ingest`.
 | Card media | Signed browser → Cloudinary uploads confirmed into the `assets` registry; cards reference only recorded assets; daily orphan sweep; every stored image renders through `CloudImage` (measured `sizes`, reserved box, blurred placeholder); link preview via `safe-fetch` | [card-media](design/card-media.md) · ADR-051, 054 |
 | Links | Preview images copied to Cloudinary by a `link-snapshot` job; daily `link-check-sweep` flags dead or changed links (`Item.linkHealth`), editors check again or dismiss; locked social hosts use the shared caption and image | [links](design/links.md) · ADR-055 |
 | Browse mode | One card per screen: native scroll-snap, `@use-gesture` only in the lazy chunk | [browse-mode](design/browse-mode.md) · ADR-052 |
+| Public decks | Anonymous `/public/{slug}` reads through `public-deck.service` with `role = null` and an allow-list DTO; per-IP in-process limit | [public](design/public.md) · ADR-056 |
 
 ## Testing
 
@@ -165,3 +166,4 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [053](adr.md#adr-053-two-e2e-tiers-smoke-tests-are-journeys-d148-d149-d155) | Two e2e tiers; smoke tests are journeys |
 | [054](adr.md#adr-054-asset-registry-with-a-database-driven-orphan-sweep-d156-d158) | Asset registry, database-driven orphan sweep |
 | [055](adr.md#adr-055-link-snapshots-and-monthly-link-checks-d163-d164) | Link preview snapshots; monthly link checks in `link_checks` |
+| [056](adr.md#adr-056-a-separate-anonymous-read-surface-for-public-decks-d174-d175) | Separate anonymous read surface for public decks, in-process limiter |

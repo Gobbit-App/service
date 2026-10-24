@@ -377,3 +377,31 @@ GET {{baseUrl}}/config
 
 ### Share preview HTML (D58; 200 with the private page for anything not public)
 GET {{baseUrl}}/s/<itemId>
+
+### ─── Public communal deck (Phase 8, 016) ───
+
+### Make a category public (D176; owner or maintainer; the slug never changes)
+PATCH {{baseUrl}}/decks/family/categories/<categoryId>
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "visibility": "public" }
+
+### Make the deck public (D176; owners only, 403 owner-required otherwise; 409 on the personal deck)
+PATCH {{baseUrl}}/decks/family
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "isPublic": true }
+
+### Public deck summary (D174; no auth, 600/hour per IP, the same 404 for anything not public)
+GET {{baseUrl}}/public/family
+
+### Public cards, newest first (only published cards in public categories)
+GET {{baseUrl}}/public/family/items?limit=20
+
+### Public cards in one public category
+GET {{baseUrl}}/public/family/items?category=food
+
+### One public card (allow-listed fields only)
+GET {{baseUrl}}/public/family/items/<itemId>

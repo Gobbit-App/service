@@ -10,6 +10,7 @@ import type { ShareWiring } from '../src/share/wiring';
 import type { SearchWiring } from '../src/services/search-wiring';
 import type { IngestWiring } from '../src/services/ingest-wiring';
 import type { MediaWiring } from '../src/services/media-wiring';
+import type { AnonRateLimiter } from '../src/lib/anon-rate-limiter';
 import {
   createSampleWorld,
   fixtureId,
@@ -66,6 +67,8 @@ export interface SetupApiTestOptions {
   ingest?: IngestWiring;
   /** Link preview fetcher override (Phase 6), e.g. one that allows a local fixture server. */
   media?: MediaWiring;
+  /** D175: anonymous read limiter, e.g. one with a low limit. */
+  anonLimiter?: AnonRateLimiter;
 }
 
 export interface ApiTestContext {
@@ -126,6 +129,7 @@ export function setupApiTest(opts: SetupApiTestOptions = {}): ApiTestContext {
       search: opts.search,
       ingest: opts.ingest,
       media: opts.media,
+      anonLimiter: opts.anonLimiter,
     });
   });
 

@@ -38,7 +38,7 @@ import {
 
 /** Filters shared by the live list and the deleted listing (D132). */
 interface ItemListFilters {
-  role: MemberRole;
+  role: MemberRole | null;
   deckId: string;
   type?: ItemType;
   categoryId?: string;
@@ -130,7 +130,7 @@ export function createItemsRepo(db: DbExecutor) {
     },
 
     /** D38: false when every category of the item is hidden from `role` (→ 404). */
-    async isVisibleTo(id: string, role: MemberRole): Promise<boolean> {
+    async isVisibleTo(id: string, role: MemberRole | null): Promise<boolean> {
       if (canSeePrivate(role)) return true;
       const [row] = await db
         .select({ id: items.id })
@@ -357,7 +357,10 @@ export function createItemsRepo(db: DbExecutor) {
     },
 
     /** D38: only the category ids `role` can see, so private ids never leak via a shared card. */
-    async categoryIdsFor(itemIds: string[], role: MemberRole): Promise<Map<string, string[]>> {
+    async categoryIdsFor(
+      itemIds: string[],
+      role: MemberRole | null,
+    ): Promise<Map<string, string[]>> {
       const result = new Map<string, string[]>();
 
       for (const id of itemIds) {

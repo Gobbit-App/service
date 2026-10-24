@@ -1,8 +1,8 @@
-import type { Category, CategoryCreate } from '@pb/shared';
+import type { Category, CategoryCreate, CategoryPatch } from '@pb/shared';
 import { type CategoriesRepo } from '../repositories/categories.repo';
 import { type DecksRepo } from '../repositories/decks.repo';
 import { type CurrentUser } from '../types';
-import { badRequest } from '../errors/http-errors';
+import { badRequest, notFound } from '../errors/http-errors';
 import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
 import { toCategoryDto } from '../lib/mappers';
 import { toSlug } from '../lib/slug';
@@ -54,6 +54,28 @@ export function createCategoriesService({
         position,
       });
 
+      return toCategoryDto(row);
+    },
+
+    /** D176: rename or change visibility (`category.update`); slug and default flag never change. */
+    async update(
+      user: CurrentUser,
+      idOrSlug: string,
+      categoryId: string,
+      patch: CategoryPatch,
+    ): Promise<Category> {
+      const deck = await resolveDeck(decks, idOrSlug, user);
+      const role = await authorize(user, deck, 'category.update', memberships);
+
+      const [visibleId] = await categories.findExistingIds(deck.id, [categoryId], role);
+      if (!visibleId) {
+        throw notFound('Category not found');
+      }
+
+      const row = await categories.update(visibleId, {
+        ...(patch.name !== undefined && { name: patch.name }),
+        ...(patch.visibility !== undefined && { visibility: patch.visibility }),
+      });
       return toCategoryDto(row);
     },
   };

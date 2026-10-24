@@ -18,8 +18,11 @@ export const LENIENT_PATHS = [
   '/auth/callback',
 ];
 
-/** Path prefixes that are public pages (share previews) and so are lenient as well. */
-export const LENIENT_PREFIXES = ['/s/'];
+/** Path prefixes that are public (share previews, D174 public reads) and so are lenient as well. */
+export const LENIENT_PREFIXES = ['/s/', '/public/'];
+
+/** D174: the anonymous JSON surface never looks at credentials, so any cookie or bearer is ignored. */
+export const CREDENTIAL_FREE_PREFIXES = ['/public/'];
 
 /** True when a stale cookie must not block this path. */
 export function isLenientPath(path: string): boolean {
@@ -45,6 +48,9 @@ export interface SessionAuthOptions {
  */
 export function sessionAuth(opts: SessionAuthOptions): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
+    if (CREDENTIAL_FREE_PREFIXES.some((p) => c.req.path.startsWith(p))) {
+      return next();
+    }
     const header = c.req.header('Authorization');
     const cookie = getCookie(c, SESSION_COOKIE);
 
