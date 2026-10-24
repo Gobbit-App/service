@@ -27,8 +27,9 @@ All ESM, strict TypeScript, no build step: packages export `.ts`, run with `tsx`
 ```
 phone ─▶ Cloudflare tunnel ─▶ Traefik ─▶ web (Caddy: static PWA)
                                            ├─ /api/* (stripped) ─▶ api :3000 ─┐
-                                           └─ /s/*              ─▶ api        ├─▶ Postgres (shared instance,
-                                                       worker (pg-boss) ──────┘   pgvector + pg_trgm)
+                                           └─ /s/*, /p/*, /sitemap.xml,       ├─▶ Postgres (shared instance,
+                                              /robots.txt ─▶ api              │   pgvector + pg_trgm)
+                                                       worker (pg-boss) ──────┘
 api / worker ─▶ Cloudinary (images), OpenRouter / OpenAI / Anthropic (optional AI), Resend (mail)
 ```
 
@@ -91,7 +92,7 @@ only on `POST /ingest`.
 | Card media | Signed browser → Cloudinary uploads confirmed into the `assets` registry; cards reference only recorded assets; daily orphan sweep; every stored image renders through `CloudImage` (measured `sizes`, reserved box, blurred placeholder); link preview via `safe-fetch` | [card-media](design/card-media.md) · ADR-051, 054 |
 | Links | Preview images copied to Cloudinary by a `link-snapshot` job; daily `link-check-sweep` flags dead or changed links (`Item.linkHealth`), editors check again or dismiss; locked social hosts use the shared caption and image | [links](design/links.md) · ADR-055 |
 | Browse mode | One card per screen: native scroll-snap, `@use-gesture` only in the lazy chunk | [browse-mode](design/browse-mode.md) · ADR-052 |
-| Public decks | Anonymous `/public/{slug}` reads through `public-deck.service` with `role = null` and an allow-list DTO; per-IP in-process limit | [public](design/public.md) · ADR-056 |
+| Public decks | Anonymous `/public/{slug}` reads through `public-deck.service` with `role = null` and an allow-list DTO; per-IP in-process limit; server-rendered `/p/` pages (members → app), sitemap for communal decks, page cache purged per deck | [public](design/public.md) · ADR-056 |
 
 ## Testing
 

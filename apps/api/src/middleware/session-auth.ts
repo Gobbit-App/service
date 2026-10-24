@@ -16,10 +16,15 @@ export const LENIENT_PATHS = [
   '/config',
   '/auth/magic-link',
   '/auth/callback',
+  '/sitemap.xml',
+  '/robots.txt',
 ];
 
-/** Path prefixes that are public (share previews, D174 public reads) and so are lenient as well. */
-export const LENIENT_PREFIXES = ['/s/', '/public/'];
+/**
+ * Path prefixes that are public (share previews, D174 public reads, D177 public pages) and so
+ * are lenient as well. `/p/` still reads a valid session: members are redirected (D178).
+ */
+export const LENIENT_PREFIXES = ['/s/', '/public/', '/p/'];
 
 /** D174: the anonymous JSON surface never looks at credentials, so any cookie or bearer is ignored. */
 export const CREDENTIAL_FREE_PREFIXES = ['/public/'];

@@ -59,6 +59,8 @@ export function buildIngestServices(deps: {
   assets: Pick<AssetsRepo, 'upsert'>;
   imageReference: ImageReferenceCheck;
   now: () => Date;
+  /** D180: published proposals change public pages. */
+  purgeDeck?: (deckId: string) => void;
   wiring?: IngestWiring;
 }) {
   const { db, env, decks, memberships, now, wiring = {} } = deps;
@@ -124,6 +126,7 @@ export function buildIngestServices(deps: {
       linkSnapshotQueue: deps.linkSnapshotQueue,
       imageReference: deps.imageReference,
       now,
+      purgeDeck: deps.purgeDeck,
     }),
   };
 }

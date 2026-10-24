@@ -29,7 +29,7 @@ export function createPublicDeckService({
   categories,
   items,
 }: {
-  decks: Pick<DecksRepo, 'findBySlug'>;
+  decks: Pick<DecksRepo, 'findBySlug' | 'findById'>;
   categories: Pick<CategoriesRepo, 'listByDeck' | 'countPublished' | 'findBySlug'>;
   items: Pick<ItemsRepo, 'list' | 'findById' | 'isVisibleTo' | 'categoryIdsFor'>;
 }) {
@@ -60,55 +60,76 @@ export function createPublicDeckService({
     });
   }
 
+  async function summaryFor(deck: PublicDeckRow): Promise<PublicDeck> {
+    const [cats, counts] = await Promise.all([
+      categories.listByDeck(deck.id, ANONYMOUS),
+      categories.countPublished(deck.id, ANONYMOUS),
+    ]);
+    return {
+      slug: deck.slug,
+      name: deck.name,
+      kind: deck.kind,
+      categories: cats.map((c) => ({
+        slug: c.slug,
+        name: c.name,
+        itemCount: counts.get(c.id) ?? 0,
+      })),
+    };
+  }
+
+  async function listFor(deck: PublicDeckRow, q: PublicItemListQuery): Promise<PublicItemPage> {
+    let categoryId: string | undefined;
+    if (q.category) {
+      const category = await categories.findBySlug(deck.id, q.category, ANONYMOUS);
+      if (!category) throw notFound('Category not found');
+      categoryId = category.id;
+    }
+
+    const rows = await items.list({
+      role: ANONYMOUS,
+      deckId: deck.id,
+      status: 'published',
+      categoryId,
+      cursor: q.cursor ? decodeCursor(q.cursor) : undefined,
+      limit: q.limit + 1,
+    });
+
+    const page = rows.slice(0, q.limit);
+    const last = page[page.length - 1];
+    const nextCursor =
+      rows.length > q.limit && last
+        ? encodeCursor({ createdAt: last.createdAt, id: last.id })
+        : null;
+
+    return { data: await toPublicItems(deck.id, page), nextCursor };
+  }
+
   return {
     resolvePublicDeck,
     toPublicItems,
 
     async summary(slug: string): Promise<PublicDeck> {
-      const deck = await resolvePublicDeck(slug);
-      const [cats, counts] = await Promise.all([
-        categories.listByDeck(deck.id, ANONYMOUS),
-        categories.countPublished(deck.id, ANONYMOUS),
-      ]);
-      return {
-        slug: deck.slug,
-        name: deck.name,
-        kind: deck.kind,
-        categories: cats.map((c) => ({
-          slug: c.slug,
-          name: c.name,
-          itemCount: counts.get(c.id) ?? 0,
-        })),
-      };
+      return await summaryFor(await resolvePublicDeck(slug));
     },
 
     async list(slug: string, q: PublicItemListQuery): Promise<PublicItemPage> {
-      const deck = await resolvePublicDeck(slug);
+      return await listFor(await resolvePublicDeck(slug), q);
+    },
 
-      let categoryId: string | undefined;
-      if (q.category) {
-        const category = await categories.findBySlug(deck.id, q.category, ANONYMOUS);
-        if (!category) throw notFound('Category not found');
-        categoryId = category.id;
-      }
+    summaryFor,
+    listFor,
 
-      const rows = await items.list({
-        role: ANONYMOUS,
-        deckId: deck.id,
-        status: 'published',
-        categoryId,
-        cursor: q.cursor ? decodeCursor(q.cursor) : undefined,
-        limit: q.limit + 1,
-      });
-
-      const page = rows.slice(0, q.limit);
-      const last = page[page.length - 1];
-      const nextCursor =
-        rows.length > q.limit && last
-          ? encodeCursor({ createdAt: last.createdAt, id: last.id })
-          : null;
-
-      return { data: await toPublicItems(deck.id, page), nextCursor };
+    /**
+     * D177: a card by id in whichever public deck holds it (card permalinks follow the deck's
+     * current slug). Null for anything strangers can't read.
+     */
+    async itemById(itemId: string): Promise<{ deck: PublicDeckRow; item: PublicItem } | null> {
+      const row = isUuid(itemId) ? await items.findById(itemId) : null;
+      if (!row || row.status !== 'published') return null;
+      const deck = await decks.findById(row.deckId);
+      if (!isPublicDeck(deck) || !(await items.isVisibleTo(row.id, ANONYMOUS))) return null;
+      const [dto] = await toPublicItems(deck.id, [row]);
+      return { deck, item: dto! };
     },
 
     async get(slug: string, itemId: string): Promise<PublicItem> {

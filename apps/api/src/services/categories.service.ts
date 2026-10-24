@@ -12,10 +12,13 @@ export function createCategoriesService({
   decks,
   categories,
   memberships,
+  purgeDeck = () => {},
 }: {
   decks: DecksRepo;
   categories: CategoriesRepo;
   memberships: MembershipLookup;
+  /** D180: drop the deck's cached public pages after each committed write. */
+  purgeDeck?: (deckId: string) => void;
 }) {
   return {
     async list(user: CurrentUser, idOrSlug: string): Promise<Category[]> {
@@ -53,6 +56,7 @@ export function createCategoriesService({
         visibility,
         position,
       });
+      purgeDeck(deck.id);
 
       return toCategoryDto(row);
     },
@@ -76,6 +80,7 @@ export function createCategoriesService({
         ...(patch.name !== undefined && { name: patch.name }),
         ...(patch.visibility !== undefined && { visibility: patch.visibility }),
       });
+      purgeDeck(deck.id);
       return toCategoryDto(row);
     },
   };

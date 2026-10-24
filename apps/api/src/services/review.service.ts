@@ -54,6 +54,8 @@ export function createReviewService(deps: {
   /** D160: a published image card references a recorded asset of its deck. */
   imageReference: ImageReferenceCheck;
   now: () => Date;
+  /** D180: a publish changes the deck's public pages; drop them after commit. */
+  purgeDeck?: (deckId: string) => void;
 }) {
   const { decks, memberships, users, items, jobs, toDtos, transaction, embedQueue, now } = deps;
 
@@ -236,6 +238,7 @@ export function createReviewService(deps: {
         return id;
       });
 
+      deps.purgeDeck?.(item.deckId);
       await embedQueue.enqueueIfStale(resultId);
       if (deps.linkSnapshotQueue) {
         const published = await items.findById(resultId);

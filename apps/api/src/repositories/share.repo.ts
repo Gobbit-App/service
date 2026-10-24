@@ -13,7 +13,7 @@ export type ShareRecord = {
     payload: Record<string, unknown>;
     deletedAt: Date | null;
   };
-  deck: { name: string; kind: DeckKind; isPublic: boolean };
+  deck: { slug: string; name: string; kind: DeckKind; isPublic: boolean; isDefault: boolean };
   /** Default category first, then by position. */
   categories: { name: string; visibility: CategoryVisibility }[];
 };
@@ -33,7 +33,9 @@ export function createShareRepo(db: Db) {
           body: items.body,
           payload: items.payload,
           deletedAt: items.deletedAt,
+          deckSlug: decks.slug,
           deckName: decks.name,
+          deckIsDefault: decks.isDefault,
           deckKind: decks.kind,
           deckIsPublic: decks.isPublic,
         })
@@ -61,7 +63,13 @@ export function createShareRepo(db: Db) {
           payload: row.payload as Record<string, unknown>,
           deletedAt: row.deletedAt,
         },
-        deck: { name: row.deckName, kind: row.deckKind, isPublic: row.deckIsPublic },
+        deck: {
+          slug: row.deckSlug,
+          name: row.deckName,
+          kind: row.deckKind,
+          isPublic: row.deckIsPublic,
+          isDefault: row.deckIsDefault,
+        },
         categories: cats,
       };
     },

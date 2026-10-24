@@ -107,6 +107,9 @@ importers:
       lru-cache:
         specifier: ^11.5.3
         version: 11.5.3
+      micromark:
+        specifier: ^4.0.3
+        version: 4.0.3(supports-color@10.2.2)
       openai:
         specifier: ^7.32.0
         version: 7.32.0(undici@8.12.2)(zod@4.6.5)

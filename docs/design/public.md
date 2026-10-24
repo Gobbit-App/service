@@ -1,4 +1,4 @@
-# Public decks (Phase 8, `specs/016-public-read-api`, ADR-056)
+# Public decks (Phase 8, `specs/016-public-read-api`, `specs/017-public-pages`, ADR-056)
 
 A shared or communal deck can publish some of its categories to anyone. Strangers read them without
 signing in; members keep using `/decks/...`.
@@ -49,6 +49,59 @@ hour). `middleware/public-rate-limit.ts` applies it to `/public/*` keyed by
 `/problems/rate-limited` with `Retry-After`. It never touches the database, and it is per API
 instance (one instance today). The limiter is injectable through `createApp({ anonLimiter })`.
 
+## Public pages (017, D177)
+
+- Routes (`routes/public-pages.ts`, plain `app.get`, outside OpenAPI): `GET /p/{slug}` (public
+  categories + newest 20 cards, "Older" link by cursor), `GET /p/{slug}/c/{category}` and
+  `GET /p/{slug}/i/{itemId}`. Caddy and the Vite dev proxy send `/p/*`, `/sitemap.xml` and
+  `/robots.txt` to the API; the service worker's navigation fallback skips them.
+- `services/public-pages.service.ts` reads through `public-deck.service` (`summaryFor`, `listFor`,
+  `itemById`), so the deck rule, `role = null` filter and allow-list DTO are the same as `/public/*`.
+- Rendering lives in `apps/api/src/public/`: `html.ts` (`hono/html`, escaped by default), `markdown.ts`
+  (`micromark`, raw HTML and dangerous protocols off), `render-item.ts` (one renderer per card type;
+  stored images through the media store's delivery URL), `pages.ts`, `layout.ts`, `styles.ts`
+  (inline CSS, no JavaScript), `seo.ts` (OG/Twitter tags, canonical, sitemap and robots).
+- Every public URL comes from `publicUrl(origin, target)` / `publicPath(target)` in `public-url.ts`;
+  `appPath(target)` gives the member route.
+- Card pages use the card's share image (`share.ogImageFor`, the same image `/s/` renders); deck and
+  category pages use the site image.
+- Answers: unknown deck, private deck, hidden category, hidden or foreign card and malformed ids all
+  get one identical 404 page (`public, max-age=60`, `X-Robots-Tag: noindex`). A card asked for
+  under another slug is a 301 to its current address. A malformed cursor is a 400 page. The anonymous
+  limiter answers an HTML 429 with `Retry-After` on `/p/*` (`onLimited`); the budget is shared with
+  `/public/*`.
+
+## Member redirect (D178)
+
+`/p/` is a lenient session path: a valid cookie or bearer sets `c.var.user`, a stale cookie is ignored.
+If the user has any role on the deck (owner account or accepted membership), pages answer 302 to
+`/d/{slug}`, `/d/{slug}/c/{category}` or `/i/{id}` with `private, no-store`. `?view=public` renders
+the stranger's page with a "You're viewing the public page" note, also `private, no-store` and never
+cached. Every page sends `Vary: Cookie`.
+
+## Indexing (D179)
+
+- Communal public decks: pages are indexable; `/sitemap.xml` (`repositories/sitemap.repo.ts`) lists the
+  deck page, each public category and each public card with `lastmod` (card `updated_at`; deck and
+  category = newest card).
+- Shared public decks: reachable, `<meta name="robots" content="noindex">` and `X-Robots-Tag: noindex`,
+  never in the sitemap.
+- `/robots.txt` disallows the app and API paths and points at the sitemap.
+
+## Page cache and purge (D180)
+
+`public/page-cache.ts`: an `lru-cache` (500 entries, 5 minutes) of rendered anonymous 200 pages, keyed
+by a per-deck generation plus path and normalised query. `purgeDeck(deckId)` bumps the generation;
+`buildServices` passes it to the items (create, update, archive, restore, remove, undelete), review
+(publish), categories (create, update) and decks (update, delete) services, which call it after
+commit. HTTP: `public, max-age=300` for pages, the sitemap and robots.txt.
+
+## Share links (D181)
+
+`/s/{id}` for a public card (public deck, not personal, card visible to strangers) answers 302 to
+`publicUrl(.., /p/{slug}/i/{id})` with the share cache header (`share.publicTarget`). Private mode is
+unchanged.
+
 ## Deviations from the 016 plan
 
 - **404 body**: the contract shows `type: "about:blank"`. The routes use the existing `notFound()`
@@ -61,3 +114,21 @@ instance (one instance today). The limiter is injectable through `createApp({ an
   `decks.int` and `sessions.int`.
 - **Deck rule**: the default deck is excluded as well as `kind = 'personal'`, matching
   `decks.service`'s personal-deck checks.
+
+## Deviations from the 017 plan
+
+- **Sitemap queries**: a dedicated `sitemap.repo` (three narrow queries) instead of
+  `public-deck.service.sitemapEntries`/`lastChanged`; it applies the same deck and visibility rules.
+- **Only 200 pages are cached**: 404s are cheap and would let a probe fill the cache.
+- **Sitemap and robots** are neither cached in-process nor rate-limited; they carry
+  `public, max-age=300`.
+- **Shared limiter budget**: `/p/*` and `/public/*` share one per-IP budget rather than separate ones.
+- **Service worker and Vite proxy**: the plan didn't list them; without the navigation denylist the
+  installed PWA would serve the SPA shell for `/p/` links.
+- **Link snapshots** (worker process) don't purge the API's in-process cache; the 5-minute TTL bounds
+  staleness. Review **discard** doesn't purge: proposals are never public. There is no category delete.
+- **Bad bearer on `/p/`**: still a 401 problem (lenient paths only forgive a stale cookie).
+- **Refactors**: `public-deck.service` exposes `summaryFor`/`listFor` taking a resolved deck;
+  `share.service` gained `publicTarget`, `ogImageFor`, `imageUrl`, `siteImageUrl` and `origin`.
+- **Share test**: the "renders once and reuses the image" case moved to the `/p/` card page, since
+  `/s/` now redirects public cards.

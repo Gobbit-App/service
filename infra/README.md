@@ -14,7 +14,7 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared (Dokploy compose ser
                                          ▼
                                       Traefik ── Host(gobbit.niranhome.win) ──▶ web:80 (Caddy, apps/web/Caddyfile)
                                                                                   │ default network
-                                                     /api/* (strip) and /s/* ─────┤──▶ api:3000 ──▶ shared Postgres (DATABASE_URL)
+                          /api/* (strip), /s/*, /p/*, /sitemap.xml, /robots.txt ──┤──▶ api:3000 ──▶ shared Postgres (DATABASE_URL)
                                                      everything else ─────────────┘    static files, SPA fallback
                                                                                        worker ──▶ shared Postgres (pg-boss jobs: embeddings, ingestion)
                                                                                          └─▶ shared URLs on the internet (SSRF-guarded), Cloudinary, LLM providers

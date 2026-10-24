@@ -20,7 +20,7 @@ function makeRecord(overrides: Partial<ShareRecord['item']> = {}): ShareRecord {
       deletedAt: null,
       ...overrides,
     },
-    deck: { name: 'Family', kind: 'shared', isPublic: true },
+    deck: { slug: 'family', name: 'Family', kind: 'shared', isPublic: true, isDefault: false },
     categories: [
       { name: 'General', visibility: 'shared' },
       { name: 'Recipes', visibility: 'public' },
@@ -161,5 +161,37 @@ describe('share service — public mode (D59–D61)', () => {
 
     expect(html).toContain('<html lang="he">');
     expect(html).toContain('he_IL');
+  });
+});
+
+describe('share service — public pages (D177, D181)', () => {
+  it('publicTarget points a public card at its public page', async () => {
+    const { service } = setup(makeRecord());
+    expect(await service.publicTarget(ITEM_ID)).toBe(`${ORIGIN}/p/family/i/${ITEM_ID}`);
+  });
+
+  it('publicTarget is null for private cards, personal and default decks', async () => {
+    const privateCard = makeRecord({ status: 'archived' });
+    const personal = makeRecord();
+    personal.deck.kind = 'personal';
+    const byDefault = makeRecord();
+    byDefault.deck.isDefault = true;
+
+    for (const record of [null, privateCard, personal, byDefault]) {
+      expect(await setup(record).service.publicTarget(ITEM_ID)).toBeNull();
+    }
+    expect(await setup(makeRecord()).service.publicTarget('not-a-uuid')).toBeNull();
+  });
+
+  it('ogImageFor uses the share image, or the private one for hidden cards', async () => {
+    expect(await setup(makeRecord()).service.ogImageFor(ITEM_ID)).toMatch(
+      /^https:\/\/res\.cloudinary\.com\/demo\//,
+    );
+    expect(await setup(null).service.ogImageFor(ITEM_ID)).toBe(`${ORIGIN}/og/private.png`);
+  });
+
+  it('imageUrl needs a media store', () => {
+    expect(setup(null).service.imageUrl('a/b', 'w_10')).toContain('/demo/');
+    expect(setup(null, { store: null }).service.imageUrl('a/b', 'w_10')).toBeNull();
   });
 });
