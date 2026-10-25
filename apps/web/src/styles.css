@@ -898,6 +898,59 @@ h3 {
   gap: var(--gap);
 }
 
+/* ---------- Your shares (022, D198) ---------- */
+
+.shares__list {
+  display: grid;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.share-row {
+  display: grid;
+  gap: 4px;
+  padding: var(--gap) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.share-row__line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap);
+}
+
+.share-row__title {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-row__time,
+.share-row__hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.share-row__state,
+.share-row__reason {
+  margin: 0;
+}
+
+.share-row--failed .share-row__state {
+  color: var(--color-danger);
+}
+
+.share-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+
 /* ---------- Settings: ingest tokens (Phase 5, D99) ---------- */
 
 .button--danger {

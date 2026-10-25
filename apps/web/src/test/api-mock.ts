@@ -17,8 +17,11 @@ const tag = (method: string) => (path: string, init?: unknown) => {
   return request;
 };
 
-/** The cloud name `GET /config` answers with; tests that render images set it and reset it. */
-export const mockConfig: { cloudinaryCloudName: string | null } = { cloudinaryCloudName: null };
+/** What `GET /config` answers with; tests that render images or need sharing set it and reset it. */
+export const mockConfig: { cloudinaryCloudName: string | null; ingestEnabled: boolean } = {
+  cloudinaryCloudName: null,
+  ingestEnabled: false,
+};
 
 export const clientModule = {
   api: { GET: tag('GET'), POST: tag('POST'), PATCH: tag('PATCH'), DELETE: tag('DELETE') },
@@ -28,7 +31,7 @@ export const clientModule = {
         cloudinaryCloudName: mockConfig.cloudinaryCloudName,
         commit: 'test',
         search: { semantic: false, ask: false },
-        ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+        ingest: { enabled: mockConfig.ingestEnabled, emailDomain: null, shortcutUrl: null },
       });
     }
     return respond(String(request));

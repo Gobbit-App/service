@@ -82,20 +82,20 @@ description: "Task list for 022-share-status"
   - **Payload**: no `error`/`raw` in the payload; `preview` without the shared text.
   - **Retry**: 202 → queued and re-enqueued; second tap 409 `/problems/share-not-failed`; raw pruned → 410 `/problems/share-expired`; `retry_count` 3 → 422 `/problems/share-retry-limit`; cap reached → 429; reader/removed member → 403/404.
 - [X] T011 [P] [US1] [unit] apps/api/src/services/shares.service.test.ts: `toShareSummary` (state, preview from item title / `raw.title` / URL host / photo count, `canRetry` rules incl. `sharer_left` and missing raw, `reviewedBy` name)
-- [ ] T012 [P] [US1] [unit] apps/web/src/shares/share-state.test.ts and failure-copy.test.ts:
+- [X] T012 [P] [US1] [unit] apps/web/src/shares/share-state.test.ts and failure-copy.test.ts:
   - every `IngestFailureCode` and `AutoPublishOutcome` has copy;
   - unknown code → "Something went wrong";
   - email channel → "forward it again" instead of "Paste it again".
-- [ ] T013 [P] [US1] [unit] apps/web/src/shares/SharesScreen.test.tsx and ShareRow.test.tsx:
+- [X] T013 [P] [US1] [unit] apps/web/src/shares/SharesScreen.test.tsx and ShareRow.test.tsx:
   - empty state; rows per state with links (published → card, in review → review/card);
   - Try again calls retry and shows processing; 410 → Paste it again;
   - offline disables actions;
   - polling only while a row is processing;
   - not-added row shows who decided and when; a deleted card shows "Card deleted";
   - `config.ingest` off → "Sharing is off for this deck" (edge case: no AI provider).
-- [ ] T014 [P] [US1] [unit] apps/web/src/share/ShareSent.test.tsx: live status from `GET /shares/{id}` (processing → published / in review / failed with reason); "Your shares" link; no "it'll appear in Review" promise
-- [ ] T015 [P] [US1] [e2e:smoke] e2e/tests/smoke/share.spec.ts: after the stubbed `POST /ingest`, the Sent screen links to Your shares (stub `GET /shares/{id}` at the page edge); the link opens `/d/<slug>/shares` (real, empty list)
-- [ ] T016 [P] [US1] [e2e:full] e2e/tests/full/shares.spec.ts: with stubbed list/get/retry responses, check processing → failed → Try again → processing, the in-review and published rows with links, and expired → Paste it again
+- [X] T014 [P] [US1] [unit] apps/web/src/share/ShareSent.test.tsx: live status from `GET /shares/{id}` (processing → published / in review / failed with reason); "Your shares" link; no "it'll appear in Review" promise
+- [X] T015 [P] [US1] [e2e:smoke] e2e/tests/smoke/share.spec.ts: after the stubbed `POST /ingest`, the Sent screen links to Your shares (stub `GET /shares/{id}` at the page edge); the link opens `/d/<slug>/shares` (real, empty list)
+- [X] T016 [P] [US1] [e2e:full] e2e/tests/full/shares.spec.ts: with stubbed list/get/retry responses, check processing → failed → Try again → processing, the in-review and published rows with links, and expired → Paste it again
 
 ### Implementation for User Story 1
 
@@ -107,13 +107,13 @@ description: "Task list for 022-share-status"
   - Item lookup is batched.
   - Wire it in apps/api/src/services/index.ts.
 - [X] T019 [US1] apps/api/src/routes/my-shares.ts: `GET /decks/{id}/shares`, `GET /shares/{id}`, `POST /shares/{id}/retry`; register; `pnpm api:openapi`; examples in api.http
-- [ ] T020 [US1] apps/web/src/shares/shares-queries.ts:
+- [X] T020 [US1] apps/web/src/shares/shares-queries.ts:
   - list query `['shares', deckId]` with `refetchInterval: (q) => anyProcessing(q) ? SHARE_POLL_MS : false`;
   - share query by id;
   - retry mutation that invalidates the list.
   - Persisted like other deck queries.
-- [ ] T021 [US1] apps/web/src/shares/{share-state,failure-copy}.ts, SharesScreen.tsx, ShareRow.tsx, SharesLink.tsx; lazy route apps/web/src/routes/d.$slug.shares.tsx; `SharesLink` in the deck header (apps/web/src/routes/d.$slug.tsx) for roles with `item.create`
-- [ ] T022 [US1] apps/web/src/share/ShareScreen.tsx keeps the job `id` from the submit response; ShareSent.tsx shows the live status and the Your shares link
+- [X] T021 [US1] apps/web/src/shares/{share-state,failure-copy}.ts, SharesScreen.tsx, ShareRow.tsx, SharesLink.tsx; lazy route apps/web/src/routes/d.$slug.shares.tsx; `SharesLink` in the deck header (apps/web/src/routes/d.$slug.tsx) for roles with `item.create`
+- [X] T022 [US1] apps/web/src/share/ShareScreen.tsx keeps the job `id` from the submit response; ShareSent.tsx shows the live status and the Your shares link
 
 **Checkpoint**: The production incident is visible to the sharer end to end
 

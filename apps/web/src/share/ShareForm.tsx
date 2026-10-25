@@ -29,7 +29,7 @@ export function ShareForm({
   initialDeck: string;
   initial: SharedPayload | null;
   channel: IngestDraft['channel'];
-  onSent: (deck: Deck) => void;
+  onSent: (deck: Deck, shareId: string) => void;
 }): ReactElement {
   const baseId = useId();
   const submit = useSubmitShare();
@@ -48,7 +48,7 @@ export function ShareForm({
     if (invalid) return;
     submit.mutate(
       { deckId: deck.id, title: initial?.title ?? '', text, url, files, channel },
-      { onSuccess: () => onSent(deck) },
+      { onSuccess: (accepted) => onSent(deck, accepted.id) },
     );
   };
 

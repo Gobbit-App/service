@@ -29,9 +29,9 @@ export function ShareScreen({
 }): ReactElement {
   const pending = usePendingShare(pendingId);
   const decks = useQuery(decksQuery());
-  const [sentTo, setSentTo] = useState<Deck | null>(null);
+  const [sent, setSent] = useState<{ deck: Deck; shareId: string } | null>(null);
 
-  if (sentTo) return <ShareSent deck={sentTo} />;
+  if (sent) return <ShareSent deck={sent.deck} shareId={sent.shareId} />;
   if (pending.status === 'loading' || decks.isPending) return <LoadingState label="Loading…" />;
   if (decks.isError && !decks.data) {
     return (
@@ -57,8 +57,8 @@ export function ShareScreen({
   }
 
   const notice = failed ? FAILED_NOTICE : pendingId && !pending.payload ? EXPIRED_NOTICE : null;
-  const handleSent = (deck: Deck) => {
-    setSentTo(deck);
+  const handleSent = (deck: Deck, shareId: string) => {
+    setSent({ deck, shareId });
     if (pending.payload) {
       clearPending().catch((err: unknown) =>
         console.warn('[share] clearing the pending share failed', err),

@@ -1,4 +1,4 @@
-import type { Category, Deck, Item } from '@pb/shared';
+import type { Category, Deck, Item, ShareSummary } from '@pb/shared';
 
 const STAMP = '2026-01-01T00:00:00.000Z';
 
@@ -56,4 +56,23 @@ export function makeDeck(overrides: Partial<Deck> = {}): Deck {
     role: 'owner',
     ...overrides,
   } as Deck;
+}
+
+/** Builds a ShareSummary (D196) for tests; defaults to a processing paste with a link. */
+export function makeShare(overrides: Partial<ShareSummary> = {}): ShareSummary {
+  return {
+    id: '00000000-0000-4000-8000-0000000000e1',
+    deckId: '00000000-0000-4000-8000-0000000000d1',
+    channel: 'paste',
+    createdAt: STAMP,
+    state: 'processing',
+    preview: { title: null, host: 'a.example', photoCount: 0 },
+    failureCode: null,
+    canRetry: false,
+    autoPublish: null,
+    item: null,
+    reviewedBy: null,
+    reviewedAt: null,
+    ...overrides,
+  };
 }

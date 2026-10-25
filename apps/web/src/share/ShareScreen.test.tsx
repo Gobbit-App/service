@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Deck } from '@pb/shared';
 import { ApiError } from '../api/api-error';
-import { makeDeck } from '../test/fixtures';
+import { makeDeck, makeShare } from '../test/fixtures';
 import { renderWithClient } from '../test/render';
 import type { SharedPayload } from './share-payload';
 
@@ -36,6 +36,7 @@ function answer(decks: Deck[], ingest: () => Promise<unknown> = async () => ({ i
   respond.mockImplementation(async (request) => {
     if (request === 'GET /decks') return { data: decks };
     if (request === 'POST /ingest') return ingest();
+    if (request === 'GET /shares/{id}') return makeShare({ id: 'j1' });
     throw new Error(`unexpected ${request}`);
   });
 }
@@ -66,12 +67,12 @@ describe('ShareScreen', () => {
     fireEvent.change(screen.getByLabelText('Text'), { target: { value: 'Gate code 1234' } });
     fireEvent.click(send);
 
-    expect(await screen.findByText("Sent — it'll appear in Review")).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sent' })).toBeInTheDocument();
     const form = sentForm();
     expect(form.get('deckId')).toBe('d-family');
     expect(form.get('channel')).toBe('paste');
     expect(form.get('text')).toBe('Gate code 1234');
-    expect(screen.getByRole('link', { name: 'Open review' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Your shares' })).toBeInTheDocument();
     expect(readPending).not.toHaveBeenCalled();
     expect(clearPending).not.toHaveBeenCalled();
   });
@@ -86,7 +87,7 @@ describe('ShareScreen', () => {
     expect(screen.getByLabelText('Pocketbook')).toHaveValue('me');
     fireEvent.click(screen.getByRole('button', { name: 'Send to Gobbit' }));
 
-    await screen.findByText("Sent — it'll appear in Review");
+    await screen.findByRole('heading', { name: 'Sent' });
     const form = sentForm();
     expect(form.get('channel')).toBe('pwa');
     expect(form.get('title')).toBe('Shared page');
@@ -152,12 +153,17 @@ describe('ShareScreen', () => {
     expect(await screen.findByText('Nowhere to share to')).toBeInTheDocument();
   });
 
-  it('hides "Open review" from editors after sending', async () => {
+  it('follows the sent share by the id the API returned (D198)', async () => {
     answer([makeDeck({ id: 'd-e', slug: 'e', name: 'E', role: 'editor' })]);
     renderWithClient(<ShareScreen />);
     fireEvent.change(await screen.findByLabelText('Text'), { target: { value: 'hi' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send to Gobbit' }));
-    await screen.findByText("Sent — it'll appear in Review");
-    expect(screen.queryByRole('link', { name: 'Open review' })).toBeNull();
+    expect(await screen.findByText('Processing…')).toBeInTheDocument();
+    expect(requests).toHaveBeenCalledWith(
+      'GET /shares/{id}',
+      expect.objectContaining({
+        params: { path: { id: 'j1' } },
+      }),
+    );
   });
 });
