@@ -172,6 +172,25 @@ Follow-up from a production share that failed silently: [`022-share-status`](spe
 - [ ] **4. Search on public pages** — search אמקה on the public page returns the AMKA card.
 - [ ] **5. Admin surface** — a second admin (invited as owner) publishes a card; the log shows both admins' actions.
 - [ ] **6. Bulk import** — 40 lines of existing notes become 40 proposed cards, reviewed and published in one sitting.
+## Usability pass
+
+Fixes from hands-on use of the deployed app, logged in [`docs/usability-backlog.md`](docs/usability-backlog.md). Not a roadmap phase; it runs before Phase 9 so the app is presentable when the waitlist opens.
+
+Specs (in order): [`025` deck wording](#025-027-renames) → [`022-editor-navigation`](specs/022-editor-navigation/spec.md) ∥ [`023-editor-inputs`](specs/023-editor-inputs/spec.md) → [`024-card-actions`](specs/024-card-actions/spec.md) → `026` package scope → `027` database names. 025 goes first because its copy changes touch most of the files 022 and 024 edit; 026 and 027 are repo-wide mechanical renames, merged when no other branch is in flight. Each is its own branch and PR. Auto-save of every editor field with undo/redo is a later feature (023 covers categories only).
+
+- [ ] **1. Navigation** — from the editor, back returns to the card; the deck list has no back control; leaving an edited card asks first and reloading keeps a draft (022).
+- [ ] **2. Inputs** — a link card saved as `example.org` stores `https://example.org`; an image card saves without alt text; re-filing a card is one tap with Undo (023).
+- [ ] **3. Card actions** — every card's actions sit inside it as icons; no text-only action buttons, glyph icons or browse arrows remain; delete is readable in both themes (024).
+- [ ] **4. No "pocketbook"** — no user-visible "pocketbook" anywhere in the app or live docs (025); `@pb/*` packages and local `pb` database names are gone (026, 027).
+
+### 025–027 renames
+
+Mechanical renames with no new behaviour, so they skip spec-kit (constitution, Development Workflow). One branch and PR each:
+
+- **025 deck wording** — every user-visible "pocketbook" becomes "deck" (≈25 files in `apps/web/src`: header, home, deck states, search, share picker, upload errors, `access-copy` type literal), the unit and e2e tests that assert those strings, root `package.json` name (`gobbit`), and live docs (`README.md`, `CONTRIBUTING.md`, `docs/architecture.md`, `docs/shortcut/README.md`, `docs/design/auth.md`). Historical records stay as written (`docs/adr.md` ADR-024, merged specs, PLAN phases 1–2). E2E tier: smoke — copy asserted by existing smoke journeys.
+- **026 package scope** — `@pb/{web,api,api-client,db,shared}` → `@gobbit/*` in every `package.json`, import, `tsconfig` path, Dockerfile, Compose entrypoint, CI filter and doc (≈500 files); `pnpm install` regenerates the lockfile. One commit produced by a script, reviewed by `pnpm typecheck && pnpm test:unit && pnpm build:web && pnpm budget` plus a Compose build. E2E tier: smoke — images and worker entrypoint change.
+- **027 database names** — local and CI Postgres user/database `pb` → `gobbit` (`infra/docker-compose.local.yml`, `.github/workflows/ci.yml`, `infra/README.md` restore commands, `.env.example`). Production is unaffected (shared Postgres configured in Dokploy, ADR-039). Existing local volumes need `pnpm compose:down -v` once; the README says so. E2E tier: none — no app change; CI integration tests cover it.
+
 ## Phase 9 — Landing page and waitlist
 
 - MCP (Phase 13): the sign-in inside the OAuth consent flow (`/connect`) passes through the same registration gate, so MCP never becomes a way around the waitlist.
