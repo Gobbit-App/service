@@ -75,7 +75,7 @@ description: "Task list for 022-share-status"
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] [int] apps/api/test/shares.int.test.ts:
+- [X] T010 [P] [US1] [int] apps/api/test/shares.int.test.ts:
   - **List**: own shares only, newest first; 30-day window; `mcp`/`import` excluded; ≤ 50.
   - **Access**: another member's share → 404 (publisher included); non-member → 404; `ing_` token → 401/403.
   - **State mapping**: queued/running/proposed/published/discarded/failed, plus a soft-deleted result item → `item.deleted`.
@@ -106,7 +106,7 @@ description: "Task list for 022-share-status"
   - `retry(user, id)`: sharer + member + `item.create`; status/raw/limit checks with the problems in the contract; `assertWithinCaps` for the job's channel; `resetForRetry`, then `queue.enqueue(id)`.
   - Item lookup is batched.
   - Wire it in apps/api/src/services/index.ts.
-- [ ] T019 [US1] apps/api/src/routes/my-shares.ts: `GET /decks/{id}/shares`, `GET /shares/{id}`, `POST /shares/{id}/retry`; register; `pnpm api:openapi`; examples in api.http
+- [X] T019 [US1] apps/api/src/routes/my-shares.ts: `GET /decks/{id}/shares`, `GET /shares/{id}`, `POST /shares/{id}/retry`; register; `pnpm api:openapi`; examples in api.http
 - [ ] T020 [US1] apps/web/src/shares/shares-queries.ts:
   - list query `['shares', deckId]` with `refetchInterval: (q) => anyProcessing(q) ? SHARE_POLL_MS : false`;
   - share query by id;

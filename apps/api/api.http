@@ -316,6 +316,18 @@ Content-Type: image/jpeg
 GET {{baseUrl}}/ingest/{{shared.response.body.id}}
 Authorization: Bearer {{token}}
 
+### Your shares on a deck (D196; last 30 days, newest first, only your own)
+GET {{baseUrl}}/decks/family/shares
+Authorization: Bearer {{token}}
+
+### One share's status (D196; 404 unless you are the sharer and still a member)
+GET {{baseUrl}}/shares/{{shared.response.body.id}}
+Authorization: Bearer {{token}}
+
+### Retry a failed share (D197; 202; 409 not failed, 410 copy gone, 422 after 3 retries, 429 caps)
+POST {{baseUrl}}/shares/{{shared.response.body.id}}/retry
+Authorization: Bearer {{token}}
+
 ### Create an ingest token (D99; the secret is returned once, max 5 live per user)
 # @name ingestToken
 POST {{baseUrl}}/me/ingest-tokens

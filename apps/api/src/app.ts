@@ -34,6 +34,7 @@ import { registerIngestRoutes } from './routes/ingest';
 import type { MediaWiring } from './services/media-wiring';
 import { registerIngestTokensRoutes } from './routes/ingest-tokens';
 import { registerReviewRoutes } from './routes/review';
+import { registerMySharesRoutes } from './routes/my-shares';
 import { registerImportsRoutes } from './routes/imports';
 import { registerEventsRoutes } from './routes/events';
 import { registerWebhookRoutes } from './routes/webhooks';
@@ -126,6 +127,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerIngestRoutes(app, services);
   registerIngestTokensRoutes(app, services);
   registerReviewRoutes(app, services);
+  registerMySharesRoutes(app, services);
   registerImportsRoutes(app, services);
   registerEventsRoutes(app, services);
   registerPublicRoutes(app, services, env);
