@@ -32,4 +32,4 @@
 ## Notes
 
 - Backlog items 3 (actions inside the card, modern look), 7 (browse arrows), 9 (pink delete) and 10 (icons).
-- Decision to confirm: form submits and dialog choices keep icon + label (FR-005); every other action is icon-only. Public pages out of scope.
+- FR-005 (confirmed 2026-10-26): labels next to icons are allowed in forms, dialogs and roomy layouts, hidden below a breakpoint; small chiclet buttons are icon-only. Public pages out of scope.

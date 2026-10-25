@@ -33,7 +33,7 @@ A member scrolling a deck sees each card as one self-contained panel: content on
 
 ### User Story 2 - Icons instead of text labels (Priority: P1)
 
-Every action button in the app shows a consistent, flat line icon instead of a word: back, close, edit, favorite, share, more, delete, archive, restore, history, settings, search, add, copy, upload/replace photo, publish, reject. Each still has a name for screen readers and a tooltip on hover or long-press.
+Every action button in the app shows a consistent, flat line icon; small buttons are icon-only, and roomy ones (forms, dialogs) may add a label that drops away on narrow screens. Icons cover: back, close, edit, favorite, share, more, delete, archive, restore, history, settings, search, add, copy, upload/replace photo, publish, reject. Each still has a name for screen readers and a tooltip on hover or long-press.
 
 **Why this priority**: mixed Unicode glyphs (◂ ⚙ ✕ ⤴) and text buttons make the app look basic; a single icon set makes it look deliberate.
 
@@ -43,10 +43,12 @@ Every action button in the app shows a consistent, flat line icon instead of a w
 
 1. **Given** any screen, **When** it renders, **Then** action buttons show icons from one set with the same stroke weight, size grid and colour rules, in light and dark themes.
 2. **Given** an icon-only button, **When** a screen reader focuses it, **Then** it announces the action name; **When** a pointer hovers or a finger long-presses it, **Then** a tooltip names it.
-3. **Given** a button whose meaning depends on its wording — the form's primary submit (Save card, Publish all, Send invite), and choices in confirmation dialogs (Discard / Keep editing, Delete / Cancel) — **When** it renders, **Then** it shows the icon and the label together.
-4. **Given** a toggle (Favorite), **When** its state changes, **Then** the icon changes between outline and filled and the accessible name/state follows.
-5. **Given** keyboard use, **When** a button gets focus, **Then** a visible focus ring shows.
-6. **Given** a touch screen, **When** the member taps an icon button, **Then** its hit area is at least 44 × 44 px even if the icon is smaller.
+3. **Given** a button inside a form or dialog (Save card, Cancel, Publish all, Send invite, Discard / Keep editing, Delete / Cancel), or a full-size button in a roomy layout where a word helps, **When** it renders on a wide enough screen, **Then** it shows the icon and the label together.
+4. **Given** such a labelled button, **When** the available width shrinks past its breakpoint (e.g. a phone), **Then** the label is hidden and the button becomes icon-only, keeping its accessible name and tooltip.
+5. **Given** a small chiclet button (card action bar, header controls, chips, toolbar tools), **When** it renders at any width, **Then** it is icon-only.
+6. **Given** a toggle (Favorite), **When** its state changes, **Then** the icon changes between outline and filled and the accessible name/state follows.
+7. **Given** keyboard use, **When** a button gets focus, **Then** a visible focus ring shows.
+8. **Given** a touch screen, **When** the member taps an icon button, **Then** its hit area is at least 44 × 44 px even if the icon is smaller.
 
 ---
 
@@ -98,7 +100,7 @@ In browse mode, the member moves between cards and categories by swiping, with k
 - **FR-002**: The action bar MUST show the most-used actions as icons (Edit, Favorite, Share; Publish/Edit/Reject in review) and put the rest in a "more" menu.
 - **FR-003**: The app MUST use a single icon set of hand-drawn inline SVGs with one stroke weight and grid; no third-party icon library and no Unicode glyph icons.
 - **FR-004**: Every icon-only button MUST have an accessible name and a tooltip; toggles MUST expose their pressed state.
-- **FR-005**: Form primary submits and confirmation-dialog choices MUST show icon and label together.
+- **FR-005**: Buttons in forms and dialogs, and full-size buttons where there is room and a word helps, MAY show a label next to the icon; the label MUST be hidden below a width breakpoint, leaving an icon-only button with the same accessible name. Small chiclet buttons (action bars, header, chips, toolbars) MUST be icon-only at every width.
 - **FR-006**: Icon buttons MUST have a touch target of at least 44 × 44 px and a visible focus indicator.
 - **FR-007**: Destructive buttons MUST share one style with contrast ≥ 4.5:1 in both themes.
 - **FR-008**: Styles from lazily loaded screens (e.g. the editor) MUST NOT change buttons elsewhere.
@@ -115,7 +117,7 @@ In browse mode, the member moves between cards and categories by swiping, with k
 ### Measurable Outcomes
 
 - **SC-001**: 100 % of card actions on the listed screens sit inside their card.
-- **SC-002**: 0 Unicode glyph icons and 0 text-only action buttons remain outside the FR-005 exceptions.
+- **SC-002**: 0 Unicode glyph icons remain, and every button has an icon; text appears only as the optional FR-005 label.
 - **SC-003**: An automated accessibility check finds no unnamed buttons and no contrast failures on buttons, in both themes.
 - **SC-004**: In a hallway test, a new member identifies Edit, Delete and Share from icons alone on the first try.
 - **SC-005**: The initial download grows by no more than 6 KB compressed.
