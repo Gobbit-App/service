@@ -35,7 +35,8 @@ export const linkPayloadSchema = z
 export const imagePayloadSchema = z
   .object({
     publicId: z.string().min(1),
-    alt: z.string().min(1),
+    /** D206: optional, may be empty; renderers fall back via `imageAlt` (`@pb/shared/image-alt`). */
+    alt: z.string().optional(),
     width: imageDimensionSchema.optional(),
     height: imageDimensionSchema.optional(),
   })

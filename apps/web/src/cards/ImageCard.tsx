@@ -9,13 +9,18 @@ export interface ImageLoading {
   priority?: boolean;
 }
 
-/** Renders an image card with Cloudinary image or a fallback message if unavailable. */
+/**
+ * Renders an image card with Cloudinary image or a fallback message if unavailable. `alt` is
+ * decided by the caller with `imageAlt` (D206): it knows whether the title is shown next to it.
+ */
 export function ImageCard({
   payload,
+  alt,
   cloudName,
   priority = false,
 }: {
   payload: ImagePayload;
+  alt: string;
   cloudName: string | null;
 } & ImageLoading): ReactElement {
   const [hasError, setHasError] = useState(false);
@@ -29,7 +34,7 @@ export function ImageCard({
       <CloudImage
         cloudName={cloudName}
         publicId={payload.publicId}
-        alt={payload.alt}
+        alt={alt}
         width={payload.width}
         height={payload.height}
         priority={priority}

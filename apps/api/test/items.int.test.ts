@@ -544,6 +544,48 @@ describe('image cards reference recorded assets (D160)', () => {
     });
     await expectUnknownImage(swapped);
   });
+  it('saves an image card without alt or with an empty alt, and clears it on update (D206)', async () => {
+    const asset = await createAsset(ctx.t.db, deck, { width: 640, height: 480 });
+    const bare = await createImage({ publicId: asset.publicId });
+    expect(bare.status).toBe(201);
+    const item = await bare.json();
+    expect(item.payload).toEqual({ publicId: asset.publicId, width: 640, height: 480 });
+
+    const empty = await createImage({ publicId: asset.publicId, alt: '' });
+    expect(empty.status).toBe(201);
+    expect((await empty.json()).payload).toEqual({
+      publicId: asset.publicId,
+      alt: '',
+      width: 640,
+      height: 480,
+    });
+
+    const described = await ctx.app.request(`/items/${item.id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify({ payload: { publicId: asset.publicId, alt: 'A loaf' } }),
+    });
+    expect(described.status).toBe(200);
+    expect((await described.json()).payload.alt).toBe('A loaf');
+
+    const cleared = await ctx.app.request(`/items/${item.id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify({ payload: { publicId: asset.publicId } }),
+    });
+    expect(cleared.status).toBe(200);
+    expect((await cleared.json()).payload).toEqual({
+      publicId: asset.publicId,
+      width: 640,
+      height: 480,
+    });
+  });
+
+  it('still refuses a non-string alt', async () => {
+    const asset = await createAsset(ctx.t.db, deck);
+    const res = await createImage({ publicId: asset.publicId, alt: 5 });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe('link previews: server-owned copy fields (D163)', () => {

@@ -6,7 +6,7 @@ import {
   routeFakeCloudinary,
   routeImageDelivery,
 } from '../../fixtures/cloudinary';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, SMOKE_CATEGORY, test, webUrl } from '../../fixtures/web';
 
 /** Below 768px (Pixel 7) the preview is a tab: open it, then read the preview region. */
 async function showPreview(page: Page) {
@@ -323,7 +323,7 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   await page.getByLabel('Choose photo').setInputFiles(photoFile);
   await expect(page.getByRole('button', { name: 'Replace photo' })).toBeVisible();
   expect(uploads).toHaveLength(1);
-  await page.getByLabel('Alt text', { exact: true }).fill('A test photo');
+  await page.getByLabel('Description (optional)', { exact: true }).fill('A test photo');
   // The preview renders the photo through the same Card as the list (FR-008).
   const preview = await showPreview(page);
   await expect(preview.getByRole('img', { name: 'A test photo' })).toBeVisible();
@@ -372,18 +372,41 @@ test('a photo Cloudinary refuses shows why and is reported to the API @smoke', a
   await expect(save(page)).toBeDisabled();
 });
 
-test('an image card cannot be saved without alt text @smoke', async ({ page, webDeck }) => {
+test('an image card needs a photo but no description (D206) @smoke', async ({ page, webDeck }) => {
   await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
 
-  await page.getByLabel('Title', { exact: true }).fill('No alt');
+  await page.getByLabel('Title', { exact: true }).fill('No description');
   await expect(save(page)).toBeDisabled();
   await expect(page.getByText('Add a photo')).toBeVisible();
   await page.getByLabel('Take photo').setInputFiles(photoFile);
   await expect(page.getByRole('button', { name: 'Remove photo' })).toBeVisible();
-  await expect(save(page)).toBeDisabled();
-  await expect(page.getByText('Alt text is required')).toBeVisible();
-  await expect(page.getByText('Fix 1 field')).toBeVisible();
+  await expect(page.getByLabel('Description (optional)', { exact: true })).toHaveValue('');
+  await expect(save(page)).toBeEnabled();
+});
+
+test('an image card without a description saves and is decorative under its title @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  // Saving needs the asset recorded by the real API (D160), so the upload answer must verify.
+  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
+  const title = `No description ${webDeck.slug}`;
+  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+  await page.getByLabel('Title', { exact: true }).fill(title);
+  await page.getByLabel('Choose photo').setInputFiles(photoFile);
+  await expect(page.getByRole('button', { name: 'Replace photo' })).toBeVisible();
+  const created = page.waitForResponse(
+    (res) => /\/api\/decks\/[^/]+\/items$/.test(res.url()) && res.request().method() === 'POST',
+  );
+  await save(page).click();
+
+  const response = await created;
+  expect(response.status()).toBe(201);
+  expect(((await response.json()) as { payload: { alt?: string } }).payload.alt).toBeUndefined();
+  const listed = page.getByRole('article').filter({ hasText: title });
+  await expect(listed.locator('img.cloud-image__img')).toHaveAttribute('alt', '');
 });
 
 test('the image type is unavailable without image storage @smoke', async ({ page, webDeck }) => {
@@ -421,6 +444,56 @@ test('Fetch preview fills a link card @smoke', async ({ page, webDeck }) => {
   await save(page).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   await expect(page.getByRole('heading', { name: fetchedTitle })).toBeVisible();
+});
+
+test('a link typed without https:// is stored with it (D205) @smoke', async ({ page, webDeck }) => {
+  const title = `Bare host ${webDeck.slug}`;
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=link`));
+  await page.getByLabel('Title', { exact: true }).fill(title);
+  const url = page.getByLabel('URL', { exact: true });
+  await url.focus();
+  await expect(url).toHaveValue('https://');
+  await url.fill('example.org');
+  await url.blur();
+  await expect(url).toHaveValue('https://example.org');
+
+  const created = page.waitForResponse(
+    (res) => /\/api\/decks\/[^/]+\/items$/.test(res.url()) && res.request().method() === 'POST',
+  );
+  await save(page).click();
+  const response = await created;
+  expect(response.status()).toBe(201);
+  expect(((await response.json()) as { payload: { url: string } }).payload.url).toBe(
+    'https://example.org',
+  );
+});
+
+test('a category tap on an existing card saves without Save (D207) @smoke', async ({
+  page,
+  api,
+  webDeck,
+}) => {
+  const card = webDeck.items.find((item) => item.type === 'text')!;
+  await page.goto(webUrl(`/i/${card.id}/edit`));
+  const chip = page.getByRole('button', { name: SMOKE_CATEGORY.name });
+  await expect(chip).toHaveAttribute('aria-pressed', 'false');
+
+  const saved = page.waitForResponse(
+    (res) => res.url().endsWith(`/api/items/${card.id}`) && res.request().method() === 'PATCH',
+  );
+  await chip.click();
+  expect((await saved).status()).toBe(200);
+  await expect(page.getByText('Categories saved')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
+
+  // Leaving without Save keeps the category: it is already on the server.
+  await page.goto(webUrl(`/i/${card.id}`));
+  const res = await api.get(`items/${card.id}`);
+  const categories = (await (await api.get(`decks/${webDeck.slug}/categories`)).json()) as {
+    data: { id: string; slug: string }[];
+  };
+  const smokeId = categories.data.find((c) => c.slug === SMOKE_CATEGORY.slug)!.id;
+  expect(((await res.json()) as { categoryIds: string[] }).categoryIds).toContain(smokeId);
 });
 
 test('a link without a preview still saves @smoke', async ({ page, webDeck }) => {

@@ -110,3 +110,43 @@ describe('CardEditor: Cancel and the unsaved-changes guard (022)', () => {
     await waitFor(() => expect(draftsKv.map.get(KEY)).toMatchObject({ draft: { title: 'New' } }));
   });
 });
+
+describe('CardEditor: instant category saves and the guard (022 + 023)', () => {
+  const withMisc = [
+    ...categories,
+    makeCategory({ id: 'cat-misc', name: 'Misc', isDefault: false }),
+  ];
+  const renderWithMisc = () =>
+    renderInRouter(
+      <CardEditor backHref="/i/i1" mode="edit" deck={deck} item={item} categories={withMisc} />,
+    );
+  const tapMiscAndWaitForSave = async () => {
+    respond.mockImplementation(async () => ({
+      ...item,
+      categoryIds: ['cat-general', 'cat-misc'],
+      updatedAt: '2026-05-02T00:00:00.000Z',
+    }));
+    fireEvent.click(screen.getByRole('button', { name: 'Misc' }));
+    await waitFor(() =>
+      expect(requests.mock.calls.some(([request]) => request === 'PATCH /items/{id}')).toBe(true),
+    );
+    // Let the save's answer land (the "Categories saved" toast needs the app's toast host).
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  };
+
+  it('a saved category change is not unsaved work: Cancel leaves without asking', async () => {
+    const { location } = await renderWithMisc();
+    await tapMiscAndWaitForSave();
+    cancel();
+    await screen.findByText('Elsewhere');
+    expect(location()).toBe('/i/i1');
+  });
+
+  it('other unsaved edits still ask after a category save', async () => {
+    await renderWithMisc();
+    typeTitle('New');
+    await tapMiscAndWaitForSave();
+    cancel();
+    expect(await screen.findByRole('dialog', { name: 'Discard changes?' })).toBeInTheDocument();
+  });
+});

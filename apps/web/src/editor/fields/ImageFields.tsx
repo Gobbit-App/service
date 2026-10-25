@@ -18,6 +18,10 @@ export type ImageFieldsProps = FieldsProps<'image'> & {
  * D133: take or pick a photo, upload it straight to Cloudinary with a signed permission, and
  * add alt text. A cancelled or failed upload leaves no photo on the draft (FR-005).
  */
+/** D206: who the optional description helps, and what happens without it. */
+export const IMAGE_DESCRIPTION_HINT =
+  'Helps people who use a screen reader. Leave empty to use the card title.';
+
 export function ImageFields({
   payload,
   onChange,
@@ -76,7 +80,7 @@ export function ImageFields({
           {localUrl ? (
             <img className="image-fields__thumb" src={localUrl} alt="" />
           ) : (
-            <ImageCard payload={payload} cloudName={cloudName} />
+            <ImageCard payload={payload} alt={payload.alt?.trim() ?? ''} cloudName={cloudName} />
           )}
         </div>
       )}
@@ -144,12 +148,12 @@ export function ImageFields({
       )}
 
       <TextInput
-        label="Alt text"
-        value={payload.alt}
+        label="Description (optional)"
+        value={payload.alt ?? ''}
         onChange={(alt) => onChange({ ...payload, alt })}
         error={errors['payload.alt']}
         disabled={disabled}
-        hint="Describe the photo for people who can't see it."
+        hint={IMAGE_DESCRIPTION_HINT}
       />
     </div>
   );

@@ -277,6 +277,31 @@ describe('toPatch', () => {
     });
   });
 
+  it('adds https:// to a source url typed without it (D205)', () => {
+    const item = makeItem();
+    expect(toPatch(item, { ...draftFromItem(item), sourceUrl: ' s.example/a ' })).toEqual({
+      sourceUrl: 'https://s.example/a',
+    });
+    expect(toPatch(item, { ...draftFromItem(item), sourceUrl: 'https://' })).toBeNull();
+    expect(toCreateBody({ ...draftFromItem(item), sourceUrl: 's.example' }).sourceUrl).toBe(
+      'https://s.example',
+    );
+  });
+
+  it('adds https:// to a link url typed without it (D205)', () => {
+    const item = makeItem({ type: 'link', payload: { url: 'https://old.example/' } });
+    const draft = { ...draftFromItem(item), payload: { url: 'example.org' } } as Draft;
+    expect(toPatch(item, draft)).toEqual({ payload: { url: 'https://example.org' } });
+  });
+
+  it('omits a blank image description and keeps a set one (D206)', () => {
+    const item = makeItem({ type: 'image', payload: { publicId: 'p', alt: 'Old' } });
+    const cleared = { ...draftFromItem(item), payload: { publicId: 'p', alt: ' ' } } as Draft;
+    expect(toPatch(item, cleared)).toEqual({ payload: { publicId: 'p' } });
+    const kept = { ...draftFromItem(item), payload: { publicId: 'p', alt: 'New' } } as Draft;
+    expect(toPatch(item, kept)).toEqual({ payload: { publicId: 'p', alt: 'New' } });
+  });
+
   it('sends the whole entities after a removal, compacted', () => {
     const item = makeItem({ entities: { phones: ['555'], urls: ['u.example'] } });
     const draft = { ...draftFromItem(item), entities: { phones: [], urls: ['u.example'] } };

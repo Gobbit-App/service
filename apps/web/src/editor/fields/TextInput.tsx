@@ -1,8 +1,10 @@
 import { useId, type ReactElement, type ReactNode } from 'react';
+import { useUrlInput } from '../../ui/use-url-input';
 
 /**
  * A labelled input or textarea with its error linked through `aria-describedby` and
- * `aria-invalid` (D136). The base for every text field in the editor.
+ * `aria-invalid` (D136). The base for every text field in the editor. `type="url"` follows the
+ * shared URL-input rule (D205): `https://` on focus, normalised on blur.
  */
 export function TextInput({
   label,
@@ -29,6 +31,7 @@ export function TextInput({
   const id = useId();
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
+  const url = useUrlInput(value, onChange);
   const describedBy = [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(' ');
   const common = {
     id,
@@ -44,8 +47,10 @@ export function TextInput({
       <label htmlFor={id}>{label}</label>
       {multiline ? (
         <textarea {...common} rows={rows} onChange={(e) => onChange(e.currentTarget.value)} />
+      ) : type === 'url' ? (
+        <input {...common} type="url" inputMode="url" {...url} />
       ) : (
-        <input {...common} type={type} onChange={(e) => onChange(e.currentTarget.value)} />
+        <input {...common} type="text" onChange={(e) => onChange(e.currentTarget.value)} />
       )}
       {hint && (
         <div id={hintId} className="field__hint">

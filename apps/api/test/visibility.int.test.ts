@@ -146,6 +146,21 @@ describe('category visibility (P2.6, D38)', () => {
     expect([...asOwner.categoryIds].sort()).toEqual([adminId, foodId].sort());
   });
 
+  it('instant category saves in a row keep the private one each time (023)', async () => {
+    const card = await createItem(ctx.t.db, ctx.world.decks.family, {
+      card: { type: 'text', title: 'Admin and home, re-filed', payload: {} },
+      categoryIds: [adminId, homeId],
+    });
+    const foodId = ctx.world.categories.food.id;
+    for (const categoryIds of [[homeId, foodId], [foodId], [homeId]]) {
+      const res = await send('PATCH', `/items/${card.id}`, editor.email, { categoryIds });
+      expect(res.status).toBe(200);
+      expect([...(await json(res)).categoryIds].sort()).toEqual([...categoryIds].sort());
+    }
+    const asOwner = await json(await get(`/items/${card.id}`, OWNER_EMAIL));
+    expect([...asOwner.categoryIds].sort()).toEqual([adminId, homeId].sort());
+  });
+
   it('removing home from a shared card hides it from the reader', async () => {
     const res = await send('PATCH', `/items/${adminAndHome.id}`, OWNER_EMAIL, {
       categoryIds: [adminId],

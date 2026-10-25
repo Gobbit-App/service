@@ -3,12 +3,14 @@ import type { Deck } from '@pb/shared';
 import { isApiError } from '../api/api-error';
 import { useSubmitShare } from '../api/ingest';
 import { problemMessages } from '../api/problem-messages';
+import { normalizeUrlInput } from '../lib/url-input';
+import { useUrlInput } from '../ui/use-url-input';
 import { DeckPicker } from './DeckPicker';
 import { hasContent, isHttpUrl, type IngestDraft, type SharedPayload } from './share-payload';
 import { ShareThumbnails } from './ShareThumbnails';
 
 export const SEND_ERROR = "Couldn't send it. Check your connection and try again.";
-export const URL_ERROR = 'Enter a full link, starting with https://';
+export const URL_ERROR = 'Enter a valid web address';
 
 function sendErrors(err: unknown): string[] {
   return isApiError(err) && err.problem ? problemMessages(err) : [SEND_ERROR];
@@ -40,14 +42,16 @@ export function ShareForm({
   const [urlInvalid, setUrlInvalid] = useState(false);
   const deck = decks.find((d) => d.slug === deckSlug) ?? decks[0]!;
   const errors = submit.isError ? sendErrors(submit.error) : [];
+  const urlInput = useUrlInput(url, setUrl);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const invalid = url.trim() !== '' && !isHttpUrl(url.trim());
+    const link = normalizeUrlInput(url);
+    const invalid = link !== '' && !isHttpUrl(link);
     setUrlInvalid(invalid);
     if (invalid) return;
     submit.mutate(
-      { deckId: deck.id, title: initial?.title ?? '', text, url, files, channel },
+      { deckId: deck.id, title: initial?.title ?? '', text, url: link, files, channel },
       { onSuccess: (accepted) => onSent(deck, accepted.id) },
     );
   };
@@ -80,7 +84,7 @@ export function ShareForm({
         value={url}
         aria-invalid={urlInvalid}
         aria-describedby={urlInvalid ? `${baseId}-url-error` : undefined}
-        onChange={(event) => setUrl(event.currentTarget.value)}
+        {...urlInput}
       />
       {urlInvalid && (
         <p id={`${baseId}-url-error`} className="form-error">
@@ -104,7 +108,7 @@ export function ShareForm({
       <button
         type="submit"
         className="button"
-        disabled={submit.isPending || !hasContent({ text, url, files })}
+        disabled={submit.isPending || !hasContent({ text, url: normalizeUrlInput(url), files })}
       >
         {submit.isPending ? 'Sending…' : 'Send to Gobbit'}
       </button>

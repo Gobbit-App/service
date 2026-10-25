@@ -16,6 +16,7 @@ import {
   type LinkDraftPayload,
 } from './draft';
 import type { ImagePayload, TablePayload } from '../cards/payload-guards';
+import { normalizeUrlInput } from '../lib/url-input';
 
 /** Errors keyed by dotted path, the same syntax as `problem.errors[].path` (e.g. `payload.rows.3.1`). */
 export type FieldErrors = Partial<Record<string, string>>;
@@ -33,6 +34,7 @@ export type ValidateOptions = {
 };
 
 export const CATEGORY_REQUIRED = 'Pick at least one category';
+export const URL_INVALID = 'Enter a valid web address';
 
 const CALC_KEY_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
 /** Function names the calc expression allows; a field key with one of these names is refused. */
@@ -61,16 +63,15 @@ function checkCommon(draft: Draft, errors: FieldErrors, categoriesOptional: bool
   if (!categoriesOptional && draft.categoryIds.length === 0) {
     errors['categoryIds'] = CATEGORY_REQUIRED;
   }
-  const sourceUrl = draft.sourceUrl.trim();
-  if (sourceUrl !== '' && !isHttpUrl(sourceUrl)) {
-    errors['sourceUrl'] = 'Enter a full http:// or https:// address';
-  }
+  // D205: checked as it will be saved (`example.org` → `https://example.org`).
+  const sourceUrl = normalizeUrlInput(draft.sourceUrl);
+  if (sourceUrl !== '' && !isHttpUrl(sourceUrl)) errors['sourceUrl'] = URL_INVALID;
 }
 
 function checkLink(payload: LinkDraftPayload, errors: FieldErrors): void {
-  const url = payload.url.trim();
+  const url = normalizeUrlInput(payload.url);
   if (url === '') errors['payload.url'] = 'URL is required';
-  else if (!isHttpUrl(url)) errors['payload.url'] = 'Enter a full http:// or https:// address';
+  else if (!isHttpUrl(url)) errors['payload.url'] = URL_INVALID;
   const image = payload.preview?.image;
   if (image !== undefined && image !== '' && !isHttpUrl(image)) {
     errors['payload.preview.image'] = 'Preview image must be an http(s) address';
@@ -78,12 +79,10 @@ function checkLink(payload: LinkDraftPayload, errors: FieldErrors): void {
 }
 
 export const PHOTO_REQUIRED = 'Add a photo';
-export const ALT_REQUIRED = 'Alt text is required';
 
-/** D133: the photo must have finished uploading (a `publicId`) and needs alt text. */
+/** D133: the photo must have finished uploading (a `publicId`); alt text is optional (D206). */
 function checkImage(payload: ImagePayload, errors: FieldErrors): void {
   if (payload.publicId === '') errors['payload.publicId'] = PHOTO_REQUIRED;
-  if (payload.alt.trim() === '') errors['payload.alt'] = ALT_REQUIRED;
 }
 
 function checkTable(payload: TablePayload, errors: FieldErrors): void {

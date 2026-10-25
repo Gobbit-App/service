@@ -120,6 +120,31 @@ describe('ShareScreen', () => {
     expect(respond).not.toHaveBeenCalledWith('POST /ingest');
   });
 
+  it('adds https:// to a link typed without it (D205)', async () => {
+    answer([family]);
+    renderWithClient(<ShareScreen />);
+    const link = await screen.findByLabelText('Link');
+    fireEvent.focus(link);
+    expect(link).toHaveValue('https://');
+    expect(screen.getByRole('button', { name: 'Send to Gobbit' })).toBeDisabled();
+    fireEvent.change(link, { target: { value: 'https://https://example.org/a' } });
+    expect(link).toHaveValue('https://example.org/a');
+    fireEvent.change(link, { target: { value: 'example.org/a' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send to Gobbit' }));
+
+    await screen.findByRole('heading', { name: 'Sent' });
+    expect(sentForm().get('url')).toBe('https://example.org/a');
+  });
+
+  it('clears a link left at only the scheme', async () => {
+    answer([family]);
+    renderWithClient(<ShareScreen />);
+    const link = await screen.findByLabelText('Link');
+    fireEvent.focus(link);
+    fireEvent.blur(link);
+    expect(link).toHaveValue('');
+  });
+
   it('shows the API problem when sending fails', async () => {
     answer([family], async () => {
       throw new ApiError(429, { title: 'Too many', detail: 'Slow down a little.' });

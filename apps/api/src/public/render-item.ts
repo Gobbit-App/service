@@ -7,6 +7,7 @@ import {
   type PublicItem,
 } from '@pb/shared';
 import { evaluateCalc, formatCalcResult } from '@pb/shared/calc';
+import { imageAlt } from '@pb/shared/image-alt';
 import { h, type Html } from './html';
 import { renderMarkdown } from './markdown';
 
@@ -58,8 +59,10 @@ function renderImage(item: PublicItem, imageUrl: ImageUrlFor): Html | string {
   if (!parsed.success) return '';
   const { publicId, alt, width, height } = parsed.data;
   const src = imageUrl(publicId, PAGE_IMAGE_TRANSFORMATION);
-  if (!src) return h`<p class="muted">${alt}</p>`;
-  return h`<figure><img src="${src}" alt="${alt}"${
+  if (!src) return alt?.trim() ? h`<p class="muted">${alt.trim()}</p>` : '';
+  // D206: the title is right above the figure, so an image without a description is decorative.
+  const altText = imageAlt({ alt, title: item.title, titleAdjacent: true });
+  return h`<figure><img src="${src}" alt="${altText}"${
     width && height ? h` width="${width}" height="${height}"` : ''
   }></figure>`;
 }

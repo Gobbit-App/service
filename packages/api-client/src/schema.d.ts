@@ -2396,7 +2396,7 @@ export interface paths {
                         type: "image";
                         payload: {
                             publicId: string;
-                            alt: string;
+                            alt?: string;
                             width?: number;
                             height?: number;
                         };
