@@ -57,7 +57,10 @@ describe('DeckAdminScreen (D184)', () => {
     setup({ isDefault: true, slug: 'me' });
     expect(await screen.findByLabelText('Name')).toBeInTheDocument();
     expect(headings()).toEqual(['Deck settings', 'Deck']);
-    expect(screen.queryByRole('switch')).toBeNull();
+    expect(screen.queryByRole('switch', { name: 'Public' })).toBeNull();
+    expect(
+      screen.getByRole('switch', { name: 'Publish shares from publishers directly' }),
+    ).toBeInTheDocument();
   });
 
   it('offline it says so and disables the controls', async () => {

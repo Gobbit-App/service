@@ -70,6 +70,16 @@ describe('ReviewCard', () => {
     expect(screen.getByRole('list', { name: 'Categories' })).toHaveTextContent('General');
   });
 
+  it("says why a publisher's share was not published directly (D193)", () => {
+    renderCard(entry({}, { autoPublish: 'held_duplicate' }));
+    expect(screen.getByText('Not published directly: it may be a duplicate')).toBeInTheDocument();
+  });
+
+  it('shows no held line for an ordinary proposal', () => {
+    renderCard(entry());
+    expect(screen.queryByText(/Not published directly/)).toBeNull();
+  });
+
   it('publishes a new proposal and discards', () => {
     const { onPublish, onDiscard } = renderCard(entry());
     fireEvent.click(screen.getByRole('button', { name: 'Publish' }));

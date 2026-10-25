@@ -50,6 +50,7 @@ export function makeDeck(overrides: Partial<Deck> = {}): Deck {
     slug: 'family',
     name: 'Family',
     isPublic: false,
+    autoPublishShares: false,
     ownerAccountId: '00000000-0000-4000-8000-0000000000b1',
     createdAt: STAMP,
     updatedAt: STAMP,

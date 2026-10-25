@@ -8,6 +8,7 @@ import {
   defaultCategory,
 } from '@pb/db/test';
 import { categorySchema, deckSchema, type MemberRole } from '@pb/shared';
+import { createDecksRepo } from '../src/repositories/decks.repo';
 import { json, OTHER_EMAIL, OWNER_EMAIL, setupApiTest } from './helpers';
 
 /** D176: admins choose what is public — category PATCH and the owner-only public switch. */
@@ -114,6 +115,44 @@ describe('public settings (D176)', () => {
       const res = await patch('/decks/me', OWNER_EMAIL, { isPublic: true });
       expect(res.status).toBe(409);
       expect((await json(res)).type).toBe('/problems/personal-deck');
+    });
+  });
+
+  describe('PATCH /decks/{id} autoPublishShares (D192)', () => {
+    it('owner and co-owner may switch it', async () => {
+      const on = await patch('/decks/street', OWNER_EMAIL, { autoPublishShares: true });
+      expect(on.status).toBe(200);
+      expect(deckSchema.parse(await json(on)).autoPublishShares).toBe(true);
+
+      const off = await patch('/decks/street', members.coOwner.email, {
+        autoPublishShares: false,
+      });
+      expect(off.status).toBe(200);
+      expect(deckSchema.parse(await json(off)).autoPublishShares).toBe(false);
+    });
+
+    it('maintainer → 403 owner-required', async () => {
+      const res = await patch('/decks/street', members.maintainer.email, {
+        autoPublishShares: true,
+      });
+      expect(res.status).toBe(403);
+      expect((await json(res)).type).toBe('/problems/owner-required');
+    });
+
+    it('may be switched on the personal deck', async () => {
+      await createDeck(ctx.t.db, members.coOwner, { isDefault: true });
+      const res = await patch('/decks/me', members.coOwner.email, { autoPublishShares: false });
+      expect(res.status).toBe(200);
+      expect(deckSchema.parse(await json(res)).autoPublishShares).toBe(false);
+    });
+
+    it('a newly ensured personal deck has it on', async () => {
+      const user = await createAccountUser(ctx.t.db);
+      const deck = await createDecksRepo(ctx.t.db).ensureDefault({
+        accountId: user.accountId,
+        name: 'Mine',
+      });
+      expect(deck.autoPublishShares).toBe(true);
     });
   });
 });

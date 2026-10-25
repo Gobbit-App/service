@@ -8,6 +8,7 @@ vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientMo
 const { respond, requests } = await import('../test/api-mock');
 const { DeckSection, publicDeckUrl } = await import('./DeckSection');
 
+const AUTO_PUBLISH = 'Publish shares from publishers directly';
 const categories = [makeCategory({ name: 'Schools', visibility: 'public' })];
 
 function setup(deck: Partial<Deck> = {}, online = true) {
@@ -63,20 +64,38 @@ describe('DeckSection (D184)', () => {
   it('disables the switch for a maintainer', () => {
     setup({ role: 'maintainer' });
     expect(screen.getByRole('switch', { name: 'Public' })).toBeDisabled();
-    expect(screen.getByText('Only co-owners can change this.')).toBeInTheDocument();
+    expect(screen.getByText('Only co-owners can change these settings.')).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).toBeEnabled();
   });
 
-  it('has no switch on the personal deck', () => {
-    setup({ isDefault: true, slug: 'me' });
-    expect(screen.queryByRole('switch')).toBeNull();
+  it('has no public switch on the personal deck', () => {
+    setup({ isDefault: true, slug: 'me', autoPublishShares: true });
+    expect(screen.queryByRole('switch', { name: 'Public' })).toBeNull();
     expect(screen.getByText(/always private/)).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: AUTO_PUBLISH })).toBeChecked();
+  });
+
+  it('lets an owner turn on publishing shares directly (D192)', async () => {
+    setup();
+    const toggle = screen.getByRole('switch', { name: AUTO_PUBLISH });
+    expect(toggle).not.toBeChecked();
+    expect(toggle).toHaveAccessibleDescription(/still goes to review/);
+    fireEvent.click(toggle);
+    await waitFor(() => expect(patchBodies()).toEqual([{ autoPublishShares: true }]));
+  });
+
+  it('shows a maintainer the auto-publish state without letting them change it', () => {
+    setup({ role: 'maintainer', autoPublishShares: true });
+    const toggle = screen.getByRole('switch', { name: AUTO_PUBLISH });
+    expect(toggle).toBeChecked();
+    expect(toggle).toBeDisabled();
   });
 
   it('is read-only offline', () => {
     setup({}, false);
     expect(screen.getByLabelText('Name')).toBeDisabled();
     expect(screen.getByRole('switch', { name: 'Public' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: AUTO_PUBLISH })).toBeDisabled();
   });
 
   it('shows the server refusal', async () => {

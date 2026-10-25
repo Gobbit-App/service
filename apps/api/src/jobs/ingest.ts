@@ -1,5 +1,6 @@
 import {
   EXTRACT_STYLE_EXAMPLES,
+  type AutoPublishOutcome,
   type DedupVerdict,
   INGEST_JOB_RETRIES,
   type IngestFailureCode,
@@ -16,6 +17,7 @@ import type { ItemsRepo } from '../repositories/items.repo';
 import { runExtraction, type RunExtractionDeps } from '../ingest/run-extraction';
 import type { RunDedupInput } from '../ingest/run-dedup';
 import { proposeItem } from '../ingest/propose';
+import type { AutoPublishInput } from '../ingest/auto-publish';
 import type { EmbedQueue } from './embed-queue';
 import type { LinkSnapshotQueue } from './link-snapshot-queue';
 import { toLinkPreview } from '../fetch/link-preview';
@@ -37,6 +39,8 @@ export interface IngestHandlerDeps {
   embedQueue: EmbedQueue;
   /** D163: snapshot a proposed link's preview image; omitted → none. */
   linkSnapshotQueue?: LinkSnapshotQueue;
+  /** D193: bound `autoPublish`, run after the proposal exists; omitted → always review. Never throws. */
+  autoPublish?: (input: AutoPublishInput) => Promise<AutoPublishOutcome | null>;
   /** D167: dimensions of the shared image for a locked-host preview; omitted → none. */
   assets?: Pick<AssetsRepo, 'byPublicId'>;
   now?: () => Date;
@@ -152,7 +156,8 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       stage = undefined;
       if (!outcome.ok) return await fail(job, outcome.error);
 
-      await proposeItem(
+      const jobRef = { id: job.id, deckId: job.deckId, userId: job.userId, channel: job.channel };
+      const proposed = await proposeItem(
         {
           categories,
           items,
@@ -164,12 +169,19 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
           log,
         },
         {
-          job: { id: job.id, deckId: job.deckId, userId: job.userId, channel: job.channel },
+          job: jobRef,
           item: outcome.item,
           summary: outcome.summary,
           signal: opts?.signal,
         },
       );
+      // D193: the proposal exists; publishing it directly is best effort, review is the fallback.
+      await deps.autoPublish?.({
+        job: jobRef,
+        proposal: proposed.item,
+        categoryIds: outcome.summary.categoryIds,
+        verdict: proposed.dedup,
+      });
       return 'proposed';
     } catch (err) {
       const failureCode = classifyFailure(err, stage);

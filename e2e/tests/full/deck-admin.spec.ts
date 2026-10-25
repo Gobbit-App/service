@@ -45,3 +45,32 @@ test('the owner makes the deck public and invites a co-owner from Deck settings 
   await expect(row).toContainText('Invited · Co-owner');
   await expect(row.getByRole('button', { name: /^Cancel invite/ })).toBeVisible();
 });
+
+/**
+ * D192 (022, `@full`): the owner turns on "Publish shares from publishers directly" and it is
+ * still on after a reload. The maintainer's disabled switch is covered by `DeckSection.test.tsx`
+ * (a second admin cannot sign in from e2e, see above).
+ */
+test('the owner turns on publishing shares directly and it persists @full', async ({
+  page,
+  api,
+  webDeck,
+}) => {
+  await page.goto(webUrl(`/d/${webDeck.slug}/settings`));
+  const toggle = page.getByRole('switch', { name: 'Publish shares from publishers directly' });
+  await expect(toggle).not.toBeChecked();
+
+  const deckPatch = page.waitForResponse(
+    (res) => res.request().method() === 'PATCH' && res.url().endsWith(`/decks/${webDeck.id}`),
+  );
+  await toggle.check();
+  expect((await deckPatch).status(), 'deck PATCH').toBe(200);
+
+  await page.reload();
+  await expect(toggle).toBeChecked();
+  const deck = await api.get(`decks/${webDeck.id}`);
+  expect(
+    ((await deck.json()) as { autoPublishShares: boolean }).autoPublishShares,
+    'deck auto-publishes shares',
+  ).toBe(true);
+});

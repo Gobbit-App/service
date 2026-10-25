@@ -27,6 +27,9 @@ import { createLinkChecksService, createLinkProbe } from './services/link-checks
 import { createAssetUploader } from './services/media-upload-from-url';
 import { normalizeRaw } from './ingest/normalize-raw';
 import { createSharerRole } from './ingest/sharer-role';
+import { autoPublish } from './ingest/auto-publish';
+import { createPublishProposal, reviewTransaction } from './review/publish-proposal';
+import { createImageReferenceCheck } from './services/image-reference';
 import { runDedup } from './ingest/run-dedup';
 import { createDedupRepo } from './repositories/dedup.repo';
 import { createCategoriesRepo } from './repositories/categories.repo';
@@ -169,15 +172,20 @@ async function main() {
   const extract = defaultExtractor(env);
   if (extract) {
     const ingestJobs = createIngestJobsRepo(db);
+    const decks = createDecksRepo(db);
+    const roleOf = createSharerRole({
+      users: createUsersRepo(db),
+      decks,
+      memberships: createMembershipsRepo(db),
+    });
+    const ingestLinkSnapshotQueue = env.CLOUDINARY_URL
+      ? createLinkSnapshotQueue({ sender: boss })
+      : noopLinkSnapshotQueue;
     const ingest = createIngestHandler({
       jobs: ingestJobs,
       categories: createCategoriesRepo(db),
       items: createItemsRepo(db),
-      roleOf: createSharerRole({
-        users: createUsersRepo(db),
-        decks: createDecksRepo(db),
-        memberships: createMembershipsRepo(db),
-      }),
+      roleOf,
       normalize: (raw) =>
         normalizeRaw(raw, {
           safeFetch: createSafeFetch(),
@@ -185,10 +193,26 @@ async function main() {
         }),
       extraction: { ...extract, llmCalls: createLlmCallsRepo(db) },
       embedQueue: workerEmbedQueue,
-      linkSnapshotQueue: env.CLOUDINARY_URL
-        ? createLinkSnapshotQueue({ sender: boss })
-        : noopLinkSnapshotQueue,
+      linkSnapshotQueue: ingestLinkSnapshotQueue,
       assets: createAssetsRepo(db),
+      // D193: publishers' shares on opted-in decks skip review, through review's own routine.
+      autoPublish: (input) =>
+        autoPublish(
+          {
+            decks,
+            roleOf,
+            publishProposal: createPublishProposal({
+              transaction: reviewTransaction(db),
+              imageReference: createImageReferenceCheck(createAssetsRepo(db)),
+              now: () => new Date(),
+            }),
+            jobs: ingestJobs,
+            embedQueue: workerEmbedQueue,
+            linkSnapshotQueue: ingestLinkSnapshotQueue,
+            logger: childLogger('ingest'),
+          },
+          input,
+        ),
       dedup: (input) =>
         runDedup(
           {

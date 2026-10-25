@@ -146,7 +146,7 @@ description: "Task list for 022-share-status"
 
 ### Tests for User Story 3
 
-- [ ] T040 [P] [US3] [unit] apps/api/src/ingest/auto-publish.test.ts. Gate order and outcomes:
+- [X] T040 [P] [US3] [unit] apps/api/src/ingest/auto-publish.test.ts. Gate order and outcomes:
   - setting off → null; `mcp`/`import` → null;
   - not a publisher → `held_not_publisher`;
   - empty `categoryIds` or only `newCategory` → `held_needs_category`;
@@ -154,33 +154,33 @@ description: "Task list for 022-share-status"
   - no verdict → `held_duplicate_check_failed`;
   - publish throws → `held_publish_failed` (job stays proposed; warning logged);
   - success → `published`.
-- [ ] T041 [P] [US3] [int] apps/api/test/ingest-pipeline.int.test.ts, with the fake extraction:
+- [X] T041 [P] [US3] [int] apps/api/test/ingest-pipeline.int.test.ts, with the fake extraction:
   - an owner's share on an opted-in deck is published with a `published` event (actor = sharer, via `ingest`), the job is `published` with `reviewedBy` = sharer, and `auto_publish = 'published'`;
   - a duplicate is held;
   - an editor's share is held `held_not_publisher`;
   - a role lowered between share and processing is held;
   - with the setting off, the job is proposed and `auto_publish` is null.
-- [ ] T042 [P] [US3] [int] apps/api/test/decks.int.test.ts:
+- [X] T042 [P] [US3] [int] apps/api/test/decks.int.test.ts:
   - an owner/co-owner toggles `autoPublishShares`; a maintainer → 403 `/problems/owner-required`;
   - allowed on the personal deck;
   - apps/api/test/personal-deck.int.test.ts: a new personal deck has it `true`.
-- [ ] T043 [P] [US3] [int] apps/api/test/review.int.test.ts stays green unchanged after the `publishProposal` extraction (run before and after)
-- [ ] T044 [P] [US3] [unit] apps/web/src/deck-admin/DeckSection.test.tsx: owner toggles the switch (PATCH sent); maintainer sees it disabled with "Only owners can change this"
-- [ ] T045 [P] [US3] [unit] ShareRow.test.tsx rows: auto-published → "Published"; held → "Waiting for review — <reason>"
-- [ ] T046 [P] [US3] [e2e:full] e2e/tests/full/deck-admin.spec.ts: owner toggles "Publish shares from publishers directly" and it persists after reload; maintainer sees it disabled
+- [X] T043 [P] [US3] [int] apps/api/test/review.int.test.ts stays green unchanged after the `publishProposal` extraction (run before and after)
+- [X] T044 [P] [US3] [unit] apps/web/src/deck-admin/DeckSection.test.tsx: owner toggles the switch (PATCH sent); maintainer sees it disabled with "Only owners can change this"
+- [X] T045 [P] [US3] [unit] ShareRow.test.tsx rows: auto-published → "Published"; held → "Waiting for review — <reason>"
+- [X] T046 [P] [US3] [e2e:full] e2e/tests/full/deck-admin.spec.ts: owner toggles "Publish shares from publishers directly" and it persists after reload; maintainer sees it disabled
 
 ### Implementation for User Story 3
 
-- [ ] T047 [US3] apps/api/src/review/publish-proposal.ts: extract the `new`-mode publish from apps/api/src/services/review.service.ts:
+- [X] T047 [US3] apps/api/src/review/publish-proposal.ts: extract the `new`-mode publish from apps/api/src/services/review.service.ts:
   - D160 `imageReference` check;
   - transaction: item `published` + `verifiedAt`, event, job `published` + `reviewedBy`/`reviewedAt`;
   - returns the item; after-commit hooks are left to callers.
   - review.service.ts uses it (publish + publishMany).
-- [ ] T048 [US3] apps/api/src/services/decks.service.ts: `autoPublishShares` patch rule (owner-only via `ownerRequired(detail)`; allowed on the personal deck); apps/api/src/errors/http-errors.ts `ownerRequired(detail?)`; apps/api/src/repositories/decks.repo.ts creates personal decks with `autoPublishShares: true`; Deck DTO mapping
-- [ ] T049 [US3] apps/api/src/ingest/auto-publish.ts: `autoPublish(deps, { job, proposal, summary, verdict })` per D193. It writes `ingest_jobs.auto_publish` and, after a publish, calls `embedQueue.enqueueIfStale` and `linkSnapshotQueue.enqueueIfNeeded`. Call it from apps/api/src/jobs/ingest.ts after `proposeItem` (`proposeItem` returns the item and verdict). Wire the deps in apps/api/src/worker.ts: `decksRepo.byId`, `roleOf`, `publishProposal`.
-- [ ] T052 [US3] Held reason in review (FR-011, US3-AS2): `job.autoPublish` (`AutoPublishOutcome | null`) in `reviewEntrySchema` (packages/shared/src/schemas/ingest.ts), mapped in apps/api/src/services/review.service.ts list; apps/web/src/review/ReviewCard.tsx shows "Not published directly: <reason>" for `held_*`. [unit] ReviewCard.test.tsx row; [int] review.int.test.ts asserts the field
-- [ ] T050 [US3] apps/web/src/deck-admin/DeckSection.tsx: switch "Publish shares from publishers directly", with help text that cards with no category or a likely duplicate still go to review
-- [ ] T051 [US3] `pnpm api:openapi` (Deck field)
+- [X] T048 [US3] apps/api/src/services/decks.service.ts: `autoPublishShares` patch rule (owner-only via `ownerRequired(detail)`; allowed on the personal deck); apps/api/src/errors/http-errors.ts `ownerRequired(detail?)`; apps/api/src/repositories/decks.repo.ts creates personal decks with `autoPublishShares: true`; Deck DTO mapping
+- [X] T049 [US3] apps/api/src/ingest/auto-publish.ts: `autoPublish(deps, { job, proposal, summary, verdict })` per D193. It writes `ingest_jobs.auto_publish` and, after a publish, calls `embedQueue.enqueueIfStale` and `linkSnapshotQueue.enqueueIfNeeded`. Call it from apps/api/src/jobs/ingest.ts after `proposeItem` (`proposeItem` returns the item and verdict). Wire the deps in apps/api/src/worker.ts: `decksRepo.byId`, `roleOf`, `publishProposal`.
+- [X] T052 [US3] Held reason in review (FR-011, US3-AS2): `job.autoPublish` (`AutoPublishOutcome | null`) in `reviewEntrySchema` (packages/shared/src/schemas/ingest.ts), mapped in apps/api/src/services/review.service.ts list; apps/web/src/review/ReviewCard.tsx shows "Not published directly: <reason>" for `held_*`. [unit] ReviewCard.test.tsx row; [int] review.int.test.ts asserts the field
+- [X] T050 [US3] apps/web/src/deck-admin/DeckSection.tsx: switch "Publish shares from publishers directly", with help text that cards with no category or a likely duplicate still go to review
+- [X] T051 [US3] `pnpm api:openapi` (Deck field)
 
 **Checkpoint**: Owner's personal-deck shares land directly; shared decks unchanged unless opted in
 

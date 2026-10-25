@@ -1064,6 +1064,12 @@ h3 {
   font-style: italic;
 }
 
+.review-card__held {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
 .review-card__dedup {
   padding: var(--gap);
   border: 1px dashed var(--color-border);
