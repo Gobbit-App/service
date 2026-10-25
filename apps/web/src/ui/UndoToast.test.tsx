@@ -18,6 +18,7 @@ describe('UndoToast', () => {
     );
     expect(screen.getByRole('status')).toHaveTextContent('Card archived');
     expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' }).querySelector('svg')).not.toBeNull();
   });
 
   it('fires the action once and dismisses', () => {

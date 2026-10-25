@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { Button } from '../ui/buttons/Button';
 
 /** D145: the offer to bring back an unsaved draft (contracts/editor-ui.md). */
 export function DraftRestoreBanner({
@@ -19,12 +20,8 @@ export function DraftRestoreBanner({
         </p>
       )}
       <div className="draft-restore__actions">
-        <button type="button" className="button" onClick={onRestore}>
-          Restore
-        </button>
-        <button type="button" className="button button--ghost" onClick={onDiscard}>
-          Discard
-        </button>
+        <Button icon="restore" label="Restore" onClick={onRestore} />
+        <Button icon="trash" label="Discard" variant="ghost" onClick={onDiscard} />
       </div>
     </div>
   );

@@ -92,14 +92,18 @@
   gap: var(--gap);
 }
 
+/* D215: the position menu ("3 / 12"); its menu offers Previous card / Next card. */
 .browse-band__position {
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
 }
 
-.browse-band .icon-button:disabled {
-  opacity: 0.35;
-  cursor: default;
+.browse-band__row--category {
+  justify-content: center;
+}
+
+.browse-band .browse-dots {
+  align-self: center;
 }
 
 /* Category name + menu. */

@@ -1,6 +1,7 @@
 import { useState, type ReactElement } from 'react';
 import type { ImportCategory } from '@pb/shared/import';
 import { categoryStatus, type PreviewRow, type RowEdit } from './preview-rows';
+import { Button } from '../ui/buttons/Button';
 
 /** D189: one parsed note: tick, read, edit; an invalid row shows why and can't be ticked. */
 export function ImportPreviewRow({
@@ -60,9 +61,7 @@ export function ImportPreviewRow({
               onChange={(event) => onEdit({ category: event.currentTarget.value })}
             />
           </label>
-          <button type="button" className="button button--ghost" onClick={() => setEditing(false)}>
-            Done
-          </button>
+          <Button icon="check" label="Done" variant="ghost" onClick={() => setEditing(false)} />
         </div>
       ) : (
         <div className="import-row__view">
@@ -83,9 +82,7 @@ export function ImportPreviewRow({
               {status === 'new' ? 'new category' : 'existing category'}
             </p>
           )}
-          <button type="button" className="button button--ghost" onClick={() => setEditing(true)}>
-            Edit
-          </button>
+          <Button icon="edit" label="Edit" variant="ghost" onClick={() => setEditing(true)} />
         </div>
       )}
       {row.error && <p className="import-row__error">{row.error}</p>}

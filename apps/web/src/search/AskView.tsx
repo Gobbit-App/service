@@ -5,6 +5,7 @@ import { askDeck } from '../api/queries';
 import { NavLink } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { askErrorCopy } from './ask-copy';
+import { Button } from '../ui/buttons/Button';
 
 /** Asks one question of the cards in a pocketbook (D77). */
 export function AskView({
@@ -54,14 +55,13 @@ export function AskView({
 
   return (
     <section className="ask-view" aria-label="Ask">
-      <button
-        type="button"
+      <Button
+        icon="send"
+        label="Ask"
         className="ask-view__submit"
         disabled={disabled}
         onClick={() => mutate(question.trim())}
-      >
-        Ask
-      </button>
+      />
       {body}
     </section>
   );

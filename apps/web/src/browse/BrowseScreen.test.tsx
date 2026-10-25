@@ -149,11 +149,14 @@ describe('BrowseScreen', () => {
 
   it('changes category with ArrowRight/ArrowLeft, never past the ends', async () => {
     const { onChange } = renderScreen();
-    await screen.findByRole('button', { name: 'Next category: Food' });
+    await screen.findByRole('heading', { name: 'Card 1' });
     fireEvent.keyDown(document.body, { key: 'ArrowLeft' });
     expect(onChange).not.toHaveBeenCalled();
-    fireEvent.keyDown(document.body, { key: 'ArrowRight' });
-    expect(onChange).toHaveBeenCalledWith({ c: 'food', pane: 'content' });
+    // Retried until the categories have loaded (the cycle is just All before that).
+    await waitFor(() => {
+      fireEvent.keyDown(document.body, { key: 'ArrowRight' });
+      expect(onChange).toHaveBeenCalledWith({ c: 'food', pane: 'content' });
+    });
   });
 
   it('closes on Escape and on the close button, to the current category', async () => {
@@ -185,8 +188,8 @@ describe('BrowseScreen', () => {
     );
     renderScreen({ c: 'food' });
     expect(await screen.findByText('No cards here yet')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Next category: School' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Next card' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Category: Food' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: /^Card / })).not.toBeInTheDocument();
   });
 
   describe('first-run hint', () => {

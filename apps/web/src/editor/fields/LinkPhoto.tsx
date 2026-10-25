@@ -4,6 +4,7 @@ import { checkImageFile } from '../image-file';
 import { useImageUpload, type UseImageUploadOptions } from '../use-image-upload';
 import type { LinkPreview, LinkPreviewSlotContext } from './LinkFields';
 import { PickButton } from './PickButton';
+import { Button } from '../../ui/buttons/Button';
 
 export type LinkPhotoProps = LinkPreviewSlotContext & {
   deckId: string;
@@ -87,9 +88,7 @@ export function LinkPhoto({ deckId, disabled, uploadDeps, ...ctx }: LinkPhotoPro
           <span>
             {state.status === 'uploading' ? `Uploading… ${state.percent}%` : 'Adding photo…'}
           </span>
-          <button type="button" className="button button--ghost" onClick={cancel}>
-            Cancel upload
-          </button>
+          <Button icon="close" label="Cancel upload" variant="ghost" onClick={cancel} />
         </div>
       ) : (
         <div className="image-fields__pick">
@@ -99,14 +98,13 @@ export function LinkPhoto({ deckId, disabled, uploadDeps, ...ctx }: LinkPhotoPro
             onPick={pick}
           />
           {hasPhoto && (
-            <button
-              type="button"
-              className="button button--ghost"
+            <Button
+              icon="trash"
+              label="Remove photo"
+              variant="ghost"
               onClick={remove}
               disabled={disabled}
-            >
-              Remove photo
-            </button>
+            />
           )}
         </div>
       )}
@@ -115,9 +113,12 @@ export function LinkPhoto({ deckId, disabled, uploadDeps, ...ctx }: LinkPhotoPro
         <div className="image-fields__failed" role="alert">
           <p className="field__error">{state.message}</p>
           {state.canRetry && (
-            <button type="button" className="button" onClick={upload.retry} disabled={pickDisabled}>
-              Retry upload
-            </button>
+            <Button
+              icon="refresh"
+              label="Retry upload"
+              onClick={upload.retry}
+              disabled={pickDisabled}
+            />
           )}
         </div>
       )}

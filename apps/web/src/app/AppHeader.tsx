@@ -2,7 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouteContext, useRouter } from '@tanstack/react-router';
 import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { meQuery } from '../api/queries';
-import { NavLink, useNavigateHref } from '../ui/NavLink';
+import { IconButton } from '../ui/buttons/IconButton';
+import { IconLink } from '../ui/buttons/IconLink';
+import { useNavigateHref } from '../ui/NavLink';
 import { onArrival } from './on-arrival';
 
 /**
@@ -45,28 +47,26 @@ export function AppHeader({
       {back === null ? (
         <span className="app-header__back app-header__back--none" aria-hidden="true" />
       ) : (
-        <NavLink href={back} className="app-header__back">
-          <span aria-hidden="true">◂</span>
-          <span className="visually-hidden">Back</span>
-        </NavLink>
+        <IconLink href={back} icon="back" label="Back" className="app-header__back" />
       )}
       <h1 className="app-header__title" dir="auto">
         {title}
       </h1>
       {actions}
-      <NavLink href="/settings" className="icon-button app-header__settings">
-        <span aria-hidden="true">⚙</span>
-        <span className="visually-hidden">Settings</span>
-      </NavLink>
-      <button
-        type="button"
-        className="button button--ghost app-header__sign-out"
+      <IconLink
+        href="/settings"
+        icon="settings"
+        label="Settings"
+        className="app-header__settings"
+      />
+      <IconButton
+        icon="sign-out"
+        label="Sign out"
+        tip={me.data ? `Sign out (${me.data.user.email})` : undefined}
+        className="app-header__sign-out"
         onClick={handleSignOut}
         disabled={signingOut}
-        title={me.data ? `Signed in as ${me.data.user.email}` : undefined}
-      >
-        Sign out
-      </button>
+      />
     </header>
   );
 }

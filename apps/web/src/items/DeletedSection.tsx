@@ -2,8 +2,9 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import type { Deck } from '@pb/shared';
 import type { ReactElement } from 'react';
 import { itemsQuery } from '../api/queries';
-import { CardActions } from './CardActions';
+import { CardActionBar } from '../cards/CardActionBar';
 import { daysLeft, daysLeftLabel } from './days-left';
+import { Button } from '../ui/buttons/Button';
 
 /**
  * D132: Recently deleted, under Archived, for `item.delete` roles. Newest deleted first,
@@ -31,19 +32,18 @@ export function DeletedSection({
             {item.deletedAt && (
               <div className="deleted-section__meta">{daysLeftLabel(daysLeft(item.deletedAt))}</div>
             )}
-            <CardActions item={item} deckSlug={deckSlug} role={role} />
+            <CardActionBar item={item} deckSlug={deckSlug} role={role} />
           </li>
         ))}
       </ul>
       {query.hasNextPage && (
-        <button
-          type="button"
-          className="button button--ghost"
+        <Button
+          icon="arrow-down"
+          label={query.isFetchingNextPage ? 'Loading…' : 'Load more'}
+          variant="ghost"
           disabled={query.isFetchingNextPage}
           onClick={() => void query.fetchNextPage()}
-        >
-          {query.isFetchingNextPage ? 'Loading…' : 'Load more'}
-        </button>
+        />
       )}
     </section>
   );

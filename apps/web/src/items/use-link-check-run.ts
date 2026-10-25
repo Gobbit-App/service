@@ -1,11 +1,13 @@
-import type { ReactElement } from 'react';
 import type { Item } from '@pb/shared';
 import { useLinkCheck, type LinkCheckAction } from '../api/link-checks';
 import { lifecycleErrorMessage } from '../api/problem-messages';
 import { LINK_HEALTH_COPY } from '../cards/LinkHealthBadge';
 import { showToast } from '../ui/toast-store';
 
-const LABEL: Record<LinkCheckAction, string> = { check: 'Check again', dismiss: 'Dismiss' };
+export const LINK_CHECK_LABEL: Record<LinkCheckAction, string> = {
+  check: 'Check again',
+  dismiss: 'Dismiss',
+};
 
 const FAILED: Record<LinkCheckAction, string> = {
   check: "Couldn't check the link.",
@@ -19,20 +21,12 @@ export function checkedMessage(item: Item): string {
     : 'Link looks fine';
 }
 
-/** D165: Check again and Dismiss for a flagged link card (the caller gates on `linkCheckActions`). */
-export function LinkCheckButtons({
-  item,
-  deckSlug,
-  actions,
-  disabled,
-}: {
-  item: Item;
-  deckSlug: string;
-  actions: readonly LinkCheckAction[];
-  disabled: boolean;
-}): ReactElement | null {
+/** D165: Check again / Dismiss for a flagged link card (the caller gates on `linkCheckActions`). */
+export function useLinkCheckRun(
+  item: Item,
+  deckSlug: string,
+): { run: (action: LinkCheckAction) => void; isPending: boolean } {
   const mutation = useLinkCheck(deckSlug);
-  if (actions.length === 0) return null;
 
   function run(action: LinkCheckAction): void {
     mutation
@@ -45,19 +39,5 @@ export function LinkCheckButtons({
       );
   }
 
-  return (
-    <>
-      {actions.map((action) => (
-        <button
-          key={action}
-          type="button"
-          className="button button--ghost"
-          disabled={disabled || mutation.isPending}
-          onClick={() => run(action)}
-        >
-          {LABEL[action]}
-        </button>
-      ))}
-    </>
-  );
+  return { run, isPending: mutation.isPending };
 }

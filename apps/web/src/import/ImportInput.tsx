@@ -1,5 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { detectFormat, importFormats, type ImportFormat } from '@pb/shared/import';
+import { Button } from '../ui/buttons/Button';
 
 const FORMAT_LABELS: Record<ImportFormat, string> = {
   lines: 'One note per line',
@@ -77,9 +78,7 @@ export function ImportInput({
           ))}
         </select>
       </label>
-      <button type="submit" className="button" disabled={text.trim() === ''}>
-        Preview
-      </button>
+      <Button type="submit" icon="eye" label="Preview" disabled={text.trim() === ''} />
     </form>
   );
 }

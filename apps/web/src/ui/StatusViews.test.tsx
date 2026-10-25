@@ -47,6 +47,7 @@ describe('ErrorState', () => {
     const onRetry = vi.fn();
     const user = userEvent.setup();
     render(<ErrorState message="Failed" onRetry={onRetry} />);
+    expect(screen.getByRole('button', { name: 'Try again' }).querySelector('svg')).not.toBeNull();
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(onRetry).toHaveBeenCalled();
   });

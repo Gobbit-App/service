@@ -6,6 +6,7 @@ import { deckHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { EventRow } from './EventRow';
+import { Button } from '../ui/buttons/Button';
 
 /** D188: the deck's activity log, newest first; `itemId` narrows it to one card's history. */
 export function EventLog({
@@ -49,14 +50,13 @@ export function EventLog({
         </ul>
       )}
       {query.hasNextPage && (
-        <button
-          type="button"
-          className="button button--ghost"
+        <Button
+          icon="arrow-down"
+          label={query.isFetchingNextPage ? 'Loading…' : 'Load more'}
+          variant="ghost"
           disabled={query.isFetchingNextPage}
           onClick={() => void query.fetchNextPage()}
-        >
-          {query.isFetchingNextPage ? 'Loading…' : 'Load more'}
-        </button>
+        />
       )}
     </section>
   );

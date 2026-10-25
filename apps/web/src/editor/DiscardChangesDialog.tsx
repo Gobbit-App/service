@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactElement, type SyntheticEvent } from 'react';
+import { Button } from '../ui/buttons/Button';
 
 /**
  * D202 / FR-006, FR-012: "Discard changes?" as a native modal dialog (focus stays inside, the
@@ -49,12 +50,8 @@ export function DiscardChangesDialog({
       </h2>
       <p id={descriptionId}>Your changes to this card haven&apos;t been saved.</p>
       <div className="discard-dialog__buttons">
-        <button ref={keepRef} type="button" className="button" onClick={onKeep}>
-          Keep editing
-        </button>
-        <button type="button" className="button button--ghost" onClick={onDiscard}>
-          Discard
-        </button>
+        <Button ref={keepRef} icon="edit" label="Keep editing" onClick={onKeep} />
+        <Button icon="trash" label="Discard" variant="danger" onClick={onDiscard} />
       </div>
     </dialog>
   );

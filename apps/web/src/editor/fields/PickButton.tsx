@@ -1,5 +1,6 @@
 import type { ChangeEvent, ReactElement } from 'react';
 import { IMAGE_ACCEPT } from '../image-file';
+import { Icon } from '../../ui/icons/Icon';
 
 /** A file input styled as a button; `capture` opens the camera on phones. */
 export function PickButton({
@@ -19,7 +20,7 @@ export function PickButton({
     if (file) onPick(file);
   };
   return (
-    <label className="button button--ghost image-fields__picker">
+    <label className="button button--ghost button--icon image-fields__picker">
       <input
         type="file"
         className="visually-hidden"
@@ -28,7 +29,8 @@ export function PickButton({
         disabled={disabled}
         onChange={onInput}
       />
-      {label}
+      <Icon name={capture ? 'photo' : 'upload'} />
+      <span className="button__label">{label}</span>
     </label>
   );
 }

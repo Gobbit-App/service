@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ReactElement } from 'react';
+import { IconButton } from './buttons/IconButton';
 import { shareItem, shareUrl, type ShareNavigator } from '../lib/share';
 
 /** A button to share an item. */
@@ -47,16 +48,9 @@ export function ShareButton(props: {
 
   return (
     <span className="share-button-wrap">
-      <button
-        type="button"
-        className="icon-button share-button"
-        aria-label="Share"
-        onClick={handleClick}
-      >
-        <span aria-hidden="true">⤴</span>
-      </button>
+      <IconButton icon="share" label="Share" className="share-button" onClick={handleClick} />
       {toast && (
-        <span role="status" className="toast">
+        <span role="status" className="share-button__toast">
           {toast}
         </span>
       )}

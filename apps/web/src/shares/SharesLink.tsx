@@ -2,7 +2,7 @@ import type { Deck } from '@pb/shared';
 import { can } from '@pb/shared/authz';
 import type { ReactElement } from 'react';
 import { deckHref } from '../ui/chip-order';
-import { NavLink } from '../ui/NavLink';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 /**
  * D198/FR-008: "Your shares" in the deck actions, beside Paste, for everyone who can share
@@ -17,8 +17,12 @@ export function SharesLink({
 }): ReactElement | null {
   if (!can(role, 'item.create')) return null;
   return (
-    <NavLink href={deckHref(deckSlug, 'shares')} className="button button--ghost shares-link">
-      Your shares
-    </NavLink>
+    <ButtonLink
+      href={deckHref(deckSlug, 'shares')}
+      icon="send"
+      label="Your shares"
+      variant="ghost"
+      className="shares-link"
+    />
   );
 }

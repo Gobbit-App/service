@@ -3,6 +3,7 @@ import type { Deck, IngestToken } from '@pb/shared';
 import { useRevokeIngestToken } from '../api/ingest-tokens';
 import { problemMessages } from '../api/problem-messages';
 import { lastUsedLabel, tokenScope } from './ingest-token-view';
+import { Button } from '../ui/buttons/Button';
 
 /** Live tokens; revoking asks once more, since a revoked token can't be restored. */
 export function TokenList({
@@ -30,31 +31,28 @@ export function TokenList({
             </div>
             {confirming === token.id ? (
               <div className="token-list__actions">
-                <button
-                  type="button"
-                  className="button button--danger"
+                <Button
+                  icon="trash"
+                  label="Revoke for good"
+                  variant="danger"
                   disabled={revoke.isPending}
                   onClick={() => revoke.mutate(token.id, { onSettled: () => setConfirming(null) })}
-                >
-                  Revoke for good
-                </button>
-                <button
-                  type="button"
-                  className="button button--ghost"
+                />
+                <Button
+                  icon="close"
+                  label="Keep"
+                  variant="ghost"
                   onClick={() => setConfirming(null)}
-                >
-                  Keep
-                </button>
+                />
               </div>
             ) : (
-              <button
-                type="button"
-                className="button button--ghost"
+              <Button
+                icon="trash"
+                label="Revoke"
+                variant="danger"
                 aria-label={`Revoke ${token.label}`}
                 onClick={() => setConfirming(token.id)}
-              >
-                Revoke
-              </button>
+              />
             )}
           </li>
         ))}

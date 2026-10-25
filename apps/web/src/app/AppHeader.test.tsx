@@ -51,6 +51,7 @@ describe('AppHeader', () => {
     expect(signOut).not.toHaveBeenCalled();
     expect(location()).toBe('/here');
     expect(signOutButton()).toBeEnabled();
+    expect(signOutButton().querySelector('svg')).not.toBeNull();
   });
 
   it('signs out once the changes are discarded', async () => {

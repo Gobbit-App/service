@@ -8,6 +8,7 @@ import { ErrorState, LoadingState } from '../ui/StatusViews';
 import { AdminError } from './AdminError';
 import { membersQuery, useChangeRole, useRemoveMember } from './deck-admin-queries';
 import { InviteForm } from './InviteForm';
+import { Button } from '../ui/buttons/Button';
 
 /**
  * D184/D185: everyone sees the member list; owners (`member.invite`, `member.remove`) also
@@ -107,34 +108,31 @@ function MemberRow({
       {controls &&
         (confirming ? (
           <div className="admin-member__actions">
-            <button
-              type="button"
-              className="button button--danger"
+            <Button
+              icon="user-minus"
+              label={pending ? 'Cancel the invite' : `Remove ${member.displayName}`}
+              variant="danger"
               disabled={busy}
               onClick={() =>
                 remove.mutate(member.userId, { onSettled: () => setConfirming(false) })
               }
-            >
-              {pending ? 'Cancel the invite' : `Remove ${member.displayName}`}
-            </button>
-            <button
-              type="button"
-              className="button button--ghost"
+            />
+            <Button
+              icon="close"
+              label="Keep"
+              variant="ghost"
               onClick={() => setConfirming(false)}
-            >
-              Keep
-            </button>
+            />
           </div>
         ) : (
-          <button
-            type="button"
-            className="button button--ghost"
+          <Button
+            icon="user-minus"
+            label={removeLabel}
+            variant="danger"
             aria-label={`${removeLabel} ${member.displayName}`}
             disabled={busy}
             onClick={() => setConfirming(true)}
-          >
-            {removeLabel}
-          </button>
+          />
         ))}
       <AdminError error={changeRole.error ?? remove.error} />
     </li>

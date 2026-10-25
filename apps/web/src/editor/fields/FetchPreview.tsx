@@ -4,6 +4,7 @@ import { useOnline } from '../../api/offline';
 import { useLinkPreview } from '../use-link-preview';
 import { isHttpUrl } from '../validate';
 import type { LinkPreview, LinkPreviewSlotContext } from './LinkFields';
+import { Button } from '../../ui/buttons/Button';
 
 export const NO_PREVIEW = 'No preview available';
 
@@ -62,15 +63,14 @@ export function FetchPreview({
 
   return (
     <div className="fetch-preview">
-      <button
-        type="button"
-        className="button button--ghost"
+      <Button
+        icon="link"
+        label={lookup.isPending ? 'Fetching preview…' : 'Fetch preview'}
+        variant="ghost"
         onClick={fetchPreview}
         disabled={!canFetch}
         aria-busy={lookup.isPending || undefined}
-      >
-        {lookup.isPending ? 'Fetching preview…' : 'Fetch preview'}
-      </button>
+      />
       <p className="muted fetch-preview__status" role="status">
         {!online
           ? 'Fetching a preview needs a connection.'

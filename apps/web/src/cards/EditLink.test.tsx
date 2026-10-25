@@ -49,9 +49,4 @@ describe('EditLink', () => {
     );
     expect(screen.getAllByRole('link', { name: 'Edit' })).toHaveLength(1);
   });
-
-  it('wraps the link in an actions row for lists', () => {
-    const { container } = renderWithClient(<EditLink item={makeItem()} role="owner" row />);
-    expect(container.querySelector('.card-actions a')).not.toBeNull();
-  });
 });

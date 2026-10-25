@@ -35,12 +35,15 @@ export function NavLink({
   href,
   className,
   label,
+  tip,
   children,
 }: {
   href: string;
   className?: string;
   /** Accessible name when the visible text is shorter than it. */
   label?: string;
+  /** D212 tooltip text. */
+  tip?: string;
   children: ReactNode;
 }): ReactElement {
   const navigate = useNavigateHref();
@@ -49,6 +52,7 @@ export function NavLink({
       href={href}
       className={className}
       aria-label={label}
+      data-tip={tip}
       onClick={(event) => {
         if (!isPlainClick(event)) return;
         event.preventDefault();

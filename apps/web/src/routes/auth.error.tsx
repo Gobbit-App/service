@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { authErrorCopy, parseReason, type AuthErrorReason } from '../lib/auth-error-copy';
-import { NavLink } from '../ui/NavLink';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 /** Where the API's magic-link callback sends a failed sign-in (`?reason=`). */
 export const Route = createFileRoute('/auth/error')({
@@ -18,9 +18,7 @@ function AuthError() {
       <section className="error-state" role="alert">
         <h1>{copy.title}</h1>
         <p>{copy.body}</p>
-        <NavLink href="/sign-in" className="button">
-          Get a new link
-        </NavLink>
+        <ButtonLink href="/sign-in" icon="send" label="Get a new link" />
       </section>
     </main>
   );

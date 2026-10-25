@@ -6,6 +6,7 @@ import { AdminError } from './AdminError';
 import { AutoPublishSwitch } from './AutoPublishSwitch';
 import { useUpdateDeck } from './deck-admin-queries';
 import { PublicSwitchDialog } from './PublicSwitchDialog';
+import { Button } from '../ui/buttons/Button';
 
 /** 017: the public page of a deck lives at `/p/<slug>` on the same origin. */
 export function publicDeckUrl(slug: string, origin = globalThis.location?.origin ?? ''): string {
@@ -55,13 +56,12 @@ export function DeckSection({
             disabled={!online}
             onChange={(event) => setName(event.currentTarget.value)}
           />
-          <button
+          <Button
             type="submit"
-            className="button"
+            icon="check"
+            label="Save"
             disabled={!online || update.isPending || !trimmed || trimmed === deck.name}
-          >
-            Save
-          </button>
+          />
         </div>
       </form>
 

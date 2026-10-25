@@ -5,6 +5,7 @@ import { categoryVisibilities } from '@pb/shared/enums';
 import { SettingsSection } from '../settings/SettingsSection';
 import { AdminError } from './AdminError';
 import { useUpdateCategory } from './deck-admin-queries';
+import { Button } from '../ui/buttons/Button';
 
 /** D184: rename and the three-way visibility select per category (`category.update`). */
 export function CategoriesSection({
@@ -61,9 +62,7 @@ function CategoryRow({
           onChange={(event) => setName(event.currentTarget.value)}
         />
         {trimmed !== category.name && (
-          <button type="submit" className="button" disabled={disabled || !trimmed}>
-            Save
-          </button>
+          <Button type="submit" icon="check" label="Save" disabled={disabled || !trimmed} />
         )}
         <select
           aria-label={`Who sees ${category.name}`}

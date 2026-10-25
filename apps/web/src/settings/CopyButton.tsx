@@ -1,4 +1,5 @@
 import { useState, type ReactElement } from 'react';
+import { Button } from '../ui/buttons/Button';
 
 type Clipboard = { writeText: (text: string) => Promise<void> };
 
@@ -26,13 +27,12 @@ export function CopyButton({
   };
 
   return (
-    <button
-      type="button"
-      className="button button--ghost"
+    <Button
+      icon={state === 'copied' ? 'check' : 'copy'}
+      label={state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy'}
+      variant="ghost"
       aria-label={label}
       onClick={() => void handleCopy()}
-    >
-      {state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy'}
-    </button>
+    />
   );
 }

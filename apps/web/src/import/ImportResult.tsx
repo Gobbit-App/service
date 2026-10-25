@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import type { ImportRunResult } from '@pb/shared/import';
-import { NavLink } from '../ui/NavLink';
 import type { PreviewRow } from './preview-rows';
+import { Button } from '../ui/buttons/Button';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 const PROBLEM_COPY: Readonly<Record<string, string>> = {
   '/problems/rate-limited': 'Daily import limit reached; try again tomorrow',
@@ -47,14 +48,8 @@ export function ImportResult({
         </ul>
       )}
       <div className="import-preview__actions">
-        {result.imported > 0 && (
-          <NavLink href={reviewHref} className="button">
-            Review them
-          </NavLink>
-        )}
-        <button type="button" className="button button--ghost" onClick={onAgain}>
-          Import more
-        </button>
+        {result.imported > 0 && <ButtonLink href={reviewHref} icon="inbox" label="Review them" />}
+        <Button icon="file-import" label="Import more" variant="ghost" onClick={onAgain} />
       </div>
     </section>
   );

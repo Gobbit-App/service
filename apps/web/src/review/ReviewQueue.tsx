@@ -11,6 +11,7 @@ import { BulkPublishNotice } from './BulkPublishNotice';
 import { bulkPublishSummary, type BulkPublishSummary } from './bulk-publish-summary';
 import { ReviewCard } from './ReviewCard';
 import { ReviewSelectBar } from './ReviewSelectBar';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 /**
  * D107: the deck's proposals, newest first, each with publish / edit / discard.
@@ -85,9 +86,12 @@ export function ReviewQueue({
         <EmptyState
           title="Nothing to review"
           action={
-            <NavLink href={deckHref(deckSlug, 'shares')} className="button button--ghost">
-              Your shares
-            </NavLink>
+            <ButtonLink
+              href={deckHref(deckSlug, 'shares')}
+              icon="send"
+              label="Your shares"
+              variant="ghost"
+            />
           }
         >
           Shared cards waiting for approval show up here. Your own shares and their status are in
