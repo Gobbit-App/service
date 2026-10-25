@@ -32,7 +32,7 @@ Down file `packages/db/migrations/down/0017_share_status.down.sql` drops the ind
 | `SHARES_LIST_LIMIT` | 50 | D196 |
 | `SHARE_MAX_RETRIES` | 3 | D197 |
 | `SHARE_POLL_MS` | 3000 | D198 web polling while processing |
-| `RETRYABLE_FAILURES` | all except `sharer_left` | `canRetry` also needs `raw` present and `retry_count < SHARE_MAX_RETRIES` |
+| `RETRYABLE_FAILURES` | all except `sharer_left`, `content_expired` | `canRetry` also needs `raw` present and `retry_count < SHARE_MAX_RETRIES` |
 
 ## Entities
 
