@@ -109,7 +109,7 @@ The person running the deployment reads the logs after a member reports a missin
 - **FR-005**: When a failed share's content is no longer kept, the screen MUST offer "Paste it again" (opening the deck's paste box) instead of "Try again".
 - **FR-006**: The "Sent" screen MUST stop promising the share will appear in review; it MUST show the share's live status and link to "Your shares".
 - **FR-007**: Members who can publish MUST always see the review entry in the deck header; the count is shown only when greater than zero. The empty review screen MUST link to "Your shares".
-- **FR-008**: Members MUST be able to reach "Your shares" from the deck whatever their role.
+- **FR-008**: Every member who can share to the deck MUST be able to reach "Your shares" from the deck, whatever their role (readers can't share, so they don't see it).
 - **FR-009**: When a share fails for good, the system MUST write one error-level log line with the share id, deck id, channel, attempt count and reason code; logs MUST NOT include shared text, links, image data, email content or credentials.
 - **FR-010**: Decks MUST have a setting "Publish shares from publishers directly", off by default for shared and communal decks (on for the personal deck, FR-014); only owners (including co-owners) can change it, and maintainers can see it.
 - **FR-011**: With the setting on, a share MUST be published directly only if, at processing time, the sharer can publish on the deck, the card has at least one category, and the duplicate check found no likely duplicate or update; otherwise it MUST go to review with the reason shown in review and in "Your shares".
