@@ -8,6 +8,7 @@ const validDeckDto = {
   name: 'My deck',
   isPublic: false,
   isDefault: true,
+  autoPublishShares: true,
   ownerAccountId: '22222222-2222-4222-8222-222222222222',
   createdAt: '2026-10-11T00:00:00.000Z',
   updatedAt: '2026-10-11T00:00:00.000Z',
@@ -21,6 +22,11 @@ describe('deckSchema', () => {
 
   it('requires isDefault', () => {
     const { isDefault: _omitted, ...withoutFlag } = validDeckDto;
+    expect(deckSchema.safeParse(withoutFlag).success).toBe(false);
+  });
+
+  it('requires autoPublishShares (D192)', () => {
+    const { autoPublishShares: _omitted, ...withoutFlag } = validDeckDto;
     expect(deckSchema.safeParse(withoutFlag).success).toBe(false);
   });
 });
@@ -95,5 +101,10 @@ describe('deckPatchSchema', () => {
       isPublic: true,
     });
     expect(result.success).toBe(true);
+  });
+
+  it('accepts {autoPublishShares:false} and rejects a non-boolean (D192)', () => {
+    expect(deckPatchSchema.safeParse({ autoPublishShares: false }).success).toBe(true);
+    expect(deckPatchSchema.safeParse({ autoPublishShares: 'yes' }).success).toBe(false);
   });
 });

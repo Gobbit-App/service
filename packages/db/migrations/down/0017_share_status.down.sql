@@ -1,0 +1,10 @@
+ALTER TABLE "ingest_jobs" DROP CONSTRAINT IF EXISTS "ingest_jobs_retry_count_chk";
+ALTER TABLE "ingest_jobs" DROP CONSTRAINT IF EXISTS "ingest_jobs_auto_publish_chk";
+ALTER TABLE "ingest_jobs" DROP CONSTRAINT IF EXISTS "ingest_jobs_failure_code_status_chk";
+ALTER TABLE "ingest_jobs" DROP CONSTRAINT IF EXISTS "ingest_jobs_failure_code_chk";
+DROP INDEX IF EXISTS "ingest_jobs_sharer_deck_idx";
+ALTER TABLE "ingest_jobs" DROP COLUMN IF EXISTS "retried_at";
+ALTER TABLE "ingest_jobs" DROP COLUMN IF EXISTS "retry_count";
+ALTER TABLE "ingest_jobs" DROP COLUMN IF EXISTS "auto_publish";
+ALTER TABLE "ingest_jobs" DROP COLUMN IF EXISTS "failure_code";
+ALTER TABLE "decks" DROP COLUMN IF EXISTS "auto_publish_shares";

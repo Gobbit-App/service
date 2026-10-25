@@ -23,14 +23,14 @@ description: "Task list for 022-share-status"
 
 ## Phase 1: Foundational (Blocking Prerequisites)
 
-- [ ] T001 [P] Constants in packages/shared/src/ingest/constants.ts (exported from `@pb/shared/ingest`):
+- [X] T001 [P] Constants in packages/shared/src/ingest/constants.ts (exported from `@pb/shared/ingest`):
   - `ingestFailureCodes = ['content_expired','sharer_left','fetch_failed','unreadable_answer','assistant_unavailable','image_unavailable','unknown']`
   - `autoPublishOutcomes = ['published','held_not_publisher','held_needs_category','held_duplicate','held_duplicate_check_failed','held_publish_failed']`
   - `shareChannels = ['pwa','shortcut','paste','email']`
   - `SHARES_LIST_LIMIT = 50`, `SHARE_MAX_RETRIES = 3`, `SHARE_POLL_MS = 3000`
   - `RETRYABLE_FAILURES` = every code except `sharer_left` and `content_expired`
   - Types `IngestFailureCode`, `AutoPublishOutcome`, `ShareChannel`
-- [ ] T002 Drizzle schema:
+- [X] T002 Drizzle schema:
   - packages/db/src/schema/decks.ts: `autoPublishShares` boolean `NOT NULL DEFAULT false`.
   - packages/db/src/schema/ingest-jobs.ts:
     - `failureCode` text null, CHECK `failure_code IS NULL OR failure_code IN (…)`, CHECK `failure_code IS NULL OR status = 'failed'`;
@@ -38,7 +38,7 @@ description: "Task list for 022-share-status"
     - `retryCount` smallint `NOT NULL DEFAULT 0`, CHECK `retry_count BETWEEN 0 AND 3`;
     - `retriedAt` `timestamp({ withTimezone: true, precision: 3, mode: 'date' })` null;
     - index `(user_id, deck_id, created_at DESC)`.
-- [ ] T003 Migration packages/db/migrations/0017_share_status.sql (`pnpm db:generate`, then hand-add the backfills):
+- [X] T003 Migration packages/db/migrations/0017_share_status.sql (`pnpm db:generate`, then hand-add the backfills):
   - `UPDATE decks SET auto_publish_shares = true WHERE is_default`.
   - `failure_code` on `status = 'failed'` rows:
     - `raw_missing` → `content_expired`;
@@ -46,9 +46,9 @@ description: "Task list for 022-share-status"
     - `invalid_output%` → `unreadable_answer`;
     - else `unknown`.
   - Down file packages/db/migrations/down/0017_share_status.down.sql.
-- [ ] T004 [P] [unit] packages/db/src/schema/enums.test.ts: the CHECK lists in the 0017 SQL equal `ingestFailureCodes` / `autoPublishOutcomes`
-- [ ] T005 [P] packages/shared/src/schemas/share.ts: `shareSummarySchema` and `shareListSchema` (`{ shares }`), per data-model.md. `state` ∈ `processing | failed | in_review | published | not_added`; `preview` `{ title: string | null, host: string | null, photoCount: number }`; `item` `{ id, title, deleted } | null`; `reviewedBy` `{ displayName } | null`. Add `autoPublishShares` to `deckSchema` and `deckPatchSchema` in packages/shared/src/schemas/deck.ts (+ deck.test.ts row). [unit] share.test.ts: the schema rejects any extra `error`/`raw` key (strict).
-- [ ] T006 [P] [unit] apps/api/src/ingest/failure-code.ts `classifyFailure(input: string | Error): IngestFailureCode`:
+- [X] T004 [P] [unit] packages/db/src/schema/enums.test.ts: the CHECK lists in the 0017 SQL equal `ingestFailureCodes` / `autoPublishOutcomes`
+- [X] T005 [P] packages/shared/src/schemas/share.ts: `shareSummarySchema` and `shareListSchema` (`{ shares }`), per data-model.md. `state` ∈ `processing | failed | in_review | published | not_added`; `preview` `{ title: string | null, host: string | null, photoCount: number }`; `item` `{ id, title, deleted } | null`; `reviewedBy` `{ displayName } | null`. Add `autoPublishShares` to `deckSchema` and `deckPatchSchema` in packages/shared/src/schemas/deck.ts (+ deck.test.ts row). [unit] share.test.ts: the schema rejects any extra `error`/`raw` key (strict).
+- [X] T006 [P] [unit] apps/api/src/ingest/failure-code.ts `classifyFailure(input: string | Error): IngestFailureCode`:
   - `raw_missing` → `content_expired`;
   - `sharer_*` → `sharer_left`;
   - `invalid_output*` / no tool call → `unreadable_answer`;
@@ -57,7 +57,7 @@ description: "Task list for 022-share-status"
   - provider/HTTP/timeout errors (`ExtractResponseError`, abort) → `assistant_unavailable`;
   - else `unknown`.
   - Tests in failure-code.test.ts.
-- [ ] T007 apps/api/src/repositories/ingest-jobs.repo.ts:
+- [X] T007 apps/api/src/repositories/ingest-jobs.repo.ts:
   - `setStatus` accepts `failureCode`;
   - `listForSharer({ userId, deckId, since, channels, limit })` newest first;
   - `resetForRetry(id, now)`: conditional `WHERE status='failed' AND raw IS NOT NULL AND retry_count < 3`; sets queued, attempts 0, clears error/failure_code/finished_at/auto_publish, `retry_count+1`, `retried_at=now`; returns the row or null;

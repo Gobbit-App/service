@@ -15,6 +15,7 @@ describe('mappers', () => {
         ownerAccountId: '223e4567-e89b-12d3-a456-426614174000',
         isPublic: false,
         isDefault: false,
+        autoPublishShares: false,
         createdAt: date,
         updatedAt: date,
         deletedAt: null,
@@ -39,6 +40,7 @@ describe('mappers', () => {
         ownerAccountId: '223e4567-e89b-12d3-a456-426614174000',
         isPublic: false,
         isDefault: true,
+        autoPublishShares: true,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
@@ -48,6 +50,7 @@ describe('mappers', () => {
 
       expect(dto.slug).toBe('me');
       expect(dto.isDefault).toBe(true);
+      expect(dto.autoPublishShares).toBe(true);
       expect(deckSchema.parse(dto).slug).toBe('me');
     });
 
@@ -60,6 +63,7 @@ describe('mappers', () => {
         ownerAccountId: '223e4567-e89b-12d3-a456-426614174000',
         isPublic: false,
         isDefault: false,
+        autoPublishShares: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,

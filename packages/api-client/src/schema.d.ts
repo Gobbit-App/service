@@ -568,6 +568,7 @@ export interface paths {
                                 name: string;
                                 isPublic: boolean;
                                 isDefault: boolean;
+                                autoPublishShares: boolean;
                                 ownerAccountId: string;
                                 createdAt: string;
                                 updatedAt: string;
@@ -640,6 +641,7 @@ export interface paths {
                                 name: string;
                                 isPublic: boolean;
                                 isDefault: boolean;
+                                autoPublishShares: boolean;
                                 ownerAccountId: string;
                                 createdAt: string;
                                 updatedAt: string;
@@ -707,6 +709,7 @@ export interface paths {
                             name: string;
                             isPublic: boolean;
                             isDefault: boolean;
+                            autoPublishShares: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;
@@ -833,6 +836,7 @@ export interface paths {
                             name: string;
                             isPublic: boolean;
                             isDefault: boolean;
+                            autoPublishShares: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;
@@ -992,6 +996,7 @@ export interface paths {
                         name?: string;
                         slug?: string;
                         isPublic?: boolean;
+                        autoPublishShares?: boolean;
                     };
                 };
             };
@@ -1010,6 +1015,7 @@ export interface paths {
                             name: string;
                             isPublic: boolean;
                             isDefault: boolean;
+                            autoPublishShares: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;
@@ -5409,7 +5415,12 @@ export interface paths {
                             /** Format: uuid */
                             resultItemId: string | null;
                             error: string | null;
+                            /** @enum {string|null} */
+                            failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
+                            /** @enum {string|null} */
+                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
                             attempts: number;
+                            retryCount: number;
                             costUsd: number;
                             /** Format: uuid */
                             reviewedBy: string | null;
@@ -5858,6 +5869,8 @@ export interface paths {
                                     } | null;
                                     newCategory: string | null;
                                     sourcePreview: string | null;
+                                    /** @enum {string|null} */
+                                    autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
                                 } | null;
                                 target: {
                                     /** Format: uuid */

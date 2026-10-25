@@ -1,4 +1,16 @@
-import { and, count, eq, gte, inArray, isNotNull, lt, notInArray, or, sql } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  lt,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
 import {
   ingestJobs,
   llmCalls,
@@ -6,7 +18,12 @@ import {
   type IngestJobRow,
   type NewIngestJobRow,
 } from '@pb/db';
-import type { IngestChannel, IngestJobStatus } from '@pb/shared';
+import {
+  SHARE_MAX_RETRIES,
+  type IngestChannel,
+  type IngestFailureCode,
+  type IngestJobStatus,
+} from '@pb/shared';
 
 /** Fields the worker writes as the job moves through the pipeline (D93). */
 export type IngestJobPatch = Partial<
@@ -22,6 +39,7 @@ export type IngestJobPatch = Partial<
     | 'reviewedBy'
     | 'reviewedAt'
     | 'raw'
+    | 'autoPublish'
   >
 >;
 
@@ -51,7 +69,62 @@ export function createIngestJobsRepo(db: DbExecutor) {
       return await db.select().from(ingestJobs).where(inArray(ingestJobs.resultItemId, itemIds));
     },
 
-    /** D110: jobs a user created since `since`, of one channel or of every channel but `exclude`. */
+    /** D196: the sharer's jobs on a deck since `since`, newest first. */
+    async listForSharer(p: {
+      userId: string;
+      deckId: string;
+      since: Date;
+      channels: readonly IngestChannel[];
+      limit: number;
+    }): Promise<IngestJobRow[]> {
+      return await db
+        .select()
+        .from(ingestJobs)
+        .where(
+          and(
+            eq(ingestJobs.userId, p.userId),
+            eq(ingestJobs.deckId, p.deckId),
+            gte(ingestJobs.createdAt, p.since),
+            inArray(ingestJobs.channel, [...p.channels]),
+          ),
+        )
+        .orderBy(desc(ingestJobs.createdAt), desc(ingestJobs.id))
+        .limit(p.limit);
+    },
+
+    /**
+     * D197: puts a failed job back in the queue, only while it still has its share and retries
+     * left (conditional, so two taps can't both win). Null when the job no longer qualifies.
+     */
+    async resetForRetry(id: string, now: Date): Promise<IngestJobRow | null> {
+      const [row] = await db
+        .update(ingestJobs)
+        .set({
+          status: 'queued',
+          attempts: 0,
+          error: null,
+          failureCode: null,
+          autoPublish: null,
+          finishedAt: null,
+          retryCount: sql`${ingestJobs.retryCount} + 1`,
+          retriedAt: now,
+        })
+        .where(
+          and(
+            eq(ingestJobs.id, id),
+            eq(ingestJobs.status, 'failed'),
+            isNotNull(ingestJobs.raw),
+            lt(ingestJobs.retryCount, SHARE_MAX_RETRIES),
+          ),
+        )
+        .returning();
+      return row ?? null;
+    },
+
+    /**
+     * D110: jobs a user created (or retried, D197) since `since`, of one channel or of every
+     * channel but `exclude`.
+     */
     async countByUserSince(
       userId: string,
       since: Date,
@@ -64,7 +137,7 @@ export function createIngestJobsRepo(db: DbExecutor) {
         .where(
           and(
             eq(ingestJobs.userId, userId),
-            gte(ingestJobs.createdAt, since),
+            or(gte(ingestJobs.createdAt, since), gte(ingestJobs.retriedAt, since)),
             channel ? eq(ingestJobs.channel, channel) : undefined,
             exclude.length > 0 ? notInArray(ingestJobs.channel, [...exclude]) : undefined,
           ),
@@ -100,10 +173,22 @@ export function createIngestJobsRepo(db: DbExecutor) {
         .limit(limit);
     },
 
-    async setStatus(id: string, status: IngestJobStatus, error: string | null, now: Date) {
+    /** A failed job always carries a failure code (D194); `unknown` when the caller has none. */
+    async setStatus(
+      id: string,
+      status: IngestJobStatus,
+      error: string | null,
+      now: Date,
+      failureCode?: IngestFailureCode,
+    ) {
       await db
         .update(ingestJobs)
-        .set({ status, error, finishedAt: now })
+        .set({
+          status,
+          error,
+          finishedAt: now,
+          failureCode: status === 'failed' ? (failureCode ?? 'unknown') : null,
+        })
         .where(eq(ingestJobs.id, id));
     },
 

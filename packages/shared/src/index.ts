@@ -23,6 +23,7 @@ export * from './search';
 export * from './schemas/search';
 export * from './ingest';
 export * from './schemas/ingest';
+export * from './schemas/share';
 export * from './schemas/import';
 export * from './import/constants';
 export * from './media';

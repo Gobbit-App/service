@@ -17,6 +17,7 @@ export function toDeckDto(r: DeckRow, role: MemberRole): Deck {
     name: r.name,
     isPublic: r.isPublic,
     isDefault: r.isDefault,
+    autoPublishShares: r.autoPublishShares,
     ownerAccountId: r.ownerAccountId,
     role,
     createdAt: r.createdAt.toISOString(),

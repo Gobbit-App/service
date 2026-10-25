@@ -115,3 +115,50 @@ export const IMPORT_TITLE_SPLIT_MAX = 80;
 export const IMPORT_LABEL_MAX = INGEST_CLIENT_LABEL_MAX;
 /** Ids per `POST /decks/{id}/review/publish`. */
 export const BULK_PUBLISH_MAX = 50;
+
+/**
+ * D194: why a share failed, in words the sharer can act on (`ingest_jobs.failure_code`).
+ * The raw `error` text stays server-side.
+ */
+export const ingestFailureCodes = [
+  'content_expired',
+  'sharer_left',
+  'fetch_failed',
+  'unreadable_answer',
+  'assistant_unavailable',
+  'image_unavailable',
+  'unknown',
+] as const;
+export type IngestFailureCode = (typeof ingestFailureCodes)[number];
+
+/** D193: what the auto-publish gate decided for a share (`ingest_jobs.auto_publish`). */
+export const autoPublishOutcomes = [
+  'published',
+  'held_not_publisher',
+  'held_needs_category',
+  'held_duplicate',
+  'held_duplicate_check_failed',
+  'held_publish_failed',
+] as const;
+export type AutoPublishOutcome = (typeof autoPublishOutcomes)[number];
+
+/** D196: channels a person shares through; listed in Your shares and auto-published (FR-015). */
+export const shareChannels = [
+  'pwa',
+  'shortcut',
+  'paste',
+  'email',
+] as const satisfies readonly IngestChannel[];
+export type ShareChannel = (typeof shareChannels)[number];
+
+/** D196–D198: Your shares. */
+export const SHARES_LIST_LIMIT = 50;
+export const SHARE_MAX_RETRIES = 3;
+export const SHARE_POLL_MS = 3000;
+/**
+ * Failures a retry can fix. `sharer_left` needs the membership back first; `content_expired`
+ * has no saved share left to run again.
+ */
+export const RETRYABLE_FAILURES: readonly IngestFailureCode[] = ingestFailureCodes.filter(
+  (code) => code !== 'sharer_left' && code !== 'content_expired',
+);

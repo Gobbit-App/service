@@ -175,6 +175,7 @@ export function createReviewService(deps: {
                 dedup: job.dedup ?? null,
                 newCategory: job.extraction?.newCategory ?? null,
                 sourcePreview: sourcePreview(job),
+                autoPublish: job.autoPublish ?? null,
               }
             : null,
           target: (targetId && targetDtos.get(targetId)) || null,

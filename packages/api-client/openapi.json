@@ -1311,6 +1311,9 @@
                           "isDefault": {
                             "type": "boolean"
                           },
+                          "autoPublishShares": {
+                            "type": "boolean"
+                          },
                           "ownerAccountId": {
                             "type": "string"
                           },
@@ -1337,6 +1340,7 @@
                           "name",
                           "isPublic",
                           "isDefault",
+                          "autoPublishShares",
                           "ownerAccountId",
                           "createdAt",
                           "updatedAt",
@@ -1484,6 +1488,9 @@
                           "isDefault": {
                             "type": "boolean"
                           },
+                          "autoPublishShares": {
+                            "type": "boolean"
+                          },
                           "ownerAccountId": {
                             "type": "string"
                           },
@@ -1510,6 +1517,7 @@
                           "name",
                           "isPublic",
                           "isDefault",
+                          "autoPublishShares",
                           "ownerAccountId",
                           "createdAt",
                           "updatedAt",
@@ -1687,6 +1695,9 @@
                     "isDefault": {
                       "type": "boolean"
                     },
+                    "autoPublishShares": {
+                      "type": "boolean"
+                    },
                     "ownerAccountId": {
                       "type": "string"
                     },
@@ -1764,6 +1775,7 @@
                     "name",
                     "isPublic",
                     "isDefault",
+                    "autoPublishShares",
                     "ownerAccountId",
                     "createdAt",
                     "updatedAt",
@@ -2069,6 +2081,9 @@
                     "isDefault": {
                       "type": "boolean"
                     },
+                    "autoPublishShares": {
+                      "type": "boolean"
+                    },
                     "ownerAccountId": {
                       "type": "string"
                     },
@@ -2095,6 +2110,7 @@
                     "name",
                     "isPublic",
                     "isDefault",
+                    "autoPublishShares",
                     "ownerAccountId",
                     "createdAt",
                     "updatedAt",
@@ -2307,6 +2323,9 @@
                   },
                   "isPublic": {
                     "type": "boolean"
+                  },
+                  "autoPublishShares": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -2345,6 +2364,9 @@
                     "isDefault": {
                       "type": "boolean"
                     },
+                    "autoPublishShares": {
+                      "type": "boolean"
+                    },
                     "ownerAccountId": {
                       "type": "string"
                     },
@@ -2371,6 +2393,7 @@
                     "name",
                     "isPublic",
                     "isDefault",
+                    "autoPublishShares",
                     "ownerAccountId",
                     "createdAt",
                     "updatedAt",
@@ -17178,7 +17201,41 @@
                         "null"
                       ]
                     },
+                    "failureCode": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "content_expired",
+                        "sharer_left",
+                        "fetch_failed",
+                        "unreadable_answer",
+                        "assistant_unavailable",
+                        "image_unavailable",
+                        "unknown",
+                        null
+                      ]
+                    },
+                    "autoPublish": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "published",
+                        "held_not_publisher",
+                        "held_needs_category",
+                        "held_duplicate",
+                        "held_duplicate_check_failed",
+                        "held_publish_failed",
+                        null
+                      ]
+                    },
                     "attempts": {
+                      "type": "integer"
+                    },
+                    "retryCount": {
                       "type": "integer"
                     },
                     "costUsd": {
@@ -17223,7 +17280,10 @@
                     "dedup",
                     "resultItemId",
                     "error",
+                    "failureCode",
+                    "autoPublish",
                     "attempts",
+                    "retryCount",
                     "costUsd",
                     "reviewedBy",
                     "reviewedAt",
@@ -18574,6 +18634,21 @@
                                   "string",
                                   "null"
                                 ]
+                              },
+                              "autoPublish": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "published",
+                                  "held_not_publisher",
+                                  "held_needs_category",
+                                  "held_duplicate",
+                                  "held_duplicate_check_failed",
+                                  "held_publish_failed",
+                                  null
+                                ]
                               }
                             },
                             "required": [
@@ -18584,7 +18659,8 @@
                               "createdAt",
                               "dedup",
                               "newCategory",
-                              "sourcePreview"
+                              "sourcePreview",
+                              "autoPublish"
                             ]
                           },
                           "target": {

@@ -34,6 +34,7 @@ function entry(
       dedup: null,
       newCategory: null,
       sourcePreview: 'https://dentist.example/',
+      autoPublish: null,
       ...job,
     },
   };
