@@ -175,3 +175,62 @@ describe('useDraftAutosave (D145)', () => {
     expect(log).toHaveBeenCalledWith('[drafts] could not save the draft', expect.any(Error));
   });
 });
+
+describe('useDraftAutosave: flush and baseline (D203, D204)', () => {
+  it('flush writes at once, before the debounce', async () => {
+    const { result, rerender, kv } = setup();
+    await settle();
+    rerender({ draft: typed });
+    act(() => result.current.flush());
+    await settle();
+    expect(kv.map.get(KEY)).toMatchObject({ draft: typed });
+  });
+
+  it('flush writes nothing while unchanged, while an offer is open, or after clear', async () => {
+    const unchanged = setup();
+    await settle();
+    act(() => unchanged.result.current.flush());
+    await settle();
+    expect(unchanged.kv.map.size).toBe(0);
+    unchanged.unmount();
+
+    const kv = memoryDraftsKv();
+    await writeDraft(KEY, typed, null, NOW, kv);
+    const offered = setup({}, kv);
+    await settle();
+    offered.rerender({ draft: { ...initial, title: 'Other' } });
+    act(() => offered.result.current.flush());
+    await settle();
+    expect((kv.map.get(KEY) as StoredDraft).draft).toEqual(typed);
+    offered.unmount();
+
+    const cleared = setup();
+    await settle();
+    cleared.rerender({ draft: typed });
+    await act(() => cleared.result.current.clear());
+    act(() => cleared.result.current.flush());
+    await act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS));
+    expect(cleared.kv.map.size).toBe(0);
+  });
+
+  it('stores nothing when the draft equals a moved baseline', async () => {
+    const saved = { ...initial, categoryIds: ['c2'] };
+    const { rerender, kv } = setup();
+    await settle();
+    rerender({ draft: saved, baseline: saved });
+    await act(() => vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS));
+    expect(kv.map.size).toBe(0);
+  });
+
+  it('does not offer the stored draft again when the baseline moves', async () => {
+    const kv = memoryDraftsKv();
+    await writeDraft(KEY, typed, null, NOW, kv);
+    const { result, rerender } = setup({}, kv);
+    await settle();
+    act(() => result.current.discard());
+    await settle();
+    rerender({ baseline: { ...initial, categoryIds: ['c2'] } });
+    await settle();
+    expect(result.current.offer).toBeNull();
+  });
+});

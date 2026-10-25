@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { can } from '@pb/shared/authz';
 import { categoriesQuery, configQuery, deckQuery } from '../api/queries';
+import { backTarget } from '../app/back-target';
 import { isCreatableType, type CreatableType } from '../editor/creatable-types';
 import { CardEditor } from '../editor/CardEditor';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
@@ -54,7 +55,11 @@ function NewCard() {
       deck={deck.data}
       type={effectiveType}
       categories={categories.data}
-      onTypeChange={(next) => void navigate({ search: { type: next }, replace: true })}
+      backHref={backTarget({ kind: 'new-card', deckSlug: deck.data.slug })}
+      // Same screen, so the unsaved-changes guard has nothing to ask about.
+      onTypeChange={(next) =>
+        void navigate({ search: { type: next }, replace: true, ignoreBlocker: true })
+      }
     />
   );
 }

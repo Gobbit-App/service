@@ -1,17 +1,14 @@
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import type { Category, Deck, Item, ItemPatch } from '@pb/shared';
 import { editHref } from '../cards/can-edit-item';
-import {
-  draftFromItem,
-  isDirty,
-  toPatch,
-  type Draft,
-  type LinkDraftPayload,
-} from '../editor/draft';
+import { DiscardChangesDialog } from '../editor/DiscardChangesDialog';
+import { draftFromItem, toPatch, type Draft, type LinkDraftPayload } from '../editor/draft';
 import { BodyField } from '../editor/fields/BodyField';
 import { CategoryChips } from '../editor/fields/CategoryChips';
 import { LinkFields } from '../editor/fields/LinkFields';
 import { TitleField } from '../editor/fields/TitleField';
+import { useEditorBaseline } from '../editor/use-editor-baseline';
+import { useLeaveGuard } from '../editor/use-leave-guard';
 import { errorCount, validateDraft, type FieldErrors } from '../editor/validate';
 import { NavLink } from '../ui/NavLink';
 
@@ -28,6 +25,7 @@ function formErrors(errors: FieldErrors, type: Draft['type']): FieldErrors {
 /**
  * D107 / FR-016: inline edit of a proposal before publishing (title, text, link, categories)
  * on the editor's draft model and fields; "Edit fully" opens the full editor.
+ * 022 FR-010: Cancel and leaving the page ask before dropping changes (no draft is kept here).
  */
 export function ReviewEditForm({
   item,
@@ -46,8 +44,11 @@ export function ReviewEditForm({
   onSave: (patch: ItemPatch) => void;
   onCancel: () => void;
 }): ReactElement {
-  const [initial] = useState(() => draftFromItem(item));
-  const [draft, setDraft] = useState<Draft>(initial);
+  const { baseline, isChanged } = useEditorBaseline(() => draftFromItem(item));
+  const [draft, setDraft] = useState<Draft>(baseline);
+  const [askingCancel, setAskingCancel] = useState(false);
+  const changed = isChanged(draft);
+  const leaveDialog = useLeaveGuard({ when: changed });
   const update = (changes: Partial<Draft>) => setDraft((prev) => ({ ...prev, ...changes }));
 
   // Only the fields this form shows are checked; the full editor covers the rest.
@@ -59,7 +60,9 @@ export function ReviewEditForm({
       ),
     [draft, item.status],
   );
-  const shown = isDirty(draft, initial) ? fieldErrors : {};
+  const shown = changed ? fieldErrors : {};
+
+  const cancel = () => (changed ? setAskingCancel(true) : onCancel());
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -118,13 +121,17 @@ export function ReviewEditForm({
         >
           Save
         </button>
-        <button type="button" className="button button--ghost" onClick={onCancel}>
+        <button type="button" className="button button--ghost" onClick={cancel}>
           Cancel
         </button>
         <NavLink href={editHref(item.id, 'review')} className="button button--ghost">
           Edit fully
         </NavLink>
       </div>
+      {leaveDialog}
+      {askingCancel && (
+        <DiscardChangesDialog onKeep={() => setAskingCancel(false)} onDiscard={onCancel} />
+      )}
     </form>
   );
 }

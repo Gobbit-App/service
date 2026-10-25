@@ -34,7 +34,8 @@ export function useSaveCard(target: SaveTarget, onSaved?: () => Promise<void> | 
 
   const finish = async (saved: Item | null) => {
     await onSaved?.();
-    navigate(afterSaveHref(target, saved));
+    // Saved: nothing is left to lose, so the unsaved-changes guard must not ask (FR-010).
+    navigate(afterSaveHref(target, saved), { ignoreBlocker: true });
   };
 
   async function save(draft: Draft): Promise<void> {

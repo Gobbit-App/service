@@ -6,15 +6,20 @@ export function saveBlockedReason(errorCount: number, calcReady: boolean): strin
   return null;
 }
 
-/** Save button with the reason it is disabled next to it, and a form-level save error. */
+/**
+ * Save button with the reason it is disabled next to it, a form-level save error and Cancel
+ * (FR-004: never disabled; leaving goes through the unsaved-changes guard).
+ */
 export function SaveBar({
   blockedReason,
   saving,
   formError,
+  onCancel,
 }: {
   blockedReason: string | null;
   saving: boolean;
   formError: string | null;
+  onCancel: () => void;
 }): ReactElement {
   const reasonId = useId();
   return (
@@ -33,6 +38,9 @@ export function SaveBar({
           aria-busy={saving || undefined}
         >
           Save card
+        </button>
+        <button type="button" className="button button--ghost" onClick={onCancel}>
+          Cancel
         </button>
         {blockedReason && (
           <span id={reasonId} className="editor__save-reason">

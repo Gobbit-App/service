@@ -1,11 +1,11 @@
 import { Suspense, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import type { Category, Deck, Item, ItemType } from '@pb/shared';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
+import { useNavigateHref } from '../ui/NavLink';
 import {
   draftFromItem,
   emptyDraft,
   isCreatableType,
-  isDirty,
   withType,
   type CreatableType,
   type Draft,
@@ -23,20 +23,30 @@ import { SaveBar, saveBlockedReason } from './SaveBar';
 import { TYPE_LABELS, TypePicker } from './TypePicker';
 import { useCalcCheck } from './use-calc-check';
 import { useDraftAutosave } from './use-draft-autosave';
+import { useEditorBaseline } from './use-editor-baseline';
+import { useLeaveGuard } from './use-leave-guard';
+import { usePageHide } from './use-page-hide';
 import { useSaveCard, type SaveTarget } from './use-save-card';
 import { errorCount, validateDraft, type FieldErrors } from './validate';
 import './editor.css';
 
-export type CardEditorProps =
-  | {
-      mode: 'create';
-      deck: Deck;
-      type: ItemType;
-      categories: Category[];
-      /** Keeps `?type=` in the URL in step with the picker (replace). */
-      onTypeChange?: (type: CreatableType) => void;
-    }
-  | { mode: 'edit'; deck: Deck; item: Item; categories: Category[]; from?: 'review' };
+type CommonProps = {
+  /** Where Cancel goes: the header back target of the editor (D200). */
+  backHref: string;
+};
+
+export type CardEditorProps = CommonProps &
+  (
+    | {
+        mode: 'create';
+        deck: Deck;
+        type: ItemType;
+        categories: Category[];
+        /** Keeps `?type=` in the URL in step with the picker (replace). */
+        onTypeChange?: (type: CreatableType) => void;
+      }
+    | { mode: 'edit'; deck: Deck; item: Item; categories: Category[]; from?: 'review' }
+  );
 
 function defaultCategoryId(categories: readonly Category[]): string | null {
   return categories.find((c) => c.isDefault)?.id ?? null;
@@ -59,12 +69,15 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   const { deck, categories } = props;
   const [initial] = useState(() => initialDraft(props));
   const [draft, setDraft] = useState(initial);
+  // D203: 023's instant category saves will call `rebaseline({ categoryIds })` from here.
+  const { baseline, isChanged } = useEditorBaseline(initial);
   const calc = useCalcCheck(draft.type);
   const autosave = useDraftAutosave({
     storageKey:
       props.mode === 'create' ? newDraftKey(deck.id, draft.type) : editDraftKey(props.item.id),
     draft,
     initial,
+    baseline,
     baseUpdatedAt: props.mode === 'edit' ? props.item.updatedAt : null,
   });
   const {
@@ -73,6 +86,16 @@ export function CardEditor(props: CardEditorProps): ReactElement {
     errors: saveErrors,
     clearErrors,
   } = useSaveCard(saveTarget(props), autosave.clear);
+  const navigate = useNavigateHref();
+  const changed = isChanged(draft);
+
+  // D201/D204: guard every way out while there is unsaved work; write the draft on the way.
+  const leaveDialog = useLeaveGuard({
+    when: changed || saving,
+    onAttempt: autosave.flush,
+    onDiscard: autosave.clear,
+  });
+  usePageHide(autosave.flush);
 
   // The URL's `?type=` changed outside the picker (e.g. back button): follow it during render.
   const urlType = props.mode === 'create' ? props.type : null;
@@ -89,7 +112,7 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   );
   // Client errors show once the user has changed something; server errors always.
   const shown: FieldErrors = {
-    ...(isDirty(draft, initial) ? clientErrors : {}),
+    ...(changed ? clientErrors : {}),
     ...saveErrors?.fields,
   };
 
@@ -204,7 +227,9 @@ export function CardEditor(props: CardEditorProps): ReactElement {
         blockedReason={saveBlockedReason(errorCount(clientErrors), calc.ready)}
         saving={saving}
         formError={saveErrors?.form ?? (calc.failed ? "Couldn't load the calculator check." : null)}
+        onCancel={() => navigate(props.backHref)}
       />
+      {leaveDialog}
     </form>
   );
 }
