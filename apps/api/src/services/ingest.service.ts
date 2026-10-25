@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import {
   can,
   DIRECT_PROPOSAL_MODEL,
-  INGEST_CAP_WINDOW_MS,
   INGEST_CLIENT_LABEL_MAX,
   INGEST_IMAGE_MAX_BYTES,
   INGEST_IMAGE_MIMES,
@@ -26,12 +25,12 @@ import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
 import { authorize, resolveRole, type MembershipLookup } from '../access/authorize';
-import { badRequest, notFound, rateLimited, serviceUnavailable } from '../errors/http-errors';
+import { badRequest, notFound, serviceUnavailable } from '../errors/http-errors';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { IngestQueue } from '../jobs/ingest-queue';
 import { proposeItem } from '../ingest/propose';
-import { countsTowardCombinedCap, OUTSIDE_COMBINED_CAP, withinCaps } from '../ingest/caps';
+import { createCapGuard } from '../ingest/caps';
 import type { RunDedupInput } from '../ingest/run-dedup';
 import { toIngestJobDto } from '../lib/ingest-mappers';
 import { isUuid, resolveDeck } from '../lib/resolve-deck';
@@ -81,9 +80,6 @@ export interface DirectProposalResult {
   itemId: string;
   dedup: DedupVerdict | null;
 }
-
-/** Retry-After for the daily cap: the window is rolling, so an hour is a fair hint. */
-const CAP_RETRY_AFTER_SECONDS = 3600;
 
 const isAllowedMime = (mime: string): boolean =>
   (INGEST_IMAGE_MIMES as readonly string[]).includes(mime);
@@ -167,24 +163,12 @@ export function createIngestService(deps: {
   const newId = deps.newId ?? randomUUID;
   const log = deps.log ?? lineSink('ingest');
 
-  /** D110: the channel's cap and the combined ceiling (which skips imports, D190), over a rolling day. */
-  async function assertWithinCaps(userId: string, channel: IngestChannel): Promise<void> {
-    const since = new Date(now().getTime() - INGEST_CAP_WINDOW_MS);
-    const [own, combined] = await Promise.all([
-      jobs.countByUserSince(userId, since, channel),
-      countsTowardCombinedCap(channel)
-        ? jobs.countByUserSince(userId, since, undefined, OUTSIDE_COMBINED_CAP)
-        : null,
-    ]);
-    const ok = withinCaps({
-      channel,
-      own,
-      combined,
-      dailyCaps: deps.dailyCaps,
-      combinedCap: deps.combinedCap,
-    });
-    if (!ok) throw rateLimited(CAP_RETRY_AFTER_SECONDS);
-  }
+  const assertWithinCaps = createCapGuard({
+    jobs,
+    dailyCaps: deps.dailyCaps,
+    combinedCap: deps.combinedCap,
+    now,
+  });
 
   /** ADR-004: a published card of this deck the caller can see, else 404. */
   async function assertTarget(deckId: string, role: MemberRole, itemId: string): Promise<void> {

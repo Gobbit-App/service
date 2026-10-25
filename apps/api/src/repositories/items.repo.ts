@@ -262,6 +262,15 @@ export function createItemsRepo(db: DbExecutor) {
       return item ?? null;
     },
 
+    /** D196: id, title and deletion of several cards at once, soft-deleted ones included. */
+    async findRefsByIds(ids: string[]): Promise<Pick<ItemRow, 'id' | 'title' | 'deletedAt'>[]> {
+      if (ids.length === 0) return [];
+      return await db
+        .select({ id: items.id, title: items.title, deletedAt: items.deletedAt })
+        .from(items)
+        .where(inArray(items.id, ids));
+    },
+
     /**
      * D132: the deck's deleted cards since `deletedSince`, proposals excluded (review-owned),
      * newest deleted first. The cursor is `(deletedAt, id)` of the last row of the previous page.

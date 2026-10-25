@@ -81,7 +81,7 @@ description: "Task list for 022-share-status"
   - **State mapping**: queued/running/proposed/published/discarded/failed, plus a soft-deleted result item → `item.deleted`.
   - **Payload**: no `error`/`raw` in the payload; `preview` without the shared text.
   - **Retry**: 202 → queued and re-enqueued; second tap 409 `/problems/share-not-failed`; raw pruned → 410 `/problems/share-expired`; `retry_count` 3 → 422 `/problems/share-retry-limit`; cap reached → 429; reader/removed member → 403/404.
-- [ ] T011 [P] [US1] [unit] apps/api/src/services/shares.service.test.ts: `toShareSummary` (state, preview from item title / `raw.title` / URL host / photo count, `canRetry` rules incl. `sharer_left` and missing raw, `reviewedBy` name)
+- [X] T011 [P] [US1] [unit] apps/api/src/services/shares.service.test.ts: `toShareSummary` (state, preview from item title / `raw.title` / URL host / photo count, `canRetry` rules incl. `sharer_left` and missing raw, `reviewedBy` name)
 - [ ] T012 [P] [US1] [unit] apps/web/src/shares/share-state.test.ts and failure-copy.test.ts:
   - every `IngestFailureCode` and `AutoPublishOutcome` has copy;
   - unknown code → "Something went wrong";
@@ -99,8 +99,8 @@ description: "Task list for 022-share-status"
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Worker: apps/api/src/jobs/ingest.ts `fail(jobId, error, code)` stores `failureCode` (from `classifyFailure`, or the explicit code for raw/sharer cases)
-- [ ] T018 [US1] apps/api/src/services/shares.service.ts:
+- [X] T017 [US1] Worker: apps/api/src/jobs/ingest.ts `fail(jobId, error, code)` stores `failureCode` (from `classifyFailure`, or the explicit code for raw/sharer cases)
+- [X] T018 [US1] apps/api/src/services/shares.service.ts:
   - `list(user, deckRef)`;
   - `get(user, id)`;
   - `retry(user, id)`: sharer + member + `item.create`; status/raw/limit checks with the problems in the contract; `assertWithinCaps` for the job's channel; `resetForRetry`, then `queue.enqueue(id)`.
@@ -199,11 +199,11 @@ description: "Task list for 022-share-status"
   - `GET /decks/{id}/shares` lists it as failed with `canRetry`;
   - the captured logs hold exactly one error line with the five fields and none of the shared URL/text;
   - the retry lines carry no message text.
-- [ ] T061 [P] [US4] [unit] apps/api/src/jobs/ingest.test.ts (or the existing handler test): `fail()` logs once at error level; a retry warning has `failureCode` and no message
+- [X] T061 [P] [US4] [unit] apps/api/src/jobs/ingest.test.ts (or the existing handler test): `fail()` logs once at error level; a retry warning has `failureCode` and no message
 
 ### Implementation for User Story 4
 
-- [ ] T062 [US4] apps/api/src/jobs/ingest.ts:
+- [X] T062 [US4] apps/api/src/jobs/ingest.ts:
   - replace the `log(string)` dep with a structured logger (`childLogger('ingest')`, injectable for tests);
   - `fail()` logs `error` "ingest job failed" with `{ jobId, deckId, channel, attempts, failureCode }`;
   - the retry path logs `warn` "ingest attempt failed, will retry" with `{ jobId, attempts, failureCode }`;

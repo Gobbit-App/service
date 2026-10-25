@@ -17,6 +17,8 @@ import type { ResendInbound } from '../ingest/resend-inbound';
 import { createIngestService } from './ingest.service';
 import { createIngestTokensService } from './ingest-tokens.service';
 import { createReviewService } from './review.service';
+import { createSharesService } from './shares.service';
+import { createCapGuard } from '../ingest/caps';
 import type { ItemDtoMapper } from './item-dtos';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
@@ -72,6 +74,9 @@ export function buildIngestServices(deps: {
         ? createCloudinaryIngestUploads(env.CLOUDINARY_URL)
         : null;
 
+  const queue = wiring.queue ?? noopIngestQueue;
+  const dailyCaps = ingestDailyCaps(env.INGEST_DAILY_CAP);
+
   return {
     ingest: createIngestService({
       enabled: wiring.enabled ?? hasExtractProvider(env),
@@ -82,8 +87,8 @@ export function buildIngestServices(deps: {
       items: deps.items,
       uploads,
       assets: deps.assets,
-      queue: wiring.queue ?? noopIngestQueue,
-      dailyCaps: ingestDailyCaps(env.INGEST_DAILY_CAP),
+      queue,
+      dailyCaps,
       combinedCap: INGEST_COMBINED_DAILY_CAP,
       dedup: (input) =>
         runDedup(
@@ -103,6 +108,21 @@ export function buildIngestServices(deps: {
       tokens: createIngestTokensRepo(db),
       decks,
       memberships,
+      now,
+    }),
+    shares: createSharesService({
+      decks,
+      memberships,
+      jobs,
+      items: deps.items,
+      users: deps.users,
+      queue,
+      assertWithinCaps: createCapGuard({
+        jobs,
+        dailyCaps,
+        combinedCap: INGEST_COMBINED_DAILY_CAP,
+        now,
+      }),
       now,
     }),
     review: createReviewService({
