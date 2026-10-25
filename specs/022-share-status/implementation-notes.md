@@ -2,7 +2,7 @@
 
 Plan: `specs/022-share-status/plan.md`, tasks: `tasks.md`. Branch `feat/022-share-status`.
 
-Migration `0017` adds `decks.auto_publish_shares` (on for existing personal decks) and the share-status columns on `ingest_jobs`. E2E tier: full (`e2e/tests/full/shares.spec.ts`, `deck-admin.spec.ts`); the share and review journeys stay covered by the smoke suite.
+Migration `0017` adds `decks.auto_publish_shares` (on for existing personal decks) and the share-status columns on `ingest_jobs`. E2E tier: smoke + full (D199): smoke `share.spec.ts` (Sent links to Your shares) and `review.spec.ts` (empty queue → Your shares); full `shares.spec.ts` (list states, retry) and `deck-admin.spec.ts` (the switch).
 
 ## Decisions not specified by the plan
 
@@ -22,3 +22,6 @@ Migration `0017` adds `decks.auto_publish_shares` (on for existing personal deck
 - **T042**: the `autoPublishShares` patch tests are in `apps/api/test/public-settings.int.test.ts`, beside the other owner-only deck settings.
 - **T045** was already covered by the US1 `ShareRow` tests (published and "Waiting for review — needs a category").
 - **T046**: the maintainer's disabled switch is covered by `DeckSection.test.tsx`; a second admin cannot sign in from e2e (the invite needs the emailed magic link).
+- **Routes file** is `routes/my-shares.ts`, not `routes/shares.ts` (`routes/share.ts` already serves `/s/:id`).
+- **Auto-publish warnings** read "ingest auto-publish failed, left in review" and "ingest auto-publish follow-up failed" and carry the error name (never its message), beyond the contract's `{ jobId, deckId }`.
+- **Close-out**: deviations copied into `docs/design/ingestion.md` ("Deviations from the 022 plan").

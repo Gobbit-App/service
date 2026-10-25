@@ -215,12 +215,12 @@ description: "Task list for 022-share-status"
 
 ## Phase 6: Close-out
 
-- [ ] T070 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`; `pnpm api:openapi && git diff --exit-code packages/api-client`
-- [ ] T071 [P] docs/adr.md ADR-058 (opt-in auto-publish of publishers' shares; constitution IV 1.2.0); docs/architecture.md: one map line + ADR-058 index row (stay < 250 lines)
-- [ ] T072 [P] docs/design/ingestion.md: "Share status" (failure codes, shares API, retry), "Auto-publish" (gate, outcomes), and Deviations (public page cache delay, D180)
-- [ ] T073 [P] README.md: Your shares, the deck setting, the worker failure log line
-- [ ] T074 [P] PLAN.md: link specs/022-share-status
-- [ ] T075 Copy implementation-notes.md deviations into docs/design/ingestion.md Deviations
+- [X] T070 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`; `pnpm api:openapi && git diff --exit-code packages/api-client`
+- [X] T071 [P] docs/adr.md ADR-058 (opt-in auto-publish of publishers' shares; constitution IV 1.2.0); docs/architecture.md: one map line + ADR-058 index row (stay < 250 lines)
+- [X] T072 [P] docs/design/ingestion.md: "Share status" (failure codes, shares API, retry), "Auto-publish" (gate, outcomes), and Deviations (public page cache delay, D180)
+- [X] T073 [P] README.md: Your shares, the deck setting, the worker failure log line
+- [X] T074 [P] PLAN.md: link specs/022-share-status
+- [X] T075 Copy implementation-notes.md deviations into docs/design/ingestion.md Deviations
 - [ ] T076 Run quickstart.md validation (sections 1–3 locally; section 4 after deploy)
 - [ ] T077 `/speckit-converge` until it reports Converged
 

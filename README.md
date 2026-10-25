@@ -327,6 +327,9 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `GET` | `/me/ingest-tokens` | List your ingest tokens (prefix only) |
 | `POST` | `/me/ingest-tokens` | Create an ingest token (shown once; max 5) |
 | `DELETE` | `/me/ingest-tokens/{id}` | Revoke an ingest token |
+| `GET` | `/decks/{id}/shares` | Your own shares on the deck (last 30 days, ≤ 50, newest first) |
+| `GET` | `/shares/{id}` | One of your shares (state, reason, card) |
+| `POST` | `/shares/{id}/retry` | Retry a failed share in place (sharer only; ≤ 3 retries; counts toward the daily cap) |
 | `GET` | `/decks/{id}/review?source=` | Proposals awaiting review (needs `item.publish`; `source` = an import label) |
 | `GET` | `/decks/{id}/review/count` | Number of proposals (header pill) |
 | `POST` | `/decks/{id}/review/publish` | Publish up to 50 proposals at once; duplicates and updates are skipped (`needs-decision`) |
@@ -347,6 +350,10 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 ### Sharing into Gobbit (Phase 5)
 
 Shares become **proposed** cards; a publisher approves them under **Review** in the deck. Ingestion needs an extraction provider key (see the env table) and the worker running.
+
+- **Your shares**: every member who can share opens **Your shares** in the deck header (`/d/<slug>/shares`) to follow their shares of the last 30 days: processing, waiting for review, published, not added, or failed with a plain reason and **Try again** (up to 3 times, while the content is kept) or **Paste it again**. The "Sent" screen shows the same live state. Publishers always see **Review** in the deck header, even when the queue is empty.
+- **Publish shares directly**: an owner (or co-owner) can turn on **Publish shares from publishers directly** in the deck's settings (on by default for your personal deck). A share by a member who can publish then skips review, unless it has no category, looks like a card the deck already has, or the duplicate check failed; those still go to review with the reason shown. Shares by editors always go to review.
+- **When a share fails**, the worker logs one line, `ingest job failed`, with `jobId`, `deckId`, `channel`, `attempts` and `failureCode` (never the shared content); `GET /api/ingest/<jobId>` shows the full error to the sharer or a publisher.
 
 - **Android**: install the PWA, then share from any app to *Gobbit*; pick the deck and send. The deck page's **Paste** button does the same for copied text or links.
 - **iPhone**: create an ingest token in **Settings** (gear in the header), then add the *Share to Gobbit* Shortcut and paste the token when asked. Building and publishing the Shortcut (and setting `SHORTCUT_URL`): [`docs/shortcut/README.md`](./docs/shortcut/README.md).

@@ -162,6 +162,8 @@ Already in place from Phase 6: the per-deck signed upload route (`POST /decks/{i
 
 Specs (in order): [`016-public-read-api`](specs/016-public-read-api/spec.md) (demo 1) → [`017-public-pages`](specs/017-public-pages/spec.md) (demos 2–3) ∥ [`018-public-search`](specs/018-public-search/spec.md) (demo 4) → [`019-deck-admin`](specs/019-deck-admin/spec.md) + [`020-item-events`](specs/020-item-events/spec.md) (demo 5) → [`021-bulk-import`](specs/021-bulk-import/spec.md) (demo 6). Decisions D174–D191; ADR-056 (public surface) and ADR-057 (item events).
 
+Follow-up from a production share that failed silently: [`022-share-status`](specs/022-share-status/spec.md): "Your shares" with live state, failure reasons and retry, an always-visible Review entry for publishers, a failure log line, and an owner opt-in that publishes publishers' shares directly. Decisions D192–D199; ADR-058.
+
 - MCP (Phase 13): `item_events` records `via` (`session`, or `mcp` plus the connection) so the admin log shows AI-app actions. Bulk import uses the same direct-proposal path as MCP. MCP needs a role on the deck; anonymous MCP on public decks is deferred.
 
 - [ ] **1. Communal kind** — create the communal deck, mark three categories public; `GET /public/<community-slug>/items` works with no cookie and omits the non-public category.
