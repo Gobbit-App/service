@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { normalizeUrlInput } from '../../lib/url-input';
 import type { LinkDraftPayload } from '../draft';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
@@ -43,7 +44,7 @@ export function LinkFields({
         disabled={disabled}
       />
       {previewSlot?.({
-        url: payload.url.trim(),
+        url: normalizeUrlInput(payload.url),
         preview,
         setPreview,
         setTitleIfEmpty: setTitleIfEmpty ?? (() => undefined),

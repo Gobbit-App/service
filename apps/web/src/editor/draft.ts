@@ -5,6 +5,7 @@ import {
   type ImagePayload,
   type TablePayload,
 } from '../cards/payload-guards';
+import { normalizeUrlInput } from '../lib/url-input';
 import { jsonEqual, sameIds } from './equal';
 
 /** Link payload while editing; unknown keys (e.g. `preview.image` from ingest) are kept. */
@@ -153,7 +154,7 @@ export function parseCalcDefault(text: string): number | undefined {
 
 function linkPayload(p: LinkDraftPayload): Record<string, unknown> {
   const { preview, ...rest } = p;
-  const out: Record<string, unknown> = { ...rest, url: p.url.trim() };
+  const out: Record<string, unknown> = { ...rest, url: normalizeUrlInput(p.url) };
   const cleaned: Record<string, string | null> = {};
   for (const [key, value] of Object.entries(preview ?? {})) {
     if (typeof value === 'string' && value.trim() !== '') cleaned[key] = value;
@@ -178,7 +179,16 @@ function calcPayload(p: CalcDraftPayload): Record<string, unknown> {
   };
 }
 
-/** The payload as the API expects it (trimmed URL; empty preview keys, unit and default dropped). */
+/** D206: a blank description is omitted; the renderers fall back to the title. */
+function imagePayload(p: ImagePayload): Record<string, unknown> {
+  const { alt, ...rest } = p;
+  return alt === undefined || alt.trim() === '' ? rest : { ...rest, alt };
+}
+
+/**
+ * The payload as the API expects it (normalised URL, D205; empty preview keys, unit, default and
+ * image description dropped).
+ */
 export function toPayload(draft: Pick<Draft, 'type' | 'payload'>): Record<string, unknown> {
   switch (draft.type) {
     case 'text':
@@ -188,6 +198,7 @@ export function toPayload(draft: Pick<Draft, 'type' | 'payload'>): Record<string
     case 'calc':
       return calcPayload(draft.payload as CalcDraftPayload);
     case 'image':
+      return imagePayload(draft.payload as ImagePayload);
     case 'table':
       return draft.payload as Record<string, unknown>;
   }
@@ -211,7 +222,7 @@ export function toCreateBody(draft: Draft): ItemCreateInput {
     payload: toPayload(draft),
     categoryIds: [...draft.categoryIds],
   };
-  const sourceUrl = draft.sourceUrl.trim();
+  const sourceUrl = normalizeUrlInput(draft.sourceUrl);
   if (sourceUrl !== '') body['sourceUrl'] = sourceUrl;
   return body as ItemCreateInput;
 }
@@ -235,7 +246,7 @@ export function toPatch(original: Item, draft: Draft): ItemPatch | null {
 
   if (!sameIds(draft.categoryIds, original.categoryIds)) patch.categoryIds = [...draft.categoryIds];
 
-  const sourceUrl = draft.sourceUrl.trim();
+  const sourceUrl = normalizeUrlInput(draft.sourceUrl);
   if (sourceUrl !== (original.sourceUrl ?? '')) {
     patch.sourceUrl = sourceUrl === '' ? null : sourceUrl;
   }

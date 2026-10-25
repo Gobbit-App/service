@@ -187,14 +187,14 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
     expect(screen.queryByText(/image storage isn't set up/)).not.toBeInTheDocument();
   });
 
-  it('blocks Save on an image card without a photo or alt text (FR-006)', () => {
+  it('blocks Save on an image card without a photo; the description is optional (D206)', () => {
     renderImage('test-cloud', 'image');
     type('Title', 'Bread');
     expect(screen.getByLabelText('Take photo')).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
-    expect(screen.getByText('Fix 2 fields')).toBeInTheDocument();
+    expect(screen.getByText('Fix 1 field')).toBeInTheDocument();
     expect(screen.getByText('Add a photo')).toBeInTheDocument();
-    expect(screen.getByText('Alt text is required')).toBeInTheDocument();
+    expect(screen.queryByText('Alt text is required')).not.toBeInTheDocument();
   });
 });
 
@@ -324,5 +324,103 @@ describe('CardEditor: unsaved drafts (D145)', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/d/family'));
     expect(draftsKv.map.has(newKey())).toBe(false);
+  });
+});
+
+describe('CardEditor: instant categories on an existing card (D207, D208)', () => {
+  const item = makeItem({
+    id: 'i2',
+    type: 'text',
+    title: 'Plumber',
+    status: 'published',
+    categoryIds: ['cat-general'],
+    updatedAt: '2026-05-01T00:00:00.000Z',
+  });
+  const editKey = editDraftKey('i2');
+
+  function renderEdit(base = item) {
+    return renderWithClient(
+      <CardEditor mode="edit" deck={deck} item={base} categories={categories} />,
+    );
+  }
+
+  /** PATCH answers echo the sent fields with a later updatedAt. */
+  function echoPatches() {
+    respond.mockImplementation(async (request) => {
+      if (request !== 'PATCH /items/{id}') throw new Error(`unexpected ${request}`);
+      const body = (requests.mock.lastCall?.[1] as { body: Record<string, unknown> }).body;
+      return { ...item, ...body, updatedAt: '2026-05-02T00:00:00.000Z' };
+    });
+  }
+
+  const patchBodies = () =>
+    requests.mock.calls
+      .filter(([request]) => request === 'PATCH /items/{id}')
+      .map(([, init]) => (init as { body: unknown }).body);
+
+  const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  it('saves a tap on its own, without leaving an unsaved draft', async () => {
+    echoPatches();
+    renderEdit();
+    fireEvent.click(screen.getByRole('button', { name: 'Misc' }));
+    expect(screen.getByRole('button', { name: 'Misc' })).toHaveAttribute('aria-pressed', 'true');
+
+    await waitFor(() =>
+      expect(patchBodies()).toEqual([{ categoryIds: ['cat-general', 'cat-misc'] }]),
+    );
+    await pause(50);
+    expect(draftsKv.map.has(editKey)).toBe(false);
+  });
+
+  it('keeps other unsaved edits and Save sends only them', async () => {
+    echoPatches();
+    const { navigate } = renderEdit();
+    type('Title', 'Plumber (new)');
+    fireEvent.click(screen.getByRole('button', { name: 'Misc' }));
+    await waitFor(() => expect(patchBodies()).toHaveLength(1));
+    expect(screen.getByLabelText('Title')).toHaveValue('Plumber (new)');
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/i/i2'));
+    expect(patchBodies()[1]).toEqual({ title: 'Plumber (new)' });
+  });
+
+  it("refuses to remove a published card's last category and says why", () => {
+    renderEdit();
+    fireEvent.click(screen.getByRole('button', { name: 'General' }));
+    expect(screen.getByText('A published card needs at least one category.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'General' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('a restored draft keeps the saved categories, not its own', async () => {
+    const { draftFromItem } = await import('./draft');
+    await writeDraft(
+      editKey,
+      { ...draftFromItem(item), title: 'Draft title', categoryIds: ['cat-misc'] },
+      item.updatedAt,
+      new Date('2026-05-01T10:00:00.000Z'),
+      draftsKv,
+    );
+    renderEdit();
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('Draft title');
+    expect(screen.getByRole('button', { name: 'General' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Misc' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('a new card still picks categories as part of Save', async () => {
+    respond.mockResolvedValueOnce(makeItem());
+    renderCreate();
+    type('Title', 'Plumber');
+    fireEvent.click(screen.getByRole('button', { name: 'Misc' }));
+    await pause(700);
+    expect(patchBodies()).toEqual([]);
+    fireEvent.click(saveButton());
+    await waitFor(() =>
+      expect(bodyOf('POST /decks/{id}/items')).toMatchObject({
+        categoryIds: ['cat-general', 'cat-misc'],
+      }),
+    );
   });
 });

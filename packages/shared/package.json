@@ -18,6 +18,7 @@
     "./card-limits": "./src/card-limits.ts",
     "./media": "./src/media/index.ts",
     "./media-constants": "./src/media/constants.ts",
+    "./image-alt": "./src/media/image-alt.ts",
     "./links": "./src/links/index.ts",
     "./events": "./src/events/index.ts",
     "./import": "./src/import/index.ts"

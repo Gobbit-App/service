@@ -85,6 +85,19 @@ describe('renderItem (D177)', () => {
     expect(out).toContain('A map');
   });
 
+  it('image without alt is decorative under its title (D206)', () => {
+    const out = render(item({ type: 'image', payload: { publicId: 'p/1' } }));
+    expect(out).toContain('alt=""');
+    const blank = render(item({ type: 'image', payload: { publicId: 'p/1', alt: '  ' } }));
+    expect(blank).toContain('alt=""');
+  });
+
+  it('image without alt and without media configured prints nothing (D206)', () => {
+    const out = render(item({ type: 'image', payload: { publicId: 'p/1' } }), noMedia);
+    expect(out).not.toContain('<img');
+    expect(out).not.toContain('undefined');
+  });
+
   it('table: header row and escaped cells', () => {
     const out = render(
       item({ type: 'table', payload: { columns: ['Name', 'Phone'], rows: [['<x>', '112']] } }),

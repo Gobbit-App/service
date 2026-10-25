@@ -74,9 +74,20 @@ describe('mergePreview', () => {
 });
 
 describe('FetchPreview', () => {
-  it('is disabled until the URL is a full http(s) address', () => {
-    renderLink({ url: 'example.com' });
+  it('is disabled until the URL is a web address', () => {
+    renderLink({ url: '' });
     expect(fetchButton()).toBeDisabled();
+  });
+
+  it('fetches a bare host as https:// (D205)', async () => {
+    respond.mockResolvedValueOnce({ preview: fetched });
+    renderLink({ url: 'example.org/bread' });
+    fireEvent.click(fetchButton());
+    await screen.findByText(/Preview filled in/);
+    expect(requests).toHaveBeenCalledWith(PREVIEW_REQUEST, {
+      params: { path: { id: 'deck-1' } },
+      body: { url: 'https://example.org/bread' },
+    });
   });
 
   it('fills the preview and the empty card title', async () => {

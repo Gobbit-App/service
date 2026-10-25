@@ -123,6 +123,23 @@ describe('item events (020)', () => {
       expect(updated).toMatchObject({ kind: 'updated', changes: ['title', 'categories'] });
     });
 
+    it('logs one categories line per instant save and another for its Undo (023)', async () => {
+      const trades = await createCategory(ctx.t.db, deck, { name: 'Trades' });
+      const home = await createCategory(ctx.t.db, deck, { name: 'Home' });
+      const card = await createCard('Plumber', { categoryIds: [trades.id] });
+      const save = async (categoryIds: string[]) => {
+        const res = await send('PATCH', `/items/${card.id}`, { categoryIds });
+        expect(res.status).toBe(200);
+      };
+      await save([trades.id, home.id]);
+      await save([home.id]);
+      await save([trades.id, home.id]); // Undo restores the set before the burst
+
+      const updates = (await log()).filter((l) => l.kind === 'updated');
+      expect(updates).toHaveLength(3);
+      for (const line of updates) expect(line.changes).toEqual(['categories']);
+    });
+
     it('logs proposed (via ingest), published and discarded for the review flow', async () => {
       const kept = await propose();
       const dropped = await propose();

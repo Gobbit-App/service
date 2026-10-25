@@ -128,13 +128,11 @@ describe('payloads', () => {
   });
 
   describe('image payload', () => {
-    it('rejects missing alt', () => {
+    it('accepts a missing or empty alt (D206)', () => {
       const schema = payloadSchemaFor('image');
-
-      const result = schema.safeParse({
-        publicId: 'abc123',
-      });
-      expect(result.success).toBe(false);
+      expect(schema.safeParse({ publicId: 'abc123' }).success).toBe(true);
+      expect(schema.safeParse({ publicId: 'abc123', alt: '' }).success).toBe(true);
+      expect(schema.safeParse({ publicId: 'abc123', alt: 5 }).success).toBe(false);
     });
 
     it('accepts valid image', () => {

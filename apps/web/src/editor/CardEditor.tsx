@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useState, type FormEvent, type ReactElement } from 'react';
+import { Suspense, useCallback, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import type { Category, Deck, Item, ItemType } from '@pb/shared';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
 import {
@@ -22,7 +22,9 @@ import { TitleField } from './fields/TitleField';
 import { SaveBar, saveBlockedReason } from './SaveBar';
 import { TYPE_LABELS, TypePicker } from './TypePicker';
 import { useCalcCheck } from './use-calc-check';
+import { rebaselineCategories, withCategories, withSavedCategories } from './rebaseline';
 import { useDraftAutosave } from './use-draft-autosave';
+import { useInstantCategories } from './use-instant-categories';
 import { useSaveCard, type SaveTarget } from './use-save-card';
 import { errorCount, validateDraft, type FieldErrors } from './validate';
 import './editor.css';
@@ -57,16 +59,42 @@ function saveTarget(props: CardEditorProps): SaveTarget {
 /** D136: the full card editor (create and edit) with a live preview through `Card`. */
 export function CardEditor(props: CardEditorProps): ReactElement {
   const { deck, categories } = props;
-  const [initial] = useState(() => initialDraft(props));
-  const [draft, setDraft] = useState(initial);
+  // D208: `baseline` is what counts as saved: the opening draft, moved by instant category saves.
+  const [{ draft, baseline }, setSnapshot] = useState(() => {
+    const opening = initialDraft(props);
+    return { draft: opening, baseline: opening };
+  });
+  const setDraft = useCallback(
+    (next: Draft | ((current: Draft) => Draft)) =>
+      setSnapshot((s) => ({ ...s, draft: typeof next === 'function' ? next(s.draft) : next })),
+    [],
+  );
   const calc = useCalcCheck(draft.type);
   const autosave = useDraftAutosave({
     storageKey:
       props.mode === 'create' ? newDraftKey(deck.id, draft.type) : editDraftKey(props.item.id),
     draft,
-    initial,
+    initial: baseline,
     baseUpdatedAt: props.mode === 'edit' ? props.item.updatedAt : null,
   });
+  const { rebase } = autosave;
+
+  /**
+   * D208 seam (022's guard): an instant category save (or its Undo) moved the card's categories
+   * on the server; make them the saved state so they never read as unsaved changes.
+   */
+  const rebaselineAfterCategorySave = useCallback(
+    (saved: Item) => {
+      setSnapshot((s) => rebaselineCategories(s, saved.categoryIds));
+      rebase(saved.updatedAt);
+    },
+    [rebase],
+  );
+  const instant = useInstantCategories(
+    props.mode === 'edit' ? props.item : null,
+    deck.slug,
+    rebaselineAfterCategorySave,
+  );
   const {
     save,
     saving,
@@ -89,7 +117,7 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   );
   // Client errors show once the user has changed something; server errors always.
   const shown: FieldErrors = {
-    ...(isDirty(draft, initial) ? clientErrors : {}),
+    ...(isDirty(draft, baseline) ? clientErrors : {}),
     ...saveErrors?.fields,
   };
 
@@ -104,8 +132,10 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   };
 
   const restoreDraft = () => {
-    const restored = autosave.restore();
-    if (!restored) return;
+    const stored = autosave.restore();
+    if (!stored) return;
+    // D208: categories on an existing card are already saved; an old draft can't bring them back.
+    const restored = withSavedCategories(stored, instant ? baseline.categoryIds : null);
     setDraft(restored);
     if (props.mode === 'create' && restored.type !== draft.type && isCreatableType(restored.type)) {
       props.onTypeChange?.(restored.type);
@@ -115,7 +145,8 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (errorCount(clientErrors) > 0 || !calc.ready) return;
-    void save(draft);
+    // D207: on an existing card the categories save on their own; Save never sends them.
+    void save(props.mode === 'edit' ? withCategories(draft, props.item.categoryIds) : draft);
   };
 
   const Fields = fieldsByType[draft.type];
@@ -166,14 +197,24 @@ export function CardEditor(props: CardEditorProps): ReactElement {
               error={shown['body']}
               disabled={saving}
             />
-            <CategoryChips
-              deck={deck}
-              categories={categories}
-              selected={draft.categoryIds}
-              onChange={(categoryIds) => update({ categoryIds })}
-              error={shown['categoryIds']}
-              disabled={saving}
-            />
+            {instant ? (
+              <CategoryChips
+                deck={deck}
+                categories={categories}
+                selected={instant.selection}
+                onChange={instant.change}
+                error={instant.refusal ?? undefined}
+              />
+            ) : (
+              <CategoryChips
+                deck={deck}
+                categories={categories}
+                selected={draft.categoryIds}
+                onChange={(categoryIds) => update({ categoryIds })}
+                error={shown['categoryIds']}
+                disabled={saving}
+              />
+            )}
             <SourceUrlField
               value={draft.sourceUrl}
               onChange={(sourceUrl) => update({ sourceUrl })}

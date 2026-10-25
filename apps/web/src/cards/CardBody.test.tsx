@@ -36,6 +36,18 @@ describe('CardBody', () => {
     expect(screen.getByAltText('School map').getAttribute('src')).toContain('/demo/');
   });
 
+  it('renders an image without alt as decorative under its title (D206)', () => {
+    const item = makeItem({
+      type: 'image',
+      title: 'School map',
+      body: '',
+      payload: { publicId: 'family/map' },
+    } as never);
+    const { container } = render(<CardBody item={item} cloudName="demo" />);
+    const img = container.querySelector('img[src*="family/map"]');
+    expect(img).toHaveAttribute('alt', '');
+  });
+
   it('shows a replaced photo after the previous one failed to load', () => {
     const image = (publicId: string) =>
       makeItem({ type: 'image', body: '', payload: { publicId, alt: 'Photo' } } as never);

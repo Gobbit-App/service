@@ -64,6 +64,14 @@ describe('validateDraft: common fields', () => {
     expect(validateDraft(draft({ sourceUrl: '' }))).toEqual({});
     expect(validateDraft(draft({ sourceUrl: 'ftp://x.example' }))).toHaveProperty('sourceUrl');
   });
+
+  it('checks the source url as it will be saved (D205)', () => {
+    expect(validateDraft(draft({ sourceUrl: 'example.org' }))).toEqual({});
+    expect(validateDraft(draft({ sourceUrl: 'https://' }))).toEqual({});
+    expect(validateDraft(draft({ sourceUrl: 'mailto:a@b' }))['sourceUrl']).toBe(
+      'Enter a valid web address',
+    );
+  });
 });
 
 describe('validateDraft: link', () => {
@@ -71,9 +79,20 @@ describe('validateDraft: link', () => {
 
   it('requires an http(s) url', () => {
     expect(validateDraft(link(''))).toHaveProperty('payload.url');
-    expect(validateDraft(link('example.com'))).toHaveProperty('payload.url');
     expect(validateDraft(link('javascript:alert(1)'))).toHaveProperty('payload.url');
     expect(validateDraft(link('https://example.com/a'))).toEqual({});
+  });
+
+  it('adds https:// before checking and keeps http:// (D205)', () => {
+    expect(validateDraft(link('example.com'))).toEqual({});
+    expect(validateDraft(link('HTTPS://Example.com/A'))).toEqual({});
+    expect(validateDraft(link('http://example.com'))).toEqual({});
+    expect(validateDraft(link('hello world'))['payload.url']).toBe('Enter a valid web address');
+    expect(validateDraft(link('mailto:a@b'))['payload.url']).toBe('Enter a valid web address');
+  });
+
+  it('a link left at only the scheme is required, not invalid', () => {
+    expect(validateDraft(link('https://'))['payload.url']).toBe('URL is required');
   });
 
   it('isHttpUrl needs a parsable URL with an http(s) prefix', () => {
@@ -87,19 +106,20 @@ describe('validateDraft: image', () => {
   const image = (publicId: string, alt: string): Draft =>
     draft({ type: 'image', payload: { publicId, alt } });
 
-  it('needs a finished upload and non-blank alt text (FR-006)', () => {
-    expect(validateDraft(image('', ''))).toEqual({
-      'payload.publicId': 'Add a photo',
-      'payload.alt': 'Alt text is required',
-    });
-    expect(validateDraft(image('gobbit/items/d/p', '  '))['payload.alt']).toBe(
-      'Alt text is required',
-    );
+  it('needs a finished upload; the description is optional (D206)', () => {
+    expect(validateDraft(image('', ''))).toEqual({ 'payload.publicId': 'Add a photo' });
+    expect(validateDraft(image('gobbit/items/d/p', '  '))).toEqual({});
     expect(validateDraft(image('gobbit/items/d/p', 'A loaf'))).toEqual({});
   });
 
   it('a valid image draft is a valid create body', () => {
     const body = toCreateBody(image('gobbit/items/d/p', 'A loaf'));
+    expect(itemCreateSchema.safeParse(body).success).toBe(true);
+  });
+
+  it('an image draft without a description is a valid create body, without alt (D206)', () => {
+    const body = toCreateBody(image('gobbit/items/d/p', '  '));
+    expect(body.payload).toEqual({ publicId: 'gobbit/items/d/p' });
     expect(itemCreateSchema.safeParse(body).success).toBe(true);
   });
 });
@@ -210,7 +230,10 @@ describe('parity with the @pb/shared Zod item schema', () => {
     ['121-code-point title', draft({ title: 'a'.repeat(121) })],
     ['600 emoji body', draft({ body: '😀'.repeat(600) })],
     ['601 Hebrew body', draft({ body: 'ש'.repeat(601) })],
-    ['bad source url', draft({ sourceUrl: 'nope' })],
+    ['bad source url', draft({ sourceUrl: 'mailto:nope' })],
+    ['bare source url', draft({ sourceUrl: 'example.org' })],
+    ['link uppercase scheme', draft({ type: 'link', payload: { url: 'HTTPS://a.example/' } })],
+    ['link not an address', draft({ type: 'link', payload: { url: 'hello world' } })],
     ['link ok', draft({ type: 'link', payload: { url: 'https://a.example/' } })],
     ['link no scheme', draft({ type: 'link', payload: { url: 'a.example' } })],
     ['link ftp', draft({ type: 'link', payload: { url: 'ftp://a.example' } })],

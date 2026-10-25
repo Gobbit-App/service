@@ -15,7 +15,10 @@ export type DraftAutosaveOptions = {
   /** `newDraftKey(deckId, type)` or `editDraftKey(itemId)`; may change with the type (create). */
   storageKey: string;
   draft: Draft;
-  /** What the editor opened with; nothing is stored while the draft equals it. */
+  /**
+   * What counts as saved (the opening draft, moved by instant category saves, D208); nothing is
+   * stored while the draft equals it.
+   */
   initial: Draft;
   /** Edit: the card's `updatedAt` when editing began. Null for a new card. */
   baseUpdatedAt: string | null;
@@ -56,6 +59,8 @@ export function useDraftAutosave({
 }: DraftAutosaveOptions) {
   const [kv] = useState(() => kvOption ?? idbDraftsKv());
   const [openKey] = useState(storageKey);
+  /** The draft at open: the stored-draft offer compares against it even after a rebaseline. */
+  const [opening] = useState(initial);
   const [loaded, setLoaded] = useState(false);
   const [pending, setPending] = useState<PendingOffer | null>(null);
   const [base, setBase] = useState(baseUpdatedAt);
@@ -78,7 +83,7 @@ export function useDraftAutosave({
     readDraft(openKey, kv)
       .then((stored) => {
         if (!alive) return;
-        if (stored && isDirty(stored.draft, initial)) setPending({ key: openKey, stored });
+        if (stored && isDirty(stored.draft, opening)) setPending({ key: openKey, stored });
         else if (stored) quietly(deleteDraft(openKey, kv), 'remove an unchanged draft');
       })
       .catch((err: unknown) => logRef.current('[drafts] could not read the stored draft', err))
@@ -88,7 +93,7 @@ export function useDraftAutosave({
     return () => {
       alive = false;
     };
-  }, [openKey, kv, initial, quietly]);
+  }, [openKey, kv, opening, quietly]);
 
   const dirty = isDirty(draft, initial);
   useEffect(() => {
@@ -139,5 +144,8 @@ export function useDraftAutosave({
     );
   };
 
-  return { offer, restore, discard, clear };
+  /** D208: the card was saved outside the form (instant categories); a stored draft now starts there. */
+  const rebase = useCallback((updatedAt: string): void => setBase(updatedAt), []);
+
+  return { offer, restore, discard, clear, rebase };
 }
