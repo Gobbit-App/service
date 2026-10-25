@@ -95,6 +95,10 @@ export function createDecksService({
       if (patch.isPublic !== undefined && role !== 'owner') {
         throw ownerRequired();
       }
+      // D192: publishing shares directly is an owner decision too (the personal deck included).
+      if (patch.autoPublishShares !== undefined && role !== 'owner') {
+        throw ownerRequired('Only a deck owner can change whether shares publish directly');
+      }
       const updated = await decks.update(deck.id, patch);
       purgeDeck(deck.id);
       return toDeckDto(updated, role);

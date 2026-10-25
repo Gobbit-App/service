@@ -94,6 +94,8 @@ export function createDecksRepo(db: DbExecutor) {
           name: v.name,
           isPublic: false,
           isDefault: true,
+          // D192: the owner's own shares land directly in their personal deck.
+          autoPublishShares: true,
           ownerAccountId: v.accountId,
         })
         .onConflictDoNothing();
@@ -117,7 +119,7 @@ export function createDecksRepo(db: DbExecutor) {
 
     async update(
       id: string,
-      patch: { name?: string; slug?: string; isPublic?: boolean },
+      patch: { name?: string; slug?: string; isPublic?: boolean; autoPublishShares?: boolean },
     ): Promise<DeckRow> {
       const [row] = await db.update(decks).set(patch).where(eq(decks.id, id)).returning();
       if (!row) {

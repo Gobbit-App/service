@@ -19,6 +19,7 @@ import { ImportLink } from '../import/ImportLink';
 import { AddCardLink } from '../items/AddCardLink';
 import { BrowseButton } from '../items/BrowseButton';
 import { ReviewPill } from '../review/ReviewPill';
+import { SharesLink } from '../shares/SharesLink';
 import { PasteLink } from '../share/PasteLink';
 import { SearchBox } from '../search/SearchBox';
 import { parseSearchParams } from '../search/search-params';
@@ -47,6 +48,7 @@ function DeckLayout() {
   const logging = pathname.endsWith('/log');
   const configuring = pathname.endsWith('/settings');
   const importing = pathname.endsWith('/import');
+  const sharing = pathname.endsWith('/shares');
   const browsing = isBrowsePath(pathname);
   const view = viewFromPath(pathname)?.view ?? null;
   // Browse cycles All + categories only, so the button shows on those lists (contract §1).
@@ -117,11 +119,13 @@ function DeckLayout() {
           !logging &&
           !configuring &&
           !importing &&
+          !sharing &&
           can(deck.data.role, 'item.create') && (
             <div className="deck-actions">
               <AddCardLink deckSlug={slug} role={deck.data.role} />
               <PasteLink deckSlug={slug} role={deck.data.role} />
               <ImportLink deckSlug={slug} role={deck.data.role} />
+              <SharesLink deckSlug={slug} role={deck.data.role} />
             </div>
           )}
         <Outlet />

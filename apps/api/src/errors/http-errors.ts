@@ -110,14 +110,14 @@ export function accountOwnerRequired(permission: Permission): HttpError {
   );
 }
 
-/** D176: only the `owner` role (co-owners included) may change whether a deck is public. */
-export function ownerRequired(): HttpError {
-  return new HttpError(
-    403,
-    '/problems/owner-required',
-    'Forbidden',
-    'Only a deck owner can change whether the deck is public',
-  );
+/**
+ * D176/D192: only the `owner` role (co-owners included) may change owner-level deck settings
+ * (whether the deck is public, whether shares publish directly).
+ */
+export function ownerRequired(
+  detail = 'Only a deck owner can change whether the deck is public',
+): HttpError {
+  return new HttpError(403, '/problems/owner-required', 'Forbidden', detail);
 }
 
 /** D32: a cookie-authenticated mutation from an origin that isn't allowed. */

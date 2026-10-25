@@ -15,6 +15,8 @@ export const decks = pgTable(
       .references(() => accounts.id, { onDelete: 'cascade' }),
     isPublic: boolean().notNull().default(false),
     isDefault: boolean().notNull().default(false), // personal-deck
+    /** D192: publishers' shares skip review when they pass the reviewer's checks. */
+    autoPublishShares: boolean().notNull().default(false),
     ...timestamps,
   },
   (t) => [

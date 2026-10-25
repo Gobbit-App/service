@@ -132,6 +132,7 @@ describe('review queue (D106, D107)', () => {
           dedup: { action: 'update', itemId: existing.id },
           newCategory: null,
           sourcePreview: 'Dan the plumber 050-1234567',
+          autoPublish: null,
         },
         target: { id: existing.id, title: 'Dan (old)' },
       });

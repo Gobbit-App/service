@@ -568,6 +568,7 @@ export interface paths {
                                 name: string;
                                 isPublic: boolean;
                                 isDefault: boolean;
+                                autoPublishShares: boolean;
                                 ownerAccountId: string;
                                 createdAt: string;
                                 updatedAt: string;
@@ -640,6 +641,7 @@ export interface paths {
                                 name: string;
                                 isPublic: boolean;
                                 isDefault: boolean;
+                                autoPublishShares: boolean;
                                 ownerAccountId: string;
                                 createdAt: string;
                                 updatedAt: string;
@@ -707,6 +709,7 @@ export interface paths {
                             name: string;
                             isPublic: boolean;
                             isDefault: boolean;
+                            autoPublishShares: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;
@@ -833,6 +836,7 @@ export interface paths {
                             name: string;
                             isPublic: boolean;
                             isDefault: boolean;
+                            autoPublishShares: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;
@@ -992,6 +996,7 @@ export interface paths {
                         name?: string;
                         slug?: string;
                         isPublic?: boolean;
+                        autoPublishShares?: boolean;
                     };
                 };
             };
@@ -1010,6 +1015,7 @@ export interface paths {
                             name: string;
                             isPublic: boolean;
                             isDefault: boolean;
+                            autoPublishShares: boolean;
                             ownerAccountId: string;
                             createdAt: string;
                             updatedAt: string;
@@ -5409,7 +5415,12 @@ export interface paths {
                             /** Format: uuid */
                             resultItemId: string | null;
                             error: string | null;
+                            /** @enum {string|null} */
+                            failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
+                            /** @enum {string|null} */
+                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
                             attempts: number;
+                            retryCount: number;
                             costUsd: number;
                             /** Format: uuid */
                             reviewedBy: string | null;
@@ -5858,6 +5869,8 @@ export interface paths {
                                     } | null;
                                     newCategory: string | null;
                                     sourcePreview: string | null;
+                                    /** @enum {string|null} */
+                                    autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
                                 } | null;
                                 target: {
                                     /** Format: uuid */
@@ -6558,6 +6571,473 @@ export interface paths {
                 };
                 /** @description Conflict */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decks/{id}/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The caller's shares on the deck over the last 30 days, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            shares: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                deckId: string;
+                                /** @enum {string} */
+                                channel: "pwa" | "shortcut" | "paste" | "email";
+                                createdAt: string;
+                                /** @enum {string} */
+                                state: "processing" | "failed" | "in_review" | "published" | "not_added";
+                                preview: {
+                                    title: string | null;
+                                    host: string | null;
+                                    photoCount: number;
+                                };
+                                /** @enum {string|null} */
+                                failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
+                                canRetry: boolean;
+                                /** @enum {string|null} */
+                                autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                                item: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    title: string;
+                                    deleted: boolean;
+                                } | null;
+                                reviewedBy: {
+                                    displayName: string;
+                                } | null;
+                                reviewedAt: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shares/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One of your shares */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            deckId: string;
+                            /** @enum {string} */
+                            channel: "pwa" | "shortcut" | "paste" | "email";
+                            createdAt: string;
+                            /** @enum {string} */
+                            state: "processing" | "failed" | "in_review" | "published" | "not_added";
+                            preview: {
+                                title: string | null;
+                                host: string | null;
+                                photoCount: number;
+                            };
+                            /** @enum {string|null} */
+                            failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
+                            canRetry: boolean;
+                            /** @enum {string|null} */
+                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                            item: {
+                                /** Format: uuid */
+                                id: string;
+                                title: string;
+                                deleted: boolean;
+                            } | null;
+                            reviewedBy: {
+                                displayName: string;
+                            } | null;
+                            reviewedAt: string | null;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shares/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The failed share is queued again from its stored copy */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            deckId: string;
+                            /** @enum {string} */
+                            channel: "pwa" | "shortcut" | "paste" | "email";
+                            createdAt: string;
+                            /** @enum {string} */
+                            state: "processing" | "failed" | "in_review" | "published" | "not_added";
+                            preview: {
+                                title: string | null;
+                                host: string | null;
+                                photoCount: number;
+                            };
+                            /** @enum {string|null} */
+                            failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
+                            canRetry: boolean;
+                            /** @enum {string|null} */
+                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                            item: {
+                                /** Format: uuid */
+                                id: string;
+                                title: string;
+                                deleted: boolean;
+                            } | null;
+                            reviewedBy: {
+                                displayName: string;
+                            } | null;
+                            reviewedAt: string | null;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Gone */
+                410: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };

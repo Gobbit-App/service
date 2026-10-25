@@ -3,6 +3,7 @@ import type { Category, Deck } from '@pb/shared';
 import { CopyButton } from '../settings/CopyButton';
 import { SettingsSection } from '../settings/SettingsSection';
 import { AdminError } from './AdminError';
+import { AutoPublishSwitch } from './AutoPublishSwitch';
 import { useUpdateDeck } from './deck-admin-queries';
 import { PublicSwitchDialog } from './PublicSwitchDialog';
 
@@ -13,7 +14,8 @@ export function publicDeckUrl(slug: string, origin = globalThis.location?.origin
 
 /**
  * D184: rename (`deck.update`) and, for shared decks, the public switch. Only owners (and
- * co-owners) may flip it (016, D176); turning it on asks first, turning it off doesn't.
+ * co-owners) may flip it (016, D176); turning it on asks first, turning it off doesn't. The
+ * auto-publish switch (D192) is owner-only too and also shown on the personal deck.
  */
 export function DeckSection({
   deck,
@@ -79,7 +81,6 @@ export function DeckSection({
             />
             Public
           </label>
-          {!isOwner && <p className="muted">Only co-owners can change this.</p>}
           {deck.isPublic && (
             <p className="admin-public__url">
               <code>{publicUrl}</code>
@@ -97,6 +98,12 @@ export function DeckSection({
           )}
         </div>
       )}
+      <AutoPublishSwitch
+        checked={deck.autoPublishShares}
+        disabled={!isOwner || !online || update.isPending}
+        onChange={(autoPublishShares) => update.mutate({ autoPublishShares })}
+      />
+      {!isOwner && <p className="muted">Only co-owners can change these settings.</p>}
       <AdminError error={update.error} />
     </SettingsSection>
   );

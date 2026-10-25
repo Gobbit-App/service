@@ -24,7 +24,10 @@ import {
   actorVias,
   itemEventKinds,
   itemEventKindsWithChanges,
+  ingestFailureCodes,
+  autoPublishOutcomes,
 } from '@pb/shared';
+import { ingestJobs } from './ingest-jobs';
 
 describe('schema enums', () => {
   it('deckKindEnum.enumValues equals deckKinds', () => {
@@ -72,6 +75,16 @@ describe('schema enums', () => {
     const sqlText = new PgDialect().sqlToQuery(chk!.value).sql;
     for (const kind of itemEventKindsWithChanges) expect(sqlText).toContain(`'${kind}'`);
     expect(sqlText.match(/'[a-z]+'/g)).toHaveLength(itemEventKindsWithChanges.length);
+  });
+
+  it.each([
+    ['ingest_jobs_failure_code_chk', ingestFailureCodes],
+    ['ingest_jobs_auto_publish_chk', autoPublishOutcomes],
+  ] as const)('%s names exactly the shared values (D194, D193)', (name, values) => {
+    const chk = getTableConfig(ingestJobs).checks.find((c) => c.name === name);
+    const sqlText = new PgDialect().sqlToQuery(chk!.value).sql;
+    for (const value of values) expect(sqlText).toContain(`'${value}'`);
+    expect(sqlText.match(/'[a-z_]+'/g)).toHaveLength(values.length);
   });
 
   describe('items table checks', () => {

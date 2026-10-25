@@ -17,6 +17,8 @@ export const deckSchema = z.object({
   isPublic: z.boolean(),
   /** Phase 3B: true for the caller's personal deck, whose `slug` is always `me`. */
   isDefault: z.boolean(),
+  /** D192: publishers' shares skip review when they pass the reviewer's checks. */
+  autoPublishShares: z.boolean(),
   ownerAccountId: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -42,6 +44,8 @@ export const deckPatchSchema = z
     name: nameSchema.optional(),
     slug: deckSlugSchema.optional(),
     isPublic: z.boolean().optional(),
+    /** D192: owners only. */
+    autoPublishShares: z.boolean().optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, 'At least one field is required');

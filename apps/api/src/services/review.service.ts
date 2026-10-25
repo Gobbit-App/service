@@ -18,7 +18,6 @@ import { resolveDeck } from '../lib/resolve-deck';
 import { toSlug } from '../lib/slug';
 import type { IngestUploadStore } from '../media/ingest-uploads';
 import type { ImageReferenceCheck } from './image-reference';
-import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
@@ -29,6 +28,11 @@ import {
   mergeProposalPatch,
   sourcePreview,
 } from '../review/review-helpers';
+import {
+  createPublishProposal,
+  type ReviewTransaction,
+  type ReviewTxRepos,
+} from '../review/publish-proposal';
 import type { Actor, CurrentUser } from '../types';
 import { diffFields, itemFields } from '../events/diff-fields';
 import { eventFrom } from '../events/item-event';
@@ -39,14 +43,7 @@ const log = childLogger('review');
 
 const ITEM_NOT_FOUND = 'Item not found';
 
-/** Repos bound to one transaction: publish/discard change the item, categories and job together. */
-export interface ReviewTxRepos {
-  items: Pick<ItemsRepo, 'findById' | 'update' | 'softDelete' | 'categoryIdsFor'>;
-  categories: Pick<CategoriesRepo, 'findBySlug' | 'create' | 'maxPosition'>;
-  jobs: Pick<IngestJobsRepo, 'update'>;
-}
-
-export type ReviewTransaction = <T>(fn: (repos: ReviewTxRepos) => Promise<T>) => Promise<T>;
+export type { ReviewTransaction, ReviewTxRepos } from '../review/publish-proposal';
 
 export function createReviewService(deps: {
   decks: DecksRepo;
@@ -67,6 +64,7 @@ export function createReviewService(deps: {
   purgeDeck?: (deckId: string) => void;
 }) {
   const { decks, memberships, users, items, jobs, toDtos, transaction, embedQueue, now } = deps;
+  const publishProposal = createPublishProposal(deps);
 
   async function reviewerDeck(user: CurrentUser, idOrSlug: string) {
     const deck = await resolveDeck(decks, idOrSlug, user);
@@ -122,6 +120,60 @@ export function createReviewService(deps: {
     return created.id;
   }
 
+  /**
+   * D106 `update`: copies the proposal onto its dedup target (one `merged` line there) and
+   * soft-deletes the proposal; the job is marked published by the reviewer. Returns the target id.
+   */
+  async function mergeIntoTarget(
+    actor: Actor,
+    proposal: ItemRow,
+    targetId: string,
+    jobId: string | null,
+    ensureSuggested?: (tx: ReviewTxRepos) => Promise<string[]>,
+  ): Promise<string> {
+    const payload = await deps.imageReference(
+      proposal.deckId,
+      proposal.type,
+      proposal.payload as Record<string, unknown>,
+    );
+    const item = { ...proposal, payload };
+    const at = now();
+    return transaction(async (tx) => {
+      const extra = ensureSuggested ? await ensureSuggested(tx) : [];
+      const own = (await tx.items.categoryIdsFor([item.id], 'owner')).get(item.id) ?? [];
+      const categoryIds = [...new Set([...own, ...extra])];
+
+      const target = await tx.items.findById(targetId);
+      if (!target || target.deckId !== item.deckId) {
+        throw conflict('The card this proposal updates no longer exists');
+      }
+      if (target.status !== 'published') {
+        throw conflict('The card this proposal updates is archived or deleted');
+      }
+      const patch = mergeProposalPatch(item, target, at);
+      const targetCategoryIds =
+        (await tx.items.categoryIdsFor([target.id], 'owner')).get(target.id) ?? [];
+      const before = itemFields(target, targetCategoryIds);
+      const changes = diffFields(before, {
+        ...before,
+        ...patch,
+        categoryIds: categoryIds.length > 0 ? categoryIds : targetCategoryIds,
+      });
+      await tx.items.update(target.id, patch, categoryIds.length > 0 ? categoryIds : undefined, [
+        eventFrom(actor, 'merged', changes),
+      ]);
+      await tx.items.softDelete(item.id);
+      if (jobId) {
+        await tx.jobs.update(jobId, {
+          status: 'published',
+          reviewedBy: actor.user.id,
+          reviewedAt: at,
+        });
+      }
+      return target.id;
+    });
+  }
+
   async function toDto(user: CurrentUser, itemId: string, role: MemberRole): Promise<Item> {
     const row = await items.findById(itemId);
     if (!row) throw notFound(ITEM_NOT_FOUND);
@@ -175,6 +227,7 @@ export function createReviewService(deps: {
                 dedup: job.dedup ?? null,
                 newCategory: job.extraction?.newCategory ?? null,
                 sourcePreview: sourcePreview(job),
+                autoPublish: job.autoPublish ?? null,
               }
             : null,
           target: (targetId && targetDtos.get(targetId)) || null,
@@ -198,76 +251,38 @@ export function createReviewService(deps: {
       const { user } = actor;
       const loaded = await loadProposal(user, itemId);
       const { role, job } = loaded;
-      const payload = await deps.imageReference(
-        loaded.item.deckId,
-        loaded.item.type,
-        loaded.item.payload as Record<string, unknown>,
-      );
-      const item = { ...loaded.item, payload };
       const suggested = req.createCategory ? (job?.extraction?.newCategory ?? null) : null;
       if (req.createCategory) {
         if (!suggested) throw badRequest('This proposal has no suggested category');
         assertPermission(role, 'category.create');
       }
+      const ensureSuggested = suggested
+        ? async (tx: ReviewTxRepos) => [
+            await ensureNewCategory(tx, loaded.item.deckId, role, suggested),
+          ]
+        : undefined;
 
-      let targetId: string | null = null;
+      let resultId: string;
       if (req.mode === 'update') {
-        targetId = dedupTargetId(job?.dedup);
+        const targetId = dedupTargetId(job?.dedup);
         if (!targetId) throw badRequest('This proposal has no card to update');
+        resultId = await mergeIntoTarget(
+          actor,
+          loaded.item,
+          targetId,
+          job?.id ?? null,
+          ensureSuggested,
+        );
+      } else {
+        resultId = await publishProposal({
+          item: loaded.item,
+          jobId: job?.id ?? null,
+          event: eventFrom(actor, 'published'),
+          reviewerId: user.id,
+          extraCategories: ensureSuggested,
+        });
       }
-
-      const at = now();
-      const resultId = await transaction(async (tx) => {
-        const extra = suggested ? [await ensureNewCategory(tx, item.deckId, role, suggested)] : [];
-        const own = (await tx.items.categoryIdsFor([item.id], 'owner')).get(item.id) ?? [];
-        const categoryIds = [...new Set([...own, ...extra])];
-
-        let id = item.id;
-        if (targetId) {
-          const target = await tx.items.findById(targetId);
-          if (!target || target.deckId !== item.deckId) {
-            throw conflict('The card this proposal updates no longer exists');
-          }
-          if (target.status !== 'published') {
-            throw conflict('The card this proposal updates is archived or deleted');
-          }
-          const patch = mergeProposalPatch(item, target, at);
-          const targetCategoryIds =
-            (await tx.items.categoryIdsFor([target.id], 'owner')).get(target.id) ?? [];
-          const before = itemFields(target, targetCategoryIds);
-          const changes = diffFields(before, {
-            ...before,
-            ...patch,
-            categoryIds: categoryIds.length > 0 ? categoryIds : targetCategoryIds,
-          });
-          await tx.items.update(
-            target.id,
-            patch,
-            categoryIds.length > 0 ? categoryIds : undefined,
-            [eventFrom(actor, 'merged', changes)],
-          );
-          await tx.items.softDelete(item.id);
-          id = target.id;
-        } else {
-          await tx.items.update(
-            item.id,
-            item.type === 'image'
-              ? { status: 'published', verifiedAt: at, payload }
-              : { status: 'published', verifiedAt: at },
-            extra.length > 0 ? categoryIds : undefined,
-            [eventFrom(actor, 'published')],
-          );
-        }
-
-        if (job) {
-          await tx.jobs.update(job.id, {
-            status: 'published',
-            reviewedBy: user.id,
-            reviewedAt: at,
-          });
-        }
-        return id;
-      });
+      const item = loaded.item;
 
       deps.purgeDeck?.(item.deckId);
       await embedQueue.enqueueIfStale(resultId);

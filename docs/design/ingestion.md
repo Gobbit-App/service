@@ -2,7 +2,7 @@
 
 _Overview: [architecture.md](../architecture.md). Decisions: [adr.md](../adr.md)._
 
-Anything shared into Gobbit (Android share sheet, iPhone Shortcut, paste box, optionally email) becomes a **proposed** card that a publisher reviews. The agent never publishes. Decisions D92–D111 (D84–D91 belong to the Phase 12 custom-domains plan).
+Anything shared into Gobbit (Android share sheet, iPhone Shortcut, paste box, optionally email) becomes a **proposed** card that a publisher reviews. The agent never publishes, except a publisher's own share on a deck that opted in ([Auto-publish](#auto-publish-022-d192d193)). Decisions D92–D111 (D84–D91 belong to the Phase 12 custom-domains plan).
 
 ## Data (migration `0009_ingest`)
 
@@ -50,7 +50,32 @@ Non-session tokens are listed in `lib/token-prefixes.ts` (today `ing_`; Phase 13
 - D96: proposed items are visible (list, get) only to callers with `item.publish` on the deck or to their creator; otherwise 404 (and `status=proposed` lists are 403). Search never returns them.
 - `GET /decks/{id}/review` (≤ 50, newest first: `{ item, job, target? }`) and `GET /decks/{id}/review/count` need `item.publish`.
 - `POST /items/{id}/publish { mode: 'new' | 'update', createCategory? }` runs in one transaction (`review.service`): `new` publishes the proposal; `update` copies its fields, categories and source onto the target and soft-deletes the proposal; a target that is no longer published (archived or deleted) is a 409, and the list leaves it out of `target`. `POST /items/{id}/discard` soft-deletes it, marks the job `discarded` and removes its uploads by tag after commit.
-- Web: `/d/$slug/review` (`review/`): `ReviewCard` with the source line, entity chips, a duplicate/update banner with a client-side field diff, inline edit, Publish / Discard / Apply update / Publish as new. A "Review · N" pill in the deck header for publishers. The queue is excluded from the persisted cache.
+- Web: `/d/$slug/review` (`review/`): `ReviewCard` with the source line, entity chips, a duplicate/update banner with a client-side field diff, inline edit, Publish / Discard / Apply update / Publish as new. A "Review" link in the deck header, always shown to publishers ("Review · N" when proposals wait, D198); the empty queue links to "Your shares". A card held from auto-publish says why ("Not published directly: …", `review/held-line.ts`). The queue is excluded from the persisted cache.
+
+## Share status (022, D194–D198)
+
+- **Failure codes** (D194): a failed job carries `failure_code`, one of `content_expired`, `sharer_left`, `fetch_failed`, `unreadable_answer`, `assistant_unavailable`, `image_unavailable`, `unknown` (DB CHECK, `@pb/shared/ingest`). The worker picks it where the job fails (`ingest/failure-code.ts`); `error` keeps the detail for `GET /ingest/{id}`. Migration `0017_share_status` backfilled old failed rows from their `error` prefix. The web maps codes to sentences in `shares/failure-copy.ts`.
+- **Log lines** (D195): a job that fails for good logs one `error` line "ingest job failed" with `{ jobId, deckId, channel, attempts, failureCode }`; a retried attempt logs `warn` "ingest attempt failed, will retry" with `{ jobId, attempts, failureCode }`. Neither carries shared text, URLs, titles or provider messages.
+- **Shares API** (D196, `routes/my-shares.ts` → `shares.service`): `GET /decks/{id}/shares` lists the caller's own shares on the deck (share channels only, last 30 days, newest first, ≤ 50); `GET /shares/{id}` returns one. Only the sharer sees them (anyone else gets 404; publishers keep `GET /ingest/{id}`). `ShareSummary` has `state` (`processing | failed | in_review | published | not_added`), a content-free `preview` (title, host, photo count), `failureCode`, `canRetry`, `autoPublish`, the card (`{ id, title, deleted }`) and who reviewed it.
+- **Retry in place** (D197): `POST /shares/{id}/retry` re-queues the same job (attempts reset, `retry_count + 1`, `retried_at`) when the caller is the sharer, it failed, its raw content is still kept, the sharer still has `item.create`, and it was retried fewer than 3 times. A retry takes a cap slot like a new share (`countByUserSince` also counts `retried_at`). 409 when not failed (a double tap), 410 `/problems/share-expired`, 422 `/problems/share-retry-limit`, 429.
+- **Web** (D198): `/d/$slug/shares` ("Your shares", linked from the deck actions beside Paste for roles with `item.create`) and the "Sent" screen poll every 3 s (`SHARE_POLL_MS`) while something is processing. A failed row offers "Try again" or "Paste it again"; offline disables both.
+
+## Auto-publish (022, D192–D193)
+
+- **Setting** (D192): `decks.auto_publish_shares`, default off, on for personal decks (migration and `decksRepo`). Only owners and co-owners change it (`PATCH /decks/{id}`, `ownerRequired()`); deck settings show the switch to every admin, disabled for maintainers. ADR-058.
+- **Gate** (D193, `ingest/auto-publish.ts`, bound in `worker.ts`): after the proposal and dedup, for share channels on decks with the setting, checked in order: the sharer's role has `item.publish` now → the extraction chose an existing category → the dedup verdict is `new` → `publishProposal()` (`review/publish-proposal.ts`, the same transaction review uses: D160 image check, `published` event with the sharer as actor and `via: 'ingest'`, job `published` with `reviewed_by` = sharer). After commit it enqueues the embedding and the link snapshot.
+- **Outcomes** in `ingest_jobs.auto_publish`: `published`, or held in review as `held_not_publisher`, `held_needs_category`, `held_duplicate`, `held_duplicate_check_failed`, `held_publish_failed` (a thrown error; logged as a warning, never fails the share). `NULL` when the setting is off and for MCP and import jobs.
+
+### Deviations from the 022 plan
+
+- **Public page cache delay**: the worker can't purge the API's in-process page cache (D180), so a directly published card appears on a public deck's `/p/` pages within the 5-minute TTL.
+- **`publishProposal` returns the published item id** and takes an optional `autoPublish` outcome, recorded on the job in the same transaction; `reviewTransaction(db)` builds the transactional repos once for review and the worker; `mergeIntoTarget` is split out of `review.service`.
+- **Auto-publish is an optional handler dep** (`IngestHandlerDeps.autoPublish`). Its warnings read "ingest auto-publish failed, left in review" and "ingest auto-publish follow-up failed" (a failed enqueue after commit) and carry the error name, never its message.
+- **Routes live in `routes/my-shares.ts`** (`routes/share.ts` already serves `/s/:id` previews).
+- **Reviewer copy is separate from sharer copy**: "Not published directly: <reason>" on the review card; the sharer's row keeps its own wording.
+- **One co-owner note** ("Only co-owners can change these settings.") under both deck switches, instead of one per switch; the auto-publish switch is its own component (`deck-admin/AutoPublishSwitch.tsx`) and shows on the personal deck too.
+- **"Your shares" sits in the deck actions** (beside Paste), not the deck header: with Review always shown the header overflowed 360 px (smoke `web.spec.ts`). The header also tightens its gap and padding at ≤ 400 px, and its title can shrink (`min-width: 0`).
+- **Test placement**: failure copy in `shares/share-state.test.ts`; auto-publish integration in `ingest-auto-publish.int.test.ts`; the `autoPublishShares` patch in `public-settings.int.test.ts`; the maintainer's disabled switch in `DeckSection.test.tsx` (a second admin can't sign in from e2e).
 
 ## Channels
 

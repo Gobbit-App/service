@@ -17,11 +17,14 @@ import type { ResendInbound } from '../ingest/resend-inbound';
 import { createIngestService } from './ingest.service';
 import { createIngestTokensService } from './ingest-tokens.service';
 import { createReviewService } from './review.service';
+import { reviewTransaction } from '../review/publish-proposal';
+import { createSharesService } from './shares.service';
+import { createCapGuard } from '../ingest/caps';
 import type { ItemDtoMapper } from './item-dtos';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import { createCategoriesRepo } from '../repositories/categories.repo';
-import { createItemsRepo, type ItemsRepo } from '../repositories/items.repo';
+import type { ItemsRepo } from '../repositories/items.repo';
 import type { UsersRepo } from '../repositories/users.repo';
 import type { AssetsRepo } from '../repositories/assets.repo';
 import type { ImageReferenceCheck } from './image-reference';
@@ -72,6 +75,9 @@ export function buildIngestServices(deps: {
         ? createCloudinaryIngestUploads(env.CLOUDINARY_URL)
         : null;
 
+  const queue = wiring.queue ?? noopIngestQueue;
+  const dailyCaps = ingestDailyCaps(env.INGEST_DAILY_CAP);
+
   return {
     ingest: createIngestService({
       enabled: wiring.enabled ?? hasExtractProvider(env),
@@ -82,8 +88,8 @@ export function buildIngestServices(deps: {
       items: deps.items,
       uploads,
       assets: deps.assets,
-      queue: wiring.queue ?? noopIngestQueue,
-      dailyCaps: ingestDailyCaps(env.INGEST_DAILY_CAP),
+      queue,
+      dailyCaps,
       combinedCap: INGEST_COMBINED_DAILY_CAP,
       dedup: (input) =>
         runDedup(
@@ -105,6 +111,21 @@ export function buildIngestServices(deps: {
       memberships,
       now,
     }),
+    shares: createSharesService({
+      decks,
+      memberships,
+      jobs,
+      items: deps.items,
+      users: deps.users,
+      queue,
+      assertWithinCaps: createCapGuard({
+        jobs,
+        dailyCaps,
+        combinedCap: INGEST_COMBINED_DAILY_CAP,
+        now,
+      }),
+      now,
+    }),
     review: createReviewService({
       decks,
       memberships,
@@ -112,15 +133,7 @@ export function buildIngestServices(deps: {
       items: deps.items,
       jobs,
       toDtos: deps.toDtos,
-      // Publish/discard change the item, its categories and the job in one commit (D95 trigger).
-      transaction: (fn) =>
-        db.transaction((tx) =>
-          fn({
-            items: createItemsRepo(tx),
-            categories: createCategoriesRepo(tx),
-            jobs: createIngestJobsRepo(tx),
-          }),
-        ),
+      transaction: reviewTransaction(db),
       uploads,
       embedQueue: deps.embedQueue,
       linkSnapshotQueue: deps.linkSnapshotQueue,

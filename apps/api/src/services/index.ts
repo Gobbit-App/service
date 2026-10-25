@@ -215,6 +215,7 @@ export function buildServices({
     ingest: ingestServices.ingest,
     ingestTokens: ingestServices.ingestTokens,
     review: ingestServices.review,
+    shares: ingestServices.shares,
     imports: createImportsService({ decks, memberships, ingest: ingestServices.ingest }),
     media: mediaServices.media,
     linkPreview: mediaServices.linkPreview,

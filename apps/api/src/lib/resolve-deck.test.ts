@@ -13,6 +13,7 @@ function makeRow(overrides: Partial<DeckRow> = {}): DeckRow {
     ownerAccountId: 'owner-id',
     isPublic: false,
     isDefault: false,
+    autoPublishShares: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,

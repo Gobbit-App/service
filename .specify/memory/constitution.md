@@ -44,7 +44,10 @@ map) and `docs/design/` (per-area detail).
 - Sessions are opaque and server-side; scoped tokens (e.g. `ing_` ingest tokens) work only on their
   own endpoint [ADR-025, ADR-046].
 - Outbound HTTP goes through `fetch/safe-fetch.ts` only [ADR-048].
-- Agents and LLMs propose, people publish: no automated path publishes a card [D96].
+- Agents and LLMs propose, people publish: no automated path publishes a card on its own [D96].
+  The one exception: a share by a member who can publish, on a deck whose owner opted in, after
+  the same checks a reviewer would apply. The AI never publishes for anyone who couldn't publish
+  the card themselves [D193, ADR-058].
 - No personal data in fixtures, specs or docs: `example.test` emails, generic households
   [ADR-023].
 
@@ -123,4 +126,4 @@ map) and `docs/design/` (per-area detail).
 - Amendments are PRs that edit this file and, if needed, the matching ADR. Versioning: MAJOR when a
   principle is removed or redefined, MINOR when one is added or materially expanded, PATCH for wording.
 
-**Version**: 1.1.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-22
+**Version**: 1.2.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-25

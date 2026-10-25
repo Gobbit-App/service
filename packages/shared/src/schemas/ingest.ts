@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { httpUrlSchema, isoDateTimeSchema, uuidSchema } from './common';
 import { itemSchema } from './item';
 import {
+  autoPublishOutcomes,
+  ingestFailureCodes,
   dedupActions,
   dedupVias,
   ingestCardTypes,
@@ -115,7 +117,10 @@ export const ingestJobSchema = z.object({
   dedup: dedupVerdictSchema.nullable(),
   resultItemId: uuidSchema.nullable(),
   error: z.string().nullable(),
+  failureCode: z.enum(ingestFailureCodes).nullable(),
+  autoPublish: z.enum(autoPublishOutcomes).nullable(),
   attempts: z.number().int(),
+  retryCount: z.number().int(),
   /** Σ llm_calls.cost_usd for this job. */
   costUsd: z.number(),
   reviewedBy: uuidSchema.nullable(),
@@ -141,6 +146,8 @@ export const reviewEntrySchema = z.object({
       newCategory: z.string().nullable(),
       /** The shared URL, or the first characters of the shared text. */
       sourcePreview: z.string().nullable(),
+      /** D193: why a publisher's share was not published directly (FR-011). */
+      autoPublish: z.enum(autoPublishOutcomes).nullable(),
     })
     .nullable(),
   /** The card a `possible_duplicate` / `update` verdict points at, when still visible. */

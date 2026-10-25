@@ -16,6 +16,7 @@ function makeJob(overrides: Partial<ReviewJob>): ReviewJob {
     dedup: null,
     newCategory: null,
     sourcePreview: null,
+    autoPublish: null,
     ...overrides,
   };
 }

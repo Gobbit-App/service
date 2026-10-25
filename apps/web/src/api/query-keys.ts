@@ -46,6 +46,10 @@ export const queryKeys = {
   /** D191: the queue narrowed to one import (`?source=<label>`). */
   reviewSource: (deckSlug: string, source: string) =>
     [REVIEW_KEY, deckSlug, 'source', source] as const,
+  /** D198: the caller's shares on a deck ("Your shares"), persisted for offline reading. */
+  shares: (deckSlug: string) => ['shares', deckSlug] as const,
+  /** D198: one share, polled by the Sent screen. */
+  share: (id: string) => ['share', id] as const,
   /** D188: never persisted (see `persist.ts`); `itemId` null = the whole deck. */
   events: (deckSlug: string, itemId: string | null) => [EVENTS_KEY, deckSlug, itemId] as const,
 };

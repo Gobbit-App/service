@@ -1,11 +1,14 @@
 import {
   EXTRACT_STYLE_EXAMPLES,
+  type AutoPublishOutcome,
   type DedupVerdict,
   INGEST_JOB_RETRIES,
+  type IngestFailureCode,
   type IngestRaw,
   type MemberRole,
   type NormalizedSource,
 } from '@pb/shared';
+import type { IngestJobRow } from '@pb/db';
 import { lockedHostOf } from '@pb/shared/links';
 import type { AssetsRepo } from '../repositories/assets.repo';
 import type { CategoriesRepo } from '../repositories/categories.repo';
@@ -14,10 +17,12 @@ import type { ItemsRepo } from '../repositories/items.repo';
 import { runExtraction, type RunExtractionDeps } from '../ingest/run-extraction';
 import type { RunDedupInput } from '../ingest/run-dedup';
 import { proposeItem } from '../ingest/propose';
+import type { AutoPublishInput } from '../ingest/auto-publish';
 import type { EmbedQueue } from './embed-queue';
 import type { LinkSnapshotQueue } from './link-snapshot-queue';
 import { toLinkPreview } from '../fetch/link-preview';
-import { lineSink } from '../lib/logger';
+import { classifyFailure, type IngestStage } from '../ingest/failure-code';
+import { childLogger, lineSink, type Logger } from '../lib/logger';
 
 export type IngestOutcome = 'proposed' | 'failed' | 'skipped';
 
@@ -34,11 +39,18 @@ export interface IngestHandlerDeps {
   embedQueue: EmbedQueue;
   /** D163: snapshot a proposed link's preview image; omitted → none. */
   linkSnapshotQueue?: LinkSnapshotQueue;
+  /** D193: bound `autoPublish`, run after the proposal exists; omitted → always review. Never throws. */
+  autoPublish?: (input: AutoPublishInput) => Promise<AutoPublishOutcome | null>;
   /** D167: dimensions of the shared image for a locked-host preview; omitted → none. */
   assets?: Pick<AssetsRepo, 'byPublicId'>;
   now?: () => Date;
+  /** Line sink handed to `proposeItem`. */
   log?: (message: string) => void;
+  /** D195: structured, content-free failure lines; default `childLogger('ingest')`. */
+  logger?: Pick<Logger, 'error' | 'warn'>;
 }
+
+type FailingJob = Pick<IngestJobRow, 'id' | 'deckId' | 'channel' | 'attempts'>;
 
 /** pg-boss runs a job at most 1 + INGEST_JOB_RETRIES times; the last failure is final. */
 export function isLastAttempt(attempts: number): boolean {
@@ -55,9 +67,28 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
   const { jobs, categories, items, embedQueue } = deps;
   const now = deps.now ?? (() => new Date());
   const log = deps.log ?? lineSink('ingest');
+  const logger = deps.logger ?? childLogger('ingest');
 
-  async function fail(jobId: string, error: string): Promise<IngestOutcome> {
-    await jobs.setStatus(jobId, 'failed', error.slice(0, 500), now());
+  /**
+   * D194/D195: stores the error and the code the sharer sees; logs one line without the error
+   * text, which may quote the shared URL or content.
+   */
+  async function fail(
+    job: FailingJob,
+    error: string,
+    failureCode: IngestFailureCode = classifyFailure(error),
+  ): Promise<IngestOutcome> {
+    await jobs.setStatus(job.id, 'failed', error.slice(0, 500), now(), failureCode);
+    logger.error(
+      {
+        jobId: job.id,
+        deckId: job.deckId,
+        channel: job.channel,
+        attempts: job.attempts,
+        failureCode,
+      },
+      'ingest job failed',
+    );
     return 'failed';
   }
 
@@ -72,15 +103,19 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
   ): Promise<IngestOutcome> {
     const job = await jobs.claim(jobId);
     if (!job) return 'skipped';
-    if (!job.raw) return fail(job.id, 'raw_missing');
-    if (!job.userId) return fail(job.id, 'sharer_gone');
+    if (!job.raw) return fail(job, 'raw_missing');
+    if (!job.userId) return fail(job, 'sharer_gone');
 
+    /** Where a thrown error came from, for the sharer's reason (D194). */
+    let stage: IngestStage | undefined;
     try {
       const role = await deps.roleOf(job.deckId, job.userId);
-      if (!role) return await fail(job.id, 'sharer_not_member');
+      if (!role) return await fail(job, 'sharer_not_member');
 
+      stage = 'normalize';
       const source = job.normalized ?? (await deps.normalize(job.raw));
       if (!job.normalized) await jobs.update(job.id, { normalized: source });
+      stage = undefined;
 
       const [deckCategories, recent] = await Promise.all([
         categories.listByDeck(job.deckId, role),
@@ -100,6 +135,7 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       const imagePublicId = job.raw.images[0]?.publicId;
       const imageDimensions =
         lockedHost && imagePublicId ? await assetDimensions(imagePublicId) : null;
+      stage = 'extract';
       const outcome = await runExtraction(deps.extraction, {
         source,
         categories: deckCategories.map((c) => ({ id: c.id, name: c.name })),
@@ -117,9 +153,11 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         userId: job.userId,
         signal: opts?.signal,
       });
-      if (!outcome.ok) return await fail(job.id, outcome.error);
+      stage = undefined;
+      if (!outcome.ok) return await fail(job, outcome.error);
 
-      await proposeItem(
+      const jobRef = { id: job.id, deckId: job.deckId, userId: job.userId, channel: job.channel };
+      const proposed = await proposeItem(
         {
           categories,
           items,
@@ -131,17 +169,30 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
           log,
         },
         {
-          job: { id: job.id, deckId: job.deckId, userId: job.userId, channel: job.channel },
+          job: jobRef,
           item: outcome.item,
           summary: outcome.summary,
           signal: opts?.signal,
         },
       );
+      // D193: the proposal exists; publishing it directly is best effort, review is the fallback.
+      await deps.autoPublish?.({
+        job: jobRef,
+        proposal: proposed.item,
+        categoryIds: outcome.summary.categoryIds,
+        verdict: proposed.dedup,
+      });
       return 'proposed';
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (isLastAttempt(job.attempts)) return fail(job.id, `error: ${message}`);
-      log(`[ingest] job ${job.id} attempt ${job.attempts} failed, will retry: ${message}`);
+      const failureCode = classifyFailure(err, stage);
+      if (isLastAttempt(job.attempts)) {
+        const message = err instanceof Error ? err.message : String(err);
+        return fail(job, `error: ${message}`, failureCode);
+      }
+      logger.warn(
+        { jobId: job.id, attempts: job.attempts, failureCode },
+        'ingest attempt failed, will retry',
+      );
       throw err;
     }
   };

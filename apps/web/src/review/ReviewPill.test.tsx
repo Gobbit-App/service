@@ -20,10 +20,11 @@ describe('ReviewPill', () => {
     expect(unwrap).toHaveBeenCalledWith('GET /decks/{id}/review/count');
   });
 
-  it('stays hidden while the queue is empty', async () => {
+  it('stays visible without a number while the queue is empty (FR-007)', async () => {
     unwrap.mockResolvedValue({ count: 0 });
-    const { container } = renderWithClient(<ReviewPill deckSlug="family" />);
+    const { navigate } = renderWithClient(<ReviewPill deckSlug="family" />);
     await vi.waitFor(() => expect(unwrap).toHaveBeenCalled());
-    expect(container).toBeEmptyDOMElement();
+    fireEvent.click(screen.getByRole('link', { name: 'Review' }));
+    expect(navigate).toHaveBeenCalledWith('/d/family/review');
   });
 });
