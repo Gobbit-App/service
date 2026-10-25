@@ -260,3 +260,7 @@ description: "Task list for 022-share-status"
 - Fixtures are synthetic (`example.test`, generic households): specs and tests are public.
 - Log decisions the plan did not make, and deviations, in implementation-notes.md as you go.
 - Commit after each task or logical group (e.g. `feat(api): shares status API`).
+
+## Phase 7: Convergence
+
+- [X] T078 apps/web/src/shares/ShareRow.tsx: for a share whose card is soft-deleted, link to "Recently deleted" (`deckHref(slug, 'archived')`) when the viewer has `item.delete`, otherwise keep "Card deleted"; [unit] ShareRow.test.tsx covers both, per spec Edge Cases (deleted card) (partial)

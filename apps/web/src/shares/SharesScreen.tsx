@@ -13,7 +13,14 @@ export const SHARING_OFF = 'Sharing is off for this pocketbook.';
  * D198: "Your shares" — the caller's shares to this deck over the last 30 days with their live
  * status. Offline it shows the last loaded list with its actions disabled (FR-016).
  */
-export function SharesScreen({ deckSlug }: { deckSlug: string }): ReactElement {
+export function SharesScreen({
+  deckSlug,
+  canRestore = false,
+}: {
+  deckSlug: string;
+  /** The viewer may undelete cards, so a deleted card links to Recently deleted. */
+  canRestore?: boolean;
+}): ReactElement {
   const query = useQuery(sharesQuery(deckSlug));
   const config = useQuery(configQuery());
   const online = useOnline();
@@ -53,7 +60,14 @@ export function SharesScreen({ deckSlug }: { deckSlug: string }): ReactElement {
       ) : (
         <ul className="shares__list">
           {shares.map((share) => (
-            <ShareRow key={share.id} share={share} deckSlug={deckSlug} online={online} now={now} />
+            <ShareRow
+              key={share.id}
+              share={share}
+              deckSlug={deckSlug}
+              online={online}
+              now={now}
+              canRestore={canRestore}
+            />
           ))}
         </ul>
       )}

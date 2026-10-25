@@ -18,5 +18,5 @@ function Shares() {
   if (!can(deck.data.role, 'item.create')) {
     return <ErrorState title="Not available" message="Readers can't share to this pocketbook." />;
   }
-  return <SharesScreen deckSlug={slug} />;
+  return <SharesScreen deckSlug={slug} canRestore={can(deck.data.role, 'item.delete')} />;
 }

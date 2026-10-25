@@ -2,6 +2,7 @@ import type { ShareSummary } from '@pb/shared';
 import type { ReactElement } from 'react';
 import { isApiError } from '../api/api-error';
 import { relativeTime } from '../lib/relative-time';
+import { deckHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { failureCopy, pasteAgainCopy } from './failure-copy';
 import { heldReason, shareTitle, stateLabel } from './share-state';
@@ -66,10 +67,28 @@ function FailedActions({
   );
 }
 
-/** The card the share became: a link while it exists, "Card deleted" after. */
-function CardLink({ item, label }: { item: NonNullable<ShareSummary['item']>; label: string }) {
-  if (item.deleted) return <span className="share-row__hint">Card deleted</span>;
-  return <NavLink href={`/i/${item.id}`}>{label}</NavLink>;
+/**
+ * The card the share became: a link while it exists; once deleted, a link to Recently deleted
+ * for those who can restore it (D132), otherwise "Card deleted".
+ */
+function CardLink({
+  item,
+  label,
+  deckSlug,
+  canRestore,
+}: {
+  item: NonNullable<ShareSummary['item']>;
+  label: string;
+  deckSlug: string;
+  canRestore: boolean;
+}) {
+  if (!item.deleted) return <NavLink href={`/i/${item.id}`}>{label}</NavLink>;
+  if (canRestore) {
+    return (
+      <NavLink href={deckHref(deckSlug, 'archived')}>Card deleted — open Recently deleted</NavLink>
+    );
+  }
+  return <span className="share-row__hint">Card deleted</span>;
 }
 
 /** D196: what happened to the share, plus the one thing the sharer can do about it. */
@@ -78,12 +97,19 @@ export function ShareDetail({
   deckSlug,
   online,
   now,
+  canRestore = false,
 }: {
   share: ShareSummary;
   deckSlug: string;
   online: boolean;
   now: Date;
+  /** The viewer may undelete cards (`item.delete`). */
+  canRestore?: boolean;
 }): ReactElement | null {
+  const card = (label: string) =>
+    share.item ? (
+      <CardLink item={share.item} label={label} deckSlug={deckSlug} canRestore={canRestore} />
+    ) : null;
   switch (share.state) {
     case 'processing':
       return null;
@@ -97,9 +123,9 @@ export function ShareDetail({
         </>
       );
     case 'in_review':
-      return share.item ? <CardLink item={share.item} label="Open proposal" /> : null;
+      return card('Open proposal');
     case 'published':
-      return share.item ? <CardLink item={share.item} label="Open card" /> : null;
+      return card('Open card');
     case 'not_added':
       return (
         <p className="share-row__hint">
@@ -119,11 +145,13 @@ export function ShareRow({
   deckSlug,
   online,
   now,
+  canRestore = false,
 }: {
   share: ShareSummary;
   deckSlug: string;
   online: boolean;
   now: Date;
+  canRestore?: boolean;
 }): ReactElement {
   const held = heldReason(share);
   return (
@@ -140,7 +168,13 @@ export function ShareRow({
         {stateLabel(share.state)}
         {held && ` — ${held}`}
       </p>
-      <ShareDetail share={share} deckSlug={deckSlug} online={online} now={now} />
+      <ShareDetail
+        share={share}
+        deckSlug={deckSlug}
+        online={online}
+        now={now}
+        canRestore={canRestore}
+      />
     </li>
   );
 }

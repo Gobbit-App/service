@@ -12,10 +12,10 @@ const { ShareRow } = await import('./ShareRow');
 const NOW = new Date('2026-01-01T00:05:00.000Z');
 const ITEM_ID = '00000000-0000-4000-8000-000000000001';
 
-function renderRow(share: ShareSummary, online = true) {
+function renderRow(share: ShareSummary, online = true, canRestore = false) {
   return renderWithClient(
     <ul>
-      <ShareRow share={share} deckSlug="family" online={online} now={NOW} />
+      <ShareRow share={share} deckSlug="family" online={online} now={NOW} canRestore={canRestore} />
     </ul>,
   );
 }
@@ -69,6 +69,19 @@ describe('ShareRow (D198)', () => {
     );
     expect(screen.getByText('Card deleted')).toBeInTheDocument();
     expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  it('links a deleted card to Recently deleted for someone who can restore it', () => {
+    const { navigate } = renderRow(
+      makeShare({
+        state: 'published',
+        item: { id: ITEM_ID, title: 'Gate code', deleted: true },
+      }),
+      true,
+      true,
+    );
+    fireEvent.click(screen.getByRole('link', { name: 'Card deleted — open Recently deleted' }));
+    expect(navigate).toHaveBeenCalledWith('/d/family/archived');
   });
 
   it('shows who discarded a share and when', () => {

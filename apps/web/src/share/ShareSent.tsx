@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import type { Deck } from '@pb/shared';
+import { can } from '@pb/shared/authz';
 import { useOnline } from '../api/offline';
 import { heldReason, stateLabel } from '../shares/share-state';
 import { ShareDetail } from '../shares/ShareRow';
@@ -43,7 +44,13 @@ export function ShareSent({ deck, shareId }: { deck: Deck; shareId: string }): R
         </p>
       )}
       {status && (
-        <ShareDetail share={status} deckSlug={deck.slug} online={online} now={new Date()} />
+        <ShareDetail
+          share={status}
+          deckSlug={deck.slug}
+          online={online}
+          now={new Date()}
+          canRestore={can(deck.role, 'item.delete')}
+        />
       )}
     </EmptyState>
   );
