@@ -1,9 +1,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { INGEST_JOB_RETRIES } from '@pb/shared';
 import { eq } from 'drizzle-orm';
 import { ingestJobs, itemCategories, items, llmCalls, type UserRow } from '@pb/db';
 import { addMember, createAccountUser, createAsset } from '@pb/db/test';
 import { ARTICLE_PAGE, INJECTION_PAGE } from '@pb/db/test/ingest-pages';
 import { createFakeExtractor } from '../src/ai/fake-extractor';
+import type { Extractor } from '../src/ai/extractor';
 import type { SafeFetch } from '../src/fetch/safe-fetch';
 import { normalizeRaw } from '../src/ingest/normalize-raw';
 import { createSharerRole } from '../src/ingest/sharer-role';
@@ -75,6 +77,7 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
     script?: unknown[],
     dedup?: IngestHandlerDeps['dedup'],
     linkSnapshotQueue?: IngestHandlerDeps['linkSnapshotQueue'],
+    overrides: Partial<IngestHandlerDeps> = {},
   ) {
     const db = ctx.t.db;
     const extractor = createFakeExtractor(script ? { script } : undefined);
@@ -100,6 +103,7 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
       dedup,
       linkSnapshotQueue,
       assets: createAssetsRepo(db),
+      ...overrides,
     });
     return { run, extractor, embedQueue };
   }
@@ -254,6 +258,80 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
         preview: { title: item.title, description: 'Best hummus in town' },
       });
     });
+  });
+
+  /**
+   * 022 incident regression (US4, D194): the provider rejects every attempt (e.g. it cannot
+   * fetch a shared image). The sharer sees a failed share they can retry; operators get one
+   * content-free error line.
+   */
+  it('a provider that fails every attempt fails the share visibly, logged without content', async () => {
+    const sharedUrl = 'https://dan.example/';
+    const jobId = await share({ url: sharedUrl, text: 'our plumber' });
+    const failing: Extractor = {
+      provider: 'fake',
+      async extract() {
+        throw new Error(`provider 400: could not fetch ${sharedUrl}`);
+      },
+    };
+    const lines: { level: 'error' | 'warn'; fields: object; msg: string }[] = [];
+    const logger = {
+      error: (fields: object, msg: string) => lines.push({ level: 'error', fields, msg }),
+      warn: (fields: object, msg: string) => lines.push({ level: 'warn', fields, msg }),
+    } as unknown as IngestHandlerDeps['logger'];
+    const { run } = handler(undefined, undefined, undefined, {
+      extraction: {
+        extractor: failing,
+        model: 'claude-haiku-5-5',
+        escalationModel: 'claude-sonnet-5-5',
+        llmCalls: createLlmCallsRepo(ctx.t.db),
+      },
+      logger,
+    });
+
+    for (let attempt = 1; attempt <= INGEST_JOB_RETRIES; attempt++) {
+      await expect(run(jobId)).rejects.toThrow('provider 400');
+    }
+    expect(await run(jobId)).toBe('failed');
+
+    expect(await jobRow(jobId)).toMatchObject({
+      status: 'failed',
+      failureCode: 'assistant_unavailable',
+      resultItemId: null,
+    });
+    const res = await ctx.app.request(`/decks/${ctx.world.decks.family.id}/shares`, {
+      headers: ctx.as(editor.email),
+    });
+    const { shares } = await json(res);
+    expect(shares.find((s: { id: string }) => s.id === jobId)).toMatchObject({
+      state: 'failed',
+      failureCode: 'assistant_unavailable',
+      canRetry: true,
+    });
+
+    const errors = lines.filter((l) => l.level === 'error');
+    expect(errors).toEqual([
+      {
+        level: 'error',
+        msg: 'ingest job failed',
+        fields: {
+          jobId,
+          deckId: ctx.world.decks.family.id,
+          channel: 'paste',
+          attempts: INGEST_JOB_RETRIES + 1,
+          failureCode: 'assistant_unavailable',
+        },
+      },
+    ]);
+    const retries = lines.filter((l) => l.level === 'warn');
+    expect(retries).toHaveLength(INGEST_JOB_RETRIES);
+    for (const line of retries) {
+      expect(Object.keys(line.fields).sort()).toEqual(['attempts', 'failureCode', 'jobId']);
+    }
+    const logged = JSON.stringify(lines);
+    expect(logged).not.toContain(sharedUrl);
+    expect(logged).not.toContain('our plumber');
+    expect(logged).not.toContain('provider 400');
   });
 
   it('skips a job that already finished (re-delivered message)', async () => {

@@ -194,7 +194,7 @@ description: "Task list for 022-share-status"
 
 ### Tests for User Story 4
 
-- [ ] T060 [P] [US4] [int] apps/api/test/ingest-pipeline.int.test.ts, the **incident regression**. The fake extraction throws a provider error on every attempt. Then:
+- [X] T060 [P] [US4] [int] apps/api/test/ingest-pipeline.int.test.ts, the **incident regression**. The fake extraction throws a provider error on every attempt. Then:
   - after the last attempt the job is `failed` with `failure_code = 'assistant_unavailable'`;
   - `GET /decks/{id}/shares` lists it as failed with `canRetry`;
   - the captured logs hold exactly one error line with the five fields and none of the shared URL/text;
