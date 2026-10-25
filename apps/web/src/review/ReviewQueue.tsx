@@ -82,8 +82,16 @@ export function ReviewQueue({
       <>
         {sourceChip}
         {summary && <BulkPublishNotice summary={summary} onDismiss={() => setSummary(null)} />}
-        <EmptyState title="Nothing to review">
-          Shared cards waiting for approval show up here.
+        <EmptyState
+          title="Nothing to review"
+          action={
+            <NavLink href={deckHref(deckSlug, 'shares')} className="button button--ghost">
+              Your shares
+            </NavLink>
+          }
+        >
+          Shared cards waiting for approval show up here. Your own shares and their status are in
+          Your shares.
         </EmptyState>
       </>
     );

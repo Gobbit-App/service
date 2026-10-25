@@ -44,10 +44,24 @@ test('an owner reviews proposals from the header pill: publish and discard @smok
   await droppedCard.getByRole('button', { name: 'Discard' }).click();
   await expect(page.getByText('Nothing to review')).toBeVisible();
   await expect(page.getByRole('link', { name: /^Review · / })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Review', exact: true })).toBeVisible();
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   await expect(page.getByRole('heading', { name: kept })).toBeVisible();
   await expect(page.getByRole('heading', { name: dropped })).toHaveCount(0);
+});
+
+test('an owner reaches an empty review queue and their shares from it (D198) @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.getByRole('link', { name: 'Review', exact: true }).click();
+  await expect(page.getByText('Nothing to review')).toBeVisible();
+
+  await page.getByRole('main').getByRole('link', { name: 'Your shares' }).click();
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/shares$`));
+  await expect(page.getByRole('heading', { name: 'Your shares' })).toBeVisible();
 });
 
 test('the review page refuses a slug that does not exist @smoke', async ({ page }) => {

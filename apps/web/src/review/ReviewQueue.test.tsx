@@ -44,6 +44,13 @@ describe('ReviewQueue', () => {
     expect(await screen.findByText('Nothing to review')).toBeInTheDocument();
   });
 
+  it('links an empty queue to Your shares (D198)', async () => {
+    unwrap.mockResolvedValue(queue());
+    const { navigate } = renderQueue();
+    fireEvent.click(await screen.findByRole('link', { name: 'Your shares' }));
+    expect(navigate).toHaveBeenCalledWith('/d/family/shares');
+  });
+
   it('shows an error with retry when the queue fails to load', async () => {
     unwrap.mockRejectedValue(new Error('down'));
     renderQueue();

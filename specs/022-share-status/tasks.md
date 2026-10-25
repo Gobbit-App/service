@@ -127,12 +127,12 @@ description: "Task list for 022-share-status"
 
 ### Tests for User Story 2
 
-- [ ] T030 [P] [US2] [unit] apps/web/src/review/ReviewPill.test.tsx (shown at count 0 without a number; count when > 0) and ReviewQueue.test.tsx (empty state links to Your shares)
-- [ ] T031 [P] [US2] [e2e:smoke] e2e/tests/smoke/review.spec.ts: owner on a fresh smoke deck sees "Review" → empty queue → "Your shares" → empty list; an editor sees "Your shares" but no "Review"
+- [X] T030 [P] [US2] [unit] apps/web/src/review/ReviewPill.test.tsx (shown at count 0 without a number; count when > 0) and ReviewQueue.test.tsx (empty state links to Your shares)
+- [X] T031 [P] [US2] [e2e:smoke] e2e/tests/smoke/review.spec.ts: owner on a fresh smoke deck sees "Review" → empty queue → "Your shares" → empty list; an editor sees "Your shares" but no "Review"
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] apps/web/src/review/ReviewPill.tsx always renders for publishers; apps/web/src/review/ReviewQueue.tsx empty state with the link
+- [X] T032 [US2] apps/web/src/review/ReviewPill.tsx always renders for publishers; apps/web/src/review/ReviewQueue.tsx empty state with the link
 
 **Checkpoint**: US1 + US2 = the MVP that fixes the "can't find it anywhere" incident
 
