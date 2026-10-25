@@ -159,11 +159,20 @@ h3 {
 
 .app-header__title {
   flex: 1;
+  min-width: 0;
   margin: 0;
   font-size: 1.125rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* D198: Review is always shown to publishers, so tighten the header to fit 360 px. */
+@media (max-width: 400px) {
+  .app-header {
+    gap: 6px;
+    padding-inline: 12px;
+  }
 }
 
 /* ---------- Buttons ---------- */

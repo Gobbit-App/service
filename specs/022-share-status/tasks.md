@@ -221,8 +221,8 @@ description: "Task list for 022-share-status"
 - [X] T073 [P] README.md: Your shares, the deck setting, the worker failure log line
 - [X] T074 [P] PLAN.md: link specs/022-share-status
 - [X] T075 Copy implementation-notes.md deviations into docs/design/ingestion.md Deviations
-- [ ] T076 Run quickstart.md validation (sections 1–3 locally; section 4 after deploy)
-- [ ] T077 `/speckit-converge` until it reports Converged
+- [X] T076 Run quickstart.md validation (sections 1–3 locally; section 4 after deploy)
+- [X] T077 `/speckit-converge` until it reports Converged
 
 ---
 

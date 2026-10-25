@@ -98,7 +98,6 @@ function DeckLayout() {
           <>
             {browseC !== null && <BrowseButton deckSlug={slug} c={browseC} />}
             {can(deck.data.role, 'item.publish') && <ReviewPill deckSlug={slug} />}
-            <SharesLink deckSlug={slug} role={deck.data.role} />
             <ActivityLink deckSlug={slug} role={deck.data.role} />
             <DeckSettingsLink deckSlug={slug} role={deck.data.role} />
           </>
@@ -126,6 +125,7 @@ function DeckLayout() {
               <AddCardLink deckSlug={slug} role={deck.data.role} />
               <PasteLink deckSlug={slug} role={deck.data.role} />
               <ImportLink deckSlug={slug} role={deck.data.role} />
+              <SharesLink deckSlug={slug} role={deck.data.role} />
             </div>
           )}
         <Outlet />

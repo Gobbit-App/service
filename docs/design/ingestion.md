@@ -58,7 +58,7 @@ Non-session tokens are listed in `lib/token-prefixes.ts` (today `ing_`; Phase 13
 - **Log lines** (D195): a job that fails for good logs one `error` line "ingest job failed" with `{ jobId, deckId, channel, attempts, failureCode }`; a retried attempt logs `warn` "ingest attempt failed, will retry" with `{ jobId, attempts, failureCode }`. Neither carries shared text, URLs, titles or provider messages.
 - **Shares API** (D196, `routes/my-shares.ts` → `shares.service`): `GET /decks/{id}/shares` lists the caller's own shares on the deck (share channels only, last 30 days, newest first, ≤ 50); `GET /shares/{id}` returns one. Only the sharer sees them (anyone else gets 404; publishers keep `GET /ingest/{id}`). `ShareSummary` has `state` (`processing | failed | in_review | published | not_added`), a content-free `preview` (title, host, photo count), `failureCode`, `canRetry`, `autoPublish`, the card (`{ id, title, deleted }`) and who reviewed it.
 - **Retry in place** (D197): `POST /shares/{id}/retry` re-queues the same job (attempts reset, `retry_count + 1`, `retried_at`) when the caller is the sharer, it failed, its raw content is still kept, the sharer still has `item.create`, and it was retried fewer than 3 times. A retry takes a cap slot like a new share (`countByUserSince` also counts `retried_at`). 409 when not failed (a double tap), 410 `/problems/share-expired`, 422 `/problems/share-retry-limit`, 429.
-- **Web** (D198): `/d/$slug/shares` ("Your shares", linked from the deck header for roles with `item.create`) and the "Sent" screen poll every 3 s (`SHARE_POLL_MS`) while something is processing. A failed row offers "Try again" or "Paste it again"; offline disables both.
+- **Web** (D198): `/d/$slug/shares` ("Your shares", linked from the deck actions beside Paste for roles with `item.create`) and the "Sent" screen poll every 3 s (`SHARE_POLL_MS`) while something is processing. A failed row offers "Try again" or "Paste it again"; offline disables both.
 
 ## Auto-publish (022, D192–D193)
 
@@ -74,6 +74,7 @@ Non-session tokens are listed in `lib/token-prefixes.ts` (today `ing_`; Phase 13
 - **Routes live in `routes/my-shares.ts`** (`routes/share.ts` already serves `/s/:id` previews).
 - **Reviewer copy is separate from sharer copy**: "Not published directly: <reason>" on the review card; the sharer's row keeps its own wording.
 - **One co-owner note** ("Only co-owners can change these settings.") under both deck switches, instead of one per switch; the auto-publish switch is its own component (`deck-admin/AutoPublishSwitch.tsx`) and shows on the personal deck too.
+- **"Your shares" sits in the deck actions** (beside Paste), not the deck header: with Review always shown the header overflowed 360 px (smoke `web.spec.ts`). The header also tightens its gap and padding at ≤ 400 px, and its title can shrink (`min-width: 0`).
 - **Test placement**: failure copy in `shares/share-state.test.ts`; auto-publish integration in `ingest-auto-publish.int.test.ts`; the `autoPublishShares` patch in `public-settings.int.test.ts`; the maintainer's disabled switch in `DeckSection.test.tsx` (a second admin can't sign in from e2e).
 
 ## Channels

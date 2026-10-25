@@ -26,7 +26,7 @@ test('the owner makes the deck public and invites a co-owner from Deck settings 
   await visibility.selectOption('public');
   expect((await categoryPatch).status(), 'category PATCH').toBe(200);
 
-  await page.getByRole('switch', { name: 'Public' }).check();
+  await page.getByRole('switch', { name: 'Public' }).click();
   const dialog = page.getByRole('dialog', { name: 'Make this deck public?' });
   await expect(dialog).toContainText(SMOKE_CATEGORY.name);
   await dialog.getByRole('button', { name: 'Make public' }).click();
@@ -63,7 +63,7 @@ test('the owner turns on publishing shares directly and it persists @full', asyn
   const deckPatch = page.waitForResponse(
     (res) => res.request().method() === 'PATCH' && res.url().endsWith(`/decks/${webDeck.id}`),
   );
-  await toggle.check();
+  await toggle.click();
   expect((await deckPatch).status(), 'deck PATCH').toBe(200);
 
   await page.reload();

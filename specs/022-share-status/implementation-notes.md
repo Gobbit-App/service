@@ -24,4 +24,12 @@ Migration `0017` adds `decks.auto_publish_shares` (on for existing personal deck
 - **T046**: the maintainer's disabled switch is covered by `DeckSection.test.tsx`; a second admin cannot sign in from e2e (the invite needs the emailed magic link).
 - **Routes file** is `routes/my-shares.ts`, not `routes/shares.ts` (`routes/share.ts` already serves `/s/:id`).
 - **Auto-publish warnings** read "ingest auto-publish failed, left in review" and "ingest auto-publish follow-up failed" and carry the error name (never its message), beyond the contract's `{ jobId, deckId }`.
+- **"Your shares" is in the deck actions** (beside Paste), not the header as D198 says (FR-008 only asks for "from the deck"): with Review always shown, the 360 px smoke check measured 415 px. The header now also uses a 6 px gap and 12 px side padding at ≤ 400 px, and `.app-header__title` gets `min-width: 0` so long deck names ellipsize instead of pushing the actions out.
+- **`deck-admin.spec.ts` uses `click()` on the switches**: both are controlled (Public opens a confirm dialog, auto-publish waits for the PATCH), so Playwright's `check()` failed with "Clicking the checkbox did not change its state". The Public case predates 022; the full tier has no CI job yet, so it hadn't surfaced.
 - **Close-out**: deviations copied into `docs/design/ingestion.md` ("Deviations from the 022 plan").
+
+## Validation (T076)
+
+- Local Compose stack (`pnpm compose:up`, CI's dummy Cloudinary credentials) seeded with a smoke session: `pnpm test:e2e --grep @smoke` 59 passed; the full run (smoke + `tests/full/`, including `shares.spec.ts` and `deck-admin.spec.ts`) 71 passed.
+- Unit and integration suites green (pre-push hook: typecheck + 2725 unit/web tests).
+- quickstart sections 2–3 (a real share through the worker) need an extraction provider key and were not run locally; they are covered by the integration suites with a stubbed provider. Section 4 (production: the failure log line and auto-publish on the personal deck) runs after deploy.
