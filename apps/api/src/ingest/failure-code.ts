@@ -13,6 +13,19 @@ const FIXED_CODES: Record<string, IngestFailureCode> = {
 /** A provider that couldn't read the uploaded photo says so in its message. */
 const IMAGE_ERROR = /\bimages?\b/i;
 
+const INVALID_OUTPUT_PREFIX = 'invalid_output: ';
+const DETAIL_MAX = 300;
+
+/**
+ * What a model answer got wrong, safe to log: `invalid_output` errors are zod issues
+ * (`path: message`, no values) or fixed extractor messages, never shared content. Other errors
+ * may quote the shared URL or text, so they have no detail.
+ */
+export function failureDetail(error: string): string | undefined {
+  if (!error.startsWith(INVALID_OUTPUT_PREFIX)) return undefined;
+  return error.slice(INVALID_OUTPUT_PREFIX.length, INVALID_OUTPUT_PREFIX.length + DETAIL_MAX);
+}
+
 /**
  * D194: maps what went wrong to the reason the sharer sees. `input` is the stored error code
  * (`raw_missing`, `invalid_output: …`) or the error the pipeline threw at `stage`.

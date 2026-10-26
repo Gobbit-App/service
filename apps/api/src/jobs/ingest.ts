@@ -21,7 +21,7 @@ import type { AutoPublishInput } from '../ingest/auto-publish';
 import type { EmbedQueue } from './embed-queue';
 import type { LinkSnapshotQueue } from './link-snapshot-queue';
 import { toLinkPreview } from '../fetch/link-preview';
-import { classifyFailure, type IngestStage } from '../ingest/failure-code';
+import { classifyFailure, failureDetail, type IngestStage } from '../ingest/failure-code';
 import { childLogger, lineSink, type Logger } from '../lib/logger';
 
 export type IngestOutcome = 'proposed' | 'failed' | 'skipped';
@@ -71,7 +71,7 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
 
   /**
    * D194/D195: stores the error and the code the sharer sees; logs one line without the error
-   * text, which may quote the shared URL or content.
+   * text, which may quote the shared URL or content (only an invalid answer's detail is logged).
    */
   async function fail(
     job: FailingJob,
@@ -79,6 +79,7 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
     failureCode: IngestFailureCode = classifyFailure(error),
   ): Promise<IngestOutcome> {
     await jobs.setStatus(job.id, 'failed', error.slice(0, 500), now(), failureCode);
+    const detail = failureDetail(error);
     logger.error(
       {
         jobId: job.id,
@@ -86,6 +87,7 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         channel: job.channel,
         attempts: job.attempts,
         failureCode,
+        ...(detail ? { detail } : {}),
       },
       'ingest job failed',
     );
