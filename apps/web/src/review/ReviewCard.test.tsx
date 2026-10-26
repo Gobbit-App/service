@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReviewEntry } from '@pb/shared';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
-import { renderWithClient } from '../test/render';
+import { renderInRouter } from '../test/render-in-router';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
 const { ReviewCard } = await import('./ReviewCard');
@@ -40,13 +40,13 @@ function entry(
   };
 }
 
-function renderCard(value: ReviewEntry, { canCreateCategory = true, busy = false } = {}) {
+async function renderCard(value: ReviewEntry, { canCreateCategory = true, busy = false } = {}) {
   const handlers = {
     onPublish: vi.fn(),
     onDiscard: vi.fn(),
     onSaveEdit: vi.fn<(patch: unknown) => Promise<unknown>>().mockResolvedValue(undefined),
   };
-  renderWithClient(
+  await renderInRouter(
     <ReviewCard
       entry={value}
       deck={makeDeck({ slug: 'family' })}
@@ -61,8 +61,8 @@ function renderCard(value: ReviewEntry, { canCreateCategory = true, busy = false
 }
 
 describe('ReviewCard', () => {
-  it('shows the source line, preview, details and categories', () => {
-    renderCard(entry());
+  it('shows the source line, preview, details and categories', async () => {
+    await renderCard(entry());
     expect(screen.getByRole('article', { name: 'Dentist' })).toBeInTheDocument();
     expect(screen.getByText('shared by Dana via Shortcut · 2 minutes ago')).toBeInTheDocument();
     expect(screen.getByText('https://dentist.example/')).toBeInTheDocument();
@@ -70,18 +70,18 @@ describe('ReviewCard', () => {
     expect(screen.getByRole('list', { name: 'Categories' })).toHaveTextContent('General');
   });
 
-  it("says why a publisher's share was not published directly (D193)", () => {
-    renderCard(entry({}, { autoPublish: 'held_duplicate' }));
+  it("says why a publisher's share was not published directly (D193)", async () => {
+    await renderCard(entry({}, { autoPublish: 'held_duplicate' }));
     expect(screen.getByText('Not published directly: it may be a duplicate')).toBeInTheDocument();
   });
 
-  it('shows no held line for an ordinary proposal', () => {
-    renderCard(entry());
+  it('shows no held line for an ordinary proposal', async () => {
+    await renderCard(entry());
     expect(screen.queryByText(/Not published directly/)).toBeNull();
   });
 
-  it('publishes a new proposal and discards', () => {
-    const { onPublish, onDiscard } = renderCard(entry());
+  it('publishes a new proposal and discards', async () => {
+    const { onPublish, onDiscard } = await renderCard(entry());
     fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
     expect(onPublish).toHaveBeenCalledWith({ mode: 'new' });
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
@@ -89,9 +89,9 @@ describe('ReviewCard', () => {
     expect(screen.queryByRole('button', { name: 'Apply update' })).not.toBeInTheDocument();
   });
 
-  it('offers apply update with a field diff when the verdict points at a card', () => {
+  it('offers apply update with a field diff when the verdict points at a card', async () => {
     const target = makeItem({ id: 't1', title: 'Dentist (old)', body: 'Call ahead' });
-    const { onPublish } = renderCard(
+    const { onPublish } = await renderCard(
       entry(
         { target },
         { dedup: { action: 'update', itemId: 't1', similarity: 0.9, via: 'vector' } },
@@ -106,8 +106,8 @@ describe('ReviewCard', () => {
     expect(onPublish).toHaveBeenLastCalledWith({ mode: 'new' });
   });
 
-  it('labels a possible duplicate', () => {
-    renderCard(
+  it('labels a possible duplicate', async () => {
+    await renderCard(
       entry(
         { target: makeItem({ id: 't1', title: 'Dentist' }) },
         { dedup: { action: 'possible_duplicate', itemId: 't1', similarity: 0.8, via: 'title' } },
@@ -116,8 +116,8 @@ describe('ReviewCard', () => {
     expect(screen.getByText(/Looks like a card you already have/)).toBeInTheDocument();
   });
 
-  it('creates the suggested category unless unticked', () => {
-    const { onPublish } = renderCard(entry({}, { newCategory: 'Health' }));
+  it('creates the suggested category unless unticked', async () => {
+    const { onPublish } = await renderCard(entry({}, { newCategory: 'Health' }));
     const box = screen.getByRole('checkbox', { name: 'Create category “Health”' });
     expect(box).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
@@ -128,19 +128,19 @@ describe('ReviewCard', () => {
     expect(onPublish).toHaveBeenLastCalledWith({ mode: 'new' });
   });
 
-  it('hides the category suggestion from roles that cannot create one', () => {
-    renderCard(entry({}, { newCategory: 'Health' }), { canCreateCategory: false });
+  it('hides the category suggestion from roles that cannot create one', async () => {
+    await renderCard(entry({}, { newCategory: 'Health' }), { canCreateCategory: false });
     expect(screen.queryByRole('checkbox', { name: /Create category/ })).not.toBeInTheDocument();
   });
 
-  it('disables the actions while busy', () => {
-    renderCard(entry(), { busy: true });
+  it('disables the actions while busy', async () => {
+    await renderCard(entry(), { busy: true });
     expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Discard' })).toBeDisabled();
   });
 
   it('saves only the edited fields, then leaves edit mode', async () => {
-    const { onSaveEdit } = renderCard(entry());
+    const { onSaveEdit } = await renderCard(entry());
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Dentist Dr. Levi' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -152,7 +152,7 @@ describe('ReviewCard', () => {
   });
 
   it('keeps the form open and shows the error when saving fails', async () => {
-    const { onSaveEdit } = renderCard(entry());
+    const { onSaveEdit } = await renderCard(entry());
     onSaveEdit.mockRejectedValueOnce(new Error('boom'));
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     fireEvent.change(screen.getByLabelText('Body'), { target: { value: 'Changed' } });
@@ -162,8 +162,8 @@ describe('ReviewCard', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
   });
 
-  it('closes the form without a request when nothing changed', () => {
-    const { onSaveEdit } = renderCard(entry());
+  it('closes the form without a request when nothing changed', async () => {
+    const { onSaveEdit } = await renderCard(entry());
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(onSaveEdit).not.toHaveBeenCalled();

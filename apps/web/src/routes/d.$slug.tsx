@@ -10,6 +10,7 @@ import { can } from '@pb/shared/authz';
 import { useCallback, useEffect } from 'react';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
+import { backTarget } from '../app/back-target';
 import { DeckSettingsLink } from '../deck-admin/DeckSettingsLink';
 import { ActivityLink } from '../events/ActivityLink';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
@@ -94,6 +95,7 @@ function DeckLayout() {
     <>
       <AppHeader
         title={deck.data.name}
+        back={backTarget(adding ? { kind: 'new-card', deckSlug: slug } : { kind: 'deck' })}
         actions={
           <>
             {browseC !== null && <BrowseButton deckSlug={slug} c={browseC} />}
