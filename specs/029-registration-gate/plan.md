@@ -155,7 +155,7 @@ e2e/tests/full/registration-gate.spec.ts     # NEW
 ## Settle before starting
 
 - [ ] Merge order with 030: the sign-in and error-page links point at `/welcome`. If 029 is ready first, ship it without the two links and let 030 add them (tasks T031–T034 move to 030).
-- [ ] Is "invite-only for now" the wording the owner wants in public, or "Gobbit isn't open yet"?
+- [x] Public wording: "invite-only for now", kept simple (owner, 2026-10-26)
 
 ## Complexity Tracking
 

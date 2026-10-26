@@ -19,6 +19,7 @@ Roadmap: `PLAN.md` § Phase 9 (demo 1). Builds on Phase 2 (magic links, invites 
 - Q: Can the gate be switched off? → A: Yes, `REGISTRATION_MODE=open` restores today's behaviour for self-hosters and local experiments. The default is `waitlist`, in every environment, so a missing variable never opens the door.
 - Q: Does a deck invite still create an account? → A: Yes. A deck owner inviting someone is the trusted way in; that person signs in as today.
 - Q: What about a sign-in link that was sent before the gate turned on? → A: Clicking it for an email with no user fails with a "Gobbit is invite-only for now" page that links to the waitlist. No account, deck or session is created.
+- Q: Which public wording? → A: Keep it simple: "Gobbit is invite-only for now" (title) and the plain body in the auth-gate contract; no further variants for now.
 
 ## User Scenarios & Testing *(mandatory)*
 

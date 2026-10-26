@@ -122,8 +122,5 @@ A member opens the Gobbit address or the installed app. They go straight to thei
 - Q: Does the form need JavaScript? → A: No. A plain same-origin form post, answered with a redirect to the "check your email" state (D228).
 - Q: Which preview image? → A: A static 1200×630 image rendered by the existing `pnpm og:static` script and served by the web image (D229).
 - Q: Which language? → A: English now; copy in one module, `lang`/`dir` ready for Hebrew later (D230).
-
-### Open questions for the owner
-
-- Should the landing page link to a public communal deck as a live example once one exists?
-- Hero copy and the "who is it for" labels: are the draft wordings in D230 acceptable, or will the owner supply final copy before implementation?
+- Q: Link to a public example deck? → A: No, not in this feature.
+- Q: Final hero copy and kind labels? → A: Keep the simple D230 drafts for now; copy lives in one module and can change later without a spec.

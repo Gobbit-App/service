@@ -169,8 +169,8 @@ e2e/tests/full/landing.spec.ts    # NEW: form journeys, stale cookie
 
 ## Settle before starting
 
-- [ ] Final hero copy and kind labels (D230 drafts) — owner to confirm or replace.
-- [ ] Link to a public example deck on the page: now, later, or never?
+- [x] Hero copy and kind labels: keep the simple D230 drafts (owner, 2026-10-26)
+- [x] No link to a public example deck (owner, 2026-10-26)
 
 ## Complexity Tracking
 
