@@ -119,8 +119,8 @@ describe('payload-guards', () => {
       expect(asImagePayload({ alt: 'An image' })).toBeNull();
     });
 
-    it('returns null for missing alt', () => {
-      expect(asImagePayload({ publicId: 'my-image' })).toBeNull();
+    it('accepts a missing alt (D206)', () => {
+      expect(asImagePayload({ publicId: 'my-image' })).toEqual({ publicId: 'my-image' });
     });
 
     it('returns null for non-string publicId', () => {

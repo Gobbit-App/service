@@ -7177,8 +7177,7 @@
                             "minLength": 1
                           },
                           "alt": {
-                            "type": "string",
-                            "minLength": 1
+                            "type": "string"
                           },
                           "width": {
                             "type": "integer",
@@ -7192,8 +7191,7 @@
                           }
                         },
                         "required": [
-                          "publicId",
-                          "alt"
+                          "publicId"
                         ],
                         "additionalProperties": false
                       },

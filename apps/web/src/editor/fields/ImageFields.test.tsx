@@ -11,7 +11,7 @@ import { emptyDraft } from '../draft';
 vi.mock('../../api/client', () => import('../../test/api-mock').then((m) => m.clientModule));
 const { ImageFields } = await import('./ImageFields');
 
-type Payload = { publicId: string; alt: string };
+type Payload = { publicId: string; alt?: string };
 type UploadCall = {
   file: Blob;
   options: UploadOptions;
@@ -130,7 +130,7 @@ describe('ImageFields', () => {
     expect(fakeUpload).toHaveBeenCalledTimes(1);
   });
 
-  it('shows progress, then attaches the public id; alt is still needed to save', async () => {
+  it('shows progress, then attaches the public id; the description is optional', async () => {
     renderFields();
     pickFile('Choose photo', photo());
     expect(screen.getByText('Preparing upload…')).toBeInTheDocument();
@@ -139,16 +139,22 @@ describe('ImageFields', () => {
     expect(screen.getByLabelText('Upload progress')).toHaveAttribute('value', '40');
     await act(async () => calls[0]!.resolve({ publicId: 'gobbit/items/d/p1' }));
     expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: '', width: 10, height: 10 });
-    expect(screen.getByText('Alt text is required')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'A loaf' } });
-    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: 'A loaf', width: 10, height: 10 });
     expect(screen.queryByText('Alt text is required')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Description (optional)')).toHaveAccessibleDescription(
+      'Helps people who use a screen reader. Leave empty to use the card title.',
+    );
+    fireEvent.change(screen.getByLabelText('Description (optional)'), {
+      target: { value: 'A loaf' },
+    });
+    expect(latest).toEqual({ publicId: 'gobbit/items/d/p1', alt: 'A loaf', width: 10, height: 10 });
   });
 
   it('keeps alt typed during the upload', async () => {
     renderFields();
     pickFile('Choose photo', photo());
-    fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'Bread' } });
+    fireEvent.change(screen.getByLabelText('Description (optional)'), {
+      target: { value: 'Bread' },
+    });
     await act(async () => calls[0]!.resolve({ publicId: 'p1' }));
     expect(latest).toEqual({ publicId: 'p1', alt: 'Bread', width: 10, height: 10 });
   });

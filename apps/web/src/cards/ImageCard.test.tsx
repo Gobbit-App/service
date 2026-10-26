@@ -10,24 +10,24 @@ describe('ImageCard', () => {
   };
 
   it('renders Image unavailable when cloudName is null', () => {
-    render(<ImageCard payload={payload} cloudName={null} />);
+    render(<ImageCard payload={payload} alt="Test image alt text" cloudName={null} />);
     expect(screen.getByText('Image unavailable')).toBeInTheDocument();
   });
 
   it('renders img with correct alt', () => {
-    render(<ImageCard payload={payload} cloudName="demo" />);
+    render(<ImageCard payload={payload} alt="Test image alt text" cloudName="demo" />);
     expect(screen.getByAltText('Test image alt text')).toBeInTheDocument();
   });
 
   it('renders img with src containing w_720 and cloud name', () => {
-    render(<ImageCard payload={payload} cloudName="demo" />);
+    render(<ImageCard payload={payload} alt="Test image alt text" cloudName="demo" />);
     const img = screen.getByAltText('Test image alt text') as HTMLImageElement;
     expect(img.src).toContain('w_720');
     expect(img.src).toContain('demo');
   });
 
   it('renders img with srcset containing 360w, 720w, 1080w', () => {
-    render(<ImageCard payload={payload} cloudName="demo" />);
+    render(<ImageCard payload={payload} alt="Test image alt text" cloudName="demo" />);
     const img = screen.getByAltText('Test image alt text') as HTMLImageElement;
     const srcset = img.getAttribute('srcset')!;
     expect(srcset).toContain('360w');
@@ -36,20 +36,28 @@ describe('ImageCard', () => {
   });
 
   it('reserves the box from the payload dimensions (D161)', () => {
-    render(<ImageCard payload={{ ...payload, width: 1200, height: 800 }} cloudName="demo" />);
+    render(
+      <ImageCard
+        payload={{ ...payload, width: 1200, height: 800 }}
+        alt="Test image alt text"
+        cloudName="demo"
+      />,
+    );
     const img = screen.getByAltText('Test image alt text');
     expect(img).toHaveAttribute('width', '1200');
     expect(img).toHaveAttribute('height', '800');
   });
 
   it('still renders a payload saved before 012 (no dimensions)', () => {
-    const { container } = render(<ImageCard payload={payload} cloudName="demo" />);
+    const { container } = render(
+      <ImageCard payload={payload} alt="Test image alt text" cloudName="demo" />,
+    );
     expect(screen.getByAltText('Test image alt text')).not.toHaveAttribute('width');
     expect(container.querySelector('.cloud-image--unknown')).not.toBeNull();
   });
 
   it('shows Image unavailable when img errors', () => {
-    render(<ImageCard payload={payload} cloudName="demo" />);
+    render(<ImageCard payload={payload} alt="Test image alt text" cloudName="demo" />);
     const img = screen.getByAltText('Test image alt text') as HTMLImageElement;
     fireEvent.error(img);
     expect(screen.getByText('Image unavailable')).toBeInTheDocument();
@@ -57,16 +65,24 @@ describe('ImageCard', () => {
   });
 
   it('loads lazily by default', () => {
-    render(<ImageCard payload={payload} cloudName="demo" />);
+    render(<ImageCard payload={payload} alt="Test image alt text" cloudName="demo" />);
     const img = screen.getByAltText('Test image alt text');
     expect(img).toHaveAttribute('loading', 'lazy');
     expect(img).not.toHaveAttribute('fetchpriority');
   });
 
   it('loads a priority image eagerly with high fetch priority', () => {
-    render(<ImageCard payload={payload} cloudName="demo" priority />);
+    render(<ImageCard payload={payload} alt="Test image alt text" cloudName="demo" priority />);
     const img = screen.getByAltText('Test image alt text');
     expect(img).toHaveAttribute('loading', 'eager');
     expect(img).toHaveAttribute('fetchpriority', 'high');
+  });
+
+  it('renders a decorative image when given an empty alt (D206)', () => {
+    const { container } = render(<ImageCard payload={{ publicId: 'p' }} alt="" cloudName="demo" />);
+    expect(container.querySelector('img.cloud-image__img, img[src*="/p"]')).toHaveAttribute(
+      'alt',
+      '',
+    );
   });
 });

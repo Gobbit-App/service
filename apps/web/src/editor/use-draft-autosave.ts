@@ -62,6 +62,7 @@ export function useDraftAutosave({
 }: DraftAutosaveOptions) {
   const [kv] = useState(() => kvOption ?? idbDraftsKv());
   const [openKey] = useState(storageKey);
+  /** The draft at open: the stored-draft offer compares against it even after a rebaseline. */
   const [opening] = useState(initial);
   const [loaded, setLoaded] = useState(false);
   const [pending, setPending] = useState<PendingOffer | null>(null);
@@ -184,5 +185,8 @@ export function useDraftAutosave({
     );
   };
 
-  return { offer, restore, discard, clear, flush };
+  /** D208: the card was saved outside the form (instant categories); a stored draft now starts there. */
+  const rebase = useCallback((updatedAt: string): void => setBase(updatedAt), []);
+
+  return { offer, restore, discard, clear, flush, rebase };
 }

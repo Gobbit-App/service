@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useState, type FormEvent, type ReactElement } from 'react';
+import { Suspense, useCallback, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import type { Category, Deck, Item, ItemType } from '@pb/shared';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
 import { useNavigateHref } from '../ui/NavLink';
@@ -22,10 +22,12 @@ import { TitleField } from './fields/TitleField';
 import { SaveBar, saveBlockedReason } from './SaveBar';
 import { TYPE_LABELS, TypePicker } from './TypePicker';
 import { useCalcCheck } from './use-calc-check';
+import { withCategories, withSavedCategories } from './rebaseline';
 import { useDraftAutosave } from './use-draft-autosave';
 import { useEditorBaseline } from './use-editor-baseline';
 import { useLeaveGuard } from './use-leave-guard';
 import { usePageHide } from './use-page-hide';
+import { useInstantCategories } from './use-instant-categories';
 import { useSaveCard, type SaveTarget } from './use-save-card';
 import { errorCount, validateDraft, type FieldErrors } from './validate';
 import './editor.css';
@@ -69,8 +71,8 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   const { deck, categories } = props;
   const [initial] = useState(() => initialDraft(props));
   const [draft, setDraft] = useState(initial);
-  // D203: 023's instant category saves will call `rebaseline({ categoryIds })` from here.
-  const { baseline, isChanged } = useEditorBaseline(initial);
+  // D203/D208: instant category saves move the baseline so they never read as unsaved.
+  const { baseline, isChanged, rebaseline } = useEditorBaseline(initial);
   const calc = useCalcCheck(draft.type);
   const autosave = useDraftAutosave({
     storageKey:
@@ -80,6 +82,25 @@ export function CardEditor(props: CardEditorProps): ReactElement {
     baseline,
     baseUpdatedAt: props.mode === 'edit' ? props.item.updatedAt : null,
   });
+  const { rebase } = autosave;
+
+  /**
+   * D208 seam (022's guard): an instant category save (or its Undo) moved the card's categories
+   * on the server; make them the saved state so they never read as unsaved changes.
+   */
+  const rebaselineAfterCategorySave = useCallback(
+    (saved: Item) => {
+      setDraft((d) => withCategories(d, saved.categoryIds));
+      rebaseline({ categoryIds: saved.categoryIds });
+      rebase(saved.updatedAt);
+    },
+    [rebaseline, rebase],
+  );
+  const instant = useInstantCategories(
+    props.mode === 'edit' ? props.item : null,
+    deck.slug,
+    rebaselineAfterCategorySave,
+  );
   const {
     save,
     saving,
@@ -127,8 +148,10 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   };
 
   const restoreDraft = () => {
-    const restored = autosave.restore();
-    if (!restored) return;
+    const stored = autosave.restore();
+    if (!stored) return;
+    // D208: categories on an existing card are already saved; an old draft can't bring them back.
+    const restored = withSavedCategories(stored, instant ? baseline.categoryIds : null);
     setDraft(restored);
     if (props.mode === 'create' && restored.type !== draft.type && isCreatableType(restored.type)) {
       props.onTypeChange?.(restored.type);
@@ -138,7 +161,8 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (errorCount(clientErrors) > 0 || !calc.ready) return;
-    void save(draft);
+    // D207: on an existing card the categories save on their own; Save never sends them.
+    void save(props.mode === 'edit' ? withCategories(draft, props.item.categoryIds) : draft);
   };
 
   const Fields = fieldsByType[draft.type];
@@ -189,14 +213,24 @@ export function CardEditor(props: CardEditorProps): ReactElement {
               error={shown['body']}
               disabled={saving}
             />
-            <CategoryChips
-              deck={deck}
-              categories={categories}
-              selected={draft.categoryIds}
-              onChange={(categoryIds) => update({ categoryIds })}
-              error={shown['categoryIds']}
-              disabled={saving}
-            />
+            {instant ? (
+              <CategoryChips
+                deck={deck}
+                categories={categories}
+                selected={instant.selection}
+                onChange={instant.change}
+                error={instant.refusal ?? undefined}
+              />
+            ) : (
+              <CategoryChips
+                deck={deck}
+                categories={categories}
+                selected={draft.categoryIds}
+                onChange={(categoryIds) => update({ categoryIds })}
+                error={shown['categoryIds']}
+                disabled={saving}
+              />
+            )}
             <SourceUrlField
               value={draft.sourceUrl}
               onChange={(sourceUrl) => update({ sourceUrl })}

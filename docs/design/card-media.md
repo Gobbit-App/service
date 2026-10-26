@@ -16,7 +16,7 @@ Image cards from the editor (upload a photo, or take one on a phone) and "Fetch 
 
 **Storage conventions**: folder `gobbit/items/<deckId>` (ingest uses `gobbit/ingest/<deckId>`), tags `editor` and `deck:<deckId>`, formats jpg/png/webp/heic/heif. All of them are covered by the signature, so the browser can't change them. 8 MB (`MEDIA_IMAGE_MAX_BYTES`, the same as ingest) is checked in the browser before the upload; Cloudinary's account upload limit is the server-side backstop (no signed preset, see Deviations).
 
-**Editor image fields**: `editor/fields/ImageFields.tsx` replaces `ReadOnlyImage`; image is in `CREATABLE_TYPES`. "Take photo" (`capture="environment"`) and "Choose photo" are labelled file inputs; `image-file.ts` checks the type (MIME, or the extension when the browser reports none, e.g. HEIC) and size. `use-image-upload.ts` runs sign → upload with states idle / signing / uploading (percent) / failed (with retry), cancel through `AbortController`, and maps 429/503/403/404 to messages. `cachedSigner` reuses a signature until it expires; a stale signature is re-signed once. `validate.ts` requires a finished upload ("Add a photo") and alt text ("Alt text is required"). Without a cloud name (`GET /config`) the type picker disables Image with "Image cards aren't available: image storage isn't set up here." and `?type=image` falls back to text. Offline, picking is disabled.
+**Editor image fields**: `editor/fields/ImageFields.tsx` replaces `ReadOnlyImage`; image is in `CREATABLE_TYPES`. "Take photo" (`capture="environment"`) and "Choose photo" are labelled file inputs; `image-file.ts` checks the type (MIME, or the extension when the browser reports none, e.g. HEIC) and size. `use-image-upload.ts` runs sign → upload with states idle / signing / uploading (percent) / failed (with retry), cancel through `AbortController`, and maps 429/503/403/404 to messages. `cachedSigner` reuses a signature until it expires; a stale signature is re-signed once. `validate.ts` requires a finished upload ("Add a photo") but no alt text: the field is "Description (optional)" and a blank one is left out of the payload (D206, 023). Without a cloud name (`GET /config`) the type picker disables Image with "Image cards aren't available: image storage isn't set up here." and `?type=image` falls back to text. Offline, picking is disabled.
 
 **Link preview (D134)**: `POST /decks/{id}/link-preview` (`link-preview.service`): `item.create`, then `rateKeys.linkPreviewUser` at 30/user/hour, then an `lru-cache` (200 entries, 1 h, keyed by the parsed URL; empty results are cached too). The page is fetched only through `fetch/safe-fetch.ts` (ADR-048) and read by `extract-page`: OG title (else `<title>`, ≤ 200 code points), OG description (≤ 500), absolute http(s) OG image (≤ 2048 chars). Any failure answers `200 { preview: null }`; the reason is only logged. In the editor, `LinkEditorFields` puts `FetchPreview` in the 007 `previewSlot`: text the member already wrote wins over fetched text, a fetched image replaces the old one, and an empty card title takes the fetched title. Any failure reads "No preview available" and Save stays on.
 
@@ -70,7 +70,7 @@ Every stored image renders through `cards/CloudImage.tsx` (image cards today, li
 ## Deviations from the 008 plan
 
 - **8 MB, not 10 MB**: the same cap as ingest images (`INGEST_IMAGE_MAX_BYTES`).
-- **No width/height** in the image payload: the card stores `{ publicId, alt }` only, as the existing schema does.
+- **No width/height** in the image payload: the card stores `{ publicId, alt? }` only (`alt` optional since 023), as the existing schema does.
 - **No `siteName`** in the preview: the link payload has no field for it, so it is dropped.
 - **The fetch failure reason is not returned** (`{ preview: null }`), only logged, so the route can't be used to probe hosts.
 - **No signed upload preset**: signed params alone (folder, tags, formats) plus the client-side 8 MB check; Cloudinary's account limit is the backstop. A signed preset with a size cap can be added later by signing its name.
@@ -84,3 +84,8 @@ Every stored image renders through `cards/CloudImage.tsx` (image cards today, li
 - **Caddy's `Permissions-Policy: camera=()`** stays: it doesn't affect `<input capture>`, which opens the system camera.
 - **`use-image-upload.ts` is not a TanStack mutation**: sign and upload are one sequence with progress, cancel and one re-sign, so the hook keeps its own state behind an injectable `Signer` and upload function.
 - **`ImageCard` is keyed by `publicId`** in `CardBody`, so a replaced photo in the editor preview doesn't inherit the previous photo's load error.
+
+## Deviations from the 023 plan
+
+- **Alt is optional** (`imagePayloadSchema.alt: z.string().optional()`, D206). Renderers use `imageAlt` from `@pb/shared/image-alt`: a non-blank alt wins, otherwise `alt=""` when the title is the heading right above the image (every current renderer, including the public page), otherwise the title. Agent-extracted image cards keep their generated alt.
+- **A non-string `alt` is refused with 400** (request validation), not 422.

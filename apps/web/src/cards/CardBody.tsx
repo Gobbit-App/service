@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import type { Item } from '@pb/shared';
+import { imageAlt } from '@pb/shared/image-alt';
 import { ImageCard, type ImageLoading } from './ImageCard';
 import { LinkCard } from './LinkCard';
 import { TableCard } from './TableCard';
@@ -39,8 +40,15 @@ function TypedBody({
     case 'image': {
       const payload = asImagePayload(item.payload);
       // Keyed by the photo, so a replaced photo (editor preview) starts without the old error.
+      // Every card layout shows the title as the heading above the body (D206).
       return payload ? (
-        <ImageCard key={payload.publicId} payload={payload} cloudName={cloudName} {...image} />
+        <ImageCard
+          key={payload.publicId}
+          payload={payload}
+          alt={imageAlt({ alt: payload.alt, title: item.title, titleAdjacent: true })}
+          cloudName={cloudName}
+          {...image}
+        />
       ) : (
         <Invalid />
       );
