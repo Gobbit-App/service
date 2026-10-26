@@ -193,6 +193,15 @@ Mechanical renames with no new behaviour, so they skip spec-kit (constitution, D
 
 ## Phase 9 — Landing page and waitlist
 
+Specs (in order): [`028-waitlist`](specs/028-waitlist/spec.md) (demos 2, 6) → [`029-registration-gate`](specs/029-registration-gate/spec.md) (demo 1) ∥ [`030-landing-page`](specs/030-landing-page/spec.md) (demo 3) → [`031-landing-analytics`](specs/031-landing-analytics/spec.md) (demo 4) ∥ [`032-waitlist-admin`](specs/032-waitlist-admin/spec.md) (demo 5). Decisions D217–D240 (028: D217–D221, 029: D222–D225, 030: D226–D230, 031: D231–D233, 032: D234–D238). Runs after the Usability pass (025–027 renames included).
+
+Rules:
+- **Closed by default.** `REGISTRATION_MODE` is `waitlist` unless set to `open`. Accounts are created only through one guarded entry point: a deck invite or a platform admin's waitlist invite. An unknown email asking for a sign-in link gets the waitlist confirmation mail instead; the API answer is the same as for a known email.
+- **Double opt-in, no enumeration.** `POST /waitlist` answers `202` for every well-formed request; a filled honeypot is dropped silently; unconfirmed entries are pruned.
+- **Landing is server-rendered.** `/welcome`, and `/` for visitors without a session cookie, are API-rendered no-JS HTML (like `/p/*`); signed-in users keep the app at `/`.
+- **Analytics only on the landing page**, self-hosted and cookieless, served same-origin under `/stats/*`, and off when not configured.
+- **Platform admins** (`PLATFORM_ADMINS`, reused by Phase 12) review and invite waitlist entries; everyone else gets 404 on `/admin/*`.
+
 - MCP (Phase 13): the sign-in inside the OAuth consent flow (`/connect`) passes through the same registration gate, so MCP never becomes a way around the waitlist.
 
 - [ ] **1. Close the door properly** — an unknown email requesting a link lands on the waitlist and cannot sign in; an invited email still can.

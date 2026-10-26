@@ -26,7 +26,7 @@ specs/NNN-short-name/
   worktree). The active feature is tracked in `.specify/feature.json` (local only).
 - **Decision IDs**: decisions in `research.md` continue the project-wide `D` numbering used in
   `docs/`: take the next free number across `docs/` and
-  `specs/*/research.md` (Phase 6 reserves D129–D147; `010-e2e-journeys` uses D148–D155; Phase 7 reserves D156–D173; Phase 8 reserves D174–D191; `022-share-status` uses D192–D199; the Usability pass uses D200–D204 for `022-editor-navigation`, D205–D209 for `023-editor-inputs` and D210–D216 for `024-card-actions`). Decisions that outlive the feature become
+  `specs/*/research.md` (Phase 6 reserves D129–D147; `010-e2e-journeys` uses D148–D155; Phase 7 reserves D156–D173; Phase 8 reserves D174–D191; `022-share-status` uses D192–D199; the Usability pass uses D200–D204 for `022-editor-navigation`, D205–D209 for `023-editor-inputs` and D210–D216 for `024-card-actions`; Phase 9 reserves D217–D240). Decisions that outlive the feature become
   the next ADR in `docs/adr.md` (ADR-049 records the spec-kit adoption itself).
 - **Ageing**: a feature folder is a working contract until its PR merges, then a historical record.
   Later changes get a new feature, not edits to a merged spec. Durable truth lives in
