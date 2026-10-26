@@ -4,9 +4,9 @@ import { describe, expect, it, vi } from 'vitest';
 import type { BrowsePane } from './browse-params';
 import { FooterBand, stepPane } from './FooterBand';
 
-function Controlled({ initial = 'content' as BrowsePane, onNextCard = vi.fn() }) {
+function Controlled({ initial = 'content' as BrowsePane }) {
   const [pane, setPane] = useState<BrowsePane>(initial);
-  return <FooterBand pageId="i1" pane={pane} onPane={setPane} onNextCard={onNextCard} active />;
+  return <FooterBand pageId="i1" pane={pane} onPane={setPane} active />;
 }
 
 describe('stepPane', () => {
@@ -20,19 +20,15 @@ describe('stepPane', () => {
 
 describe('FooterBand', () => {
   it('is a tablist named "Card view" whose selection follows the pane', () => {
-    const { rerender } = render(
-      <FooterBand pageId="i1" pane="details" onPane={vi.fn()} onNextCard={null} active />,
-    );
+    const { rerender } = render(<FooterBand pageId="i1" pane="details" onPane={vi.fn()} active />);
     const tabs = within(screen.getByRole('tablist', { name: 'Card view' })).getAllByRole('tab');
     expect(tabs.map((tab) => tab.textContent)).toEqual(['Content', 'Details', 'Source']);
     expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('tabindex', '0');
     expect(screen.getByRole('tab', { name: 'Source' })).toHaveAttribute('tabindex', '-1');
-    expect(screen.getByRole('button', { name: 'Next card' })).toBeDisabled();
 
-    rerender(<FooterBand pageId="i1" pane="source" onPane={vi.fn()} onNextCard={null} active />);
+    rerender(<FooterBand pageId="i1" pane="source" onPane={vi.fn()} active />);
     expect(screen.getByRole('tab', { name: 'Source' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('button', { name: 'Next view' })).toBeDisabled();
   });
 
   it('moves between tabs with the arrow keys, Home and End', () => {
@@ -50,14 +46,10 @@ describe('FooterBand', () => {
     expect(screen.getByRole('tab', { name: 'Content' })).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('switches panes with the ‹ › buttons and pages with ↓', () => {
-    const onNextCard = vi.fn();
-    render(<Controlled onNextCard={onNextCard} />);
-    expect(screen.getByRole('button', { name: 'Previous view' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Next view' }));
-    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Next card' }));
-    expect(onNextCard).toHaveBeenCalledOnce();
+  it('shows no arrow buttons, only the tabs (D215)', () => {
+    render(<Controlled />);
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
   });
 
   it('disables everything on a state page', () => {
@@ -66,12 +58,11 @@ describe('FooterBand', () => {
         pageId="state"
         pane="content"
         onPane={vi.fn()}
-        onNextCard={null}
+
         active={false}
         disabled
       />,
     );
     for (const tab of screen.getAllByRole('tab')) expect(tab).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Next view' })).toBeDisabled();
   });
 });

@@ -2,9 +2,9 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
 import { useOfflineBanner } from '../api/offline';
 import type { RouterContext } from '../app/router-context';
 import { ServiceWorkerUpdate } from '../app/ServiceWorkerUpdate';
-import { NavLink } from '../ui/NavLink';
 import { EmptyState, OfflineBanner } from '../ui/StatusViews';
 import { ToastHost } from '../ui/UndoToast';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
@@ -28,11 +28,7 @@ function NotFound() {
     <main className="page">
       <EmptyState
         title="Page not found"
-        action={
-          <NavLink href="/" className="button">
-            Go home
-          </NavLink>
-        }
+        action={<ButtonLink href="/" icon="back" label="Go home" />}
       />
     </main>
   );

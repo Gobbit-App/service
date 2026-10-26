@@ -18,14 +18,14 @@ describe('FavoriteButton', () => {
     expect(button).toHaveAttribute('aria-label', 'Add to favorites');
   });
 
-  it('displays filled star when favorite', () => {
+  it('draws a filled star icon when favorite', () => {
     render(<FavoriteButton isFavorite={true} onToggle={() => {}} />);
-    expect(screen.getByText('★')).toBeInTheDocument();
+    expect(screen.getByRole('button').querySelector('svg')).toHaveAttribute('fill', 'currentColor');
   });
 
-  it('displays empty star when not favorite', () => {
+  it('draws an outline star icon when not favorite', () => {
     render(<FavoriteButton isFavorite={false} onToggle={() => {}} />);
-    expect(screen.getByText('☆')).toBeInTheDocument();
+    expect(screen.getByRole('button').querySelector('svg')).toHaveAttribute('fill', 'none');
   });
 
   it('calls onToggle when clicked', async () => {

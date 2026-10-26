@@ -1,5 +1,6 @@
 import { useId, type ReactElement } from 'react';
 import type { Category } from '@pb/shared';
+import { Button } from '../ui/buttons/Button';
 
 /**
  * D184: confirmation before a deck goes public. Names what anyone will see (the public
@@ -46,12 +47,8 @@ export function PublicSwitchDialog({
       </p>
       <p className="muted">Admins-only and members-only categories stay private.</p>
       <div className="admin-confirm__actions">
-        <button type="button" className="button" disabled={pending} onClick={onConfirm}>
-          Make public
-        </button>
-        <button type="button" className="button button--ghost" onClick={onCancel}>
-          Cancel
-        </button>
+        <Button icon="eye" label="Make public" disabled={pending} onClick={onConfirm} />
+        <Button icon="close" label="Cancel" variant="ghost" onClick={onCancel} />
       </div>
     </div>
   );

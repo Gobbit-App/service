@@ -89,6 +89,18 @@ describe('ReviewCard', () => {
     expect(screen.queryByRole('button', { name: 'Apply update' })).not.toBeInTheDocument();
   });
 
+  it('keeps its actions in the card bar with Edit fully in the menu (D213)', async () => {
+    await renderCard(entry());
+    const bar = screen.getByRole('group', { name: 'Card actions' });
+    expect(screen.getByRole('article', { name: 'Dentist' })).toContainElement(bar);
+    expect(screen.getByRole('button', { name: 'Discard' })).toHaveClass('icon-button--danger');
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.getByRole('menuitem', { name: 'Edit fully' })).toHaveAttribute(
+      'href',
+      '/i/p1/edit?from=review',
+    );
+  });
+
   it('offers apply update with a field diff when the verdict points at a card', async () => {
     const target = makeItem({ id: 't1', title: 'Dentist (old)', body: 'Call ahead' });
     const { onPublish } = await renderCard(

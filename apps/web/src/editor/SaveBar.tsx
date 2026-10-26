@@ -1,4 +1,5 @@
 import { useId, type ReactElement } from 'react';
+import { Button } from '../ui/buttons/Button';
 
 export function saveBlockedReason(errorCount: number, calcReady: boolean): string | null {
   if (errorCount > 0) return errorCount === 1 ? 'Fix 1 field' : `Fix ${errorCount} fields`;
@@ -30,18 +31,15 @@ export function SaveBar({
         </p>
       )}
       <div className="editor__save-row">
-        <button
+        <Button
           type="submit"
-          className="button"
+          icon="check"
+          label="Save card"
           disabled={blockedReason !== null || saving}
           aria-describedby={blockedReason ? reasonId : undefined}
           aria-busy={saving || undefined}
-        >
-          Save card
-        </button>
-        <button type="button" className="button button--ghost" onClick={onCancel}>
-          Cancel
-        </button>
+        />
+        <Button icon="close" label="Cancel" variant="ghost" onClick={onCancel} />
         {blockedReason && (
           <span id={reasonId} className="editor__save-reason">
             {blockedReason}

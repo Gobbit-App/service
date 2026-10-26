@@ -178,9 +178,9 @@ Fixes from hands-on use of the deployed app, logged in [`docs/usability-backlog.
 
 Specs (in order): [`025` deck wording](#025-027-renames) → [`022-editor-navigation`](specs/022-editor-navigation/spec.md) ∥ [`023-editor-inputs`](specs/023-editor-inputs/spec.md) → [`024-card-actions`](specs/024-card-actions/spec.md) → `026` package scope → `027` database names. 025 goes first because its copy changes touch most of the files 022 and 024 edit; 026 and 027 are repo-wide mechanical renames, merged when no other branch is in flight. Each is its own branch and PR. Auto-save of every editor field with undo/redo is a later feature (023 covers categories only).
 
-- [ ] **1. Navigation** — from the editor, back returns to the card; the deck list has no back control; leaving an edited card asks first and reloading keeps a draft (022).
-- [ ] **2. Inputs** — a link card saved as `example.org` stores `https://example.org`; an image card saves without alt text; re-filing a card is one tap with Undo (023).
-- [ ] **3. Card actions** — every card's actions sit inside it as icons; no text-only action buttons, glyph icons or browse arrows remain; delete is readable in both themes (024).
+- [x] **1. Navigation** — from the editor, back returns to the card; the deck list has no back control; leaving an edited card asks first and reloading keeps a draft (022, PR #56).
+- [x] **2. Inputs** — a link card saved as `example.org` stores `https://example.org`; an image card saves without alt text; re-filing a card is one tap with Undo (023, PR #57).
+- [x] **3. Card actions** — every card's actions sit inside it as icons; no text-only action buttons, glyph icons or browse arrows remain; delete is readable in both themes (024, merges after #56 and #57).
 - [ ] **4. No "pocketbook"** — no user-visible "pocketbook" anywhere in the app or live docs (025); `@pb/*` packages and local `pb` database names are gone (026, 027).
 
 ### 025–027 renames

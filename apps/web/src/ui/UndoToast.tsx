@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactElement } from 'react';
 import { dismissToast, useToast } from './toast-store';
+import { Button } from './buttons/Button';
 
 /** D146: how long the Undo offer stays on screen. */
 export const UNDO_TOAST_MS = 6000;
@@ -33,16 +34,16 @@ export function UndoToast({
     <div className="toast" role="status">
       <span className="toast__message">{message}</span>
       {actionLabel && onAction && (
-        <button
-          type="button"
-          className="button button--ghost toast__action"
+        <Button
+          icon="undo"
+          label={actionLabel}
+          variant="ghost"
+          className="toast__action"
           onClick={() => {
             onAction();
             onDismiss();
           }}
-        >
-          {actionLabel}
-        </button>
+        />
       )}
     </div>
   );

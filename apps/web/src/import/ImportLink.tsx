@@ -2,7 +2,7 @@ import type { Deck } from '@pb/shared';
 import { can } from '@pb/shared/authz';
 import type { ReactElement } from 'react';
 import { deckHref } from '../ui/chip-order';
-import { NavLink } from '../ui/NavLink';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 /** D189: "Import" opens the import screen; owners and maintainers (`item.publish`). */
 export function ImportLink({
@@ -14,12 +14,12 @@ export function ImportLink({
 }): ReactElement | null {
   if (!can(role, 'item.publish')) return null;
   return (
-    <NavLink
+    <ButtonLink
       href={deckHref(deckSlug, 'import')}
-      className="button button--ghost import-link"
+      icon="file-import"
       label="Import notes"
-    >
-      Import
-    </NavLink>
+      variant="ghost"
+      className="import-link"
+    />
   );
 }

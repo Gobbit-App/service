@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { Button } from './buttons/Button';
 
 /** Banner shown when offline. */
 export function OfflineBanner({ visible }: { visible: boolean }): ReactElement | null {
@@ -43,11 +44,7 @@ export function ErrorState({
     <section className="error-state" role="alert">
       <h2>{title}</h2>
       <p>{message}</p>
-      {onRetry && (
-        <button type="button" className="button" onClick={onRetry}>
-          Try again
-        </button>
-      )}
+      {onRetry && <Button icon="refresh" label="Try again" onClick={onRetry} />}
     </section>
   );
 }
@@ -66,12 +63,8 @@ export function UpdatePrompt({
   return (
     <div className="update-prompt" role="status">
       <span>A new version of Gobbit is ready.</span>
-      <button type="button" className="button" onClick={onUpdate}>
-        Reload
-      </button>
-      <button type="button" className="button button--ghost" onClick={onDismiss}>
-        Later
-      </button>
+      <Button icon="refresh" label="Reload" onClick={onUpdate} />
+      <Button icon="close" label="Later" variant="ghost" onClick={onDismiss} />
     </div>
   );
 }

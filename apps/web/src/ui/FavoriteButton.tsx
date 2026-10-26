@@ -1,21 +1,21 @@
 import type { ReactElement } from 'react';
+import { IconButton } from './buttons/IconButton';
 
-/** A button to toggle an item's favorite status. */
+/** A button to toggle an item's favorite status (outline star; filled while favorite). */
 export function FavoriteButton(props: {
   isFavorite: boolean;
   onToggle: () => void;
   disabled?: boolean;
 }): ReactElement {
   return (
-    <button
-      type="button"
-      className="icon-button favorite-button"
-      aria-pressed={props.isFavorite}
-      aria-label={props.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+    <IconButton
+      icon="star"
+      className="favorite-button"
+      pressed={props.isFavorite}
+      label={props.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      tip={props.isFavorite ? 'Favorite' : 'Add to favorites'}
       onClick={props.onToggle}
       disabled={props.disabled}
-    >
-      <span aria-hidden="true">{props.isFavorite ? '★' : '☆'}</span>
-    </button>
+    />
   );
 }

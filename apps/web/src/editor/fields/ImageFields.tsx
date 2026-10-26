@@ -8,6 +8,7 @@ import { useImageUpload, type UseImageUploadOptions } from '../use-image-upload'
 import { PickButton } from './PickButton';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
+import { Button } from '../../ui/buttons/Button';
 
 export type ImageFieldsProps = FieldsProps<'image'> & {
   /** Tests inject a fake signer/uploader. */
@@ -99,9 +100,7 @@ export function ImageFields({
                 ? 'Saving photo…'
                 : 'Preparing upload…'}
           </span>
-          <button type="button" className="button button--ghost" onClick={cancel}>
-            Cancel upload
-          </button>
+          <Button icon="close" label="Cancel upload" variant="ghost" onClick={cancel} />
         </div>
       )}
 
@@ -109,9 +108,12 @@ export function ImageFields({
         <div className="image-fields__failed" role="alert">
           <p className="field__error">{state.message}</p>
           {state.canRetry && (
-            <button type="button" className="button" onClick={upload.retry} disabled={pickDisabled}>
-              Retry upload
-            </button>
+            <Button
+              icon="refresh"
+              label="Retry upload"
+              onClick={upload.retry}
+              disabled={pickDisabled}
+            />
           )}
         </div>
       )}
@@ -126,14 +128,13 @@ export function ImageFields({
       {hasPhoto && !upload.busy && (
         <div className="image-fields__pick">
           <PickButton label="Replace photo" disabled={pickDisabled} onPick={pick} />
-          <button
-            type="button"
-            className="button button--ghost"
+          <Button
+            icon="trash"
+            label="Remove photo"
+            variant="ghost"
             onClick={remove}
             disabled={disabled}
-          >
-            Remove photo
-          </button>
+          />
         </div>
       )}
 

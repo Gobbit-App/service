@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { fromListState } from '../browse/browse-params';
 import { firstVisibleItemId } from './first-visible';
+import { IconButton } from '../ui/buttons/IconButton';
 
 /**
  * Contract §1: opens Browse on the card the reader is looking at (push, `fromList`). Lives in
@@ -18,9 +19,5 @@ export function BrowseButton({ deckSlug, c }: { deckSlug: string; c: string }): 
       state: (prev) => ({ ...prev, ...fromListState(c) }),
     });
   };
-  return (
-    <button type="button" className="button button--ghost browse-button" onClick={open}>
-      Browse
-    </button>
-  );
+  return <IconButton icon="browse" label="Browse" className="browse-button" onClick={open} />;
 }

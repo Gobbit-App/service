@@ -175,23 +175,6 @@
   gap: 8px;
 }
 
-.icon-button {
-  min-width: var(--tap);
-  min-height: var(--tap);
-  padding: 0 8px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-surface);
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.icon-button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
 /* Calc fields (US4). */
 .calc-fields__field {
   display: grid;

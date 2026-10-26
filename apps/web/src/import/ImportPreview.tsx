@@ -3,6 +3,7 @@ import { IMPORT_ROWS_PER_PREVIEW } from '@pb/shared/ingest-constants';
 import type { ImportCategory } from '@pb/shared/import';
 import { ImportPreviewRow } from './ImportPreviewRow';
 import { editRow, importableRows, toggleRow, type PreviewRow } from './preview-rows';
+import { Button } from '../ui/buttons/Button';
 
 /** D189: the parsed notes before anything is sent; too many rows must be split first. */
 export function ImportPreview({
@@ -50,17 +51,13 @@ export function ImportPreview({
         </ol>
       )}
       <div className="import-preview__actions">
-        <button
-          type="button"
-          className="button"
+        <Button
+          icon="file-import"
+          label={busy ? 'Importing…' : `Import ${count} ${count === 1 ? 'card' : 'cards'}`}
           disabled={busy || tooMany || count === 0}
           onClick={onImport}
-        >
-          {busy ? 'Importing…' : `Import ${count} ${count === 1 ? 'card' : 'cards'}`}
-        </button>
-        <button type="button" className="button button--ghost" disabled={busy} onClick={onBack}>
-          Back
-        </button>
+        />
+        <Button icon="back" label="Back" variant="ghost" disabled={busy} onClick={onBack} />
       </div>
     </section>
   );

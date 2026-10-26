@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import type { IngestTokenCreated } from '@pb/shared';
 import { CopyButton } from './CopyButton';
 import { ingestEmailAddress } from './ingest-token-view';
+import { Button } from '../ui/buttons/Button';
 
 /** D99: the only time the plain token is visible; the email-in address derives from it (D104). */
 export function TokenSecret({
@@ -33,9 +34,7 @@ export function TokenSecret({
           </div>
         </>
       )}
-      <button type="button" className="button" onClick={onDone}>
-        Done
-      </button>
+      <Button icon="check" label="Done" onClick={onDone} />
     </div>
   );
 }

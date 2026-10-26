@@ -15,6 +15,7 @@ import { Card } from '../cards/Card';
 import { useNavigateHref } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { emptyListCopy } from './empty-copy';
+import { Button } from '../ui/buttons/Button';
 
 /**
  * Data-model §3: back from Browse, scroll to the card Browse was on (once, then forget it). It
@@ -55,7 +56,7 @@ export function ItemList({
   deckSlug: string;
   filter: ItemFilter;
   categories: readonly Category[];
-  /** Per-card actions under each card (Archived: Restore/Delete, D131). */
+  /** Each card's action bar (D213); without it, cards get Favorite + Share. */
   renderActions?: (item: Item) => ReactNode;
 }): ReactElement {
   const query = useInfiniteQuery(itemsQuery(deckSlug, filter));
@@ -103,21 +104,24 @@ export function ItemList({
       <ul className="item-list__items">
         {items.map((item) => (
           <li key={item.id}>
-            <Card item={item} deckSlug={deckSlug} categories={categories} />
-            {renderActions?.(item)}
+            <Card
+              item={item}
+              deckSlug={deckSlug}
+              categories={categories}
+              actions={renderActions?.(item)}
+            />
           </li>
         ))}
       </ul>
       {hasNextPage && (
         <div ref={sentinel} className="item-list__more">
-          <button
-            type="button"
-            className="button button--ghost"
+          <Button
+            icon="arrow-down"
+            label={isFetchingNextPage ? 'Loading…' : 'Load more'}
+            variant="ghost"
             disabled={isFetchingNextPage}
             onClick={() => void fetchNextPage()}
-          >
-            {isFetchingNextPage ? 'Loading…' : 'Load more'}
-          </button>
+          />
         </div>
       )}
     </div>

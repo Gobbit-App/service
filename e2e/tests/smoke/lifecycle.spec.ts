@@ -30,6 +30,12 @@ async function itemState(api: APIRequestContext, id: string): Promise<string> {
 
 const toast = (page: Page) => page.locator('.toast');
 
+/** D213: Archive and Delete live in the card's "More actions" menu. */
+async function cardMenu(page: Page, action: 'Archive' | 'Delete'): Promise<void> {
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: action }).click();
+}
+
 test('demo 2: archive, undo, archive, search misses, restore, search hits @smoke', async ({
   api,
   page,
@@ -40,7 +46,7 @@ test('demo 2: archive, undo, archive, search misses, restore, search hits @smoke
 
   // archive from the card view, back on the deck with Undo
   await page.goto(webUrl(`/i/${card.id}`));
-  await page.getByRole('button', { name: 'Archive' }).click();
+  await cardMenu(page, 'Archive');
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   await expect(toast(page)).toContainText('Card archived');
   await expect(heading).toHaveCount(0);
@@ -51,7 +57,7 @@ test('demo 2: archive, undo, archive, search misses, restore, search hits @smoke
 
   // archive again: search no longer finds it
   await page.goto(webUrl(`/i/${card.id}`));
-  await page.getByRole('button', { name: 'Archive' }).click();
+  await cardMenu(page, 'Archive');
   await expect(toast(page)).toContainText('Card archived');
   await expect.poll(() => itemState(api, card.id)).toBe('archived');
   expect(await searchIds(api, webDeck, 'quetzal')).not.toContain(card.id);
@@ -75,7 +81,7 @@ test('links to a deck or card the user cannot see show unavailable @smoke', asyn
 
   await page.goto(webUrl('/i/00000000-0000-4000-8000-00000000dead'));
   await expect(page.getByRole('heading', { name: 'Card unavailable' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Archive' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'More actions' })).toHaveCount(0);
 });
 
 test('delete asks first, undoes, and undeletes from Recently deleted @smoke', async ({
@@ -89,13 +95,13 @@ test('delete asks first, undoes, and undeletes from Recently deleted @smoke', as
   // cancelling the confirm keeps the card
   await page.goto(webUrl(`/i/${card.id}`));
   page.once('dialog', (dialog) => void dialog.dismiss());
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await cardMenu(page, 'Delete');
   await expect(page).toHaveURL(new RegExp(`/i/${card.id}$`));
   expect(await itemState(api, card.id)).toBe('published');
 
   // delete → Undo
   page.once('dialog', (dialog) => void dialog.accept());
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await cardMenu(page, 'Delete');
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   await expect(toast(page)).toContainText('Card deleted');
   await expect(heading).toHaveCount(0);
@@ -106,7 +112,7 @@ test('delete asks first, undoes, and undeletes from Recently deleted @smoke', as
   // delete again → Recently deleted (D132 floors the days left, so seconds later it may read 29)
   await page.goto(webUrl(`/i/${card.id}`));
   page.once('dialog', (dialog) => void dialog.accept());
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await cardMenu(page, 'Delete');
   await expect(toast(page)).toContainText('Card deleted');
   await expect.poll(() => itemState(api, card.id)).toBe('gone');
 

@@ -19,6 +19,7 @@ function renderBand(overrides: Partial<HeaderBandProps> = {}) {
     onClose: vi.fn(),
     position: { index: 2, total: 10 },
     onPrevCard: vi.fn(),
+    onNextCard: vi.fn(),
     active: true,
     ...overrides,
   };
@@ -34,33 +35,40 @@ describe('positionLabel', () => {
 });
 
 describe('HeaderBand', () => {
-  it('names the chevrons after the neighbouring categories', () => {
-    const props = renderBand();
-    fireEvent.click(screen.getByRole('button', { name: 'Next category: School' }));
-    expect(props.onCategory).toHaveBeenCalledWith('school');
-    fireEvent.click(screen.getByRole('button', { name: 'Previous category: All' }));
-    expect(props.onCategory).toHaveBeenCalledWith('all');
-    expect(screen.getByText('3 of 10')).toBeInTheDocument();
+  it('shows no arrow buttons (D215)', () => {
+    renderBand();
+    for (const name of [/card$/, /^Previous category/, /^Next category/]) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+    expect(document.body.textContent).not.toMatch(/[‹›↑↓✕]/);
+    expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Close browse',
+      'Card 3 of 10',
+      'Category: Food',
+    ]);
   });
 
-  it('disables the chevrons at the ends and the previous-card button on the first card', () => {
-    renderBand({
-      current: cycle[0],
-      prevCategory: null,
-      onPrevCard: null,
-      position: { index: 0, total: null },
-    });
-    expect(screen.getByRole('button', { name: 'Previous category' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Previous card' })).toBeDisabled();
-    expect(screen.getByText('1')).toBeInTheDocument();
-  });
-
-  it('closes and pages back', () => {
+  it('closes with an icon button', () => {
     const props = renderBand();
-    fireEvent.click(screen.getByRole('button', { name: 'Close browse' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Previous card' }));
+    const close = screen.getByRole('button', { name: 'Close browse' });
+    expect(close.querySelector('svg')).not.toBeNull();
+    fireEvent.click(close);
     expect(props.onClose).toHaveBeenCalledOnce();
+  });
+
+  it('pages through the position menu', () => {
+    const props = renderBand();
+    fireEvent.click(screen.getByRole('button', { name: 'Card 3 of 10' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Previous card' }));
     expect(props.onPrevCard).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Card 3 of 10' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Next card' }));
+    expect(props.onNextCard).toHaveBeenCalledOnce();
+  });
+
+  it('hides the position on state pages', () => {
+    renderBand({ position: null, onPrevCard: null, onNextCard: null });
+    expect(screen.queryByRole('button', { name: /^Card / })).not.toBeInTheDocument();
   });
 
   it('opens a menu of All + the categories from the category name', () => {

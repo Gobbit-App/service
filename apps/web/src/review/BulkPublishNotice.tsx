@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { publishedMessage, type BulkPublishSummary } from './bulk-publish-summary';
+import { Button } from '../ui/buttons/Button';
 
 /** D191: the outcome of a bulk publish; skipped cards stay in the queue and are named here. */
 export function BulkPublishNotice({
@@ -24,9 +25,7 @@ export function BulkPublishNotice({
           </ul>
         </>
       )}
-      <button type="button" className="button button--ghost" onClick={onDismiss}>
-        Dismiss
-      </button>
+      <Button icon="close" label="Dismiss" variant="ghost" onClick={onDismiss} />
     </div>
   );
 }

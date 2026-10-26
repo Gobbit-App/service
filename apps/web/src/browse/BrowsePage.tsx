@@ -18,7 +18,7 @@ export interface BrowsePageProps {
   current: boolean;
   /** Current ±1: renders its card; the rest are empty 100dvh placeholders (D144). */
   mounted: boolean;
-  header: Omit<HeaderBandProps, 'active'>;
+  header: Omit<HeaderBandProps, 'active' | 'onNextCard'>;
   onNextCard: (() => void) | null;
 }
 
@@ -63,7 +63,7 @@ export function BrowsePage({
       aria-hidden={current ? undefined : true}
       inert={!current}
     >
-      <HeaderBand {...header} active={current} />
+      <HeaderBand {...header} onNextCard={onNextCard} active={current} />
       <div
         className="browse-page__content"
         role="tabpanel"
@@ -79,13 +79,7 @@ export function BrowsePage({
           image={{ priority: current }}
         />
       </div>
-      <FooterBand
-        pageId={item.id}
-        pane={pane}
-        onPane={onPane}
-        onNextCard={onNextCard}
-        active={current}
-      />
+      <FooterBand pageId={item.id} pane={pane} onPane={onPane} active={current} />
     </section>
   );
 }

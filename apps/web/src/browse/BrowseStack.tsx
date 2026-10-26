@@ -40,7 +40,7 @@ export interface BrowseStackProps {
   pane: BrowsePane;
   onPane: (pane: BrowsePane) => void;
   onSettle: (itemId: string) => void;
-  header: Omit<HeaderBandProps, 'active' | 'position' | 'onPrevCard'>;
+  header: Omit<HeaderBandProps, 'active' | 'position' | 'onPrevCard' | 'onNextCard'>;
   /** Off while the first-run hint is open. */
   keysEnabled: boolean;
 }

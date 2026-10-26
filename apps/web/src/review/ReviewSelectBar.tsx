@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { BULK_PUBLISH_MAX } from '@pb/shared/ingest-constants';
+import { Button } from '../ui/buttons/Button';
 
 /** D191: the queue's select mode toggle and, while selecting, select all and publish. */
 export function ReviewSelectBar({
@@ -22,27 +23,27 @@ export function ReviewSelectBar({
   const tooMany = selectedCount > BULK_PUBLISH_MAX;
   return (
     <div className="review-select-bar" role="toolbar" aria-label="Select proposals">
-      <button type="button" className="button button--ghost" onClick={onToggleMode}>
-        {selecting ? 'Done selecting' : 'Select'}
-      </button>
+      <Button
+        icon={selecting ? 'check' : 'select'}
+        label={selecting ? 'Done selecting' : 'Select'}
+        variant="ghost"
+        onClick={onToggleMode}
+      />
       {selecting && (
         <>
-          <button
-            type="button"
-            className="button button--ghost"
+          <Button
+            icon="select"
+            label="Select all shown"
+            variant="ghost"
             disabled={busy || selectedCount === shownCount}
             onClick={onSelectAll}
-          >
-            Select all shown
-          </button>
-          <button
-            type="button"
-            className="button"
+          />
+          <Button
+            icon="check"
+            label={`Publish selected (${selectedCount})`}
             disabled={busy || selectedCount === 0 || tooMany}
             onClick={onPublish}
-          >
-            Publish selected ({selectedCount})
-          </button>
+          />
           {tooMany && (
             <p className="review-select-bar__hint">Publish at most {BULK_PUBLISH_MAX} at a time.</p>
           )}

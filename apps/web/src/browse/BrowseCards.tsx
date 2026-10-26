@@ -25,16 +25,9 @@ function StatePage({
   return (
     <div className="browse__pages">
       <section className="browse-page browse-page--state">
-        <HeaderBand {...header} position={null} onPrevCard={null} active />
+        <HeaderBand {...header} position={null} onPrevCard={null} onNextCard={null} active />
         <div className="browse-page__content">{children}</div>
-        <FooterBand
-          pageId="state"
-          pane={pane}
-          onPane={() => undefined}
-          onNextCard={null}
-          active={false}
-          disabled
-        />
+        <FooterBand pageId="state" pane={pane} onPane={() => undefined} active={false} disabled />
       </section>
     </div>
   );

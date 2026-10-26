@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import type { Entities } from '@pb/shared';
+import { Icon } from '../ui/icons/Icon';
 
 export type EntityKind = keyof Entities;
 
@@ -46,7 +47,7 @@ export function EntityChips({
               aria-label={`Remove ${chip.label} ${chip.value}`}
               onClick={() => onRemove(chip.kind, chip.index)}
             >
-              ×
+              <Icon name="close" />
             </button>
           )}
         </li>

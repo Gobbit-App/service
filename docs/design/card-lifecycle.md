@@ -31,7 +31,7 @@ deleted > 30 days ──prune-deleted-items (weekly)──▶ hard-deleted
 - **D143**: `deckHref(slug, path)` (`apps/web/src/ui/chip-order.ts`) builds every deck-scoped href in the web app.
 - **D146**: the web actions are optimistic on the cached lists, roll back on error, invalidate search, and show a 6-second Undo toast after archive and delete. Delete asks first (`window.confirm`). Actions are disabled offline.
 
-**Web**: the card view (`/i/$itemId`) shows Archive/Restore and Delete by role. The Archived view (`/d/$slug/archived`) lists archived cards with Restore and, for `item.delete` roles, a **Recently deleted** section with days left and Undelete. A deleted card's permalink shows "Card unavailable".
+**Web**: the card view (`/i/$itemId`) shows Archive/Restore and Delete by role; since 024 they sit in the card's own bar, Archive and Delete under "More actions" ([icons-and-actions](icons-and-actions.md)). The Archived view (`/d/$slug/archived`) lists archived cards with Restore and, for `item.delete` roles, a **Recently deleted** section with days left and Undelete. A deleted card's permalink shows "Card unavailable".
 
 ## Deviations from the 006 plan
 

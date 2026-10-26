@@ -5,6 +5,7 @@ import { lockedHostOf } from '@pb/shared/links';
 import { CloudImage } from './CloudImage';
 import { LinkHealthBadge } from './LinkHealthBadge';
 import type { LinkPayload } from './payload-guards';
+import { Icon } from '../ui/icons/Icon';
 
 /** Which preview image is shown: the stored copy, the page's own image, or none (D163). */
 type ImageSource = 'stored' | 'remote' | 'none';
@@ -80,12 +81,13 @@ export function LinkCard({
       {!preview?.title && <p className="link-card__url">{payload.url}</p>}
       {isWebUrl && (
         <a
-          className="button link-card__open"
+          className="button button--icon link-card__open"
           href={payload.url}
           target="_blank"
           rel="noopener noreferrer"
         >
-          Open
+          <Icon name="external" />
+          <span className="button__label">Open</span>
         </a>
       )}
     </div>

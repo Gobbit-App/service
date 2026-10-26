@@ -154,7 +154,6 @@ h3 {
   min-width: var(--tap);
   min-height: var(--tap);
   text-decoration: none;
-  font-size: 1.25rem;
 }
 
 .app-header__title {
@@ -167,11 +166,16 @@ h3 {
   white-space: nowrap;
 }
 
-/* D198: Review is always shown to publishers, so tighten the header to fit 360 px. */
+/* D198: Review is always shown to publishers, so tighten the header to fit 360 px.
+   D211: icon controls keep their 44 px hit areas edge to edge (no gap) so seven fit. */
 @media (max-width: 400px) {
   .app-header {
-    gap: 6px;
-    padding-inline: 12px;
+    gap: 0;
+    padding-inline: 8px;
+  }
+
+  .app-header__title {
+    padding-inline: 4px;
   }
 }
 
@@ -193,32 +197,201 @@ h3 {
   cursor: pointer;
 }
 
-.button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
 .button--ghost {
   background: transparent;
   color: var(--color-accent);
 }
 
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* D211: icon + label; the label is visually hidden below 480 px (the name stays). */
+.button--icon {
+  gap: 8px;
+  padding-inline: 14px 18px;
+}
+
+@media (max-width: 479.98px) {
+  .button--icon {
+    min-width: var(--tap);
+    padding-inline: 10px;
+  }
+
+  .button--icon .button__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* D214: the one destructive style — danger text and border on the surface (≥ 4.5:1). */
+.button--danger {
+  border-color: var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+}
+
+/* D210: icons are 20 px in a 44 px hit area; directional ones mirror in RTL. */
+.icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+[dir='rtl'] .icon--directional {
+  transform: scaleX(-1);
+}
+
 .icon-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--tap);
+  gap: 4px;
+  min-width: var(--tap);
   height: var(--tap);
+  padding: 0 10px;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-muted);
-  font-size: 1.25rem;
+  font: inherit;
+  text-decoration: none;
   cursor: pointer;
+}
+
+.icon-button:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+.icon-button:disabled,
+.icon-button[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.icon-button--danger,
+.icon-button--danger:hover:not(:disabled, [aria-disabled='true']) {
+  color: var(--color-danger);
 }
 
 .favorite-button[aria-pressed='true'] {
   color: var(--color-accent);
+}
+
+/* D212: tooltips from data-tip on hover (pointer devices), keyboard focus and long-press. */
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]::after {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 40;
+  display: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--color-banner);
+  color: var(--color-banner-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  content: attr(data-tip);
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+@media (hover: hover) {
+  [data-tip]:hover::after {
+    display: block;
+  }
+}
+
+[data-tip]:focus-visible::after,
+[data-tip][data-tip-open]::after {
+  display: block;
+}
+
+/* A visible label already says it: no tooltip on wide screens. */
+@media (min-width: 480px) {
+  .button--icon[data-tip]:not([aria-disabled='true'])::after {
+    display: none;
+  }
+}
+
+/* D213: menu button and its menu (portalled to <body>, placed by MoreMenu). */
+.menu-button {
+  position: relative;
+  display: inline-flex;
+}
+
+.menu-button__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.menu {
+  position: fixed;
+  z-index: 30;
+  min-width: 180px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+  list-style: none;
+}
+
+.menu__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu__item:hover,
+.menu__item:focus-visible {
+  background: var(--color-accent-soft);
+}
+
+.menu__item[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.menu__item--danger {
+  color: var(--color-danger);
 }
 
 .share-button-wrap {
@@ -226,10 +399,10 @@ h3 {
   display: inline-flex;
 }
 
-.toast {
+.share-button__toast {
   position: absolute;
   right: 0;
-  top: calc(100% + 4px);
+  bottom: calc(100% + 4px);
   z-index: 5;
   padding: 6px 12px;
   border-radius: var(--radius-pill);
@@ -349,10 +522,43 @@ h3 {
   text-decoration: none;
 }
 
-.card__actions {
+/* D213: the action bar, the card's last row; the menu button sits at the inline end. */
+.card__bar {
   display: flex;
-  flex-shrink: 0;
-  margin: 0 -8px 0 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: var(--gap) -8px -8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+.card__bar > .menu-button {
+  margin-inline-start: auto;
+}
+
+/* Tooltips at the bar's ends stay inside the card (it clips overflow). */
+.card__bar > [data-tip]:first-child::after {
+  left: 0;
+  transform: none;
+}
+
+.card__bar > :last-child[data-tip]::after,
+.card__bar > .menu-button [data-tip]::after {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+[dir='rtl'] .card__bar > [data-tip]:first-child::after {
+  right: 0;
+  left: auto;
+}
+
+[dir='rtl'] .card__bar > :last-child[data-tip]::after,
+[dir='rtl'] .card__bar > .menu-button [data-tip]::after {
+  right: auto;
+  left: 0;
 }
 
 .card__body {
@@ -666,25 +872,6 @@ h3 {
   color: var(--color-banner-text);
 }
 
-.card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-top: var(--gap);
-}
-
-.card-actions__hint {
-  color: var(--color-muted);
-  font-size: 0.875rem;
-}
-
-.button--danger {
-  border-color: var(--color-danger);
-  background: transparent;
-  color: var(--color-danger);
-}
-
 .deleted-section {
   margin-top: calc(var(--gutter) * 2);
 }
@@ -846,7 +1033,36 @@ h3 {
   list-style: none;
 }
 
+.entity-chips__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  position: relative;
+  margin-inline: 2px -8px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+/* a 44 px hit area around the 28 px circle */
+.entity-chips__remove::before {
+  position: absolute;
+  inset: -8px;
+  content: '';
+}
+
+.entity-chips__remove .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
 .chip--add {
+  gap: 6px;
   border-style: dashed;
 }
 
@@ -962,11 +1178,6 @@ h3 {
 
 /* ---------- Settings: ingest tokens (Phase 5, D99) ---------- */
 
-.button--danger {
-  border-color: var(--color-danger);
-  background: var(--color-danger);
-}
-
 .muted {
   margin: 4px 0 0;
   color: var(--color-muted);
@@ -1037,18 +1248,17 @@ h3 {
 
 /* ---------- Review queue (Phase 5, D107) ---------- */
 
-.review-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 12px;
+/* D213: the review inbox icon; the count sits beside it while proposals wait. */
+.review-pill__count {
+  min-width: 1.25rem;
+  padding: 0 6px;
   border-radius: var(--radius-pill);
   background: var(--color-accent);
   color: var(--color-accent-text);
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  text-align: center;
 }
 
 .review-queue {
@@ -1147,11 +1357,6 @@ h3 {
 .bulk-publish-notice p,
 .bulk-publish-notice ul {
   margin: 0;
-}
-
-.review-card__discard {
-  border-color: var(--color-danger);
-  color: var(--color-danger);
 }
 
 .entity-chips {
@@ -1326,17 +1531,6 @@ h3 {
 
 .ask-view__submit {
   justify-self: start;
-  min-height: var(--tap);
-  padding: 0 20px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--color-accent);
-  color: var(--color-accent-text);
-  font: inherit;
-}
-
-.ask-view__submit:disabled {
-  opacity: 0.5;
 }
 
 .ask-view__answer {
@@ -1357,16 +1551,6 @@ h3 {
 }
 
 /* D188: activity log */
-.header-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 8px;
-  color: var(--color-accent);
-  font-size: 0.875rem;
-  text-decoration: none;
-}
-
 .event-log h2 {
   font-size: 1.125rem;
 }

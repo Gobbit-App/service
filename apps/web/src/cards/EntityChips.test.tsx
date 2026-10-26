@@ -51,7 +51,10 @@ describe('EntityChips', () => {
   it('calls onRemove with the kind and index', () => {
     const onRemove = vi.fn();
     render(<EntityChips entities={{ phones: ['555', '666'] }} onRemove={onRemove} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Phone 666' }));
+    const remove = screen.getByRole('button', { name: 'Remove Phone 666' });
+    expect(remove.querySelector('svg')).not.toBeNull();
+    expect(remove).not.toHaveTextContent('×');
+    fireEvent.click(remove);
     expect(onRemove).toHaveBeenCalledWith('phones', 1);
   });
 });

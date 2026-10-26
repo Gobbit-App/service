@@ -8,6 +8,7 @@ import { useUrlInput } from '../ui/use-url-input';
 import { DeckPicker } from './DeckPicker';
 import { hasContent, isHttpUrl, type IngestDraft, type SharedPayload } from './share-payload';
 import { ShareThumbnails } from './ShareThumbnails';
+import { Button } from '../ui/buttons/Button';
 
 export const SEND_ERROR = "Couldn't send it. Check your connection and try again.";
 export const URL_ERROR = 'Enter a valid web address';
@@ -105,13 +106,12 @@ export function ShareForm({
         </div>
       )}
 
-      <button
+      <Button
         type="submit"
-        className="button"
+        icon="send"
+        label={submit.isPending ? 'Sending…' : 'Send to Gobbit'}
         disabled={submit.isPending || !hasContent({ text, url: normalizeUrlInput(url), files })}
-      >
-        {submit.isPending ? 'Sending…' : 'Send to Gobbit'}
-      </button>
+      />
     </form>
   );
 }

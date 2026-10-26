@@ -14,6 +14,8 @@ import { payloadBytes } from '../validate';
 import { LimitMeter } from './LimitMeter';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
+import { Button } from '../../ui/buttons/Button';
+import { IconButton } from '../../ui/buttons/IconButton';
 
 /** The live result with every field's default; nothing to show until the inputs are complete. */
 function LiveResult({ payload }: Pick<FieldsProps<'calc'>, 'payload'>): ReactElement {
@@ -78,26 +80,22 @@ export function CalcFields({
                 disabled={disabled}
               />
             </div>
-            <button
-              type="button"
-              className="button button--ghost"
-              aria-label={`Remove field ${i + 1}`}
+            <IconButton
+              icon="close"
+              label={`Remove field ${i + 1}`}
               disabled={disabled || !canRemoveField(payload)}
               onClick={() => onChange(removeField(payload, i))}
-            >
-              Remove
-            </button>
+            />
           </fieldset>
         );
       })}
-      <button
-        type="button"
-        className="button button--ghost"
+      <Button
+        icon="plus"
+        label="Add field"
+        variant="ghost"
         disabled={disabled || !canAddField(payload)}
         onClick={() => onChange(addField(payload))}
-      >
-        Add field
-      </button>
+      />
       {errors['payload.fields'] && <p className="field__error">{errors['payload.fields']}</p>}
       <TextInput
         label="Expression"

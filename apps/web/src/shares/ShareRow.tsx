@@ -7,6 +7,8 @@ import { NavLink } from '../ui/NavLink';
 import { failureCopy, pasteAgainCopy } from './failure-copy';
 import { heldReason, shareTitle, stateLabel } from './share-state';
 import { useRetryShare } from './shares-queries';
+import { Button } from '../ui/buttons/Button';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 /** The retry error as a line; 410 is handled by switching to "Paste it again" instead. */
 function retryErrorMessage(err: unknown): string {
@@ -35,29 +37,25 @@ function FailedActions({
     }
     // FR-016: offline, the action is shown but disabled.
     return online ? (
-      <NavLink
+      <ButtonLink
         href={`/share?deck=${encodeURIComponent(deckSlug)}`}
-        className="button button--ghost"
-      >
-        {pasteAgainCopy(share.channel)}
-      </NavLink>
+        icon="clipboard"
+        label={pasteAgainCopy(share.channel)}
+        variant="ghost"
+      />
     ) : (
-      <button type="button" className="button button--ghost" disabled>
-        {pasteAgainCopy(share.channel)}
-      </button>
+      <Button icon="clipboard" label={pasteAgainCopy(share.channel)} variant="ghost" disabled />
     );
   }
   if (!share.canRetry) return null;
   return (
     <>
-      <button
-        type="button"
-        className="button"
+      <Button
+        icon="refresh"
+        label={retry.isPending ? 'Trying again…' : 'Try again'}
         disabled={!online || retry.isPending}
         onClick={() => retry.mutate(share.id)}
-      >
-        {retry.isPending ? 'Trying again…' : 'Try again'}
-      </button>
+      />
       {retry.isError && (
         <p className="share-row__hint" role="alert">
           {retryErrorMessage(retry.error)}
