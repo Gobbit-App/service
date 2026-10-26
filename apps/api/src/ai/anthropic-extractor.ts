@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { EXTRACT_TIMEOUT_MS } from '@pb/shared';
 import { buildExtractPrompt, PROPOSE_CARD_TOOL, PROPOSE_CARD_TOOL_NAME } from './extract-prompt';
 import {
+  EXTRACT_MAX_TOKENS,
   ExtractResponseError,
   type ExtractCall,
   type ExtractInput,
@@ -44,7 +45,7 @@ export function createAnthropicExtractor(opts: {
   timeoutMs?: number;
   client?: AnthropicExtractClient;
 }): Extractor {
-  const { apiKey, maxTokens = 1024, timeoutMs = EXTRACT_TIMEOUT_MS } = opts;
+  const { apiKey, maxTokens = EXTRACT_MAX_TOKENS, timeoutMs = EXTRACT_TIMEOUT_MS } = opts;
   const client: AnthropicExtractClient =
     opts.client ??
     (new Anthropic({

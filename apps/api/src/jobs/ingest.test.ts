@@ -134,4 +134,23 @@ describe('ingest handler failure logging (D195)', () => {
       'ingest job failed',
     );
   });
+
+  it('logs which fields an unreadable answer got wrong, without content', async () => {
+    runExtraction.mockResolvedValue({
+      ok: false,
+      error: 'invalid_output: link: Invalid input: expected object, received null',
+    });
+    const { handler, logger } = setup();
+
+    await expect(handler('job-1')).resolves.toBe('failed');
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        failureCode: 'unreadable_answer',
+        detail: 'link: Invalid input: expected object, received null',
+      }),
+      'ingest job failed',
+    );
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain('private.example');
+  });
 });

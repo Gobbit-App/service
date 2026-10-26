@@ -69,15 +69,22 @@ export const PROPOSE_CARD_TOOL = {
   },
 };
 
-/** Zod schema for the `propose_card` tool input (lenient; validated further downstream). */
+/**
+ * Zod schema for the `propose_card` tool input (lenient; validated further downstream). Models
+ * often send `null` for optional fields they don't use (`"link": null` on a photo), so every
+ * optional field accepts it, as does an entity list.
+ */
 export const proposeCardInputSchema = z.object({
   type: z.enum(['text', 'link', 'image']),
   title: z.string(),
   body: z.string(),
-  link: z.object({ url: z.string() }).optional(),
-  entities: z.record(z.string(), z.array(z.string())).optional(),
-  categoryIds: z.array(z.string()).default([]),
-  newCategory: z.string().nullable().optional(),
+  link: z.object({ url: z.string().nullish() }).nullish(),
+  entities: z.record(z.string(), z.array(z.string()).nullish()).nullish(),
+  categoryIds: z
+    .array(z.string())
+    .nullish()
+    .transform((ids) => ids ?? []),
+  newCategory: z.string().nullish(),
   language: z.string(),
   confidence: z.number().min(0).max(1),
 });
