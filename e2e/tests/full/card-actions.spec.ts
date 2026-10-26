@@ -4,7 +4,7 @@ import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
 
 /**
  * 024 card actions (D210–D216, `@full`): accessible names and contrast in both themes, labels
- * that hide on narrow screens, long-press tooltips, offline menu items and no editor styles
+ * that hide on narrow screens, long-press and hover tooltips kept on screen (D217), offline menu items and no editor styles
  * leaking onto the card bar. The critical path (archive/delete through "More actions", the
  * position menu) runs in the `@smoke` lifecycle and browse specs.
  */
@@ -117,6 +117,87 @@ test('a long press shows the tooltip without running the action @full', async ({
 
   // the click that follows the release is swallowed: no menu opened
   await expect(page.getByRole('menu')).toHaveCount(0);
+});
+
+/** The tooltip's box (the control's `::after`), or null while it is hidden. */
+async function tipBox(control: Locator) {
+  return control.evaluate((el) => {
+    const style = getComputedStyle(el, '::after');
+    if (style.display === 'none') return null;
+    const box = el.getBoundingClientRect();
+    const shift = new DOMMatrix(style.transform === 'none' ? undefined : style.transform);
+    const pad = (a: string, b: string) =>
+      style.boxSizing === 'border-box' ? 0 : parseFloat(a) + parseFloat(b);
+    const left = box.left + parseFloat(style.left) + shift.m41;
+    const top = box.top + parseFloat(style.top) + shift.m42;
+    return {
+      left,
+      top,
+      right: left + parseFloat(style.width) + pad(style.paddingLeft, style.paddingRight),
+      bottom: top + parseFloat(style.height) + pad(style.paddingTop, style.paddingBottom),
+    };
+  });
+}
+
+/** D217: the tooltip is shown and fully on screen. */
+async function expectTipOnScreen(page: Page, control: Locator) {
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error('no viewport');
+  await expect.poll(() => tipBox(control)).not.toBeNull();
+  const tip = await tipBox(control);
+  expect(tip?.top ?? -1).toBeGreaterThanOrEqual(0);
+  expect(tip?.left ?? -1).toBeGreaterThanOrEqual(0);
+  expect(tip?.right ?? Infinity).toBeLessThanOrEqual(viewport.width);
+  expect(tip?.bottom ?? Infinity).toBeLessThanOrEqual(viewport.height);
+}
+
+test.describe('with a mouse', () => {
+  test.use({ hasTouch: false, isMobile: false, viewport: { width: 1024, height: 780 } });
+
+  test('hovering an icon control shows its tooltip on screen (D217) @full', async ({
+    page,
+    webDeck,
+  }) => {
+    await page.goto(webUrl(`/i/${textCard(webDeck).id}`));
+    const controls = [
+      page.getByRole('link', { name: 'Back' }),
+      page.getByRole('link', { name: 'Settings' }),
+      page.getByRole('button', { name: 'Sign out' }),
+      page.getByRole('link', { name: 'Edit' }),
+      moreActions(page),
+    ];
+    for (const control of controls) {
+      await control.hover();
+      await expectTipOnScreen(page, control);
+    }
+
+    // a right-click keeps the browser menu: nothing is swallowed or opened
+    await page.mouse.move(0, 0);
+    await moreActions(page).click({ button: 'right' });
+    await expect(moreActions(page)).not.toHaveAttribute('data-tip-open', '');
+  });
+});
+
+test('a long press on a header control shows its tooltip on screen (D217) @full', async ({
+  page,
+  webDeck,
+}) => {
+  const card = textCard(webDeck);
+  await page.goto(webUrl(`/i/${card.id}`));
+  const back = page.getByRole('link', { name: 'Back' });
+  await expect(back).toBeVisible();
+
+  const box = await back.boundingBox();
+  if (!box) throw new Error('Back has no box');
+  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
+  await expect(back).toHaveAttribute('data-tip-open', '');
+  await expectTipOnScreen(page, back);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+
+  // the release does not follow the link
+  await expect(page).toHaveURL(new RegExp(`/i/${card.id}$`));
 });
 
 test('offline, server actions stay in the menu and say why they do nothing @full', async ({

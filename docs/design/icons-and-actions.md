@@ -18,6 +18,12 @@ Every action in the web app is an icon control from one hand-drawn set. A card's
 
 **Tooltips (D212)**: CSS draws `[data-tip]::after`. It shows on hover only on pointer devices (`@media (hover: hover)`), on `:focus-visible`, and while `data-tip-open` is set. `ui/tooltip-press.ts` (installed once in `main.tsx`) sets `data-tip-open` after a still press of 500 ms. A move of more than 10 px cancels it, so swipes and scrolling are untouched. The click that ends the press is swallowed. There are no `title` attributes.
 
+**Tooltip fixes (D217)**:
+- The press also opens the tooltip when the browser reports its own long press: a `contextmenu` during a touch. Android fires that at about 400 ms and then cancels the touch, which used to cancel the 500 ms timer first. That `contextmenu` is prevented. A mouse right-click keeps the browser menu.
+- The tooltip stays while the finger is down and hides 1.5 s after the release.
+- `[data-tip]` sets `-webkit-touch-callout: none` and `user-select: none`, so iOS shows neither its link callout nor a text selection.
+- Controls in the app header and the browse header band show their tooltip below, not above. Before, it was drawn off the top of the screen on hover and press. The tooltips of Back and Close browse are pinned to the start edge, and those of Settings and Sign out to the end edge, so they stay inside the screen (RTL mirrored).
+
 **Card bar (D213)**:
 - `cards/CardActionBar` renders inside the card's `card__bar` (`role="group"`, "Card actions"). The same bar is used on the list, the card page and browse.
 - The bar holds Edit, Favorite, Share and at most one state action: Restore for an archived card, or Check again for a flagged link.
@@ -36,7 +42,8 @@ Every action in the web app is an icon control from one hand-drawn set. A card's
 **Tests (D216)**: unit tests cover the primitives, the menu, tooltip-press, the card bar's role and offline rules, the position menu, the token contrast and the glyph scan. `@smoke` covers the lifecycle and browse journeys through the new controls. `@full` (`e2e/tests/full/card-actions.spec.ts`) covers:
 - axe `button-name`, `link-name` and `color-contrast` in light and dark;
 - labels hidden at 360 px and shown at 1024 px;
-- a long press showing a tooltip;
+- a long press showing a tooltip, on the card bar and on the header's Back (on screen, no navigation);
+- with a mouse, hover tooltips of the header and card bar inside the viewport, and a right-click that opens nothing (D217);
 - offline menu items;
 - no editor style leaking onto the card bar.
 

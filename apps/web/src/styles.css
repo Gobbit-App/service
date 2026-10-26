@@ -289,6 +289,10 @@ h3 {
 /* D212: tooltips from data-tip on hover (pointer devices), keyboard focus and long-press. */
 [data-tip] {
   position: relative;
+  /* D217: a long press shows the tooltip, not iOS's link callout or a text selection. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 [data-tip]::after {
@@ -319,6 +323,39 @@ h3 {
 [data-tip]:focus-visible::after,
 [data-tip][data-tip-open]::after {
   display: block;
+}
+
+/* D217: controls at the top of the screen show their tooltip below, kept inside the screen
+   at its edges (the browse band's close button starts its row). */
+.app-header [data-tip]::after,
+.browse-band--header [data-tip]::after {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+
+.app-header__back::after,
+.browse-band__row > [data-tip]:first-child::after {
+  left: 0;
+  transform: none;
+}
+
+.app-header__settings::after,
+.app-header__sign-out::after {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+[dir='rtl'] .app-header__back::after,
+[dir='rtl'] .browse-band__row > [data-tip]:first-child::after {
+  right: 0;
+  left: auto;
+}
+
+[dir='rtl'] .app-header__settings::after,
+[dir='rtl'] .app-header__sign-out::after {
+  right: auto;
+  left: 0;
 }
 
 /* A visible label already says it: no tooltip on wide screens. */
