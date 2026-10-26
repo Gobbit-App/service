@@ -2,11 +2,14 @@ import { useMemo, useState, type ReactElement } from 'react';
 import type { Category, Deck, ItemPatch, PublishRequest, ReviewEntry } from '@pb/shared';
 import { problemMessages } from '../api/problem-messages';
 import { editHref } from '../cards/can-edit-item';
+import { CardBar } from '../cards/CardBar';
 import { CardBody } from '../cards/CardBody';
 import { itemCategories } from '../cards/Card';
 import { useCloudName } from '../cards/use-cloud-name';
 import { EntityChips } from '../cards/EntityChips';
-import { NavLink } from '../ui/NavLink';
+import { Button } from '../ui/buttons/Button';
+import { IconButton } from '../ui/buttons/IconButton';
+import { MoreMenu } from '../ui/MoreMenu';
 import { ReviewDiff } from './ReviewDiff';
 import { ReviewEditForm } from './ReviewEditForm';
 import { reviewDiff } from './review-diff';
@@ -141,56 +144,57 @@ export function ReviewCard({
       )}
 
       {!editing && (
-        <div className="review-card__buttons">
+        <CardBar>
           {mode.kind === 'new' ? (
-            <button
-              type="button"
-              className="button"
+            <Button
+              icon="check"
+              label="Publish"
               disabled={busy}
               onClick={() => onPublish({ mode: 'new', ...withCategory })}
-            >
-              Publish
-            </button>
+            />
           ) : (
             <>
-              <button
-                type="button"
-                className="button"
+              <Button
+                icon="check"
+                label="Apply update"
                 disabled={busy}
                 onClick={() => onPublish({ mode: 'update', ...withCategory })}
-              >
-                Apply update
-              </button>
-              <button
-                type="button"
-                className="button button--ghost"
+              />
+              <Button
+                icon="plus"
+                label="Publish as new"
+                variant="ghost"
                 disabled={busy}
                 onClick={() => onPublish({ mode: 'new', ...withCategory })}
-              >
-                Publish as new
-              </button>
+              />
             </>
           )}
-          <button
-            type="button"
-            className="button button--ghost"
+          <IconButton
+            icon="edit"
+            label="Edit"
+            tip="Edit here"
             disabled={busy}
             onClick={() => setEditing(true)}
-          >
-            Edit
-          </button>
-          <NavLink href={editHref(item.id, 'review')} className="button button--ghost">
-            Edit fully
-          </NavLink>
-          <button
-            type="button"
-            className="button button--ghost review-card__discard"
+          />
+          <IconButton
+            icon="reject"
+            label="Discard"
+            tone="danger"
             disabled={busy}
             onClick={onDiscard}
-          >
-            Discard
-          </button>
-        </div>
+          />
+          <MoreMenu
+            disabled={busy}
+            actions={[
+              {
+                key: 'edit-fully',
+                label: 'Edit fully',
+                icon: 'external',
+                href: editHref(item.id, 'review'),
+              },
+            ]}
+          />
+        </CardBar>
       )}
     </article>
   );

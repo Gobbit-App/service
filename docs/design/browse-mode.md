@@ -2,7 +2,7 @@
 
 _Overview: [architecture.md](../architecture.md). Decisions: [adr.md](../adr.md)._
 
-Browse shows one card per screen. Readers swipe vertically between cards, across the header to change category, and across the footer to switch between the Content, Details and Source panes. Every gesture has a button and a key. Nothing changes in the API or the DB. The one new web dependency is `@use-gesture/react`, and it loads only in the Browse chunk.
+Browse shows one card per screen. Readers swipe vertically between cards, across the header to change category, and across the footer to switch between the Content, Details and Source panes. Every gesture has a control and a key: since 024 the card arrows are gone and moving between cards goes through the position menu ("Card 3 of 12"), see [icons-and-actions](icons-and-actions.md). Nothing changes in the API or the DB. The one new web dependency is `@use-gesture/react`, and it loads only in the Browse chunk.
 
 **Route and address (D141)**:
 - The route is `/d/$slug/browse?c=<all|category>&i=<itemId>&pane=<content|details|source>` (`routes/d.$slug.browse.tsx`).

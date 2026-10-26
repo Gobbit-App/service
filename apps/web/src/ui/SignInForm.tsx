@@ -1,5 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { isApiError } from '../api/api-error';
+import { Button } from './buttons/Button';
 
 type State =
   | { step: 'idle' }
@@ -45,9 +46,7 @@ export function SignInForm({
         <p>
           We sent a sign-in link to <strong>{state.email}</strong>. It works once and expires soon.
         </p>
-        <button type="button" className="button button--ghost" onClick={handleReset}>
-          Use a different email
-        </button>
+        <Button icon="back" label="Use a different email" variant="ghost" onClick={handleReset} />
       </div>
     );
   }
@@ -68,9 +67,12 @@ export function SignInForm({
           value={emailInput}
           onChange={(e) => setEmailInput(e.currentTarget.value)}
         />
-        <button type="submit" className="button" disabled={isSending}>
-          {isSending ? 'Sending…' : 'Send sign-in link'}
-        </button>
+        <Button
+          type="submit"
+          icon="send"
+          label={isSending ? 'Sending…' : 'Send sign-in link'}
+          disabled={isSending}
+        />
       </form>
       {errorMessage && (
         <p className="form-error" role="alert">

@@ -80,7 +80,9 @@ test('a flagged link shows its note; Dismiss clears it from "Links to check" @fu
   await expect(page.getByText(card.title)).toBeVisible();
   await expect(page.getByText('Link may be dead')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Dismiss' }).click();
+  // D213: Dismiss lives in the card's "More actions" menu
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Dismiss' }).click();
   await expect(page.locator('.toast')).toContainText('Note dismissed');
   expect(seed.dismissed()).toBe(true);
   await expect(page.getByText('No links to check')).toBeVisible();
@@ -102,7 +104,7 @@ test('a reader sees the note but no actions and no "Links to check" @full', asyn
   await page.goto(webUrl(`/i/${card.id}`));
   await expect(page.getByText('Link may be dead')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Check again' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Dismiss' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'More actions' })).toHaveCount(0);
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   await expect(page.getByText('Link may be dead')).toBeVisible();

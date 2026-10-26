@@ -10,7 +10,8 @@ import { TitleField } from '../editor/fields/TitleField';
 import { useEditorBaseline } from '../editor/use-editor-baseline';
 import { useLeaveGuard } from '../editor/use-leave-guard';
 import { errorCount, validateDraft, type FieldErrors } from '../editor/validate';
-import { NavLink } from '../ui/NavLink';
+import { Button } from '../ui/buttons/Button';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 const FORM_FIELDS = new Set(['title', 'body', 'categoryIds']);
 
@@ -113,20 +114,20 @@ export function ReviewEditForm({
       )}
 
       <div className="review-card__buttons">
-        <button
+        <Button
           type="submit"
-          className="button"
+          icon="check"
+          label="Save"
           disabled={saving || errorCount(fieldErrors) > 0}
           aria-busy={saving || undefined}
-        >
-          Save
-        </button>
-        <button type="button" className="button button--ghost" onClick={cancel}>
-          Cancel
-        </button>
-        <NavLink href={editHref(item.id, 'review')} className="button button--ghost">
-          Edit fully
-        </NavLink>
+        />
+        <Button icon="close" label="Cancel" variant="ghost" onClick={cancel} />
+        <ButtonLink
+          href={editHref(item.id, 'review')}
+          icon="external"
+          label="Edit fully"
+          variant="ghost"
+        />
       </div>
       {leaveDialog}
       {askingCancel && (

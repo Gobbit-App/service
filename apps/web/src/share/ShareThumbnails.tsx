@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactElement } from 'react';
+import { IconButton } from '../ui/buttons/IconButton';
 
 /** A shared image, shown from a blob: URL that is revoked when it leaves (CSP allows blob:). */
 function Thumbnail({ file }: { file: File }): ReactElement {
@@ -26,14 +27,11 @@ export function ShareThumbnails({
       {files.map((file, index) => (
         <li key={`${index}-${file.name}`} className="share-thumbs__item">
           <Thumbnail file={file} />
-          <button
-            type="button"
-            className="button button--ghost"
-            aria-label={`Remove ${file.name || 'image'}`}
+          <IconButton
+            icon="close"
+            label={`Remove ${file.name || 'image'}`}
             onClick={() => onRemove(index)}
-          >
-            Remove
-          </button>
+          />
         </li>
       ))}
     </ul>

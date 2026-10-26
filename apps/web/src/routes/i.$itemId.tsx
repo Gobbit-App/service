@@ -4,9 +4,7 @@ import { categoriesQuery, deckQuery, itemQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
 import { backTarget } from '../app/back-target';
 import { Card } from '../cards/Card';
-import { EditLink } from '../cards/EditLink';
-import { CardActions } from '../items/CardActions';
-import { ItemHistoryLink } from '../items/ItemHistoryLink';
+import { CardActionBar } from '../cards/CardActionBar';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { deckHref } from '../ui/chip-order';
 import { NavLink, useNavigateHref } from '../ui/NavLink';
@@ -50,21 +48,20 @@ function ItemPage() {
           deckSlug={deckSlug}
           categories={categories.data ?? []}
           linkTitle={false}
+          actions={
+            deck.data && (
+              <CardActionBar
+                item={item.data}
+                deckSlug={deckSlug}
+                role={deck.data.role}
+                onDone={(action) => {
+                  // D146: back to the deck, where the toast offers Undo
+                  if (action === 'archive' || action === 'delete') navigate(deckHref(deckSlug));
+                }}
+              />
+            )
+          }
         />
-        {deck.data && (
-          <CardActions
-            item={item.data}
-            deckSlug={deckSlug}
-            role={deck.data.role}
-            onDone={(action) => {
-              // D146: back to the deck, where the toast offers Undo
-              if (action === 'archive' || action === 'delete') navigate(deckHref(deckSlug));
-            }}
-          >
-            <EditLink item={item.data} role={deck.data.role} />
-            <ItemHistoryLink deckSlug={deckSlug} itemId={item.data.id} role={deck.data.role} />
-          </CardActions>
-        )}
         <p className="page__back">
           <NavLink href={deckHref(deckSlug)}>
             More from {deck.data?.name ?? 'this pocketbook'}

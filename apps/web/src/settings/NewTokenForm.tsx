@@ -4,6 +4,7 @@ import { INGEST_TOKEN_LABEL_MAX } from '@pb/shared/ingest-constants';
 import { useCreateIngestToken } from '../api/ingest-tokens';
 import { problemMessages } from '../api/problem-messages';
 import { UNBOUND_SCOPE } from './ingest-token-view';
+import { Button } from '../ui/buttons/Button';
 
 /** D99: label + optional deck binding; the created token goes to `onCreated` (shown once). */
 export function NewTokenForm({
@@ -66,13 +67,12 @@ export function NewTokenForm({
         </div>
       )}
 
-      <button
+      <Button
         type="submit"
-        className="button"
+        icon="key"
+        label={create.isPending ? 'Creating…' : 'Create token'}
         disabled={disabled || create.isPending || label.trim() === ''}
-      >
-        {create.isPending ? 'Creating…' : 'Create token'}
-      </button>
+      />
     </form>
   );
 }

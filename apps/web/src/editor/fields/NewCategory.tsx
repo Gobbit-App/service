@@ -3,6 +3,8 @@ import type { Category, Deck } from '@pb/shared';
 import { NAME_MAX } from '@pb/shared/card-limits';
 import { useCreateCategory } from '../../api/create-category';
 import { problemMessages } from '../../api/problem-messages';
+import { Button } from '../../ui/buttons/Button';
+import { Icon } from '../../ui/icons/Icon';
 
 /**
  * US6: "New category" inline in the chips. Not a nested <form> (the editor is one); Enter adds.
@@ -57,6 +59,7 @@ export function NewCategory({
         disabled={disabled}
         onClick={() => setOpen(true)}
       >
+        <Icon name="plus" />
         New category
       </button>
     );
@@ -79,18 +82,14 @@ export function NewCategory({
         aria-invalid={create.isError || undefined}
         aria-describedby={create.isError ? `${id}-error` : undefined}
       />
-      <button
-        type="button"
-        className="button"
+      <Button
+        icon="plus"
+        label="Add"
         disabled={trimmed === '' || create.isPending}
         aria-busy={create.isPending || undefined}
         onClick={add}
-      >
-        Add
-      </button>
-      <button type="button" className="button button--ghost" onClick={close}>
-        Cancel
-      </button>
+      />
+      <Button icon="close" label="Cancel" variant="ghost" onClick={close} />
       {create.isError && (
         <p id={`${id}-error`} className="field__error" role="alert">
           {problemMessages(create.error).join(' ')}

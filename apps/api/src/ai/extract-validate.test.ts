@@ -45,6 +45,23 @@ describe('extract-validate (D100)', () => {
     expect(r.summary.confidence).toBe(0.9);
   });
 
+  it('accepts null for the optional fields a model leaves unused (photo share)', () => {
+    const raw = {
+      ...baseRaw,
+      type: 'image',
+      link: null,
+      entities: { phones: null, people: ['Dana'] },
+      categoryIds: null,
+      newCategory: null,
+    };
+    const r = okResult(raw, { ...defaultCtx, imagePublicId: 'gobbit/ingest/d/photo' });
+    expect(r.item.type).toBe('image');
+    expect(r.item.payload).toEqual({ publicId: 'gobbit/ingest/d/photo', alt: 'Plumber' });
+    expect(r.item.categoryIds).toEqual([]);
+    expect(r.item.entities).toEqual({ people: ['Dana'] });
+    expect(r.summary.newCategory).toBeNull();
+  });
+
   it('truncates a long body at a sentence end within CARD_BODY_MAX', () => {
     const raw = { ...baseRaw, body: 'a. '.repeat(700) };
     const r = okResult(raw);

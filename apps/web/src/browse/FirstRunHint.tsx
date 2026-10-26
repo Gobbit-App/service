@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactElement } from 'react';
+import { Button } from '../ui/buttons/Button';
 
 /** FR-012: the one-time overlay naming the three zones. Dismiss only (contract §4). */
 export function FirstRunHint({ onDismiss }: { onDismiss: () => void }): ReactElement {
@@ -35,9 +36,7 @@ export function FirstRunHint({ onDismiss }: { onDismiss: () => void }): ReactEle
       <div className="browse-hint__zone browse-hint__zone--middle">
         <h2 id={titleId}>How to browse</h2>
         <p>Swipe up or down for the next or previous card</p>
-        <button ref={button} type="button" className="button" onClick={onDismiss}>
-          Got it
-        </button>
+        <Button ref={button} icon="check" label="Got it" onClick={onDismiss} />
       </div>
       <div className="browse-hint__zone browse-hint__zone--footer">
         <p>Swipe sideways here for details and source</p>

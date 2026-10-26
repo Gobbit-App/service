@@ -1,7 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { Deck, Item } from '@pb/shared';
 import { can } from '@pb/shared/authz';
-import type { ReactElement, ReactNode } from 'react';
 import {
   expectedItem,
   INVERSE,
@@ -9,15 +8,12 @@ import {
   useLifecycle,
   type LifecycleAction,
 } from '../api/item-lifecycle';
-import { linkCheckActions } from '../api/link-checks';
-import { useOnline } from '../api/offline';
 import { lifecycleErrorMessage } from '../api/problem-messages';
 import { showToast } from '../ui/toast-store';
-import { LinkCheckButtons } from './LinkCheckButtons';
 
 export const DELETE_CONFIRM = 'Delete this card? You can undo it for 30 days.';
 
-const LABEL: Record<LifecycleAction, string> = {
+export const LIFECYCLE_LABEL: Record<LifecycleAction, string> = {
   archive: 'Archive',
   restore: 'Restore',
   delete: 'Delete',
@@ -53,30 +49,21 @@ export function availableActions(item: Item, role: Deck['role']): LifecycleActio
 }
 
 /**
- * Role-gated lifecycle buttons for one card (FR-014). `children` is the slot for the
- * editor's Edit button (specs/007). `onDone` runs once an action has been sent optimistically,
- * e.g. the card view returns to the deck after archive or delete.
+ * FR-014 / D146 (moved from CardActions in 024): run a lifecycle action optimistically, toast
+ * the result with Undo, and confirm a delete first. `onDone` runs once the action was sent,
+ * e.g. the card page returns to the deck after archive or delete.
  */
-export function CardActions({
+export function useCardLifecycle({
   item,
   deckSlug,
-  role,
   onDone,
-  children,
 }: {
   item: Item;
   deckSlug: string;
-  role: Deck['role'];
   onDone?: (action: LifecycleAction) => void;
-  children?: ReactNode;
-}): ReactElement | null {
+}): { run: (action: LifecycleAction) => void; isPending: boolean } {
   const qc = useQueryClient();
-  const online = useOnline();
   const lifecycle = useLifecycle();
-  const actions = availableActions(item, role);
-  const linkActions = linkCheckActions(item, role);
-
-  if (actions.length === 0 && linkActions.length === 0 && !children) return null;
 
   function fail(action: LifecycleAction, error: unknown): void {
     showToast({ message: lifecycleErrorMessage(error, FAILED[action]) });
@@ -102,25 +89,5 @@ export function CardActions({
     onDone?.(action);
   }
 
-  const disabled = !online || lifecycle.isPending;
-  return (
-    <div className="card-actions">
-      {children}
-      <LinkCheckButtons item={item} deckSlug={deckSlug} actions={linkActions} disabled={!online} />
-      {actions.map((action) => (
-        <button
-          key={action}
-          type="button"
-          className={action === 'delete' ? 'button button--danger' : 'button button--ghost'}
-          disabled={disabled}
-          onClick={() => run(action)}
-        >
-          {LABEL[action]}
-        </button>
-      ))}
-      {!online && (
-        <span className="card-actions__hint">Offline: these actions need a connection.</span>
-      )}
-    </div>
-  );
+  return { run, isPending: lifecycle.isPending };
 }

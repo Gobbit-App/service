@@ -48,7 +48,8 @@ test('the owner sees a publish and an archive in Activity and a card history @fu
   await expect(archivedRow).toContainText(user.displayName);
 
   await published.getByRole('link', { name: title }).click();
-  await page.getByRole('link', { name: 'History' }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'History' }).click();
   await expect(page.getByRole('heading', { name: 'Card history' })).toBeVisible();
   await expect(page.locator('.event-row')).toHaveCount(2); // proposed + published
   await expect(page.locator('.event-row', { hasText: archived.title })).toHaveCount(0);

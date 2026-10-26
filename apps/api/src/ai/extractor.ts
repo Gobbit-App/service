@@ -35,5 +35,11 @@ export interface Extractor {
   extract(input: ExtractInput, opts: { model: string; signal?: AbortSignal }): Promise<ExtractCall>;
 }
 
+/**
+ * Output budget for one `propose_card` call: a 600-character body in a non-Latin script plus
+ * entities can pass 1024 tokens, and a cut-off call is unreadable JSON.
+ */
+export const EXTRACT_MAX_TOKENS = 2048;
+
 /** The provider answered without a usable `propose_card` call. */
 export class ExtractResponseError extends Error {}

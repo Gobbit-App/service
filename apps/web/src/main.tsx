@@ -8,6 +8,7 @@ import { signOut, unauthorizedRedirect } from './api/session';
 import { historyNavigate } from './app/history-navigate';
 import { createAppRouter } from './app/router';
 import { NavigateContext } from './ui/NavLink';
+import { installTooltipPress } from './ui/tooltip-press';
 import './styles.css';
 
 const persister = createIdbPersister();
@@ -32,6 +33,9 @@ const router = createAppRouter({
 });
 
 const navigate = historyNavigate(router.history);
+
+// D212: long-press shows a control's tooltip on touch screens.
+installTooltipPress();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('index.html is missing #root');

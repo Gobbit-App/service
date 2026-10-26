@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { EXTRACT_TIMEOUT_MS } from '@pb/shared';
 import { buildExtractPrompt, PROPOSE_CARD_TOOL, PROPOSE_CARD_TOOL_NAME } from './extract-prompt';
 import {
+  EXTRACT_MAX_TOKENS,
   ExtractResponseError,
   type ExtractCall,
   type ExtractInput,
@@ -65,7 +66,7 @@ export function createOpenAiChatExtractor(opts: {
   timeoutMs?: number;
   client?: OpenAiExtractClient;
 }): Extractor {
-  const { apiKey, maxTokens = 1024, timeoutMs = EXTRACT_TIMEOUT_MS } = opts;
+  const { apiKey, maxTokens = EXTRACT_MAX_TOKENS, timeoutMs = EXTRACT_TIMEOUT_MS } = opts;
   const client: OpenAiExtractClient =
     opts.client ??
     (new OpenAI({

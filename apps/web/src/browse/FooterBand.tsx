@@ -28,19 +28,16 @@ export interface FooterBandProps {
   pageId: string;
   pane: BrowsePane;
   onPane: (pane: BrowsePane) => void;
-  /** Null when there is no next card. */
-  onNextCard: (() => void) | null;
   active: boolean;
   /** State pages (loading, empty, offline): everything shown, nothing usable. */
   disabled?: boolean;
 }
 
-/** Contract §2 footer band: a horizontal swipe changes the pane; tabs, ‹ › and ↓ do the same. */
+/** Contract §2 footer band: a horizontal swipe changes the pane; the tabs do the same (D215: no arrows). */
 export function FooterBand({
   pageId,
   pane,
   onPane,
-  onNextCard,
   active,
   disabled = false,
 }: FooterBandProps): ReactElement {
@@ -92,43 +89,14 @@ export function FooterBand({
           ))}
         </div>
       </div>
-      <div className="browse-band__row">
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="Previous view"
-          disabled={disabled || !prev}
-          onClick={() => prev && onPane(prev)}
-        >
-          <span aria-hidden="true">‹</span>
-        </button>
-        <span className="browse-dots" aria-hidden="true">
-          {browsePanes.map((p) => (
-            <span
-              key={p}
-              className={p === pane ? 'browse-dots__dot is-active' : 'browse-dots__dot'}
-            />
-          ))}
-        </span>
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="Next view"
-          disabled={disabled || !next}
-          onClick={() => next && onPane(next)}
-        >
-          <span aria-hidden="true">›</span>
-        </button>
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="Next card"
-          disabled={disabled || !onNextCard}
-          onClick={onNextCard ?? undefined}
-        >
-          <span aria-hidden="true">↓</span>
-        </button>
-      </div>
+      <span className="browse-dots" aria-hidden="true">
+        {browsePanes.map((p) => (
+          <span
+            key={p}
+            className={p === pane ? 'browse-dots__dot is-active' : 'browse-dots__dot'}
+          />
+        ))}
+      </span>
     </footer>
   );
 }

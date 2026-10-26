@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyFailure } from './failure-code';
+import { classifyFailure, failureDetail } from './failure-code';
 
 describe('classifyFailure', () => {
   it.each([
@@ -36,5 +36,17 @@ describe('classifyFailure', () => {
   it('maps an error without a stage to unknown', () => {
     expect(classifyFailure(new Error('boom'))).toBe('unknown');
     expect(classifyFailure(42)).toBe('unknown');
+  });
+});
+
+describe('failureDetail', () => {
+  it('returns the issues of an invalid answer, capped', () => {
+    expect(failureDetail('invalid_output: title: Invalid input')).toBe('title: Invalid input');
+    expect(failureDetail(`invalid_output: ${'x'.repeat(400)}`)).toHaveLength(300);
+  });
+
+  it('has no detail for errors that may quote shared content', () => {
+    expect(failureDetail('error: provider 502 while fetching https://a.example')).toBeUndefined();
+    expect(failureDetail('raw_missing')).toBeUndefined();
   });
 });

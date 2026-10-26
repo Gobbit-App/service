@@ -1,7 +1,9 @@
 import type { ReactElement } from 'react';
+import { IconButton } from '../ui/buttons/IconButton';
 import { CategoryMenu } from './CategoryMenu';
 import type { CycleEntry } from './category-cycle';
 import type { SwipeStep } from './swipe';
+import { PositionMenu } from './PositionMenu';
 import { useZoneSwipe } from './use-zone-swipe';
 
 /** "3 of 10", or just "3" while more pages exist (the total isn't known yet). */
@@ -20,11 +22,16 @@ export interface HeaderBandProps {
   position: { index: number; total: number | null } | null;
   /** Null when there is no previous card. */
   onPrevCard: (() => void) | null;
+  /** Null when there is no next card. */
+  onNextCard: (() => void) | null;
   /** Only the current page binds the swipe (contract §2). */
   active: boolean;
 }
 
-/** Contract §2 header band: a horizontal swipe changes category; the controls do the same. */
+/**
+ * Contract §2 header band: a horizontal swipe changes category. D215: no arrow buttons — the
+ * category menu and the position menu give the same moves without a swipe.
+ */
 export function HeaderBand({
   cycle,
   current,
@@ -34,6 +41,7 @@ export function HeaderBand({
   onClose,
   position,
   onPrevCard,
+  onNextCard,
   active,
 }: HeaderBandProps): ReactElement {
   const bind = useZoneSwipe((step: SwipeStep) => {
@@ -44,46 +52,18 @@ export function HeaderBand({
   return (
     <header className="browse-band browse-band--header" {...bind()}>
       <div className="browse-band__row">
-        <button type="button" className="icon-button" aria-label="Close browse" onClick={onClose}>
-          <span aria-hidden="true">✕</span>
-        </button>
+        <IconButton icon="close" label="Close browse" onClick={onClose} />
         {position && (
-          <span className="browse-band__position" aria-hidden="true">
-            {positionLabel(position.index, position.total)}
-          </span>
+          <PositionMenu
+            index={position.index}
+            total={position.total}
+            onPrevCard={onPrevCard}
+            onNextCard={onNextCard}
+          />
         )}
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="Previous card"
-          disabled={!onPrevCard}
-          onClick={onPrevCard ?? undefined}
-        >
-          <span aria-hidden="true">↑</span>
-        </button>
       </div>
       <div className="browse-band__row browse-band__row--category">
-        <button
-          type="button"
-          className="icon-button"
-          aria-label={
-            prevCategory ? `Previous category: ${prevCategory.name}` : 'Previous category'
-          }
-          disabled={!prevCategory}
-          onClick={() => prevCategory && onCategory(prevCategory.slug)}
-        >
-          <span aria-hidden="true">‹</span>
-        </button>
         <CategoryMenu cycle={cycle} current={current} onSelect={onCategory} />
-        <button
-          type="button"
-          className="icon-button"
-          aria-label={nextCategory ? `Next category: ${nextCategory.name}` : 'Next category'}
-          disabled={!nextCategory}
-          onClick={() => nextCategory && onCategory(nextCategory.slug)}
-        >
-          <span aria-hidden="true">›</span>
-        </button>
       </div>
     </header>
   );

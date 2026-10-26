@@ -5,7 +5,7 @@ const { baseURL, token } = resolveE2eEnv();
 
 /** Specs that drive the browser against the web origin (D62); the rest are API-only. */
 const WEB_SPECS =
-  /\/(web|share|editor|review|settings|lifecycle|browse|links|activity-log|deck-admin|import|editor-navigation)\.spec\.ts$/;
+  /\/(web|share|editor|review|settings|lifecycle|browse|links|activity-log|deck-admin|import|editor-navigation|editor-inputs|shares|card-actions)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: './tests',

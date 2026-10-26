@@ -1,11 +1,9 @@
-import { useMemo, type ReactElement } from 'react';
+import { useMemo, type ReactElement, type ReactNode } from 'react';
 import type { Category, Item } from '@pb/shared';
-import { useToggleFavorite } from '../api/favorites';
 import { cardAge } from '../lib/card-age';
 import { chipHref } from '../ui/chip-order';
-import { FavoriteButton } from '../ui/FavoriteButton';
 import { NavLink } from '../ui/NavLink';
-import { ShareButton } from '../ui/ShareButton';
+import { CardBar, ReaderActions } from './CardBar';
 import { CardBody } from './CardBody';
 import type { ImageLoading } from './ImageCard';
 import { Highlighted } from '../search/Highlighted';
@@ -17,7 +15,10 @@ export function itemCategories(item: Item, categories: readonly Category[]): Cat
   return item.categoryIds.flatMap((id) => byId.get(id) ?? []);
 }
 
-/** The card frame (§4): title, body, category chips, added/edited age, favorite and share. */
+/**
+ * The card frame (§4): title, body, category chips, added/edited age, then the action bar
+ * (D213: every action lives inside the card; default Favorite + Share).
+ */
 export function Card({
   item,
   deckSlug,
@@ -27,6 +28,7 @@ export function Card({
   now = new Date(),
   preview = false,
   image,
+  actions,
 }: {
   item: Item;
   deckSlug: string;
@@ -40,9 +42,10 @@ export function Card({
   preview?: boolean;
   /** D144: image loading hints (Browse: measured width, priority for the current card). */
   image?: ImageLoading;
+  /** The card's action bar (e.g. CardActionBar); defaults to Favorite + Share. */
+  actions?: ReactNode;
 }): ReactElement {
   const cloudName = useCloudName();
-  const toggle = useToggleFavorite();
   const chips = useMemo(() => itemCategories(item, categories), [item, categories]);
   const age = cardAge(item, now);
   const titleId = `card-title-${item.id}`;
@@ -59,16 +62,6 @@ export function Card({
             <Highlighted text={item.title} query={highlight} />
           )}
         </h2>
-        {!preview && (
-          <div className="card__actions">
-            <FavoriteButton
-              isFavorite={item.isFavorite}
-              disabled={toggle.isPending}
-              onToggle={() => toggle.mutate({ itemId: item.id, isFavorite: !item.isFavorite })}
-            />
-            <ShareButton itemId={item.id} title={item.title} />
-          </div>
-        )}
       </header>
       <CardBody item={item} cloudName={cloudName} image={image} />
       {(chips.length > 0 || age) && (
@@ -102,6 +95,12 @@ export function Card({
           )}
         </footer>
       )}
+      {!preview &&
+        (actions ?? (
+          <CardBar>
+            <ReaderActions item={item} />
+          </CardBar>
+        ))}
     </article>
   );
 }

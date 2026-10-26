@@ -7,8 +7,8 @@ import { heldReason, stateLabel } from '../shares/share-state';
 import { ShareDetail } from '../shares/ShareRow';
 import { shareQuery } from '../shares/shares-queries';
 import { deckHref } from '../ui/chip-order';
-import { NavLink } from '../ui/NavLink';
 import { EmptyState } from '../ui/StatusViews';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 /**
  * D108/D198: after "Send to Gobbit". Shows the share's live status (polled until it leaves
@@ -25,12 +25,13 @@ export function ShareSent({ deck, shareId }: { deck: Deck; shareId: string }): R
       title="Sent"
       action={
         <div className="share-sent__links">
-          <NavLink href={deckHref(deck.slug, 'shares')} className="button">
-            Your shares
-          </NavLink>
-          <NavLink href={deckHref(deck.slug)} className="button button--ghost">
-            Back to {deck.name}
-          </NavLink>
+          <ButtonLink href={deckHref(deck.slug, 'shares')} icon="send" label="Your shares" />
+          <ButtonLink
+            href={deckHref(deck.slug)}
+            icon="back"
+            label={`Back to ${deck.name}`}
+            variant="ghost"
+          />
         </div>
       }
     >

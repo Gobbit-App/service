@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react';
 import { PAYLOAD_MAX_BYTES, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS } from '@pb/shared/card-limits';
+import { Button } from '../../ui/buttons/Button';
+import { IconButton } from '../../ui/buttons/IconButton';
 import { payloadBytes } from '../validate';
 import { LimitMeter } from './LimitMeter';
 import {
@@ -49,33 +51,24 @@ export function TableFields({
                       onChange={(e) => onChange(setHeading(payload, c, e.currentTarget.value))}
                     />
                     <div className="table-fields__tools">
-                      <button
-                        type="button"
-                        className="icon-button"
-                        aria-label={`Move column ${c + 1} left`}
+                      <IconButton
+                        icon="arrow-left"
+                        label={`Move column ${c + 1} left`}
                         disabled={disabled || c === 0}
                         onClick={() => onChange(moveColumn(payload, c, -1))}
-                      >
-                        ←
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-button"
-                        aria-label={`Move column ${c + 1} right`}
+                      />
+                      <IconButton
+                        icon="arrow-right"
+                        label={`Move column ${c + 1} right`}
                         disabled={disabled || c === columns.length - 1}
                         onClick={() => onChange(moveColumn(payload, c, 1))}
-                      >
-                        →
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-button"
-                        aria-label={`Remove column ${c + 1}`}
+                      />
+                      <IconButton
+                        icon="close"
+                        label={`Remove column ${c + 1}`}
                         disabled={disabled || !canRemoveColumn(payload)}
                         onClick={() => onChange(removeColumn(payload, c))}
-                      >
-                        ×
-                      </button>
+                      />
                     </div>
                     {error && (
                       <p id={errorId} className="field__error">
@@ -103,33 +96,24 @@ export function TableFields({
                 ))}
                 <td>
                   <div className="table-fields__tools">
-                    <button
-                      type="button"
-                      className="icon-button"
-                      aria-label={`Move row ${r + 1} up`}
+                    <IconButton
+                      icon="arrow-up"
+                      label={`Move row ${r + 1} up`}
                       disabled={disabled || r === 0}
                       onClick={() => onChange(moveRow(payload, r, -1))}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-button"
-                      aria-label={`Move row ${r + 1} down`}
+                    />
+                    <IconButton
+                      icon="arrow-down"
+                      label={`Move row ${r + 1} down`}
                       disabled={disabled || r === rows.length - 1}
                       onClick={() => onChange(moveRow(payload, r, 1))}
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-button"
-                      aria-label={`Remove row ${r + 1}`}
+                    />
+                    <IconButton
+                      icon="close"
+                      label={`Remove row ${r + 1}`}
                       disabled={disabled}
                       onClick={() => onChange(removeRow(payload, r))}
-                    >
-                      ×
-                    </button>
+                    />
                   </div>
                   {errors[`payload.rows.${r}`] && (
                     <p className="field__error">{errors[`payload.rows.${r}`]}</p>
@@ -141,22 +125,20 @@ export function TableFields({
         </table>
       </div>
       <div className="table-fields__tools">
-        <button
-          type="button"
-          className="button button--ghost"
+        <Button
+          icon="plus"
+          label="Add row"
+          variant="ghost"
           disabled={disabled || !canAddRow(payload)}
           onClick={() => onChange(addRow(payload))}
-        >
-          Add row
-        </button>
-        <button
-          type="button"
-          className="button button--ghost"
+        />
+        <Button
+          icon="plus"
+          label="Add column"
+          variant="ghost"
           disabled={disabled || !canAddColumn(payload)}
           onClick={() => onChange(addColumn(payload))}
-        >
-          Add column
-        </button>
+        />
       </div>
       <p className="muted">
         {rows.length} / {TABLE_MAX_ROWS} rows · {columns.length} / {TABLE_MAX_COLUMNS} columns ·{' '}

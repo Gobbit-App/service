@@ -4,6 +4,7 @@ import { ROLE_LABELS } from '@pb/shared/authz';
 import { memberRoles } from '@pb/shared/enums';
 import { AdminError } from './AdminError';
 import { useInviteMember } from './deck-admin-queries';
+import { Button } from '../ui/buttons/Button';
 
 /** Readers first: the least access is the default choice. */
 const ROLE_ORDER: readonly MemberRole[] = [...memberRoles].reverse();
@@ -67,13 +68,12 @@ export function InviteForm({
         ))}
       </select>
 
-      <button
+      <Button
         type="submit"
-        className="button"
+        icon="send"
+        label={invite.isPending ? 'Sending…' : 'Send invite'}
         disabled={disabled || invite.isPending || email.trim() === ''}
-      >
-        {invite.isPending ? 'Sending…' : 'Send invite'}
-      </button>
+      />
       {sentTo && (
         <p className="muted" role="status">
           Invite sent to {sentTo}.

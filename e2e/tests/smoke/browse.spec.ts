@@ -81,6 +81,23 @@ async function expectCurrent(page: Page, card: { id: string; title: string }): P
   await expect(page).toHaveURL(new RegExp(`i=${card.id}`));
 }
 
+/** D215: the position menu ("Card n of N") replaces the previous/next card buttons. */
+async function moveCard(page: Page, label: 'Previous card' | 'Next card'): Promise<void> {
+  await page.getByRole('button', { name: /^Card \d+/ }).click();
+  await page.getByRole('menuitem', { name: label }).click();
+}
+
+/** The position menu's item is there but `aria-disabled` (first/last card). */
+async function expectMoveDisabled(page: Page, label: 'Previous card' | 'Next card') {
+  await page.getByRole('button', { name: /^Card \d+/ }).click();
+  await expect(page.getByRole('menuitem', { name: label })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toHaveCount(0);
+}
+
 /** Lets the 300 ms settle (and any stray handler) run before asserting nothing changed. */
 const settle = (page: Page) => page.waitForTimeout(600);
 
@@ -105,12 +122,18 @@ test.describe('browse mode', () => {
     await expectCurrent(page, first!);
     const historyLength = await page.evaluate(() => history.length);
 
-    // next/prev by button and by swipe
-    await page.getByRole('button', { name: 'Next card' }).click();
+    // D215: no arrow buttons; the position control names the card
+    await expect(
+      page.getByRole('button', { name: /^(Previous|Next) (card|category|view)/ }),
+    ).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Card 1( of \d+)?$/ })).toBeVisible();
+
+    // next/prev by the position menu and by swipe
+    await moveCard(page, 'Next card');
     await expectCurrent(page, second!);
     await swipeCard(page, 'next');
     await expectCurrent(page, third!);
-    await page.getByRole('button', { name: 'Previous card' }).click();
+    await moveCard(page, 'Previous card');
     await expectCurrent(page, second!);
 
     // reload restores i
@@ -138,7 +161,10 @@ test.describe('browse mode', () => {
       await page.keyboard.press('PageDown');
       await expectCurrent(page, card);
     }
-    await expect(page.getByRole('button', { name: 'Next card' })).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: `Card ${MAIN_CARDS} of ${MAIN_CARDS}` }),
+    ).toBeVisible();
+    await expectMoveDisabled(page, 'Next card');
     await expect(page.getByText('Main card archived')).toHaveCount(0);
     const last = deck.cards[MAIN_CARDS - 1]!;
 
@@ -178,13 +204,13 @@ test.describe('browse mode', () => {
 
     await context.setOffline(true);
     try {
-      // a category never opened on this device → the offline state page
-      await page.getByRole('button', { name: /^Next category: / }).click();
+      // a category never opened on this device → the offline state page (keys, D215)
+      await page.keyboard.press('ArrowRight');
       await expect(page).not.toHaveURL(new RegExp(`c=${MAIN.slug}`));
       await expect(page.getByText(/You're offline/)).toBeVisible();
 
       // the visited one still renders from the persisted cache
-      await page.getByRole('button', { name: /^Previous category: / }).click();
+      await page.keyboard.press('ArrowLeft');
       await expect(page).toHaveURL(new RegExp(`c=${MAIN.slug}`));
       await expect(cardHeading(page, deck.cards[0]!.title)).toBeVisible();
     } finally {
@@ -197,7 +223,7 @@ test.describe('browse mode', () => {
     const { width, height } = viewport(page);
     await page.goto(browseUrl(deck.slug, 'c=all'));
     await expect(page.getByRole('button', { name: 'Category: All' })).toBeVisible();
-    await page.getByRole('button', { name: 'Next card' }).click();
+    await moveCard(page, 'Next card');
     await expect(page).toHaveURL(/i=/);
 
     // a swipe at the first category does nothing
@@ -206,13 +232,11 @@ test.describe('browse mode', () => {
     await expect(page).toHaveURL(/c=all/);
 
     // a header swipe moves to the next category at card 1, `c` updated and `i` cleared
-    const next = await page
-      .getByRole('button', { name: /^Next category: / })
-      .getAttribute('aria-label');
-    const nextName = next!.replace('Next category: ', '');
     await swipeBand(page, await bandY(page, 'header'), 'next');
-    await expect(page.getByRole('button', { name: `Category: ${nextName}` })).toBeVisible();
     await expect(page).not.toHaveURL(/c=all/);
+    await expect(page.getByRole('button', { name: 'Category: All' })).toHaveCount(0);
+    const next = await page.getByRole('button', { name: /^Category: / }).getAttribute('aria-label');
+    const nextName = next!.replace('Category: ', '');
     await expect(page).not.toHaveURL(/i=/);
     const url = page.url();
 
@@ -237,7 +261,7 @@ test.describe('browse mode', () => {
     await page.getByRole('button', { name: `Category: ${MAIN.name}` }).click();
     await page.getByRole('menuitemradio', { name: OTHER.name }).click();
     await expect(cardHeading(page, 'Other card 3')).toBeVisible();
-    await page.getByRole('button', { name: 'Next card' }).click();
+    await moveCard(page, 'Next card');
     await expect(cardHeading(page, 'Other card 2')).toBeVisible();
     await expect(page).toHaveURL(/i=/);
     await page.goBack();
@@ -260,7 +284,7 @@ test.describe('browse mode', () => {
     await expect(page.getByRole('tabpanel', { name: 'Details' })).toContainText(MAIN.name);
 
     // the next card keeps the pane
-    await page.getByRole('button', { name: 'Next card' }).click();
+    await moveCard(page, 'Next card');
     await expectCurrent(page, deck.cards[1]!);
     await expect(page.getByRole('tab', { name: 'Details' })).toHaveAttribute(
       'aria-selected',
@@ -276,7 +300,7 @@ test.describe('browse mode', () => {
     await expect(page).toHaveURL(/pane=details/);
   });
 
-  test('no gestures needed: first-run hint, buttons and keyboard @smoke', async ({ page }) => {
+  test('no gestures needed: first-run hint, menus and keyboard @smoke', async ({ page }) => {
     const [first, second] = deck.cards;
     await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}`));
 
@@ -289,10 +313,11 @@ test.describe('browse mode', () => {
     await expect(cardHeading(page, first!.title)).toBeVisible();
     await expect(hint).toHaveCount(0);
 
-    // card, pane and category by accessible names only
-    await page.getByRole('button', { name: 'Next card' }).click();
+    // card, pane and category by accessible names only (D215: position and category menus)
+    await expectMoveDisabled(page, 'Previous card');
+    await moveCard(page, 'Next card');
     await expect(cardHeading(page, second!.title)).toBeVisible();
-    await page.getByRole('button', { name: 'Previous card' }).click();
+    await moveCard(page, 'Previous card');
     await expect(cardHeading(page, first!.title)).toBeVisible();
     await page.getByRole('tab', { name: 'Source' }).click();
     await expect(page).toHaveURL(/pane=source/);
@@ -300,8 +325,9 @@ test.describe('browse mode', () => {
     await page.getByRole('menuitemradio', { name: OTHER.name }).click();
     await expect(page).toHaveURL(new RegExp(`c=${OTHER.slug}`));
     await expect(page.getByRole('button', { name: `Category: ${OTHER.name}` })).toBeVisible();
-    await page.getByRole('button', { name: /^Previous category: / }).click();
-    await expect(page).not.toHaveURL(new RegExp(`c=${OTHER.slug}`));
+    await page.getByRole('button', { name: `Category: ${OTHER.name}` }).click();
+    await page.getByRole('menuitemradio', { name: MAIN.name }).click();
+    await expect(page).toHaveURL(new RegExp(`c=${MAIN.slug}`));
 
     // the same with the keyboard only
     await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}`));
