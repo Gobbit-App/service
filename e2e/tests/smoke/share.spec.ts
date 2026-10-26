@@ -74,7 +74,13 @@ test('pasting a text sends it and links to Your shares @smoke', async ({ page, w
   await expect(page.getByRole('heading', { name: 'Your shares' })).toBeVisible();
 });
 
-test('an expired or failed share falls back to the paste box @smoke', async ({ page, anon }) => {
+test('an expired or failed share falls back to the paste box @smoke', async ({
+  page,
+  anon,
+  webDeck,
+}) => {
+  // The paste box needs a deck the user can write to; without its own it raced other tests' decks.
+  expect(webDeck.slug).toBeTruthy();
   const res = await anon.post(webUrl('/share'), { multipart: { text: 'hi' }, maxRedirects: 0 });
   expect(res.status()).toBe(303);
   expect(res.headers()['location']).toBe('/share?failed=1');
