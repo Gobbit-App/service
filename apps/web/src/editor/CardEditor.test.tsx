@@ -6,7 +6,8 @@ import { requests, respond } from '../test/api-mock';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import type { memoryDraftsKv } from '../test/memory-drafts-kv';
 import { emptyDraft, withType } from './draft';
-import { renderWithClient, testQueryClient } from '../test/render';
+import { testQueryClient } from '../test/render';
+import { renderInRouter } from '../test/render-in-router';
 import { configQuery } from '../api/queries';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
@@ -26,9 +27,10 @@ const categories = [
   makeCategory({ id: 'cat-general', slug: 'general', name: 'General', isDefault: true }),
 ];
 
-function renderCreate(type: 'text' | 'link' = 'text', onTypeChange = vi.fn()) {
-  const view = renderWithClient(
+async function renderCreate(type: 'text' | 'link' = 'text', onTypeChange = vi.fn()) {
+  const view = await renderInRouter(
     <CardEditor
+      backHref="/d/family"
       mode="create"
       deck={deck}
       type={type}
@@ -56,7 +58,7 @@ beforeEach(async () => {
 describe('CardEditor: create', () => {
   it('preselects the default category and saves a text card, then opens the deck', async () => {
     respond.mockResolvedValueOnce(makeItem());
-    const { navigate } = renderCreate();
+    const { navigate } = await renderCreate();
 
     expect(screen.getByRole('button', { name: 'General' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Misc' })).toHaveAttribute('aria-pressed', 'false');
@@ -64,7 +66,9 @@ describe('CardEditor: create', () => {
     type('Body', 'Call Sam');
     fireEvent.click(saveButton());
 
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/d/family'));
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith('/d/family', { ignoreBlocker: true }),
+    );
     expect(bodyOf('POST /decks/{id}/items')).toEqual({
       type: 'text',
       title: 'Plumber',
@@ -74,8 +78,8 @@ describe('CardEditor: create', () => {
     });
   });
 
-  it('shows "New card" and a type picker that keeps the title when switching', () => {
-    const { onTypeChange } = renderCreate();
+  it('shows "New card" and a type picker that keeps the title when switching', async () => {
+    const { onTypeChange } = await renderCreate();
     expect(screen.getByRole('heading', { name: 'New card' })).toBeInTheDocument();
     type('Title', 'Recipe');
     fireEvent.click(screen.getByRole('radio', { name: 'Link' }));
@@ -86,7 +90,7 @@ describe('CardEditor: create', () => {
 
   it('saves a link card with its url and preview text', async () => {
     respond.mockResolvedValueOnce(makeItem());
-    renderCreate('link');
+    await renderCreate('link');
     type('Title', 'Recipe');
     type('URL', 'https://example.com/pie');
     type('Preview title', 'Pie');
@@ -99,8 +103,8 @@ describe('CardEditor: create', () => {
     });
   });
 
-  it('disables Save over 600 body code points and says why', () => {
-    renderCreate();
+  it('disables Save over 600 body code points and says why', async () => {
+    await renderCreate();
     type('Title', 'Long');
     type('Body', '😀'.repeat(601));
     expect(saveButton()).toBeDisabled();
@@ -109,8 +113,8 @@ describe('CardEditor: create', () => {
     expect(screen.getByText('601 / 600 characters')).toBeInTheDocument();
   });
 
-  it('disables Save with no category', () => {
-    renderCreate();
+  it('disables Save with no category', async () => {
+    await renderCreate();
     type('Title', 'No category');
     fireEvent.click(screen.getByRole('button', { name: 'General' }));
     expect(saveButton()).toBeDisabled();
@@ -125,7 +129,7 @@ describe('CardEditor: create', () => {
         status: 422,
       }),
     );
-    const { navigate } = renderCreate();
+    const { navigate } = await renderCreate();
     type('Title', 'Kept');
     fireEvent.click(saveButton());
 
@@ -143,14 +147,14 @@ describe('CardEditor: create', () => {
         errors: [{ path: 'title', message: 'Title is taken' }],
       }),
     );
-    renderCreate();
+    await renderCreate();
     type('Title', 'Dup');
     fireEvent.click(saveButton());
     expect(await screen.findByText('Title is taken')).toBeInTheDocument();
   });
 
-  it('renders the draft in the preview card', () => {
-    renderCreate();
+  it('renders the draft in the preview card', async () => {
+    await renderCreate();
     type('Title', 'Preview me');
     const preview = screen.getByRole('region', { name: 'Preview', hidden: true });
     expect(preview).toHaveTextContent('Preview me');
@@ -159,7 +163,7 @@ describe('CardEditor: create', () => {
 });
 
 describe('CardEditor: image cards (D133, FR-015)', () => {
-  function renderImage(cloudName: string | null, initialType: ItemType = 'text') {
+  async function renderImage(cloudName: string | null, initialType: ItemType = 'text') {
     const queryClient = testQueryClient();
     queryClient.setQueryData(configQuery().queryKey, {
       cloudinaryCloudName: cloudName,
@@ -167,28 +171,34 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
     });
-    return renderWithClient(
-      <CardEditor mode="create" deck={deck} type={initialType} categories={categories} />,
+    return renderInRouter(
+      <CardEditor
+        backHref="/d/family"
+        mode="create"
+        deck={deck}
+        type={initialType}
+        categories={categories}
+      />,
       { queryClient },
     );
   }
 
-  it('disables the image type with an explanation when image storage is off', () => {
-    renderImage(null);
+  it('disables the image type with an explanation when image storage is off', async () => {
+    await renderImage(null);
     const image = screen.getByRole('radio', { name: 'Image' });
     expect(image).toBeDisabled();
     expect(image).toHaveAccessibleDescription(/image storage isn't set up/);
     expect(screen.getByRole('radio', { name: 'Calc' })).toBeEnabled();
   });
 
-  it('offers the image type when a cloud name is configured', () => {
-    renderImage('test-cloud');
+  it('offers the image type when a cloud name is configured', async () => {
+    await renderImage('test-cloud');
     expect(screen.getByRole('radio', { name: 'Image' })).toBeEnabled();
     expect(screen.queryByText(/image storage isn't set up/)).not.toBeInTheDocument();
   });
 
-  it('blocks Save on an image card without a photo; the description is optional (D206)', () => {
-    renderImage('test-cloud', 'image');
+  it('blocks Save on an image card without a photo; the description is optional (D206)', async () => {
+    await renderImage('test-cloud', 'image');
     type('Title', 'Bread');
     expect(screen.getByLabelText('Take photo')).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
@@ -208,14 +218,21 @@ describe('CardEditor: edit', () => {
     entities: { phones: ['555-1234'] },
   });
 
-  function renderEdit(from?: 'review', base = item) {
-    return renderWithClient(
-      <CardEditor mode="edit" deck={deck} item={base} categories={categories} from={from} />,
+  async function renderEdit(from?: 'review', base = item) {
+    return renderInRouter(
+      <CardEditor
+        backHref={from === 'review' ? '/d/family/review' : `/i/${base.id}`}
+        mode="edit"
+        deck={deck}
+        item={base}
+        categories={categories}
+        from={from}
+      />,
     );
   }
 
-  it('shows the type as a label, not a picker', () => {
-    renderEdit();
+  it('shows the type as a label, not a picker', async () => {
+    await renderEdit();
     expect(screen.getByRole('heading', { name: 'Edit card' })).toBeInTheDocument();
     expect(screen.queryByRole('radio')).toBeNull();
     expect(screen.getByText('Link')).toBeInTheDocument();
@@ -223,33 +240,35 @@ describe('CardEditor: edit', () => {
 
   it('sends only the changed title and returns to the card', async () => {
     respond.mockResolvedValueOnce({ ...item, title: 'New' });
-    const { navigate } = renderEdit();
+    const { navigate } = await renderEdit();
     type('Title', 'New');
     fireEvent.click(saveButton());
 
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/i/i1'));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/i/i1', { ignoreBlocker: true }));
     expect(bodyOf('PATCH /items/{id}')).toEqual({ title: 'New' });
   });
 
   it('saves nothing when unchanged and goes back', async () => {
-    const { navigate } = renderEdit();
+    const { navigate } = await renderEdit();
     fireEvent.click(saveButton());
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/i/i1'));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/i/i1', { ignoreBlocker: true }));
     expect(requests).not.toHaveBeenCalledWith('PATCH /items/{id}', expect.anything());
   });
 
   it('returns to the review queue for a proposal opened from review', async () => {
     const proposal = { ...item, status: 'proposed' as const };
     respond.mockResolvedValueOnce({ ...proposal, title: 'New' });
-    const { navigate } = renderEdit('review', proposal);
+    const { navigate } = await renderEdit('review', proposal);
     type('Title', 'New');
     fireEvent.click(saveButton());
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/d/family/review'));
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith('/d/family/review', { ignoreBlocker: true }),
+    );
   });
 
   it('removes an extracted detail and sends the remaining entities', async () => {
     respond.mockResolvedValueOnce(item);
-    renderEdit();
+    await renderEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Remove Phone 555-1234' }));
     fireEvent.click(saveButton());
     await waitFor(() => expect(bodyOf('PATCH /items/{id}')).toEqual({ entities: {} }));
@@ -261,12 +280,12 @@ describe('CardEditor: unsaved drafts (D145)', () => {
   const newKey = () => newDraftKey(deck.id, 'text');
 
   it('autosaves while typing and offers the draft when reopened', async () => {
-    const first = renderCreate();
+    const first = await renderCreate();
     type('Title', 'Half-written');
     await waitFor(() => expect(draftsKv.map.has(newKey())).toBe(true));
     first.unmount();
 
-    renderCreate();
+    await renderCreate();
     expect(await screen.findByText('Restore unsaved draft?')).toBeInTheDocument();
     expect(screen.getByLabelText('Title')).toHaveValue('');
     fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
@@ -277,7 +296,7 @@ describe('CardEditor: unsaved drafts (D145)', () => {
   it('restoring a draft of another type switches the picker and the URL', async () => {
     const draft = { ...withType(emptyDraft('text', 'cat-general'), 'link'), title: 'Saved link' };
     await writeDraft(newKey(), draft, null, STAMP, draftsKv);
-    const { onTypeChange } = renderCreate();
+    const { onTypeChange } = await renderCreate();
     fireEvent.click(await screen.findByRole('button', { name: 'Restore' }));
     expect(onTypeChange).toHaveBeenCalledWith('link');
     expect(screen.getByLabelText('URL')).toBeInTheDocument();
@@ -291,7 +310,7 @@ describe('CardEditor: unsaved drafts (D145)', () => {
       STAMP,
       draftsKv,
     );
-    renderCreate();
+    await renderCreate();
     fireEvent.click(await screen.findByRole('button', { name: 'Discard' }));
     expect(screen.queryByRole('status', { name: /restore/i })).toBeNull();
     expect(screen.getByLabelText('Title')).toHaveValue('');
@@ -308,7 +327,9 @@ describe('CardEditor: unsaved drafts (D145)', () => {
       STAMP,
       draftsKv,
     );
-    renderWithClient(<CardEditor mode="edit" deck={deck} item={item} categories={categories} />);
+    await renderInRouter(
+      <CardEditor backHref="/i/i9" mode="edit" deck={deck} item={item} categories={categories} />,
+    );
     expect(
       await screen.findByText(
         'This card has changed since — restoring will overwrite those changes when you save.',
@@ -318,11 +339,13 @@ describe('CardEditor: unsaved drafts (D145)', () => {
 
   it('a successful save removes the draft', async () => {
     respond.mockResolvedValueOnce(makeItem());
-    const { navigate } = renderCreate();
+    const { navigate } = await renderCreate();
     type('Title', 'Plumber');
     await waitFor(() => expect(draftsKv.map.has(newKey())).toBe(true));
     fireEvent.click(saveButton());
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/d/family'));
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith('/d/family', { ignoreBlocker: true }),
+    );
     expect(draftsKv.map.has(newKey())).toBe(false);
   });
 });
@@ -338,9 +361,15 @@ describe('CardEditor: instant categories on an existing card (D207, D208)', () =
   });
   const editKey = editDraftKey('i2');
 
-  function renderEdit(base = item) {
-    return renderWithClient(
-      <CardEditor mode="edit" deck={deck} item={base} categories={categories} />,
+  async function renderEdit(base = item) {
+    return renderInRouter(
+      <CardEditor
+        backHref={`/i/${base.id}`}
+        mode="edit"
+        deck={deck}
+        item={base}
+        categories={categories}
+      />,
     );
   }
 
@@ -362,7 +391,7 @@ describe('CardEditor: instant categories on an existing card (D207, D208)', () =
 
   it('saves a tap on its own, without leaving an unsaved draft', async () => {
     echoPatches();
-    renderEdit();
+    await renderEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Misc' }));
     expect(screen.getByRole('button', { name: 'Misc' })).toHaveAttribute('aria-pressed', 'true');
 
@@ -375,19 +404,19 @@ describe('CardEditor: instant categories on an existing card (D207, D208)', () =
 
   it('keeps other unsaved edits and Save sends only them', async () => {
     echoPatches();
-    const { navigate } = renderEdit();
+    const { navigate } = await renderEdit();
     type('Title', 'Plumber (new)');
     fireEvent.click(screen.getByRole('button', { name: 'Misc' }));
     await waitFor(() => expect(patchBodies()).toHaveLength(1));
     expect(screen.getByLabelText('Title')).toHaveValue('Plumber (new)');
 
     fireEvent.click(saveButton());
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/i/i2'));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/i/i2', { ignoreBlocker: true }));
     expect(patchBodies()[1]).toEqual({ title: 'Plumber (new)' });
   });
 
-  it("refuses to remove a published card's last category and says why", () => {
-    renderEdit();
+  it("refuses to remove a published card's last category and says why", async () => {
+    await renderEdit();
     fireEvent.click(screen.getByRole('button', { name: 'General' }));
     expect(screen.getByText('A published card needs at least one category.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'General' })).toHaveAttribute('aria-pressed', 'true');
@@ -402,7 +431,7 @@ describe('CardEditor: instant categories on an existing card (D207, D208)', () =
       new Date('2026-05-01T10:00:00.000Z'),
       draftsKv,
     );
-    renderEdit();
+    await renderEdit();
     fireEvent.click(await screen.findByRole('button', { name: 'Restore' }));
     expect(screen.getByLabelText('Title')).toHaveValue('Draft title');
     expect(screen.getByRole('button', { name: 'General' })).toHaveAttribute('aria-pressed', 'true');
@@ -411,7 +440,7 @@ describe('CardEditor: instant categories on an existing card (D207, D208)', () =
 
   it('a new card still picks categories as part of Save', async () => {
     respond.mockResolvedValueOnce(makeItem());
-    renderCreate();
+    await renderCreate();
     type('Title', 'Plumber');
     fireEvent.click(screen.getByRole('button', { name: 'Misc' }));
     await pause(700);

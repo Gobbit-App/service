@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { emptyDraft, isDirty } from './draft';
-import { rebaselineCategories, withCategories, withSavedCategories } from './rebaseline';
+import { emptyDraft, isDirty, type Draft } from './draft';
+import { withCategories, withSavedCategories } from './rebaseline';
+
+/** What CardEditor's seam does after an instant save: move the draft's and the baseline's categories. */
+function afterCategorySave(draft: Draft, baseline: Draft, ids: string[]) {
+  return { draft: withCategories(draft, ids), baseline: { ...baseline, categoryIds: ids } };
+}
 
 const base = { ...emptyDraft('text', 'a'), title: 'Plumber' };
 
@@ -14,14 +19,14 @@ describe('rebaseline (D208)', () => {
   });
 
   it('a saved category change is not an unsaved change', () => {
-    const { draft, baseline } = rebaselineCategories({ draft: base, baseline: base }, ['b']);
+    const { draft, baseline } = afterCategorySave(base, base, ['b']);
     expect(draft.categoryIds).toEqual(['b']);
     expect(isDirty(draft, baseline)).toBe(false);
   });
 
   it('keeps other unsaved edits dirty', () => {
     const edited = { ...base, title: 'Plumber (new number)' };
-    const { draft, baseline } = rebaselineCategories({ draft: edited, baseline: base }, ['b']);
+    const { draft, baseline } = afterCategorySave(edited, base, ['b']);
     expect(draft.title).toBe('Plumber (new number)');
     expect(isDirty(draft, baseline)).toBe(true);
     expect(isDirty({ ...draft, title: 'Plumber' }, baseline)).toBe(false);

@@ -147,7 +147,7 @@ h3 {
   border-bottom: 1px solid var(--color-border);
 }
 
-.app-header__home {
+.app-header__back {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1641,4 +1641,35 @@ h3 {
 .admin-member__role {
   color: var(--color-muted);
   font-size: 0.875rem;
+}
+
+/* 022: "Discard changes?" (native modal dialog, shared by the editor and the review queue) */
+.discard-dialog {
+  width: min(22rem, calc(100vw - 2 * var(--gap)));
+  padding: var(--gap);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.discard-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.discard-dialog__title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.discard-dialog p {
+  margin: 0 0 var(--gap);
+  color: var(--color-muted);
+}
+
+.discard-dialog__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }

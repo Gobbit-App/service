@@ -45,7 +45,7 @@ function Home() {
 
   return (
     <>
-      <AppHeader title="Pocketbooks" />
+      <AppHeader title="Pocketbooks" back={null} />
       <main className="page">
         {decks.data.length === 0 ? (
           <EmptyState title="No pocketbooks yet" />

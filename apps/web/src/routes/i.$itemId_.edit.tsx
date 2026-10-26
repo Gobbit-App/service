@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { categoriesQuery, deckQuery, itemQuery, meQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
+import { backTarget } from '../app/back-target';
 import { canEditItem } from '../cards/can-edit-item';
 import { CardEditor } from '../editor/CardEditor';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
@@ -60,9 +61,15 @@ function EditCard() {
     return <Unavailable message="You can't edit this card." />;
   }
 
+  const back = backTarget({
+    kind: 'edit',
+    itemId: item.data.id,
+    deckSlug: deck.data.slug,
+    from,
+  });
   return (
     <>
-      <AppHeader title={deck.data.name} />
+      <AppHeader title={deck.data.name} back={back} />
       <main className="page">
         <CardEditor
           key={item.data.id}
@@ -71,6 +78,7 @@ function EditCard() {
           item={item.data}
           categories={categories.data}
           from={from}
+          backHref={back}
         />
       </main>
     </>

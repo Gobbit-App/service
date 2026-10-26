@@ -73,9 +73,25 @@ Create and edit every card type (text, link, table, calc; image is read-only unt
 - **"New category" also appears in the review inline edit**, which uses the same `CategoryChips` and the same `can(deck.role, 'category.create')` gate.
 - **New categories are created with the server default visibility (`shared`).** There is no visibility choice inline.
 
+## Navigation and unsaved work (022, `specs/022-editor-navigation`)
+
+**Back (D200)**: `AppHeader` takes a required `back: string | null` from `backTarget(screen)` (`app/back-target.ts`): one level up, never history. Deck screens and settings/share go to the deck list (`/?all=true`), a card and a new card to their deck, the editor to its card (or to the review queue with `?from=review`); the deck list has no back control (a spacer keeps the title in place).
+
+**Guard (D201–D204)**: the editor and the review inline edit compare the draft with a baseline (`useEditorBaseline`: `{ baseline, isChanged, rebaseline }`). While changed (or saving), `useLeaveGuard` holds every navigation through TanStack Router's `useBlocker` (resolver + `beforeunload`) and renders `DiscardChangesDialog` (native modal `<dialog>`, Keep editing focused, Escape = Keep editing). A held navigation writes the draft at once (`autosave.flush`, also on `pagehide`/hidden); Discard removes it, then continues. The editor has Cancel next to Save; navigation after a save, and the create editor's `?type=` replace, pass `ignoreBlocker`. Sign-out runs only after the navigation to `/sign-in` lands (`app/on-arrival.ts`). Out-of-band saves (023's instant categories) call `rebaseline({ categoryIds })` so they stop counting as unsaved.
+
+## Deviations from the 022 plan
+
+- **Browser back while asking**: the router holds a back/forward after the browser has moved, so the address bar shows the previous address while the dialog is open; Keep editing moves it back to the editor. The editor stays on screen throughout.
+- **Dialog styles in `styles.css`**, not `editor/editor.css`: the review queue uses the dialog without loading the editor's stylesheet.
+- **Sign-out waits through `onArrival(history, '/sign-in', run)`** (`app/on-arrival.ts`, own unit tests) instead of an inline history subscription in `AppHeader`.
+- **Components that use the guard need a router in tests**: `test/render-in-router.tsx` renders inside a real router (memory history, or the jsdom browser history for `beforeunload`); the `CardEditor`, `ReviewEditForm` and `ReviewCard` tests moved to it.
+- **The review inline edit is guarded only while changed** (not while saving): its save keeps running after the form unmounts and has no draft to lose.
+- **Reload prompt in e2e**: Playwright's `page.reload()` does not raise the browser's prompt, so the `@full` spec checks it with `page.close({ runBeforeUnload: true })`; the draft flush is checked by reloading after Keep editing.
+
 ## Deviations from the 023 plan
 
 - **The instant-category controller is created on the first tap** (lint `react-hooks/refs`); until then the chips follow the card.
 - **Undo failure has its own toast** ("Couldn't undo the category change.").
 - **The last-category refusal counts only visible categories**: a published card with hidden categories is still refused, though the server would accept.
 - **The 023 smoke test checks the saved categories through the API** rather than via the header back control, which 022 reworks.
+- **Seam at merge with 022**: `rebaselineAfterCategorySave` moves both the draft's categories and the `useEditorBaseline` baseline (`rebaseline({ categoryIds })`), then `autosave.rebase(updatedAt)`.

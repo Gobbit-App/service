@@ -161,6 +161,39 @@ test('a card is edited from its page; the type is fixed @smoke', async ({ page, 
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
 
+test('the editor goes back to its card; leaving with changes asks first (022) @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  const card = webDeck.items.find((item) => item.type === 'text')!;
+  const editUrl = new RegExp(`/i/${card.id}/edit$`);
+  const cardUrl = new RegExp(`/i/${card.id}$`);
+  const discardDialog = page.getByRole('dialog', { name: 'Discard changes?' });
+  await page.goto(webUrl(`/i/${card.id}/edit`));
+
+  // Unchanged: Cancel leaves at once, to the card.
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page).toHaveURL(cardUrl);
+  await expect(discardDialog).toHaveCount(0);
+
+  // Changed: the header back asks; Keep editing stays with the text.
+  await page.getByRole('link', { name: 'Edit', exact: true }).click();
+  await expect(page).toHaveURL(editUrl);
+  await page.getByLabel('Title', { exact: true }).fill(`Unsaved ${webDeck.slug}`);
+  await page.getByRole('link', { name: 'Back' }).click();
+  await expect(discardDialog).toBeVisible();
+  await discardDialog.getByRole('button', { name: 'Keep editing' }).click();
+  await expect(discardDialog).toHaveCount(0);
+  await expect(page).toHaveURL(editUrl);
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue(`Unsaved ${webDeck.slug}`);
+
+  // Discard leaves for the card, which is unchanged.
+  await page.getByRole('link', { name: 'Back' }).click();
+  await discardDialog.getByRole('button', { name: 'Discard' }).click();
+  await expect(page).toHaveURL(cardUrl);
+  await expect(page.getByRole('heading', { name: card.title })).toBeVisible();
+});
+
 test('list cards link to the editor @smoke', async ({ page, webDeck }) => {
   const card = webDeck.items.find((item) => item.type === 'table')!;
   await page.goto(webUrl(`/d/${webDeck.slug}`));
@@ -179,6 +212,8 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
 }) => {
   const newCard = webUrl(`/d/${webDeck.slug}/new`);
   const restoreOffer = page.getByText('Restore unsaved draft?');
+  // 022: unsaved changes arm the browser's "leave site?" prompt; accept it on reload.
+  page.on('dialog', (dialog) => void dialog.accept());
   await page.goto(newCard);
   await page.getByLabel('Title', { exact: true }).fill('Half-written');
   await page.getByLabel('Body', { exact: true }).fill('Not saved yet');
@@ -197,6 +232,11 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   // session survives, while the app still runs its sign-out cleanup (drafts included).
   await page.route('**/auth/logout', (route) => route.fulfill({ status: 204 }));
   await page.getByRole('button', { name: 'Sign out' }).click();
+  // 022: the restored text is unsaved, so leaving for sign-in asks first.
+  await page
+    .getByRole('dialog', { name: 'Discard changes?' })
+    .getByRole('button', { name: 'Discard' })
+    .click();
   await expect(page).toHaveURL(/\/sign-in/);
   // The app leaves for /sign-in first and clears local data afterwards; navigating away before
   // that finishes would abort it.

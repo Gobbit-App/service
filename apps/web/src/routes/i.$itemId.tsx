@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { categoriesQuery, deckQuery, itemQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
+import { backTarget } from '../app/back-target';
 import { Card } from '../cards/Card';
 import { EditLink } from '../cards/EditLink';
 import { CardActions } from '../items/CardActions';
@@ -42,7 +43,7 @@ function ItemPage() {
   const deckSlug = deck.data?.slug ?? item.data.deckId;
   return (
     <>
-      <AppHeader title={deck.data?.name ?? 'Card'} />
+      <AppHeader title={deck.data?.name ?? 'Card'} back={backTarget({ kind: 'card', deckSlug })} />
       <main className="page">
         <Card
           item={item.data}

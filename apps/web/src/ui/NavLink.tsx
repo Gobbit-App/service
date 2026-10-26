@@ -10,6 +10,8 @@ import {
 export interface NavigateOptions {
   /** Replace the current history entry instead of pushing one. */
   replace?: boolean;
+  /** Skip the unsaved-changes guard (D201): e.g. leaving the editor after a successful save. */
+  ignoreBlocker?: boolean;
 }
 
 export type NavigateHref = (href: string, options?: NavigateOptions) => void;
