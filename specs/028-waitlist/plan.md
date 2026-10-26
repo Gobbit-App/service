@@ -78,9 +78,9 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D217 | `waitlist_entries`: kind `family/community/personal/other`, source `landing/sign_in`, status `pending/confirmed/invited/removed`; note ≤ 500, `utm_source` ≤ 64 `[a-z0-9_-]`; confirm token hash + expiry on the entry; `confirmed_at`/`invited_at`/`invited_by`/`user_id`/`removed_at`; lower-case CHECK; unique `email WHERE status <> 'removed'`; status ↔ timestamp CHECKs; transitions in the service | ADR-059 (with 029) |
-| D218 | One `waitlist.service.join()` for API, form and gate; `202 { ok: true }` for every well-formed request; outcomes differ only by mail (confirm / existing user / none); `GET /waitlist/confirm` atomic `UPDATE`, `303` to `/welcome?confirmed=1` or `?confirm=invalid` (`200` JSON without `APP_URL`); TTL 7 days; mail after commit, failure logged, still `202` | ADR-059 |
-| D219 | Honeypot `website` (silent drop, log line); 10/IP/hour in the anonymous in-memory limiter (own bucket, shared with confirm and 030's form); 3/email/hour in `rate_limit_counters` (`waitlist:email:<sha256>`), checked before lookup; gate calls skip both; no CAPTCHA | ADR-059 |
+| D217 | `waitlist_entries`: kind `family/community/personal/other`, source `landing/sign_in`, status `pending/confirmed/invited/removed`; note ≤ 500, `utm_source` ≤ 64 `[a-z0-9_-]`; confirm token hash + expiry on the entry; `confirmed_at`/`invited_at`/`invited_by`/`user_id`/`removed_at`; lower-case CHECK; unique `email WHERE status <> 'removed'`; status ↔ timestamp CHECKs; transitions in the service | ADR-061 (with 029) |
+| D218 | One `waitlist.service.join()` for API, form and gate; `202 { ok: true }` for every well-formed request; outcomes differ only by mail (confirm / existing user / none); `GET /waitlist/confirm` atomic `UPDATE`, `303` to `/welcome?confirmed=1` or `?confirm=invalid` (`200` JSON without `APP_URL`); TTL 7 days; mail after commit, failure logged, still `202` | ADR-061 |
+| D219 | Honeypot `website` (silent drop, log line); 10/IP/hour in the anonymous in-memory limiter (own bucket, shared with confirm and 030's form); 3/email/hour in `rate_limit_counters` (`waitlist:email:<sha256>`), checked before lookup; gate calls skip both; no CAPTCHA | ADR-061 |
 | D220 | Weekly `prune-waitlist` (`'0 6 * * 0'`): delete pending 30 days after expiry, removed 30 days after removal; count logged | no |
 | D221 | `waitlist_summary` view: week, kind, source, effective status (`joined` = invited + user has a session), count | no |
 

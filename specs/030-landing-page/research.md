@@ -1,6 +1,6 @@
 # Research: Landing page
 
-Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D226–D230**. D226–D227 are proposed for **ADR-061** (landing page at the root for cookieless requests) at close-out; ADR-059 is 028/029's and ADR-060 is 031's; the others stay feature-level.
+Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D226–D230**. D226–D227 are proposed for **ADR-063** (landing page at the root for cookieless requests) at close-out; ADR-061 is 028/029's and ADR-062 is 031's; the others stay feature-level.
 
 ## What exists today
 

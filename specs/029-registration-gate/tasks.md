@@ -99,7 +99,7 @@ description: "Task list for 029-registration-gate"
 
 - [ ] T050 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`; `git grep createWithAccount` shows one caller (`users.service.register`)
 - [ ] T051 [P] docs/design/auth.md: "Registration gate" section (mode, request-time gate, `register` reasons, `closed`); update the D25 paragraph that says users are created on first sign-in
-- [ ] T052 [P] docs/adr.md ADR-059 (registration gate: D222–D224) + one index row in docs/architecture.md
+- [ ] T052 [P] docs/adr.md ADR-061 (registration gate: D222–D224) + one index row in docs/architecture.md
 - [ ] T053 [P] README.md env table + .env.example: `REGISTRATION_MODE`
 - [ ] T054 [P] Update the "Phase 9 gates registration here" comments in users.service.ts and docs/adr.md ADR text references if any point at `findOrCreateByEmail`
 - [ ] T055 Run quickstart.md validation

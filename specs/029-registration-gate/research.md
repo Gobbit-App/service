@@ -1,6 +1,6 @@
 # Research: Registration gate
 
-Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D222–D225**. D222–D224 together become **ADR-059 (registration gate)** at close-out, with a row in the `docs/architecture.md` index; D225 is UI copy and needs no ADR.
+Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D222–D225**. D222–D224 together become **ADR-061 (registration gate)** at close-out, with a row in the `docs/architecture.md` index; D225 is UI copy and needs no ADR.
 
 ## What exists today
 

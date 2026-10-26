@@ -117,7 +117,7 @@ description: "Task list for 028-waitlist"
 ## Phase 6: Close-out
 
 - [ ] T050 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int`
-- [ ] T051 [P] New docs/design/waitlist.md (table, statuses, join outcomes, confirm, limits, prune, view, deviations); one line in docs/architecture.md map; ADR-059 (registration gate and waitlist) drafted in docs/adr.md if 029 hasn't, with its index row
+- [ ] T051 [P] New docs/design/waitlist.md (table, statuses, join outcomes, confirm, limits, prune, view, deviations); one line in docs/architecture.md map; ADR-061 (registration gate and waitlist) drafted in docs/adr.md if 029 hasn't, with its index row
 - [ ] T052 [P] README.md: waitlist endpoint, limits, how to read `waitlist_summary`
 - [ ] T053 [P] CLAUDE.md ground rule line: waitlist joins only through `waitlist.service.join` (no enumeration, double opt-in)
 - [ ] T054 PLAN.md: tick demo 6 (and the waitlist half of demo 2) only after quickstart section 4 has run on the deployed instance

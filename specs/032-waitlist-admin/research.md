@@ -1,6 +1,6 @@
 # Research: Waitlist admin and invite
 
-Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D234–D238**. D234 outlives the feature (Phase 12 reuses it) and becomes ADR-062 at close-out ("platform admins"); the others stay here.
+Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D234–D238**. D234 outlives the feature (Phase 12 reuses it) and becomes ADR-064 at close-out ("platform admins"); the others stay here.
 
 ## What exists today
 

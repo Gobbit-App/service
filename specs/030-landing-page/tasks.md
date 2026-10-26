@@ -106,7 +106,7 @@ description: "Task list for 030-landing-page"
 
 - [ ] T050 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`
 - [ ] T051 [P] docs/design/waitlist.md (new or extended with 028): landing page, Caddy cookie rule, SW denylist, form PRG, CSRF same-origin note, Deviations; docs/design/public.md: link to the landing page section
-- [ ] T052 [P] docs/architecture.md: at most one line for the landing page + ADR index row; docs/adr.md: **ADR-061** from D226–D227 (number reconciled at close-out)
+- [ ] T052 [P] docs/architecture.md: at most one line for the landing page + ADR index row; docs/adr.md: **ADR-063** from D226–D227 (number reconciled at close-out)
 - [ ] T053 [P] README.md: landing page URL, after-deploy steps (WhatsApp re-scrape, Search Console); infra/README.md: Caddy `@landing` and `/welcome` routes; `.env.example`: no new variables (confirm)
 - [ ] T054 [P] CLAUDE.md ground rules: one line — landing page at `/welcome` (and cookieless `/` via Caddy), no-JS form through `waitlist.join` only
 - [ ] T055 PLAN.md: tick demo 3 only after quickstart §5 has run on the deployed instance

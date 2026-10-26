@@ -69,8 +69,8 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D226 | API-rendered landing page at `/welcome` (`hono/html`, 017 layout, outside OpenAPI); Caddy rewrites `/` to it when no `gobbit_session` cookie is present, else SPA; canonical and `og:url` = root via `landingUrl(origin)`; `Vary: Cookie` | yes → **ADR-061** (proposed) |
-| D227 | SPA home 401 → full navigation (`location.replace`) to `/welcome`, deep links keep `/sign-in?next=`; SW denylist `/^\/welcome$/`; `/welcome` with a valid session → "Open Gobbit" variant, `private, no-store` | yes → **ADR-061** (proposed) |
+| D226 | API-rendered landing page at `/welcome` (`hono/html`, 017 layout, outside OpenAPI); Caddy rewrites `/` to it when no `gobbit_session` cookie is present, else SPA; canonical and `og:url` = root via `landingUrl(origin)`; `Vary: Cookie` | yes → **ADR-063** (proposed) |
+| D227 | SPA home 401 → full navigation (`location.replace`) to `/welcome`, deep links keep `/sign-in?next=`; SW denylist `/^\/welcome$/`; `/welcome` with a valid session → "Open Gobbit" variant, `private, no-store` | yes → **ADR-063** (proposed) |
 | D228 | No-JS urlencoded `POST /welcome` → `WaitlistJoinRequest` → `waitlist.join`; accepted → 303 `/welcome/joined`; invalid → 400 re-render with values; 429 page; honeypot `website`; per-IP bucket shared with `POST /waitlist`; CSRF passes as same origin; states `joined`, `confirmed`, `confirm=invalid` | no |
 | D229 | Static `/og/landing.png` 1200×630 from `og:static`'s `landingTree()`; root indexable and first in the sitemap; anonymous GET `public, max-age=300`, not in the page cache | no |
 | D230 | Copy in `public/landing-copy.ts` (English, `lang`/`dir` ready for Hebrew); hero, three uses, form, privacy line; native labelled controls, ≥ 44 px targets; `LANDING_CSS` appended only on this page | no |

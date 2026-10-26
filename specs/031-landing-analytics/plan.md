@@ -68,8 +68,8 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D231 | Self-hosted Umami (PostgreSQL image, pinned tag) in the deck's Compose project, own `umami` database on the shared Postgres; one website for the landing page | ADR-060 (with D232) |
-| D232 | Same origin: Caddy proxies only `/stats/script.js` and `/stats/api/send`; tag rendered by `layout()` only for heads that carry `analytics` (set only when `ANALYTICS_SITE_ID` is configured); only the landing sets it; DNT on; dashboard on a separate host behind Umami's login | ADR-060 |
+| D231 | Self-hosted Umami (PostgreSQL image, pinned tag) in the deck's Compose project, own `umami` database on the shared Postgres; one website for the landing page | ADR-062 (with D232) |
+| D232 | Same origin: Caddy proxies only `/stats/script.js` and `/stats/api/send`; tag rendered by `layout()` only for heads that carry `analytics` (set only when `ANALYTICS_SITE_ID` is configured); only the landing sets it; DNT on; dashboard on a separate host behind Umami's login | ADR-062 |
 | D233 | Conversion = `/welcome/joined` views ÷ landing visitors (Umami funnel on paths); `waitlist_summary` is authoritative; smoke and operator opt out via Umami's `localStorage` switch | no |
 
 ## Project Structure

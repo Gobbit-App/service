@@ -71,9 +71,9 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D222 | `REGISTRATION_MODE` = `waitlist \| open`, default `waitlist`, invalid value fails start-up; not exposed to the web | ADR-059 |
-| D223 | In `waitlist` mode an unknown email gets no magic link; `waitlistService.join({ source: 'sign_in', kind: 'other', skipRateLimits: true })` sends the waitlist mail; magic-link limits only (`skipRateLimits`); response stays `200` | ADR-059 |
-| D224 | `findExisting` + `register(email, reason)` replace `findOrCreateByEmail`; `open_sign_in` refused unless open; callback → `MagicLinkFailure('closed')` in the same transaction | ADR-059 |
+| D222 | `REGISTRATION_MODE` = `waitlist \| open`, default `waitlist`, invalid value fails start-up; not exposed to the web | ADR-061 |
+| D223 | In `waitlist` mode an unknown email gets no magic link; `waitlistService.join({ source: 'sign_in', kind: 'other', skipRateLimits: true })` sends the waitlist mail; magic-link limits only (`skipRateLimits`); response stays `200` | ADR-061 |
+| D224 | `findExisting` + `register(email, reason)` replace `findOrCreateByEmail`; `open_sign_in` refused unless open; callback → `MagicLinkFailure('closed')` in the same transaction | ADR-061 |
 | D225 | One "check your inbox" message for everyone; "New here? Join the waitlist" on sign-in; `closed` error copy with "Join the waitlist" | no |
 
 ## Project Structure
@@ -148,7 +148,7 @@ e2e/tests/full/registration-gate.spec.ts     # NEW
 | Risk | Likelihood / impact | Mitigation |
 |------|---------------------|------------|
 | A family member who never signed in (no user) is locked out | M / M | Owners invite them to a deck (creates the user), or 032 invites them from the waitlist; the closed page explains it |
-| Gate bypassed by a new creation path later | L / H | `register` requires a reason; `createWithAccount` has one caller; ADR-059 names the rule; Phase 13 plan already references it |
+| Gate bypassed by a new creation path later | L / H | `register` requires a reason; `createWithAccount` has one caller; ADR-061 names the rule; Phase 13 plan already references it |
 | Response timing reveals unknown emails | L / L | Both branches do one lookup and one mail; same status/body; rate limits run first. Exact timing parity is not a goal (D22 never claimed it) |
 | Waitlist mail failure turns into a 500 only for unknown emails | L / L | Same behaviour as a mail failure for a known user today; both are 500 |
 

@@ -1,6 +1,6 @@
 # Research: Landing page analytics
 
-Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D231–D233**. D231 and D232 together become **ADR-060 (landing analytics: self-hosted, same-origin, landing only)** at close-out; D233 is feature-local.
+Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D231–D233**. D231 and D232 together become **ADR-062 (landing analytics: self-hosted, same-origin, landing only)** at close-out; D233 is feature-local.
 
 ## What exists today
 

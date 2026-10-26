@@ -20,10 +20,8 @@ Roadmap: `PLAN.md` § Phase 9 (demo 5). Builds on [`028-waitlist`](../028-waitli
 - Q: What does the invited person receive? → A: a "You're in" email with a sign-in link that lives longer than a normal sign-in link (`WAITLIST_INVITE_TTL_DAYS`, default 7). The account exists from the moment of the invite, so a fresh sign-in link from the sign-in screen also works afterwards.
 - Q: Is the personal deck created at invite time? → A: no. The account is created at invite time; the deck is ensured on first sign-in by the existing Phase 3B step, the same as for every user. The demo checks exactly this.
 - Q: Can an admin invite many entries at once? → A: not in this feature. One at a time keeps the early community deliberate; bulk invite can come later.
-
-### Open questions for the owner
-
-- Should removing an entry delete its row (erasure) instead of marking it `removed`? The plan marks it `removed` so the email can't re-join silently; full erasure is Phase 11 (GDPR).
+- Q: Does removing an entry delete it? → A: no. It marks the entry `removed` (with who and when); 028's weekly prune deletes it 30 days later, so `waitlist_summary` counts for recent weeks stay stable and the removal stays reviewable meanwhile. The person can join again with the same email (028's unique index ignores removed entries). Full erasure on request is Phase 11 (GDPR).
+- Q: How is the invite email signed? → A: "Gobbit", no admin name.
 
 ## User Scenarios & Testing *(mandatory)*
 

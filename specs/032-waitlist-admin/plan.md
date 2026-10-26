@@ -65,7 +65,7 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D234 | Platform admins = `PLATFORM_ADMINS` env emails; `isPlatformAdmin` / `requirePlatformAdmin` in `access/platform-admin.ts`; 404 for everyone else; `GET /me.isPlatformAdmin` | yes — ADR-062 at close-out (Phase 12 reuses it) |
+| D234 | Platform admins = `PLATFORM_ADMINS` env emails; `isPlatformAdmin` / `requirePlatformAdmin` in `access/platform-admin.ts`; 404 for everyone else; `GET /me.isPlatformAdmin` | yes — ADR-064 at close-out (Phase 12 reuses it) |
 | D235 | `GET /admin/waitlist` (status default `confirmed`, kind, keyset, counts), `POST …/{id}/invite` (201 / 200 resend; 409 pending/removed), `DELETE …/{id}` (→ removed; 409 invited) | no |
 | D236 | Invite = one transaction (lock entry, `usersService.register(…, 'waitlist_invite')`, mark invited, `sign_in` link with `WAITLIST_INVITE_TTL_DAYS`), mail after commit with `mailSent` flag; no deck at invite — Phase 3B onboarding on first sign-in | no |
 | D237 | PWA `/admin/waitlist`, code-split; Settings link only for admins; waitlist queries in `NOT_PERSISTED`; online-only | no |
@@ -163,7 +163,7 @@ e2e/tests/full/waitlist-admin.spec.ts        # NEW
 
 - [ ] 028 and 029 merged; confirm 028's column names (`removed_at`/`removed_by` and the list index were moved into 028 at planning time).
 - [x] Invite email signed "Gobbit" (owner, 2026-10-26)
-- [ ] Owner question in the spec: remove vs. erase.
+- [x] Remove marks `removed`, pruned after 30 days; the email can join again (owner, 2026-10-26)
 
 ## Complexity Tracking
 

@@ -1,6 +1,6 @@
 # Research: Waitlist with double opt-in
 
-Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240; this feature owns **D217–D221**. D217–D219 are proposed to become **ADR-059 (registration gate and waitlist)** at Phase 9 close-out, together with 029's gate decisions; D220–D221 need no ADR.
+Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240; this feature owns **D217–D221**. D217–D219 are proposed to become **ADR-061 (registration gate and waitlist)** at Phase 9 close-out, together with 029's gate decisions; D220–D221 need no ADR.
 
 ## What exists today
 

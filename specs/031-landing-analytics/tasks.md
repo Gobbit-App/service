@@ -54,7 +54,7 @@ Built before US1 so the opt-in is guarded from the first commit.
 
 - [ ] T019 [P] `infra/README.md` and `docs/design/deployment.md`: Umami database and role, secrets, first login and password change, website id, backup schedule, re-paste raw YAML
 - [ ] T020 [P] `docs/design/waitlist.md` (or the landing area doc from 030): analytics section, conversion definition (D233), "Deviations" from `implementation-notes.md`
-- [ ] T021 `docs/adr.md`: ADR-060 from D231 + D232; `docs/architecture.md`: ≤ 2 lines plus the ADR index row (stay < 250 lines)
+- [ ] T021 `docs/adr.md`: ADR-062 from D231 + D232; `docs/architecture.md`: ≤ 2 lines plus the ADR index row (stay < 250 lines)
 - [ ] T022 Run quickstart §1 and §2; deploy per plan Rollout and run §3 (demo 4)
 - [ ] T023 Mark the feature done in `PLAN.md` § Phase 9 and `specs/README.md`
 
