@@ -62,6 +62,7 @@ repository is public (constitution, Constraints).
 | V. Tests at the right tier | [tiers used; e2e tier (smoke/full/none) and why; traceability table below] |
 | VI. Lean, offline-first web | [bundle impact; query cache; subpath imports] |
 | VII. Simple, optional, deployable | [new deps justified; works without AI keys; deploy impact] |
+| VIII. Accountable by default | [every decision has an event or audit row in the Accountability table; ids/hashes only; limits env-tunable] |
 
 ## Decisions this plan pins down
 
@@ -127,6 +128,21 @@ e2e/tests/full/          # Playwright @full specs (nightly)
 | Invariant / rule (spec FR or D-number) | Enforced in (DB / service / route / UI) | Test (file, tier) |
 |----------------------------------------|------------------------------------------|-------------------|
 | [e.g., FR-003 reader cannot edit] | [service `can()`] | [`items.int.test.ts`, int] |
+
+## Accountability
+
+<!--
+  Constitution VIII, ADR-060, convention in docs/design/api-conventions.md#decision-events.
+  One row per decision the feature makes about a person, their content or their experience,
+  including silent ones (no-enumeration answers, honeypot drops, refusals, fallbacks).
+  "None" only with the reason.
+-->
+
+| Decision | Event / audit row | Outcomes · reasons | Fields (ids/hashes only) | Level | Watched (instance / aggregate / rate) | Alert threshold (default) | Test |
+|----------|-------------------|--------------------|--------------------------|-------|---------------------------------------|---------------------------|------|
+| [e.g., waitlist join] | [`waitlist.join` log] | [accepted, refused · per_ip, per_email] | [requestId, entryId, emailHash] | [info] | [aggregate by reason; refusal rate] | [refused > 50/h] | [`waitlist.service.test.ts`, unit] |
+
+**Operator controls**: [env vars that tune limits or thresholds, defaults in `@pb/shared`, runbook entry]
 
 ## Rollout
 

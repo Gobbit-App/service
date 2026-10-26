@@ -64,7 +64,8 @@ hand-written `down/` file (ADR-011, ADR-019); latest is `0016_import_channel`.
   (23505 → 409, 23503/23514 → 422, P0001 → named problems) and `HttpError` are mapped there (ADR-010, 018).
 - **Pagination**: keyset cursor over `(createdAt, id)`, base64url; limit default 20, > 50 rejected (ADR-009, 013).
 - **Logging**: pino JSON lines to stdout with a `component` field; one request line per call, query
-  strings never logged.
+  strings never logged. Every decision about a person is a named decision event (`event`, `outcome`,
+  `reason`, ids or hashes only) or an audit row (constitution VIII, ADR-060).
 
 → [design/api-conventions.md](design/api-conventions.md) (error table, route pattern, logging)
 
@@ -174,3 +175,4 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [057](adr.md#adr-057-item-events-written-in-the-same-transaction-as-the-card-d186-d187) | Item events written in the card transaction |
 | [058](adr.md#adr-058-publishers-shares-may-skip-review-per-deck-d192-d193) | Publishers' shares may skip review, per deck, behind owner opt-in and reviewer gates |
 | [059](adr.md#adr-059-one-inline-icon-set-and-shared-action-primitives-d210d212) | One inline SVG icon set and shared action primitives |
+| [060](adr.md#adr-060-accountable-by-default--every-decision-is-recorded-and-watchable-constitution-viii) | Accountable by default: every decision about a person is a named event or audit row, watchable per instance, aggregate and rate |

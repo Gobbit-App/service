@@ -95,6 +95,36 @@ map) and `docs/design/` (per-area detail).
 - `main` is always deployable: CI builds the images, Dokploy deploys the image CI built, and smoke
   waits for `/health` to report the commit [ADR-033, ADR-038].
 
+### VIII. Accountable by default (NON-NEGOTIABLE)
+
+Nothing the service decides goes unrecorded. Every decision about a person, their content or what
+they experience is traceable, reviewable, and ready to be monitored and alerted on [ADR-060].
+
+- Every decision leaves a record. This covers accepting, refusing, rate-limiting, dropping,
+  routing, redirecting, changing state, publishing, inviting and removing.
+- A record takes one of two forms:
+  - a named structured log event through `childLogger` (`event`, `outcome`, `reason`, and the
+    `requestId` or job id; plus the actor id when there is one);
+  - for changes to durable data, an audit row written in the same transaction as the change
+    (the `item_events` pattern, ADR-057).
+- Operator and admin actions always record who acted and when.
+- Silence toward the client is never silence in the records. No-enumeration answers, honeypot
+  drops, rate-limit refusals, fallbacks (AI off, `preview: null`) and handled errors each record
+  their real outcome and reason.
+- Records identify people by id or keyed hash. They never contain a raw email, IP address, query
+  text or card content (Principle IV).
+- Event names are stable and listed in the plan's Accountability table, so each event can be
+  watched three ways:
+  - per instance, alerting on a single occurrence;
+  - in aggregate, as a count per window;
+  - as a rate or average against its baseline.
+- The plan names which events warrant an alert and the default threshold.
+- An operator can change any limit or threshold that shapes a user's experience without a code
+  change: an env var with its default in `@pb/shared`. The runbook says how.
+- Every event in a plan's Accountability table is asserted in a test.
+- Code that predates this principle is brought into line when it is next changed, and by the
+  retrofit tracked in `PLAN.md`.
+
 ## Constraints
 
 - Stack: Hono + Zod OpenAPI (API), pg-boss worker (separate process) [ADR-042], PostgreSQL 17 with
@@ -110,6 +140,10 @@ map) and `docs/design/` (per-area detail).
   `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement` → `/speckit-converge`. Small fixes
   (one obvious change, no new behaviour) may skip the workflow.
 - `PLAN.md` is the roadmap; each phase becomes one or more features under `specs/NNN-name/`.
+- Every plan has an Accountability table (Principle VIII): each decision the feature makes, its
+  event or audit row, its fields, how it is watched (instance / aggregate / rate) and any alert
+  threshold. "None" is acceptable only when the feature makes no decision about a person, their
+  content or their experience, with the reason.
 - Decisions in `research.md` continue the project-wide `D` numbering; any that will outlive the
   feature become an ADR in `docs/adr.md`, with a one-line row in the `docs/architecture.md` index.
 - Before merge: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int`
@@ -126,4 +160,4 @@ map) and `docs/design/` (per-area detail).
 - Amendments are PRs that edit this file and, if needed, the matching ADR. Versioning: MAJOR when a
   principle is removed or redefined, MINOR when one is added or materially expanded, PATCH for wording.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-25
+**Version**: 1.3.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-26
