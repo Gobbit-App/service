@@ -48,6 +48,6 @@ type PageHead = {
 | URL | Meaning | Personal data |
 |-----|---------|---------------|
 | `/` (no session), `/welcome` | landing visit | none |
-| `/welcome?joined=1` | form accepted (conversion, D233) | none |
+| `/welcome/joined` | form accepted (conversion, D233) | none |
 | `/welcome?confirmed=1`, `/welcome?confirm=invalid` | email confirmed / bad link | none (the token stays on `/api/waitlist/confirm`) |
 | `?utm_source=…` etc. | campaign attribution | none |

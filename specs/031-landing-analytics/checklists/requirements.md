@@ -32,6 +32,6 @@
 ## Notes
 
 - The clarifications name the chosen tool (Umami) and the `/stats/` path because the owner asked for a self-hosted, same-origin setup; the requirements themselves stay tool-agnostic.
-- Depends on 030 (landing page and its `?joined=1` state) and 028 (`waitlist_summary` as the authoritative count).
+- Depends on 030 (landing page and its `/welcome/joined` thanks state) and 028 (`waitlist_summary` as the authoritative count).
 - Two open questions for the owner (dashboard exposure, funnel path) are listed in the spec; neither blocks planning.
 - Out of scope: analytics inside the app or on public deck pages, event tracking, Hebrew landing copy, abuse controls on the collect endpoint (Phase 11).

@@ -41,7 +41,7 @@ Rendered in `<head>` by `layout()` only when `head.analytics` is set:
 
 | Page | Tag |
 |------|-----|
-| `/` without a session (landing), `/welcome` and its `?joined=1`, `?confirmed=1`, `?confirm=invalid` states, form re-render with errors | yes, when `ANALYTICS_SITE_ID` is set |
+| `/` without a session (landing), `/welcome`, `/welcome/joined`, the `?confirmed=1`, `?confirm=invalid` states, form re-render with errors | yes, when `ANALYTICS_SITE_ID` is set |
 | SPA (`index.html`, every app route), `/p/…`, `/s/…`, `/sitemap.xml`, `/robots.txt`, `/auth/error`, API error pages, emails | never |
 
 All attribute values are escaped by `h`. `src` and `data-host-url` are relative (same origin).

@@ -12,13 +12,13 @@ Project override of the core template. Written for outside readers: the reposito
 
 **Page.** The public `layout()` gains an `analytics` flag on `PageHead`. When the flag is set and `ANALYTICS_SITE_ID` is configured it renders one deferred, same-origin tracker tag. Only 030's landing renderer sets the flag. Every other page type is tested to render no tag.
 
-**Conversion.** Views of `/welcome?joined=1` against landing visitors, read in Umami; `waitlist_summary` (028) stays the exact count (D233).
+**Conversion.** A Umami funnel from landing visits to `/welcome/joined`; `waitlist_summary` (028) stays the exact count (D233).
 
 No migration, no new route in the API, no npm dependency.
 
 ## Starting point
 
-- `main` with `030-landing-page` merged: landing renderer in `apps/api/src/public/` using `layout()`, served at `/welcome` (always) and at `/` without a `gobbit_session` cookie; PRG to `/welcome?joined=1`; confirm redirect to `/welcome?confirmed=1`.
+- `main` with `030-landing-page` merged: landing renderer in `apps/api/src/public/` using `layout()`, served at `/welcome` (always) and at `/` without a `gobbit_session` cookie; PRG to `/welcome/joined`; confirm redirect to `/welcome?confirmed=1`.
 - `apps/api/src/public/layout.ts`: `PageHead` type and `layout(head, main)` ("no script", D177).
 - `apps/api/src/env.ts`: Zod env schema; production refinements (`superRefine`).
 - `apps/web/Caddyfile`: `handle_path /api/*`, `handle /s/*`, `handle /p/*`, `@seo`, SPA `handle`; CSP header for all responses.
@@ -70,7 +70,7 @@ Full reasoning in [research.md](./research.md).
 |----|----------|------|
 | D231 | Self-hosted Umami (PostgreSQL image, pinned tag) in the deck's Compose project, own `umami` database on the shared Postgres; one website for the landing page | ADR-060 (with D232) |
 | D232 | Same origin: Caddy proxies only `/stats/script.js` and `/stats/api/send`; tag rendered by `layout()` only for heads that carry `analytics` (set only when `ANALYTICS_SITE_ID` is configured); only the landing sets it; DNT on; dashboard on a separate host behind Umami's login | ADR-060 |
-| D233 | Conversion = `/welcome?joined=1` views ÷ landing visitors (Umami query filter); `waitlist_summary` is authoritative; smoke and operator opt out via Umami's `localStorage` switch | no |
+| D233 | Conversion = `/welcome/joined` views ÷ landing visitors (Umami funnel on paths); `waitlist_summary` is authoritative; smoke and operator opt out via Umami's `localStorage` switch | no |
 
 ## Project Structure
 
@@ -143,7 +143,7 @@ e2e/tests/smoke/landing.spec.ts              # (030) + analytics assertion (tag 
 | Risk | Likelihood / impact | Mitigation |
 |------|---------------------|------------|
 | Tag leaks into app or public deck pages | L / H (privacy) | Opt-in flag per head; unit test per page type; `index.html` check |
-| Umami dashboard exposed with default credentials | M / M | Separate host; password change is step 3 of rollout; option to keep it unexposed (open question 1) |
+| Umami dashboard exposed with default credentials | M / M | Separate host; password change is step 3 of rollout; owner chose the own-host option |
 | Collect endpoint spammed to inflate numbers | L / L | No app data reachable; numbers cross-checked with `waitlist_summary`; Phase 11 abuse controls |
 | Blockers undercount visits | M / L | Same-origin path; `waitlist_summary` is authoritative; `TRACKER_SCRIPT_NAME` can rename the script |
 | Umami upgrade breaks the tracker contract | L / L | Pinned image tag; upgrade deliberately, re-run quickstart |
@@ -151,8 +151,8 @@ e2e/tests/smoke/landing.spec.ts              # (030) + analytics assertion (tag 
 
 ## Settle before starting
 
-- [ ] Dashboard exposure: own host behind Umami login (default) or tunnel/Cloudflare Access only (spec open question 1).
-- [ ] Thanks state as query (`?joined=1`, current 030 contract) or its own path for Umami funnels (spec open question 2).
+- [x] Dashboard exposure: own hostname behind Umami login (owner, 2026-10-26)
+- [x] Thanks state on its own path `/welcome/joined` (030 contract updated; owner, 2026-10-26)
 
 ## Complexity Tracking
 

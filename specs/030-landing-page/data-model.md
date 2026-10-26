@@ -10,7 +10,7 @@ Chosen from the request, in this order:
 |-------|------|-------|------|--------|---------------|
 | `signed-in` | `GET /welcome` with a valid session | hero, three uses, "Open Gobbit" → `/` | no | `index` | `private, no-store` |
 | `invalid` | `POST /welcome` failed validation | hero, form with field messages and values | yes | `noindex` | `private, no-store` |
-| `joined` | `GET ?joined=1` | `role="status"`: "Check your email to confirm" | no | `index`¹ | `public, max-age=300` |
+| `joined` | `GET /welcome/joined` | `role="status"`: "Check your email to confirm" | no | `noindex` | `public, max-age=300` |
 | `confirmed` | `GET ?confirmed=1` | `role="status"`: "You're on the list" | no | `index`¹ | `public, max-age=300` |
 | `confirm-invalid` | `GET ?confirm=invalid` | `role="status"`: "That link no longer works" + form | yes | `index`¹ | `public, max-age=300` |
 | `default` | anything else | hero, three uses, form, privacy line | yes | `index` | `public, max-age=300` |
@@ -69,7 +69,7 @@ One exported object `LANDING_COPY_EN` with `lang: 'en'`, `dir: 'ltr'`, `title`, 
 |------|-------|-------|
 | `LANDING_PATH` | `/welcome` | `public/public-url.ts` |
 | `LANDING_OG_IMAGE_PATH` | `/og/landing.png` | `share/og-template.ts` (shared with `og-static.ts`) |
-| `LANDING_JOINED_QUERY` | `joined=1` | `routes/landing.ts` (031 counts this page view) |
+| `LANDING_JOINED_PATH` | `/welcome/joined` | `public/public-url.ts` (031 counts this page view) |
 | Cache | `PAGE_CACHE_CONTROL`, `PRIVATE_CACHE_CONTROL` | existing, `public/responses.ts` |
 | Limits | `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `WAITLIST_NOTE_MAX`, `WAITLIST_UTM_MAX` | 028, `@pb/shared` |
 

@@ -28,7 +28,7 @@ description: "Task list for 030-landing-page"
 - [ ] T001 [P] `landing-copy.ts` (`LANDING_COPY_EN`: title, description ≤ 160, hero, uses, labels, kind labels, state messages, field errors, privacy line, header links) in apps/api/src/public/
 - [ ] T002 [P] `landing-styles.ts` (`LANDING_CSS`: hero, form, radios ≥ 44 px, status message, off-screen honeypot class; light/dark via 017 variables) in apps/api/src/public/
 - [ ] T003 [P] `landingUrl(origin)` and `LANDING_PATH` + [unit] test in apps/api/src/public/public-url.ts
-- [ ] T004 `/welcome` in `LENIENT_PATHS` in apps/api/src/middleware/session-auth.ts; Caddy `@landing` + `handle /welcome` blocks in apps/web/Caddyfile (contract); `welcome` in the Vite dev proxy in apps/web/vite.config.ts
+- [ ] T004 `/welcome` and `/welcome/joined` in `LENIENT_PATHS` in apps/api/src/middleware/session-auth.ts; Caddy `@landing` + `handle /welcome` blocks in apps/web/Caddyfile (contract); `welcome` in the Vite dev proxy in apps/web/vite.config.ts
 
 **Checkpoint**: `/welcome` reaches the API in dev and Compose; cookieless `/` reaches it through Caddy
 
@@ -44,7 +44,7 @@ description: "Task list for 030-landing-page"
 
 - [ ] T010 [P] [US1] [unit] `landing.test.ts`: every state renders its message (`default`, `joined`, `confirmed`, `confirm-invalid`, `invalid`); unknown query → default; no `<script`; typed values escaped (`<b>` in note); labels, `fieldset`/`legend`, `aria-invalid` + `aria-describedby` on errors; default state < 30 KB
 - [ ] T011 [P] [US1] [unit] `landing-form.test.ts`: urlencoded → `WaitlistJoinRequest` input (`utm_source` → `utmSource`, blank note omitted, invalid utm dropped, unknown fields ignored); Zod issues → one copy message per field
-- [ ] T012 [US1] [int] `landing.int.test.ts`: valid post → 303 `/welcome?joined=1` + one pending `landing` entry + one mail; new/pending/confirmed/existing-user/honeypot posts → identical 303 (honeypot: no row, no mail); bad email → 400 with message and values, `private, no-store`, `noindex`; foreign `Origin` → 403, app origin → 303; lowered per-IP limit → 429 HTML with `Retry-After`; JSON body → 400
+- [ ] T012 [US1] [int] `landing.int.test.ts`: valid post → 303 `/welcome/joined`; `GET /welcome/joined` → `joined` state, `noindex` + one pending `landing` entry + one mail; new/pending/confirmed/existing-user/honeypot posts → identical 303 (honeypot: no row, no mail); bad email → 400 with message and values, `private, no-store`, `noindex`; foreign `Origin` → 403, app origin → 303; lowered per-IP limit → 429 HTML with `Retry-After`; JSON body → 400
 - [ ] T013 [P] [US1] [e2e:full] e2e/tests/full/landing.spec.ts: fill and submit on a Pixel 7 viewport → "check your email"; invalid email → message, note kept; honeypot filled (via `page.fill` on the hidden field) → same thanks state. Local stack only
 
 ### Implementation for User Story 1
@@ -120,7 +120,7 @@ description: "Task list for 030-landing-page"
 - **Foundational (Phase 1)**: blocks all stories
 - **US1**: after Phase 1
 - **US2, US3**: after US1 (they extend its page and route); independent of each other
-- **External**: `028-waitlist` merged. `029-registration-gate` links to `/welcome` from sign-in and `/auth/error?reason=closed` (plain `<a href>`, since `/welcome` is not an SPA route); `031-landing-analytics` adds its script and counts `/welcome?joined=1` on these pages
+- **External**: `028-waitlist` merged. `029-registration-gate` links to `/welcome` from sign-in and `/auth/error?reason=closed` (plain `<a href>`, since `/welcome` is not an SPA route); `031-landing-analytics` adds its script and counts `/welcome/joined` on these pages
 - **Close-out**: after all stories
 
 ### Within Each User Story

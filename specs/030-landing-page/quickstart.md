@@ -30,7 +30,7 @@ curl -s http://127.0.0.1:8080/sitemap.xml | head -5
 
 1. In a phone-sized browser window, disable JavaScript and open `http://127.0.0.1:8080/` with no session.
 2. Fill email `parent@example.test`, choose "My family", submit. Time it: under 30 seconds from page load.
-3. The URL becomes `/welcome?joined=1` with "Check your email to confirm". Reload: no second mail in the API log.
+3. The URL becomes `/welcome/joined` with "Check your email to confirm". Reload: no second mail in the API log.
 4. The API log shows the confirmation mail; open its link → `/welcome?confirmed=1` "You're on the list". Open it again → `/welcome?confirm=invalid`.
 5. Submit `not-an-email` with a note: the form returns with a message next to email and the note kept.
 6. Submit `parent@example.test` again: same "check your email" state (no hint that it is known).

@@ -14,7 +14,7 @@ Project override of the core template. Written for outside readers: the reposito
 
 **Signed-out app.** An installed app serves `/` from the service worker, so the SPA itself sends a 401 on its home to `/welcome` with a full navigation; the service worker lets `/welcome` through to the network. A signed-in member opening `/welcome` sees an "Open Gobbit" variant without the form (D227).
 
-**Form.** A plain urlencoded `POST /welcome` validated with 028's `WaitlistJoinRequest` schema and handed to `waitlist.join({ …, source: 'landing' })`. Every accepted outcome redirects 303 to `/welcome?joined=1`; invalid input re-renders the form with messages and values (400); limits answer a 429 page. A hidden honeypot field `website` and 028's per-IP and per-email limits keep bots out (D228).
+**Form.** A plain urlencoded `POST /welcome` validated with 028's `WaitlistJoinRequest` schema and handed to `waitlist.join({ …, source: 'landing' })`. Every accepted outcome redirects 303 to its own thanks path `/welcome/joined`; invalid input re-renders the form with messages and values (400); limits answer a 429 page. A hidden honeypot field `website` and 028's per-IP and per-email limits keep bots out (D228).
 
 **Preview and indexing.** A static 1200×630 image `/og/landing.png` rendered by `pnpm og:static`; canonical and `og:url` are always the root; the root is indexable and first in the sitemap (D229).
 
@@ -71,7 +71,7 @@ Full reasoning in [research.md](./research.md).
 |----|----------|------|
 | D226 | API-rendered landing page at `/welcome` (`hono/html`, 017 layout, outside OpenAPI); Caddy rewrites `/` to it when no `gobbit_session` cookie is present, else SPA; canonical and `og:url` = root via `landingUrl(origin)`; `Vary: Cookie` | yes → **ADR-061** (proposed) |
 | D227 | SPA home 401 → full navigation (`location.replace`) to `/welcome`, deep links keep `/sign-in?next=`; SW denylist `/^\/welcome$/`; `/welcome` with a valid session → "Open Gobbit" variant, `private, no-store` | yes → **ADR-061** (proposed) |
-| D228 | No-JS urlencoded `POST /welcome` → `WaitlistJoinRequest` → `waitlist.join`; accepted → 303 `/welcome?joined=1`; invalid → 400 re-render with values; 429 page; honeypot `website`; per-IP bucket shared with `POST /waitlist`; CSRF passes as same origin; states `joined`, `confirmed`, `confirm=invalid` | no |
+| D228 | No-JS urlencoded `POST /welcome` → `WaitlistJoinRequest` → `waitlist.join`; accepted → 303 `/welcome/joined`; invalid → 400 re-render with values; 429 page; honeypot `website`; per-IP bucket shared with `POST /waitlist`; CSRF passes as same origin; states `joined`, `confirmed`, `confirm=invalid` | no |
 | D229 | Static `/og/landing.png` 1200×630 from `og:static`'s `landingTree()`; root indexable and first in the sitemap; anonymous GET `public, max-age=300`, not in the page cache | no |
 | D230 | Copy in `public/landing-copy.ts` (English, `lang`/`dir` ready for Hebrew); hero, three uses, form, privacy line; native labelled controls, ≥ 44 px targets; `LANDING_CSS` appended only on this page | no |
 
@@ -136,9 +136,9 @@ e2e/tests/full/landing.spec.ts    # NEW: form journeys, stale cookie
 | FR-002 `/welcome` always landing; signed-out SPA home → `/welcome` | `routes/landing.ts`, `api/session.ts`, `sw.ts` | `session.test.ts` (unit: `/` → `/welcome` full navigation; `/d/x` → `/sign-in?next=`); `e2e/tests/full/landing.spec.ts` (full: stale cookie on `/` ends on `/welcome`) |
 | FR-003 no script | `layout.ts`, `landing.ts` | `landing.test.ts` (unit: no `<script` in any state); smoke |
 | FR-004 fields, honeypot, 028 service only | `landing-form.ts`, route | `landing-form.test.ts` (unit: field mapping, `utm_source` → `utmSource`, unknown fields dropped); `landing.int.test.ts` (int: valid post creates a pending `landing` entry and one mail) |
-| FR-005 PRG; errors keep values | route | `landing.int.test.ts` (int: 303 `/welcome?joined=1`; bad email → 400 with message, `aria-invalid`, typed note kept and escaped); full |
+| FR-005 PRG; errors keep values | route | `landing.int.test.ts` (int: 303 `/welcome/joined`; bad email → 400 with message, `aria-invalid`, typed note kept and escaped); full |
 | FR-006 no enumeration | route + 028 service | `landing.int.test.ts` (int: new, pending, confirmed, existing user and honeypot posts → identical 303) |
-| FR-007 states | `landing.ts` | `landing.test.ts` (unit: `joined`, `confirmed`, `confirm=invalid` messages; unknown query → default) |
+| FR-007 states | `landing.ts` | `landing.test.ts` (unit: `/welcome/joined`, `confirmed`, `confirm=invalid` messages; unknown query → default) |
 | FR-008 head tags, canonical = root | `layout.ts`, `landingUrl` | `landing.test.ts` (unit: og:title/description ≤ 160/image/url, twitter:card, canonical root for every state); smoke |
 | FR-009 indexable + sitemap | `seo.ts` | `seo.test.ts` (unit: root first in sitemap); `landing.int.test.ts` (int: `/sitemap.xml` contains root; no `noindex`) |
 | FR-010 sign-in / open-app link | `landing.ts` | `landing.int.test.ts` (int: anonymous → "Sign in" `/sign-in`; valid session → "Open Gobbit", no form, `private, no-store`) |

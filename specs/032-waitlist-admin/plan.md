@@ -162,7 +162,8 @@ e2e/tests/full/waitlist-admin.spec.ts        # NEW
 ## Settle before starting
 
 - [ ] 028 and 029 merged; confirm 028's column names (`removed_at`/`removed_by` and the list index were moved into 028 at planning time).
-- [ ] Owner questions in the spec: invite email signature; remove vs. erase.
+- [x] Invite email signed "Gobbit" (owner, 2026-10-26)
+- [ ] Owner question in the spec: remove vs. erase.
 
 ## Complexity Tracking
 

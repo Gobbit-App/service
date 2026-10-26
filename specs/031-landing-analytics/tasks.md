@@ -13,7 +13,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Settle the two open questions in spec.md (dashboard exposure, thanks state as query or path); record the answers in `implementation-notes.md`
+- [x] T001 Open questions settled (2026-10-26): dashboard on its own hostname behind Umami login; thanks state on its own path `/welcome/joined`
 
 ## Phase 2: Foundational
 
@@ -35,7 +35,7 @@ Built before US1 so the opt-in is guarded from the first commit.
 
 ## Phase 4: US1 — operator sees visits and conversion (P1) 🎯 MVP
 
-- [ ] T010 [P] [US1] Unit tests for 030's landing renderer: tag on `/welcome`, `/` (no session), `?joined=1`, `?confirmed=1`, error re-render when configured; none when unset; thanks/confirm redirects carry only flag params
+- [ ] T010 [P] [US1] Unit tests for 030's landing renderer: tag on `/welcome`, `/` (no session), `/welcome/joined`, `?confirmed=1`, error re-render when configured; none when unset; thanks/confirm redirects carry only flag params
 - [ ] T011 [US1] Landing renderer passes `analytics: analyticsHead(env)`
 - [ ] T012 [P] [US1] Unit test `apps/web/scripts/caddy-routes.test.ts`: Caddyfile proxies exactly `/stats/script.js` and `/stats/api/send`, 404s the rest of `/stats/*`, prefix equals `STATS_BASE_PATH`, CSP header string unchanged
 - [ ] T013 [US1] Caddyfile: `@stats` matcher, `uri strip_prefix /stats`, `reverse_proxy {$ANALYTICS_UPSTREAM:umami:3000}`; `handle /stats/*` → 404 (contract §1)

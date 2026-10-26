@@ -1,12 +1,13 @@
 # Contract: Landing page
 
-`/welcome` is API-rendered HTML outside OpenAPI, like 017's `/p/*` pages. Public URLs are on the app origin; Caddy forwards `/welcome` to the API without stripping a prefix.
+`/welcome` is API-rendered HTML outside OpenAPI, like 017's `/p/*` pages. Public URLs are on the app origin; Caddy forwards `/welcome` and `/welcome/joined` to the API without stripping a prefix.
 
 ## Routes
 
 | Method | Path | Auth | Answer |
 |--------|------|------|--------|
 | GET | `/welcome` | lenient session (invalid cookie ignored) | 200 HTML in the state chosen by [data-model](../data-model.md#page-states-publiclandingts) |
+| GET | `/welcome/joined` | lenient session | 200 HTML, state `joined` (its own path so Umami funnels can match it, 031); a valid session still renders `signed-in` |
 | POST | `/welcome` | none (session ignored) | 303 / 400 / 403 / 429, below |
 | GET | `/` without `gobbit_session` cookie | — | Caddy rewrites to `GET /welcome` (query kept); the browser's URL stays `/` |
 
@@ -14,7 +15,6 @@
 
 | Query | State |
 |-------|-------|
-| `joined=1` | `joined` |
 | `confirmed=1` | `confirmed` (target of 028's confirm redirect) |
 | `confirm=invalid` | `confirm-invalid` |
 | `utm_source=<s>` | copied into the hidden form field when it matches 028's pattern; otherwise ignored |
@@ -28,7 +28,7 @@ Body `application/x-www-form-urlencoded`: `email`, `kind`, `note`, `utm_source`,
 
 | Outcome | Status | Headers / body |
 |---------|--------|----------------|
-| Accepted by `waitlist.join` (new, pending resend, confirmed, invited, existing user, honeypot) | 303 | `Location: /welcome?joined=1`, `Cache-Control: no-store` |
+| Accepted by `waitlist.join` (new, pending resend, confirmed, invited, existing user, honeypot) | 303 | `Location: /welcome/joined`, `Cache-Control: no-store` |
 | Validation failed | 400 | landing page, state `invalid`, field messages, values kept; `private, no-store` |
 | Cross-site `Origin` | 403 | `hono/csrf` (as for every form-encoded post) |
 | Per-IP or per-email limit | 429 | 017's "try again later" HTML page, `Retry-After` |
@@ -77,7 +77,7 @@ No `<script>` element in any state.
 
 ## Session auth
 
-`/welcome` joins `LENIENT_PATHS` in `middleware/session-auth.ts`: a valid session sets the user (for the `signed-in` state), an invalid or expired one is ignored instead of answering 401.
+`/welcome` and `/welcome/joined` join `LENIENT_PATHS` in `middleware/session-auth.ts`: a valid session sets the user (for the `signed-in` state), an invalid or expired one is ignored instead of answering 401.
 
 ## Caddy (`apps/web/Caddyfile`)
 
@@ -93,7 +93,7 @@ handle @landing {
 	reverse_proxy {$API_UPSTREAM:api:3000}
 }
 
-handle /welcome {
+handle /welcome /welcome/joined {
 	reverse_proxy {$API_UPSTREAM:api:3000}
 }
 ```
@@ -104,7 +104,7 @@ handle /welcome {
 
 ## Service worker (`apps/web/src/sw.ts`)
 
-The navigation route's denylist gains `/^\/welcome$/` (query strings are not part of the pathname matched), so `/welcome` navigations reach the network instead of `index.html`. `/` stays served from the precached shell for installed apps.
+The navigation route's denylist gains `/^\/welcome(\/joined)?$/` (query strings are not part of the pathname matched), so `/welcome` and `/welcome/joined` navigations reach the network instead of `index.html`. `/` stays served from the precached shell for installed apps.
 
 ## SPA (`apps/web/src/api/session.ts`, `main.tsx`)
 
@@ -116,4 +116,4 @@ The navigation route's denylist gains `/^\/welcome$/` (query strings are not par
 
 ## Vite dev proxy (`apps/web/vite.config.ts`)
 
-The public-pages entry becomes `'^/(p/.*|welcome|sitemap\\.xml|robots\\.txt)$'` (plus `/welcome?…` via Vite's path match). Dev does not emulate the cookie rule for `/`.
+The public-pages entry becomes `'^/(p/.*|welcome(/joined)?|sitemap\\.xml|robots\\.txt)$'` (plus `/welcome?…` via Vite's path match). Dev does not emulate the cookie rule for `/`.

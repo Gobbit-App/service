@@ -23,7 +23,6 @@ Roadmap: `PLAN.md` § Phase 9 (demo 5). Builds on [`028-waitlist`](../028-waitli
 
 ### Open questions for the owner
 
-- Should the "You're in" email name who invited them (the admin's display name) or stay signed "Gobbit"? The plan uses "Gobbit" (no personal names in system mail).
 - Should removing an entry delete its row (erasure) instead of marking it `removed`? The plan marks it `removed` so the email can't re-join silently; full erasure is Phase 11 (GDPR).
 
 ## User Scenarios & Testing *(mandatory)*

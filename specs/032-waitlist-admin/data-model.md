@@ -61,7 +61,7 @@ Existing 028 invariants this feature relies on (tested here from the admin path)
 
 ## Mail
 
-`waitlistInviteEmail({ link, ttlDays })` in `apps/api/src/mail/templates.ts`: subject "You're in — welcome to Gobbit"; text and HTML with the link, its lifetime, and that the sign-in screen works afterwards. Signed "Gobbit"; no admin name (spec open question).
+`waitlistInviteEmail({ link, ttlDays })` in `apps/api/src/mail/templates.ts`: subject "You're in — welcome to Gobbit"; text and HTML with the link, its lifetime, and that the sign-in screen works afterwards. Signed "Gobbit"; no admin name (owner, 2026-10-26).
 
 ## Web state
 

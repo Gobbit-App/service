@@ -8,7 +8,7 @@
 
 **Input**: User description: "Phase 9, part 4: privacy-friendly analytics for the landing page only. The operator sees visits and waitlist form conversion for the last 7 days on a dashboard. No cookies, no consent banner, nothing tracked inside the app. PLAN.md Phase 9 demo 4."
 
-Roadmap: `PLAN.md` § Phase 9 (demo 4). Builds on [`030-landing-page`](../030-landing-page/spec.md) (the landing page at `/` and `/welcome`, its `?joined=1` thanks state) and [`028-waitlist`](../028-waitlist/spec.md) (`waitlist_summary`, the server-side count of sign-ups). Runs in parallel with [`032-waitlist-admin`](../032-waitlist-admin/spec.md).
+Roadmap: `PLAN.md` § Phase 9 (demo 4). Builds on [`030-landing-page`](../030-landing-page/spec.md) (the landing page at `/` and `/welcome`, its `/welcome/joined` thanks state) and [`028-waitlist`](../028-waitlist/spec.md) (`waitlist_summary`, the server-side count of sign-ups). Runs in parallel with [`032-waitlist-admin`](../032-waitlist-admin/spec.md).
 
 ## Clarifications
 
@@ -17,14 +17,11 @@ Roadmap: `PLAN.md` § Phase 9 (demo 4). Builds on [`030-landing-page`](../030-la
 - Q: Which pages are measured? → A: Only the landing page (`/` for visitors without a session, and `/welcome` with its thanks and confirmed states). Never the app, public deck pages (`/p/…`), share previews (`/s/…`) or emails.
 - Q: Hosted product or self-hosted? → A: Self-hosted Umami on the same Dokploy host, with its own database on the shared Postgres (D231).
 - Q: Does the browser talk to a third-party host? → A: No. The tracker script and its collect endpoint are served on the app's own origin under `/stats/` through Caddy, so the Content-Security-Policy stays `'self'` (D232).
-- Q: What counts as a conversion? → A: A view of the thanks state (`/welcome?joined=1`) divided by landing visitors in the same period; the waitlist table stays the source of truth for sign-up counts (D233).
+- Q: What counts as a conversion? → A: A view of the thanks state (`/welcome/joined`) divided by landing visitors in the same period; the waitlist table stays the source of truth for sign-up counts (D233).
 - Q: Is analytics required to run Gobbit? → A: No. With `ANALYTICS_SITE_ID` unset no tag is rendered and nothing is proxied or contacted (constitution VII).
 - Q: Cookie or consent banner? → A: Neither. Umami sets no cookies and stores no IP address; the tracker honours "Do Not Track".
-
-### Open questions for the owner
-
-1. Should the Umami dashboard get its own hostname behind Umami's login (the plan's default) or stay unexposed and be reached through a tunnel / Cloudflare Access only?
-2. Funnel reports in Umami match on paths, not query strings. Is filtering by the `joined=1` query enough, or should 030 make the thanks state its own path (`/welcome/joined`) so a two-step funnel works out of the box?
+- Q: How is the dashboard reached? → A: Its own hostname (`STATS_HOST`) behind Umami's login.
+- Q: Query or path for the thanks state? → A: Its own path, `/welcome/joined` (030), so Umami funnels match it.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -39,7 +36,7 @@ A week after the waitlist opens, the operator opens the analytics dashboard, pic
 **Acceptance Scenarios**:
 
 1. **Given** analytics is configured, **When** a visitor opens `/` without a session, **Then** one page view for the landing page is recorded.
-2. **Given** a visitor submits the waitlist form successfully, **When** the thanks state renders, **Then** a page view with `joined=1` is recorded, and the dashboard can show it next to the landing visits for the same period.
+2. **Given** a visitor submits the waitlist form successfully, **When** the thanks state renders, **Then** a page view of `/welcome/joined` is recorded, and the dashboard can show it next to the landing visits for the same period.
 3. **Given** a visitor arrives from a link with `utm_source=whatsapp`, **When** the dashboard is filtered to the last 7 days, **Then** the visit shows under that source.
 4. **Given** the dashboard, **When** the operator compares the count of thanks views with `waitlist_summary` for the same week, **Then** the waitlist number is the authoritative one (analytics may undercount: blockers, Do Not Track).
 
@@ -101,7 +98,7 @@ Someone self-hosting Gobbit, CI and local development run without an analytics s
 
 - **Analytics site**: the one website registered in Umami for the landing page, identified by a site id.
 - **Page view**: path, query, referrer, UTM parameters, coarse device and country, and a daily-rotating anonymous visitor hash (held by Umami, not by Gobbit).
-- **Conversion**: a page view of the thanks state (`joined=1`) in a period, relative to landing visitors in the same period.
+- **Conversion**: a page view of the thanks state (`/welcome/joined`) in a period, relative to landing visitors in the same period.
 
 ## Success Criteria *(mandatory)*
 
