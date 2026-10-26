@@ -47,7 +47,7 @@ Order: `confirmed` → `confirmed_at ASC, id`; `invited` → `invited_at DESC, i
 
 `mailSent: false` when the provider failed after commit; the entry is invited and the account exists — call again to resend.
 
-Effects: account via `usersService.register(email, 'waitlist_invite')` (existing account is linked, never duplicated); `sign_in` magic link valid `WAITLIST_INVITE_TTL_DAYS`; "You're in" email to the entry's address. No deck is created here.
+Effects: account via `usersService.register(email, 'waitlist_invite', adminId)` (existing account is linked, never duplicated; `registered_by` = admin); `sign_in` magic link valid `WAITLIST_INVITE_TTL_DAYS`; "You're in" email to the entry's address. No deck is created here. Records: `waitlist_events` `invited` (first) or `invite_resent` with `actor_id` in the same transaction; `waitlist.admin` with outcome `invited`/`resent`/`linked_existing` or `refused` + reason; `waitlist.mail` `invite` after commit.
 
 ## 3. `DELETE /admin/waitlist/{id}`
 
@@ -56,6 +56,8 @@ Effects: account via `usersService.register(email, 'waitlist_invite')` (existing
 | 204 | Entry is now `removed` (or already was) |
 | 404 | Unknown id (or caller not admin) |
 | 409 | `/problems/waitlist-invited` |
+
+Records: `waitlist_events` `removed` with `actor_id` in the same transaction (not for the no-op); `waitlist.admin` `removed`, `unchanged` or `refused` + reason.
 
 ## 4. `GET /me` (changed)
 
@@ -68,3 +70,14 @@ Adds `"isPlatformAdmin": true | false` to the response.
 ## 6. PWA route
 
 `/admin/waitlist` (code-split). "Waitlist" link in `/settings` only when `me.isPlatformAdmin`. A non-admin opening the address directly sees the app's not-found view.
+
+## 7. Decision events (D238)
+
+| Event | Outcomes · reasons | Fields |
+|-------|--------------------|--------|
+| `waitlist.admin` | invite: `invited`, `resent`, `linked_existing`, `refused` · `pending`/`removed`/`not_found`; remove: `removed`, `unchanged`, `refused` · `invited`/`not_found` | `actorId`, `entryId`, `action`, `userId?` |
+| `waitlist.admin_list` | `listed` | `actorId`, `status`, `kind?`, `returned`, `page` |
+| `admin.denied` | `denied` · `not_admin`/`signed_out` | `actorId?`, `route` |
+| `admin.config` | `configured` | `count` |
+
+Ids only; no email in any event. The `404` body stays identical for non-admins; only the record says why.

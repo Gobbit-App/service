@@ -10,15 +10,16 @@ Project override of the core template. Written for outside readers: the reposito
 
 **Who.** Platform admins are the emails in `PLATFORM_ADMINS` (D234). Everyone else gets 404 from `/admin/*`, and `GET /me` tells the app whether to show the entry.
 
-**API.** `GET /admin/waitlist` (filter by status and kind, keyset pages, counts), `POST /admin/waitlist/{id}/invite` (confirmed → invited, or resend), `DELETE /admin/waitlist/{id}` (→ removed) (D235). An invite registers the account through 029's guarded `usersService.register(…, 'waitlist_invite')`, marks the entry and inserts a long-lived `sign_in` magic link in one transaction, then sends a "You're in" email after commit (D236). The personal deck is left to Phase 3B's `ensurePersonalDeck` on first sign-in — the demo proves the gate doesn't bypass it.
+**API.** `GET /admin/waitlist` (filter by status and kind, keyset pages, counts), `POST /admin/waitlist/{id}/invite` (confirmed → invited, or resend), `DELETE /admin/waitlist/{id}` (→ removed) (D235). An invite registers the account through 029's guarded `usersService.register(…, 'waitlist_invite', adminId)`, marks the entry and inserts a long-lived `sign_in` magic link in one transaction, then sends a "You're in" email after commit (D236). The personal deck is left to Phase 3B's `ensurePersonalDeck` on first sign-in — the demo proves the gate doesn't bypass it.
 
-**Screen.** A code-split `/admin/waitlist` route in the PWA with status tabs, a kind filter and Invite / Resend / Remove per row; never persisted offline (D237). Admin actions leave `invited_by`/`removed_by` on the row and an id-only log line (D238).
+**Screen.** A code-split `/admin/waitlist` route in the PWA with status tabs, a kind filter and Invite / Resend / Remove per row; never persisted offline (D237). Admin actions leave `invited_by`/`removed_by` on the row, a `waitlist_events` audit row and a `waitlist.admin` decision event. List views and refused requests are recorded too (D238).
 
 ## Starting point
 
 - `main` with 028 and 029 merged (this feature can't start before both).
 - From 028: `waitlist_entries` (statuses, `confirmed_at`, `invited_at`, `invited_by`, `user_id`), `waitlist.repo.ts`, `waitlist.service.ts`, `WAITLIST_KIND_LABELS` and the waitlist enums in `@pb/shared/waitlist`.
-- From 029: `REGISTRATION_MODE`; `usersService.findExisting(email)` and `usersService.register(email, reason)` replace `findOrCreateByEmail`.
+- From 029: `REGISTRATION_MODE`; `usersService.findExisting(email)` and `usersService.register(email, reason, actorId?)` replace `findOrCreateByEmail`; `users.registered_via`/`registered_by` (D241).
+- From 028 (accountability): `decisionLogger`, `logHash`, `expectDecision`, `waitlist_events` + `waitlist.repo.insertEvent` (D239, D240).
 - Existing: `magic-links.repo.create` (per-row `expiresAt`, `purpose`, `next`); `auth.service.consumeMagicLink` (consume → user → `ensurePersonalDeck` → session); `mail/templates.ts`; `routes/me.ts` + `meSchema` (`packages/shared/src/schemas/auth.ts`); `env.ts` (`positiveInt`, comma-list transform like `CORS_ORIGINS`); `errors/http-errors.ts` (`/problems/not-found`, `/problems/conflict` family).
 - Web: `/settings` → `settings/SettingsScreen.tsx` with `SettingsSection`; `api/persist.ts` `NOT_PERSISTED`; `api/query-keys.ts`; infinite-list precedent `api/events.ts` + `events/` (D188); `autoCodeSplitting`; `pnpm budget` (`apps/web/scripts/bundle-budget.ts`).
 - e2e: `e2e/fixtures/api.ts` (API helpers with the smoke session); `MemoryMailer` is not reachable from e2e, so the journey reads the invite link through a test-only path (see Risks).
@@ -56,6 +57,7 @@ Project override of the core template. Written for outside readers: the reposito
 | V. Tests at the right tier | Unit (env parsing, guard, labels, components), int (admin matrix, invite transaction, concurrency, onboarding on first sign-in), e2e full journey + negative |
 | VI. Lean web | Code-split route, plain CSS, `pnpm budget`; the waitlist query key is added to `NOT_PERSISTED` |
 | VII. Simple, optional | `PLATFORM_ADMINS` empty by default = feature dormant; no new dependency; mail via the existing `Mailer` |
+| VIII. Accountable by default | Same-transaction `waitlist_events` rows (028) for invite/resend/remove; `waitlist.admin`, `waitlist.admin_list`, `admin.denied`, `admin.config` events; ids only. Accountability table below |
 
 No violations.
 
@@ -67,9 +69,9 @@ Full reasoning in [research.md](./research.md).
 |----|----------|------|
 | D234 | Platform admins = `PLATFORM_ADMINS` env emails; `isPlatformAdmin` / `requirePlatformAdmin` in `access/platform-admin.ts`; 404 for everyone else; `GET /me.isPlatformAdmin` | yes — ADR-064 at close-out (Phase 12 reuses it) |
 | D235 | `GET /admin/waitlist` (status default `confirmed`, kind, keyset, counts), `POST …/{id}/invite` (201 / 200 resend; 409 pending/removed), `DELETE …/{id}` (→ removed; 409 invited) | no |
-| D236 | Invite = one transaction (lock entry, `usersService.register(…, 'waitlist_invite')`, mark invited, `sign_in` link with `WAITLIST_INVITE_TTL_DAYS`), mail after commit with `mailSent` flag; no deck at invite — Phase 3B onboarding on first sign-in | no |
+| D236 | Invite = one transaction (lock entry, `usersService.register(…, 'waitlist_invite', adminId)`, mark invited, `sign_in` link with `WAITLIST_INVITE_TTL_DAYS`), mail after commit with `mailSent` flag; no deck at invite — Phase 3B onboarding on first sign-in | no |
 | D237 | PWA `/admin/waitlist`, code-split; Settings link only for admins; waitlist queries in `NOT_PERSISTED`; online-only | no |
-| D238 | `invited_by`/`removed_by` on the row, id-only log line per action; no admin events table | no |
+| D238 | `invited_by`/`removed_by` on the row + `waitlist_events` row per action (028); `waitlist.admin` / `waitlist.admin_list` / `admin.denied` / `admin.config` events, ids only | no (ADR-060 covers it) |
 
 ## Project Structure
 
@@ -102,9 +104,10 @@ packages/db/
 
 apps/api/src/
 ├── env.ts                                   # + PLATFORM_ADMINS (list), WAITLIST_INVITE_TTL_DAYS
-├── access/platform-admin.ts                 # NEW: isPlatformAdmin, requirePlatformAdmin (+ .test.ts)
-├── repositories/waitlist.repo.ts            # + listForAdmin, countsByStatus, lockById, markInvited, markRemoved
-├── services/waitlist-admin.service.ts       # NEW: list, invite, remove (+ .test.ts)
+├── access/platform-admin.ts                 # NEW: isPlatformAdmin, requirePlatformAdmin → admin.denied (+ .test.ts)
+├── repositories/waitlist.repo.ts            # + listForAdmin, countsByStatus, lockById, markInvited, markRemoved (each with insertEvent in the tx)
+├── services/waitlist-admin.service.ts       # NEW: list, invite, remove + decision events (+ .test.ts)
+├── services/waitlist-admin.events.ts        # NEW: outcome/reason tuples
 ├── services/index.ts                        # wire service + transaction repos
 ├── mail/templates.ts                        # + waitlistInviteEmail (+ test)
 ├── errors/http-errors.ts                    # + waitlist-not-confirmed, waitlist-removed, waitlist-invited
@@ -138,8 +141,27 @@ e2e/tests/full/waitlist-admin.spec.ts        # NEW
 | FR-006 remove pending/confirmed only | service + `waitlist_removed_has_time` (028) | int: pending/confirmed → 204 removed with `removed_by`; invited 409; removed → 204 no-op; DB rejects `removed` without `removed_at` |
 | FR-007 `me.isPlatformAdmin` and hidden entry | `routes/me.ts`; `SettingsScreen` | int: `/me` true/false; `SettingsScreen.test.tsx` (unit: link only when true) |
 | FR-008 code-split, not persisted | route split; `NOT_PERSISTED` | `pnpm budget` (CI); `persist.test.ts` (unit: admin waitlist key not dehydrated); `WaitlistScreen.test.tsx` (unit: offline message) |
-| FR-009 trace | service, log sink | `waitlist-admin.service.test.ts` (unit: one log line per action with ids, no email) |
+| FR-009 recorded | service, `waitlist.repo` (`insertEvent` in the tx), `requirePlatformAdmin` | `waitlist-admin.service.test.ts` (unit: `expectDecision` for every outcome and reason, no email in any field); int: `waitlist_events` row per invite/resend/remove with `actor_id`, rolled back with a failed transaction, kept after the prune deletes the entry; `admin.denied` for reader/owner/signed-out; `waitlist.admin_list` per page |
 | Journey | — | `e2e/tests/full/waitlist-admin.spec.ts` (e2e:full: invite → sign in → own deck with `general`; non-admin sees not-found) |
+
+## Accountability
+
+Constitution VIII and ADR-060. The convention is in `docs/design/api-conventions.md#decision-events`. Durable rows go in 028's `waitlist_events` (and 029's `users.registered_via`/`registered_by`); events carry ids only.
+
+| Decision | Event / audit row | Outcomes · reasons | Fields (ids/hashes only) | Level | Watched | Alert threshold (default) | Test |
+|----------|-------------------|--------------------|--------------------------|-------|---------|---------------------------|------|
+| Invite | `waitlist.admin` (`invite`) + `waitlist_events` `invited`/`invite_resent` | `invited`, `resent`, `linked_existing`, `refused` · `pending`/`removed`/`not_found` | `actorId`, `entryId`, `userId?` | info; warn for `refused` | per instance; aggregate per admin per day | > 50 invites by one admin in 1 hour (runaway script or compromised session) | unit + int |
+| Remove | `waitlist.admin` (`remove`) + `waitlist_events` `removed` | `removed`, `unchanged`, `refused` · `invited`/`not_found` | `actorId`, `entryId` | info; warn for `refused` | per instance; aggregate | > 20 removals in 1 hour | unit + int |
+| Who looked at the list | `waitlist.admin_list` | `listed` | `actorId`, `status`, `kind?`, `returned`, `page` | info | aggregate per admin | list views outside the admins' usual hours (review, not page) | unit |
+| Non-admin at an admin address | `admin.denied` | `denied` · `not_admin`/`signed_out` | `actorId?`, `route` | warn | per instance; aggregate per actor | ≥ 5 from one actor in 1 hour; any `not_admin` from an account created < 1 day ago | int |
+| Invite mail | `waitlist.mail` (`invite`) | `sent`, `failed` | `entryId` | info / error | per instance; rate | any `failed` (the admin also sees it); > 5% over 1 hour | unit |
+| Admin set | `admin.config` (start-up) | `configured` | `count` | info; warn when 0 in production | per instance | count changes between deploys (review) | unit |
+| Admin action latency | request log | — | `route`, `durationMs` | — | average | invite p95 > 2 s | — |
+
+**Operator controls**:
+- `PLATFORM_ADMINS` adds or removes admins (takes effect at redeploy) and `WAITLIST_INVITE_TTL_DAYS` sets the invite link lifetime.
+- Each entry's history is in `waitlist_events` (`infra/README.md` § Waitlist: "history of one entry" and "actions by one admin" queries).
+- An invited account can be found by `users.registered_by`.
 
 ## Rollout
 
@@ -164,6 +186,7 @@ e2e/tests/full/waitlist-admin.spec.ts        # NEW
 - [ ] 028 and 029 merged; confirm 028's column names (`removed_at`/`removed_by` and the list index were moved into 028 at planning time).
 - [x] Invite email signed "Gobbit" (owner, 2026-10-26)
 - [x] Remove marks `removed`, pruned after 30 days; the email can join again (owner, 2026-10-26)
+- [ ] Constitution v1.3.0 (principle VIII, ADR-060) merged first (PR #61); 028's `waitlist_events` + `decisionLogger` and 029's `registered_via`/`registered_by` in place
 
 ## Complexity Tracking
 

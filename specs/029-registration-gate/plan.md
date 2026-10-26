@@ -16,6 +16,12 @@ Project override of the core template. Written for outside readers: the reposito
 
 **Web.** One "check your inbox" message that covers both outcomes, a "New here? Join the waitlist" link on the sign-in screen, and copy for `reason=closed` (D225).
 
+**Records.** Constitution VIII and ADR-060.
+
+- Every sign-in request, callback and registration outcome is a decision event (`auth.magic_link`, `auth.callback`, `users.register`), identified only by keyed hashes and ids.
+- `users.registered_via` and `registered_by` store how each new user got in and who let them in.
+- A start-up `registration.mode` event raises an alert when production runs `open` (D241).
+
 ## Starting point
 
 - `main @ f78bfa6`; [`028-waitlist`](../028-waitlist/spec.md) merged (provides `waitlistService.join`, the `sign_in` source and the mail variant).
@@ -35,7 +41,7 @@ Project override of the core template. Written for outside readers: the reposito
 
 **Primary Dependencies**: Hono + `@hono/zod-openapi`, Drizzle; TanStack Router. No new dependencies.
 
-**Storage**: PostgreSQL 17. No migration (028 owns `waitlist_entries`).
+**Storage**: PostgreSQL 17. One migration: `users.registered_via` (enum) and `registered_by` (D241). 028 owns `waitlist_entries`.
 
 **Testing**: Vitest unit; integration with Testcontainers; Playwright smoke and full
 
@@ -57,11 +63,12 @@ Project override of the core template. Written for outside readers: the reposito
 |-----------|------------------------|
 | I. Layered API | The decision lives in `users.service.register` and `auth.service`; routes only map `MagicLinkFailure('closed')` as they already do for other reasons |
 | II. One source of truth | `registrationModes` and `RegistrationReason` in `@pb/shared` (env schema and services read the same lists); `closed` joins `MagicLinkFailureReason` in `auth.service.ts` and the web's `AuthErrorReason`, as the existing reasons do today; no DTO or OpenAPI change |
-| III. Invariants in the DB | Nothing new to store; uniqueness of users and waitlist entries is already enforced by indexes (users; 028) |
-| IV. Private by default | Closed by default; same response for every email; refusal logged without the address |
+| III. Invariants in the DB | Uniqueness of users and waitlist entries is already enforced by indexes (users; 028). New enum column + FK with a hand-written down file |
+| IV. Private by default | Closed by default; same response for every email; events carry keyed hashes, never the address |
 | V. Tests at the right tier | Unit decision table for `register`; int matrix for request + callback in both modes; e2e smoke assertion + full journey (see E2E tier) |
 | VI. Lean web | Copy and one link; no new chunk |
 | VII. Simple, optional | One env var with a safe default; no dependency; works without AI keys or analytics |
+| VIII. Accountable by default | Every request, callback and registration outcome is a decision event. New users store `registered_via`/`registered_by`. The mode is announced at start-up and alerts when `open` in production. The existing magic-link limits now say which one refused. Accountability table below |
 
 No violations.
 
@@ -75,6 +82,7 @@ Full reasoning in [research.md](./research.md).
 | D223 | In `waitlist` mode an unknown email gets no magic link; `waitlistService.join({ source: 'sign_in', kind: 'other', skipRateLimits: true })` sends the waitlist mail; magic-link limits only (`skipRateLimits`); response stays `200` | ADR-061 |
 | D224 | `findExisting` + `register(email, reason)` replace `findOrCreateByEmail`; `open_sign_in` refused unless open; callback → `MagicLinkFailure('closed')` in the same transaction | ADR-061 |
 | D225 | One "check your inbox" message for everyone; "New here? Join the waitlist" on sign-in; `closed` error copy with "Join the waitlist" | no |
+| D241 | Events `auth.magic_link`, `auth.callback`, `users.register`, `registration.mode`; `users.registered_via` + `registered_by` set by `register` | ADR-061 |
 
 ## Project Structure
 
@@ -101,14 +109,19 @@ packages/shared/src/
 
 apps/api/src/
 ├── env.ts (+ env.test.ts)                   # + REGISTRATION_MODE
-├── services/users.service.ts (+ test)       # findExisting, register(email, reason), RegistrationClosed
+├── services/users.service.ts (+ test)       # findExisting, register(email, reason, actorId?), RegistrationClosed, users.register events
+├── repositories/users.repo.ts               # createWithAccount sets registered_via/registered_by
+├── app.ts / worker start-up                 # registration.mode event
 ├── services/auth.service.ts (+ test)        # gate in requestMagicLink; 'closed' in MagicLinkFailureReason/consumeMagicLink
 ├── errors/http-errors.ts                    # magicLinkInvalid: readable detail for 'closed'
-├── services/memberships.service.ts          # invite → register(email, 'deck_invite')
+├── services/memberships.service.ts          # invite → register(email, 'deck_invite', inviterId)
 ├── services/index.ts                        # wire waitlistService + mode into auth/users services
 └── mail/templates.ts                        # (028 owns the sign_in wording; no change expected here)
 apps/api/test/auth.int.test.ts               # + gate matrix (both modes)
 apps/api/test/members.int.test.ts            # + invite of an unknown email with the gate on
+
+packages/db/src/schema/users.ts             # + registered_via, registered_by
+packages/db/migrations/0019_users_registered_via.sql (+ down/)
 
 apps/web/src/
 ├── lib/auth-error-copy.ts (+ test)          # + 'closed'
@@ -133,12 +146,32 @@ e2e/tests/full/registration-gate.spec.ts     # NEW
 | FR-006 single guarded entry point | `users.service` | `users.service.test.ts` (unit: table); `createWithAccount` has one caller (review checklist + grep in T050) |
 | FR-007 safe default, invalid fails | `env.ts` | `env.test.ts` (unit: unset → `waitlist`; `open` → `open`; `yes` → start-up error) |
 | FR-008 copy and links | web | `auth-error-copy.test.ts`, `SignInForm.test.tsx` (unit); `smoke/web.spec.ts` (e2e:smoke: waitlist link visible); `full/registration-gate.spec.ts` (e2e:full: closed page, unknown email submit shows the shared message) |
-| FR-009 refusal logged without email | `auth.service` | `auth.service.test.ts` (unit: log line has `via`, not the address) |
+| FR-009 every outcome recorded, no address | `auth.service`, `users.service` | `auth.service.test.ts`, `users.service.test.ts` (unit: one event per outcome and reason, `via` present, no address); `auth.int.test.ts` (int: `expectDecision` for sent, waitlisted, refused per_email and per_ip, signed_in, each failed reason; no test address in captured lines) |
+| FR-010 how a user got in | `users.repo.createWithAccount` | `users.service.test.ts` (unit: reason and actor passed); `members.int.test.ts` (int: deck invite → `registered_via = 'deck_invite'`, `registered_by` = inviter; `open` sign-in → `open_sign_in`, null actor; deleting the inviter nulls `registered_by`); `migrations.int.test.ts` (round trip) |
+| FR-011 mode announced | start-up | `env.test.ts` / `app.test.ts` (unit: `registration.mode` at info for `waitlist`, warn for `open` with `NODE_ENV=production`) |
 | `open` mode = today | both services | `auth.int.test.ts` (int: unknown email → link → user + personal deck + session) |
+
+## Accountability
+
+Constitution VIII and ADR-060. The convention is in `docs/design/api-conventions.md#decision-events`. Uses 028's `decisionLogger`, `logHash` and `expectDecision` (D239). All request events carry `requestId`.
+
+| Decision | Event / audit row | Outcomes · reasons | Fields (ids/hashes only) | Level | Watched | Alert threshold (default) | Test |
+|----------|-------------------|--------------------|--------------------------|-------|---------|---------------------------|------|
+| Sign-in request | `auth.magic_link` | `sent`, `waitlisted`, `refused` · `per_email`/`per_ip` | `emailHash`, `ipHash`, `userId?` | info; warn for `refused` | aggregate by outcome; rate `waitlisted` ÷ all | `refused` > 30 per hour; `waitlisted` share > 3× its 7-day average (a link shared somewhere, or a bot) | unit + int |
+| Callback | `auth.callback` | `signed_in`, `failed` · `invalid`/`used`/`expired`/`onboarding`/`closed` | `userId?`, `created?`, `ipHash` | info; warn for `failed` | aggregate by reason; rate failed ÷ all | failed > 25% over 1 hour with ≥ 20 callbacks (mail scanner or broken links); any `closed` > 10 per day | unit + int |
+| Registration | `users.register` + `users.registered_via`/`registered_by` | `created`, `existing`, `refused` · `registration_closed` | `userId?`, `via`, `actorId?`, `emailHash` | info | instance for `created` via `open_sign_in` in production; aggregate by `via` | any `created` with `via = open_sign_in` while production mode is `waitlist` (must be impossible) | unit + int |
+| Mode in effect | `registration.mode` (start-up) | `configured` | `mode` | info; **warn** when `open` in production | instance | any `warn` (production running open) | unit |
+| Request latency | request line `POST /auth/magic-link` `durationMs` | — | — | — | p95 | p95 > 500 ms over 1 hour | — |
+
+**Operator controls**:
+
+- `REGISTRATION_MODE` opens or closes the door.
+- The existing magic-link limits stay constants in this feature. Making them env-tunable is the Phase 11 accountability retrofit (`PLAN.md`), because they predate the principle and this feature doesn't change their values.
+- `infra/README.md` § Registration gate gives the `jq` query per event and this SQL: `select registered_via, count(*) from users group by 1`.
 
 ## Rollout
 
-- **Migrations**: none.
+- **Migrations**: `0019_users_registered_via` (two nullable columns and an enum; no backfill; reversible).
 - **Env / config**: `REGISTRATION_MODE` (default `waitlist`). Production: leave unset (closed). `.env.example` documents `open` for local experiments; `infra/docker-compose.local.yml` leaves it unset.
 - **API client**: no change (no route or schema change); `pnpm api:openapi` must produce no diff.
 - **Deploy order / flags**: 028 deployed first (its service and mail). Deploying 029 closes registration immediately; announce nothing — existing users and pending invitees are unaffected.
@@ -156,6 +189,7 @@ e2e/tests/full/registration-gate.spec.ts     # NEW
 
 - [ ] Merge order with 030: the sign-in and error-page links point at `/welcome`. If 029 is ready first, ship it without the two links and let 030 add them (tasks T031–T034 move to 030).
 - [x] Public wording: "invite-only for now", kept simple (owner, 2026-10-26)
+- [ ] Constitution v1.3.0 (principle VIII, ADR-060) merged first (PR #61); 028's `decisionLogger`/`logHash` merged first
 
 ## Complexity Tracking
 

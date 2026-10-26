@@ -19,6 +19,7 @@ Roadmap: `PLAN.md` § Phase 9 (demos 2 and 6). First feature of the phase: [`029
 - Q: Does the response reveal whether an email is already listed or already has an account? → A: No. Every well-formed request gets the same answer; the difference shows up only in the email the address owner receives (same rule as sign-in, D22).
 - Q: How are bots stopped? → A: A hidden honeypot field plus per-IP and per-email limits. No CAPTCHA.
 - Q: Who reads the summary? → A: The operator, in SQL (`waitlist_summary`). An admin screen is [`032-waitlist-admin`](../032-waitlist-admin/spec.md).
+- Q: What can the operator see and change when visitors are refused or dropped? → A: Every outcome, silent ones included, is a decision event with its reason. Events carry keyed hashes, never addresses. Every change to an entry also writes an audit row that outlives the entry. Both limits are env vars with the current values as defaults, and a runbook covers reading the events, alert thresholds, raising limits and clearing one address's counter (constitution VIII, ADR-060).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -51,7 +52,7 @@ A form-filling bot submits the hidden `website` field. It receives the same "che
 
 **Acceptance Scenarios**:
 
-1. **Given** a submission with the honeypot filled, **When** it arrives, **Then** it is answered like a real one, nothing is stored, no email is sent, and one log line records the drop (no email address in the log).
+1. **Given** a submission with the honeypot filled, **When** it arrives, **Then** it is answered like a real one, nothing is stored, no email is sent, and one `waitlist.join` decision event records the drop with reason `honeypot` (keyed hashes, no email or IP address).
 2. **Given** more submissions from one IP than the hourly limit, **When** the next arrives, **Then** it is refused with "too many requests" and a retry time.
 3. **Given** more submissions for one email than the hourly limit, **When** the next arrives, **Then** it is refused the same way, checked before any lookup so it reveals nothing.
 
@@ -94,7 +95,7 @@ An address someone typed by mistake never confirms. Thirty days after its link e
 - `utm_source` that is too long or has characters outside `a-z 0-9 _ -` is dropped, not rejected.
 - A removed entry's email may join again; it starts a new `pending` entry.
 - Two submissions for the same new email at the same moment produce one entry (unique index; the loser updates the winner's row).
-- Mail delivery fails: the entry stays `pending`, the failure is logged, the visitor still gets the same answer (a retry from the form resends).
+- Mail delivery fails: the entry stays `pending`, a `waitlist.mail` `failed` event is recorded at error level, and the visitor still gets the same answer (a retry from the form resends).
 - Confirming twice from two tabs: the second sees "link no longer works", the entry stays `confirmed`.
 - The confirmation link is opened by a mail scanner that prefetches links: confirming is a single `GET` that is safe to repeat (idempotent outcome), so a prefetch confirming the address is acceptable (the scanner belongs to the address owner).
 - No AI is involved; the feature works with no AI key.
@@ -107,17 +108,21 @@ An address someone typed by mistake never confirms. Thirty days after its link e
 - **FR-002**: An entry MUST count as confirmed only after its owner opens a single-use, expiring link sent to that email.
 - **FR-003**: Every well-formed join request MUST receive the same answer regardless of whether the email is new, already listed, already a user, or a bot submission.
 - **FR-004**: Submissions with the honeypot filled MUST be dropped without storing anything or sending mail.
-- **FR-005**: Join requests MUST be limited per IP and per email per hour; over the limit MUST be refused with a retry time.
+- **FR-005**: Join requests MUST be limited per IP and per email per hour; over the limit MUST be refused with a retry time. The limits MUST be configurable by the operator (FR-013).
 - **FR-006**: The waitlist service MUST be callable by other features (the sign-in gate, the landing page form) with a source of `landing` or `sign_in`, applying the same rules.
 - **FR-007**: Entries MUST move only along `pending → confirmed → invited`, with `removed` reachable from any state; the database MUST reject rows whose timestamps contradict their status.
 - **FR-008**: Unconfirmed entries MUST be deleted 30 days after their link expired, and removed entries 30 days after removal.
 - **FR-009**: A database view MUST report entry counts by ISO week, kind, source and effective status (including `joined`).
 - **FR-010**: Confirmation tokens MUST be stored only as hashes, as sign-in tokens are.
+- **FR-011**: Every join, confirm, mail and prune outcome, and every refusal and drop, MUST be recorded as a named decision event with its outcome and reason. People MUST be identified only by id or keyed hash, never by email or IP address (constitution VIII).
+- **FR-012**: Every change to an entry (created, resent, confirmed, invited, removed) MUST write an audit row in the same transaction. Audit rows MUST contain no email and MUST survive the prune of their entry.
+- **FR-013**: Both rate limits MUST be settable through env vars whose defaults are the values above; an invalid value MUST stop start-up.
 
 ### Key Entities
 
 - **Waitlist entry**: one email's request to join: kind, optional note, source, campaign tag, status, confirmation token hash and expiry, timestamps for confirmed/invited, the inviting admin and the created user (set by 032).
 - **Waitlist summary**: a read-only view of counts per week, kind, source and effective status.
+- **Waitlist event**: an audit row per change to an entry: the entry id, the action, the acting admin (when there is one), source and time. No email.
 
 ## Success Criteria *(mandatory)*
 

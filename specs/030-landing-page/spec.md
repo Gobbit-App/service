@@ -88,7 +88,8 @@ A member opens the Gobbit address or the installed app. They go straight to thei
 - **FR-009**: The root URL MUST be indexable and listed in the sitemap.
 - **FR-010**: The page MUST link to sign-in for existing members, and to "Open Gobbit" when the viewer is signed in.
 - **FR-011**: The page's text MUST live in one place so a translated version can be added later.
-- **FR-012**: Submissions MUST be rate limited per network, answering a plain "try again later" page when exceeded.
+- **FR-012**: Submissions MUST be rate limited per network and per email. When exceeded, the visitor MUST see the landing page again with what they typed kept and a notice saying roughly when to try again.
+- **FR-013**: Every page view state, the route that brought the visitor (root, app or direct) and every form outcome (accepted, invalid with the field names, refused with the limit) MUST be recorded as a decision event without personal data (constitution VIII).
 
 ### Key Entities
 

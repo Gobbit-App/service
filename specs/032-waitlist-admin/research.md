@@ -31,7 +31,7 @@ Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. T
 
 - **Decision**: `waitlistAdmin.invite(admin, id)`:
   1. In one transaction: lock the entry `FOR UPDATE`; check status; `usersService.register(email, 'waitlist_invite')` (returns the existing user when the email already has one — a deck invite may have created it meanwhile); set `status = invited`, `invited_at = now()`, `invited_by = admin.id`, `user_id`; insert a `sign_in` magic link with `expires_at = now() + WAITLIST_INVITE_TTL_DAYS` and `next = null`.
-  2. After commit: send `waitlistInviteEmail({ link, ttlDays })` ("You're in"); on failure log `[waitlist-admin] invite mail failed` and return `{ entry, mailSent: false }` (200/201 still), so the screen offers "Resend".
+  2. After commit: send `waitlistInviteEmail({ link, ttlDays })` ("You're in"); on failure record `waitlist.mail` `failed` (`template: invite`, `entryId`) and return `{ entry, mailSent: false }` (200/201 still), so the screen offers "Resend".
   Resend on an `invited` entry skips step 1's writes except a new magic link (older unused links stay valid until they expire — the account exists, so they grant nothing a normal sign-in wouldn't).
   The personal deck is **not** created here; `consumeMagicLink` runs `ensurePersonalDeck` on first sign-in as for everyone (Phase 3B), which is what demo 5 checks. `WAITLIST_INVITE_TTL_DAYS` default 7 (`WAITLIST_INVITE_TTL_DAYS_DEFAULT` in `@pb/shared`).
 - **Rationale**: the row lock serialises concurrent invites (second admin gets 200 resend semantics only if the first committed; otherwise waits). Reusing `sign_in` links needs no enum migration and the callback already handles them; a longer TTL fits "email sits in an inbox for a few days". Mail after commit avoids sending a link for a rolled-back account.
@@ -43,8 +43,20 @@ Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. T
 - **Rationale**: the operator already has the PWA on their phone; a separate admin app doubles auth and deploys. Code-splitting keeps the budget; not persisting avoids storing other people's emails on a device (constitution IV spirit).
 - **Alternatives considered**: SQL only (fails SC-001 on a phone); an API-rendered HTML admin page (needs its own CSRF and form handling for writes); persisting like deck data (other people's personal data offline).
 
-## D238 — Trace of admin actions
+## D238 — Every admin action and refusal is recorded
 
-- **Decision**: the entry row keeps `invited_by` and `invited_at`; removals set `removed_at` and `removed_by` (two nullable columns; CHECK `waitlist_removed_has_time`; both ship in 028's `0018_waitlist`). Each invite, resend and removal writes one log line `[waitlist-admin] <action> entry=<id> by=<adminUserId>` — ids only, never the email.
-- **Rationale**: two operators need to know who did what; `item_events` is deck-scoped and the wrong home. Ids in logs keep personal data out of log storage.
-- **Alternatives considered**: a generic `admin_events` table (no reader for it yet; Phase 12 can add one if `/admin/domains` needs history); logging the email (personal data in logs).
+- **Decision**: constitution VIII (ADR-060). Uses 028's `decisionLogger` (D239) and `waitlist_events` audit table (D240).
+  - **Durable record**:
+    - the entry row keeps `invited_by`/`invited_at` and `removed_by`/`removed_at` (they ship in 028's `0018_waitlist`);
+    - each invite, resend and removal also inserts a `waitlist_events` row (`invited`, `invite_resent`, `removed`, with `actor_id` = the admin) in the same transaction as the change;
+    - those rows have no email and survive the 30-day prune, so "who removed this, and when" stays answerable after the entry is gone;
+    - the account created by an invite carries `registered_via = 'waitlist_invite'` and `registered_by` = the admin (029's D241).
+  - **`waitlist.admin`**, one per write call, with `actorId`, `entryId` and `action` (`invite` / `remove`):
+    - invite outcomes: `invited`, `resent`, `linked_existing` (the email already had an account), or `refused` with reason `pending`/`removed`/`not_found`;
+    - remove outcomes: `removed`, `unchanged` (already removed), or `refused` with reason `invited`/`not_found`.
+  - **`waitlist.admin_list`**, one per list call: `actorId`, `status`, `kind?`, `returned` (count), `page` (first or next). Reading the list reveals emails, so who looked is recorded too.
+  - **`waitlist.mail`** (028) with `template: 'invite'`, `sent`/`failed`, `entryId`.
+  - **`admin.denied`** (warn), one per refused request to `/admin/*`: reason `not_admin` (signed in, with `actorId`) or `signed_out`, plus `route`.
+  - **`admin.config`** at API start-up: `count` of configured admins (never the emails), `warn` when the count is 0 in production.
+- **Rationale**: platform admins see every waiting person's email and can create accounts, so their actions are the ones most worth being able to review. An id-only log line answers "who" but can't be alerted on by outcome, and it is gone when log retention ends. The audit row is cheap and already exists from 028. Recording list reads costs one line per screen load. The denied events show a member probing admin addresses, which a 404 hides from everyone else.
+- **Alternatives considered**: log lines only (the earlier draft; no closed outcome set, nothing durable); a generic `admin_events` table (028's `waitlist_events` already covers waitlist actions; Phase 12 decides for `/admin/domains`); logging the email (personal data in logs).

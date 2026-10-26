@@ -14,6 +14,8 @@ Project override of the core template. Written for outside readers: the reposito
 
 **Conversion.** A Umami funnel from landing visits to `/welcome/joined`; `waitlist_summary` (028) stays the exact count (D233).
 
+**Records.** Constitution VIII and ADR-060. Analytics decides nothing about a visitor. Start-up announces whether the tag is on (`analytics.config`). An alert compares Umami's counts with 030's `landing.render` events, so a silent tracker outage can't pass for no visitors (D243).
+
 No migration, no new route in the API, no npm dependency.
 
 ## Starting point
@@ -59,6 +61,7 @@ No migration, no new route in the API, no npm dependency.
 | V. Tests at the right tier | Unit tests for every page type's tag/no-tag, env parsing and the Caddy route list; smoke assertion for the proxy + CSP boundary |
 | VI. Lean, offline-first web | SPA untouched (no tag in `index.html`, bundle unchanged); SW denylist gains `/stats/`; one origin kept (ADR-034) |
 | VII. Simple, optional, deployable | Optional: unset `ANALYTICS_SITE_ID` → off. New service justified in research (D231); no npm dependency |
+| VIII. Accountable by default | No per-visitor decision. `analytics.config` at start-up; Umami cross-checked against 030's `landing.render` (the record); Umami is never the record (D243). Accountability table below |
 
 One deliberate exception to D177 ("public pages carry no script"): the landing page carries one optional deferred script. Recorded in Complexity Tracking.
 
@@ -70,6 +73,7 @@ Full reasoning in [research.md](./research.md).
 |----|----------|------|
 | D231 | Self-hosted Umami (PostgreSQL image, pinned tag) in the deck's Compose project, own `umami` database on the shared Postgres; one website for the landing page | ADR-062 (with D232) |
 | D232 | Same origin: Caddy proxies only `/stats/script.js` and `/stats/api/send`; tag rendered by `layout()` only for heads that carry `analytics` (set only when `ANALYTICS_SITE_ID` is configured); only the landing sets it; DNT on; dashboard on a separate host behind Umami's login | ADR-062 |
+| D243 | `analytics.config {enabled, host?}` at API start; alert when Umami's landing visitors drift from `landing.render` counts | no (ADR-060 covers it) |
 | D233 | Conversion = `/welcome/joined` views ÷ landing visitors (Umami funnel on paths); `waitlist_summary` is authoritative; smoke and operator opt out via Umami's `localStorage` switch | no |
 
 ## Project Structure
@@ -128,6 +132,19 @@ e2e/tests/smoke/landing.spec.ts              # (030) + analytics assertion (tag 
 | FR-006 works when blocked/down | `defer`; no-JS form (030) | 030's no-JS form tests; smoke runs with analytics off in PR CI |
 | FR-007 optional | `env.ts` optional field | `env.test.ts` (unit: unset boots; non-UUID refuses) |
 | Smoke never records views | opt-out in `addInitScript` | `landing.spec.ts` (e2e:smoke) |
+| FR-008 announced | `server.ts` start-up | `analytics.test.ts` (unit: `expectDecision('analytics.config')` with `enabled` true/false, no site id in fields) |
+
+## Accountability
+
+Constitution VIII and ADR-060. The convention is in `docs/design/api-conventions.md#decision-events`. Visitor-level records are 030's (`landing.render`, `landing.form`) and 028's.
+
+| Decision | Event / record | Outcomes · reasons | Fields (ids/hashes only) | Level | Watched | Alert threshold (default) | Test |
+|----------|----------------|--------------------|--------------------------|-------|---------|---------------------------|------|
+| Tag on or off | `analytics.config` (API start) | `enabled`, `disabled` | `host?` (never the site id) | info | per instance | `disabled` in production after rollout step 4 | unit |
+| Tracker delivering | Umami visitors vs `landing.render` (`default`, `via` ≠ `app`) | — | — | — | aggregate per day | renders > 0 and Umami 0 for 24 hours while enabled; Umami < 20% of renders over 7 days | quickstart §3 |
+| Collect endpoint health | Caddy access log for `/stats/api/send` | status | — | — | rate | 5xx > 5% over 1 hour | — |
+
+**Operator controls**: `ANALYTICS_SITE_ID` (unset turns the tag off at the next deploy); Umami's `localStorage` opt-out for their own browser; the `/stats/*` proxy can be removed from Caddy without an API change.
 
 ## Rollout
 
@@ -153,6 +170,7 @@ e2e/tests/smoke/landing.spec.ts              # (030) + analytics assertion (tag 
 
 - [x] Dashboard exposure: own hostname behind Umami login (owner, 2026-10-26)
 - [x] Thanks state on its own path `/welcome/joined` (030 contract updated; owner, 2026-10-26)
+- [ ] Constitution v1.3.0 (principle VIII, ADR-060) merged first (PR #61); 030's `landing.render` exists before the cross-check alert
 
 ## Complexity Tracking
 

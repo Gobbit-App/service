@@ -31,7 +31,7 @@ Body `application/x-www-form-urlencoded`: `email`, `kind`, `note`, `utm_source`,
 | Accepted by `waitlist.join` (new, pending resend, confirmed, invited, existing user, honeypot) | 303 | `Location: /welcome/joined`, `Cache-Control: no-store` |
 | Validation failed | 400 | landing page, state `invalid`, field messages, values kept; `private, no-store` |
 | Cross-site `Origin` | 403 | `hono/csrf` (as for every form-encoded post) |
-| Per-IP or per-email limit | 429 | 017's "try again later" HTML page, `Retry-After` |
+| Per-IP or per-email limit | 429 | landing page re-rendered with values kept and the notice "Too many tries. Please try again in about N minutes."; `Retry-After`; `private, no-store`; same notice for both limits |
 | Wrong content type (e.g. JSON) | 400 | same as validation failed with an empty form |
 
 The `Location` is relative so it stays on whichever origin served the form.
@@ -78,6 +78,15 @@ No `<script>` element in any state.
 ## Session auth
 
 `/welcome` and `/welcome/joined` join `LENIENT_PATHS` in `middleware/session-auth.ts`: a valid session sets the user (for the `signed-in` state), an invalid or expired one is ignored instead of answering 401.
+
+## Decision events (D242)
+
+| Request | Event | Fields |
+|---------|-------|--------|
+| `GET /welcome`, `/welcome/joined` | `landing.render` | `state`, `via` (`root` / `app` / `direct`), `utmSource?` |
+| `POST /welcome` accepted | `landing.form` `accepted` | (028's `waitlist.join` carries the outcome) |
+| `POST /welcome` invalid | `landing.form` `invalid` | `fields` (names only) |
+| `POST /welcome` limited | `landing.form` `refused` · `per_ip`/`per_email` | `retryAfterSec` |
 
 ## Caddy (`apps/web/Caddyfile`)
 

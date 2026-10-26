@@ -21,6 +21,7 @@
 - [ ] T003 Add `ANALYTICS_SITE_ID` (optional UUID) to `apps/api/src/env.ts`
 - [ ] T004 [P] Unit tests in `apps/api/src/public/analytics.test.ts`: tag markup per contract §2 (defer, relative `src` and `data-host-url`, `data-do-not-track="true"`, `data-domains` = host, attribute values escaped)
 - [ ] T005 Create `apps/api/src/public/analytics.ts`: `STATS_BASE_PATH = '/stats'`, `analyticsTag({ siteId, host })`, `analyticsHead(env)` returning `{ siteId, host }` or `undefined`
+- [ ] T005a Start-up `analytics.config` decision event (`enabled`, `host?`, never the site id) from the API entry point via 028's `decisionLogger`; unit test with `expectDecision` (D243)
 
 **Checkpoint**: env and tag helper exist; nothing renders them yet.
 
@@ -52,7 +53,7 @@ Built before US1 so the opt-in is guarded from the first commit.
 
 ## Phase 6: Polish and close-out
 
-- [ ] T019 [P] `infra/README.md` and `docs/design/deployment.md`: Umami database and role, secrets, first login and password change, website id, backup schedule, re-paste raw YAML
+- [ ] T019 [P] `infra/README.md` and `docs/design/deployment.md`: Umami database and role, secrets, first login and password change, website id, backup schedule, re-paste raw YAML; § Analytics checks: the `analytics.config` line, the Umami-vs-`landing.render` comparison query and the alert thresholds from the plan's Accountability table
 - [ ] T020 [P] `docs/design/waitlist.md` (or the landing area doc from 030): analytics section, conversion definition (D233), "Deviations" from `implementation-notes.md`
 - [ ] T021 `docs/adr.md`: ADR-062 from D231 + D232; `docs/architecture.md`: ≤ 2 lines plus the ADR index row (stay < 250 lines)
 - [ ] T022 Run quickstart §1 and §2; deploy per plan Rollout and run §3 (demo 4)

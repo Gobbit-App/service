@@ -93,6 +93,7 @@ Someone self-hosting Gobbit, CI and local development run without an analytics s
 - **FR-005**: The operator MUST be able to see, for the last 7 days, landing visitors, page views, referrers and UTM sources, and the number of thanks-state views.
 - **FR-006**: The landing page and the waitlist form MUST work identically when analytics is unconfigured, unavailable or blocked.
 - **FR-007**: Analytics MUST be optional: with no analytics settings the system runs and passes its tests without the analytics service.
+- **FR-008**: Whether analytics is on MUST be announced when the service starts, and the operator MUST be alerted when the analytics counts stop matching the service's own record of landing page views (constitution VIII).
 
 ### Key Entities
 

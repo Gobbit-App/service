@@ -14,7 +14,13 @@ Project override of the core template. Written for outside readers: the reposito
 
 **Signed-out app.** An installed app serves `/` from the service worker, so the SPA itself sends a 401 on its home to `/welcome` with a full navigation; the service worker lets `/welcome` through to the network. A signed-in member opening `/welcome` sees an "Open Gobbit" variant without the form (D227).
 
-**Form.** A plain urlencoded `POST /welcome` validated with 028's `WaitlistJoinRequest` schema and handed to `waitlist.join({ …, source: 'landing' })`. Every accepted outcome redirects 303 to its own thanks path `/welcome/joined`; invalid input re-renders the form with messages and values (400); limits answer a 429 page. A hidden honeypot field `website` and 028's per-IP and per-email limits keep bots out (D228).
+**Form.** A plain urlencoded `POST /welcome` validated with 028's `WaitlistJoinRequest` schema and handed to `waitlist.join({ …, source: 'landing' })`. Every accepted outcome redirects 303 to its own thanks path `/welcome/joined`; invalid input re-renders the form with messages and values (400); a limit re-renders it too, with values kept and "try again in about N minutes" (429, `Retry-After`). A hidden honeypot field `website` and 028's per-IP and per-email limits keep bots out (D228).
+
+**Records.** Constitution VIII and ADR-060.
+
+- Each render records its state and how the visitor arrived (`via`: `root`, `app` or `direct`).
+- Each form post records its outcome, with field names only when invalid.
+- 028's events carry the waitlist outcome (D242).
 
 **Preview and indexing.** A static 1200×630 image `/og/landing.png` rendered by `pnpm og:static`; canonical and `og:url` are always the root; the root is indexable and first in the sitemap (D229).
 
@@ -60,6 +66,7 @@ Project override of the core template. Written for outside readers: the reposito
 | V. Tests at the right tier | Unit (states, escaping, tags, size), int (routes, PRG, CSRF, limits, sitemap), smoke (Caddy cookie routing + CSP + preview tags), full (form journeys) |
 | VI. Lean web | The page ships no JavaScript; the SPA change is a few lines in `api/session.ts`, `main.tsx` and `sw.ts` (`pnpm budget` unchanged) |
 | VII. Simple, optional | No new env var or dependency; uses `APP_URL`; works with mail off (Console mailer) like 028 |
+| VIII. Accountable by default | `landing.render` (state, `via`) and `landing.form` (outcome, field names) events; refusals also in 028's events; the limits are 028's env vars. Accountability table below |
 
 No violations.
 
@@ -70,8 +77,9 @@ Full reasoning in [research.md](./research.md).
 | ID | Decision | ADR? |
 |----|----------|------|
 | D226 | API-rendered landing page at `/welcome` (`hono/html`, 017 layout, outside OpenAPI); Caddy rewrites `/` to it when no `gobbit_session` cookie is present, else SPA; canonical and `og:url` = root via `landingUrl(origin)`; `Vary: Cookie` | yes → **ADR-063** (proposed) |
-| D227 | SPA home 401 → full navigation (`location.replace`) to `/welcome`, deep links keep `/sign-in?next=`; SW denylist `/^\/welcome$/`; `/welcome` with a valid session → "Open Gobbit" variant, `private, no-store` | yes → **ADR-063** (proposed) |
-| D228 | No-JS urlencoded `POST /welcome` → `WaitlistJoinRequest` → `waitlist.join`; accepted → 303 `/welcome/joined`; invalid → 400 re-render with values; 429 page; honeypot `website`; per-IP bucket shared with `POST /waitlist`; CSRF passes as same origin; states `joined`, `confirmed`, `confirm=invalid` | no |
+| D227 | SPA home 401 → full navigation (`location.replace`) to `/welcome`, deep links keep `/sign-in?next=`; SW denylist `/^\/welcome(\/joined)?$/`; `/welcome` with a valid session → "Open Gobbit" variant, `private, no-store` | yes → **ADR-063** (proposed) |
+| D228 | No-JS urlencoded `POST /welcome` → `WaitlistJoinRequest` → `waitlist.join`; accepted → 303 `/welcome/joined`; invalid → 400 re-render with values; limited → 429 re-render with values and a retry notice; honeypot `website`; per-IP bucket shared with `POST /waitlist`; CSRF passes as same origin; states `joined`, `confirmed`, `confirm=invalid` | no |
+| D242 | `landing.render` (state, `via` from Caddy's `X-Gobbit-Via: root` or `?from=app`) and `landing.form` (accepted / invalid fields / refused) events | no (ADR-060 covers it) |
 | D229 | Static `/og/landing.png` 1200×630 from `og:static`'s `landingTree()`; root indexable and first in the sitemap; anonymous GET `public, max-age=300`, not in the page cache | no |
 | D230 | Copy in `public/landing-copy.ts` (English, `lang`/`dir` ready for Hebrew); hero, three uses, form, privacy line; native labelled controls, ≥ 44 px targets; `LANDING_CSS` appended only on this page | no |
 
@@ -110,12 +118,12 @@ apps/api/src/
 apps/api/scripts/og-static.ts     # + /og/landing.png
 apps/api/test/landing.int.test.ts # NEW
 apps/web/
-├── Caddyfile                     # @landing matcher for /, handle /welcome → API
+├── Caddyfile                     # @landing matcher for /, handle /welcome → API; strip client X-Gobbit-Via, set it to root on the rewrite
 ├── public/og/landing.png         # NEW (generated, committed)
 ├── vite.config.ts                # dev proxy + welcome
 └── src/
-    ├── sw.ts                     # denylist + /^\/welcome$/
-    ├── api/session.ts            # unauthorizedRedirect: home → /welcome (full navigation)
+    ├── sw.ts                     # denylist + /^\/welcome(\/joined)?$/
+    ├── api/session.ts            # unauthorizedRedirect: home → /welcome?from=app (full navigation)
     └── main.tsx                  # onUnauthorized: location.replace for full-navigation targets
 e2e/tests/smoke/landing.spec.ts   # NEW: GET-only root routing + preview tags
 e2e/tests/full/landing.spec.ts    # NEW: form journeys, stale cookie
@@ -143,10 +151,23 @@ e2e/tests/full/landing.spec.ts    # NEW: form journeys, stale cookie
 | FR-009 indexable + sitemap | `seo.ts` | `seo.test.ts` (unit: root first in sitemap); `landing.int.test.ts` (int: `/sitemap.xml` contains root; no `noindex`) |
 | FR-010 sign-in / open-app link | `landing.ts` | `landing.int.test.ts` (int: anonymous → "Sign in" `/sign-in`; valid session → "Open Gobbit", no form, `private, no-store`) |
 | FR-011 copy in one module | `landing-copy.ts` | `landing.test.ts` (unit: templates read only from copy; `lang`/`dir` from copy) |
-| FR-012 rate limited | `public-rate-limit` + 028 per-email | `landing.int.test.ts` (int: lowered limit → 429 HTML with `Retry-After`) |
+| FR-012 rate limited, values kept | `public-rate-limit` `onLimited` + 028 per-email | `landing.int.test.ts` (int: lowered per-IP and per-email limits → 429 landing page with typed values, the notice with N from `Retry-After`, same notice for both) |
+| FR-013 decisions recorded | `routes/landing.ts` | `landing.int.test.ts` (int: `expectDecision` for every state, each `via` (header set → `root`, `?from=app` → `app`, neither → `direct`), `invalid` with field names and no values, both refusals) |
 | Cross-site posts refused | `hono/csrf` | `landing.int.test.ts` (int: foreign `Origin` → 403; app origin → 303) |
 | Cache headers | route | `landing.int.test.ts` (int: anonymous GET `public, max-age=300` + `Vary: Cookie`; 400 `private, no-store`) |
 | SC-003 size | `landing.ts` + styles | `landing.test.ts` (unit: rendered default state < 30 KB) |
+
+## Accountability
+
+Constitution VIII and ADR-060. The convention is in `docs/design/api-conventions.md#decision-events`. Waitlist outcomes, honeypot drops and refusals are recorded by 028 (its Accountability table). This table adds what the page itself decides.
+
+| Decision | Event | Outcomes · reasons | Fields (ids/hashes only) | Level | Watched | Alert threshold (default) | Test |
+|----------|-------|--------------------|--------------------------|-------|---------|---------------------------|------|
+| Which page a visitor gets | `landing.render` | `rendered` | `state`, `via`, `utmSource?` | info | aggregate by `via` and `state` | no `via = root` renders for 24 hours while requests reach the API (Caddy rule broken); `state = signed_in` > 20% of renders over a day (members being sent to the landing page) | int |
+| Form answer | `landing.form` | `accepted`, `invalid`, `refused` · `per_ip`/`per_email` | `fields?`, `retryAfterSec?` | info; warn for `refused` | rate: invalid ÷ posts | invalid > 30% over 1 day with ≥ 20 posts (form or copy problem) | int |
+| Visit → join | `landing.render` (`default`) vs `landing.form` `accepted` | — | — | — | rate | conversion below half its 14-day average (page broken in some browser) | — |
+
+**Operator controls**: the limits are 028's env vars, and the runbook is 028's (`infra/README.md` § Waitlist), extended with a `landing.render` query by `via`.
 
 ## Rollout
 
@@ -171,6 +192,8 @@ e2e/tests/full/landing.spec.ts    # NEW: form journeys, stale cookie
 
 - [x] Hero copy and kind labels: keep the simple D230 drafts (owner, 2026-10-26)
 - [x] No link to a public example deck (owner, 2026-10-26)
+- [x] Limit refusal re-renders the page with values and a retry notice (owner, 2026-10-26)
+- [ ] Constitution v1.3.0 (principle VIII, ADR-060) merged first (PR #61)
 
 ## Complexity Tracking
 

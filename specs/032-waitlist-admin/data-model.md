@@ -69,3 +69,13 @@ Existing 028 invariants this feature relies on (tested here from the admin path)
 |-----------|--------|-----------|----------------|
 | `['me']` | `GET /me` | yes (existing) | sign-in/out |
 | `['admin', 'waitlist', status, kind]` | `GET /admin/waitlist` (infinite) | **no** | invite, resend, remove |
+
+## Audit rows (028's `waitlist_events`, D238)
+
+| Admin action | `action` | `actor_id` |
+|--------------|----------|------------|
+| First invite | `invited` | admin |
+| Resend | `invite_resent` | admin |
+| Remove (pending/confirmed) | `removed` | admin |
+
+Written by `markInvited`/`markRemoved` through `insertEvent` in the same transaction; refusals and no-ops write no row (their decision event records them). The account an invite creates carries `registered_via = 'waitlist_invite'`, `registered_by` = admin (029).

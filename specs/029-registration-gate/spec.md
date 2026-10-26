@@ -20,6 +20,7 @@ Roadmap: `PLAN.md` § Phase 9 (demo 1). Builds on Phase 2 (magic links, invites 
 - Q: Does a deck invite still create an account? → A: Yes. A deck owner inviting someone is the trusted way in; that person signs in as today.
 - Q: What about a sign-in link that was sent before the gate turned on? → A: Clicking it for an email with no user fails with a "Gobbit is invite-only for now" page that links to the waitlist. No account, deck or session is created.
 - Q: Which public wording? → A: Keep it simple: "Gobbit is invite-only for now" (title) and the plain body in the auth-gate contract; no further variants for now.
+- Q: How do we know who got in and why? → A: Every sign-in request, callback and registration is a decision event. Each user row stores how it was created (deck invite, waitlist invite, open sign-in) and who invited them. The configured mode is announced at start-up, and `open` in production raises an alert (constitution VIII).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -94,7 +95,9 @@ On the sign-in screen a newcomer sees "New here? Join the waitlist". After askin
 - **FR-006**: All user creation MUST go through one guarded entry point that states why the user is created (deck invite, waitlist invite, open sign-in); open sign-in MUST be refused unless registration is open.
 - **FR-007**: Operators MUST be able to open registration with a single setting; an unset or invalid setting MUST NOT open it (invalid fails at start-up).
 - **FR-008**: The sign-in screen MUST link to the waitlist, and the error page for the closed outcome MUST explain it and link to the waitlist.
-- **FR-009**: A refused registration MUST be logged without the email address.
+- **FR-009**: Every sign-in request outcome (link sent, waitlisted, rate-limited with which limit), every callback outcome (signed in, failed with its reason) and every registration decision (created, existing, refused) MUST be recorded as a decision event identifying people only by id or keyed hash, never by email address.
+- **FR-010**: Every user created from now on MUST store how it was created (deck invite, waitlist invite, open sign-in) and, for invites, who invited them.
+- **FR-011**: The registration mode in effect MUST be recorded at start-up, and an `open` mode in production MUST be raised for alerting.
 
 ### Key Entities
 

@@ -1,6 +1,6 @@
 # Research: Registration gate
 
-Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D222–D225**. D222–D224 together become **ADR-061 (registration gate)** at close-out, with a row in the `docs/architecture.md` index; D225 is UI copy and needs no ADR.
+Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D222–D225** and **D241** (accountability, added after the range filled). D222–D224 and D241 together become **ADR-061 (registration gate)** at close-out, with a row in the `docs/architecture.md` index; D225 is UI copy and needs no ADR.
 
 ## What exists today
 
@@ -27,7 +27,7 @@ Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. T
   - `findExisting(email)` — normalize and look up; never creates. Used by the sign-in callback and by `requestMagicLink`.
   - `register(email, reason)` with `reason: 'deck_invite' | 'waitlist_invite' | 'open_sign_in'` — find or create (keeping D25's unique-violation fallback). It throws `RegistrationClosed` for `open_sign_in` unless the mode is `open`. `memberships.service.invite` calls it with `deck_invite`; 032 calls it with `waitlist_invite`; the callback calls it with `open_sign_in` only when `findExisting` returned nothing.
 
-  The callback maps `RegistrationClosed` to a new `MagicLinkFailure('closed')`; the transaction rolls back, so no user, deck or session is left, and the route redirects to `/auth/error?reason=closed` (or `401 /problems/magic-link-invalid` with `reason: closed` without `APP_URL`). The refusal is logged as `[auth] registration closed via=sign_in` without the email.
+  The callback maps `RegistrationClosed` to a new `MagicLinkFailure('closed')`; the transaction rolls back, so no user, deck or session is left, and the route redirects to `/auth/error?reason=closed` (or `401 /problems/magic-link-invalid` with `reason: closed` without `APP_URL`). The refusal is recorded as the decision event `users.register` `refused`/`registration_closed` with `via: 'open_sign_in'` and `emailHash`, never the address (D241).
 - **Rationale**: the comment in `users.service.ts` already marks this as the gate. Naming the reason at the single creation point makes every future path (Phase 13 `/connect`, Phase 11 GDPR re-creation, imports) declare itself, and a unit test can cover the whole decision table. The callback check is defence in depth for links issued before the gate or while `open`.
 - **Alternatives considered**: a flag argument `findOrCreateByEmail(email, { allowCreate })` (callers pass booleans with no meaning attached, and the default would have to be chosen); checking the mode in each caller (three copies of the rule; the next caller forgets); a DB trigger refusing `users` inserts (the database can't tell an invite from a sign-in).
 
@@ -40,3 +40,18 @@ Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. T
   - The waitlist mail wording for source `sign_in` is owned by 028; this feature asks for: subject "You're not on Gobbit yet", one line saying someone asked to sign in with this address, and the confirm button.
 - **Rationale**: one sentence that covers both outcomes keeps D22 and still tells a newcomer to look in their inbox. The error page is the only place a person meets the gate directly, so it must point somewhere useful.
 - **Alternatives considered**: keeping today's "Check your inbox" copy unchanged (a newcomer expects a sign-in link and gets a waitlist mail with no warning); a separate "Request access" button on the sign-in screen (two forms asking for the same email).
+
+## D241 — Every gate decision is recorded; every user records how it came in
+
+- **Decision**: constitution VIII (ADR-060) applies to the gate as follows.
+  - **Events.** These use 028's `decisionLogger` and `logHash` (D239):
+    - `auth.magic_link`: `sent` (`userId`), `waitlisted` (unknown email handed to 028), or `refused` with reason `per_email`/`per_ip`. The two limits already exist (D39) and now say which one refused. Fields: `emailHash`, `ipHash`.
+    - `auth.callback`: `signed_in` (`userId`, `created`) or `failed` with the `MagicLinkFailureReason` (`invalid`, `used`, `expired`, `onboarding`, `closed`).
+    - `users.register`: `created` (`userId`, `via`, `actorId` for invites), `existing` (`userId`, `via`) or `refused`/`registration_closed`.
+    - `registration.mode`: emitted once at start-up with `mode`. It is at `warn` level when `open` and `NODE_ENV=production`, so an opened door is an instance alert.
+  - **Durable record.** `users` gains `registered_via` (`registration_reason` enum, nullable: rows created before this feature stay null) and `registered_by` (FK `users`, `ON DELETE SET NULL`; the inviter for `deck_invite`, the admin for `waitlist_invite`). `register` sets both in the same insert. No separate audit table: a user is created once, and the row is the record of how.
+- **Rationale**: the gate is the most consequential decision Phase 9 adds (it decides who gets in). Without a stored reason, "how did this account appear?" can't be answered once the logs have rotated. Two columns are the smallest durable answer. The start-up event makes a misconfigured `open` visible without anyone reading env vars.
+- **Alternatives considered**:
+  - a `user_events` table: more general, but only one event exists today. Phase 11's privacy work can add it when there are more.
+  - logging only (the earlier D224 wording): fails "reviewable" once logs rotate.
+  - storing the reason in `accounts`: the account is not what was invited.

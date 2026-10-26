@@ -43,3 +43,16 @@ Still creates the invitee's user when needed, in both modes (`register(email, 'd
 |-------|--------|
 | `/sign-in` | "New here? Join the waitlist" → `/welcome` (030). After submit: "If you have a Gobbit account, a sign-in link is on its way. If you don't, we've sent you a link to join the waitlist." |
 | `/auth/error?reason=closed` | Title "Gobbit is invite-only for now"; body "This email doesn't have an account yet. Join the waitlist and we'll let you know when there's room."; actions "Join the waitlist" (`/welcome`, full navigation) and "Get a new link" (`/sign-in`) |
+
+## Decision events (D241)
+
+Every branch above records one event (constitution VIII); the response never changes because of it.
+
+| Step | Event | Outcome · reason |
+|------|-------|------------------|
+| magic-link limit hit | `auth.magic_link` | `refused` · `per_email` or `per_ip` |
+| known email, link mailed | `auth.magic_link` | `sent` (`userId`) |
+| unknown email, `waitlist` mode | `auth.magic_link` | `waitlisted` (028 records its own `waitlist.join`) |
+| callback success | `auth.callback` | `signed_in` (`userId`, `created`) |
+| callback failure | `auth.callback` | `failed` · `invalid`/`used`/`expired`/`onboarding`/`closed` |
+| user created / found / refused | `users.register` | `created` / `existing` / `refused` · `registration_closed` (`via`, `actorId?`) |

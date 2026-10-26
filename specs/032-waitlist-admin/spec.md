@@ -97,7 +97,7 @@ Someone asks to be taken off the list, or an entry is obviously junk. The operat
 - **FR-006**: Platform admins MUST be able to remove pending and confirmed entries; invited entries MUST NOT be removable here.
 - **FR-007**: The app MUST tell the client whether the signed-in user is a platform admin, and MUST show the waitlist entry only to them.
 - **FR-008**: The admin screen MUST NOT add to the app's start-up bundle, and waitlist data MUST NOT be stored on the device.
-- **FR-009**: Every invite and removal MUST leave a trace: who did it and when on the entry, and one log line.
+- **FR-009**: Every invite, resend and removal MUST leave a durable record of who did it, what and when, which survives the entry's deletion, plus a decision event with its outcome; every refused action and every list view MUST be recorded with the admin's id; every request to an admin address by a non-admin MUST be recorded. Records carry ids only, never emails (constitution VIII).
 
 ### Key Entities
 

@@ -16,7 +16,7 @@ description: "Task list for 028-waitlist"
 ## Format: `[ID] [P?] [Story] [Tier?] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: US1 join and confirm, US2 bots and floods, US3 summary view, US4 prune
+- **[Story]**: US1 join and confirm, US2 bots and floods, US3 summary view, US4 prune; every story also asserts its decision events (constitution VIII, plan Accountability table)
 - **[Tier]**: `[unit]` `*.test.ts` next to code, `[int]` `apps/api/test/*.int.test.ts` or `packages/db/test/*.int.test.ts` (Docker). No `[e2e:*]` tasks: E2E tier none (plan Technical Context); 030 owns the browser journey
 
 ---
@@ -31,6 +31,10 @@ description: "Task list for 028-waitlist"
 - [ ] T006 [P] [int] packages/db/test/waitlist-invariants.int.test.ts: each CHECK rejects a contradicting row (upper-case email, note 501, bad utm, pending without token, confirmed without `confirmed_at`, invited without `invited_at`, removed without `removed_at`); second live entry for one email rejected; removed + new pending allowed; deleting a user sets `user_id`/`invited_by` to null
 - [ ] T007 apps/api/src/repositories/waitlist.repo.ts: `findLiveByEmail`, `insertPending` (`ON CONFLICT` on the live index → null), `refreshPending`, `confirmByTokenHash` (atomic `UPDATE … RETURNING`), `markInvited`, `remove`, `pruneExpired({ pendingBefore, removedBefore })`
 - [ ] T008 `rateKeys.waitlistEmail` in apps/api/src/lib/rate-window.ts
+- [ ] T009 [P] apps/api/src/env.ts: `LOG_HASH_KEY` (required in production, development default otherwise), `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR` (`positiveInt` with the `limits.ts` defaults); [unit] env.test.ts rows: defaults, override, `0`/`abc` fail, production without `LOG_HASH_KEY` fails
+- [ ] T009a [P] apps/api/src/lib/log-hash.ts `logHash(kind, value)` (HMAC-SHA256 with `LOG_HASH_KEY`, first 16 hex characters, emails normalized first); [unit] log-hash.test.ts: stable per key, differs across keys, `Parent@Example.TEST ` = `parent@example.test`
+- [ ] T009b [P] apps/api/src/lib/decision-event.ts `decisionLogger(component).record(event, { outcome, reason?, … })` (level from a per-event map, `requestId`/`jobId` required); `expectDecision(lines, event, { outcome, reason })` in apps/api/test/capture-logger.ts; [unit] decision-event.test.ts: fields, levels, refuses raw `email`/`ip` keys
+- [ ] T009c packages/db/src/schema/waitlist-events.ts and `waitlist_event_action` enum, in the same 0018 migration and down file (T004/T005); `insertEvent` and `findByTokenHash` in waitlist.repo.ts; [int] waitlist-invariants.int.test.ts: deleting an entry keeps its events; `actor_id` set null when the user is deleted
 
 **Checkpoint**: Table, view and repository exist; migration reversible
 
@@ -45,13 +49,13 @@ description: "Task list for 028-waitlist"
 ### Tests for User Story 1
 
 - [ ] T010 [P] [US1] [unit] apps/api/src/mail/templates.test.ts rows: `waitlistConfirmEmail` wording per source, link and TTL present, HTML escaped; `waitlistExistingUserEmail` links `${APP_URL}/sign-in`
-- [ ] T011 [P] [US1] [unit] apps/api/src/services/waitlist.service.test.ts with fake repo/mailer/users: outcome table (new, pending → new token + updated fields, `sign_in` re-join keeps form fields, confirmed/invited → no mail, existing user → existing-user mail, no row); mail failure logged without address, no throw; `markInvited` from non-confirmed and `remove` of removed → 409
-- [ ] T012 [P] [US1] [int] apps/api/test/waitlist.int.test.ts: join → 202, pending row, one mail in `MemoryMailer`; stored hash = sha256(mailed token) ≠ token; confirm → 303 `/welcome?confirmed=1`, row confirmed; reuse/unknown/missing token → 303 `?confirm=invalid`, row unchanged; expired (clock + 7 d + 1 s) → invalid; two parallel confirms → one success; without `APP_URL` → 200 `{ confirmed }`; padded upper-case email matches the same row; `400` problem for bad input; identical status/headers/body for new, pending, confirmed, existing user
+- [ ] T011 [P] [US1] [unit] apps/api/src/services/waitlist.service.test.ts with fake repo/mailer/users: outcome table (new, pending → new token + updated fields, `sign_in` re-join keeps form fields, confirmed/invited → no mail, existing user → existing-user mail, no row); mail failure → `waitlist.mail` `failed` at error level without the address, no throw; each outcome records its `waitlist.join` event and, for `created`/`resent`, inserts one audit row in the same transaction; `markInvited` from non-confirmed and `remove` of removed → 409
+- [ ] T012 [P] [US1] [int] apps/api/test/waitlist.int.test.ts: join → 202, pending row, one mail in `MemoryMailer`; stored hash = sha256(mailed token) ≠ token; confirm → 303 `/welcome?confirmed=1`, row confirmed; reuse/unknown/missing token → 303 `?confirm=invalid`, row unchanged; expired (clock + 7 d + 1 s) → invalid; two parallel confirms → one success; without `APP_URL` → 200 `{ confirmed }`; padded upper-case email matches the same row; `400` problem for bad input; identical status/headers/body for new, pending, confirmed, existing user; `expectDecision` for each `waitlist.join` and `waitlist.confirm` outcome and reason (`missing`, `unknown`, `used`, `expired`); `waitlist_events` rows: created, resent, confirmed; a forced rollback leaves neither entry nor event
 
 ### Implementation for User Story 1
 
 - [ ] T013 [US1] `waitlistConfirmEmail`, `waitlistExistingUserEmail` in apps/api/src/mail/templates.ts
-- [ ] T014 [US1] apps/api/src/services/waitlist.service.ts (`join`, `confirm`, `markInvited`, `remove`; token via lib/tokens.ts; email via `normalizeEmail`; user lookup via `usersRepo.findByEmail`); wire in apps/api/src/services/index.ts
+- [ ] T014 [US1] apps/api/src/services/waitlist.service.ts (`join`, `confirm`, `markInvited`, `remove`; token via lib/tokens.ts; email via `normalizeEmail`; user lookup via `usersRepo.findByEmail`; events through `decisionLogger('waitlist')` with tuples in waitlist.events.ts; audit rows through `insertEvent` in the same transaction); wire in apps/api/src/services/index.ts
 - [ ] T015 [US1] apps/api/src/routes/waitlist.ts: `POST /waitlist` (OpenAPI, 202) and `GET /waitlist/confirm` (outside OpenAPI, `Cache-Control: no-store`, `Referrer-Policy: no-referrer`); register in app.ts; `pnpm api:openapi`; examples in apps/api/api.http
 
 **Checkpoint**: Demo 2's join-and-confirm half works with curl locally
@@ -66,12 +70,12 @@ description: "Task list for 028-waitlist"
 
 ### Tests for User Story 2
 
-- [ ] T020 [P] [US2] [int] apps/api/test/waitlist.int.test.ts: honeypot → same 202 body, no row, no mail, one log line without the address (`capture-logger`); 11th join from one IP → 429 + `Retry-After`; 4th join for one email → 429 for both a new email and an existing user's email; confirm counts in the same IP bucket; service call with `skipRateLimits` bypasses both
+- [ ] T020 [P] [US2] [int] apps/api/test/waitlist.int.test.ts: honeypot → same 202 body, no row, no audit row, no mail, `expectDecision` `dropped`/`honeypot`, no address or IP in any captured line; 11th join from one IP → 429 + `Retry-After` and `rate_limit.refused` (`bucket: 'waitlist'`, `ipHash`); 4th join for one email → 429 for both a new email and an existing user's email, with `refused`/`per_email`; both 429 bodies identical; `WAITLIST_JOIN_PER_IP_PER_HOUR=2` → 3rd join refused; confirm counts in the same IP bucket; service call with `skipRateLimits` bypasses both
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Honeypot branch and per-email `rateLimits.enforce(rateKeys.waitlistEmail(hash), WAITLIST_JOIN_PER_EMAIL_PER_HOUR)` before any lookup, both skipped with `skipRateLimits`, in waitlist.service.ts
-- [ ] T022 [US2] Own `createAnonRateLimiter({ limit: WAITLIST_JOIN_PER_IP_PER_HOUR })` bucket (injectable `deps.waitlistLimiter`) applied with `publicRateLimit` to `/waitlist` and `/waitlist/*` in apps/api/src/app.ts; export the limiter options so 030 can attach `POST /welcome` with `onLimited: rateLimitedHtml`
+- [ ] T021 [US2] Honeypot branch and per-email `rateLimits.enforce(rateKeys.waitlistEmail(hash), env.WAITLIST_JOIN_PER_EMAIL_PER_HOUR)` before any lookup, both skipped with `skipRateLimits`, each recording its `waitlist.join` event, in waitlist.service.ts
+- [ ] T022 [US2] Own `createAnonRateLimiter({ limit: env.WAITLIST_JOIN_PER_IP_PER_HOUR })` bucket (injectable `deps.waitlistLimiter`) applied with `publicRateLimit` to `/waitlist` and `/waitlist/*` in apps/api/src/app.ts; its `onLimited` records `rate_limit.refused` before answering; export the limiter options so 030 can attach `POST /welcome` with its own HTML `onLimited`, which records the same event
 
 **Checkpoint**: Demo 2 complete through the API
 
@@ -103,8 +107,8 @@ description: "Task list for 028-waitlist"
 
 ### Tests for User Story 4
 
-- [ ] T040 [P] [US4] [unit] apps/api/src/jobs/prune-waitlist.test.ts: cutoffs computed from `now` (`expiry + 30 d`, `removed_at + 30 d`), count returned and logged without addresses
-- [ ] T041 [P] [US4] [int] apps/api/test/waitlist.int.test.ts: clock +38 d after join → expired pending and 31-day-old removed deleted; confirmed, invited and fresh pending kept
+- [ ] T040 [P] [US4] [unit] apps/api/src/jobs/prune-waitlist.test.ts: cutoffs computed from `now` (`expiry + 30 d`, `removed_at + 30 d`); counts returned and recorded as `waitlist.prune` `pruned` with `jobId`, `pendingDeleted`, `removedDeleted`
+- [ ] T041 [P] [US4] [int] apps/api/test/waitlist.int.test.ts: clock +38 d after join → expired pending and 31-day-old removed deleted, their `waitlist_events` rows kept; confirmed, invited and fresh pending kept
 
 ### Implementation for User Story 4
 
@@ -117,8 +121,9 @@ description: "Task list for 028-waitlist"
 ## Phase 6: Close-out
 
 - [ ] T050 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int`
-- [ ] T051 [P] New docs/design/waitlist.md (table, statuses, join outcomes, confirm, limits, prune, view, deviations); one line in docs/architecture.md map; ADR-061 (registration gate and waitlist) drafted in docs/adr.md if 029 hasn't, with its index row
-- [ ] T052 [P] README.md: waitlist endpoint, limits, how to read `waitlist_summary`
+- [ ] T051 [P] New docs/design/waitlist.md (table, statuses, join outcomes, confirm, limits, events and audit rows, prune, view, deviations); one line in docs/architecture.md map; ADR-061 (registration gate and waitlist) drafted in docs/adr.md if 029 hasn't, with its index row
+- [ ] T052 [P] README.md: waitlist endpoint, env rows (`LOG_HASH_KEY`, both limits), how to read `waitlist_summary`; `LOG_HASH_KEY` in the Compose `x-api-env`
+- [ ] T052a [P] infra/README.md § Waitlist runbook: a `jq` query per Accountability event, the default alert thresholds, raising a limit for a launch event (Dokploy env + redeploy), SQL to clear one address's counter (`DELETE FROM rate_limit_counters WHERE key = 'waitlist:email:' || <sha256>`), reading one entry's history from `waitlist_events`
 - [ ] T053 [P] CLAUDE.md ground rule line: waitlist joins only through `waitlist.service.join` (no enumeration, double opt-in)
 - [ ] T054 PLAN.md: tick demo 6 (and the waitlist half of demo 2) only after quickstart section 4 has run on the deployed instance
 - [ ] T055 Run quickstart.md validation

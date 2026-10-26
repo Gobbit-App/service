@@ -22,10 +22,11 @@ pnpm test:e2e -- full/waitlist-admin.spec.ts
 6. Back as the owner, tap **Resend** on the entry: a second email is printed, still one account.
 7. Add a second entry and leave it unconfirmed: **Invite** is not offered on the Pending tab; calling the API gives `409 /problems/waitlist-not-confirmed`.
 8. Remove a confirmed entry: it moves to the Removed tab.
-9. Sign in as a user not in `PLATFORM_ADMINS`: no Waitlist link; `/admin/waitlist` shows not found; `GET /api/admin/waitlist` → 404.
+9. Sign in as a user not in `PLATFORM_ADMINS`: no Waitlist link; `/admin/waitlist` shows not found; `GET /api/admin/waitlist` → 404, and the API log has one `admin.denied` `not_admin` line with that user's id.
+10. Read the record: `psql "$DATABASE_URL" -c "select entry_id, action, actor_id, created_at from waitlist_events where actor_id is not null order by created_at"` shows the invite and the removal with the admin's id; the log has `waitlist.admin` and `waitlist.admin_list` lines with ids only.
 
 ## 3. Deployed instance (PLAN.md demo 5)
 
 1. Set `PLATFORM_ADMINS` in Dokploy; redeploy.
 2. From the phone, invite one real confirmed waitlist entry (with their agreement).
-3. They sign in from the email and land in their own empty deck with `general`; the entry shows Invited.
+3. They sign in from the email and land in their own empty deck with `general`; the entry shows Invited; its `waitlist_events` row names the admin, and the account's `registered_via` is `waitlist_invite`.

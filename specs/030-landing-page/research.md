@@ -1,6 +1,6 @@
 # Research: Landing page
 
-Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D226–D230**. D226–D227 are proposed for **ADR-063** (landing page at the root for cookieless requests) at close-out; ADR-061 is 028/029's and ADR-062 is 031's; the others stay feature-level.
+Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D226–D230** and **D242** (accountability, added after the range filled). D226–D227 are proposed for **ADR-063** (landing page at the root for cookieless requests) at close-out; ADR-061 is 028/029's and ADR-062 is 031's; the others stay feature-level.
 
 ## What exists today
 
@@ -40,12 +40,27 @@ Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. T
 
 - **Decision**:
   - `<form method="post" action="/welcome">`, `application/x-www-form-urlencoded`. Fields: `email` (`type=email`, `autocomplete=email`, `inputmode=email`, required), `kind` (four radio buttons, required: family, community, personal, other), `note` (textarea, optional, 028's limit), `utm_source` (hidden, copied from the GET query when it matches 028's pattern), `website` (honeypot: inside a block hidden with an off-screen class, `tabindex="-1"`, `autocomplete="off"`, label "Leave this empty").
-  - The route maps the form fields (`utm_source` → `utmSource`) onto 028's `WaitlistJoinRequest` schema (`@pb/shared`), then calls `waitlist.join({ …, source: 'landing', ip, website })`. Every accepted outcome (new, resend, known, existing account, honeypot) → `303 Location: /welcome/joined`. Validation failure → `400` with the form re-rendered, `aria-invalid` and a message per field, values kept (escaped). Service rate limit → `429` HTML page with `Retry-After` (same page as 017's `rateLimitedPage`).
+  - The route maps the form fields (`utm_source` → `utmSource`) onto 028's `WaitlistJoinRequest` schema (`@pb/shared`), then calls `waitlist.join({ …, source: 'landing', ip, website })`. Every accepted outcome (new, resend, known, existing account, honeypot) → `303 Location: /welcome/joined`. Validation failure → `400` with the form re-rendered, `aria-invalid` and a message per field, values kept (escaped). Rate limit (per IP in middleware, or per email in the service) → a `429` re-render of the landing page with the visitor's values kept, an inline notice "Too many tries. Please try again in about N minutes." (N from `Retry-After`, rounded up), `Retry-After`, `private, no-store`. The notice is identical for both limits, and the reason is in 028's events (owner, 2026-10-26: a friendlier refusal than 017's bare page, without losing what was typed).
   - Anonymous per-IP limit: `public-rate-limit` on `POST /welcome` sharing 028's per-IP waitlist bucket with `POST /waitlist` (D219; the service also applies its per-email counter); `GET /welcome` shares the `/p/*` anonymous read limit.
   - Same-origin form posts already pass `hono/csrf` because the allowed list contains the origin of `API_URL`, which deployments set to the app origin + `/api`. An integration test pins this; if a deployment ever splits origins, `APP_URL`'s origin must be added to `csrfOrigins` (one line, noted in `docs/design/waitlist.md`).
   - Thanks state on its own path, `GET /welcome/joined` ("Check your email to confirm", `noindex`), so Umami funnels can match it by path (owner, 2026-10-26). Other states read from the GET query, each with its own message and the same canonical: `confirmed=1` ("You're on the list", from 028's confirm redirect), `confirm=invalid` ("That link no longer works", form shown again). Any other query → default state.
 - **Rationale**: PLAN.md demo 3 asks for under 30 seconds on a phone; a plain form with three visible fields and native keyboard hints is the fastest path and works on every browser. Post/redirect/get stops double submissions on reload and gives 031 a distinct, cacheable `/welcome/joined` URL to count. Answering every accepted outcome identically keeps 028's no-enumeration rule (D22's spirit) on the web.
 - **Alternatives considered**: `fetch()` to `POST /api/waitlist` with inline JS (breaks the no-JS rule and needs a CSP change); rendering the thanks message directly on the POST response (reload re-submits; harder to count); CAPTCHA (third-party script, worse for real users; the honeypot plus rate limits are enough at waitlist scale, 028).
+
+## D242 — Landing decisions are recorded
+
+- **Decision**: constitution VIII (ADR-060). Uses 028's `decisionLogger` (D239).
+  - **`landing.render`**, one per `GET /welcome[/joined]`:
+    - `state`: `default`, `joined`, `confirmed`, `confirm_invalid` or `signed_in`;
+    - `via`: `root` when Caddy rewrote `/` (Caddy sets `X-Gobbit-Via: root` on that rewrite and strips any client-sent value first), `app` when the SPA sent a signed-out user here (`/welcome?from=app`), else `direct`;
+    - `utmSource` when valid.
+  - **`landing.form`**, one per `POST /welcome`:
+    - `accepted` (the service's own `waitlist.join` event carries the real outcome);
+    - `invalid`, with `fields` (field names only, never values);
+    - `refused` with reason `per_ip`/`per_email`, written next to 028's refusal events so the page and the API counts can be compared.
+  - Silent outcomes (honeypot, existing user) are recorded by 028, not repeated here.
+- **Rationale**: the landing page makes three routing decisions about a visitor that nobody can see afterwards: Caddy's cookie rule, the SPA's signed-out redirect, and the signed-in variant. If Caddy's matcher breaks, members land on the waitlist page or strangers on the empty app shell. `via` counts show it within the hour, without waiting for a smoke run.
+- **Alternatives considered**: Caddy access logs only (they live in another container, with a different format and no state); Umami only (031 is optional and blockable, so it can't be the record).
 
 ## D229 — Static preview image and indexing
 

@@ -31,10 +31,22 @@ psql "$DATABASE_URL" -c "select status, kind, source, utm_source from waitlist_e
 curl -si -X POST http://127.0.0.1:3000/waitlist \
   -H 'content-type: application/json' \
   -d '{"email":"bot@example.test","kind":"other","website":"http://spam.example.test"}'
-# → the same 202 {"ok":true}; no row for bot@example.test, no mail printed, one "[waitlist] honeypot drop" log line
+# → the same 202 {"ok":true}; no row for bot@example.test, no mail printed,
+#   one {"event":"waitlist.join","outcome":"dropped","reason":"honeypot",…} line with hashes, no address
 ```
 
 Also check: the same request with the owner's email (`SEED_OWNER_EMAIL`) answers the same `202` and prints the "you already have an account" mail; no row is created.
+
+Read the decisions (constitution VIII):
+
+```sh
+# pnpm dev logs: pipe through jq, or with Compose: docker logs <api> | …
+… | jq -c 'select(.event|test("^waitlist\\.|^rate_limit\\.")) | {event, outcome, reason}' | sort | uniq -c
+psql "$DATABASE_URL" -c "select action, source, actor_id, created_at from waitlist_events order by created_at"
+# → created, confirmed (no email in either table row)
+```
+
+Lower a limit and watch the refusal: restart the API with `WAITLIST_JOIN_PER_EMAIL_PER_HOUR=1`, join the same address twice → the second answers `429` and logs `waitlist.join` `refused`/`per_email`.
 
 ## 3. Demo 6 (summary view)
 
@@ -46,4 +58,4 @@ Expect one row per (week, kind, source, status) with counts; after 032 invites s
 
 ## 4. Deployed instance
 
-After deploy: join with a real address you control, confirm from the inbox, check the row and the view on the server's database, then delete the test entry. Tick demo 2's waitlist half and demo 6 in `PLAN.md` (the landing form half of demo 2 closes with 030).
+After deploy: join with a real address you control, confirm from the inbox, check the row, its `waitlist_events` rows and the view on the server's database, and check that the decision events appear in the API logs. Then delete the test entry. Tick demo 2's waitlist half and demo 6 in `PLAN.md` (the landing form half of demo 2 closes with 030).

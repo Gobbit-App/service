@@ -1,6 +1,6 @@
 # Research: Landing page analytics
 
-Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D231–D233**. D231 and D232 together become **ADR-062 (landing analytics: self-hosted, same-origin, landing only)** at close-out; D233 is feature-local.
+Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. This feature owns **D231–D233** and **D243** (accountability, added after the range filled). D231 and D232 together become **ADR-062 (landing analytics: self-hosted, same-origin, landing only)** at close-out; D233 is feature-local.
 
 ## What exists today
 
@@ -38,4 +38,13 @@ Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240. T
 
 - **Decision**: conversion for a period = page views of the path `/welcome/joined` ÷ unique visitors to `/` and `/welcome` (excluding the thanks and confirmed states) in the same period, read in Umami as a two-step funnel `/` or `/welcome` → `/welcome/joined` (funnels match paths, hence the own path; owner, 2026-10-26). Confirmed sign-ups (`/welcome?confirmed=1`) are visible the same way. The authoritative sign-up count is `waitlist_summary` (028); the quickstart compares the two. The tracker records the URL with its query, which carries only `confirmed`, `confirm=invalid` and UTM parameters: no token or email is ever in a landing URL (confirm tokens live on `/api/waitlist/confirm`, which redirects). Smoke tests and the operator opt out in the browser with Umami's `localStorage` switch (`umami.disabled = 1`) so they don't inflate counts.
 - **Rationale**: page views of a distinct state need no JavaScript events and no change to the no-JS form; the thanks state renders only after the server accepted the submission, so it is a real conversion, not a click. Undercounting from blockers is acceptable because the waitlist table is exact.
-- **Alternatives considered**: a `data-umami-event` click event on the submit button (counts clicks, including invalid submissions); a server-to-server event from the API on each successful join (exact, but sends traffic from the server's IP that skews visitor stats, and couples the waitlist service to analytics); a separate thanks path for Umami's funnel report (cleaner funnel, but changes 030's PRG contract; left as open question 2).
+- **Alternatives considered**: a `data-umami-event` click event on the submit button (counts clicks, including invalid submissions); a server-to-server event from the API on each successful join (exact, but sends traffic from the server's IP that skews visitor stats, and couples the waitlist service to analytics); keeping the thanks state on `/welcome?joined=1` (no 030 change, but Umami's funnel can't match it; the owner chose the own path, 2026-10-26).
+
+## D243 — Analytics is checked against the record, never the record
+
+- **Decision**: constitution VIII (ADR-060). Analytics makes no decision about a person, so it adds no per-visitor event. Its one decision is whether the tag is on, and two checks keep it honest:
+  - **Start-up**: the API emits `analytics.config` once, with `enabled` (bool) and `host` when enabled, never the site id. The worker doesn't render pages, so it doesn't emit.
+  - **Cross-check**: Umami's daily landing visitors are compared with 030's `landing.render` count (`state` `default`, `via` ≠ `app`). Alert when renders are > 0 and Umami shows 0 for 24 hours while `enabled` (tag broken, CSP regression, proxy down), or when Umami shows less than 20% of renders over 7 days (blocking or a broken script).
+  - The `/stats/*` proxy is Caddy's; Caddy's access log is the record of tracker traffic, and Umami's 4xx/5xx on `/stats/api/send` are watched as a rate.
+- **Rationale**: Umami undercounts by design (blockers, DNT), so it is never the record of what happened. 030's events and `waitlist_summary` are. But a tag that silently stops sending looks just like "nobody came". Comparing it with the record is the only way to tell them apart.
+- **Alternatives considered**: a server-side event from the API to Umami per render (couples the API to analytics, skews visitor stats; rejected in D233); no check (an outage of the tag would be invisible until someone looks at the dashboard).
