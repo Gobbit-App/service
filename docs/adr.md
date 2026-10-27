@@ -484,3 +484,25 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 Unavailable actions use `aria-disabled` with a reason in the tooltip, never a silent `disabled`. Tooltips are CSS on `[data-tip]`: hover on pointer devices, focus, and a 500 ms still press via `ui/tooltip-press.ts`. There are no `title` attributes. A card's own actions sit inside it (`CardActionBar` + `MoreMenu`). Selection controls (tabs, chips, toggles) keep their text.
 
 **Rationale**: Path strings are the smallest form (the whole set is about 2 KB gzip) and need no request or build step. One renderer and one set of primitives make the stroke, the hit area, the names and the narrow-screen rule properties of a component, not of a hundred call sites, and unit tests cover them once. A CSS tooltip with one delegated touch listener needs no library and never blocks swipes. Details: [`docs/design/icons-and-actions.md`](design/icons-and-actions.md).
+
+## ADR-060: Accountable by default — every decision is recorded and watchable (constitution VIII)
+
+**Decision**: Every decision the service makes about a person, their content or their experience leaves a record that can be traced, reviewed, monitored and alerted on. Constitution v1.3.0 adds this as principle VIII.
+
+- **Records**:
+  - A **decision event** is one pino line with `event` (stable, dot-separated `<area>.<decision>`, e.g. `waitlist.join`, `auth.magic_link`, `rate_limit.refused`), `outcome` (a closed set per event, e.g. `accepted | refused | dropped`), `reason` (a closed set, e.g. `per_ip | per_email | honeypot`), `requestId` or `jobId`, and `actorId` when there is one.
+  - A change to durable data also writes an **audit row** in the same transaction (the `item_events` pattern, ADR-057).
+  - Operator and admin actions always carry who and when.
+- **Privacy**: people appear only as ids or keyed hashes. A raw email, IP address, query text or card content never enters a record. This keeps principle IV.
+- **Silent answers are still recorded**: answers kept identical for the client (no enumeration), honeypot drops, rate-limit refusals, AI-off fallbacks and handled errors log their real outcome.
+- **Watchable three ways**: each plan lists its events, fields, levels and how each is watched:
+  - per instance (alert on one occurrence);
+  - aggregate (count per window, by outcome and reason);
+  - rate or average (ratio to baseline, duration).
+
+  The plan names the alert thresholds with their defaults. Because events are named and their values come from closed sets, log-based metrics and alerts can be built without parsing free text.
+- **Operator control**: limits and thresholds that shape the user's experience are env-tunable with defaults in `@pb/shared`, and documented in a runbook.
+- **Tests**: each event in a plan is asserted in a test.
+- **Existing code**: code that predates the principle is brought into line when it is next changed, and through a retrofit feature tracked in `PLAN.md`. Today, rate-limit refusals, for example, appear only as a generic request line with status 429.
+
+**Rationale**: A service that refuses, drops or changes things for people without a trace can't be debugged, defended or tuned. Several paths already answer clients identically on purpose (D22, the honeypot), so the client-facing answer can't be where accountability lives. Named events with closed-set fields are the cheapest form that serves all three uses: reading one occurrence, counting over a window and watching a rate. They are also enough for any log-based monitoring backend. Choosing that backend (collection, dashboards, alert routing) is a separate operational decision. Until then, records are JSON lines on stdout, readable with `jq` (`docs/design/api-conventions.md`). Details: [`docs/design/api-conventions.md#decision-events`](design/api-conventions.md#decision-events).

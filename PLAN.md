@@ -215,7 +215,8 @@ Mechanical renames with no new behaviour, so they skip spec-kit (constitution, D
 - MCP (Phase 13): abuse controls cover `/api/mcp` and the OAuth endpoints; client-metadata fetches go through the SSRF-safe fetch; GDPR export and delete include MCP connections and tokens; monitoring alerts on MCP error rates; the privacy notice says members can connect their own AI apps to decks where MCP is enabled.
 
 - [ ] **1. Backups that restore** — full restore into a fresh Postgres container on a laptop completes and the app boots against it.
-- [ ] **2. Monitoring and alerts** — stop the API container; an alert arrives within 5 minutes; start it; recovery notice arrives.
+- [ ] **2. Monitoring and alerts** — stop the API container; an alert arrives within 5 minutes; start it; recovery notice arrives. The chosen backend also reads decision events (ADR-060) and fires the thresholds named in each plan's Accountability table; choosing it is this item's ADR.
+- [ ] **7. Accountability retrofit** — code that predates constitution VIII emits decision events (ADR-060): rate-limit refusals (`rate_limit_counters`, `anon-rate-limiter`), magic-link request and callback outcomes, CSRF rejections, ingest outcomes, link-preview and link-check fallbacks, public-deck 404s. Demo: one `jq` query over a day's logs counts every refusal by `event` and `reason`. New code complies from Phase 9 on.
 - [ ] **3. Abuse controls** — a 200-request-per-minute burst against the public page from one IP gets 429s without affecting a signed-in user.
 - [ ] **4. Privacy basics (GDPR)** — export a test user, delete it, confirm the cards remain with author "deleted user" and sign-in no longer works.
 - [ ] **5. Secrets and supply chain** — CI fails on a deliberately introduced vulnerable dependency version.

@@ -141,6 +141,32 @@ All errors (except 5xx) follow the Problem schema:
 
 The API and the worker write JSON lines to stdout through pino (`lib/logger.ts`). Each line is `{"level":"info","time":"<ISO>","component":"<area>","msg":"…", …fields}`, and errors go under `err` (`type`, `message`, `stack`, `code`). Modules take a child logger (`childLogger('media')`). The older string sinks (`log(message, err?)` deps used by mailers, queues and services) default to `lineSink(component, level)`, which writes the same JSON shape, so tests still inject plain functions. `@pb/db`'s idle-client error handler writes one JSON line by default, and the API and worker pass `logDbIdleError`. `LOG_LEVEL` (`trace`…`fatal`, `silent`) defaults to `info`, or `silent` under Vitest. Filter with `jq`, e.g. `docker logs <api> | jq 'select(.level=="error")'`.
 
+### Decision events
+
+Constitution VIII and ADR-060 require a record for every decision the service makes about a person, their content or their experience. That record is a decision event, written next to the request line.
+
+| Field | Rule |
+|-------|------|
+| `event` | Stable name `<area>.<decision>`, lower case, e.g. `waitlist.join`, `auth.magic_link`, `rate_limit.refused`. A rename is a breaking change for dashboards and alerts. |
+| `outcome` | Closed set per event (`accepted`, `refused`, `dropped`, `sent`, `failed`, …), declared as a const array in code |
+| `reason` | Closed set, present whenever `outcome` isn't the happy path (`per_ip`, `per_email`, `honeypot`, `existing_user`, …) |
+| `requestId` / `jobId` | Always present. `requestId` comes from `middleware/request-id.ts`, `jobId` from pg-boss. |
+| `actorId` | The user id when a signed-in person or an admin caused the decision |
+| subjects | Ids (`entryId`, `deckId`, `itemId`) or a keyed hash (`emailHash`, `ipHash`). Never a raw email, IP address, query text or card content. |
+
+- **Level**:
+  - `info` for expected outcomes, refusals included;
+  - `warn` for outcomes an operator should look at in aggregate;
+  - `error` only for failures.
+- **Audit rows**: a change to durable data also writes an audit row in the same transaction (ADR-057). The log event is then the cheap signal and the row is the reviewable record.
+- **Plans**: each plan's Accountability table lists its events and how each is watched:
+  - **instance**: alert on one occurrence, e.g. an admin action or a failure;
+  - **aggregate**: count per window by `outcome`/`reason`;
+  - **rate**: share of all outcomes, or an average such as a duration, compared with its baseline.
+
+  The table gives default alert thresholds. Tests assert each event through an injected logger or a pino destination stream.
+- **Reading until a monitoring backend exists**: `docker logs <api> | jq -c 'select(.event=="waitlist.join") | {outcome, reason}' | sort | uniq -c`.
+
 ## Pagination
 
 ### Keyset cursor pattern
