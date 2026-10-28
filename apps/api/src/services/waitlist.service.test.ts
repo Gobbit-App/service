@@ -49,18 +49,6 @@ function fakeRepo(seed: Partial<WaitlistEntryRow>[] = []) {
       return row;
     },
     findByTokenHash: async (hash: string) => rows.find((r) => r.confirmTokenHash === hash) ?? null,
-    markInvited: async (r: { id: string; invitedBy: string; userId: string; now: Date }) => {
-      const row = rows.find((x) => x.id === r.id && x.status === 'confirmed');
-      if (!row) return null;
-      Object.assign(row, { status: 'invited', invitedAt: r.now, invitedBy: r.invitedBy });
-      return row;
-    },
-    remove: async (r: { id: string; removedBy: string; now: Date }) => {
-      const row = rows.find((x) => x.id === r.id && x.status !== 'removed');
-      if (!row) return null;
-      Object.assign(row, { status: 'removed', removedAt: r.now, removedBy: r.removedBy });
-      return row;
-    },
     insertEvent: async (v: NewWaitlistEvent) => {
       events.push({ ...v, inTx });
       return { id: `ev${events.length}`, createdAt: NOW, ...v } as never;
@@ -304,37 +292,5 @@ describe('waitlist.confirm (D218)', () => {
     expect(rows[0].status).toBe('pending');
     await flush();
     expectDecision(lines, 'waitlist.confirm', { outcome: 'invalid', reason: 'expired' });
-  });
-});
-
-describe('waitlist.markInvited / remove (032)', () => {
-  it('invites a confirmed entry with an audit row naming the actor', async () => {
-    const { service, events } = setup({ seed: [{ status: 'confirmed' }] });
-    const row = await service.markInvited({ id: 'e0', invitedBy: 'admin', userId: 'u9' });
-    expect(row.status).toBe('invited');
-    expect(events).toEqual([{ entryId: 'e0', action: 'invited', actorId: 'admin', inTx: true }]);
-  });
-
-  it('refuses to invite a pending entry with 409', async () => {
-    const { service } = setup({ seed: [{ status: 'pending' }] });
-    await expect(
-      service.markInvited({ id: 'e0', invitedBy: 'admin', userId: 'u9' }),
-    ).rejects.toMatchObject({ status: 409 });
-  });
-
-  it('refuses to remove a removed entry with 409, and a missing one with 404', async () => {
-    const { service } = setup({ seed: [{ status: 'removed' }] });
-    await expect(service.remove({ id: 'e0', removedBy: 'admin' })).rejects.toMatchObject({
-      status: 409,
-    });
-    await expect(service.remove({ id: 'nope', removedBy: 'admin' })).rejects.toMatchObject({
-      status: 404,
-    });
-  });
-
-  it('removes a live entry with a removed audit row', async () => {
-    const { service, events } = setup({ seed: [{ status: 'confirmed' }] });
-    expect((await service.remove({ id: 'e0', removedBy: 'admin' })).status).toBe('removed');
-    expect(events).toEqual([{ entryId: 'e0', action: 'removed', actorId: 'admin', inTx: true }]);
   });
 });

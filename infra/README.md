@@ -57,6 +57,28 @@ WHERE entry_id = (SELECT id FROM waitlist_entries WHERE email = lower('someone@e
 ORDER BY created_at;
 ```
 
+## Waitlist admin
+
+Platform admins are the emails in `PLATFORM_ADMINS` (Dokploy environment, comma-separated; redeploy to change). They invite and remove entries at `/admin/waitlist` in the PWA; `/admin/*` answers 404 to everyone else (`docs/design/auth.md#platform-admins-d234`). Invite links stay valid `WAITLIST_INVITE_TTL_DAYS` (default 7).
+
+| Event | Query | Alert when (default) |
+| --- | --- | --- |
+| Admins configured | `jq 'select(.event=="admin.config") \| [.level,.count]'` | any `warn` (no admins in production); `count` differs from the previous start |
+| Admin actions | `jq -c 'select(.event=="waitlist.admin") \| [.action,.outcome,.reason,.actorId]' \| sort \| uniq -c` | > 50 invites per admin per hour; > 20 removals per hour |
+| Who read the list | `jq -c 'select(.event=="waitlist.admin_list") \| [.actorId,.status,.returned,.page]'` | volume baseline only |
+| Refused admin requests | `jq -c 'select(.event=="admin.denied") \| [.reason,.actorId,.route]'` | ≥ 5 per actor per hour |
+| Invite mail | `jq 'select(.event=="waitlist.mail" and .template=="invite" and .outcome=="failed")'` | any failure (resend from the Invited tab) |
+
+**Actions by one admin** (rows outlive the prune and hold no email):
+
+```sql
+SELECT action, entry_id, created_at FROM waitlist_events
+WHERE actor_id = (SELECT id FROM users WHERE email = lower('admin@example.test'))
+ORDER BY created_at DESC LIMIT 100;
+```
+
+The history of one entry is the `waitlist_events` query in § Waitlist.
+
 ## Registration gate
 
 `REGISTRATION_MODE` (default `waitlist`) closes sign-up: unknown addresses asking for a sign-in link are put on the waitlist instead (`docs/design/auth.md#registration-gate-d222d224-d241`). Set `REGISTRATION_MODE=open` in the Dokploy environment and redeploy to open it; any other value stops the API from starting.

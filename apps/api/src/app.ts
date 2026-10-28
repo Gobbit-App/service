@@ -44,6 +44,7 @@ import { publicRateLimit } from './middleware/public-rate-limit';
 import { createAnonRateLimiter, type AnonRateLimiter } from './lib/anon-rate-limiter';
 import { PUBLIC_READ_PER_HOUR, PUBLIC_SEARCH_PER_HOUR } from '@pb/shared';
 import { registerWaitlistRoutes } from './routes/waitlist';
+import { registerAdminWaitlistRoutes } from './routes/admin-waitlist';
 import { rateLimitRefusal } from './middleware/rate-limit-refused';
 import { decisionLogger } from './lib/decision-event';
 import { rateLimited } from './errors/http-errors';
@@ -170,6 +171,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerPublicPagesRoutes(app, services, env);
   registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });
   registerWaitlistRoutes(app, services, env);
+  registerAdminWaitlistRoutes(app, services);
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

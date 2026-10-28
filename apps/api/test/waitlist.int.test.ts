@@ -363,13 +363,14 @@ describe('waitlist prune (D220)', () => {
     const removed = nextEmail();
     await join({ email: removed });
     const [removedRow] = await entries(removed);
-    const { waitlist } = buildServices({
-      db: ctx.t.db,
-      env: ctx.env,
-      mailer: ctx.mailer,
-      now: ctx.clock.now,
+    // Removal is an admin action (032); the repo writes the same rows the service does.
+    const repo = createWaitlistRepo(ctx.t.db);
+    await repo.remove({ id: removedRow.id, removedBy: ctx.world.owner.id, now: ctx.clock.now() });
+    await repo.insertEvent({
+      entryId: removedRow.id,
+      action: 'removed',
+      actorId: ctx.world.owner.id,
     });
-    await waitlist.remove({ id: removedRow.id, removedBy: ctx.world.owner.id });
 
     // Pending links expire after 7 days and are kept 30 more; removed entries 30 days.
     ctx.clock.advance(38 * DAY_MS);

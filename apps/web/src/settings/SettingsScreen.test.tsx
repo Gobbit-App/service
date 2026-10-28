@@ -37,12 +37,18 @@ function setup({
   tokens = [token(1)],
   ingest = {},
   create = async () => ({ ...token(9, { label: 'Phone' }), token: 'ing_secret9' }),
+  isPlatformAdmin = false,
 }: {
   tokens?: IngestToken[];
   ingest?: Partial<AppConfig['ingest']>;
   create?: () => Promise<unknown>;
+  isPlatformAdmin?: boolean;
 } = {}) {
   respond.mockImplementation(async (request) => {
+    if (request === 'GET /me') {
+      const user = { id: 'u1', email: 'me@example.test', displayName: 'Me' };
+      return { user, decks: [], isPlatformAdmin };
+    }
     if (request === 'GET /me/ingest-tokens') return { data: tokens };
     if (request === 'GET /decks') return { data: [family, club] };
     if (request === 'POST /me/ingest-tokens') return create();
@@ -133,6 +139,21 @@ describe('SettingsScreen', () => {
     expect(within(ways).getByText(/\/api\/ingest$/)).toBeInTheDocument();
     expect(screen.queryByText(/iPhone/)).toBeNull();
     expect(screen.queryByText(/turned off/)).toBeNull();
+  });
+
+  it('links the waitlist only for platform admins (032)', async () => {
+    setup({ isPlatformAdmin: true });
+    expect(await screen.findByRole('link', { name: 'Waitlist' })).toHaveAttribute(
+      'href',
+      '/admin/waitlist',
+    );
+  });
+
+  it('shows no waitlist link to everyone else (032)', async () => {
+    setup();
+    await screen.findByRole('list', { name: 'Your tokens' });
+    await vi.waitFor(() => expect(respond).toHaveBeenCalledWith('GET /me'));
+    expect(screen.queryByRole('link', { name: 'Waitlist' })).toBeNull();
   });
 
   it('lists the email way with the inbound domain when email-in is on', async () => {

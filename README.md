@@ -69,6 +69,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `REGISTRATION_MODE` | `waitlist` | `waitlist` closes sign-up: an unknown address asking for a sign-in link joins the waitlist instead; invitees still get accounts. `open` lets anyone sign up (logged at `warn` in production) |
 | `WAITLIST_JOIN_PER_IP_PER_HOUR` | `10` | Waitlist joins and confirms per IP per hour (in memory; 429 beyond) |
 | `WAITLIST_JOIN_PER_EMAIL_PER_HOUR` | `3` | Waitlist joins per address per hour (`rate_limit_counters`; 429 beyond) |
+| `PLATFORM_ADMINS` | — | Comma-separated emails of platform admins (`/admin/*`, e.g. the waitlist screen); everyone else gets 404. Empty logs `admin.config` at `warn` in production |
+| `WAITLIST_INVITE_TTL_DAYS` | `7` | Days a waitlist invite's sign-in link stays valid |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
@@ -254,7 +256,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 
 **Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
 
-Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`.
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`.
 
 ### GitHub Actions
 
@@ -388,6 +390,8 @@ Every change people make to a card (added, proposed, published, edited, archived
 ### Waitlist (Phase 9)
 
 `POST /waitlist` `{ email, kind, note?, utmSource? }` asks for an invite (kind `family`, `community`, `personal` or `other`). Every well-formed request answers `202 { ok: true }`, whether the address is new, already listed or already a user; only the email differs (a confirm link, a sign-in link, or nothing). The confirm link (`GET /waitlist/confirm?token=`, valid 7 days) redirects to `${APP_URL}/welcome?confirmed=1` or `?confirm=invalid`. Joins are limited per IP and per address (`WAITLIST_JOIN_PER_*_PER_HOUR`); unconfirmed entries are pruned weekly. Counts per week, kind, source and status: `SELECT * FROM waitlist_summary ORDER BY week DESC;`. Reading the decision events and clearing a limit: [`infra/README.md`](./infra/README.md#waitlist) § Waitlist.
+
+Platform admins (`PLATFORM_ADMINS`) work the list in the PWA at `/admin/waitlist` (Settings → Platform → Waitlist): `GET /admin/waitlist?status=&kind=&cursor=` (default `confirmed`, oldest first, counts per status), `POST /admin/waitlist/{id}/invite` (creates the account and mails a sign-in link valid `WAITLIST_INVITE_TTL_DAYS`; `201` first invite, `200` resend) and `DELETE /admin/waitlist/{id}` (pending or confirmed only). Everyone else gets `404` on `/admin/*`. See [`docs/design/waitlist.md`](./docs/design/waitlist.md#admin-032-d234d238-adr-064).
 
 ### Writing cards (Phase 6)
 

@@ -77,3 +77,15 @@ export function waitlistExistingUserEmail(p: { signInUrl: string }): RenderedMai
     html: `<p>${escapeHtml(intro)}</p>\n<p>${escapeHtml(action)} <a href="${escapeHtml(p.signInUrl)}">${escapeHtml(p.signInUrl)}</a></p>`,
   };
 }
+
+/** 032: an admin invited a confirmed waitlist entry; the link signs them in (and makes their deck). */
+export function waitlistInviteEmail(p: { link: string; ttlDays: number }): RenderedMail {
+  const intro = "You're in: there's a place for you on Gobbit now.";
+  const action = 'Open Gobbit to sign in and start your first deck:';
+  const rules = `The link works once and expires in ${p.ttlDays} days. After that, sign in from the Gobbit sign-in screen with this address any time.`;
+  return {
+    subject: "You're in — welcome to Gobbit",
+    text: `${intro}\n\n${action}\n${p.link}\n\n${rules}\n\nGobbit`,
+    html: `<p>${escapeHtml(intro)}</p>\n<p>${escapeHtml(action)}</p>\n<p><a href="${escapeHtml(p.link)}">Open Gobbit</a></p>\n<p>${escapeHtml(rules)}</p>\n<p>Gobbit</p>`,
+  };
+}

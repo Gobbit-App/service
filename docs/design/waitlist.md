@@ -73,6 +73,40 @@ It records `waitlist.prune` with both counts.
 and status; an `invited` entry whose user has ever had a session counts as `joined`. No emails,
 tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC;`.
 
+## Admin (032, D234–D238, ADR-064)
+
+Platform admins (`PLATFORM_ADMINS`, [auth](auth.md#platform-admins-d234)) work the list from the
+PWA at `/admin/waitlist` (linked from Settings → Platform), through `waitlist-admin.service` only:
+
+- `GET /admin/waitlist?status=&kind=&cursor=&limit=` — default `confirmed`, oldest confirmed
+  first; `invited` newest invite first, others newest first; keyset cursor, `limit` ≤ 100
+  (default 50); `counts` per status for the kind filter.
+- `POST /admin/waitlist/{id}/invite` — locks the entry, `users.service.register(email,
+  'waitlist_invite')` (or links the existing user), marks it `invited` and mints a `sign_in`
+  link valid `WAITLIST_INVITE_TTL_DAYS` (default 7) in one transaction; the "You're in" mail goes
+  after commit. `201` first invite, `200` resend (a new link, older ones stay valid); `409`
+  `waitlist-not-confirmed` / `waitlist-removed`. A failed send still answers with
+  `mailSent: false` and the screen offers Resend. The personal deck appears on first sign-in
+  (Phase 3B), not at invite.
+- `DELETE /admin/waitlist/{id}` — pending/confirmed → `removed` (`204`, no-op when already
+  removed); `409 waitlist-invited` for invited entries.
+
+Each write inserts a `waitlist_events` row (`invited`, `invite_resent`, `removed`, `actor_id` =
+the admin) in its transaction and records `waitlist.admin`; each list call records
+`waitlist.admin_list`. The web never persists the admin query (`NOT_PERSISTED`). Queries and
+alerts: `infra/README.md` § Waitlist admin.
+
+### Deviations from the 032 plan
+
+- The `/admin/*` guard runs before request validation, so non-admins get the same 404 for every
+  admin URL; malformed ids are a 404 for admins too.
+- The invite registers the user inside the locked transaction; a concurrent deck invite for the
+  same address can fail it with a unique-index 500 (retry links the existing user).
+- 028's placeholder `markInvited` / `remove` were removed from `waitlist.service`.
+- `WAITLIST_KIND_LABELS` / `WAITLIST_STATUS_LABELS` were added to `@pb/shared/waitlist-constants`.
+- The `@full` e2e journey removes a pending entry (e2e can't read mail); invite → first sign-in is
+  an integration test. Details: `specs/032-waitlist-admin/implementation-notes.md`.
+
 ## Deviations from the 028 plan
 
 - The confirm keeps the token hash on the row (status moves to `confirmed`), so a reused link reads
@@ -84,5 +118,5 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
   `/waitlist`, and a second registration counted each join twice. Its options stay local to
   `createApp`; 030 attaches its form route in the same place.
 - `waitlistJoinSchema` trims and lower-cases the email before validating it.
-- `markInvited` / `remove` exist in the service without decision events; 032 adds them with the
-  admin actor.
+- `markInvited` / `remove` existed in the service without decision events; 032 replaced them with
+  `waitlist-admin.service` (admin actor, decision events).

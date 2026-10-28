@@ -55,6 +55,9 @@ x-api-env: &api-env
   REGISTRATION_MODE: ${REGISTRATION_MODE:-waitlist}
   WAITLIST_JOIN_PER_IP_PER_HOUR: ${WAITLIST_JOIN_PER_IP_PER_HOUR:-10}
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR: ${WAITLIST_JOIN_PER_EMAIL_PER_HOUR:-3}
+  # D234/D236: platform admins (comma-separated emails) and the waitlist invite link lifetime.
+  PLATFORM_ADMINS: ${PLATFORM_ADMINS:-}
+  WAITLIST_INVITE_TTL_DAYS: ${WAITLIST_INVITE_TTL_DAYS:-7}
 
 services:
   api:

@@ -1827,6 +1827,88 @@ h3 {
   font-size: 0.875rem;
 }
 
+/* ---------- Platform admin waitlist (032) ---------- */
+
+.waitlist-admin {
+  display: grid;
+  gap: var(--gap);
+}
+
+.waitlist-admin h2 {
+  margin: 0;
+}
+
+.waitlist-admin__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px var(--gap);
+}
+
+.waitlist-admin__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.waitlist-admin__count {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.waitlist-admin__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.waitlist-admin__kind select {
+  min-height: var(--tap);
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+}
+
+.waitlist-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px var(--gap);
+}
+
+.waitlist-row__who {
+  display: grid;
+  min-width: 0;
+}
+
+.waitlist-row__email {
+  overflow-wrap: anywhere;
+}
+
+.waitlist-row__who .muted {
+  font-size: 0.875rem;
+}
+
+.waitlist-row__note {
+  margin: 4px 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.waitlist-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.waitlist-row > .form-error {
+  flex-basis: 100%;
+}
+
 /* 022: "Discard changes?" (native modal dialog, shared by the editor and the review queue) */
 .discard-dialog {
   width: min(22rem, calc(100vw - 2 * var(--gap)));
