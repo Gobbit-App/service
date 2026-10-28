@@ -10,13 +10,17 @@
   background: var(--color-bg);
 }
 
+/* D218: the snap pages fill the screen above the dock, which stays put at the bottom. */
 .browse__stage {
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
 /* The snap container: one card per screen; the page never scroll-chains past it. */
 .browse__pages {
-  height: 100%;
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
   scroll-snap-type: y mandatory;
@@ -27,22 +31,32 @@
   display: none;
 }
 
+/*
+ * D218: a sideways swipe on the card changes the pane; vertical drags stay native paging. The
+ * card body scrolls too, so it needs pan-y itself; wide tables keep their own sideways scroll.
+ */
+.browse__pages--swipe,
+.browse__pages--swipe .browse-page__content {
+  touch-action: pan-y;
+}
+
 .browse-page {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
 
-/* The middle zone: horizontal swipes do nothing; long cards scroll, then chain to the next. */
+/* The card zone: long cards scroll, then chain to the next. */
 .browse-page__content {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  padding: 0 var(--gutter);
+  padding: calc(var(--safe-top) + 12px) calc(var(--gutter) + var(--safe-right)) 12px
+    calc(var(--gutter) + var(--safe-left));
   overflow-y: auto;
   overscroll-behavior: auto;
 }
@@ -61,28 +75,34 @@
   align-content: center;
 }
 
-/* Header/footer zones (contract §2): a quarter of the screen, at least 88 px; vertical stays native. */
+/* D218: the dock — pane bar over menu bar, fixed under the pages, clear of the gesture bar. */
+.browse-dock {
+  flex: 0 0 auto;
+  padding: 8px calc(var(--gutter) + var(--safe-right)) max(var(--safe-bottom), 8px)
+    calc(var(--gutter) + var(--safe-left));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* The dock's swipe zones (contract §2): horizontal swipes step, vertical stays native. */
 .browse-band {
   display: flex;
-  flex: 0 0 auto;
   flex-direction: column;
-  justify-content: center;
   gap: 4px;
-  min-height: max(25dvh, 88px);
-  padding: 0 calc(var(--gutter) + var(--safe-right)) 0 calc(var(--gutter) + var(--safe-left));
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.browse-band--header {
-  padding-top: var(--safe-top);
-  background: linear-gradient(var(--color-surface), var(--color-bg));
+.browse-band--panes {
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
 }
 
-.browse-band--footer {
-  padding-bottom: var(--safe-bottom);
-  background: linear-gradient(var(--color-bg), var(--color-surface));
+.browse-band--menu {
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
 }
 
 .browse-band__row {
@@ -92,18 +112,19 @@
   gap: var(--gap);
 }
 
+/* Close | category | position: equal ends keep the category name centred. */
+.browse-band--menu .browse-band__row > :first-child,
+.browse-band__end {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  min-width: var(--tap);
+}
+
 /* D215: the position menu ("3 / 12"); its menu offers Previous card / Next card. */
 .browse-band__position {
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
-}
-
-.browse-band__row--category {
-  justify-content: center;
-}
-
-.browse-band .browse-dots {
-  align-self: center;
 }
 
 /* Category name + menu. */
@@ -130,9 +151,10 @@
   cursor: pointer;
 }
 
+/* D218: the menu bar is at the bottom, so the menu opens upwards. */
 .browse-category__menu {
   position: absolute;
-  top: calc(100% + 4px);
+  bottom: calc(100% + 4px);
   left: 50%;
   z-index: 2;
   min-width: 200px;
@@ -245,7 +267,7 @@
 
 .browse__notice {
   position: fixed;
-  bottom: calc(max(25dvh, 88px) + 8px);
+  top: calc(var(--safe-top) + 12px);
   left: 50%;
   z-index: 11;
   margin: 0;
@@ -276,15 +298,17 @@
   padding: var(--gutter);
 }
 
-.browse-hint__zone--header,
-.browse-hint__zone--footer {
-  min-height: max(25dvh, 88px);
+/* D218: the two dock zones, over the pane bar and the menu bar. */
+.browse-hint__zone--panes,
+.browse-hint__zone--menu {
+  min-height: 64px;
+  padding-block: 8px;
   border: 2px dashed rgb(255 255 255 / 60%);
-  border-width: 0 0 2px;
+  border-width: 2px 0 0;
 }
 
-.browse-hint__zone--footer {
-  border-width: 2px 0 0;
+.browse-hint__zone--menu {
+  padding-bottom: max(var(--safe-bottom), 8px);
 }
 
 .browse-hint__zone--middle {

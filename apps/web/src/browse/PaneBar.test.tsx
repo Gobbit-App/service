@@ -2,32 +2,23 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { BrowsePane } from './browse-params';
-import { FooterBand, stepPane } from './FooterBand';
+import { PaneBar } from './PaneBar';
 
 function Controlled({ initial = 'content' as BrowsePane }) {
   const [pane, setPane] = useState<BrowsePane>(initial);
-  return <FooterBand pageId="i1" pane={pane} onPane={setPane} active />;
+  return <PaneBar pageId="i1" pane={pane} onPane={setPane} active />;
 }
 
-describe('stepPane', () => {
-  it('steps without wrapping', () => {
-    expect(stepPane('content', 'next')).toBe('details');
-    expect(stepPane('details', 'next')).toBe('source');
-    expect(stepPane('source', 'next')).toBeNull();
-    expect(stepPane('content', 'prev')).toBeNull();
-  });
-});
-
-describe('FooterBand', () => {
+describe('PaneBar', () => {
   it('is a tablist named "Card view" whose selection follows the pane', () => {
-    const { rerender } = render(<FooterBand pageId="i1" pane="details" onPane={vi.fn()} active />);
+    const { rerender } = render(<PaneBar pageId="i1" pane="details" onPane={vi.fn()} active />);
     const tabs = within(screen.getByRole('tablist', { name: 'Card view' })).getAllByRole('tab');
     expect(tabs.map((tab) => tab.textContent)).toEqual(['Content', 'Details', 'Source']);
     expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('tabindex', '0');
     expect(screen.getByRole('tab', { name: 'Source' })).toHaveAttribute('tabindex', '-1');
 
-    rerender(<FooterBand pageId="i1" pane="source" onPane={vi.fn()} active />);
+    rerender(<PaneBar pageId="i1" pane="source" onPane={vi.fn()} active />);
     expect(screen.getByRole('tab', { name: 'Source' })).toHaveAttribute('aria-selected', 'true');
   });
 
@@ -54,7 +45,7 @@ describe('FooterBand', () => {
 
   it('disables everything on a state page', () => {
     render(
-      <FooterBand
+      <PaneBar
         pageId="state"
         pane="content"
         onPane={vi.fn()}

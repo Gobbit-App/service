@@ -96,13 +96,20 @@ export function MoreMenu({
       if (!root.current?.contains(target) && !menu.current?.contains(target)) setOpen(false);
     };
     const onViewportChange = () => setOpen(false);
+    // Only a scroll that moves the trigger misplaces the menu (D218: Browse's dock is fixed
+    // while the cards scroll under it).
+    const onScroll = (event: Event) => {
+      const scroller = event.target;
+      if (scroller instanceof Node && button.current && !scroller.contains(button.current)) return;
+      setOpen(false);
+    };
     document.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('resize', onViewportChange);
-    window.addEventListener('scroll', onViewportChange, true);
+    window.addEventListener('scroll', onScroll, true);
     return () => {
       document.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('resize', onViewportChange);
-      window.removeEventListener('scroll', onViewportChange, true);
+      window.removeEventListener('scroll', onScroll, true);
     };
   }, [open]);
 

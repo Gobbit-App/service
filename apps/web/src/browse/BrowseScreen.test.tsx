@@ -78,6 +78,22 @@ describe('BrowseScreen', () => {
     expect(screen.getByText('Card 1 of 6')).toBeInTheDocument();
   });
 
+  it('renders one dock under the pages, outside every page (D218)', async () => {
+    renderScreen();
+    await screen.findByRole('heading', { name: 'Card 1' });
+    const docks = document.querySelectorAll('.browse-dock');
+    expect(docks).toHaveLength(1);
+    expect(docks[0]?.closest('.browse__pages')).toBeNull();
+    expect(document.querySelector('.browse__pages')?.nextElementSibling).not.toBeNull();
+    expect(screen.getAllByRole('tablist')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Close browse' })).toHaveLength(1);
+    expect(screen.getByRole('tab', { name: 'Content' })).toHaveAttribute(
+      'aria-controls',
+      'browse-panel-i1',
+    );
+    expect(document.querySelector('.browse__pages')).toHaveClass('browse__pages--swipe');
+  });
+
   it('gives only the current card image priority, sized by CloudImage (D144, D161)', async () => {
     mockConfig.cloudinaryCloudName = 'demo';
     const photos = items.map((item, n) =>

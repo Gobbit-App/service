@@ -6,13 +6,12 @@ import { emptyListCopy } from '../items/empty-copy';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { filterKey, type BrowsePane } from './browse-params';
 import { BrowseStack, type BrowseStackProps } from './BrowseStack';
-import { FooterBand } from './FooterBand';
-import { HeaderBand } from './HeaderBand';
+import { BrowseDock } from './BrowseDock';
 import { useBrowseItems } from './use-browse-items';
 
 export const OFFLINE_COPY = "You're offline and these cards aren't saved on this device yet.";
 
-/** Contract §4: one page with an active header (category change still works) and no cards. */
+/** Contract §4: one page and an active menu bar (category change still works), no cards. */
 function StatePage({
   header,
   pane,
@@ -23,13 +22,20 @@ function StatePage({
   children: ReactNode;
 }): ReactElement {
   return (
-    <div className="browse__pages">
-      <section className="browse-page browse-page--state">
-        <HeaderBand {...header} position={null} onPrevCard={null} onNextCard={null} active />
-        <div className="browse-page__content">{children}</div>
-        <FooterBand pageId="state" pane={pane} onPane={() => undefined} active={false} disabled />
-      </section>
-    </div>
+    <>
+      <div className="browse__pages">
+        <section className="browse-page browse-page--state">
+          <div className="browse-page__content">{children}</div>
+        </section>
+      </div>
+      <BrowseDock
+        menu={{ ...header, position: null, onPrevCard: null, onNextCard: null }}
+        pageId="state"
+        pane={pane}
+        onPane={() => undefined}
+        panesDisabled
+      />
+    </>
   );
 }
 

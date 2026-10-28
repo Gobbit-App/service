@@ -57,6 +57,20 @@ describe('zoneSwipeHandler', () => {
     expect(onStep).not.toHaveBeenCalled();
   });
 
+  it('cancels and ignores drags whose start the zone gave away (D218)', () => {
+    const onStep = vi.fn();
+    const handle = zoneSwipeHandler(
+      onStep,
+      () => WIDTH,
+      () => true,
+    );
+    const start = drag({ first: true, last: false });
+    handle(start);
+    expect(start.cancel).toHaveBeenCalled();
+    handle(drag({ xy: [60, 100] }));
+    expect(onStep).not.toHaveBeenCalled();
+  });
+
   it('counts a short fast flick', () => {
     const { onStep, handle } = setup();
     handle(drag({ xy: [175, 100], velocity: [0.6, 0], elapsedTime: 40 }));
@@ -68,5 +82,14 @@ describe('useZoneSwipe', () => {
   it('returns pointer bindings for a band', () => {
     const { result } = renderHook(() => useZoneSwipe(vi.fn()));
     expect(typeof result.current().onPointerDown).toBe('function');
+  });
+
+  it('asks ignoreStart about the pointer-down target and its zone', () => {
+    const ignoreStart = vi.fn(() => true);
+    const { result } = renderHook(() => useZoneSwipe(vi.fn(), true, ignoreStart));
+    const zone = document.createElement('div');
+    const target = document.createElement('input');
+    result.current().onPointerDownCapture({ target, currentTarget: zone } as never);
+    expect(ignoreStart).toHaveBeenCalledWith(target, zone);
   });
 });

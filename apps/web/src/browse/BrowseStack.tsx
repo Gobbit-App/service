@@ -10,13 +10,14 @@ import {
 import type { Category, Item } from '@pb/shared';
 import type { BrowsePane } from './browse-params';
 import { writeBrowseReturn } from './browse-return';
+import { BrowseDock } from './BrowseDock';
 import { BrowsePage } from './BrowsePage';
-import type { HeaderBandProps } from './HeaderBand';
-import { positionLabel } from './HeaderBand';
+import { positionLabel, type MenuBarProps } from './MenuBar';
 import { pagingBehavior, scrollToPage } from './motion';
 import { useBrowseKeys } from './use-browse-keys';
 import { usePrefetchAhead } from './use-browse-items';
 import { useCurrentCard } from './use-current-card';
+import { usePaneSwipe } from './use-pane-swipe';
 
 export const NOT_FOUND_COPY = "That card isn't available here";
 
@@ -40,7 +41,7 @@ export interface BrowseStackProps {
   pane: BrowsePane;
   onPane: (pane: BrowsePane) => void;
   onSettle: (itemId: string) => void;
-  header: Omit<HeaderBandProps, 'active' | 'position' | 'onPrevCard' | 'onNextCard'>;
+  header: Omit<MenuBarProps, 'active' | 'position' | 'onPrevCard' | 'onNextCard'>;
   /** Off while the first-run hint is open. */
   keysEnabled: boolean;
 }
@@ -140,10 +141,12 @@ export function BrowseStack({
     [nextCard, prevCard],
   );
   useBrowseKeys(keys, keysEnabled);
+  // D218: a sideways swipe anywhere on the card changes the pane, like the pane bar.
+  const bindPaneSwipe = usePaneSwipe(pane, onPane, keysEnabled);
 
   return (
     <>
-      <div className="browse__pages" ref={container}>
+      <div className="browse__pages browse__pages--swipe" ref={container} {...bindPaneSwipe()}>
         {items.map((item, i) => (
           <BrowsePage
             key={item.id}
@@ -151,15 +154,8 @@ export function BrowseStack({
             deckSlug={deckSlug}
             categories={categories}
             pane={pane}
-            onPane={onPane}
             current={i === index}
             mounted={Math.abs(i - index) <= 1}
-            header={{
-              ...header,
-              position: { index: i, total },
-              onPrevCard: i === index ? prevCard : null,
-            }}
-            onNextCard={i === index ? nextCard : null}
           />
         ))}
       </div>
@@ -171,6 +167,12 @@ export function BrowseStack({
       <p className="visually-hidden" aria-live="polite">
         {current ? `Card ${positionLabel(index, total)}` : ''}
       </p>
+      <BrowseDock
+        menu={{ ...header, position: { index, total }, onPrevCard: prevCard, onNextCard: nextCard }}
+        pageId={current?.id ?? initialId}
+        pane={pane}
+        onPane={onPane}
+      />
     </>
   );
 }

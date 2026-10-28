@@ -2,8 +2,7 @@ import type { ReactElement } from 'react';
 import type { Category, Item } from '@pb/shared';
 import type { ImageLoading } from '../cards/ImageCard';
 import type { BrowsePane } from './browse-params';
-import { FooterBand, panelId, tabId } from './FooterBand';
-import { HeaderBand, type HeaderBandProps } from './HeaderBand';
+import { panelId, tabId } from './PaneBar';
 import { ContentPane } from './panes/ContentPane';
 import { DetailsPane } from './panes/DetailsPane';
 import { SourcePane } from './panes/SourcePane';
@@ -13,13 +12,10 @@ export interface BrowsePageProps {
   deckSlug: string;
   categories: readonly Category[];
   pane: BrowsePane;
-  onPane: (pane: BrowsePane) => void;
-  /** The current card: binds the gestures, is in the a11y tree, loads its image first. */
+  /** The current card: is in the a11y tree and loads its image first. */
   current: boolean;
-  /** Current ±1: renders its card; the rest are empty 100dvh placeholders (D144). */
+  /** Current ±1: renders its card; the rest are empty full-height placeholders (D144). */
   mounted: boolean;
-  header: Omit<HeaderBandProps, 'active' | 'onNextCard'>;
-  onNextCard: (() => void) | null;
 }
 
 function PaneBody({
@@ -41,17 +37,14 @@ function PaneBody({
   }
 }
 
-/** One snap page (contract §2): header band, the card's pane, footer band. */
+/** One snap page (contract §2, D218): the card's pane; the controls live in the dock. */
 export function BrowsePage({
   item,
   deckSlug,
   categories,
   pane,
-  onPane,
   current,
   mounted,
-  header,
-  onNextCard,
 }: BrowsePageProps): ReactElement {
   if (!mounted) {
     return <section className="browse-page" data-item-id={item.id} aria-hidden="true" inert />;
@@ -63,7 +56,6 @@ export function BrowsePage({
       aria-hidden={current ? undefined : true}
       inert={!current}
     >
-      <HeaderBand {...header} onNextCard={onNextCard} active={current} />
       <div
         className="browse-page__content"
         role="tabpanel"
@@ -79,7 +71,6 @@ export function BrowsePage({
           image={{ priority: current }}
         />
       </div>
-      <FooterBand pageId={item.id} pane={pane} onPane={onPane} active={current} />
     </section>
   );
 }

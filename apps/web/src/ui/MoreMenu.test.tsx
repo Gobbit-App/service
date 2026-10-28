@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { NavigateContext } from './NavLink';
@@ -75,5 +75,17 @@ describe('MoreMenu (D213)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'More actions' }));
     await userEvent.click(screen.getByRole('button', { name: 'outside' }));
     expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('closes when its trigger scrolls, not when another scroller does (D218)', async () => {
+    setup();
+    const sibling = document.createElement('div');
+    document.body.append(sibling);
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    fireEvent.scroll(sibling);
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    fireEvent.scroll(document);
+    expect(screen.queryByRole('menu')).toBeNull();
+    sibling.remove();
   });
 });

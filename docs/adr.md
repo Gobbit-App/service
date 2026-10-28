@@ -425,7 +425,7 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 
 ## ADR-052: Browse: native scroll-snap + use-gesture (D139, D140, D144)
 
-**Decision**: Browse pages cards with native CSS scroll-snap and one IntersectionObserver. `@use-gesture/react` (`useDrag`) is used only for horizontal swipes on the header and footer bands, with `touch-action: pan-y` and a 24 px edge guard. Only the current card ±1 is mounted. The gesture library lives only in the lazy Browse route chunk, and `pnpm budget` enforces that.
+**Decision**: Browse pages cards with native CSS scroll-snap and one IntersectionObserver. `@use-gesture/react` (`useDrag`) is used only for horizontal swipes on the header and footer bands (since D218: the bottom dock's menu and pane bars, plus the card for panes), with `touch-action: pan-y` and a 24 px edge guard. Only the current card ±1 is mounted. The gesture library lives only in the lazy Browse route chunk, and `pnpm budget` enforces that.
 
 **Rationale**:
 - Native snapping keeps vertical paging on the compositor, with platform physics and no JS per frame, and it works with keyboard and assistive tech.

@@ -29,7 +29,7 @@ Every action in the web app is an icon control from one hand-drawn set. A card's
 
 **Destructive style and CSS scoping (D214)**: there is one `.button--danger` rule: an outline with danger text and border. `.icon-button--danger` and `.menu__item--danger` use the same token. Danger text measures at least 7:1 in both themes. `styles.test.ts` checks the tokens: danger and primary text at ≥ 4.5:1, muted icons at ≥ 3:1. It also checks that the lazy stylesheets (`editor.css`, `browse.css`) never restyle `.button`, `.icon-button` or `.menu*` unscoped, which is how the editor used to change list buttons after it had been opened.
 
-**Browse (D215)**: there are no arrow buttons. The header holds close (an icon), `browse/PositionMenu` ("Card 3 of 12" with Previous card and Next card items, `aria-disabled` at the ends) and the category menu. The footer holds the view tabs and dots. Swipes and keys are unchanged.
+**Browse (D215)**: there are no arrow buttons. The header holds close (an icon), `browse/PositionMenu` ("Card 3 of 12" with Previous card and Next card items, `aria-disabled` at the ends) and the category menu. The footer holds the view tabs and dots. Swipes and keys are unchanged. Since D218 both sit in one bottom dock ([browse-mode](browse-mode.md)).
 
 **App header**: back, page actions, Settings and Sign out are icon controls. Below 400 px the header has no gap between them, so seven 44 px controls fit in 360 px.
 

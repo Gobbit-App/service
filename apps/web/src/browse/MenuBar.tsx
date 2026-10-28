@@ -11,7 +11,7 @@ export function positionLabel(index: number, total: number | null): string {
   return total === null ? `${index + 1}` : `${index + 1} of ${total}`;
 }
 
-export interface HeaderBandProps {
+export interface MenuBarProps {
   cycle: readonly CycleEntry[];
   current: CycleEntry;
   prevCategory: CycleEntry | null;
@@ -24,15 +24,16 @@ export interface HeaderBandProps {
   onPrevCard: (() => void) | null;
   /** Null when there is no next card. */
   onNextCard: (() => void) | null;
-  /** Only the current page binds the swipe (contract §2). */
+  /** Off while nothing should react to the swipe (no category to page through). */
   active: boolean;
 }
 
 /**
- * Contract §2 header band: a horizontal swipe changes category. D215: no arrow buttons — the
+ * Contract §2 category zone, D218: the dock's bottom row — Close, the category menu and the
+ * position menu. A horizontal swipe on it changes category. D215: no arrow buttons — the
  * category menu and the position menu give the same moves without a swipe.
  */
-export function HeaderBand({
+export function MenuBar({
   cycle,
   current,
   prevCategory,
@@ -43,28 +44,28 @@ export function HeaderBand({
   onPrevCard,
   onNextCard,
   active,
-}: HeaderBandProps): ReactElement {
+}: MenuBarProps): ReactElement {
   const bind = useZoneSwipe((step: SwipeStep) => {
     const target = step === 'next' ? nextCategory : prevCategory;
     if (target) onCategory(target.slug);
   }, active);
 
   return (
-    <header className="browse-band browse-band--header" {...bind()}>
+    <nav className="browse-band browse-band--menu" aria-label="Browse" {...bind()}>
       <div className="browse-band__row">
         <IconButton icon="close" label="Close browse" onClick={onClose} />
-        {position && (
-          <PositionMenu
-            index={position.index}
-            total={position.total}
-            onPrevCard={onPrevCard}
-            onNextCard={onNextCard}
-          />
-        )}
-      </div>
-      <div className="browse-band__row browse-band__row--category">
         <CategoryMenu cycle={cycle} current={current} onSelect={onCategory} />
+        <span className="browse-band__end">
+          {position && (
+            <PositionMenu
+              index={position.index}
+              total={position.total}
+              onPrevCard={onPrevCard}
+              onNextCard={onNextCard}
+            />
+          )}
+        </span>
       </div>
-    </header>
+    </nav>
   );
 }

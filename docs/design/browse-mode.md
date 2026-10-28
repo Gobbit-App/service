@@ -2,7 +2,7 @@
 
 _Overview: [architecture.md](../architecture.md). Decisions: [adr.md](../adr.md)._
 
-Browse shows one card per screen. Readers swipe vertically between cards, across the header to change category, and across the footer to switch between the Content, Details and Source panes. Every gesture has a control and a key: since 024 the card arrows are gone and moving between cards goes through the position menu ("Card 3 of 12"), see [icons-and-actions](icons-and-actions.md). Nothing changes in the API or the DB. The one new web dependency is `@use-gesture/react`, and it loads only in the Browse chunk.
+Browse shows one card per screen. Readers swipe vertically between cards, sideways on the card or the pane bar to switch between the Content, Details and Source panes, and sideways on the menu bar to change category (D218). Every gesture has a control and a key: since 024 the card arrows are gone and moving between cards goes through the position menu ("Card 3 of 12"), see [icons-and-actions](icons-and-actions.md). Nothing changes in the API or the DB. The one new web dependency is `@use-gesture/react`, and it loads only in the Browse chunk.
 
 **Route and address (D141)**:
 - The route is `/d/$slug/browse?c=<all|category>&i=<itemId>&pane=<content|details|source>` (`routes/d.$slug.browse.tsx`).
@@ -24,18 +24,20 @@ Browse shows one card per screen. Readers swipe vertically between cards, across
 
 **Paging (D139, D144)**:
 - `.browse__pages` is a native CSS scroll-snap container: `y mandatory`, with `overscroll-behavior-y: contain`.
-- Every page is `100dvh`. Only the current card ±1 render content; the rest are empty placeholders of the same height.
+- Every page fills the snap container, which takes the screen above the dock (D218). Only the current card ±1 render content; the rest are empty placeholders of the same height.
 - One IntersectionObserver at threshold 0.6 (`use-current-card.ts`) tracks the current card. After 300 ms of settle it writes `i`.
 - Only the current page is exposed to assistive tech; the others are `inert` + `aria-hidden`. Focus moves to the card title on change, and one live region announces the position.
 - **Scroll restoration is disabled for this route** (`app/router.ts`). Router scroll restoration would otherwise restore the snap container from an earlier Browse visit in the tab, and again after every settle `replace`. Browse positions itself only from `i`.
 
-**Zones (D140)**:
-- The header band (`max(25dvh, 88px)`) and the footer band take horizontal swipes through `use-zone-swipe.ts` (`useDrag`, `axis: 'x'`, `filterTaps`, `touch-action: pan-y`).
+**Dock (D218)**: one fixed `BrowseDock` sits under the pages, outside every page, and holds the pane bar (`PaneBar`: tabs + dots) above the menu bar (`MenuBar`: close, category menu, position menu). Menus in it open upwards. `MoreMenu` closes only on scrolls that move its trigger, so a snap settling under the dock leaves the position menu open.
+
+**Zones (D140, D218)**:
+- The menu bar, the pane bar and the whole card (`.browse__pages`) take horizontal swipes through `use-zone-swipe.ts` (`useDrag`, `axis: 'x'`, `filterTaps`, `touch-action: pan-y`, also on the scrolling card body). The menu bar changes category; the pane bar and the card change pane (`use-pane-swipe.ts`).
+- A card drag that starts on text entry or on an element that scrolls sideways (a wide table) is left alone (`swipe-target.ts`).
 - `swipe.ts` classifies a swipe: at least 40 px or 0.3 px/ms, on the dominant axis, with leftward meaning next.
 - The 24 px at each screen edge are ignored (`edge-guard.ts`), so the system back gesture keeps working.
-- The middle zone only scrolls.
 - Category order is All, then the chip-row order (`category-cycle.ts`), with no wrap-around.
-- The footer selects the pane, and the pane stays the same across cards. The Content pane is the list's card (favorite, share, and the title links to `/i/<id>`).
+- The pane bar selects the pane, and the pane stays the same across cards. The Content pane is the list's card (favorite, share, and the title links to `/i/<id>`).
 
 **Without gestures (D142)**:
 - Buttons: ↑/↓ card buttons, ‹ › category chevrons named after their target, a category menu, a `tablist` for the panes, and a close button.
@@ -50,7 +52,7 @@ Browse shows one card per screen. Readers swipe vertically between cards, across
 **Images and motion (D144)**:
 - `ImageCard` takes an optional `priority` prop. `sizes` comes from `CloudImage`, which measures its own width (013, D161); the old viewport-based `use-image-sizes.ts` is gone.
 - The current card gets `loading="eager"` + `fetchpriority="high"`; its neighbours stay lazy.
-- The only CSS transition is a `transform` on the footer dots, so there is no `will-change`. Styles live in `browse/browse.css`, which is part of the lazy chunk.
+- The only CSS transition is a `transform` on the pane-bar dots, so there is no `will-change`. Styles live in `browse/browse.css`, which is part of the lazy chunk.
 
 **Bundle**:
 - Initial JS is 113.7 KB gzip (was 112.5).
@@ -72,3 +74,4 @@ Browse shows one card per screen. Readers swipe vertically between cards, across
   - reusing `cards/cloudinary.ts` widths;
   - the `gobbit:browse-hint:v1` key;
   - a Source pane built from `sourceKind`/`sourceUrl`/ages.
+- **One bottom dock replaces the header and footer bands (D218).** The 25dvh bands took half the screen and swipes on the card did nothing; the dock is compact, fixed at the bottom, and sideways swipes anywhere on the card change the pane. The category swipe moved to the menu bar only, so a card swipe can never change category by accident.

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { CycleEntry } from './category-cycle';
-import { HeaderBand, positionLabel, type HeaderBandProps } from './HeaderBand';
+import { MenuBar, positionLabel, type MenuBarProps } from './MenuBar';
 
 const cycle: CycleEntry[] = [
   { slug: 'all', name: 'All' },
@@ -9,8 +9,8 @@ const cycle: CycleEntry[] = [
   { slug: 'school', name: 'School' },
 ];
 
-function renderBand(overrides: Partial<HeaderBandProps> = {}) {
-  const props: HeaderBandProps = {
+function renderBand(overrides: Partial<MenuBarProps> = {}) {
+  const props: MenuBarProps = {
     cycle,
     current: cycle[1] as CycleEntry,
     prevCategory: cycle[0] as CycleEntry,
@@ -23,7 +23,7 @@ function renderBand(overrides: Partial<HeaderBandProps> = {}) {
     active: true,
     ...overrides,
   };
-  render(<HeaderBand {...props} />);
+  render(<MenuBar {...props} />);
   return props;
 }
 
@@ -34,7 +34,7 @@ describe('positionLabel', () => {
   });
 });
 
-describe('HeaderBand', () => {
+describe('MenuBar', () => {
   it('shows no arrow buttons (D215)', () => {
     renderBand();
     for (const name of [/card$/, /^Previous category/, /^Next category/]) {
@@ -43,8 +43,8 @@ describe('HeaderBand', () => {
     expect(document.body.textContent).not.toMatch(/[‹›↑↓✕]/);
     expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual([
       'Close browse',
-      'Card 3 of 10',
       'Category: Food',
+      'Card 3 of 10',
     ]);
   });
 

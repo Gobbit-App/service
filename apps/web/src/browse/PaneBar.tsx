@@ -1,19 +1,12 @@
 import type { KeyboardEvent, ReactElement } from 'react';
 import { browsePanes, type BrowsePane } from './browse-params';
-import type { SwipeStep } from './swipe';
-import { useZoneSwipe } from './use-zone-swipe';
+import { stepPane, usePaneSwipe } from './use-pane-swipe';
 
 const PANE_LABELS: Record<BrowsePane, string> = {
   content: 'Content',
   details: 'Details',
   source: 'Source',
 };
-
-/** The neighbouring pane, or null at either end (no wrap). */
-export function stepPane(pane: BrowsePane, step: SwipeStep): BrowsePane | null {
-  const index = browsePanes.indexOf(pane) + (step === 'next' ? 1 : -1);
-  return browsePanes[index] ?? null;
-}
 
 export function tabId(pageId: string, pane: BrowsePane): string {
   return `browse-tab-${pageId}-${pane}`;
@@ -23,7 +16,7 @@ export function panelId(pageId: string): string {
   return `browse-panel-${pageId}`;
 }
 
-export interface FooterBandProps {
+export interface PaneBarProps {
   /** The page's card id (tab/panel ids); state pages pass their own key. */
   pageId: string;
   pane: BrowsePane;
@@ -33,18 +26,18 @@ export interface FooterBandProps {
   disabled?: boolean;
 }
 
-/** Contract §2 footer band: a horizontal swipe changes the pane; the tabs do the same (D215: no arrows). */
-export function FooterBand({
+/**
+ * Contract §2 pane zone, D218: the dock's top row. A horizontal swipe on it (or on the card,
+ * `usePaneSwipe`) changes the pane; the tabs do the same (D215: no arrows).
+ */
+export function PaneBar({
   pageId,
   pane,
   onPane,
   active,
   disabled = false,
-}: FooterBandProps): ReactElement {
-  const bind = useZoneSwipe((step: SwipeStep) => {
-    const next = stepPane(pane, step);
-    if (next) onPane(next);
-  }, active && !disabled);
+}: PaneBarProps): ReactElement {
+  const bind = usePaneSwipe(pane, onPane, active && !disabled);
   const prev = stepPane(pane, 'prev');
   const next = stepPane(pane, 'next');
 
@@ -68,7 +61,7 @@ export function FooterBand({
   };
 
   return (
-    <footer className="browse-band browse-band--footer" {...bind()}>
+    <div className="browse-band browse-band--panes" {...bind()}>
       <div className="browse-band__row">
         <div className="browse-tabs" role="tablist" aria-label="Card view" onKeyDown={onTabKeyDown}>
           {browsePanes.map((p) => (
@@ -97,6 +90,6 @@ export function FooterBand({
           />
         ))}
       </span>
-    </footer>
+    </div>
   );
 }

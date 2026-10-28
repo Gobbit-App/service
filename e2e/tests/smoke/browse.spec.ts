@@ -65,10 +65,18 @@ const browseUrl = (slug: string, query: string) => webUrl(`/d/${slug}/browse?${q
 const cardHeading = (page: Page, title: string) => page.getByRole('heading', { name: title });
 const currentPage = (page: Page) => page.locator('section.browse-page:not([inert])');
 
-async function bandY(page: Page, band: 'header' | 'footer'): Promise<number> {
-  const box = await currentPage(page).locator(`.browse-band--${band}`).boundingBox();
-  if (!box) throw new Error(`no ${band} band on the current page`);
+/** D218: the dock's two zones — the menu bar (category) and the pane bar (tabs + dots). */
+async function bandY(page: Page, band: 'menu' | 'panes'): Promise<number> {
+  const box = await page.locator(`.browse-dock .browse-band--${band}`).boundingBox();
+  if (!box) throw new Error(`no ${band} bar in the dock`);
   return Math.round(box.y + box.height * 0.6);
+}
+
+/** A point on the current card's page below its content (blank space), or its middle. */
+async function cardY(page: Page, where: 'content' | 'blank'): Promise<number> {
+  const box = await currentPage(page).boundingBox();
+  if (!box) throw new Error('no current page');
+  return Math.round(box.y + box.height * (where === 'content' ? 0.1 : 0.85));
 }
 
 /**
@@ -218,7 +226,7 @@ test.describe('browse mode', () => {
     }
   });
 
-  test('header changes category @smoke', async ({ page }) => {
+  test('menu bar changes category @smoke', async ({ page }) => {
     await page.addInitScript((key) => localStorage.setItem(key, 'dismissed'), HINT_KEY);
     const { width, height } = viewport(page);
     await page.goto(browseUrl(deck.slug, 'c=all'));
@@ -227,12 +235,12 @@ test.describe('browse mode', () => {
     await expect(page).toHaveURL(/i=/);
 
     // a swipe at the first category does nothing
-    await swipeBand(page, await bandY(page, 'header'), 'prev');
+    await swipeBand(page, await bandY(page, 'menu'), 'prev');
     await settle(page);
     await expect(page).toHaveURL(/c=all/);
 
-    // a header swipe moves to the next category at card 1, `c` updated and `i` cleared
-    await swipeBand(page, await bandY(page, 'header'), 'next');
+    // a menu bar swipe moves to the next category at card 1, `c` updated and `i` cleared
+    await swipeBand(page, await bandY(page, 'menu'), 'next');
     await expect(page).not.toHaveURL(/c=all/);
     await expect(page.getByRole('button', { name: 'Category: All' })).toHaveCount(0);
     const next = await page.getByRole('button', { name: /^Category: / }).getAttribute('aria-label');
@@ -240,15 +248,15 @@ test.describe('browse mode', () => {
     await expect(page).not.toHaveURL(/i=/);
     const url = page.url();
 
-    // a horizontal swipe in the middle zone does nothing
-    await swipeBand(page, Math.round(height / 2), 'prev');
+    // a horizontal swipe on the card never changes the category (D218: it is the pane zone)
+    await swipeBand(page, Math.round(height / 3), 'prev');
     await settle(page);
     await expect(page.getByRole('button', { name: `Category: ${nextName}` })).toBeVisible();
 
-    // a header swipe starting in the 24 px edge guard does nothing (system back owns it)
-    await swipeBand(page, await bandY(page, 'header'), 'prev', 10);
+    // a menu bar swipe starting in the 24 px edge guard does nothing (system back owns it)
+    await swipeBand(page, await bandY(page, 'menu'), 'prev', 10);
     await settle(page);
-    await swipeBand(page, await bandY(page, 'header'), 'next', width - 10);
+    await swipeBand(page, await bandY(page, 'menu'), 'next', width - 10);
     await settle(page);
     await expect(page.getByRole('button', { name: `Category: ${nextName}` })).toBeVisible();
     expect(new URL(page.url()).searchParams.get('c')).toBe(new URL(url).searchParams.get('c'));
@@ -269,13 +277,31 @@ test.describe('browse mode', () => {
     await expect(page.getByRole('article', { name: 'Other card 2' })).toBeInViewport();
   });
 
-  test('footer panes @smoke', async ({ page }) => {
+  test('pane swipes on the card and the pane bar @smoke', async ({ page }) => {
     await page.addInitScript((key) => localStorage.setItem(key, 'dismissed'), HINT_KEY);
     await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}`));
     await expect(cardHeading(page, deck.cards[0]!.title)).toBeVisible();
 
-    // a footer swipe → Details
-    await swipeBand(page, await bandY(page, 'footer'), 'next');
+    // D218: the controls sit in one dock at the bottom; the card starts right at the top
+    const dock = await page.locator('.browse-dock').boundingBox();
+    const { height } = viewport(page);
+    expect(dock!.y + dock!.height).toBeCloseTo(height, 0);
+    expect((await currentPage(page).locator('.card').boundingBox())!.y).toBeLessThan(60);
+
+    // a sideways swipe on the blank space under a short card → Details, and back on the card
+    await swipeBand(page, await cardY(page, 'blank'), 'next');
+    await expect(page).toHaveURL(/pane=details/);
+    await swipeBand(page, await cardY(page, 'content'), 'prev');
+    await expect(page).toHaveURL(/pane=content/);
+
+    // a pane bar swipe that starts on a tab → Details
+    const tab = await page.getByRole('tab', { name: 'Details' }).boundingBox();
+    await swipeBand(
+      page,
+      Math.round(tab!.y + tab!.height / 2),
+      'next',
+      Math.round(tab!.x + tab!.width / 2),
+    );
     await expect(page.getByRole('tab', { name: 'Details' })).toHaveAttribute(
       'aria-selected',
       'true',

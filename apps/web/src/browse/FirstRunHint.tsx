@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactElement } from 'react';
 import { Button } from '../ui/buttons/Button';
 
-/** FR-012: the one-time overlay naming the three zones. Dismiss only (contract §4). */
+/** FR-012: the one-time overlay naming the swipe zones (D218 layout). Dismiss only (contract §4). */
 export function FirstRunHint({ onDismiss }: { onDismiss: () => void }): ReactElement {
   const titleId = useId();
   const button = useRef<HTMLButtonElement>(null);
@@ -30,16 +30,17 @@ export function FirstRunHint({ onDismiss }: { onDismiss: () => void }): ReactEle
       aria-labelledby={titleId}
       onKeyDown={onKeyDown}
     >
-      <div className="browse-hint__zone browse-hint__zone--header">
-        <p>Swipe sideways here to change category</p>
-      </div>
       <div className="browse-hint__zone browse-hint__zone--middle">
         <h2 id={titleId}>How to browse</h2>
         <p>Swipe up or down for the next or previous card</p>
+        <p>Swipe sideways on the card for details and source</p>
         <Button ref={button} icon="check" label="Got it" onClick={onDismiss} />
       </div>
-      <div className="browse-hint__zone browse-hint__zone--footer">
-        <p>Swipe sideways here for details and source</p>
+      <div className="browse-hint__zone browse-hint__zone--panes">
+        <p>Swipe sideways or tap here for details and source</p>
+      </div>
+      <div className="browse-hint__zone browse-hint__zone--menu">
+        <p>Swipe sideways here to change category</p>
       </div>
     </div>
   );
