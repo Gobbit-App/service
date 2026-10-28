@@ -43,6 +43,11 @@ import { rateLimitedHtml, registerPublicPagesRoutes } from './routes/public-page
 import { publicRateLimit } from './middleware/public-rate-limit';
 import { createAnonRateLimiter, type AnonRateLimiter } from './lib/anon-rate-limiter';
 import { PUBLIC_READ_PER_HOUR, PUBLIC_SEARCH_PER_HOUR } from '@pb/shared';
+import { registerWaitlistRoutes } from './routes/waitlist';
+import { rateLimitRefusal } from './middleware/rate-limit-refused';
+import { decisionLogger } from './lib/decision-event';
+import { rateLimited } from './errors/http-errors';
+import type { Logger } from './lib/logger';
 
 export interface AppDeps {
   db: Db;
@@ -63,6 +68,10 @@ export interface AppDeps {
   anonLimiter?: AnonRateLimiter;
   /** D182: anonymous search request limiter (its own bucket); tests pass one with a low limit. */
   anonSearchLimiter?: AnonRateLimiter;
+  /** D219: waitlist join/confirm per-IP limiter (its own bucket); tests pass one with a low limit. */
+  waitlistLimiter?: AnonRateLimiter;
+  /** Parent logger for decision events (D239); integration tests capture it. */
+  logger?: Logger;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -111,6 +120,33 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   };
   app.use('/public/:slug/search', publicRateLimit(searchLimit));
   app.use('/p/:slug/search', publicRateLimit({ ...searchLimit, onLimited: rateLimitedHtml }));
+  // D219: waitlist joins and confirms share their own per-IP bucket; each refusal is recorded
+  // (D240). 030's HTML form reuses `waitlistLimit` with its own page as the answer.
+  const recordWaitlistRefusal = rateLimitRefusal({
+    bucket: 'waitlist',
+    logHash: services.logHash,
+    ipHeader: env.CLIENT_IP_HEADER,
+    decisions: deps.logger
+      ? decisionLogger('rate-limit', {
+          parent: deps.logger,
+          levels: { 'rate_limit.refused': 'warn' },
+        })
+      : undefined,
+  });
+  const waitlistLimit = {
+    ...anonLimit,
+    limiter:
+      deps.waitlistLimiter ?? createAnonRateLimiter({ limit: env.WAITLIST_JOIN_PER_IP_PER_HOUR }),
+  };
+  const waitlistJsonLimit = publicRateLimit({
+    ...waitlistLimit,
+    onLimited: (c, retryAfterSeconds) => {
+      recordWaitlistRefusal(c, retryAfterSeconds);
+      throw rateLimited(retryAfterSeconds);
+    },
+  });
+  // Hono's `/waitlist/*` also matches `/waitlist`; one registration counts each request once.
+  app.use('/waitlist/*', waitlistJsonLimit);
 
   registerHealthRoutes(app, { pool: deps.pool, commit: env.GIT_SHA });
   registerConfigRoutes(app, env);
@@ -133,6 +169,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerPublicRoutes(app, services, env);
   registerPublicPagesRoutes(app, services, env);
   registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });
+  registerWaitlistRoutes(app, services, env);
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

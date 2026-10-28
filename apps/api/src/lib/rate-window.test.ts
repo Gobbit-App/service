@@ -73,5 +73,9 @@ describe('rate-window', () => {
       const key = rateKeys.callbackIp('10.0.0.1');
       expect(key).toBe('callback:ip:10.0.0.1');
     });
+
+    it('should generate waitlist:email:<hash> format', () => {
+      expect(rateKeys.waitlistEmail('abc123')).toBe('waitlist:email:abc123');
+    });
   });
 });

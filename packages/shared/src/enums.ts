@@ -44,3 +44,24 @@ export type LinkCheckStatus = (typeof linkCheckStatuses)[number];
 /** D165: the statuses a member sees as a flag. */
 export const linkFlagStatuses = ['dead', 'changed'] as const;
 export type LinkFlagStatus = (typeof linkFlagStatuses)[number];
+
+/** D217: who a waitlist entry is for, where it came from, and where it stands. */
+export const waitlistKinds = ['family', 'community', 'personal', 'other'] as const;
+export type WaitlistKind = (typeof waitlistKinds)[number];
+
+export const waitlistSources = ['landing', 'sign_in'] as const;
+export type WaitlistSource = (typeof waitlistSources)[number];
+
+export const waitlistStatuses = ['pending', 'confirmed', 'invited', 'removed'] as const;
+export type WaitlistStatus = (typeof waitlistStatuses)[number];
+
+/** D240: one audit row per change to a waitlist entry. */
+export const waitlistEventActions = [
+  'created',
+  'resent',
+  'confirmed',
+  'invited',
+  'invite_resent',
+  'removed',
+] as const;
+export type WaitlistEventAction = (typeof waitlistEventActions)[number];

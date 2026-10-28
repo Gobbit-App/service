@@ -49,6 +49,11 @@ x-api-env: &api-env
   RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
   # iCloud link of the published "Share to Gobbit" Shortcut (shown in settings).
   SHORTCUT_URL: ${SHORTCUT_URL:-}
+  # D239: keyed hashes in decision events; required in production (Dokploy secret, ≥ 32 chars).
+  LOG_HASH_KEY: ${LOG_HASH_KEY:-}
+  # D219: waitlist limits; raise for a launch event and redeploy (infra/README.md § Waitlist).
+  WAITLIST_JOIN_PER_IP_PER_HOUR: ${WAITLIST_JOIN_PER_IP_PER_HOUR:-10}
+  WAITLIST_JOIN_PER_EMAIL_PER_HOUR: ${WAITLIST_JOIN_PER_EMAIL_PER_HOUR:-3}
 
 services:
   api:

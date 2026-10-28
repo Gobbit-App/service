@@ -8,6 +8,10 @@ import {
   memberRoles,
   magicLinkPurposes,
   sessionKinds,
+  waitlistKinds,
+  waitlistSources,
+  waitlistStatuses,
+  waitlistEventActions,
 } from '@pb/shared';
 
 export const tstz = () => timestamp({ withTimezone: true, precision: 3, mode: 'date' });
@@ -26,3 +30,7 @@ export const sourceKindEnum = pgEnum('source_kind', sourceKinds);
 export const memberRoleEnum = pgEnum('member_role', memberRoles);
 export const magicLinkPurposeEnum = pgEnum('magic_link_purpose', magicLinkPurposes);
 export const sessionKindEnum = pgEnum('session_kind', sessionKinds);
+export const waitlistKindEnum = pgEnum('waitlist_kind', waitlistKinds);
+export const waitlistSourceEnum = pgEnum('waitlist_source', waitlistSources);
+export const waitlistStatusEnum = pgEnum('waitlist_status', waitlistStatuses);
+export const waitlistEventActionEnum = pgEnum('waitlist_event_action', waitlistEventActions);

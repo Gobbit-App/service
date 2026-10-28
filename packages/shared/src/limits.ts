@@ -46,6 +46,12 @@ export const PUBLIC_QUERY_EMBED_GLOBAL_PER_HOUR = 300;
 export const PUBLIC_SEARCH_LIMIT_DEFAULT = 10;
 export const PUBLIC_SEARCH_LIMIT_MAX = 20;
 
+/** D219: waitlist joins per client IP per hour, in-process (env WAITLIST_JOIN_PER_IP_PER_HOUR). */
+export const WAITLIST_JOIN_PER_IP_PER_HOUR = 10;
+
+/** D219: waitlist joins per email per hour, DB-backed (env WAITLIST_JOIN_PER_EMAIL_PER_HOUR). */
+export const WAITLIST_JOIN_PER_EMAIL_PER_HOUR = 3;
+
 /** Maximum character count for name fields. */
 export const NAME_MAX = 80;
 

@@ -506,3 +506,14 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 - **Existing code**: code that predates the principle is brought into line when it is next changed, and through a retrofit feature tracked in `PLAN.md`. Today, rate-limit refusals, for example, appear only as a generic request line with status 429.
 
 **Rationale**: A service that refuses, drops or changes things for people without a trace can't be debugged, defended or tuned. Several paths already answer clients identically on purpose (D22, the honeypot), so the client-facing answer can't be where accountability lives. Named events with closed-set fields are the cheapest form that serves all three uses: reading one occurrence, counting over a window and watching a rate. They are also enough for any log-based monitoring backend. Choosing that backend (collection, dashboards, alert routing) is a separate operational decision. Until then, records are JSON lines on stdout, readable with `jq` (`docs/design/api-conventions.md`). Details: [`docs/design/api-conventions.md#decision-events`](design/api-conventions.md#decision-events).
+
+## ADR-061: Registration gate and waitlist (D217–D219, D240)
+
+**Decision**: People ask for an invite through a double opt-in waitlist that never reveals whether an address is known. (029 adds the registration gate to this ADR.)
+
+- **One service**: `waitlist.service.join()` holds every rule; the JSON API, the landing form (030) and the sign-in gate (029) call it. Entries live in `waitlist_entries` (one live entry per email, status `pending | confirmed | invited | removed`, CHECKs tie timestamps to status).
+- **No enumeration**: every well-formed request answers `202 { ok: true }`; the cases differ only in the mail (confirm, existing-user sign-in link, or none). A confirm link is a `GET` with an atomic `UPDATE`, single use, valid 7 days, stored as sha256.
+- **Spam controls**: a honeypot field (silent drop), a per-IP in-memory bucket and a per-email Postgres counter checked before any lookup; both limits are env vars. No CAPTCHA.
+- **Accountability (constitution VIII)**: each outcome is a named decision event with keyed hashes (`LOG_HASH_KEY`), and each state change writes a `waitlist_events` row in the same transaction; those rows outlive the weekly prune of unconfirmed and removed entries.
+
+**Rationale**: double opt-in keeps invites to addresses someone controls and stops signing up other people; identical answers extend D22 so the waitlist is no "is this a Gobbit user?" oracle; one service keeps the API, the form and the gate identical. Details: [`docs/design/waitlist.md`](design/waitlist.md).

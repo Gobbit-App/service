@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { parseEnv } from './env';
+import { DEV_LOG_HASH_KEY, parseEnv } from './env';
 
 describe('env', () => {
   const validUrl = 'postgresql://localhost/test';
+  const FAKE_LOG_HASH_KEY = 'x'.repeat(32);
   const FAKE_CLOUDINARY_URL = ['cloudinary://', 'key', ':', 'not-a-real-secret', '@', 'demo'].join(
     '',
   );
@@ -81,6 +82,7 @@ describe('env', () => {
       MAIL_PROVIDER: 'console',
       ALLOW_CONSOLE_MAIL: 'true',
       CLOUDINARY_URL: FAKE_CLOUDINARY_URL,
+      LOG_HASH_KEY: FAKE_LOG_HASH_KEY,
     });
     expect(env.NODE_ENV).toBe('production');
     expect(env.MAIL_PROVIDER).toBe('console');
@@ -140,6 +142,7 @@ describe('env', () => {
       NODE_ENV: 'production',
       ALLOW_CONSOLE_MAIL: 'true',
       CLOUDINARY_URL: FAKE_CLOUDINARY_URL,
+      LOG_HASH_KEY: FAKE_LOG_HASH_KEY,
     });
     expect(env.API_URL).toBe('https://example.com');
   });
@@ -150,5 +153,53 @@ describe('env', () => {
       CLIENT_IP_HEADER: 'CF-Connecting-IP',
     });
     expect(env.CLIENT_IP_HEADER).toBe('cf-connecting-ip');
+  });
+
+  describe('waitlist and log hashing (D219, D239)', () => {
+    it('defaults the waitlist limits from limits.ts and the dev log-hash key', () => {
+      const env = parseEnv({ DATABASE_URL: validUrl });
+      expect(env.WAITLIST_JOIN_PER_IP_PER_HOUR).toBe(10);
+      expect(env.WAITLIST_JOIN_PER_EMAIL_PER_HOUR).toBe(3);
+      expect(env.LOG_HASH_KEY).toBe(DEV_LOG_HASH_KEY);
+    });
+
+    it('reads overrides', () => {
+      const env = parseEnv({
+        DATABASE_URL: validUrl,
+        WAITLIST_JOIN_PER_IP_PER_HOUR: '50',
+        WAITLIST_JOIN_PER_EMAIL_PER_HOUR: '5',
+        LOG_HASH_KEY: FAKE_LOG_HASH_KEY,
+      });
+      expect(env.WAITLIST_JOIN_PER_IP_PER_HOUR).toBe(50);
+      expect(env.WAITLIST_JOIN_PER_EMAIL_PER_HOUR).toBe(5);
+      expect(env.LOG_HASH_KEY).toBe(FAKE_LOG_HASH_KEY);
+    });
+
+    it.each(['0', 'abc', '-1'])('rejects a waitlist limit of %s', (value) => {
+      expect(() =>
+        parseEnv({ DATABASE_URL: validUrl, WAITLIST_JOIN_PER_IP_PER_HOUR: value }),
+      ).toThrow(/WAITLIST_JOIN_PER_IP_PER_HOUR/);
+      expect(() =>
+        parseEnv({ DATABASE_URL: validUrl, WAITLIST_JOIN_PER_EMAIL_PER_HOUR: value }),
+      ).toThrow(/WAITLIST_JOIN_PER_EMAIL_PER_HOUR/);
+    });
+
+    it('rejects a short LOG_HASH_KEY', () => {
+      expect(() => parseEnv({ DATABASE_URL: validUrl, LOG_HASH_KEY: 'short' })).toThrow(
+        /LOG_HASH_KEY/,
+      );
+    });
+
+    it('requires LOG_HASH_KEY in production', () => {
+      expect(() =>
+        parseEnv({
+          DATABASE_URL: validUrl,
+          NODE_ENV: 'production',
+          API_URL: 'https://example.com',
+          ALLOW_CONSOLE_MAIL: 'true',
+          CLOUDINARY_URL: FAKE_CLOUDINARY_URL,
+        }),
+      ).toThrow(/LOG_HASH_KEY is required in production/);
+    });
   });
 });

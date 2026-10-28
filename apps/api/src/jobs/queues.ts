@@ -16,6 +16,8 @@ export const QUEUES = {
   linkSnapshot: 'link-snapshot',
   /** D164: daily check of due link cards. */
   linkCheckSweep: 'link-check-sweep',
+  /** D220: weekly delete of expired pending and old removed waitlist entries. */
+  pruneWaitlist: 'prune-waitlist',
 } as const;
 
 export interface EmbedItemJob {

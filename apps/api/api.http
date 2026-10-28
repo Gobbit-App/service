@@ -461,3 +461,14 @@ Authorization: Bearer {{token}}
 ### One card's history (survives the card being purged)
 GET {{baseUrl}}/decks/family/events?itemId=<itemId>
 Authorization: Bearer {{token}}
+
+### ─── Waitlist (Phase 9, 028) ───
+
+### Join the waitlist (D218; no auth, 10/hour per IP, 3/hour per address; always 202 { ok: true })
+POST {{baseUrl}}/waitlist
+Content-Type: application/json
+
+{ "email": "parent@example.test", "kind": "family", "note": "Our street's numbers", "utmSource": "flyer" }
+
+### Confirm (the mailed link; 303 to APP_URL/welcome?confirmed=1 or ?confirm=invalid, 200 JSON without APP_URL)
+GET {{baseUrl}}/waitlist/confirm?token=<token>

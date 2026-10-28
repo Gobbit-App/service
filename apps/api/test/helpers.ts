@@ -11,6 +11,7 @@ import type { SearchWiring } from '../src/services/search-wiring';
 import type { IngestWiring } from '../src/services/ingest-wiring';
 import type { MediaWiring } from '../src/services/media-wiring';
 import type { AnonRateLimiter } from '../src/lib/anon-rate-limiter';
+import type { Logger } from '../src/lib/logger';
 import {
   createSampleWorld,
   fixtureId,
@@ -71,6 +72,10 @@ export interface SetupApiTestOptions {
   anonLimiter?: AnonRateLimiter;
   /** D182: anonymous search request limiter. */
   anonSearchLimiter?: AnonRateLimiter;
+  /** D219: waitlist per-IP limiter. */
+  waitlistLimiter?: AnonRateLimiter;
+  /** D239: parent logger for decision events (e.g. `captureLogger().logger`). */
+  logger?: Logger;
 }
 
 export interface ApiTestContext {
@@ -133,6 +138,8 @@ export function setupApiTest(opts: SetupApiTestOptions = {}): ApiTestContext {
       media: opts.media,
       anonLimiter: opts.anonLimiter,
       anonSearchLimiter: opts.anonSearchLimiter,
+      waitlistLimiter: opts.waitlistLimiter,
+      logger: opts.logger,
     });
   });
 

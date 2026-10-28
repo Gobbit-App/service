@@ -9,6 +9,7 @@ import {
   LINK_CHECK_READ_BYTES,
   MEDIA_SWEEP_CRON,
   SEARCH_QUERY_PRUNE_CRON,
+  WAITLIST_PRUNE_CRON,
 } from '@pb/shared';
 import { parseEnv } from './env';
 import { createBoss } from './jobs/boss';
@@ -44,6 +45,8 @@ import { ensureQueues } from './jobs/ensure-queues';
 import { createPruneSearchQueries } from './jobs/prune-search-queries';
 import { createPruneIngestJobs } from './jobs/prune-ingest-jobs';
 import { createPruneDeletedItems } from './jobs/prune-deleted-items';
+import { createPruneWaitlist } from './jobs/prune-waitlist';
+import { createWaitlistRepo } from './repositories/waitlist.repo';
 import { createIngestJobsRepo } from './repositories/ingest-jobs.repo';
 import { createCloudinaryIngestUploads } from './media/ingest-uploads';
 import { createCloudinaryMediaStore } from './media/media-store';
@@ -98,6 +101,13 @@ async function main() {
   await boss.schedule(QUEUES.pruneDeletedItems, DELETED_ITEM_PRUNE_CRON);
   await boss.work(QUEUES.pruneDeletedItems, async () => {
     await pruneDeletedItems();
+  });
+
+  // D220: expired pending and old removed waitlist entries are deleted weekly
+  const pruneWaitlist = createPruneWaitlist({ waitlist: createWaitlistRepo(db) });
+  await boss.schedule(QUEUES.pruneWaitlist, WAITLIST_PRUNE_CRON);
+  await boss.work(QUEUES.pruneWaitlist, async ([job]: Job[]) => {
+    await pruneWaitlist(job?.id ?? 'unknown');
   });
 
   const embedder = defaultEmbedder(env);

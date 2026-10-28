@@ -13,6 +13,7 @@ const QUEUE_POLICIES = {
   [QUEUES.mediaSweep]: 'singleton',
   [QUEUES.linkSnapshot]: 'stately',
   [QUEUES.linkCheckSweep]: 'singleton',
+  [QUEUES.pruneWaitlist]: 'singleton',
 } as const;
 
 /** pg-boss v10+ refuses `send` to a queue that was never created; idempotent. */
