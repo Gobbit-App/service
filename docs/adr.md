@@ -254,7 +254,7 @@ Full text of every ADR; the one-line index is in [architecture.md](architecture.
 
 ## ADR-027: An invite creates the user (D25, D37)
 
-**Decision**: `POST /decks/:id/invites` calls `findOrCreateByEmail()`, so a pending membership always has a non-null `user_id`.
+**Decision**: `POST /decks/:id/invites` creates the user (`register(email, 'deck_invite')` since ADR-061; originally `findOrCreateByEmail()`), so a pending membership always has a non-null `user_id`.
 
 **Rationale**: One code path creates users (Phase 9 can gate registration there); memberships stay simple FKs; the invite link only has to accept.
 
@@ -336,7 +336,7 @@ Full text of every ADR; the one-line index is in [architecture.md](architecture.
 
 **Decision**: Each account has exactly one personal deck, marked `decks.is_default` and protected by a partial unique index, a trigger and CHECKs. `usersService.ensurePersonalDeck()` runs inside the magic-link callback transaction on every sign-in and invite, before the session opens. Its public address is `me`: a reserved slug that the API resolves and the PWA shows as `/d/me`. The stored slug is `personal-<accountId>` and is never shown. There is no backfill migration.
 
-**Rationale**: "Ensure" on every callback covers new users, invitees and accounts created before this phase without a data migration. It sits next to `findOrCreateByEmail()`, so the Phase 9 registration gate covers it too. Running it in the callback transaction means no user reaches the app without a deck, and a failure leaves no session behind. Finding the deck by `is_default` rather than `kind` stays correct when other personal decks exist. A fixed alias keeps URLs stable across renames and asks the user for no slug.
+**Rationale**: "Ensure" on every callback covers new users, invitees and accounts created before this phase without a data migration. It sits next to the user creation point (`register()` since ADR-061), so the registration gate covers it too. Running it in the callback transaction means no user reaches the app without a deck, and a failure leaves no session behind. Finding the deck by `is_default` rather than `kind` stays correct when other personal decks exist. A fixed alias keeps URLs stable across renames and asks the user for no slug.
 
 ## ADR-041: Hybrid search in one repository call, fused in TypeScript (D68–D71)
 
@@ -507,13 +507,15 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 
 **Rationale**: A service that refuses, drops or changes things for people without a trace can't be debugged, defended or tuned. Several paths already answer clients identically on purpose (D22, the honeypot), so the client-facing answer can't be where accountability lives. Named events with closed-set fields are the cheapest form that serves all three uses: reading one occurrence, counting over a window and watching a rate. They are also enough for any log-based monitoring backend. Choosing that backend (collection, dashboards, alert routing) is a separate operational decision. Until then, records are JSON lines on stdout, readable with `jq` (`docs/design/api-conventions.md`). Details: [`docs/design/api-conventions.md#decision-events`](design/api-conventions.md#decision-events).
 
-## ADR-061: Registration gate and waitlist (D217–D219, D240)
+## ADR-061: Registration gate and waitlist (D217–D219, D222–D224, D240, D241)
 
-**Decision**: People ask for an invite through a double opt-in waitlist that never reveals whether an address is known. (029 adds the registration gate to this ADR.)
+**Decision**: Registration is closed by default; people ask for an invite through a double opt-in waitlist that never reveals whether an address is known.
 
 - **One service**: `waitlist.service.join()` holds every rule; the JSON API, the landing form (030) and the sign-in gate (029) call it. Entries live in `waitlist_entries` (one live entry per email, status `pending | confirmed | invited | removed`, CHECKs tie timestamps to status).
 - **No enumeration**: every well-formed request answers `202 { ok: true }`; the cases differ only in the mail (confirm, existing-user sign-in link, or none). A confirm link is a `GET` with an atomic `UPDATE`, single use, valid 7 days, stored as sha256.
 - **Spam controls**: a honeypot field (silent drop), a per-IP in-memory bucket and a per-email Postgres counter checked before any lookup; both limits are env vars. No CAPTCHA.
 - **Accountability (constitution VIII)**: each outcome is a named decision event with keyed hashes (`LOG_HASH_KEY`), and each state change writes a `waitlist_events` row in the same transaction; those rows outlive the weekly prune of unconfirmed and removed entries.
+- **Registration gate**: `REGISTRATION_MODE` is `waitlist` (default) or `open`. The gate acts when a sign-in link is requested: with it closed, an unknown address is put on the waitlist (source `sign_in`) and gets the waitlist mail instead of a link, with the same answer as a known one. A stale sign-in link for an address without a user fails as `closed` and leaves nothing behind.
+- **One creation point**: `users.service.register(email, reason)` is the only path to `createWithAccount`; `deck_invite` and `waitlist_invite` create in any mode, `open_sign_in` only when open. Every new user records `registered_via` and `registered_by`, and every gate decision is a named event (`auth.magic_link`, `auth.callback`, `users.register`, `registration.mode`).
 
-**Rationale**: double opt-in keeps invites to addresses someone controls and stops signing up other people; identical answers extend D22 so the waitlist is no "is this a Gobbit user?" oracle; one service keeps the API, the form and the gate identical. Details: [`docs/design/waitlist.md`](design/waitlist.md).
+**Rationale**: a closed door with a waitlist lets the owner pace growth without new admin tooling; gating at request time means no link is ever minted for a sign-up that would be refused, and one creation point keeps any future path behind the same rule. Double opt-in keeps invites to addresses someone controls and stops signing up other people; identical answers extend D22 so the waitlist is no "is this a Gobbit user?" oracle; one service keeps the API, the form and the gate identical. Details: [`docs/design/waitlist.md`](design/waitlist.md), [`docs/design/auth.md`](design/auth.md#registration-gate-d222d224-d241).

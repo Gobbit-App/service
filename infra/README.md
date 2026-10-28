@@ -57,6 +57,23 @@ WHERE entry_id = (SELECT id FROM waitlist_entries WHERE email = lower('someone@e
 ORDER BY created_at;
 ```
 
+## Registration gate
+
+`REGISTRATION_MODE` (default `waitlist`) closes sign-up: unknown addresses asking for a sign-in link are put on the waitlist instead (`docs/design/auth.md#registration-gate-d222d224-d241`). Set `REGISTRATION_MODE=open` in the Dokploy environment and redeploy to open it; any other value stops the API from starting.
+
+| Event | Query | Alert when (default) |
+| --- | --- | --- |
+| Mode in effect | `jq 'select(.event=="registration.mode") \| [.level,.mode]'` | any `warn` (production running `open`) |
+| Sign-in requests | `jq -c 'select(.event=="auth.magic_link") \| [.outcome,.reason]' \| sort \| uniq -c` | `refused` > 30 per hour; `waitlisted` share > 3× its 7-day average |
+| Callbacks | `jq -c 'select(.event=="auth.callback") \| [.outcome,.reason]' \| sort \| uniq -c` | `failed` > 25% over 1 hour with ≥ 20 callbacks; `closed` > 10 per day |
+| Registrations | `jq -c 'select(.event=="users.register") \| [.outcome,.via]' \| sort \| uniq -c` | any `created` with `via` `open_sign_in` while production runs `waitlist` (must be impossible) |
+
+How users came in (rows from before the gate show `NULL`):
+
+```sql
+SELECT registered_via, count(*) FROM users GROUP BY 1;
+```
+
 ## Backups (Phase 0 step 7)
 
 Nightly logical dump of the `gobbit` database to the S3-compatible store on the NAS, using the same Dokploy S3 destination the other services already back up to. The database lives on the shared Dokploy-managed Postgres (D67), so this uses Dokploy's built-in database backups.

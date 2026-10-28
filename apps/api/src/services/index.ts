@@ -19,6 +19,7 @@ import { createLogHash } from '../lib/log-hash';
 import { decisionLogger } from '../lib/decision-event';
 import { logger as rootLogger, type Logger } from '../lib/logger';
 import { WAITLIST_DECISION_LEVELS, type WaitlistDecisions } from './waitlist.events';
+import { AUTH_DECISION_LEVELS, type AuthDecisions } from './auth.events';
 import { createPageCache } from '../public/page-cache';
 import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
@@ -70,8 +71,11 @@ export interface ServiceDeps {
   logger?: Logger;
 }
 
+/** What the users service needs besides its repos (D222, D241). */
+type RegistrationDeps = Omit<Parameters<typeof createUsersService>[0], 'users' | 'decks'>;
+
 /** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
-export function buildCallbackRepos(tx: DbTx): CallbackRepos {
+export function buildCallbackRepos(tx: DbTx, registration: RegistrationDeps): CallbackRepos {
   const users = createUsersRepo(tx);
   const decks = createDecksRepo(tx);
   return {
@@ -80,7 +84,7 @@ export function buildCallbackRepos(tx: DbTx): CallbackRepos {
     memberships: createMembershipsRepo(tx),
     decks,
     users,
-    usersService: createUsersService({ users, decks }),
+    usersService: createUsersService({ users, decks, ...registration }),
   };
 }
 
@@ -112,7 +116,18 @@ export function buildServices({
   const publicDecks = createPublicDeckService({ decks, categories, items });
   const share = buildShareService(db, env, shareWiring);
 
-  const usersService = createUsersService({ users, decks });
+  // D239: keyed hashes for decision events (emailHash, ipHash).
+  const logHash = createLogHash(env.LOG_HASH_KEY);
+  // D222/D241: one registration policy for every users service (request and callback tx).
+  const registration: RegistrationDeps = {
+    mode: env.REGISTRATION_MODE,
+    logHash,
+    decisions: decisionLogger<AuthDecisions>('users', {
+      parent: logger,
+      levels: AUTH_DECISION_LEVELS,
+    }),
+  };
+  const usersService = createUsersService({ users, decks, ...registration });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
   const toDtos = createItemDtoMapper({ items, favorites, linkChecks });
   const searchServices = buildSearchServices({
@@ -152,28 +167,27 @@ export function buildServices({
     wiring: media,
   });
   const transaction: CallbackTransaction = (fn) =>
-    db.transaction((tx) => fn(buildCallbackRepos(tx)));
-  // D239: keyed hashes for decision events (emailHash, ipHash).
-  const logHash = createLogHash(env.LOG_HASH_KEY);
+    db.transaction((tx) => fn(buildCallbackRepos(tx, registration)));
+  const waitlist = createWaitlistService({
+    env,
+    now,
+    mailer,
+    waitlist: createWaitlistRepo(db),
+    transaction: (fn) => db.transaction((tx) => fn(createWaitlistRepo(tx))),
+    users,
+    rateLimits,
+    logHash,
+    decisions: decisionLogger<WaitlistDecisions>('waitlist', {
+      parent: logger,
+      levels: WAITLIST_DECISION_LEVELS,
+    }),
+  });
 
   return {
     users: usersService,
     rateLimits,
     logHash,
-    waitlist: createWaitlistService({
-      env,
-      now,
-      mailer,
-      waitlist: createWaitlistRepo(db),
-      transaction: (fn) => db.transaction((tx) => fn(createWaitlistRepo(tx))),
-      users,
-      rateLimits,
-      logHash,
-      decisions: decisionLogger<WaitlistDecisions>('waitlist', {
-        parent: logger,
-        levels: WAITLIST_DECISION_LEVELS,
-      }),
-    }),
+    waitlist,
     auth: createAuthService({
       env,
       now,
@@ -182,6 +196,14 @@ export function buildServices({
       magicLinks,
       transaction,
       rateLimits,
+      usersService,
+      waitlist,
+      mode: env.REGISTRATION_MODE,
+      logHash,
+      decisions: decisionLogger<AuthDecisions>('auth', {
+        parent: logger,
+        levels: AUTH_DECISION_LEVELS,
+      }),
     }),
     members: createMembershipsService({
       env,

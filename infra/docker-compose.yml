@@ -52,6 +52,7 @@ x-api-env: &api-env
   # D239: keyed hashes in decision events; required in production (Dokploy secret, ≥ 32 chars).
   LOG_HASH_KEY: ${LOG_HASH_KEY:-}
   # D219: waitlist limits; raise for a launch event and redeploy (infra/README.md § Waitlist).
+  REGISTRATION_MODE: ${REGISTRATION_MODE:-waitlist}
   WAITLIST_JOIN_PER_IP_PER_HOUR: ${WAITLIST_JOIN_PER_IP_PER_HOUR:-10}
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR: ${WAITLIST_JOIN_PER_EMAIL_PER_HOUR:-3}
 

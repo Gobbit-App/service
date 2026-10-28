@@ -66,6 +66,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `INGEST_DAILY_CAP` | `50` | Shares per user and channel per rolling 24 h (429 beyond; all channels together stop at 200) |
 | `SHORTCUT_URL` | — | iCloud link of the published "Share to Gobbit" Shortcut; shown in Settings (`docs/shortcut/README.md`) |
 | `LOG_HASH_KEY` | dev key | Key (≥ 32 characters) for the keyed hashes in decision events (`emailHash`, `ipHash`); **required in production**. Rotating it only breaks matching against older logs |
+| `REGISTRATION_MODE` | `waitlist` | `waitlist` closes sign-up: an unknown address asking for a sign-in link joins the waitlist instead; invitees still get accounts. `open` lets anyone sign up (logged at `warn` in production) |
 | `WAITLIST_JOIN_PER_IP_PER_HOUR` | `10` | Waitlist joins and confirms per IP per hour (in memory; 429 beyond) |
 | `WAITLIST_JOIN_PER_EMAIL_PER_HOUR` | `3` | Waitlist joins per address per hour (`rate_limit_counters`; 429 beyond) |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
@@ -253,7 +254,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 
 **Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
 
-Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`.
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`.
 
 ### GitHub Actions
 

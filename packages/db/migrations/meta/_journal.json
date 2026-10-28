@@ -134,6 +134,13 @@
       "when": 1793206282475,
       "tag": "0018_waitlist",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793207509136,
+      "tag": "0019_users_registered_via",
+      "breakpoints": true
     }
   ]
 }

@@ -73,7 +73,7 @@ Oct 12: implemented and merged (`db1da3b`), deployed at `2543adc` (migration `00
 Rules:
 - Every user has exactly one **personal deck** (`kind = personal`, owned by the user's account, `general` category from the existing trigger).
 - **Onboarding runs on every sign-in, not only the first.** Each magic-link callback (sign-in and invite) checks that the user has a personal deck and, if not, runs the same onboarding as a first-time sign-in. This covers new users, users created by an invite, and users who signed in before this phase (the owner included). There is no backfill migration. The step is idempotent ("ensure", not "create") and runs in the callback transaction before the session opens. It is not queued: the redirect only happens once the deck exists.
-- It lives in one function next to `users.service.findOrCreateByEmail()`, so the Phase 9 registration gate covers it too.
+- It lives in one function next to the user creation point (`users.service.register()` since 029), so the registration gate covers it too.
 - **Addressed as `me`.** The personal deck's URL is `/d/me` in the PWA, and `me` resolves to the caller's personal deck in the API. `me` is a reserved slug that no other deck can take. The stored slug is internal and never shown, so users never pick or see a slug for it. Its display name defaults to "My deck" and can be renamed.
 - The personal deck cannot be deleted (409) and is not shareable (no memberships, D33 owner-only).
 

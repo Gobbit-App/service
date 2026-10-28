@@ -15,6 +15,8 @@ import {
 
 const MINUTE_MS = 60_000;
 const APP_URL = 'http://app.test';
+/** These suites cover link mechanics with fresh addresses; the gate has its own suite (D222). */
+const OPEN = { REGISTRATION_MODE: 'open' };
 
 let ipSeq = 0;
 /** A fresh client IP per test so the per-IP limits never interfere (they have their own suite). */
@@ -40,7 +42,7 @@ function authClient(ctx: ApiTestContext) {
 }
 
 describe('magic links without APP_URL (P2.2, D22–D26)', () => {
-  const ctx = setupApiTest({ env: { CLIENT_IP_HEADER: 'x-test-ip' } });
+  const ctx = setupApiTest({ env: { CLIENT_IP_HEADER: 'x-test-ip', ...OPEN } });
   let client: ReturnType<typeof authClient>;
 
   beforeEach(() => {
@@ -170,7 +172,7 @@ describe('magic links without APP_URL (P2.2, D22–D26)', () => {
 });
 
 describe('magic links with APP_URL (D26 redirects)', () => {
-  const ctx = setupApiTest({ env: { CLIENT_IP_HEADER: 'x-test-ip', APP_URL } });
+  const ctx = setupApiTest({ env: { CLIENT_IP_HEADER: 'x-test-ip', APP_URL, ...OPEN } });
   let client: ReturnType<typeof authClient>;
 
   beforeEach(() => {
@@ -239,7 +241,7 @@ describe('magic links with APP_URL (D26 redirects)', () => {
 });
 
 describe('sign-in onboarding (Phase 3B)', () => {
-  const ctx = setupApiTest({ env: { CLIENT_IP_HEADER: 'x-test-ip' } });
+  const ctx = setupApiTest({ env: { CLIENT_IP_HEADER: 'x-test-ip', ...OPEN } });
   let client: ReturnType<typeof authClient>;
 
   beforeEach(() => {

@@ -121,7 +121,9 @@ export function registerMembersRoutes(app: OpenAPIHono<AppEnv>, services: Servic
     const user = getUser(c);
     const { id } = c.req.valid('param');
     const input = c.req.valid('json');
-    const { membership, created } = await services.members.invite(user, id, input);
+    const { membership, created } = await services.members.invite(user, id, input, {
+      requestId: c.get('requestId'),
+    });
     return created ? c.json({ membership }, 201) : c.json({ membership }, 200);
   });
 }

@@ -4,10 +4,16 @@ import {
   RATE_MAGIC_LINK_PER_IP,
   SESSION_TOUCH_INTERVAL_MS,
 } from '@pb/shared';
+import type { RegistrationMode } from '@pb/shared/auth';
 import type { Authenticated } from '../types';
 import { hashToken } from '../lib/tokens';
 import { HttpError } from '../errors/http-errors';
+import { captureLogger, expectDecision } from '../../test/capture-logger';
+import { decisionLogger } from '../lib/decision-event';
+import { createLogHash } from '../lib/log-hash';
+import { AUTH_DECISION_LEVELS, type AuthDecisions } from './auth.events';
 import { classifyMagicLinkFailure, createAuthService, MagicLinkFailure } from './auth.service';
+import { RegistrationClosed } from './users.service';
 
 const NOW = new Date('2026-01-10T12:00:00.000Z');
 const user = { id: 'u1', accountId: 'a1', email: 'a@b.co', displayName: 'a' };
@@ -49,7 +55,29 @@ describe('createAuthService', () => {
   let decks: any;
   let users: any;
   let transaction: any;
+  let waitlist: any;
+  let capture: ReturnType<typeof captureLogger>;
   let service: ReturnType<typeof createAuthService>;
+
+  const build = (mode: RegistrationMode) =>
+    createAuthService({
+      env: { API_URL: 'https://api.test', MAGIC_LINK_TTL_MINUTES: 15, SESSION_TTL_DAYS: 30 },
+      now: () => NOW,
+      mailer,
+      sessions,
+      magicLinks,
+      transaction,
+      rateLimits,
+      usersService,
+      waitlist,
+      mode,
+      logHash: createLogHash('k'.repeat(32)),
+      decisions: decisionLogger<AuthDecisions>('auth', {
+        parent: capture.logger,
+        levels: AUTH_DECISION_LEVELS,
+      }),
+      log,
+    });
 
   beforeEach(() => {
     sessions = {
@@ -62,10 +90,14 @@ describe('createAuthService', () => {
       consume: vi.fn(),
       findByTokenHash: vi.fn(),
     };
-    rateLimits = { enforce: vi.fn().mockResolvedValue(undefined) };
+    rateLimits = {
+      enforce: vi.fn().mockResolvedValue(undefined),
+      check: vi.fn().mockResolvedValue({ allowed: true, retryAfterSeconds: 60 }),
+    };
     mailer = { send: vi.fn().mockResolvedValue(undefined) };
     usersService = {
-      findOrCreateByEmail: vi.fn().mockResolvedValue({ user, created: false }),
+      findExisting: vi.fn().mockResolvedValue(user),
+      register: vi.fn().mockResolvedValue({ user, created: false }),
       ensurePersonalDeck: vi.fn().mockResolvedValue(undefined),
     };
     memberships = {
@@ -78,17 +110,10 @@ describe('createAuthService', () => {
     const repos = { sessions, magicLinks, memberships, decks, users, usersService };
     transaction = vi.fn((fn) => fn(repos));
 
+    waitlist = { join: vi.fn().mockResolvedValue('created') };
+    capture = captureLogger();
     log = vi.fn();
-    service = createAuthService({
-      env: { API_URL: 'https://api.test', MAGIC_LINK_TTL_MINUTES: 15, SESSION_TTL_DAYS: 30 },
-      now: () => NOW,
-      mailer,
-      sessions,
-      magicLinks,
-      transaction,
-      rateLimits,
-      log,
-    });
+    service = build('waitlist');
   });
 
   describe('authenticate', () => {
@@ -186,15 +211,15 @@ describe('createAuthService', () => {
   });
 
   describe('requestMagicLink', () => {
-    it('enforces the email limit before the IP limit', async () => {
-      await service.requestMagicLink({ email: '  A@B.co ', ip: '1.2.3.4' });
+    it('checks the email limit before the IP limit', async () => {
+      await service.requestMagicLink({ email: '  A@B.co ', ip: '1.2.3.4', requestId: 'r' });
 
-      expect(rateLimits.enforce).toHaveBeenNthCalledWith(
+      expect(rateLimits.check).toHaveBeenNthCalledWith(
         1,
         `magic-link:email:${hashToken('a@b.co')}`,
         RATE_MAGIC_LINK_PER_EMAIL,
       );
-      expect(rateLimits.enforce).toHaveBeenNthCalledWith(
+      expect(rateLimits.check).toHaveBeenNthCalledWith(
         2,
         'magic-link:ip:1.2.3.4',
         RATE_MAGIC_LINK_PER_IP,
@@ -202,7 +227,7 @@ describe('createAuthService', () => {
     });
 
     it('stores a hashed link and mails the callback URL', async () => {
-      await service.requestMagicLink({ email: 'A@B.co', ip: '1.2.3.4' });
+      await service.requestMagicLink({ email: 'A@B.co', ip: '1.2.3.4', requestId: 'r' });
 
       const created = magicLinks.create.mock.calls[0][0];
       expect(created).toMatchObject({
@@ -219,22 +244,29 @@ describe('createAuthService', () => {
     });
 
     it('stores a safe next path with the link', async () => {
-      await service.requestMagicLink({ email: 'a@b.co', ip: 'ip', next: '/d/family' });
+      await service.requestMagicLink({
+        email: 'a@b.co',
+        ip: 'ip',
+        next: '/d/family',
+        requestId: 'r',
+      });
       expect(magicLinks.create.mock.calls[0][0].next).toBe('/d/family');
     });
 
     it.each(['//evil.com', 'https://evil.com', '/\\evil', '/'])(
       'drops an unsafe next %j',
       async (next) => {
-        await service.requestMagicLink({ email: 'a@b.co', ip: 'ip', next });
+        await service.requestMagicLink({ email: 'a@b.co', ip: 'ip', next, requestId: 'r' });
         expect(magicLinks.create.mock.calls[0][0].next).toBeUndefined();
       },
     );
 
     it('stops at the email limit without touching the IP limit or sending', async () => {
-      rateLimits.enforce.mockRejectedValueOnce(new HttpError(429, 't', 'x'));
-      await expect(service.requestMagicLink({ email: 'a@b.co', ip: 'ip' })).rejects.toThrow();
-      expect(rateLimits.enforce).toHaveBeenCalledTimes(1);
+      rateLimits.check.mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 60 });
+      await expect(
+        service.requestMagicLink({ email: 'a@b.co', ip: 'ip', requestId: 'r' }),
+      ).rejects.toThrow();
+      expect(rateLimits.check).toHaveBeenCalledTimes(1);
       expect(magicLinks.create).not.toHaveBeenCalled();
       expect(mailer.send).not.toHaveBeenCalled();
     });
@@ -246,7 +278,7 @@ describe('createAuthService', () => {
       magicLinks.findByTokenHash.mockResolvedValue({ usedAt: new Date() });
 
       const err = await service
-        .consumeMagicLink({ token: 't', ip: 'ip', userAgent: null })
+        .consumeMagicLink({ token: 't', ip: 'ip', userAgent: null, requestId: 'r' })
         .catch((e) => e);
 
       expect(err).toBeInstanceOf(MagicLinkFailure);
@@ -256,7 +288,12 @@ describe('createAuthService', () => {
     it('opens a cookie session for a sign-in link', async () => {
       magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'a@b.co', next: '/d/x' });
 
-      const result = await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: 'ua' });
+      const result = await service.consumeMagicLink({
+        token: 't',
+        ip: 'ip',
+        userAgent: 'ua',
+        requestId: 'r',
+      });
 
       expect(result).toMatchObject({ next: '/d/x', user });
       expect(sessions.create).toHaveBeenCalledWith(
@@ -267,7 +304,7 @@ describe('createAuthService', () => {
     it('runs consume, onboarding and session creation in one transaction', async () => {
       magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'a@b.co', next: null });
 
-      await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null });
+      await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null, requestId: 'r' });
 
       expect(transaction).toHaveBeenCalledTimes(1);
       expect(usersService.ensurePersonalDeck).toHaveBeenCalledWith(user);
@@ -278,7 +315,7 @@ describe('createAuthService', () => {
       usersService.ensurePersonalDeck.mockRejectedValue(new Error('db down'));
 
       const err = await service
-        .consumeMagicLink({ token: 't', ip: 'ip', userAgent: null })
+        .consumeMagicLink({ token: 't', ip: 'ip', userAgent: null, requestId: 'r' })
         .catch((e) => e);
 
       expect(err).toBeInstanceOf(MagicLinkFailure);
@@ -290,7 +327,7 @@ describe('createAuthService', () => {
     it('ensures the personal deck before the session is created', async () => {
       magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'a@b.co', next: null });
 
-      await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null });
+      await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null, requestId: 'r' });
 
       const ensureOrder = usersService.ensurePersonalDeck.mock.invocationCallOrder[0];
       const sessionOrder = sessions.create.mock.invocationCallOrder[0];
@@ -311,7 +348,12 @@ describe('createAuthService', () => {
         deletedAt: null,
       });
 
-      const result = await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null });
+      const result = await service.consumeMagicLink({
+        token: 't',
+        ip: 'ip',
+        userAgent: null,
+        requestId: 'r',
+      });
 
       expect(result).toMatchObject({ next: '/d/x', user });
       expect(usersService.ensurePersonalDeck).toHaveBeenCalledWith(user);
@@ -323,9 +365,155 @@ describe('createAuthService', () => {
       magicLinks.findByTokenHash.mockResolvedValue(null);
 
       await expect(
-        service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null }),
+        service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null, requestId: 'r' }),
       ).rejects.toMatchObject({ reason: 'invalid' });
       expect(usersService.ensurePersonalDeck).not.toHaveBeenCalled();
     });
+  });
+  describe('registration gate (D222, D241)', () => {
+    const request = { email: 'New@Example.test', ip: '1.2.3.4', requestId: 'req-1' };
+
+    it('records sent with the user id for an existing user', async () => {
+      await service.requestMagicLink(request);
+      await capture.flush();
+      expect(expectDecision(capture.lines, 'auth.magic_link', { outcome: 'sent' })).toMatchObject({
+        userId: 'u1',
+        requestId: 'req-1',
+        emailHash: expect.any(String),
+        ipHash: expect.any(String),
+      });
+    });
+
+    it('lists an unknown email in waitlist mode instead of sending a link', async () => {
+      usersService.findExisting.mockResolvedValue(null);
+
+      await expect(service.requestMagicLink(request)).resolves.toBeUndefined();
+
+      expect(waitlist.join).toHaveBeenCalledWith({
+        email: 'new@example.test',
+        kind: 'other',
+        source: 'sign_in',
+        ip: '1.2.3.4',
+        skipRateLimits: true,
+        requestId: 'req-1',
+      });
+      expect(magicLinks.create).not.toHaveBeenCalled();
+      expect(mailer.send).not.toHaveBeenCalled();
+      await capture.flush();
+      expectDecision(capture.lines, 'auth.magic_link', { outcome: 'waitlisted' });
+      expect(JSON.stringify(capture.lines)).not.toContain('example.test');
+      expect(JSON.stringify(capture.lines)).not.toContain('1.2.3.4');
+    });
+
+    it('propagates waitlist errors', async () => {
+      usersService.findExisting.mockResolvedValue(null);
+      waitlist.join.mockRejectedValue(new Error('db down'));
+      await expect(service.requestMagicLink(request)).rejects.toThrow('db down');
+    });
+
+    it('sends a link to an unknown email in open mode', async () => {
+      service = build('open');
+      usersService.findExisting.mockResolvedValue(null);
+
+      await service.requestMagicLink(request);
+
+      expect(waitlist.join).not.toHaveBeenCalled();
+      expect(magicLinks.create).toHaveBeenCalledTimes(1);
+      await capture.flush();
+      const line = expectDecision(capture.lines, 'auth.magic_link', { outcome: 'sent' });
+      expect(line.userId).toBeUndefined();
+    });
+
+    it.each([
+      ['per_email', 0],
+      ['per_ip', 1],
+    ] as const)('records refused %s and throws 429', async (reason, refusedCall) => {
+      for (let i = 0; i < refusedCall; i++) {
+        rateLimits.check.mockResolvedValueOnce({ allowed: true, retryAfterSeconds: 60 });
+      }
+      rateLimits.check.mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 42 });
+
+      const err = await service.requestMagicLink(request).catch((e) => e);
+
+      expect(err).toBeInstanceOf(HttpError);
+      expect(err.status).toBe(429);
+      expect(usersService.findExisting).not.toHaveBeenCalled();
+      await capture.flush();
+      const line = expectDecision(capture.lines, 'auth.magic_link', { outcome: 'refused', reason });
+      expect(line.level).toBe('warn');
+    });
+
+    it('fails a sign-in link for an email without a user as closed', async () => {
+      magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'n@example.test' });
+      usersService.findExisting.mockResolvedValue(null);
+      usersService.register.mockRejectedValue(new RegistrationClosed());
+
+      const err = await service
+        .consumeMagicLink({ token: 't', ip: 'ip', userAgent: null, requestId: 'req-1' })
+        .catch((e) => e);
+
+      expect(err).toBeInstanceOf(MagicLinkFailure);
+      expect(err.reason).toBe('closed');
+      expect(usersService.register).toHaveBeenCalledWith('n@example.test', 'open_sign_in', {
+        requestId: 'req-1',
+      });
+      expect(sessions.create).not.toHaveBeenCalled();
+      await capture.flush();
+      const line = expectDecision(capture.lines, 'auth.callback', {
+        outcome: 'failed',
+        reason: 'closed',
+      });
+      expect(line).toMatchObject({ level: 'warn', ipHash: expect.any(String) });
+    });
+
+    it('registers a new user through a sign-in link in open mode', async () => {
+      service = build('open');
+      const created = { ...user, id: 'u2' };
+      magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'n@example.test' });
+      usersService.findExisting.mockResolvedValue(null);
+      usersService.register.mockResolvedValue({ user: created, created: true });
+
+      const result = await service.consumeMagicLink({
+        token: 't',
+        ip: 'ip',
+        userAgent: null,
+        requestId: 'req-1',
+      });
+
+      expect(result.user).toBe(created);
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'auth.callback', { outcome: 'signed_in' }),
+      ).toMatchObject({ userId: 'u2', created: true });
+    });
+
+    it('signs an existing user in without registering', async () => {
+      magicLinks.consume.mockResolvedValue({ purpose: 'sign_in', email: 'a@b.co' });
+
+      await service.consumeMagicLink({ token: 't', ip: 'ip', userAgent: null, requestId: 'r' });
+
+      expect(usersService.register).not.toHaveBeenCalled();
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'auth.callback', { outcome: 'signed_in' }),
+      ).toMatchObject({ userId: 'u1', created: false });
+    });
+
+    it.each(['invalid', 'used', 'expired'] as const)(
+      'records failed %s for an unusable link',
+      async (reason) => {
+        magicLinks.consume.mockResolvedValue(null);
+        magicLinks.findByTokenHash.mockResolvedValue(
+          reason === 'invalid' ? null : { usedAt: reason === 'used' ? NOW : null },
+        );
+
+        await service
+          .consumeMagicLink({ token: 't', ip: 'ip', userAgent: null, requestId: 'r' })
+          .catch(() => undefined);
+
+        await capture.flush();
+        expectDecision(capture.lines, 'auth.callback', { outcome: 'failed', reason });
+      },
+    );
   });
 });

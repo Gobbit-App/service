@@ -1,7 +1,7 @@
-import { pgTable, text, uuid, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { accounts } from './accounts';
-import { timestamps } from './common';
+import { registrationReasonEnum, timestamps } from './common';
 
 export const users = pgTable(
   'users',
@@ -13,6 +13,10 @@ export const users = pgTable(
       .references(() => accounts.id, { onDelete: 'cascade' }),
     email: text().notNull(),
     displayName: text().notNull(),
+    /** D241: why the row exists; null for users created before Phase 9. */
+    registeredVia: registrationReasonEnum(),
+    /** D241: the inviter (`deck_invite`) or admin (`waitlist_invite`); null for `open_sign_in`. */
+    registeredBy: uuid().references((): AnyPgColumn => users.id, { onDelete: 'set null' }),
     ...timestamps,
   },
   (t) => [
