@@ -71,6 +71,9 @@ instance (one instance today). The limiter is injectable through `createApp({ an
   limiter answers an HTML 429 with `Retry-After` on `/p/*` (`onLimited`); the budget is shared with
   `/public/*`.
 
+The landing page (`/welcome`, and `/` without a session cookie) reuses this layout and escaping;
+see [waitlist](waitlist.md#landing-page-030-d226d230-d242-adr-063).
+
 ## Member redirect (D178)
 
 `/p/` is a lenient session path: a valid cookie or bearer sets `c.var.user`, a stale cookie is ignored.

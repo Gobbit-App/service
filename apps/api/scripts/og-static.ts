@@ -7,7 +7,13 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STATIC_ICONS, iconTree } from '../src/share/icon-template';
-import { OG_HEIGHT, OG_WIDTH, privateCardTree } from '../src/share/og-template';
+import {
+  LANDING_OG_IMAGE_PATH,
+  OG_HEIGHT,
+  OG_WIDTH,
+  landingTree,
+  privateCardTree,
+} from '../src/share/og-template';
 import { createTreeRenderer } from '../src/share/render';
 import { PRIVATE_OG_IMAGE_PATH } from '../src/share/share.service';
 
@@ -27,6 +33,10 @@ async function main(): Promise<void> {
   await write(
     PRIVATE_OG_IMAGE_PATH.slice(1),
     await renderer.png(privateCardTree(), OG_WIDTH, OG_HEIGHT),
+  );
+  await write(
+    LANDING_OG_IMAGE_PATH.slice(1),
+    await renderer.png(landingTree(), OG_WIDTH, OG_HEIGHT),
   );
 
   for (const { file, size, variant } of STATIC_ICONS) {

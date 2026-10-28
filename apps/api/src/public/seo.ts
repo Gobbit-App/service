@@ -1,5 +1,6 @@
 import type { DeckKind } from '@pb/shared';
 import { h } from './html';
+import { landingUrl } from './public-url';
 
 /** D179: app routes crawlers have no business in. */
 export const ROBOTS_DISALLOW = [
@@ -30,11 +31,15 @@ export function robotsFor(deck: { kind: DeckKind }): 'index' | 'noindex' {
 
 export type SitemapEntry = { loc: string; lastmod: Date | null };
 
-/** D179: `<urlset>` with `lastmod` as a UTC date (YYYY-MM-DD). Every value escaped. */
-export function sitemapXml(entries: SitemapEntry[]): string {
+/**
+ * D179: `<urlset>` with `lastmod` as a UTC date (YYYY-MM-DD). Every value escaped. The root
+ * (030's landing page, D229) is always the first `<url>`, without `lastmod`.
+ */
+export function sitemapXml(origin: string, entries: SitemapEntry[]): string {
+  const all: SitemapEntry[] = [{ loc: landingUrl(origin), lastmod: null }, ...entries];
   return h`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries.map(
+${all.map(
   (e) =>
     h`<url><loc>${e.loc}</loc>${e.lastmod ? h`<lastmod>${e.lastmod.toISOString().slice(0, 10)}</lastmod>` : ''}</url>
 `,

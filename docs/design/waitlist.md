@@ -73,6 +73,53 @@ It records `waitlist.prune` with both counts.
 and status; an `invited` entry whose user has ever had a session counts as `joined`. No emails,
 tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC;`.
 
+## Landing page (030, D226–D230, D242, ADR-063)
+
+- **Addresses**: the API renders `GET /welcome` and `GET /welcome/joined` (`routes/landing.ts`,
+  plain `app.get`, outside OpenAPI) with 017's `layout()` and `public/landing.ts`. Canonical and
+  `og:url` are always `${APP_URL}/` (`landingUrl()` in `public-url.ts`); the root is the first
+  sitemap entry. All copy is in `public/landing-copy.ts` (`LANDING_COPY_EN`), so a translation is
+  a second object of the same shape.
+- **Caddy cookie rule**: `@landing` (path `/`, no `gobbit_session` cookie) rewrites `/` to
+  `/welcome?{query}` and sets `X-Gobbit-Via: root`; `@welcome` proxies `/welcome[/joined]` and
+  strips any client-sent `X-Gobbit-Via`. With the cookie, `/` stays the SPA. Vite's dev proxy
+  sends `/welcome[/joined]` to the API but does not emulate the `/` rule.
+- **Signed-out app home (D227)**: a 401 on `/` (only `utm_*` in the query) sends the SPA to
+  `/welcome?from=app` with a full page load (`window.location.replace`); deep links still go to
+  `/sign-in?next=…`. The service worker's navigation denylist skips `/welcome[/joined]`, and links
+  into it from the app are document links (`ButtonLink document`, plain `<a>`).
+- **States**: `default`, `joined` (its own path, `noindex`), `confirmed` (`?confirmed=1`),
+  `confirm-invalid` (`?confirm=invalid`, form shown again), `invalid` (400/429 re-render,
+  `noindex`) and `signed-in` ("Open Gobbit", no form). Anonymous answers are
+  `public, max-age=300`; signed-in and re-rendered ones `private, no-store`; always `Vary: Cookie`.
+- **Form (D228)**: no JavaScript, `POST /welcome` urlencoded → `parseLandingForm` → 028's schema →
+  `waitlist.join({ …, source: 'landing' })`. Every accepted outcome (new, resend, known, existing
+  user, honeypot) is `303 /welcome/joined`; a validation failure is a 400 re-render with one
+  message per field and the typed values (escaped); a per-IP or per-email refusal is a 429
+  re-render with the values, a "Too many tries… about N minutes" notice and `Retry-After`.
+- **CSRF**: same-origin posts pass `hono/csrf` because its allowed list holds the origin of
+  `API_URL` (the app origin + `/api` in every deployment). If a deployment ever splits origins,
+  add `APP_URL`'s origin to `csrfOrigins`.
+- **Decision events (D242)**: `landing.render` per GET (`state`, `via` = `root | app | direct`,
+  `utmSource`) and `landing.form` per POST (`accepted`, `invalid` with field names only, `refused`
+  `per_ip | per_email` at `warn`). Honeypot and existing-user outcomes stay in 028's
+  `waitlist.join` events. Queries: `infra/README.md` § Waitlist.
+- **Preview image**: `og/landing.png` (1200×630) is rendered by `pnpm og:static`
+  (`landingTree()` in `share/og-template.ts`) and committed.
+
+## Deviations from the 030 plan
+
+- The per-IP check runs inside `POST /welcome` (same 028 bucket, `rate_limit.refused` recorded)
+  instead of `public-rate-limit` middleware, so the 429 can re-render the typed values.
+- A 429 renders the `invalid` state with a page notice and no field errors.
+- `layout()` gained `css` and `headerLink` options and an `imageSize` for the preview image;
+  `sitemapXml` takes the root URL first.
+- The signed-out home goes to `/welcome?from=app` (keeping `utm_*`), so `via` can tell it apart.
+- Caddy uses a named `@welcome` matcher (two paths in one `handle` are not valid Caddyfile) and
+  the `X-Gobbit-Via` header carries the `root` rewrite to the API.
+- `ButtonLink` gained a `document` prop for links that leave the SPA.
+- `/auth/error?reason=closed` shows "Join the waitlist" and "Get a new link" (029 T032).
+
 ## Deviations from the 028 plan
 
 - The confirm keeps the token hash on the row (status moves to `confirmed`), so a reused link reads

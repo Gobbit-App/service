@@ -1,6 +1,8 @@
 # D51: the web image owns the routing for the one public origin.
 #   /api/*  -> API with the prefix stripped     /s/*  -> API unchanged (share previews)
 #   /p/*, /sitemap.xml, /robots.txt -> API unchanged (public pages, D177/D179)
+#   / without a gobbit_session cookie -> API /welcome (landing page, D226; URL stays /)
+#   /welcome, /welcome/joined -> API unchanged (landing page and its form, D228)
 #   files   -> served from /srv                  else  -> index.html (SPA fallback)
 # D54: response headers (connect-src allows Cloudinary: the service worker fetch()es images to cache them,
 # and the editor uploads photos straight to api.cloudinary.com, D133;
@@ -35,6 +37,24 @@
 
 	@seo path /sitemap.xml /robots.txt
 	handle @seo {
+		reverse_proxy {$API_UPSTREAM:api:3000}
+	}
+
+	# D226/D227: only cookie presence is checked; a stale cookie gets the SPA, whose 401
+	# handler sends the visitor to /welcome. X-Gobbit-Via only feeds landing.render (D242).
+	@landing {
+		path /
+		not header_regexp Cookie (^|;\s*)gobbit_session=
+	}
+	handle @landing {
+		request_header X-Gobbit-Via root
+		rewrite * /welcome?{query}
+		reverse_proxy {$API_UPSTREAM:api:3000}
+	}
+
+	@welcome path /welcome /welcome/joined
+	handle @welcome {
+		request_header -X-Gobbit-Via
 		reverse_proxy {$API_UPSTREAM:api:3000}
 	}
 

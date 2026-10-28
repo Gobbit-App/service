@@ -2,6 +2,7 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import type pg from 'pg';
 import type { Db } from '@pb/db';
+import type { MiddlewareHandler } from 'hono';
 import type { AppEnv } from './types';
 import type { Env } from './env';
 import type { Mailer } from './mail/mailer';
@@ -44,6 +45,9 @@ import { publicRateLimit } from './middleware/public-rate-limit';
 import { createAnonRateLimiter, type AnonRateLimiter } from './lib/anon-rate-limiter';
 import { PUBLIC_READ_PER_HOUR, PUBLIC_SEARCH_PER_HOUR } from '@pb/shared';
 import { registerWaitlistRoutes } from './routes/waitlist';
+import { registerLandingRoutes } from './routes/landing';
+import { LANDING_DECISION_LEVELS, type LandingDecisions } from './services/landing.events';
+import { LANDING_JOINED_PATH, LANDING_PATH } from './public/public-url';
 import { rateLimitRefusal } from './middleware/rate-limit-refused';
 import { decisionLogger } from './lib/decision-event';
 import { rateLimited } from './errors/http-errors';
@@ -147,6 +151,13 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   });
   // Hono's `/waitlist/*` also matches `/waitlist`; one registration counts each request once.
   app.use('/waitlist/*', waitlistJsonLimit);
+  // 030: landing GETs count in the anonymous read budget; its POST counts in the waitlist
+  // bucket inside the route, so the 429 page can keep the typed values.
+  const landingReadLimit = publicRateLimit({ ...anonLimit, onLimited: rateLimitedHtml });
+  const landingReads: MiddlewareHandler<AppEnv> = (c, next) =>
+    c.req.method === 'POST' ? next() : landingReadLimit(c, next);
+  app.use(LANDING_PATH, landingReads);
+  app.use(LANDING_JOINED_PATH, landingReads);
 
   registerHealthRoutes(app, { pool: deps.pool, commit: env.GIT_SHA });
   registerConfigRoutes(app, env);
@@ -170,6 +181,16 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerPublicPagesRoutes(app, services, env);
   registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });
   registerWaitlistRoutes(app, services, env);
+  registerLandingRoutes(app, services, {
+    env,
+    joinLimiter: waitlistLimit.limiter,
+    now: waitlistLimit.now,
+    recordIpRefusal: recordWaitlistRefusal,
+    decisions: decisionLogger<LandingDecisions>('landing', {
+      parent: deps.logger,
+      levels: LANDING_DECISION_LEVELS,
+    }),
+  });
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

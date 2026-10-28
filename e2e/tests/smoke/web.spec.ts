@@ -34,6 +34,21 @@ test('a signed-out deep link lands on sign-in with next @smoke', async ({ browse
   }
 });
 
+test('sign-in offers the waitlist to newcomers @smoke', async ({ browser }) => {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage();
+    await page.goto(webUrl('/sign-in'));
+    // D222 (029 T031): GET only, nothing is submitted.
+    await expect(page.getByRole('link', { name: 'Join the waitlist' })).toHaveAttribute(
+      'href',
+      '/welcome',
+    );
+  } finally {
+    await context.close();
+  }
+});
+
 test('every card type renders without horizontal overflow at 360 px @smoke', async ({
   page,
   webDeck,
