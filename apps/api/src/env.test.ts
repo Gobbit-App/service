@@ -172,6 +172,24 @@ describe('env', () => {
     });
   });
 
+  describe('landing analytics (D232)', () => {
+    it('is off when unset', () => {
+      expect(parseEnv({ DATABASE_URL: validUrl }).ANALYTICS_SITE_ID).toBeUndefined();
+    });
+
+    it('accepts a UUID', () => {
+      const id = '2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90';
+      const env = parseEnv({ DATABASE_URL: validUrl, ANALYTICS_SITE_ID: id });
+      expect(env.ANALYTICS_SITE_ID).toBe(id);
+    });
+
+    it('refuses to boot with a non-UUID', () => {
+      expect(() => parseEnv({ DATABASE_URL: validUrl, ANALYTICS_SITE_ID: 'site-1' })).toThrow(
+        /ANALYTICS_SITE_ID/,
+      );
+    });
+  });
+
   describe('waitlist and log hashing (D219, D239)', () => {
     it('defaults the waitlist limits from limits.ts and the dev log-hash key', () => {
       const env = parseEnv({ DATABASE_URL: validUrl });

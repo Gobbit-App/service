@@ -128,3 +128,22 @@ describe('landingPage head (D229)', () => {
     expect(noindex).toEqual(['joined', 'invalid']);
   });
 });
+
+describe('analytics tag (D232, 031)', () => {
+  const analytics = { siteId: '2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90', host: 'app.example.test' };
+
+  it.each(ALL_STATES)('%s carries the tag in <head> when configured', (state) => {
+    const html = page({ state, analytics });
+    const tag = html.indexOf('<script defer src="/stats/script.js"');
+    expect(tag).toBeGreaterThan(-1);
+    expect(tag).toBeLessThan(html.indexOf('</head>'));
+    expect(html).toContain(`data-website-id="${analytics.siteId}"`);
+    expect(html.match(/<script/g)).toHaveLength(1);
+  });
+
+  it.each(ALL_STATES)('%s has no tag when unset', (state) => {
+    const html = page({ state });
+    expect(html).not.toMatch(/<script/i);
+    expect(html).not.toContain('/stats/');
+  });
+});
