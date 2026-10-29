@@ -32,3 +32,4 @@ export * from './events';
 export * from './schemas/event';
 export * from './schemas/waitlist';
 export * from './waitlist/constants';
+export * from './auth';

@@ -97,7 +97,7 @@ only on `POST /ingest`.
 | Public decks | Anonymous `/public/{slug}` reads through `public-deck.service` with `role = null` and an allow-list DTO; per-IP in-process limit; server-rendered `/p/` pages (members → app), sitemap for communal decks, page cache purged per deck; anonymous search with its own embedding budgets | [public](design/public.md) · ADR-056 |
 | Deck admin | `/d/$slug/settings`: name, public switch, publish-shares-directly switch, category visibility, invites, member roles (`PATCH /decks/{id}/members/{userId}`, last-owner guard) | [web-pwa](design/web-pwa.md#deck-settings-phase-8-d184d185), [auth](design/auth.md#authorization-d33d35) |
 | Activity log | Card writes append `item_events` lines (actor, client, kind, changed field names) in the same transaction; owners and maintainers read them per deck or per card | [activity-log](design/activity-log.md) · ADR-057 |
-| Waitlist | Double opt-in requests (`POST /waitlist`, `GET /waitlist/confirm`) through `waitlist.service.join` only; same 202 for every case (no enumeration); honeypot, per-IP and per-email limits (env-tunable); `waitlist_events` audit rows; weekly prune; `waitlist_summary` view | [waitlist](design/waitlist.md) · ADR-061 |
+| Waitlist | `REGISTRATION_MODE` (default `waitlist`) gates sign-up at link request; users are created only by `users.service.register(reason)`. Double opt-in requests (`POST /waitlist`, `GET /waitlist/confirm`) through `waitlist.service.join` only; same 202 for every case (no enumeration); honeypot, per-IP and per-email limits (env-tunable); `waitlist_events` audit rows; weekly prune; `waitlist_summary` view | [waitlist](design/waitlist.md) · ADR-061 |
 
 ## Testing
 
@@ -177,4 +177,4 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [058](adr.md#adr-058-publishers-shares-may-skip-review-per-deck-d192-d193) | Publishers' shares may skip review, per deck, behind owner opt-in and reviewer gates |
 | [059](adr.md#adr-059-one-inline-icon-set-and-shared-action-primitives-d210d212) | One inline SVG icon set and shared action primitives |
 | [060](adr.md#adr-060-accountable-by-default--every-decision-is-recorded-and-watchable-constitution-viii) | Accountable by default: every decision about a person is a named event or audit row, watchable per instance, aggregate and rate |
-| [061](adr.md#adr-061-registration-gate-and-waitlist-d217d219-d240) | Waitlist: double opt-in, one service, no enumeration, decision events and audit rows (029 adds the gate) |
+| [061](adr.md#adr-061-registration-gate-and-waitlist-d217d219-d222d224-d240-d241) | Registration closed by default (`REGISTRATION_MODE`), one user creation point; waitlist: double opt-in, one service, no enumeration, decision events and audit rows |

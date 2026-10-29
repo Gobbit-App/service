@@ -155,6 +155,23 @@ describe('env', () => {
     expect(env.CLIENT_IP_HEADER).toBe('cf-connecting-ip');
   });
 
+  describe('registration mode (D222)', () => {
+    it('defaults to waitlist', () => {
+      expect(parseEnv({ DATABASE_URL: validUrl }).REGISTRATION_MODE).toBe('waitlist');
+    });
+
+    it('reads open', () => {
+      const env = parseEnv({ DATABASE_URL: validUrl, REGISTRATION_MODE: 'open' });
+      expect(env.REGISTRATION_MODE).toBe('open');
+    });
+
+    it('rejects an unknown mode', () => {
+      expect(() => parseEnv({ DATABASE_URL: validUrl, REGISTRATION_MODE: 'yes' })).toThrow(
+        /REGISTRATION_MODE/,
+      );
+    });
+  });
+
   describe('waitlist and log hashing (D219, D239)', () => {
     it('defaults the waitlist limits from limits.ts and the dev log-hash key', () => {
       const env = parseEnv({ DATABASE_URL: validUrl });

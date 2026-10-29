@@ -5,8 +5,11 @@ export type DecisionLevel = 'info' | 'warn' | 'error';
 /** Per-event outcome/reason sets: `{ 'waitlist.join': { outcome: 'created' | …; reason: … } }`. */
 export type DecisionCatalog = Record<string, { outcome: string; reason?: string }>;
 
-/** Exactly one correlation id: the request's, or the pg-boss job's. */
-type Correlation = { requestId: string; jobId?: never } | { jobId: string; requestId?: never };
+/** Exactly one correlation id: the request's, the pg-boss job's, or the process start's. */
+type Correlation =
+  | { requestId: string; jobId?: never; bootId?: never }
+  | { jobId: string; requestId?: never; bootId?: never }
+  | { bootId: string; requestId?: never; jobId?: never };
 
 /** Subjects are ids or keyed hashes (`emailHash`, `ipHash`); never the raw value. */
 type Subjects = Record<string, string | number | boolean | null | undefined> & {
@@ -42,9 +45,9 @@ export function decisionLogger<C extends DecisionCatalog>(
           throw new Error(`decision event ${event}: field "${key}" must be a keyed hash`);
         }
       }
-      const correlated = fields as { requestId?: string; jobId?: string };
-      if (!correlated.requestId && !correlated.jobId) {
-        throw new Error(`decision event ${event}: requestId or jobId is required`);
+      const correlated = fields as { requestId?: string; jobId?: string; bootId?: string };
+      if (!correlated.requestId && !correlated.jobId && !correlated.bootId) {
+        throw new Error(`decision event ${event}: requestId, jobId or bootId is required`);
       }
       const level = levels[`${event}:${String(fields.outcome)}`] ?? levels[event] ?? 'info';
       log[level]({ event, ...fields }, event);

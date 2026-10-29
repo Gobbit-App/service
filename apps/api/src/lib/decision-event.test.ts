@@ -57,7 +57,7 @@ describe('decisionLogger (D239)', () => {
   it('requires a requestId or jobId', () => {
     const { decisions } = setup();
     expect(() => decisions.record('demo.join', { outcome: 'created' } as never)).toThrow(
-      /requestId or jobId/,
+      /requestId, jobId or bootId/,
     );
   });
 

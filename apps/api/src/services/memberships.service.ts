@@ -192,13 +192,15 @@ export function createMembershipsService(deps: {
     },
 
     /**
-     * D37: creates the user when needed. Resending to a pending member replaces the earlier
+     * D37: creates the user when needed (D241: `deck_invite`, registered by the inviter; the
+     * gate never refuses an invite). Resending to a pending member replaces the earlier
      * invite: the new role applies and every older invite link stops working.
      */
     async invite(
       user: CurrentUser,
       idOrSlug: string,
       input: InviteCreate,
+      ctx: { requestId: string },
     ): Promise<{ membership: Membership; created: boolean }> {
       const deck = await resolveDeck(decks, idOrSlug, user);
       await authorize(user, deck, 'member.invite', memberships);
@@ -207,7 +209,10 @@ export function createMembershipsService(deps: {
         throw conflict("The personal deck can't be shared", PERSONAL_DECK_PROBLEM);
       }
 
-      const { user: invitee } = await usersService.findOrCreateByEmail(input.email);
+      const { user: invitee } = await usersService.register(input.email, 'deck_invite', {
+        requestId: ctx.requestId,
+        actorId: user.id,
+      });
       if (invitee.id === user.id) {
         throw badRequest('You cannot invite yourself');
       }

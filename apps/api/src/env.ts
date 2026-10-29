@@ -8,6 +8,7 @@ import {
   WAITLIST_JOIN_PER_IP_PER_HOUR,
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR,
 } from '@pb/shared';
+import { registrationModes } from '@pb/shared/auth';
 import { cloudNameFrom } from './lib/cloudinary-url';
 
 const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
@@ -82,6 +83,8 @@ const baseSchema = z.object({
   WAITLIST_JOIN_PER_IP_PER_HOUR: positiveInt(WAITLIST_JOIN_PER_IP_PER_HOUR),
   /** D219: waitlist joins per email per hour (`rate_limit_counters`). */
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR: positiveInt(WAITLIST_JOIN_PER_EMAIL_PER_HOUR),
+  /** D222: `waitlist` sends unknown emails to the waitlist; `open` lets anyone register. */
+  REGISTRATION_MODE: z.enum(registrationModes).default('waitlist'),
 });
 
 export const envSchema = baseSchema

@@ -22,6 +22,16 @@ describe('SignInForm', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('ada@example.com');
   });
 
+  it('shows one message that covers both a sign-in link and the waitlist (D222)', async () => {
+    render(<SignInForm onSubmit={async () => {}} />);
+
+    await submit('ada@example.com');
+
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent('a sign-in link is on its way');
+    expect(status).toHaveTextContent('a link to join the waitlist');
+  });
+
   it('disables the button while sending', async () => {
     let finish!: () => void;
     const onSubmit = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));

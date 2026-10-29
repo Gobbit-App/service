@@ -69,7 +69,8 @@ export function magicLinkInvalid(reason: string): HttpError {
     401,
     '/problems/magic-link-invalid',
     'Magic link invalid',
-    `The sign-in link is ${reason}`,
+    // D222: a sign-in link for an email without a user while registration is closed.
+    reason === 'closed' ? 'Registration is closed' : `The sign-in link is ${reason}`,
   );
 }
 

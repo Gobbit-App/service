@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { parseEnv, type Env } from './env';
 import { createPool, createDb, type Db } from '@pb/db';
 import type { PgBoss } from 'pg-boss';
@@ -17,6 +18,7 @@ import { createEmbeddingsRepo } from './repositories/embeddings.repo';
 import { hasEmbeddingProvider, hasExtractProvider } from './ai/providers';
 import { childLogger, logDbIdleError } from './lib/logger';
 import { checkCloudinaryCredentials } from './media/cloudinary-check';
+import { recordRegistrationMode } from './services/registration-mode';
 
 const log = childLogger('api');
 
@@ -98,6 +100,7 @@ async function main() {
     },
     'api listening',
   );
+  recordRegistrationMode(env, { bootId: randomUUID() });
   if (env.CLOUDINARY_URL) void checkCloudinaryCredentials(env.CLOUDINARY_URL);
   else log.warn('CLOUDINARY_URL not set; image uploads and OG images are disabled');
 

@@ -4,6 +4,7 @@ import { createMembershipsService } from './memberships.service';
 
 const NOW = new Date('2026-01-10T12:00:00.000Z');
 const UUID = '11111111-1111-4111-8111-111111111111';
+const CTX = { requestId: 'req-1' };
 
 const caller = { id: 'caller', accountId: 'acc-owner', email: 'o@x.co', displayName: 'Olga' };
 const deck = { id: UUID, slug: 'family', name: 'Family Deck', ownerAccountId: 'acc-owner' };
@@ -41,7 +42,7 @@ describe('createMembershipsService', () => {
     magicLinks = { create: vi.fn(), expireUnusedForMembership: vi.fn() };
     users = { listByAccount: vi.fn().mockResolvedValue([]), findById: vi.fn() };
     usersService = {
-      findOrCreateByEmail: vi.fn().mockResolvedValue({ user: invitee, created: true }),
+      register: vi.fn().mockResolvedValue({ user: invitee, created: true }),
     };
     mailer = { send: vi.fn().mockResolvedValue(undefined) };
 
@@ -108,32 +109,32 @@ describe('createMembershipsService', () => {
 
     it("409s inviting into the caller's personal deck (Phase 3B) before creating users", async () => {
       decks.findById.mockResolvedValue({ ...deck, isDefault: true, kind: 'personal' });
-      const err = await service.invite(caller, UUID, input).catch((e) => e);
+      const err = await service.invite(caller, UUID, input, CTX).catch((e) => e);
       expect(err).toBeInstanceOf(HttpError);
       expect(err).toMatchObject({ status: 409, type: '/problems/personal-deck' });
-      expect(usersService.findOrCreateByEmail).not.toHaveBeenCalled();
+      expect(usersService.register).not.toHaveBeenCalled();
       expect(mailer.send).not.toHaveBeenCalled();
     });
 
     it('rejects inviting yourself with 400', async () => {
-      usersService.findOrCreateByEmail.mockResolvedValue({ user: caller, created: false });
-      const err = await service.invite(caller, UUID, input).catch((e) => e);
+      usersService.register.mockResolvedValue({ user: caller, created: false });
+      const err = await service.invite(caller, UUID, input, CTX).catch((e) => e);
       expect(err.status).toBe(400);
       expect(mailer.send).not.toHaveBeenCalled();
     });
 
     it('rejects users of the owner account with 400', async () => {
-      usersService.findOrCreateByEmail.mockResolvedValue({
+      usersService.register.mockResolvedValue({
         user: { ...invitee, accountId: 'acc-owner' },
         created: false,
       });
-      const err = await service.invite(caller, UUID, input).catch((e) => e);
+      const err = await service.invite(caller, UUID, input, CTX).catch((e) => e);
       expect(err.status).toBe(400);
     });
 
     it('409s for an accepted member', async () => {
       memberships.findActive.mockResolvedValue(membershipRow({ acceptedAt: NOW }));
-      const err = await service.invite(caller, UUID, input).catch((e) => e);
+      const err = await service.invite(caller, UUID, input, CTX).catch((e) => e);
       expect(err.status).toBe(409);
       expect(err.type).toBe('/problems/already-member');
       expect(mailer.send).not.toHaveBeenCalled();
@@ -143,7 +144,7 @@ describe('createMembershipsService', () => {
       memberships.findActive.mockResolvedValue(membershipRow());
       memberships.reinvite.mockResolvedValue(membershipRow({ role: 'editor' }));
 
-      const result = await service.invite(caller, UUID, input);
+      const result = await service.invite(caller, UUID, input, CTX);
 
       expect(result.created).toBe(false);
       expect(result.membership.role).toBe('editor');
@@ -164,10 +165,15 @@ describe('createMembershipsService', () => {
     it('creates a membership and sends the invite for a new member', async () => {
       memberships.create.mockResolvedValue(membershipRow({ role: 'editor' }));
 
-      const result = await service.invite(caller, UUID, input);
+      const result = await service.invite(caller, UUID, input, CTX);
 
       expect(result.created).toBe(true);
       expect(result.membership).toMatchObject({ id: 'm1', email: 'new@x.co', role: 'editor' });
+      // D241: invites always register, recorded as a deck invite by the inviter.
+      expect(usersService.register).toHaveBeenCalledWith('new@x.co', 'deck_invite', {
+        requestId: 'req-1',
+        actorId: 'caller',
+      });
       expect(memberships.create).toHaveBeenCalledWith({
         deckId: UUID,
         userId: 'inv',

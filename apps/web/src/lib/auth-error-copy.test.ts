@@ -18,6 +18,10 @@ describe('parseReason', () => {
     expect(parseReason('onboarding')).toBe('onboarding');
   });
 
+  it('should return "closed" for "closed" (D222)', () => {
+    expect(parseReason('closed')).toBe('closed');
+  });
+
   it('should return "unknown" for undefined', () => {
     expect(parseReason(undefined)).toBe('unknown');
   });
@@ -62,5 +66,11 @@ describe('authErrorCopy', () => {
     const copy = authErrorCopy('unknown');
     expect(copy.title).toBe('Sign-in failed');
     expect(copy.body).toBe('Something went wrong. Request a new link below.');
+  });
+
+  it('should explain the registration gate for "closed" (D222)', () => {
+    const copy = authErrorCopy('closed');
+    expect(copy.title).toBe('Gobbit is invite-only for now');
+    expect(copy.body).toContain('Join the waitlist');
   });
 });

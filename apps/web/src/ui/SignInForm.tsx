@@ -44,7 +44,8 @@ export function SignInForm({
       <div className="sign-in-sent" role="status">
         <h2>Check your inbox</h2>
         <p>
-          We sent a sign-in link to <strong>{state.email}</strong>. It works once and expires soon.
+          If <strong>{state.email}</strong> has a Gobbit account, a sign-in link is on its way. If
+          it doesn't, we've sent a link to join the waitlist.
         </p>
         <Button icon="back" label="Use a different email" variant="ghost" onClick={handleReset} />
       </div>

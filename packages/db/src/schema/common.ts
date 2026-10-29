@@ -12,6 +12,7 @@ import {
   waitlistSources,
   waitlistStatuses,
   waitlistEventActions,
+  registrationReasons,
 } from '@pb/shared';
 
 export const tstz = () => timestamp({ withTimezone: true, precision: 3, mode: 'date' });
@@ -34,3 +35,4 @@ export const waitlistKindEnum = pgEnum('waitlist_kind', waitlistKinds);
 export const waitlistSourceEnum = pgEnum('waitlist_source', waitlistSources);
 export const waitlistStatusEnum = pgEnum('waitlist_status', waitlistStatuses);
 export const waitlistEventActionEnum = pgEnum('waitlist_event_action', waitlistEventActions);
+export const registrationReasonEnum = pgEnum('registration_reason', registrationReasons);

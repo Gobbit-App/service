@@ -5,6 +5,7 @@ import {
   SESSION_TOUCH_INTERVAL_MS,
   type SessionKind,
 } from '@pb/shared';
+import type { RegistrationMode } from '@pb/shared/auth';
 import type { MagicLinkRow, SessionRow } from '@pb/db';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
@@ -18,15 +19,24 @@ import type { Authenticated, CredentialSource, CurrentUser } from '../types';
 import { generateToken, hashesEqual, hashToken } from '../lib/tokens';
 import { rateKeys } from '../lib/rate-window';
 import { safeNextPath } from '../lib/next-path';
-import { cookieSessionRequired } from '../errors/http-errors';
-import { normalizeEmail, type UsersService } from './users.service';
+import { cookieSessionRequired, rateLimited } from '../errors/http-errors';
+import { normalizeEmail, RegistrationClosed, type UsersService } from './users.service';
 import type { RateLimitService } from './rate-limit.service';
+import type { WaitlistService } from './waitlist.service';
 import { lineSink } from '../lib/logger';
+import type { LogHash } from '../lib/log-hash';
+import { decisionLogger, type DecisionLogger } from '../lib/decision-event';
+import {
+  AUTH_DECISION_LEVELS,
+  type AuthDecisions,
+  type CallbackFailureReason,
+} from './auth.events';
 
 const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;
 
-export type MagicLinkFailureReason = 'invalid' | 'used' | 'expired' | 'onboarding';
+/** D222: `closed` = a `sign_in` link for an email with no user while the mode is `waitlist`. */
+export type MagicLinkFailureReason = CallbackFailureReason;
 
 /** A magic link that can't be consumed; the route decides between redirect and problem (D26). */
 export class MagicLinkFailure extends Error {
@@ -67,9 +77,18 @@ export function createAuthService(deps: {
   magicLinks: MagicLinksRepo;
   transaction: CallbackTransaction;
   rateLimits: RateLimitService;
+  /** D222: the request-time gate looks users up and lists unknown emails. */
+  usersService: Pick<UsersService, 'findExisting'>;
+  waitlist: Pick<WaitlistService, 'join'>;
+  mode: RegistrationMode;
+  logHash: LogHash;
+  decisions?: DecisionLogger<AuthDecisions>;
   log?: (message: string, err?: unknown) => void;
 }) {
   const { env, now, mailer, sessions, magicLinks, transaction, log = lineSink('auth') } = deps;
+  const { logHash, mode } = deps;
+  const decisions =
+    deps.decisions ?? decisionLogger<AuthDecisions>('auth', { levels: AUTH_DECISION_LEVELS });
   const sessionTtlMs = env.SESSION_TTL_DAYS * DAY_MS;
 
   async function openSessionWith(
@@ -121,6 +140,50 @@ export function createAuthService(deps: {
       log('onboarding failed', err);
       throw new MagicLinkFailure('onboarding');
     }
+  }
+
+  /** D222: the user a `sign_in` link signs in; registering a new one may be `closed`. */
+  async function signInUser(
+    r: CallbackRepos,
+    email: string,
+    requestId: string,
+  ): Promise<{ user: CurrentUser; created: boolean }> {
+    const existing = await r.usersService.findExisting(email);
+    if (existing) return { user: existing, created: false };
+    try {
+      return await r.usersService.register(email, 'open_sign_in', { requestId });
+    } catch (err) {
+      if (err instanceof RegistrationClosed) throw new MagicLinkFailure('closed');
+      throw err;
+    }
+  }
+
+  async function consume(input: {
+    token: string;
+    userAgent: string | null;
+    requestId: string;
+  }): Promise<{ token: string; next: string | null; user: CurrentUser; created: boolean }> {
+    const tokenHash = hashToken(input.token);
+    return transaction(async (r) => {
+      const row = await r.magicLinks.consume(tokenHash, now());
+      if (!row) {
+        throw new MagicLinkFailure(
+          classifyMagicLinkFailure(await r.magicLinks.findByTokenHash(tokenHash)),
+        );
+      }
+
+      const { user, created } =
+        row.purpose === 'invite'
+          ? { user: await inviteUser(r, row.membershipId), created: false }
+          : await signInUser(r, row.email, input.requestId);
+      if (!user) {
+        throw new MagicLinkFailure('invalid');
+      }
+
+      await ensureOnboarding(r.usersService, user);
+      const { token } = await openSessionWith(r.sessions, user.id, 'cookie', input.userAgent);
+      return { token, next: row.next, user, created };
+    });
   }
 
   return {
@@ -178,14 +241,49 @@ export function createAuthService(deps: {
       return { token, expiresAt: session.expiresAt };
     },
 
-    /** D22/D39: always succeeds for a well-formed address (no enumeration) unless rate limited. */
-    async requestMagicLink(input: { email: string; ip: string; next?: string }): Promise<void> {
+    /**
+     * D22/D39: always succeeds for a well-formed address (no enumeration) unless rate limited.
+     * D222: in `waitlist` mode an email without a user gets the waitlist mail instead of a link;
+     * the caller can't tell the two apart. Records `auth.magic_link`.
+     */
+    async requestMagicLink(input: {
+      email: string;
+      ip: string;
+      next?: string;
+      requestId: string;
+    }): Promise<void> {
       const email = normalizeEmail(input.email);
-      await deps.rateLimits.enforce(
-        rateKeys.magicLinkEmail(hashToken(email)),
-        RATE_MAGIC_LINK_PER_EMAIL,
-      );
-      await deps.rateLimits.enforce(rateKeys.magicLinkIp(input.ip), RATE_MAGIC_LINK_PER_IP);
+      const subject = {
+        requestId: input.requestId,
+        emailHash: logHash('email', email),
+        ipHash: logHash('ip', input.ip),
+      };
+      const limits = [
+        ['per_email', rateKeys.magicLinkEmail(hashToken(email)), RATE_MAGIC_LINK_PER_EMAIL],
+        ['per_ip', rateKeys.magicLinkIp(input.ip), RATE_MAGIC_LINK_PER_IP],
+      ] as const;
+      for (const [reason, key, limit] of limits) {
+        const result = await deps.rateLimits.check(key, limit);
+        if (!result.allowed) {
+          decisions.record('auth.magic_link', { outcome: 'refused', reason, ...subject });
+          throw rateLimited(result.retryAfterSeconds);
+        }
+      }
+
+      const existing = await deps.usersService.findExisting(email);
+      if (!existing && mode === 'waitlist') {
+        // The magic-link limits above already bound this path (D222).
+        await deps.waitlist.join({
+          email,
+          kind: 'other',
+          source: 'sign_in',
+          ip: input.ip,
+          skipRateLimits: true,
+          requestId: input.requestId,
+        });
+        decisions.record('auth.magic_link', { outcome: 'waitlisted', ...subject });
+        return;
+      }
 
       const token = generateToken();
       await magicLinks.create({
@@ -203,41 +301,40 @@ export function createAuthService(deps: {
         to: email,
         ...signInEmail({ link, email, ttlMinutes: env.MAGIC_LINK_TTL_MINUTES }),
       });
+      decisions.record('auth.magic_link', { outcome: 'sent', userId: existing?.id, ...subject });
     },
 
     /**
      * D23/D26/D37: consumes the link once and opens a cookie session for its user. Phase 3B:
      * consume, user resolution, personal-deck onboarding and session creation share one
-     * transaction, so any failure leaves the link unconsumed and no session open.
+     * transaction, so any failure leaves the link unconsumed and no session open. D222: a
+     * `sign_in` link for an email without a user registers it only in `open` mode, else fails
+     * as `closed`. Records `auth.callback`.
      */
     async consumeMagicLink(input: {
       token: string;
       ip: string;
       userAgent: string | null;
+      requestId: string;
     }): Promise<{ token: string; next: string | null; user: CurrentUser }> {
       await deps.rateLimits.enforce(rateKeys.callbackIp(input.ip), RATE_CALLBACK_PER_IP);
 
-      const tokenHash = hashToken(input.token);
-      return transaction(async (r) => {
-        const row = await r.magicLinks.consume(tokenHash, now());
-        if (!row) {
-          throw new MagicLinkFailure(
-            classifyMagicLinkFailure(await r.magicLinks.findByTokenHash(tokenHash)),
-          );
+      const subject = { requestId: input.requestId, ipHash: logHash('ip', input.ip) };
+      try {
+        const result = await consume(input);
+        decisions.record('auth.callback', {
+          outcome: 'signed_in',
+          userId: result.user.id,
+          created: result.created,
+          ...subject,
+        });
+        return { token: result.token, next: result.next, user: result.user };
+      } catch (err) {
+        if (err instanceof MagicLinkFailure) {
+          decisions.record('auth.callback', { outcome: 'failed', reason: err.reason, ...subject });
         }
-
-        const user =
-          row.purpose === 'invite'
-            ? await inviteUser(r, row.membershipId)
-            : (await r.usersService.findOrCreateByEmail(row.email)).user;
-        if (!user) {
-          throw new MagicLinkFailure('invalid');
-        }
-
-        await ensureOnboarding(r.usersService, user);
-        const { token } = await openSessionWith(r.sessions, user.id, 'cookie', input.userAgent);
-        return { token, next: row.next, user };
-      });
+        throw err;
+      }
     },
   };
 }

@@ -60,7 +60,12 @@ export function registerAuthRoutes(
 
   app.openapi(magicLinkRoute, async (c) => {
     const { email, next } = c.req.valid('json');
-    await services.auth.requestMagicLink({ email, next, ip: clientIp(c, env.CLIENT_IP_HEADER) });
+    await services.auth.requestMagicLink({
+      email,
+      next,
+      ip: clientIp(c, env.CLIENT_IP_HEADER),
+      requestId: c.get('requestId'),
+    });
     return c.json({ ok: true as const }, 200);
   });
 
@@ -82,6 +87,7 @@ export function registerAuthRoutes(
         token,
         ip: clientIp(c, env.CLIENT_IP_HEADER),
         userAgent: userAgent(c),
+        requestId: c.get('requestId'),
       });
       c.header(
         'Set-Cookie',
