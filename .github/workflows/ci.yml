@@ -165,7 +165,7 @@ jobs:
       # The API ran the migrations on boot; the seed adds the owner and a fresh smoke bearer.
       - name: Seed the owner and smoke session
         env:
-          DATABASE_URL: postgres://pb:pb@localhost:5432/pb
+          DATABASE_URL: postgres://gobbit:gobbit@localhost:5432/gobbit
           SEED_OWNER_EMAIL: owner@example.test
         run: |
           token=$(openssl rand -hex 32)

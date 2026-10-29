@@ -6,6 +6,6 @@ export default defineConfig({
   out: './migrations',
   casing: 'snake_case',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgres://pb:pb@localhost:5432/pb',
+    url: process.env.DATABASE_URL ?? 'postgres://gobbit:gobbit@localhost:5432/gobbit',
   },
 });

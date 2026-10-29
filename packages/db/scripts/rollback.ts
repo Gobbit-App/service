@@ -1,7 +1,7 @@
 import { createPool } from '../src/client';
 import { rollbackLatest } from '../src/migrations';
 
-const databaseUrl = process.env.DATABASE_URL ?? 'postgres://pb:pb@localhost:5432/pb';
+const databaseUrl = process.env.DATABASE_URL ?? 'postgres://gobbit:gobbit@localhost:5432/gobbit';
 
 try {
   const pool = createPool(databaseUrl);
