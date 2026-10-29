@@ -1,7 +1,7 @@
 import { createPool } from '../src/client';
 import { parseOwnerSeedEnv, runSeed } from '../seed/run-seed';
 
-const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://pb:pb@localhost:5432/pb';
+const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://gobbit:gobbit@localhost:5432/gobbit';
 
 // The seed is for local development only: deployed instances start empty and the owner signs in
 // by magic link (D25). The deployed smoke token comes from POST /auth/token-exchange (README).
