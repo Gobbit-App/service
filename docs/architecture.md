@@ -98,6 +98,7 @@ only on `POST /ingest`.
 | Deck admin | `/d/$slug/settings`: name, public switch, publish-shares-directly switch, category visibility, invites, member roles (`PATCH /decks/{id}/members/{userId}`, last-owner guard) | [web-pwa](design/web-pwa.md#deck-settings-phase-8-d184d185), [auth](design/auth.md#authorization-d33d35) |
 | Activity log | Card writes append `item_events` lines (actor, client, kind, changed field names) in the same transaction; owners and maintainers read them per deck or per card | [activity-log](design/activity-log.md) · ADR-057 |
 | Waitlist | `REGISTRATION_MODE` (default `waitlist`) gates sign-up at link request; users are created only by `users.service.register(reason)`. Double opt-in requests (`POST /waitlist`, `GET /waitlist/confirm`) through `waitlist.service.join` only; same 202 for every case (no enumeration); honeypot, per-IP and per-email limits (env-tunable); `waitlist_events` audit rows; weekly prune; `waitlist_summary` view | [waitlist](design/waitlist.md) · ADR-061 |
+| Landing page | No-JS `/welcome` page rendered by the API; Caddy serves it at `/` when there is no session cookie, the SPA sends signed-out users of `/` there; the form posts through `waitlist.join` (303/400/429) | [waitlist](design/waitlist.md#landing-page-030-d226d230-d242-adr-063) · ADR-063 |
 
 ## Testing
 
@@ -178,3 +179,4 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [059](adr.md#adr-059-one-inline-icon-set-and-shared-action-primitives-d210d212) | One inline SVG icon set and shared action primitives |
 | [060](adr.md#adr-060-accountable-by-default--every-decision-is-recorded-and-watchable-constitution-viii) | Accountable by default: every decision about a person is a named event or audit row, watchable per instance, aggregate and rate |
 | [061](adr.md#adr-061-registration-gate-and-waitlist-d217d219-d222d224-d240-d241) | Registration closed by default (`REGISTRATION_MODE`), one user creation point; waitlist: double opt-in, one service, no enumeration, decision events and audit rows |
+| [063](adr.md#adr-063-landing-page-at-the-root-for-cookieless-requests-d226d227) | Landing page API-rendered at `/welcome`; Caddy routes `/` there without a `gobbit_session` cookie; the SPA's signed-out home follows |

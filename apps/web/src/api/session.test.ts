@@ -14,9 +14,37 @@ describe('isPublicPath / unauthorizedRedirect', () => {
   });
 
   it('sends private pages to sign-in with the return path', () => {
-    expect(unauthorizedRedirect({ pathname: '/d/family', search: '?x=1' })).toBe(
-      `/sign-in?next=${encodeURIComponent('/d/family?x=1')}`,
-    );
+    expect(unauthorizedRedirect({ pathname: '/d/family', search: '?x=1' })).toEqual({
+      href: `/sign-in?next=${encodeURIComponent('/d/family?x=1')}`,
+      full: false,
+    });
+    expect(unauthorizedRedirect({ pathname: '/d/x', search: '' })).toEqual({
+      href: `/sign-in?next=${encodeURIComponent('/d/x')}`,
+      full: false,
+    });
+  });
+
+  it('sends the signed-out home to the landing page with a full navigation (D227)', () => {
+    expect(unauthorizedRedirect({ pathname: '/', search: '' })).toEqual({
+      href: '/welcome?from=app',
+      full: true,
+    });
+    expect(unauthorizedRedirect({ pathname: '/', search: '?utm_source=x' })).toEqual({
+      href: '/welcome?from=app&utm_source=x',
+      full: true,
+    });
+  });
+
+  it('a home with other query parameters still goes to sign-in', () => {
+    expect(unauthorizedRedirect({ pathname: '/', search: '?q=milk' })).toEqual({
+      href: `/sign-in?next=${encodeURIComponent('/?q=milk')}`,
+      full: false,
+    });
+  });
+
+  it('keeps the public paths unchanged', () => {
+    expect(isPublicPath('/welcome')).toBe(false);
+    expect(unauthorizedRedirect({ pathname: '/auth/error', search: '?reason=closed' })).toBeNull();
   });
 });
 

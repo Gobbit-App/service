@@ -255,7 +255,7 @@ export function createPublicPagesService({
           });
         }
       }
-      return sitemapXml(entries);
+      return sitemapXml(origin, entries);
     },
 
     robots(): string {

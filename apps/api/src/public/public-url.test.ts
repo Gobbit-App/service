@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { appPath, openInAppPath, publicPath, publicUrl } from './public-url';
+import {
+  appPath,
+  LANDING_JOINED_PATH,
+  LANDING_PATH,
+  landingUrl,
+  openInAppPath,
+  publicPath,
+  publicUrl,
+} from './public-url';
 
 const ORIGIN = 'https://gobbit.example';
 
@@ -35,5 +43,16 @@ describe('public URLs (D177, D178)', () => {
     expect(publicPath(target)).toBe('/p/our-street/search?q=%D7%90%D7%9E%D7%A7%D7%94%20%26%20co');
     expect(appPath(target)).toBe('/d/our-street/search?q=%D7%90%D7%9E%D7%A7%D7%94%20%26%20co');
     expect(appPath({ kind: 'search', slug: 'our-street', q: '' })).toBe('/d/our-street/search');
+  });
+});
+
+describe('landing URLs (030)', () => {
+  it('the canonical landing URL is the root', () => {
+    expect(landingUrl(ORIGIN)).toBe('https://gobbit.example/');
+  });
+
+  it('the page and its thanks page live under /welcome', () => {
+    expect(LANDING_PATH).toBe('/welcome');
+    expect(LANDING_JOINED_PATH).toBe('/welcome/joined');
   });
 });

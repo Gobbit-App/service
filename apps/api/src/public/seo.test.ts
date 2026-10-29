@@ -28,7 +28,7 @@ describe('seo (D179)', () => {
   });
 
   it('sitemap escapes locations and formats lastmod as a date', () => {
-    const xml = sitemapXml([
+    const xml = sitemapXml('https://gobbit.example', [
       { loc: 'https://gobbit.example/p/a&b', lastmod: new Date('2026-10-05T23:30:00.000Z') },
       { loc: 'https://gobbit.example/p/c', lastmod: null },
     ]);
@@ -39,9 +39,18 @@ describe('seo (D179)', () => {
     expect(xml).toContain('<url><loc>https://gobbit.example/p/c</loc></url>');
   });
 
-  it('an empty sitemap is still a valid urlset', () => {
-    expect(sitemapXml([])).toContain(
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>',
+  it('the root (landing page) is the first url, without lastmod (030)', () => {
+    const xml = sitemapXml('https://gobbit.example', [
+      { loc: 'https://gobbit.example/p/c', lastmod: null },
+    ]);
+    const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    expect(locs).toEqual(['https://gobbit.example/', 'https://gobbit.example/p/c']);
+    expect(xml).toContain('<url><loc>https://gobbit.example/</loc></url>');
+  });
+
+  it('a sitemap with no public decks still lists the root', () => {
+    expect(sitemapXml('https://gobbit.example', [])).toContain(
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n<url><loc>https://gobbit.example/</loc></url>\n</urlset>',
     );
   });
 });

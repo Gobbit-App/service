@@ -24,6 +24,10 @@ function SignIn() {
       <h1 className="brand">Gobbit</h1>
       <p className="lead">Your family's pocket of useful cards.</p>
       <SignInForm onSubmit={requestLink} />
+      {/* D226: a plain anchor; /welcome is API-rendered, outside the SPA. */}
+      <p className="sign-in__join">
+        New here? <a href="/welcome">Join the waitlist</a>
+      </p>
     </main>
   );
 }

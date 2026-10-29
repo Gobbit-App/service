@@ -519,3 +519,13 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 - **One creation point**: `users.service.register(email, reason)` is the only path to `createWithAccount`; `deck_invite` and `waitlist_invite` create in any mode, `open_sign_in` only when open. Every new user records `registered_via` and `registered_by`, and every gate decision is a named event (`auth.magic_link`, `auth.callback`, `users.register`, `registration.mode`).
 
 **Rationale**: a closed door with a waitlist lets the owner pace growth without new admin tooling; gating at request time means no link is ever minted for a sign-up that would be refused, and one creation point keeps any future path behind the same rule. Double opt-in keeps invites to addresses someone controls and stops signing up other people; identical answers extend D22 so the waitlist is no "is this a Gobbit user?" oracle; one service keeps the API, the form and the gate identical. Details: [`docs/design/waitlist.md`](design/waitlist.md), [`docs/design/auth.md`](design/auth.md#registration-gate-d222d224-d241).
+
+## ADR-063: Landing page at the root for cookieless requests (D226–D227)
+
+**Decision**: The API renders the landing page at `/welcome` (no JavaScript, 017's layout and escaping), and the root URL shows it to anyone without a session cookie.
+
+- **Routing at the edge**: Caddy rewrites `/` to `/welcome` (query kept, `X-Gobbit-Via: root`) only when the request has no `gobbit_session` cookie; with the cookie, `/` stays the SPA. `/welcome` and `/welcome/joined` always go to the API. Answers send `Vary: Cookie`; canonical and `og:url` are the root.
+- **Signed-out app home**: the SPA sends a 401 on `/` to `/welcome?from=app` with a full page load, and the service worker never serves `/welcome` from the shell. Deep links keep `/sign-in?next=…`. A valid session on `/welcome` gets an "Open Gobbit" variant without the form.
+- **Form**: post/redirect/get through `waitlist.join` only (ADR-061), so the page keeps the no-enumeration rule and the limits.
+
+**Rationale**: link previews and first visits never carry a cookie, so they get real HTML with preview tags at the root, while members (who always have the cookie) keep the app at `/` with no change to `start_url`, bookmarks or the 401 logic. An installed app serves `/` from the service worker, so the SPA has to route its own signed-out users. Rendering in the API reuses the public-page code and lets the form reach the service that enforces the waitlist rules. Moving the app off `/`, a static page in the web image, a landing route inside the SPA and forward auth in Caddy were rejected (D226). Details: [`docs/design/waitlist.md`](design/waitlist.md#landing-page-030-d226d230-d242-adr-063).

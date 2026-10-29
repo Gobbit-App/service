@@ -14,7 +14,7 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared (Dokploy compose ser
                                          ▼
                                       Traefik ── Host(gobbit.niranhome.win) ──▶ web:80 (Caddy, apps/web/Caddyfile)
                                                                                   │ default network
-                          /api/* (strip), /s/*, /p/*, /sitemap.xml, /robots.txt ──┤──▶ api:3000 ──▶ shared Postgres (DATABASE_URL)
+           /api/* (strip), /s/*, /p/*, /welcome, / w/o session, sitemap, robots ──┤──▶ api:3000 ──▶ shared Postgres (DATABASE_URL)
                                                      everything else ─────────────┘    static files, SPA fallback
                                                                                        worker ──▶ shared Postgres (pg-boss jobs: embeddings, ingestion)
                                                                                          └─▶ shared URLs on the internet (SSRF-guarded), Cloudinary, LLM providers
@@ -56,6 +56,15 @@ SELECT action, source, actor_id, created_at FROM waitlist_events
 WHERE entry_id = (SELECT id FROM waitlist_entries WHERE email = lower('someone@example.test'))
 ORDER BY created_at;
 ```
+
+### Landing page
+
+`apps/web/Caddyfile` sends `/` to the API's landing page (rewritten to `/welcome`, header `X-Gobbit-Via: root`) only when the request carries no `gobbit_session` cookie; `/welcome` and `/welcome/joined` always go to the API with any client `X-Gobbit-Via` removed. If the rule breaks, members land on the waitlist page or strangers on an empty app shell; the `via` counts show it:
+
+| Event | Query | Alert when (default) |
+| --- | --- | --- |
+| Landing renders by route | `jq -c 'select(.event=="landing.render") \| [.state,.via]' \| sort \| uniq -c` | `via` `root` drops to 0 for an hour while `direct` continues; `signed_in` share jumps |
+| Form outcomes | `jq -c 'select(.event=="landing.form") \| [.outcome,.reason,.fields]' \| sort \| uniq -c` | `refused` > 30 per hour; `invalid` > 50% of posts over 6 hours |
 
 ## Registration gate
 
