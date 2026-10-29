@@ -29,4 +29,4 @@ Logged first, then planned in `PLAN.md` § Usability pass. Each item names the f
 
 ### Branding
 
-- [ ] Remove every mention of "pocketbook" → 025–027 (025 done: user-visible copy and live docs)
+- [ ] Remove every mention of "pocketbook" → 025–027
