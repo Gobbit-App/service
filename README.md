@@ -244,7 +244,7 @@ The API's `/health` reports `db_ms`, which is a quick way to see the network rou
 
 ### Environment Variables (Production)
 
-Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM`, `CLIENT_IP_HEADER=cf-connecting-ip`, `NODE_ENV=production`) is a default in `infra/docker-compose.yml` (D52). Dokploy holds only the secrets:
+Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM`, `CLIENT_IP_HEADER=cf-connecting-ip`, `NODE_ENV=production`) is a default in `infra/docker-compose.yml` (D52). New or newly required variables are listed per change in `CHANGELOG.md`; check it before each deploy. Dokploy holds only the secrets:
 
 - `DATABASE_URL` – the `gobbit` database on the shared Postgres, e.g. `postgres://gobbit:<pw>@<box LAN IP>:5433/gobbit` (add `?sslmode=verify-full` off the LAN)
 - `RESEND_API_KEY`
