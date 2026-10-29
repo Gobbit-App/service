@@ -11,9 +11,16 @@ import {
   PAYLOAD_MAX_BYTES,
   TABLE_MAX_COLUMNS,
   TABLE_MAX_ROWS,
+  WAITLIST_JOIN_PER_EMAIL_PER_HOUR,
+  WAITLIST_JOIN_PER_IP_PER_HOUR,
 } from './limits';
 
 describe('limits', () => {
+  it('waitlist join limits default to 10 per IP and 3 per email per hour (D219)', () => {
+    expect(WAITLIST_JOIN_PER_IP_PER_HOUR).toBe(10);
+    expect(WAITLIST_JOIN_PER_EMAIL_PER_HOUR).toBe(3);
+  });
+
   it('CARD_BODY_MAX should be 600', () => {
     expect(CARD_BODY_MAX).toBe(600);
   });

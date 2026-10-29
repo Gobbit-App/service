@@ -14,6 +14,11 @@ import { createAssetsRepo } from '../repositories/assets.repo';
 import { createLinkChecksRepo } from '../repositories/link-checks.repo';
 import { createSitemapRepo } from '../repositories/sitemap.repo';
 import { createItemEventsRepo } from '../repositories/item-events.repo';
+import { createWaitlistRepo } from '../repositories/waitlist.repo';
+import { createLogHash } from '../lib/log-hash';
+import { decisionLogger } from '../lib/decision-event';
+import { logger as rootLogger, type Logger } from '../lib/logger';
+import { WAITLIST_DECISION_LEVELS, type WaitlistDecisions } from './waitlist.events';
 import { createPageCache } from '../public/page-cache';
 import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
@@ -40,6 +45,7 @@ import {
 } from './search-wiring';
 import { buildIngestServices, type IngestWiring } from './ingest-wiring';
 import { createImportsService } from './imports.service';
+import { createWaitlistService } from './waitlist.service';
 import {
   buildMediaServices,
   resolveLinkCheckFetch,
@@ -60,6 +66,8 @@ export interface ServiceDeps {
   ingest?: IngestWiring;
   /** Link preview fetcher, image fetcher and media store overrides (Phase 6, 7). */
   media?: MediaWiring;
+  /** Parent logger for decision events (D239); integration tests capture it. */
+  logger?: Logger;
 }
 
 /** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
@@ -85,6 +93,7 @@ export function buildServices({
   search,
   ingest,
   media,
+  logger = rootLogger,
 }: ServiceDeps) {
   const users = createUsersRepo(db);
   const decks = createDecksRepo(db);
@@ -144,10 +153,27 @@ export function buildServices({
   });
   const transaction: CallbackTransaction = (fn) =>
     db.transaction((tx) => fn(buildCallbackRepos(tx)));
+  // D239: keyed hashes for decision events (emailHash, ipHash).
+  const logHash = createLogHash(env.LOG_HASH_KEY);
 
   return {
     users: usersService,
     rateLimits,
+    logHash,
+    waitlist: createWaitlistService({
+      env,
+      now,
+      mailer,
+      waitlist: createWaitlistRepo(db),
+      transaction: (fn) => db.transaction((tx) => fn(createWaitlistRepo(tx))),
+      users,
+      rateLimits,
+      logHash,
+      decisions: decisionLogger<WaitlistDecisions>('waitlist', {
+        parent: logger,
+        levels: WAITLIST_DECISION_LEVELS,
+      }),
+    }),
     auth: createAuthService({
       env,
       now,

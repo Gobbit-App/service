@@ -14,6 +14,7 @@
     "./search": "./src/search/index.ts",
     "./ingest": "./src/ingest/index.ts",
     "./ingest-constants": "./src/ingest/constants.ts",
+    "./waitlist-constants": "./src/waitlist/constants.ts",
     "./item-constants": "./src/items/constants.ts",
     "./card-limits": "./src/card-limits.ts",
     "./media": "./src/media/index.ts",

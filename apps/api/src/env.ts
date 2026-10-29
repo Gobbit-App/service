@@ -5,6 +5,8 @@ import {
   SESSION_TTL_DAYS_DEFAULT,
   DEFAULT_EMBEDDING_MODEL,
   INGEST_DAILY_CAP,
+  WAITLIST_JOIN_PER_IP_PER_HOUR,
+  WAITLIST_JOIN_PER_EMAIL_PER_HOUR,
 } from '@pb/shared';
 import { cloudNameFrom } from './lib/cloudinary-url';
 
@@ -15,6 +17,9 @@ const bool = (fallback: 'true' | 'false') =>
     .enum(['true', 'false'])
     .default(fallback)
     .transform((v) => v === 'true');
+
+/** D239: development-only fallback; production must set its own LOG_HASH_KEY. */
+export const DEV_LOG_HASH_KEY = 'gobbit-development-log-hash-key-not-secret';
 
 const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
 
@@ -71,6 +76,12 @@ const baseSchema = z.object({
   RESEND_WEBHOOK_SECRET: z.string().optional(),
   /** iCloud link of the published "Share to Gobbit" Shortcut, shown in settings. */
   SHORTCUT_URL: z.url().optional(),
+  /** D239: HMAC key for `emailHash`/`ipHash` in decision events. Required in production. Never logged. */
+  LOG_HASH_KEY: z.string().min(32, 'LOG_HASH_KEY must be at least 32 characters').optional(),
+  /** D219: waitlist joins (and confirms) per IP per hour, in memory. */
+  WAITLIST_JOIN_PER_IP_PER_HOUR: positiveInt(WAITLIST_JOIN_PER_IP_PER_HOUR),
+  /** D219: waitlist joins per email per hour (`rate_limit_counters`). */
+  WAITLIST_JOIN_PER_EMAIL_PER_HOUR: positiveInt(WAITLIST_JOIN_PER_EMAIL_PER_HOUR),
 });
 
 export const envSchema = baseSchema
@@ -89,6 +100,7 @@ export const envSchema = baseSchema
     if (data.NODE_ENV === 'production') {
       require('API_URL', 'API_URL is required in production');
       require('CLOUDINARY_URL', 'CLOUDINARY_URL is required in production');
+      require('LOG_HASH_KEY', 'LOG_HASH_KEY is required in production');
       if (data.MAIL_PROVIDER === 'console' && !data.ALLOW_CONSOLE_MAIL) {
         ctx.addIssue({
           code: 'custom',
@@ -103,6 +115,7 @@ export const envSchema = baseSchema
     API_URL: stripTrailingSlash(data.API_URL ?? `http://localhost:${data.PORT}`),
     APP_URL: data.APP_URL ? stripTrailingSlash(data.APP_URL) : undefined,
     CLIENT_IP_HEADER: data.CLIENT_IP_HEADER?.toLowerCase(),
+    LOG_HASH_KEY: data.LOG_HASH_KEY ?? DEV_LOG_HASH_KEY,
   }));
 
 export type Env = z.output<typeof envSchema>;

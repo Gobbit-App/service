@@ -1,5 +1,45 @@
 import { describe, it, expect } from 'vitest';
-import { escapeHtml, signInEmail, inviteEmail } from './templates';
+import {
+  escapeHtml,
+  signInEmail,
+  inviteEmail,
+  waitlistConfirmEmail,
+  waitlistExistingUserEmail,
+} from './templates';
+
+describe('waitlistConfirmEmail (D218)', () => {
+  const link = 'https://api.example.test/waitlist/confirm?token=abc&x=<y>';
+
+  it('words the landing mail as keeping a place on the waitlist', () => {
+    const mail = waitlistConfirmEmail({ link, ttlDays: 7, source: 'landing' });
+    expect(mail.subject).toBe('Confirm your place on the Gobbit waitlist');
+    expect(mail.text).toContain('keep your place on the waitlist');
+  });
+
+  it("words the sign-in mail as 'not on Gobbit yet'", () => {
+    const mail = waitlistConfirmEmail({ link, ttlDays: 7, source: 'sign_in' });
+    expect(mail.subject).toBe('Join the Gobbit waitlist');
+    expect(mail.text).toContain("you're not on Gobbit yet");
+  });
+
+  it('carries the link and the TTL, escaped in HTML', () => {
+    const mail = waitlistConfirmEmail({ link, ttlDays: 7, source: 'landing' });
+    expect(mail.text).toContain(link);
+    expect(mail.text).toContain('7 days');
+    expect(mail.html).toContain('7 days');
+    expect(mail.html).toContain('&lt;y&gt;');
+    expect(mail.html).not.toContain('<y>');
+  });
+});
+
+describe('waitlistExistingUserEmail (D218)', () => {
+  it('links the sign-in page', () => {
+    const mail = waitlistExistingUserEmail({ signInUrl: 'https://app.example.test/sign-in' });
+    expect(mail.text).toContain('https://app.example.test/sign-in');
+    expect(mail.html).toContain('href="https://app.example.test/sign-in"');
+    expect(mail.text).toContain('already have a Gobbit account');
+  });
+});
 
 describe('escapeHtml', () => {
   it('escapes & to &amp;', () => {

@@ -22,7 +22,40 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared (Dokploy compose ser
 
 **The Dokploy Compose service is a raw source:** its YAML is a copy of `docker-compose.yml` pasted into Dokploy, and the deploy webhook only pulls new images and restarts. Any change to `docker-compose.yml` (new service, new env var) must be pasted into Dokploy → Compose → *Raw* by hand, then deployed. Otherwise production keeps running the old service list.
 
-Dokploy environment for this Compose project — secrets only (D52): `DATABASE_URL`, `RESEND_API_KEY`, `CLOUDINARY_URL`, and optionally `OPENROUTER_API_KEY` (embeddings, Ask and ingestion; preferred) or the direct fallbacks `OPENAI_API_KEY` (embeddings) and `ANTHROPIC_API_KEY` (Ask and ingestion), plus `RESEND_WEBHOOK_SECRET` for email-in. `api` and `worker` share one environment (the `x-api-env` anchor), so every variable reaches both: the worker uploads, fetches and calls the extraction model. Setting up the shared database (role, database, extensions, external port, TLS) is in the root `README.md` → *Shared database*. Everything else (`API_URL`, `APP_URL`, `MAIL_PROVIDER`, `MAIL_FROM`, `CLIENT_IP_HEADER`, …) is a default in `docker-compose.yml`. Optional overrides: `API_IMAGE_TAG` / `WEB_IMAGE_TAG` (default `latest`), `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `ASK_MODEL`, `EMBEDDING_MODEL`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL` (the published Shortcut's iCloud link) and `INGEST_EMAIL_DOMAIN` (email-in, together with `RESEND_WEBHOOK_SECRET` and `RESEND_API_KEY`; see the root `README.md` and `docs/shortcut/README.md`). Email-in also needs MX records for that domain pointing at Resend; the webhook reaches the API through `web` (`/api/webhooks/resend/inbound`), so no extra route is needed. There is no Dokploy "Domains" entry; the router comes from the `web` labels. `COOKIE_SECURE` defaults to `true` and must stay that way.
+Dokploy environment for this Compose project — secrets only (D52): `DATABASE_URL`, `RESEND_API_KEY`, `CLOUDINARY_URL`, and optionally `OPENROUTER_API_KEY` (embeddings, Ask and ingestion; preferred) or the direct fallbacks `OPENAI_API_KEY` (embeddings) and `ANTHROPIC_API_KEY` (Ask and ingestion), plus `RESEND_WEBHOOK_SECRET` for email-in and `LOG_HASH_KEY` (required: keys the hashes in decision events, ≥ 32 characters). `api` and `worker` share one environment (the `x-api-env` anchor), so every variable reaches both: the worker uploads, fetches and calls the extraction model. Setting up the shared database (role, database, extensions, external port, TLS) is in the root `README.md` → *Shared database*. Everything else (`API_URL`, `APP_URL`, `MAIL_PROVIDER`, `MAIL_FROM`, `CLIENT_IP_HEADER`, …) is a default in `docker-compose.yml`. Optional overrides: `API_IMAGE_TAG` / `WEB_IMAGE_TAG` (default `latest`), `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `ASK_MODEL`, `EMBEDDING_MODEL`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL` (the published Shortcut's iCloud link) and `INGEST_EMAIL_DOMAIN` (email-in, together with `RESEND_WEBHOOK_SECRET` and `RESEND_API_KEY`; see the root `README.md` and `docs/shortcut/README.md`). Email-in also needs MX records for that domain pointing at Resend; the webhook reaches the API through `web` (`/api/webhooks/resend/inbound`), so no extra route is needed. There is no Dokploy "Domains" entry; the router comes from the `web` labels. `COOKIE_SECURE` defaults to `true` and must stay that way.
+
+## Waitlist
+
+Decision events are JSON lines on the `api` / `worker` stdout (constitution VIII, ADR-060, `docs/design/waitlist.md`). People appear only as `emailHash` / `ipHash` (HMAC with `LOG_HASH_KEY`). Until a monitoring backend exists (PLAN.md Phase 11), read them with `jq`:
+
+| Event | Query | Alert when (default) |
+| --- | --- | --- |
+| Joins by outcome | `jq -c 'select(.event=="waitlist.join") \| [.outcome,.reason,.source]' \| sort \| uniq -c` | volume baseline only |
+| Honeypot drops | `jq 'select(.event=="waitlist.join" and .outcome=="dropped")'` | > 50 per hour, or > 50% of joins over 6 hours |
+| Per-email refusals | `jq 'select(.event=="waitlist.join" and .reason=="per_email") \| .emailHash'` | > 20 per hour, or one hash in 3 windows in a day |
+| Per-IP refusals | `jq 'select(.event=="rate_limit.refused" and .bucket=="waitlist") \| .ipHash'` | > 30 per hour, or one hash in 3 windows in a day |
+| Confirms | `jq -c 'select(.event=="waitlist.confirm") \| [.outcome,.reason]'` | confirmed ÷ created < 30% over 7 days; `invalid` > 20 per hour |
+| Mail | `jq 'select(.event=="waitlist.mail" and .outcome=="failed")'` | any failure; > 5% per hour |
+| Prune | `jq 'select(.event=="waitlist.prune")'` (worker) | no event for 8 days |
+
+To follow one address, hash it with the same key: `node -e "const c=require('crypto');console.log(c.createHmac('sha256',process.env.LOG_HASH_KEY).update(process.argv[1].trim().toLowerCase()).digest('hex').slice(0,16))" someone@example.test`, then `jq 'select(.emailHash=="<hash>")'`.
+
+**Raising a limit for a launch event**: set `WAITLIST_JOIN_PER_IP_PER_HOUR` (default 10) or `WAITLIST_JOIN_PER_EMAIL_PER_HOUR` (default 3) in the Dokploy environment and redeploy; remove it afterwards. An invalid value stops the API from starting.
+
+**Clearing one address's counter** (the per-IP bucket is in memory and resets within the hour or on restart):
+
+```sql
+DELETE FROM rate_limit_counters
+WHERE key = 'waitlist:email:' || encode(sha256(convert_to(lower(trim('someone@example.test')), 'UTF8')), 'hex');
+```
+
+**One entry's history** (rows outlive the prune and hold no email):
+
+```sql
+SELECT action, source, actor_id, created_at FROM waitlist_events
+WHERE entry_id = (SELECT id FROM waitlist_entries WHERE email = lower('someone@example.test'))
+ORDER BY created_at;
+```
 
 ## Backups (Phase 0 step 7)
 

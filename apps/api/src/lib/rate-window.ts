@@ -36,4 +36,6 @@ export const rateKeys = {
   linkPreviewUser: (userId: string) => `link-preview:user:${userId}`,
   mediaConfirmUser: (userId: string) => `media-confirm:user:${userId}`,
   linkCheckUser: (userId: string) => `link-check:user:${userId}`,
+  /** D219: waitlist joins per address (sha256 of the normalized email). */
+  waitlistEmail: (emailHash: string) => `waitlist:email:${emailHash}`,
 };
