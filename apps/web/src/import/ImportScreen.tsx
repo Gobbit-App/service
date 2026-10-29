@@ -35,7 +35,7 @@ export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
   if (!deck.data) {
     return (
       <ErrorState
-        message={accessErrorCopy(deck.error, 'pocketbook')}
+        message={accessErrorCopy(deck.error, 'deck')}
         onRetry={isRetryable(deck.error) ? () => void deck.refetch() : undefined}
       />
     );

@@ -64,7 +64,7 @@ describe('SettingsScreen', () => {
     setup({ tokens: [token(1), token(2, { deckId: family.id, lastUsedAt: STAMP })] });
     const list = await screen.findByRole('list', { name: 'Your tokens' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(within(list).getByText(/My personal pocketbook/)).toBeInTheDocument();
+    expect(within(list).getByText(/My personal deck/)).toBeInTheDocument();
     expect(within(list).getByText(/Family · Last used/)).toBeInTheDocument();
   });
 

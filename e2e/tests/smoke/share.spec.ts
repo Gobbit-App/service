@@ -55,7 +55,7 @@ test('pasting a text sends it and links to Your shares @smoke', async ({ page, w
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   await page.getByRole('link', { name: 'Paste' }).click();
   await expect(page).toHaveURL(new RegExp(`/share\\?deck=${webDeck.slug}$`));
-  await expect(page.getByLabel('Pocketbook')).toHaveValue(webDeck.slug);
+  await expect(page.getByLabel('Deck')).toHaveValue(webDeck.slug);
 
   const send = page.getByRole('button', { name: 'Send to Gobbit' });
   await expect(send).toBeDisabled();

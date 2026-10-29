@@ -24,7 +24,7 @@ export function EventLog({
   if (query.isError && events.length === 0) {
     return (
       <ErrorState
-        message={accessErrorCopy(query.error, 'pocketbook')}
+        message={accessErrorCopy(query.error, 'deck')}
         onRetry={isRetryable(query.error) ? () => void query.refetch() : undefined}
       />
     );

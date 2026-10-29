@@ -63,9 +63,7 @@ function ItemPage() {
           }
         />
         <p className="page__back">
-          <NavLink href={deckHref(deckSlug)}>
-            More from {deck.data?.name ?? 'this pocketbook'}
-          </NavLink>
+          <NavLink href={deckHref(deckSlug)}>More from {deck.data?.name ?? 'this deck'}</NavLink>
         </p>
       </main>
     </>

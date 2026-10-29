@@ -16,7 +16,7 @@ describe('AskView', () => {
     renderWithClient(<AskView deckSlug="family" question="ab" />);
 
     expect(
-      screen.getByText('Ask a question and get an answer from the cards in this pocketbook.'),
+      screen.getByText('Ask a question and get an answer from the cards in this deck.'),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ask' })).toBeDisabled();
     expect(respond).not.toHaveBeenCalled();
@@ -50,7 +50,7 @@ describe('AskView', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Ask' }));
 
-    expect(await screen.findByText('Nothing in this pocketbook answers that')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing in this deck answers that')).toBeInTheDocument();
     expect(screen.getByText('No card covers that.')).toBeInTheDocument();
   });
 

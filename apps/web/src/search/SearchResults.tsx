@@ -29,9 +29,7 @@ export function SearchResults({
 
   if (q.trim().length === 0) {
     if (recent.length === 0) {
-      return (
-        <EmptyState title="Search this pocketbook">Type a word, a name or a number.</EmptyState>
-      );
+      return <EmptyState title="Search this deck">Type a word, a name or a number.</EmptyState>;
     }
     return <RecentSearches items={recent} onPick={onPickRecent} />;
   }

@@ -2,7 +2,7 @@ import { isApiError } from '../api/api-error';
 import { isNetworkError } from '../api/network-state';
 
 /** P3.2: copy for a deck or card that failed to load with nothing cached. */
-export function accessErrorCopy(error: unknown, what: 'card' | 'pocketbook'): string {
+export function accessErrorCopy(error: unknown, what: 'card' | 'deck'): string {
   if (isApiError(error) && (error.status === 403 || error.status === 404)) {
     return "You don't have access — ask the person who shared it.";
   }

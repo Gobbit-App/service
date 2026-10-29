@@ -18,7 +18,7 @@ function ActivityLog() {
   const deck = useQuery(deckQuery(slug));
 
   if (deck.isPending) return <LoadingState label="Loading…" />;
-  if (!deck.data) return <ErrorState message="Couldn't load this pocketbook." />;
+  if (!deck.data) return <ErrorState message="Couldn't load this deck." />;
   if (!can(deck.data.role, 'event.list')) {
     return (
       <ErrorState title="Not available" message="Only owners and maintainers see the activity." />

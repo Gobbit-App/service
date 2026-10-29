@@ -19,15 +19,15 @@ function Home() {
   const { all } = Route.useSearch();
   const decks = useQuery(decksQuery());
 
-  if (decks.isPending) return <LoadingState label="Loading pocketbooks…" />;
+  if (decks.isPending) return <LoadingState label="Loading decks…" />;
   if (decks.isError && !decks.data) {
     return (
       <main className="page">
         <ErrorState
           message={
             isNetworkError(decks.error)
-              ? "You're offline and your pocketbooks aren't saved on this device yet."
-              : "Couldn't load your pocketbooks."
+              ? "You're offline and your decks aren't saved on this device yet."
+              : "Couldn't load your decks."
           }
           onRetry={() => void decks.refetch()}
         />
@@ -45,10 +45,10 @@ function Home() {
 
   return (
     <>
-      <AppHeader title="Pocketbooks" back={null} />
+      <AppHeader title="Decks" back={null} />
       <main className="page">
         {decks.data.length === 0 ? (
-          <EmptyState title="No pocketbooks yet" />
+          <EmptyState title="No decks yet" />
         ) : (
           <ul className="deck-list">
             {decks.data.map((deck) => (

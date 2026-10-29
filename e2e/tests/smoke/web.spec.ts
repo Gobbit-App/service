@@ -111,7 +111,7 @@ test('a favorite survives a reload @smoke', async ({ page, webDeck }) => {
 
 test('typing in the pinned search box lists tagged results @smoke', async ({ page, webDeck }) => {
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await page.getByRole('searchbox', { name: 'Search this pocketbook' }).fill('Smoke text');
+  await page.getByRole('searchbox', { name: 'Search this deck' }).fill('Smoke text');
   await expect(page).toHaveURL(/\/search\?q=Smoke(\+|%20)text/);
   const hit = page.locator('.search-hit').first();
   await expect(hit.locator('.result-tag')).toBeVisible();
