@@ -55,6 +55,8 @@ x-api-env: &api-env
   REGISTRATION_MODE: ${REGISTRATION_MODE:-waitlist}
   WAITLIST_JOIN_PER_IP_PER_HOUR: ${WAITLIST_JOIN_PER_IP_PER_HOUR:-10}
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR: ${WAITLIST_JOIN_PER_EMAIL_PER_HOUR:-3}
+  # D232: Umami website id (a UUID, not a secret). Empty → the landing page has no tracker.
+  ANALYTICS_SITE_ID: ${ANALYTICS_SITE_ID:-}
 
 services:
   api:
@@ -96,6 +98,10 @@ services:
     pull_policy: always
     depends_on:
       - api
+    environment:
+      # D232: Caddy proxies /stats/script.js and /stats/api/send here. A project-unique alias,
+      # because web is also on dokploy-network, where another project's `umami` could answer.
+      ANALYTICS_UPSTREAM: ${ANALYTICS_UPSTREAM:-gobbit-umami:3000}
     # Traefik (and the cloudflared service that feeds it) live on Dokploy's shared network.
     networks:
       - default
@@ -107,6 +113,40 @@ services:
       - traefik.http.routers.gobbit.rule=Host(`${PUBLIC_HOST:-gobbit.niranhome.win}`)
       - traefik.http.routers.gobbit.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
       - traefik.http.services.gobbit.loadbalancer.server.port=80
+    restart: unless-stopped
+
+  umami:
+    # D231: self-hosted landing analytics (031). v3 images are PostgreSQL-only; pinned, upgrade
+    # deliberately and re-run specs/031-landing-analytics/quickstart.md. Its own `umami` database
+    # on the shared Postgres; it migrates it on start. Secrets live in Dokploy only.
+    image: ghcr.io/umami-software/umami:3.4.1
+    environment:
+      DATABASE_URL: ${UMAMI_DATABASE_URL:-}
+      APP_SECRET: ${UMAMI_APP_SECRET:-}
+      CLIENT_IP_HEADER: cf-connecting-ip
+      DISABLE_TELEMETRY: 1
+      DISABLE_UPDATES: 1
+    # The dashboard has its own hostname behind Umami's login; the app origin serves only the
+    # tracker and the collect endpoint (Caddy). No published port.
+    networks:
+      default:
+        aliases:
+          - gobbit-umami
+      dokploy-network: {}
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.gobbit-stats.rule=Host(`${STATS_HOST:-gobbit-stats.niranhome.win}`)
+      - traefik.http.routers.gobbit-stats.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
+      - traefik.http.services.gobbit-stats.loadbalancer.server.port=3000
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/api/heartbeat').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      start_period: 60s
     restart: unless-stopped
 
 networks:

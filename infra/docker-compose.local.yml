@@ -62,5 +62,19 @@ services:
     ports:
       - 127.0.0.1:${WEB_PORT:-8080}:80
 
+  umami:
+    # D231: only with `pnpm compose:up -- --profile analytics`; create the `umami` role and
+    # database first (specs/031-landing-analytics/quickstart.md §2). Local defaults, not secrets.
+    profiles: [analytics]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${UMAMI_DATABASE_URL:-postgres://umami:umami@db:5432/umami}
+      APP_SECRET: ${UMAMI_APP_SECRET:-local-umami-secret}
+      CLIENT_IP_HEADER: ''
+    ports:
+      - 127.0.0.1:${UMAMI_PORT:-3001}:3000
+
 volumes:
   pgdata:

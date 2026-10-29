@@ -85,6 +85,8 @@ const baseSchema = z.object({
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR: positiveInt(WAITLIST_JOIN_PER_EMAIL_PER_HOUR),
   /** D222: `waitlist` sends unknown emails to the waitlist; `open` lets anyone register. */
   REGISTRATION_MODE: z.enum(registrationModes).default('waitlist'),
+  /** D232: Umami website id; when set, the landing page carries the tracker tag. Off when unset. */
+  ANALYTICS_SITE_ID: z.uuid('ANALYTICS_SITE_ID must be a UUID').optional(),
 });
 
 export const envSchema = baseSchema

@@ -3,10 +3,12 @@
 #   /p/*, /sitemap.xml, /robots.txt -> API unchanged (public pages, D177/D179)
 #   / without a gobbit_session cookie -> API /welcome (landing page, D226; URL stays /)
 #   /welcome, /welcome/joined -> API unchanged (landing page and its form, D228)
+#   /stats/script.js, /stats/api/send -> Umami, prefix stripped (landing analytics, D232); other /stats/* -> 404
 #   files   -> served from /srv                  else  -> index.html (SPA fallback)
 # D54: response headers (connect-src allows Cloudinary: the service worker fetch()es images to cache them,
 # and the editor uploads photos straight to api.cloudinary.com, D133;
-# img-src allows blob: for the share screen's thumbnails, D108). API_UPSTREAM overrides the default upstream (api:3000).
+# img-src allows blob: for the share screen's thumbnails, D108). API_UPSTREAM overrides the default upstream (api:3000),
+# ANALYTICS_UPSTREAM the Umami one (umami:3000); the CSP needs no change for the same-origin tracker (D232).
 {
 	admin off
 	auto_https off
@@ -42,6 +44,24 @@
 
 	# D226/D227: only cookie presence is checked; a stale cookie gets the SPA, whose 401
 	# handler sends the visitor to /welcome. X-Gobbit-Via only feeds landing.render (D242).
+	# D232: only the tracker and the collect endpoint reach Umami; its dashboard and API have
+	# their own hostname. Without an umami service these answer 502, but no page asks for them.
+	handle /stats/script.js {
+		uri strip_prefix /stats
+		reverse_proxy {$ANALYTICS_UPSTREAM:umami:3000} {
+			header_down Cache-Control "public, max-age=86400"
+		}
+	}
+
+	handle /stats/api/send {
+		uri strip_prefix /stats
+		reverse_proxy {$ANALYTICS_UPSTREAM:umami:3000}
+	}
+
+	handle /stats/* {
+		respond 404
+	}
+
 	@landing {
 		path /
 		not header_regexp Cookie (^|;\s*)gobbit_session=

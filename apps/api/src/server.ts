@@ -19,6 +19,7 @@ import { hasEmbeddingProvider, hasExtractProvider } from './ai/providers';
 import { childLogger, logDbIdleError } from './lib/logger';
 import { checkCloudinaryCredentials } from './media/cloudinary-check';
 import { recordRegistrationMode } from './services/registration-mode';
+import { recordAnalyticsConfig } from './public/analytics';
 
 const log = childLogger('api');
 
@@ -100,7 +101,9 @@ async function main() {
     },
     'api listening',
   );
-  recordRegistrationMode(env, { bootId: randomUUID() });
+  const bootId = randomUUID();
+  recordRegistrationMode(env, { bootId });
+  recordAnalyticsConfig(env, { bootId });
   if (env.CLOUDINARY_URL) void checkCloudinaryCredentials(env.CLOUDINARY_URL);
   else log.warn('CLOUDINARY_URL not set; image uploads and OG images are disabled');
 

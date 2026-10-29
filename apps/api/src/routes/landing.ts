@@ -9,6 +9,7 @@ import { HttpError } from '../errors/http-errors';
 import type { DecisionLogger } from '../lib/decision-event';
 import type { LandingDecisions } from '../services/landing.events';
 import { LANDING_COPY_EN } from '../public/landing-copy';
+import { analyticsHead } from '../public/analytics';
 import { landingPage, type LandingState, type LandingView } from '../public/landing';
 import { parseLandingForm, landingUtmSource, type LandingFormValues } from '../public/landing-form';
 import {
@@ -57,14 +58,15 @@ export function registerLandingRoutes(
 ): void {
   const { env, decisions } = deps;
   const origin = env.APP_URL ?? new URL(env.API_URL).origin;
+  const analytics = analyticsHead(env);
 
   function render(
     c: Context<AppEnv>,
     status: 200 | 400 | 429,
-    view: Omit<LandingView, 'origin'>,
+    view: Omit<LandingView, 'origin' | 'analytics'>,
     headers: Record<string, string>,
   ): Response {
-    return c.html(landingPage({ ...view, origin }), status, { Vary: VARY, ...headers });
+    return c.html(landingPage({ ...view, origin, analytics }), status, { Vary: VARY, ...headers });
   }
 
   /** The 400/429 re-render: values kept, never cached, never indexed (the template says noindex). */

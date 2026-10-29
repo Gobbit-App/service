@@ -49,6 +49,7 @@ registerRoute(
       /^\/s\//,
       /^\/p\//,
       /^\/welcome(\/joined)?$/,
+      /^\/stats\//,
       /^\/version\.json$/,
       /^\/sitemap\.xml$/,
       /^\/robots\.txt$/,

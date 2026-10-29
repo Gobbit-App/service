@@ -1,5 +1,6 @@
 import { WAITLIST_NOTE_MAX } from '@pb/shared';
 import { LANDING_OG_IMAGE_PATH, OG_HEIGHT, OG_WIDTH } from '../share/og-template';
+import type { AnalyticsHead } from './analytics';
 import { h, type Html } from './html';
 import { LANDING_COPY_EN, type LandingCopy } from './landing-copy';
 import type { LandingField, LandingFormErrors, LandingFormValues } from './landing-form';
@@ -21,6 +22,8 @@ export type LandingView = {
   /** A page-level message above the form, e.g. the 429 retry notice. */
   notice?: string;
   copy?: LandingCopy;
+  /** D232: the tracker, in every state, when `ANALYTICS_SITE_ID` is set (031). */
+  analytics?: AnalyticsHead;
 };
 
 /** States whose page should not be indexed (D229): the thanks page and the 400/429 re-render. */
@@ -41,6 +44,7 @@ function head(view: LandingView, copy: LandingCopy): PageHead {
     lang: copy.lang,
     dir: copy.dir,
     robots: NOINDEX_STATES.has(view.state) ? 'noindex' : 'index',
+    analytics: view.analytics,
   };
 }
 
