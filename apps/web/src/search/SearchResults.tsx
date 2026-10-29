@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { Category } from '@pb/shared';
+import type { Category } from '@gobbit/shared';
 import { isNetworkError } from '../api/network-state';
 import { searchQuery } from '../api/queries';
 import { Card } from '../cards/Card';

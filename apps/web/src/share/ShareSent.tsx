@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import type { Deck } from '@pb/shared';
-import { can } from '@pb/shared/authz';
+import type { Deck } from '@gobbit/shared';
+import { can } from '@gobbit/shared/authz';
 import { useOnline } from '../api/offline';
 import { heldReason, stateLabel } from '../shares/share-state';
 import { ShareDetail } from '../shares/ShareRow';

@@ -62,7 +62,7 @@ Every item status counts as a reference: proposed, published, archived, and soft
 
 The payload size CHECK (≤ 8192 bytes) is unaffected. `item_search_text()` already drops `publicId` for images, and the two new fields are numbers, so search text doesn't change.
 
-## Transient DTOs (new, `@pb/shared/media`)
+## Transient DTOs (new, `@gobbit/shared/media`)
 
 ### `MediaAssetConfirmRequest`
 
@@ -79,7 +79,7 @@ The payload size CHECK (≤ 8192 bytes) is unaffected. `item_search_text()` alre
 
 `{ publicId, width: int | null, height: int | null, bytes: int | null, format: string | null, source, createdAt }`
 
-## Limits added (`@pb/shared/media-constants`)
+## Limits added (`@gobbit/shared/media-constants`)
 
 - `MEDIA_ORPHAN_GRACE_DAYS = 7`
 - `MEDIA_SWEEP_CRON = '0 6 * * *'`

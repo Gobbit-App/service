@@ -64,9 +64,9 @@ Declared in the Drizzle schema (`index('items_deleted_idx').on(...).where(sql\`d
 
 The embedding lives on the `items` row and goes with it. Cloudinary assets of image cards are not removed (Phase 7 orphan sweep; see plan "Settle before starting").
 
-## DTO changes (`@pb/shared`)
+## DTO changes (`@gobbit/shared`)
 
 - `itemListQuerySchema.status`: `z.enum([...itemStatuses, 'deleted']).default('published')` (`itemListStatuses`).
 - `Item` (`itemSchema`): optional `deletedAt: string (ISO) | null`, present only in the deleted listing.
-- `items/constants.ts` (subpath `@pb/shared/item-constants`, like `ingest/constants.ts`): `ITEM_UNDELETE_DAYS = 30`, `DELETED_ITEM_PRUNE_CRON = '0 5 * * 0'`.
+- `items/constants.ts` (subpath `@gobbit/shared/item-constants`, like `ingest/constants.ts`): `ITEM_UNDELETE_DAYS = 30`, `DELETED_ITEM_PRUNE_CRON = '0 5 * * 0'`.
 - Web helper `daysLeft(deletedAt, now)` = `max(0, floor(30 − (now − deletedAt)/1 day))`.

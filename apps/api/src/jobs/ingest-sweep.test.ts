@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { INGEST_JOB_RETRIES, INGEST_SWEEP_STALE_MS } from '@pb/shared';
+import { INGEST_JOB_RETRIES, INGEST_SWEEP_STALE_MS } from '@gobbit/shared';
 import { createIngestSweep } from './ingest-sweep';
 import { isLastAttempt } from './ingest';
 

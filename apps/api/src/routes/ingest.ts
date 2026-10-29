@@ -5,7 +5,7 @@ import {
   ingestJobSchema,
   ingestRequestSchema,
   type IngestRequest,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import type { IngestCaller, IngestFile, IngestSubmission } from '../services/ingest.service';

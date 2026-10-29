@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { CategoryRow, DeckRow, ItemRow } from '@pb/db';
-import { createCategory, createDeck, createItem } from '@pb/db/test';
+import type { CategoryRow, DeckRow, ItemRow } from '@gobbit/db';
+import { createCategory, createDeck, createItem } from '@gobbit/db/test';
 import { setupApiTest } from './helpers';
 
 const APP_URL = 'http://app.test';

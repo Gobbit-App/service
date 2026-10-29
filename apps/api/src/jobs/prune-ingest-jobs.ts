@@ -1,4 +1,4 @@
-import { INGEST_RAW_RETENTION_DAYS } from '@pb/shared';
+import { INGEST_RAW_RETENTION_DAYS } from '@gobbit/shared';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { IngestUploadStore } from '../media/ingest-uploads';
 import { lineSink } from '../lib/logger';

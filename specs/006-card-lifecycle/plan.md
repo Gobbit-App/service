@@ -52,7 +52,7 @@ The web app gets role-gated `CardActions` on the card view and on Archived, an o
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | Routes parse and build the actor (`getActor`). `items.service` owns transitions, `can()` and the window, and throws `conflict`/`gone`/`forbidden`. `items.repo` adds `findByIdIncludingDeleted`, `undelete`, `listDeleted`, `purgeDeletedBefore`. A deck the caller can't see stays 404. |
-| II. One source of truth for contracts | `itemListStatuses`, `deletedAt`, `ITEM_UNDELETE_DAYS` (`@pb/shared/item-constants`); new routes in OpenAPI; `pnpm api:openapi`. New problem types listed in `contracts/items-lifecycle.md`. |
+| II. One source of truth for contracts | `itemListStatuses`, `deletedAt`, `ITEM_UNDELETE_DAYS` (`@gobbit/shared/item-constants`); new routes in OpenAPI; `pnpm api:openapi`. New problem types listed in `contracts/items-lifecycle.md`. |
 | III. Invariants live in the database | Index-only migration `0011_item_lifecycle` + hand-written down. The D95 published-has-category trigger already guards undelete. Soft delete stays `deleted_at` (ADR-005). |
 | IV. Private by default | The deleted listing requires `item.delete` and keeps the `itemHasVisibleCategory` filter. Undelete goes through the same `loadItem` access path (deck visible, proposal rule D96). Ingest tokens are still refused on these routes (ADR-046). |
 | V. Tests at the right tier | Unit: transitions, `daysLeft`, purge job, cache helpers. Int: role × action matrix, window, listing. E2E: demo 2 happy path plus reader-has-no-actions. See traceability. |
@@ -109,7 +109,7 @@ apps/api/api.http                    # restore / undelete / deleted listing requ
 
 packages/shared/src/
 ├── enums.ts                         # + itemListStatuses
-├── items/constants.ts               # + ITEM_UNDELETE_DAYS, DELETED_ITEM_PRUNE_CRON (subpath `@pb/shared/item-constants`)
+├── items/constants.ts               # + ITEM_UNDELETE_DAYS, DELETED_ITEM_PRUNE_CRON (subpath `@gobbit/shared/item-constants`)
 └── schemas/item.ts                  # list query status enum; Item.deletedAt optional
 
 packages/db/
@@ -133,7 +133,7 @@ apps/web/src/
 e2e/tests/smoke/lifecycle.spec.ts    # demo 2 + negative paths
 ```
 
-**Structure Decision**: The changes span the API service, routes, repo and worker; shared DTOs; one index migration; and web components in `items/`, `ui/` and `api/`. `CardActions` and the mutations are written so `specs/007-card-editor` adds an Edit button and `specs/009-browse-mode` reuses the component as is. The window and cron constants go in `packages/shared/src/items/constants.ts` with a subpath export, mirroring `ingest/constants.ts` (`@pb/shared/ingest-constants`), so the web imports `ITEM_UNDELETE_DAYS` without the root.
+**Structure Decision**: The changes span the API service, routes, repo and worker; shared DTOs; one index migration; and web components in `items/`, `ui/` and `api/`. `CardActions` and the mutations are written so `specs/007-card-editor` adds an Edit button and `specs/009-browse-mode` reuses the component as is. The window and cron constants go in `packages/shared/src/items/constants.ts` with a subpath export, mirroring `ingest/constants.ts` (`@gobbit/shared/ingest-constants`), so the web imports `ITEM_UNDELETE_DAYS` without the root.
 
 ## Invariant → test traceability
 

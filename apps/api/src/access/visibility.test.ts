@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PgDialect } from 'drizzle-orm/pg-core';
-import type { MemberRole } from '@pb/shared';
+import type { MemberRole } from '@gobbit/shared';
 import { canSeePrivate, visibleCategoriesWhere } from './visibility';
 
 const render = (role: MemberRole | null) =>

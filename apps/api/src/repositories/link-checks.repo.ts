@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray, isNull, lte, or, sql } from 'drizzle-orm';
-import { items, linkChecks, type DbExecutor, type LinkCheckRow } from '@pb/db';
-import type { LinkFlagStatus } from '@pb/shared';
+import { items, linkChecks, type DbExecutor, type LinkCheckRow } from '@gobbit/db';
+import type { LinkFlagStatus } from '@gobbit/shared';
 
 /** One sweep candidate (D164): a live published link card and its check row, if any. */
 export interface DueLink {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { IMPORT_LABEL_MAX } from '@pb/shared/ingest-constants';
+import { IMPORT_LABEL_MAX } from '@gobbit/shared/ingest-constants';
 import { parseReviewSearch } from './review-search';
 
 describe('parseReviewSearch (D191)', () => {

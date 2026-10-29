@@ -1,5 +1,5 @@
 import { lt, sql } from 'drizzle-orm';
-import { rateLimitCounters, type Db } from '@pb/db';
+import { rateLimitCounters, type Db } from '@gobbit/db';
 
 export function createRateLimitsRepo(db: Db) {
   return {

@@ -1,5 +1,5 @@
-import type { ItemRow } from '@pb/db';
-import { lockedHostOf } from '@pb/shared/links';
+import type { ItemRow } from '@gobbit/db';
+import { lockedHostOf } from '@gobbit/shared/links';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
@@ -24,7 +24,7 @@ import {
   can,
   compactEntities,
   payloadSchemaFor,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
 import { canSeePrivate } from '../access/visibility';
 import {

@@ -1,7 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { ingestJobs, items, type DeckRow, type UserRow } from '@pb/db';
-import { addMember, createAccountUser, createCategory, createDeck, createItem } from '@pb/db/test';
+import { ingestJobs, items, type DeckRow, type UserRow } from '@gobbit/db';
+import {
+  addMember,
+  createAccountUser,
+  createCategory,
+  createDeck,
+  createItem,
+} from '@gobbit/db/test';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
 import { buildServices } from '../src/services';
 import type { DirectDraft } from '../src/services/ingest.service';

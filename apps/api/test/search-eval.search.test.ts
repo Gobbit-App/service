@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { DeckRow } from '@pb/db';
-import { DEFAULT_EMBEDDING_MODEL } from '@pb/shared';
+import type { DeckRow } from '@gobbit/db';
+import { DEFAULT_EMBEDDING_MODEL } from '@gobbit/shared';
 import {
   createDeck,
   createItem,
@@ -11,7 +11,7 @@ import {
   searchCards,
   TEXT_EVAL_KINDS,
   withTestDb,
-} from '@pb/db/test';
+} from '@gobbit/db/test';
 import {
   createCachedEmbedder,
   embeddingCacheKey,

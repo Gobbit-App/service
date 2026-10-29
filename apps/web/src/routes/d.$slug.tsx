@@ -6,7 +6,7 @@ import {
   useNavigate,
   useSearch,
 } from '@tanstack/react-router';
-import { can } from '@pb/shared/authz';
+import { can } from '@gobbit/shared/authz';
 import { useCallback, useEffect } from 'react';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';

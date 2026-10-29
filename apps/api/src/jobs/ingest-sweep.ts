@@ -1,4 +1,4 @@
-import { INGEST_SWEEP_STALE_MS } from '@pb/shared';
+import { INGEST_SWEEP_STALE_MS } from '@gobbit/shared';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { IngestQueue } from './ingest-queue';
 import { isLastAttempt } from './ingest';

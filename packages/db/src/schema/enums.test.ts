@@ -26,7 +26,7 @@ import {
   itemEventKindsWithChanges,
   ingestFailureCodes,
   autoPublishOutcomes,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { ingestJobs } from './ingest-jobs';
 
 describe('schema enums', () => {

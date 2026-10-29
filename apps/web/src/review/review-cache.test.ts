@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Item, ReviewCount, ReviewEntry, ReviewList } from '@pb/shared';
+import type { Item, ReviewCount, ReviewEntry, ReviewList } from '@gobbit/shared';
 import {
   decrementCount,
   removeReviewEntries,

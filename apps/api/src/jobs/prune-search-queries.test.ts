@@ -1,4 +1,4 @@
-import { SEARCH_QUERY_RETENTION_DAYS } from '@pb/shared';
+import { SEARCH_QUERY_RETENTION_DAYS } from '@gobbit/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createPruneSearchQueries } from './prune-search-queries';
 
@@ -21,7 +21,7 @@ describe('createPruneSearchQueries', () => {
     expect(cutoff.getTime()).toBe(now.getTime() - 30 * DAY_MS);
   });
 
-  it('uses SEARCH_QUERY_RETENTION_DAYS from @pb/shared by default', async () => {
+  it('uses SEARCH_QUERY_RETENTION_DAYS from @gobbit/shared by default', async () => {
     const pruneBefore = vi.fn<(cutoff: Date) => Promise<number>>(async () => 0);
     const now = new Date('2026-10-12T00:00:00.000Z');
 

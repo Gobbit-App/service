@@ -68,6 +68,12 @@ importers:
       '@fontsource/noto-sans-hebrew':
         specifier: ^5.3.0
         version: 5.3.0
+      '@gobbit/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@gobbit/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@hono/node-server':
         specifier: ^2.1.1
         version: 2.1.1(hono@4.13.9)
@@ -77,12 +83,6 @@ importers:
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
-      '@pb/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@pb/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
@@ -150,10 +150,10 @@ importers:
 
   apps/web:
     dependencies:
-      '@pb/api-client':
+      '@gobbit/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@pb/shared':
+      '@gobbit/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@tanstack/query-async-storage-persister':
@@ -266,7 +266,7 @@ importers:
 
   packages/db:
     dependencies:
-      '@pb/shared':
+      '@gobbit/shared':
         specifier: workspace:*
         version: link:../shared
       drizzle-orm:

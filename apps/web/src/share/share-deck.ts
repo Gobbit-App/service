@@ -1,6 +1,6 @@
-import type { Deck } from '@pb/shared';
-import { can } from '@pb/shared/authz';
-import { RESERVED_DECK_SLUG } from '@pb/shared/decks';
+import type { Deck } from '@gobbit/shared';
+import { can } from '@gobbit/shared/authz';
+import { RESERVED_DECK_SLUG } from '@gobbit/shared/decks';
 
 /** Decks the user may share into (D108): roles with `item.create`. */
 export function shareableDecks(decks: readonly Deck[]): Deck[] {

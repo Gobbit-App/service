@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { deckListSchema, deckSchema, deckWithCategoriesSchema, problemSchema } from '@pb/shared';
-import type { UserRow } from '@pb/db';
-import { createAccountUser, createDeck, defaultCategory } from '@pb/db/test';
+import {
+  deckListSchema,
+  deckSchema,
+  deckWithCategoriesSchema,
+  problemSchema,
+} from '@gobbit/shared';
+import type { UserRow } from '@gobbit/db';
+import { createAccountUser, createDeck, defaultCategory } from '@gobbit/db/test';
 import { json, setupApiTest } from './helpers';
 
 describe('personal deck (Phase 3B)', () => {

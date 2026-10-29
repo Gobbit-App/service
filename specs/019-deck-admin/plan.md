@@ -14,7 +14,7 @@ Project override of the core template. Written for outside readers: the reposito
 - **Categories**: rename and visibility per category, through 016's `PATCH /decks/{id}/categories/{categoryId}`.
 - **Members**: list, invite with a role (Reader, Editor, Maintainer, Co-owner), change role, remove or cancel.
 
-Controls follow `can(role, permission)` from `@pb/shared`. The deck's role already comes with `GET /decks/{id}` (D184).
+Controls follow `can(role, permission)` from `@gobbit/shared`. The deck's role already comes with `GET /decks/{id}` (D184).
 
 **API.** One new route: `PATCH /decks/{id}/members/{userId}` `{ role }`, owner only. Refused for the caller's own role, for implicit owners, for pending invites (re-invite instead), and when the last owner membership would go away (D185). Everything else already exists.
 
@@ -28,7 +28,7 @@ Controls follow `can(role, permission)` from `@pb/shared`. The deck's role alrea
 - `PERMISSION_MATRIX` in `packages/shared/src/authz/can.ts`.
 - Web:
   - Routes are file-based (`apps/web/src/routes/d.$slug.*.tsx`). `/settings` is the account settings (tokens) with `SettingsSection`.
-  - Value imports from `@pb/shared` use subpaths; `can` needs a `@pb/shared/authz` subpath if one doesn't exist yet.
+  - Value imports from `@gobbit/shared` use subpaths; `can` needs a `@gobbit/shared/authz` subpath if one doesn't exist yet.
   - The 150 KB gzip budget (`pnpm budget`).
 - e2e: `e2e/tests/smoke/members.spec.ts` covers invite and accept through the API.
 
@@ -59,7 +59,7 @@ Controls follow `can(role, permission)` from `@pb/shared`. The deck's role alrea
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/members.ts` PATCH → `memberships.service.changeRole` → `memberships.repo.updateRole` |
-| II. One source of truth | `memberRolePatchSchema` in `@pb/shared`; the web uses `can()` and `PERMISSION_MATRIX`, never its own role lists |
+| II. One source of truth | `memberRolePatchSchema` in `@gobbit/shared`; the web uses `can()` and `PERMISSION_MATRIX`, never its own role lists |
 | III. Invariants in the DB | Membership rows and roles are already constrained; the last-owner rule is checked in the service inside a transaction with a row lock |
 | IV. Private by default | Public switch owner-only with confirmation; server refuses every hidden control |
 | V. Tests at the right tier | Unit (role labels, dialog copy), component (controls by role), int (role PATCH matrix), e2e full journey |

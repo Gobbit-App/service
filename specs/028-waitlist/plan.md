@@ -42,7 +42,7 @@ No screen. No AI. No new dependency. New env vars:
 - Sign-in: `POST /auth/magic-link` (D22–D26) answers `200` for every well-formed email; `lib/tokens.ts` (`generateToken`, `hashToken`); `lib/auth-redirect.ts` builds `APP_URL` redirects with an API fallback.
 - Rate limits: `rateLimits.enforce(key, limit)` over `rate_limit_counters` (D39, keys in `lib/rate-window.ts`); `createAnonRateLimiter` + `publicRateLimit({ limiter, ipHeader, now, onLimited })` wired in `app.ts` for `/public/*`, `/p/*` (D175, D182). Hourly limits live in `packages/shared/src/limits.ts`.
 - Mail: `Mailer` (`ResendMailer`, `ConsoleMailer`, `MemoryMailer` in tests); templates in `mail/templates.ts`.
-- Jobs: `QUEUES` in `jobs/queues.ts`, schedules in `worker.ts`, factory per prune job (`jobs/prune-search-queries.ts`); domain cron constants in `@pb/shared` (`INGEST_PRUNE_CRON` in `ingest/constants.ts`).
+- Jobs: `QUEUES` in `jobs/queues.ts`, schedules in `worker.ts`, factory per prune job (`jobs/prune-search-queries.ts`); domain cron constants in `@gobbit/shared` (`INGEST_PRUNE_CRON` in `ingest/constants.ts`).
 - Migrations: Drizzle-generated, hand-written SQL appended (`0007_default_deck`); down files in `packages/db/migrations/down/`; up/down round trip in `packages/db/test/migrations.int.test.ts`.
 
 ## Technical Context
@@ -80,7 +80,7 @@ No screen. No AI. No new dependency. New env vars:
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | Route parses → `waitlist.service` (rules, mail) → `waitlist.repo` (Drizzle). The gate (029) and the form (030) call the service, never the repo |
-| II. Typed contracts | `waitlistJoinSchema` in `@pb/shared`; OpenAPI route; `pnpm api:openapi` regenerates the client |
+| II. Typed contracts | `waitlistJoinSchema` in `@gobbit/shared`; OpenAPI route; `pnpm api:openapi` regenerates the client |
 | III. Invariants in the DB | Lower-case email, note length, utm format, status ↔ timestamp CHECKs, one live entry per email (partial unique index); view computed in SQL |
 | IV. Private by default | No enumeration (D22 extended); token hashes only; view exposes counts, not emails; prune bounds unconfirmed data; logs without addresses |
 | V. Tests at the right tier | Unit for schema, templates, service branches, prune factory; int for every FR; E2E tier none (no UI here; 030 owns the journey) |

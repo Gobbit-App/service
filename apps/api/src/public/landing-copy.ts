@@ -1,4 +1,4 @@
-import { WAITLIST_NOTE_MAX, type WaitlistKind } from '@pb/shared';
+import { WAITLIST_NOTE_MAX, type WaitlistKind } from '@gobbit/shared';
 
 /**
  * D230: every string of the landing page. A translation is a second object with the same shape;

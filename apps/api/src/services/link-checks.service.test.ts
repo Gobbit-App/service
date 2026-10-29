@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { LinkCheckRow } from '@pb/db';
+import type { LinkCheckRow } from '@gobbit/db';
 import {
   LINK_CHECK_INTERVAL_DAYS,
   LINK_CHECK_JITTER_DAYS,
   LINK_CHECK_RETRY_DAYS,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { DueLink, LinkCheckWrite } from '../repositories/link-checks.repo';
 import {
   createLinkChecksService,

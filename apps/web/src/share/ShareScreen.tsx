@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
-import type { Deck } from '@pb/shared';
+import type { Deck } from '@gobbit/shared';
 import { isNetworkError } from '../api/network-state';
 import { decksQuery } from '../api/queries';
 import { readLastDeck } from '../lib/last-deck';

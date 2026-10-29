@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { and, eq } from 'drizzle-orm';
-import { ingestJobs, itemEvents, items, memberships, type DeckRow, type UserRow } from '@pb/db';
-import type { IngestChannel } from '@pb/shared';
-import { addMember, createAccountUser, createDeck } from '@pb/db/test';
-import { ARTICLE_PAGE } from '@pb/db/test/ingest-pages';
+import { ingestJobs, itemEvents, items, memberships, type DeckRow, type UserRow } from '@gobbit/db';
+import type { IngestChannel } from '@gobbit/shared';
+import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
+import { ARTICLE_PAGE } from '@gobbit/db/test/ingest-pages';
 import { createFakeExtractor } from '../src/ai/fake-extractor';
 import type { SafeFetch } from '../src/fetch/safe-fetch';
 import { autoPublish } from '../src/ingest/auto-publish';

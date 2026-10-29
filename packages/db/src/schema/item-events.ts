@@ -1,6 +1,6 @@
 import { check, index, pgEnum, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { ITEM_EVENT_TITLE_MAX, actorVias, itemEventKinds } from '@pb/shared';
+import { ITEM_EVENT_TITLE_MAX, actorVias, itemEventKinds } from '@gobbit/shared';
 import { tstz } from './common';
 import { decks } from './decks';
 import { items } from './items';

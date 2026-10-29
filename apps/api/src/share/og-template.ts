@@ -1,4 +1,4 @@
-import { textDirection } from '@pb/shared';
+import { textDirection } from '@gobbit/shared';
 
 export type OgNode = {
   type: string;

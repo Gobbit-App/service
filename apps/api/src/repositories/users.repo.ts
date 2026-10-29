@@ -1,7 +1,7 @@
 import { and, asc, eq, isNull } from 'drizzle-orm';
-import { accounts, users } from '@pb/db';
-import type { DbExecutor } from '@pb/db';
-import type { RegistrationReason } from '@pb/shared/auth';
+import { accounts, users } from '@gobbit/db';
+import type { DbExecutor } from '@gobbit/db';
+import type { RegistrationReason } from '@gobbit/shared/auth';
 import type { CurrentUser } from '../types';
 
 const currentUserColumns = {

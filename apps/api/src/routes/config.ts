@@ -1,5 +1,5 @@
 import { createRoute, type OpenAPIHono } from '@hono/zod-openapi';
-import { appConfigSchema, type AppConfig } from '@pb/shared';
+import { appConfigSchema, type AppConfig } from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Env } from '../env';
 import { cloudNameFrom } from '../lib/cloudinary-url';

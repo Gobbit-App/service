@@ -1,6 +1,6 @@
 import { useId, useState, type KeyboardEvent, type ReactElement } from 'react';
-import type { Category, Deck } from '@pb/shared';
-import { NAME_MAX } from '@pb/shared/card-limits';
+import type { Category, Deck } from '@gobbit/shared';
+import { NAME_MAX } from '@gobbit/shared/card-limits';
 import { useCreateCategory } from '../../api/create-category';
 import { problemMessages } from '../../api/problem-messages';
 import { Button } from '../../ui/buttons/Button';

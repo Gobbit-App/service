@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { SearchMode } from '@pb/shared/search';
+import type { SearchMode } from '@gobbit/shared/search';
 
 const LABELS: Record<SearchMode, string> = { search: 'Search', ask: 'Ask' };
 

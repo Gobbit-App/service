@@ -1,7 +1,7 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import { useState, type ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MediaAsset, MediaSignResponse } from '@pb/shared';
+import type { MediaAsset, MediaSignResponse } from '@gobbit/shared';
 import { renderWithClient } from '../../test/render';
 import { UploadError, type signAndUpload, type UploadedImage, type UploadOptions } from '../upload';
 import type { LinkPreview } from './LinkFields';

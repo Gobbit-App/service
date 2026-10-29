@@ -6,7 +6,7 @@ import {
   publicItemSchema,
   publicSearchQuerySchema,
   publicSearchResponseSchema,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Env } from '../env';
 import type { Services } from '../services';

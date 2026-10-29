@@ -1,4 +1,4 @@
-import type { ItemRow } from '@pb/db';
+import type { ItemRow } from '@gobbit/db';
 import {
   can,
   shareChannels,
@@ -6,7 +6,7 @@ import {
   type DedupVerdict,
   type IngestChannel,
   type MemberRole,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { Logger } from '../lib/logger';

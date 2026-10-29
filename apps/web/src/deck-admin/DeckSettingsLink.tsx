@@ -1,5 +1,5 @@
-import { can } from '@pb/shared/authz';
-import type { Deck } from '@pb/shared';
+import { can } from '@gobbit/shared/authz';
+import type { Deck } from '@gobbit/shared';
 import type { ReactElement } from 'react';
 import { deckHref } from '../ui/chip-order';
 import { IconLink } from '../ui/buttons/IconLink';

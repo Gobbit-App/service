@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactElement } from 'react';
-import type { Category, CategoryVisibility, Deck } from '@pb/shared';
-import { VISIBILITY_LABELS } from '@pb/shared/authz';
-import { categoryVisibilities } from '@pb/shared/enums';
+import type { Category, CategoryVisibility, Deck } from '@gobbit/shared';
+import { VISIBILITY_LABELS } from '@gobbit/shared/authz';
+import { categoryVisibilities } from '@gobbit/shared/enums';
 import { SettingsSection } from '../settings/SettingsSection';
 import { AdminError } from './AdminError';
 import { useUpdateCategory } from './deck-admin-queries';

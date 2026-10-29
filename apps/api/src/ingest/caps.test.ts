@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ingestDailyCaps } from '@pb/shared';
+import { ingestDailyCaps } from '@gobbit/shared';
 import { countsTowardCombinedCap, withinCaps } from './caps';
 
 const dailyCaps = ingestDailyCaps(50);

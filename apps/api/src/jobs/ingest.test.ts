@@ -1,5 +1,5 @@
-import type { IngestJobRow } from '@pb/db';
-import { INGEST_JOB_RETRIES } from '@pb/shared';
+import type { IngestJobRow } from '@gobbit/db';
+import { INGEST_JOB_RETRIES } from '@gobbit/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const runExtraction = vi.fn();

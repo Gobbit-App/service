@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ItemType } from '@pb/shared';
+import type { ItemType } from '@gobbit/shared';
 import type { CalcExpressionCheck } from './validate';
 
 type CheckState = { check: CalcExpressionCheck | null; failed: boolean };
@@ -19,7 +19,7 @@ export function useCalcCheck(type: ItemType): {
   useEffect(() => {
     if (!needed || state.check) return;
     let cancelled = false;
-    import('@pb/shared/calc')
+    import('@gobbit/shared/calc')
       .then((module) => {
         if (!cancelled) setState({ check: module.validateCalcExpression, failed: false });
       })

@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { CategoryRow, DeckRow, ItemRow } from '@pb/db';
-import { createCategory, createDeck, createItem } from '@pb/db/test';
-import { publicDeckSchema, publicItemPageSchema, publicItemSchema } from '@pb/shared';
+import type { CategoryRow, DeckRow, ItemRow } from '@gobbit/db';
+import { createCategory, createDeck, createItem } from '@gobbit/db/test';
+import { publicDeckSchema, publicItemPageSchema, publicItemSchema } from '@gobbit/shared';
 import { createAnonRateLimiter, type AnonRateLimiter } from '../src/lib/anon-rate-limiter';
 import { json, setupApiTest } from './helpers';
 

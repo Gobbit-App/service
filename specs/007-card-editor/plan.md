@@ -46,7 +46,7 @@ main @ `10b0e2a` + [specs/006-card-lifecycle](../006-card-lifecycle/spec.md).
 
 **Target Platform**: PWA on Android Chrome and iOS Safari
 
-**Project Type**: pnpm monorepo, web package (plus a zod-free subpath in `@pb/shared`)
+**Project Type**: pnpm monorepo, web package (plus a zod-free subpath in `@gobbit/shared`)
 
 **Performance Goals**:
 - Typing stays responsive with a 12×6 table.
@@ -65,7 +65,7 @@ main @ `10b0e2a` + [specs/006-card-lifecycle](../006-card-lifecycle/spec.md).
 | Principle | How this plan complies (or "N/A") |
 |-----------|-----------------------------------|
 | I. Layered API | No API change. The rules already live in `items.service` (type immutable, proposal visibility via `canSeeProposal`, D95, private categories kept via `hiddenCategoryIds`) and `categories.service.create`. The UI only mirrors them for feedback. A hidden proposal answers 404, and the editor shows "card unavailable". |
-| II. One source of truth for contracts | The limits come from `@pb/shared/limits.ts`, re-exported through a new zod-free subpath `@pb/shared/card-limits`, with no copied numbers. Calc validation reuses `validateCalcExpression` through the existing `@pb/shared/calc` subpath. Requests use the `@pb/api-client` types. No `api:openapi` change. |
+| II. One source of truth for contracts | The limits come from `@gobbit/shared/limits.ts`, re-exported through a new zod-free subpath `@gobbit/shared/card-limits`, with no copied numbers. Calc validation reuses `validateCalcExpression` through the existing `@gobbit/shared/calc` subpath. Requests use the `@gobbit/api-client` types. No `api:openapi` change. |
 | III. Invariants live in the database | Unchanged: the D95 trigger and the body/payload CHECKs stay the backstop. The editor maps the 422 to the category field. |
 | IV. Private by default | The editor only lists categories from `categoriesQuery` (already visibility-filtered). The service keeps hidden categories on rewrite. Drafts are wiped on sign-out (D145). No new fetches; "Fetch preview" is 008, through `safe-fetch`. |
 | V. Tests at the right tier | Unit for `draft.ts`/`validate.ts`/`drafts-store.ts`/field reducers; int for edit/proposal rules (extend existing tests); e2e `editor.spec.ts`. Traceability table below. |
@@ -151,7 +151,7 @@ e2e/tests/smoke/editor.spec.ts   # extended
 apps/api/test/items.int.test.ts, proposal-visibility.int.test.ts  # edit-rule cases (existing behaviour, now relied on by UI)
 ```
 
-**Structure Decision**: The web gains `editor/` and `items/` loses the old form. `@pb/shared` gains one zod-free subpath. The API, DB and api-client are unchanged.
+**Structure Decision**: The web gains `editor/` and `items/` loses the old form. `@gobbit/shared` gains one zod-free subpath. The API, DB and api-client are unchanged.
 
 ## Invariant → test traceability
 
@@ -184,7 +184,7 @@ apps/api/test/items.int.test.ts, proposal-visibility.int.test.ts  # edit-rule ca
 
 | Risk | Likelihood / impact | Mitigation |
 |------|---------------------|------------|
-| Client checks drift from server Zod | M / L (server still refuses) | Limits imported from `@pb/shared` (not copied); a unit test feeds the same fixtures to `validate.ts` and the shared Zod schemas and compares the verdicts (the test runs in Node, so zod is fine there) |
+| Client checks drift from server Zod | M / L (server still refuses) | Limits imported from `@gobbit/shared` (not copied); a unit test feeds the same fixtures to `validate.ts` and the shared Zod schemas and compares the verdicts (the test runs in Node, so zod is fine there) |
 | zod/mathjs leaks into the initial bundle | M / M | Only subpath imports; `pnpm budget` in CI; calc fields lazy; review `vite build` manifest |
 | Removing `buildReviewPatch` regresses review edit | L / M | Port `review-edit.test.ts` cases to `draft.test.ts` first, then switch |
 | `Card` `preview` mode diverges from the list | L / M | One component with a prop, not a copy; e2e compares text |

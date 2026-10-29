@@ -20,10 +20,10 @@ map) and `docs/design/` (per-area detail).
 
 ### II. One source of truth for contracts
 
-- Every request/response DTO is a Zod schema in `@pb/shared`; row types come from `@pb/db`.
-- The web app uses the generated `@pb/api-client`; after any route change run `pnpm api:openapi`
+- Every request/response DTO is a Zod schema in `@gobbit/shared`; row types come from `@gobbit/db`.
+- The web app uses the generated `@gobbit/api-client`; after any route change run `pnpm api:openapi`
   (CI fails on drift) [ADR-035].
-- Payloads are validated in `@pb/shared` and re-validated on PATCH [ADR-008]; limits reject, they
+- Payloads are validated in `@gobbit/shared` and re-validated on PATCH [ADR-008]; limits reject, they
   do not clamp [ADR-009].
 
 ### III. Invariants live in the database
@@ -81,7 +81,7 @@ map) and `docs/design/` (per-area detail).
 - API data is offline through the persisted query cache, never the service worker [ADR-036]; search
   results are not persisted.
 - The initial bundle stays within the 150 KB gzip budget (`pnpm budget`); import values from
-  `@pb/shared` subpaths, never the root.
+  `@gobbit/shared` subpaths, never the root.
 - One origin everywhere: Caddy serves the PWA and proxies `/api` and `/s` (no CORS) [ADR-034].
 
 ### VII. Simple, optional, deployable
@@ -120,7 +120,7 @@ they experience is traceable, reviewable, and ready to be monitored and alerted 
   - as a rate or average against its baseline.
 - The plan names which events warrant an alert and the default threshold.
 - An operator can change any limit or threshold that shapes a user's experience without a code
-  change: an env var with its default in `@pb/shared`. The runbook says how.
+  change: an env var with its default in `@gobbit/shared`. The runbook says how.
 - Every event in a plan's Accountability table is asserted in a test.
 - Code that predates this principle is brought into line when it is next changed, and by the
   retrofit tracked in `PLAN.md`.

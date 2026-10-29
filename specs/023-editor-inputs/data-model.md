@@ -13,7 +13,7 @@ No migration, no new table or column.
 - DB: `items.payload` is `jsonb`; the only CHECK on it is the 8192-byte budget, which still applies. `item_search_text` reads `payload->>'alt'`, which is `NULL` when absent and is already concatenated null-safely.
 - Existing cards keep their alt. The editor omits `alt` when blank; API clients may send it empty or leave it out.
 
-## Rendering rule (`@pb/shared/image-alt`)
+## Rendering rule (`@gobbit/shared/image-alt`)
 
 `imageAlt({ alt, title, titleAdjacent }) → string`
 

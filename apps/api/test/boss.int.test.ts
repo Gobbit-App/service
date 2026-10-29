@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { PgBoss } from 'pg-boss';
-import { createDeck, createItem, createSampleWorld, withTestDb } from '@pb/db/test';
+import { createDeck, createItem, createSampleWorld, withTestDb } from '@gobbit/db/test';
 import { BOSS_SCHEMA, createBoss } from '../src/jobs/boss';
 import { createEmbedQueue } from '../src/jobs/embed-queue';
 import { ensureQueues } from '../src/jobs/ensure-queues';

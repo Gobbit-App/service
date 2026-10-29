@@ -4,7 +4,7 @@ import {
   MEDIA_IMAGE_MAX_BYTES,
   MEDIA_SIGN_TTL_MS,
   type MediaSignResponse,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { CloudinaryCredentials } from '../lib/cloudinary-url';
 
 /** Tag on every editor upload; with `deck:<id>` it lets Phase 7 find a deck's images (D129). */

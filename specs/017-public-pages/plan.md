@@ -11,7 +11,7 @@ Project override of the core template. Written for outside readers: the reposito
 **Pages.** The API renders HTML for `/p/{slug}`, `/p/{slug}/c/{category}` and `/p/{slug}/i/{itemId}` from 016's `public-deck.service`:
 
 - Templates use `hono/html` tagged templates, which escape every interpolation. No JSX, no client script, one inline stylesheet.
-- Card bodies render through `micromark` (CommonMark, raw HTML off, unsafe link protocols dropped). Each card type has a small renderer; calculators show the default result computed with `@pb/shared/calc` (D177).
+- Card bodies render through `micromark` (CommonMark, raw HTML off, unsafe link protocols dropped). Each card type has a small renderer; calculators show the default result computed with `@gobbit/shared/calc` (D177).
 - Every page carries OG/Twitter tags. Card pages reuse the share pipeline's image (the card's own image or the generated OG image, D60). Page language and direction come from `htmlLang()` on the content (D177).
 - A `publicUrl(deck, path)` helper builds every absolute URL, so Phase 12 can switch it to a deck's own domain in one place.
 
@@ -29,8 +29,8 @@ Project override of the core template. Written for outside readers: the reposito
 
 - `016-public-read-api` merged: `public-deck.service` (`resolvePublicDeck`, `summary`, `list`, `get`), `toPublicItem`, `anon-rate-limiter` + `public-rate-limit` middleware.
 - Share previews (`apps/api/src/share/`): `share.service` with `origin` (from `APP_URL`), `publicMeta` and `generatedImageUrl(itemId, content)`; `share-page.ts` renders by string concatenation with `escapeHtml`; `excerpt.ts` (`stripMarkdown`, `excerpt`, `OG_DESCRIPTION_MAX = 160`); `mode.ts` decides public mode. `/s/:itemId` sets `public, max-age=300` and `X-Robots-Tag: noindex`.
-- `@pb/shared` `utils/text-script.ts`: `htmlLang`, `ogLocale`, direction helpers.
-- `@pb/shared/calc`: the calculator engine the PWA uses.
+- `@gobbit/shared` `utils/text-script.ts`: `htmlLang`, `ogLocale`, direction helpers.
+- `@gobbit/shared/calc`: the calculator engine the PWA uses.
 - Web: PWA routes `/d/$slug`, `/d/$slug/c/$category`, `/i/$itemId`; `/sign-in?next=` (D66, `safeNext`).
 - Caddy (`apps/web/Caddyfile`): `/api/*` (stripped) and `/s/*` go to the API; everything else is the SPA.
 - No `micromark` dependency yet; the PWA uses `react-markdown` (which wraps micromark via mdast).
@@ -62,7 +62,7 @@ Project override of the core template. Written for outside readers: the reposito
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/public-pages.ts` (parse, headers, redirects) → `public-pages.service` (compose, cache) → 016's `public-deck.service` → repositories |
-| II. One source of truth | Pages read the same `PublicDeck`/`PublicItem` DTOs as the JSON API; calc results from `@pb/shared/calc` |
+| II. One source of truth | Pages read the same `PublicDeck`/`PublicItem` DTOs as the JSON API; calc results from `@gobbit/shared/calc` |
 | III. Invariants in the DB | Visibility stays in SQL (016); no new data |
 | IV. Private by default | Pages built only from `PublicItem`; member redirects are `private, no-store`; cache keyed without user data; shared decks `noindex` |
 | V. Tests at the right tier | Unit (escaping, markdown safety, renderers, cache), int (routes, redirects, sitemap, purge), smoke (demos 2, 3) |

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { PAYLOAD_MAX_BYTES, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS } from '@pb/shared/card-limits';
+import { PAYLOAD_MAX_BYTES, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS } from '@gobbit/shared/card-limits';
 import { Button } from '../../ui/buttons/Button';
 import { IconButton } from '../../ui/buttons/IconButton';
 import { payloadBytes } from '../validate';

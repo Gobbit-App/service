@@ -1,4 +1,4 @@
-import { highlightSegments } from '@pb/shared/search';
+import { highlightSegments } from '@gobbit/shared/search';
 import type { ReactElement } from 'react';
 
 /** Renders `text` with case/diacritic-insensitive query hits wrapped in <mark>. */

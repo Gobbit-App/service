@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { DeckRow, ItemRow } from '@pb/db';
-import { createDeck, createItem } from '@pb/db/test';
+import type { DeckRow, ItemRow } from '@gobbit/db';
+import { createDeck, createItem } from '@gobbit/db/test';
 import { createFakeEmbedder } from '../src/ai/fake-embedder';
 import { createEmbedItemHandler } from '../src/jobs/embed-item';
 import { createEmbedSweep } from '../src/jobs/embed-sweep';

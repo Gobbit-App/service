@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { problemSchema } from '@pb/shared';
+import { problemSchema } from '@gobbit/shared';
 import { AUTH_SECURITY, problems } from './openapi';
 
 describe('AUTH_SECURITY', () => {

@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { and, eq, sql } from 'drizzle-orm';
-import { ingestJobs, items, llmCalls, type DeckRow, type UserRow } from '@pb/db';
-import { addMember, createAccountUser, createDeck, createItem } from '@pb/db/test';
+import { ingestJobs, items, llmCalls, type DeckRow, type UserRow } from '@gobbit/db';
+import { addMember, createAccountUser, createDeck, createItem } from '@gobbit/db/test';
 import {
   INGEST_CHANNEL_DAILY_CAPS,
   INGEST_COMBINED_DAILY_CAP,
   IMPORT_ROWS_PER_REQUEST,
   type IngestChannel,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { buildServices } from '../src/services';
 import { json, setupApiTest } from './helpers';
 

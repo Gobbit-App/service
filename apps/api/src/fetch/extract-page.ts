@@ -1,6 +1,6 @@
 import { parseHTML } from 'linkedom';
 import { Readability } from '@mozilla/readability';
-import { PAGE_TEXT_MAX, type OpenGraph } from '@pb/shared';
+import { PAGE_TEXT_MAX, type OpenGraph } from '@gobbit/shared';
 
 /** Structured data extracted from a fetched HTML page. */
 export interface ExtractedPage {

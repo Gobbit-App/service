@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { items, llmCalls, type DeckRow, type ItemRow } from '@pb/db';
-import { createDeck, createItem } from '@pb/db/test';
-import { EMBEDDING_DIMS } from '@pb/shared';
+import { items, llmCalls, type DeckRow, type ItemRow } from '@gobbit/db';
+import { createDeck, createItem } from '@gobbit/db/test';
+import { EMBEDDING_DIMS } from '@gobbit/shared';
 import type { Embedder } from '../src/ai/embedder';
 import { axisVector, blendVectors } from '../src/ai/fake-embedder';
 import { runDedup } from '../src/ingest/run-dedup';

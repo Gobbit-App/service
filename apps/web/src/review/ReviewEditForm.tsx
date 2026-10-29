@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
-import type { Category, Deck, Item, ItemPatch } from '@pb/shared';
+import type { Category, Deck, Item, ItemPatch } from '@gobbit/shared';
 import { editHref } from '../cards/can-edit-item';
 import { DiscardChangesDialog } from '../editor/DiscardChangesDialog';
 import { draftFromItem, toPatch, type Draft, type LinkDraftPayload } from '../editor/draft';

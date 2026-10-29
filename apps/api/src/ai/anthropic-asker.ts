@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { ASK_TIMEOUT_MS } from '@pb/shared';
+import { ASK_TIMEOUT_MS } from '@gobbit/shared';
 import { ASK_TOOL, ASK_TOOL_NAME, askToolInputSchema, buildAskPrompt } from './ask-prompt';
 import type { Asker, AskInput, AskOutput } from './asker';
 

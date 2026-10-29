@@ -59,7 +59,7 @@ description: "Tasks for 006-card-lifecycle"
 
 - [X] T021 [US1] `archive` status check, new `restore`, `update` refusing archived → published and routing `status:'archived'` through `archive`, in apps/api/src/services/items.service.ts
 - [X] T022 [US1] `POST /items/{id}/restore` (200, 403, 404, 409) in apps/api/src/routes/items.ts; archive route documents 409
-- [X] T023 [US1] `pnpm api:openapi` (regenerate @pb/api-client)
+- [X] T023 [US1] `pnpm api:openapi` (regenerate @gobbit/api-client)
 - [X] T024 [P] [US1] `insertIntoPages` next to `removeFromPages` in apps/web/src/api/favorite-cache.ts
 - [X] T025 [US1] `useArchive`/`useRestore` mutations (optimistic, rollback, invalidate `search` and `['item', id]`) in apps/web/src/api/item-lifecycle.ts
 - [X] T026 [US1] `CardActions` (Archive, Restore; slot for 007's Edit) in apps/web/src/items/CardActions.tsx; mounted in apps/web/src/routes/i.$itemId.tsx with `UndoToast`

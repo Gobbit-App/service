@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { items, linkChecks, type DeckRow, type ItemRow, type UserRow } from '@pb/db';
-import { LINK_CHECK_BATCH, LINK_CHECK_RATE_PER_HOUR, type LinkCheckStatus } from '@pb/shared';
-import { addMember, createAccountUser, createDeck, createItem } from '@pb/db/test';
+import { items, linkChecks, type DeckRow, type ItemRow, type UserRow } from '@gobbit/db';
+import { LINK_CHECK_BATCH, LINK_CHECK_RATE_PER_HOUR, type LinkCheckStatus } from '@gobbit/shared';
+import { addMember, createAccountUser, createDeck, createItem } from '@gobbit/db/test';
 import { extractPage } from '../src/fetch/extract-page';
 import type { SafeFetch } from '../src/fetch/safe-fetch';
 import { createLinkChecksRepo } from '../src/repositories/link-checks.repo';

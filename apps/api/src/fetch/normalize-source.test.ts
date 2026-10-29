@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { INGEST_TEXT_MAX } from '@pb/shared';
+import { INGEST_TEXT_MAX } from '@gobbit/shared';
 import { buildNormalizedSource } from './normalize-source';
 import type { ExtractedPage } from './extract-page';
 

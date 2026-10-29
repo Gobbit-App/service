@@ -1,4 +1,4 @@
-import { htmlLang, ogLocale } from '@pb/shared';
+import { htmlLang, ogLocale } from '@gobbit/shared';
 import { isUuid } from '../lib/resolve-deck';
 import type { ShareRecord, ShareRepo } from '../repositories/share.repo';
 import { ogContentHash, ogPublicId, type OgContent } from './content-hash';

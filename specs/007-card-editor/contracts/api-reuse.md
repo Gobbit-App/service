@@ -1,6 +1,6 @@
 # Contract: API endpoints and problem types the editor reuses
 
-No new or changed endpoints. Everything below exists on main @ `10b0e2a` and is described by `@pb/api-client`. 007 only adds web hooks (`api/update-item.ts`, `api/create-category.ts`) and relies on the behaviour listed here, so integration tests assert it (see tasks.md).
+No new or changed endpoints. Everything below exists on main @ `10b0e2a` and is described by `@gobbit/api-client`. 007 only adds web hooks (`api/update-item.ts`, `api/create-category.ts`) and relies on the behaviour listed here, so integration tests assert it (see tasks.md).
 
 ## Endpoints
 
@@ -14,7 +14,7 @@ No new or changed endpoints. Everything below exists on main @ `10b0e2a` and is 
 | `PATCH /items/{id}` (`itemPatchSchema`, strict, ≥ 1 field) | edit save | `item.update` + proposal rule | type change → 400 "Item type is immutable"; `payload` validated by `payloadSchemaFor(item.type)` and **replaces** the stored payload; `categoryIds` rewrite keeps categories the caller can't see (`hiddenCategoryIds`); published with 0 categories → 422 `/problems/item-needs-category`; omitted `status` → unchanged (proposal stays `proposed`); returns the updated `Item` |
 | `POST /items/{id}/publish` | **not** called by the editor | `item.publish` | publishing stays in the review queue |
 
-Body limits: card `body` ≤ 600 code points, `title` ≤ 120, `payload` ≤ 8192 UTF-8 bytes. These come from the Zod schemas in `@pb/shared`, with DB CHECK constraints as the backstop.
+Body limits: card `body` ≤ 600 code points, `title` ≤ 120, `payload` ≤ 8192 UTF-8 bytes. These come from the Zod schemas in `@gobbit/shared`, with DB CHECK constraints as the backstop.
 
 ## Problem types (RFC 9457) → editor handling (`editor/problem-fields.ts`)
 

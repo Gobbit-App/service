@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PAGE_TEXT_MAX } from '@pb/shared';
+import { PAGE_TEXT_MAX } from '@gobbit/shared';
 import { collapseWhitespace, extractPage } from './extract-page';
 
 const PARAGRAPHS = [

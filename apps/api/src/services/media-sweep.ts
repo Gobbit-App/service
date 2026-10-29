@@ -1,4 +1,4 @@
-import { MEDIA_DELETE_CHUNK, MEDIA_ORPHAN_GRACE_DAYS, MEDIA_SWEEP_BATCH } from '@pb/shared';
+import { MEDIA_DELETE_CHUNK, MEDIA_ORPHAN_GRACE_DAYS, MEDIA_SWEEP_BATCH } from '@gobbit/shared';
 import type { Logger } from '../lib/logger';
 import { deckPrefixes, type MediaStore } from '../media/media-store';
 import type { AssetsRepo } from '../repositories/assets.repo';

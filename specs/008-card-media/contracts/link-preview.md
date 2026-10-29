@@ -1,6 +1,6 @@
 # Contract: `POST /decks/{id}/link-preview`
 
-Reads a page's Open Graph preview for a link card (D134). Defined in `apps/api/src/routes/media.ts`; schemas are in `@pb/shared/media`.
+Reads a page's Open Graph preview for a link card (D134). Defined in `apps/api/src/routes/media.ts`; schemas are in `@gobbit/shared/media`.
 
 **Auth**: session only (ingest tokens rejected).
 

@@ -1,4 +1,4 @@
-import type { Item, ItemPage } from '@pb/shared';
+import type { Item, ItemPage } from '@gobbit/shared';
 
 /** TanStack Query paginated data shape. */
 export type PagesData = { pages: ItemPage[]; pageParams: unknown[] };

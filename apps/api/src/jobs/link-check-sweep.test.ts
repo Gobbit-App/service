@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { LINK_CHECK_CRON } from '@pb/shared';
+import { LINK_CHECK_CRON } from '@gobbit/shared';
 import { scheduleLinkCheckSweep } from './link-check-sweep';
 
 describe('scheduleLinkCheckSweep (D164)', () => {

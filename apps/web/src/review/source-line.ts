@@ -1,4 +1,4 @@
-import type { ReviewEntry } from '@pb/shared';
+import type { ReviewEntry } from '@gobbit/shared';
 import { relativeTime } from '../lib/relative-time';
 
 type ReviewJob = NonNullable<ReviewEntry['job']>;

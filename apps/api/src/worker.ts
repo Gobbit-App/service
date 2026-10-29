@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import type { Job } from 'pg-boss';
-import { createDb, createPool } from '@pb/db';
+import { createDb, createPool } from '@gobbit/db';
 import {
   DELETED_ITEM_PRUNE_CRON,
   EMBED_SWEEP_CRON,
@@ -10,7 +10,7 @@ import {
   MEDIA_SWEEP_CRON,
   SEARCH_QUERY_PRUNE_CRON,
   WAITLIST_PRUNE_CRON,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { parseEnv } from './env';
 import { createBoss } from './jobs/boss';
 import { createEmbedQueue, noopEmbedQueue } from './jobs/embed-queue';

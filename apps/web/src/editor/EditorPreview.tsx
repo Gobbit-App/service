@@ -1,5 +1,5 @@
 import { useMemo, type ReactElement } from 'react';
-import type { Category, Item } from '@pb/shared';
+import type { Category, Item } from '@gobbit/shared';
 import { Card } from '../cards/Card';
 import { toPayload, type Draft } from './draft';
 

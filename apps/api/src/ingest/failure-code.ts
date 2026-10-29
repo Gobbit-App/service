@@ -1,4 +1,4 @@
-import type { IngestFailureCode } from '@pb/shared';
+import type { IngestFailureCode } from '@gobbit/shared';
 
 /** Where in the pipeline a thrown error came from. */
 export type IngestStage = 'normalize' | 'extract';

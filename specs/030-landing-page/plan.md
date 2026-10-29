@@ -26,7 +26,7 @@ Project override of the core template. Written for outside readers: the reposito
 
 ## Starting point
 
-- `028-waitlist` merged: `waitlist.join`, `WaitlistJoinRequest` (`@pb/shared`), `WAITLIST_*` limits, the per-IP waitlist limiter (D219), `GET /waitlist/confirm` → `/welcome?confirmed=1` or `/welcome?confirm=invalid`.
+- `028-waitlist` merged: `waitlist.join`, `WaitlistJoinRequest` (`@gobbit/shared`), `WAITLIST_*` limits, the per-IP waitlist limiter (D219), `GET /waitlist/confirm` → `/welcome?confirmed=1` or `/welcome?confirm=invalid`.
 - `017-public-pages`: `apps/api/src/public/` (`layout`, `styles`, `html`, `responses`, `seo`, `public-url`), `routes/public-pages.ts` (`send()` with `Vary: Cookie`, `rateLimitedHtml`), sitemap and robots from the API.
 - Caddy (`apps/web/Caddyfile`): `/api/*` (stripped), `/s/*`, `/p/*`, `/sitemap.xml`, `/robots.txt` → API; else SPA; CSP `default-src 'self'`, `style-src 'self' 'unsafe-inline'`.
 - Web: `routes/index.tsx` (home, `pickLanding`); `api/session.ts` (`PUBLIC_PATHS`, `unauthorizedRedirect`); `main.tsx` (query client `onUnauthorized` → `router.history.replace`); `sw.ts` navigation denylist; Vite dev proxy for `/api`, `/s`, `/p`, sitemap, robots.
@@ -60,7 +60,7 @@ Project override of the core template. Written for outside readers: the reposito
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/landing.ts` (parse form, headers, PRG) → 028's `waitlist.join` (rules) → `waitlist.repo`; page templates in `public/landing.ts` |
-| II. One source of truth | The form validates with 028's `WaitlistJoinRequest` and limits from `@pb/shared`; no second copy of the rules |
+| II. One source of truth | The form validates with 028's `WaitlistJoinRequest` and limits from `@gobbit/shared`; no second copy of the rules |
 | III. Invariants in the DB | No new data; 028's constraints apply unchanged |
 | IV. Private by default | No per-visitor content in public cached responses; 400 and signed-in variants `private, no-store`; identical answer for known/unknown/honeypot emails; nothing about members on the page |
 | V. Tests at the right tier | Unit (states, escaping, tags, size), int (routes, PRG, CSRF, limits, sitemap), smoke (Caddy cookie routing + CSP + preview tags), full (form journeys) |

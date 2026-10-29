@@ -1,4 +1,4 @@
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 import { relativeTime } from './relative-time';
 
 /** Edits closer than this to creation (same request, publish in one go) still read as "Added". */

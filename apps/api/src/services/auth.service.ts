@@ -4,9 +4,9 @@ import {
   RATE_MAGIC_LINK_PER_IP,
   SESSION_TOUCH_INTERVAL_MS,
   type SessionKind,
-} from '@pb/shared';
-import type { RegistrationMode } from '@pb/shared/auth';
-import type { MagicLinkRow, SessionRow } from '@pb/db';
+} from '@gobbit/shared';
+import type { RegistrationMode } from '@gobbit/shared/auth';
+import type { MagicLinkRow, SessionRow } from '@gobbit/db';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
 import { signInEmail } from '../mail/templates';

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import type { ItemEvent } from '@pb/shared';
+import type { ItemEvent } from '@gobbit/shared';
 import { describe, expect, it } from 'vitest';
-import { itemEventKinds } from '@pb/shared/events';
+import { itemEventKinds } from '@gobbit/shared/events';
 import { EventRow } from './EventRow';
 import { eventLabel } from './event-copy';
 

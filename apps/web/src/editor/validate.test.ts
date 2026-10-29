@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { itemCreateSchema } from '@pb/shared';
-import { validateCalcExpression } from '@pb/shared/calc';
+import { itemCreateSchema } from '@gobbit/shared';
+import { validateCalcExpression } from '@gobbit/shared/calc';
 import { emptyDraft, toCreateBody, type Draft } from './draft';
 import { errorCount, isHttpUrl, payloadBytes, validateDraft } from './validate';
 
@@ -223,7 +223,7 @@ describe('errorCount', () => {
 });
 
 /** Parity: the client mirror and the server's Zod create schema agree on these drafts. */
-describe('parity with the @pb/shared Zod item schema', () => {
+describe('parity with the @gobbit/shared Zod item schema', () => {
   const cases: [string, Draft][] = [
     ['text ok', draft()],
     ['blank title', draft({ title: '  ' })],

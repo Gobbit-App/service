@@ -4,7 +4,7 @@ import {
   type ItemEvent,
   type ItemEventListQuery,
   type ItemEventPage,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { authorize, type MembershipLookup } from '../access/authorize';
 import { resolveDeck } from '../lib/resolve-deck';
 import type { DecksRepo } from '../repositories/decks.repo';

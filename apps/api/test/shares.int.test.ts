@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { and, eq } from 'drizzle-orm';
-import { ingestJobs, items, memberships, type IngestJobRow, type UserRow } from '@pb/db';
-import { addMember, createAccountUser, createItem } from '@pb/db/test';
-import { SHARES_LIST_LIMIT, type IngestChannel } from '@pb/shared';
+import { ingestJobs, items, memberships, type IngestJobRow, type UserRow } from '@gobbit/db';
+import { addMember, createAccountUser, createItem } from '@gobbit/db/test';
+import { SHARES_LIST_LIMIT, type IngestChannel } from '@gobbit/shared';
 import type { IngestQueue } from '../src/jobs/ingest-queue';
 import { MemoryIngestUploads } from '../src/media/ingest-uploads';
 import { json, setupApiTest } from './helpers';

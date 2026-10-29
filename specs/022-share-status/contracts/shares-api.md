@@ -1,6 +1,6 @@
 # Contract: shares API and deck setting
 
-All JSON; errors are `application/problem+json` (RFC 9457). Session or bearer auth. `ing_` ingest tokens are **not** accepted (ADR-046). DTOs live in `packages/shared/src/schemas/share.ts`; `pnpm api:openapi` regenerates `@pb/api-client`.
+All JSON; errors are `application/problem+json` (RFC 9457). Session or bearer auth. `ing_` ingest tokens are **not** accepted (ADR-046). DTOs live in `packages/shared/src/schemas/share.ts`; `pnpm api:openapi` regenerates `@gobbit/api-client`.
 
 ## `GET /decks/{idOrSlug}/shares`
 

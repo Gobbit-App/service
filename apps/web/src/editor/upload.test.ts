@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MediaSignResponse } from '@pb/shared';
+import type { MediaSignResponse } from '@gobbit/shared';
 import {
   cachedSigner,
   failureMessage,

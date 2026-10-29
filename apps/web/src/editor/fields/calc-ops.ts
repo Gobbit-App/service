@@ -1,4 +1,4 @@
-import { CALC_MAX_FIELDS } from '@pb/shared/card-limits';
+import { CALC_MAX_FIELDS } from '@gobbit/shared/card-limits';
 import { parseCalcDefault, type CalcDraftField, type CalcDraftPayload } from '../draft';
 
 /** Pure edits on a calc draft. Renaming a key never rewrites the expression. */

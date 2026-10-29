@@ -3,8 +3,8 @@ import {
   RATE_MAGIC_LINK_PER_EMAIL,
   RATE_MAGIC_LINK_PER_IP,
   SESSION_TOUCH_INTERVAL_MS,
-} from '@pb/shared';
-import type { RegistrationMode } from '@pb/shared/auth';
+} from '@gobbit/shared';
+import type { RegistrationMode } from '@gobbit/shared/auth';
 import type { Authenticated } from '../types';
 import { hashToken } from '../lib/tokens';
 import { HttpError } from '../errors/http-errors';

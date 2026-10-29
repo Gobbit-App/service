@@ -1,4 +1,4 @@
-import { INGEST_JOB_RETRIES } from '@pb/shared';
+import { INGEST_JOB_RETRIES } from '@gobbit/shared';
 
 /** Queue names shared by the API (sender) and the worker (D72, D80, D93, D132, D158, D163, D164). */
 export const QUEUES = {

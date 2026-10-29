@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_BODY_MAX, NAME_MAX } from '@pb/shared';
+import { CARD_BODY_MAX, NAME_MAX } from '@gobbit/shared';
 import { HttpError } from '../errors/http-errors';
 import { parseDirectDraft, suggestedCategory, type DirectDraft } from './ingest.service';
 

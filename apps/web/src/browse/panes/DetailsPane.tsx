@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { Category, Item } from '@pb/shared';
+import type { Category, Item } from '@gobbit/shared';
 import { itemCategories } from '../../cards/Card';
 import { EntityChips } from '../../cards/EntityChips';
 import { itemTypeLabel } from '../source-kind';

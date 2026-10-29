@@ -7,8 +7,8 @@ import {
   INGEST_DAILY_CAP,
   WAITLIST_JOIN_PER_IP_PER_HOUR,
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR,
-} from '@pb/shared';
-import { registrationModes } from '@pb/shared/auth';
+} from '@gobbit/shared';
+import { registrationModes } from '@gobbit/shared/auth';
 import { cloudNameFrom } from './lib/cloudinary-url';
 
 const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');

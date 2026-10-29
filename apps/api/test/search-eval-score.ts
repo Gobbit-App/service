@@ -1,4 +1,4 @@
-import type { SearchEvalCase } from '@pb/db/test';
+import type { SearchEvalCase } from '@gobbit/db/test';
 
 export const EVAL_K = 5;
 export const EVAL_MIN_RECALL = 0.9;

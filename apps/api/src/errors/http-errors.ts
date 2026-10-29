@@ -1,5 +1,5 @@
 import type { Context } from 'hono';
-import type { MemberRole, Permission, Problem, ProblemFieldError } from '@pb/shared';
+import type { MemberRole, Permission, Problem, ProblemFieldError } from '@gobbit/shared';
 
 export interface HttpErrorExtras {
   /** Extra response headers, e.g. `Retry-After` or a cookie-clearing `Set-Cookie`. */

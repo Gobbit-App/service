@@ -74,7 +74,7 @@ services:
     # API; the API runs the migrations, so the worker waits for it to be healthy.
     image: ghcr.io/gobbit-app/service/api:${API_IMAGE_TAG:-latest}
     pull_policy: always
-    entrypoint: ['pnpm', '--filter', '@pb/api', 'worker']
+    entrypoint: ['pnpm', '--filter', '@gobbit/api', 'worker']
     depends_on:
       api:
         condition: service_healthy

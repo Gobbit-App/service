@@ -1,4 +1,4 @@
-import { INGEST_IMAGE_MAX_BYTES } from '@pb/shared';
+import { INGEST_IMAGE_MAX_BYTES } from '@gobbit/shared';
 import type { IngestFile } from '../services/ingest.service';
 import type { InboundEmail } from './email-mapping';
 

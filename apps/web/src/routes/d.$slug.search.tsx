@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { lazy, Suspense, useEffect } from 'react';
-import type { SearchMode } from '@pb/shared/search';
+import type { SearchMode } from '@gobbit/shared/search';
 import { useOnline } from '../api/offline';
 import { categoriesQuery, configQuery } from '../api/queries';
 import { ModeToggle } from '../search/ModeToggle';

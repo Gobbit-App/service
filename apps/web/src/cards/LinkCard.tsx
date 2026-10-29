@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import type { LinkHealth } from '@pb/shared';
-import { lockedHostOf } from '@pb/shared/links';
+import type { LinkHealth } from '@gobbit/shared';
+import { lockedHostOf } from '@gobbit/shared/links';
 import { CloudImage } from './CloudImage';
 import { LinkHealthBadge } from './LinkHealthBadge';
 import type { LinkPayload } from './payload-guards';

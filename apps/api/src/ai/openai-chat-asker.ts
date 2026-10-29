@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { ASK_TIMEOUT_MS } from '@pb/shared';
+import { ASK_TIMEOUT_MS } from '@gobbit/shared';
 import { AskResponseError } from './anthropic-asker';
 import { ASK_TOOL, ASK_TOOL_NAME, askToolInputSchema, buildAskPrompt } from './ask-prompt';
 import type { Asker, AskInput, AskOutput } from './asker';

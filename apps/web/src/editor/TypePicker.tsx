@@ -1,5 +1,5 @@
 import { useId, type ReactElement } from 'react';
-import type { ItemType } from '@pb/shared';
+import type { ItemType } from '@gobbit/shared';
 import { useCloudName } from '../cards/use-cloud-name';
 import { CREATABLE_TYPES, type CreatableType } from './draft';
 

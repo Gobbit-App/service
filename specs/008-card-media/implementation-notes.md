@@ -11,7 +11,7 @@ No migration, no new env vars (`CLOUDINARY_URL` now also signs editor uploads), 
 | Baseline, 007 head `5b40d50` | 112.5 KB |
 | 008 | 112.5 KB |
 
-The image fields, upload helper and Fetch preview live in the editor's lazy chunks (`CardEditor` chunk 7.4 KB gzip). Web code imports only `@pb/shared/media-constants` (no zod).
+The image fields, upload helper and Fetch preview live in the editor's lazy chunks (`CardEditor` chunk 7.4 KB gzip). Web code imports only `@gobbit/shared/media-constants` (no zod).
 
 ## Settled before starting (plan, "Settle")
 
@@ -19,7 +19,7 @@ The image fields, upload helper and Fetch preview live in the editor's lazy chun
 
 ## Decisions not specified by the plan
 
-- **Schemas in `packages/shared/src/schemas/media.ts`**, re-exported from `@pb/shared` and `@pb/shared/media`. The limits are in `media/constants.ts`, exported as the zod-free `@pb/shared/media-constants`, which the web imports (research named `@pb/shared/media`, which would pull zod into the editor chunk).
+- **Schemas in `packages/shared/src/schemas/media.ts`**, re-exported from `@gobbit/shared` and `@gobbit/shared/media`. The limits are in `media/constants.ts`, exported as the zod-free `@gobbit/shared/media-constants`, which the web imports (research named `@gobbit/shared/media`, which would pull zod into the editor chunk).
 - **`LINK_PREVIEW_IMAGE_URL_MAX` = 2048**: an OG image URL longer than that, or not absolute http(s), is dropped.
 - **Cache key** is the parsed URL (`new URL(url).href`), so trivially different spellings share an entry. Empty results (`null`) are cached too, wrapped because `lru-cache` can't hold `null`.
 - **Order of checks**: deck lookup and `authorize` first on both routes, so non-members learn nothing. The sign route then answers 503 without Cloudinary before counting the rate limit, so a server without Cloudinary doesn't use up the hourly count. The preview rate limit is counted before the cache, so cache hits count too.

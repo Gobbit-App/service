@@ -1,4 +1,4 @@
-import { WAITLIST_PENDING_RETENTION_DAYS } from '@pb/shared';
+import { WAITLIST_PENDING_RETENTION_DAYS } from '@gobbit/shared';
 import type { WaitlistRepo } from '../repositories/waitlist.repo';
 import { decisionLogger, type DecisionLogger } from '../lib/decision-event';
 import { WAITLIST_DECISION_LEVELS, type WaitlistDecisions } from '../services/waitlist.events';

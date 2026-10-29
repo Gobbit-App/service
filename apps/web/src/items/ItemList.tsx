@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactElement, type ReactNode } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import type { Category, Item } from '@pb/shared';
+import type { Category, Item } from '@gobbit/shared';
 import { isNetworkError } from '../api/network-state';
 import { itemsQuery } from '../api/queries';
 import type { ItemFilter } from '../api/query-keys';

@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { EMBEDDING_DIMS, EMBED_BATCH_MAX, EMBED_TIMEOUT_MS } from '@pb/shared';
+import { EMBEDDING_DIMS, EMBED_BATCH_MAX, EMBED_TIMEOUT_MS } from '@gobbit/shared';
 import type { EmbedResult, Embedder } from './embedder';
 
 /** Minimal slice of the `openai` SDK client used here (tests pass a fake). */

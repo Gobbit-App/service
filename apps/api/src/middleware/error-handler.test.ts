@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { InvalidCursorError } from '@pb/shared';
+import { InvalidCursorError } from '@gobbit/shared';
 import { createErrorHandler, errorHandler, notFoundHandler } from './error-handler';
 import { captureLogger } from '../../test/capture-logger';
 import { notFound } from '../errors/http-errors';

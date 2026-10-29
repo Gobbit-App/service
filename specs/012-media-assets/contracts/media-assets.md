@@ -1,6 +1,6 @@
 # Contract: `POST /decks/{id}/media/assets`
 
-Records a finished editor upload (D157). Defined with `@hono/zod-openapi` in `apps/api/src/routes/media.ts`; schemas are in `@pb/shared/media`.
+Records a finished editor upload (D157). Defined with `@hono/zod-openapi` in `apps/api/src/routes/media.ts`; schemas are in `@gobbit/shared/media`.
 
 **Auth**: session cookie or `Authorization: Bearer` (session). Ingest tokens (`ing_`) are rejected (ADR-046).
 

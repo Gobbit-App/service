@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SEARCH_Q_MAX } from '@pb/shared';
+import { SEARCH_Q_MAX } from '@gobbit/shared';
 import { parseSearchParams } from './search-params';
 
 describe('parseSearchParams', () => {

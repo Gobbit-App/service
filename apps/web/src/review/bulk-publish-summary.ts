@@ -1,4 +1,4 @@
-import type { BulkPublishResult, BulkPublishSkipReason, ReviewEntry } from '@pb/shared';
+import type { BulkPublishResult, BulkPublishSkipReason, ReviewEntry } from '@gobbit/shared';
 
 const SKIP_LABELS: Record<BulkPublishSkipReason, string> = {
   'needs-decision': 'needs a decision',

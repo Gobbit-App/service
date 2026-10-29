@@ -51,7 +51,7 @@ A web-only visual and structural pass, one PR. No API, schema or contract change
 
 **Performance Goals**: no extra request (icons inline in the bundle); no layout shift (icon box fixed 20 px in a 44 px target)
 
-**Constraints**: initial bundle ≤ 150 KB gzip and growth ≤ 6 KB (SC-005); plain CSS; `@use-gesture/react` stays in the browse chunk; value imports only from `@pb/shared` subpaths
+**Constraints**: initial bundle ≤ 150 KB gzip and growth ≤ 6 KB (SC-005); plain CSS; `@use-gesture/react` stays in the browse chunk; value imports only from `@gobbit/shared` subpaths
 
 **Scale/Scope**: ~35 icons, ~100 buttons across ~45 components
 
@@ -60,7 +60,7 @@ A web-only visual and structural pass, one PR. No API, schema or contract change
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | N/A — no API change; lifecycle and link-check calls reuse the existing hooks. |
-| II. One source of truth | N/A — no DTO change; role rules keep coming from `@pb/shared/authz` (`can`) and `availableActions`/`canEditItem`. |
+| II. One source of truth | N/A — no DTO change; role rules keep coming from `@gobbit/shared/authz` (`can`) and `availableActions`/`canEditItem`. |
 | III. Invariants in the DB | N/A — no schema change. Delete still confirms; server rules unchanged. |
 | IV. Private by default | Unchanged: the bar only hides/shows controls by role; the server still authorises every write. |
 | V. Tests at the right tier | Unit next to every new module and changed component; e2e smoke (critical journeys) + full (variants, a11y, offline); traceability below. |

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { AssetRow } from '@pb/db';
+import type { AssetRow } from '@gobbit/db';
 import { HttpError } from '../errors/http-errors';
 import { createImageReferenceCheck } from './image-reference';
 

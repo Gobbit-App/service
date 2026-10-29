@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { importInChunks, type ImportRowDraft, type ImportRunResult } from '@pb/shared/import';
+import { importInChunks, type ImportRowDraft, type ImportRunResult } from '@gobbit/shared/import';
 import { isApiError } from '../api/api-error';
 import { api, unwrap } from '../api/client';
 import { problemMessages } from '../api/problem-messages';

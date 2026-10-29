@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { SEARCH_DEBOUNCE_MS } from '@pb/shared';
+import { SEARCH_DEBOUNCE_MS } from '@gobbit/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SearchBox } from './SearchBox';
 

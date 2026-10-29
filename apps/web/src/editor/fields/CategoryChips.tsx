@@ -1,6 +1,6 @@
 import { useId, type ReactElement } from 'react';
-import type { Category, Deck } from '@pb/shared';
-import { can } from '@pb/shared/authz';
+import type { Category, Deck } from '@gobbit/shared';
+import { can } from '@gobbit/shared/authz';
 import { NewCategory } from './NewCategory';
 
 export type CategoryChipsProps = {

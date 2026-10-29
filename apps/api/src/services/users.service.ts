@@ -1,6 +1,6 @@
-import { PERSONAL_DECK_NAME } from '@pb/shared';
-import type { RegistrationMode, RegistrationReason } from '@pb/shared/auth';
-import type { DeckRow } from '@pb/db';
+import { PERSONAL_DECK_NAME } from '@gobbit/shared';
+import type { RegistrationMode, RegistrationReason } from '@gobbit/shared/auth';
+import type { DeckRow } from '@gobbit/db';
 import type { UsersRepo } from '../repositories/users.repo';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { CurrentUser } from '../types';

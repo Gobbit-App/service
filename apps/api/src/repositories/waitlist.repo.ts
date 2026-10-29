@@ -1,12 +1,12 @@
 import { and, eq, gt, lt, ne, sql } from 'drizzle-orm';
-import type { WaitlistEventAction, WaitlistKind, WaitlistSource } from '@pb/shared';
+import type { WaitlistEventAction, WaitlistKind, WaitlistSource } from '@gobbit/shared';
 import {
   waitlistEntries,
   waitlistEvents,
   type DbExecutor,
   type WaitlistEntryRow,
   type WaitlistEventRow,
-} from '@pb/db';
+} from '@gobbit/db';
 
 export interface NewPendingEntry {
   email: string;

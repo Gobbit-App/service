@@ -17,7 +17,7 @@ Project override of the core template. Written for outside readers: the reposito
 ## Starting point
 
 - `main` with 028 and 029 merged (this feature can't start before both).
-- From 028: `waitlist_entries` (statuses, `confirmed_at`, `invited_at`, `invited_by`, `user_id`), `waitlist.repo.ts`, `waitlist.service.ts`, `WAITLIST_KIND_LABELS` and the waitlist enums in `@pb/shared/waitlist`.
+- From 028: `waitlist_entries` (statuses, `confirmed_at`, `invited_at`, `invited_by`, `user_id`), `waitlist.repo.ts`, `waitlist.service.ts`, `WAITLIST_KIND_LABELS` and the waitlist enums in `@gobbit/shared/waitlist`.
 - From 029: `REGISTRATION_MODE`; `usersService.findExisting(email)` and `usersService.register(email, reason, actorId?)` replace `findOrCreateByEmail`; `users.registered_via`/`registered_by` (D241).
 - From 028 (accountability): `decisionLogger`, `logHash`, `expectDecision`, `waitlist_events` + `waitlist.repo.insertEvent` (D239, D240).
 - Existing: `magic-links.repo.create` (per-row `expiresAt`, `purpose`, `next`); `auth.service.consumeMagicLink` (consume → user → `ensurePersonalDeck` → session); `mail/templates.ts`; `routes/me.ts` + `meSchema` (`packages/shared/src/schemas/auth.ts`); `env.ts` (`positiveInt`, comma-list transform like `CORS_ORIGINS`); `errors/http-errors.ts` (`/problems/not-found`, `/problems/conflict` family).
@@ -51,7 +51,7 @@ Project override of the core template. Written for outside readers: the reposito
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/admin-waitlist.ts` (parse) → `waitlist-admin.service.ts` (admin guard, status rules, transaction, mail) → `waitlist.repo.ts` / `magic-links.repo.ts` (SQL). The guard is a service call, so Phase 12's `/admin/domains` and any later client reuse it. Non-admins get 404 (ADR-004). |
-| II. One source of truth | `schemas/waitlist-admin.ts` and the `meSchema` change in `@pb/shared`; web uses the generated client and 028's `WAITLIST_KIND_LABELS` |
+| II. One source of truth | `schemas/waitlist-admin.ts` and the `meSchema` change in `@gobbit/shared`; web uses the generated client and 028's `WAITLIST_KIND_LABELS` |
 | III. Invariants in the DB | `removed` ⇔ `removed_at` CHECK; 028's invited/confirmed CHECKs and one-live-entry-per-email index; users' unique email; migration + hand-written down file, round-trip tested |
 | IV. Private by default | Admin surface hidden (404) and env-defined; account creation only through 029's guarded entry point; emails never logged or persisted on the device; fixtures use `example.test` |
 | V. Tests at the right tier | Unit (env parsing, guard, labels, components), int (admin matrix, invite transaction, concurrency, onboarding on first sign-in), e2e full journey + negative |

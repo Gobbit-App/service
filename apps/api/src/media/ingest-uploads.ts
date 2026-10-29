@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { INGEST_IMAGE_LLM_WIDTH } from '@pb/shared';
+import { INGEST_IMAGE_LLM_WIDTH } from '@gobbit/shared';
 import { cloudinaryDeliveryUrl, parseCloudinaryUrl } from '../lib/cloudinary-url';
 import type { StoredImage } from './media-store';
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { INGEST_MAX_IMAGES } from '@pb/shared/ingest-constants';
+import { INGEST_MAX_IMAGES } from '@gobbit/shared/ingest-constants';
 import {
   SHARE_TTL_MS,
   acceptedImages,

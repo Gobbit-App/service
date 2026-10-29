@@ -5,7 +5,7 @@ Decisions continue the project-wide D numbering. Phase 8 reserves D174–D191. T
 ## What exists today
 
 - **Share previews** (D58–D61): `/s/:itemId` renders a tiny HTML page with OG tags and a refresh to the PWA. Public mode uses the real title, excerpt and image; the image is the card's own (Cloudinary `c_fill,w_1200,h_630`) or a generated OG image (Satori + resvg, stored in Cloudinary, keyed by content hash).
-- **Language** (`@pb/shared` `text-script`): `htmlLang(text)` and `ogLocale(text)` guess Hebrew, Arabic or English from the script.
+- **Language** (`@gobbit/shared` `text-script`): `htmlLang(text)` and `ogLocale(text)` guess Hebrew, Arabic or English from the script.
 - **PWA**: renders cards client-side with `react-markdown` (no GFM). Its routes need JavaScript and an API session; strangers can't use them.
 - **Caddy**: one origin. Only `/api/*` and `/s/*` reach the API.
 
@@ -15,7 +15,7 @@ Decisions continue the project-wide D numbering. Phase 8 reserves D174–D191. T
   - Routes `/p/{slug}`, `/p/{slug}/c/{category}`, `/p/{slug}/i/{itemId}` on the API, outside OpenAPI, behind Caddy `handle` blocks.
   - Templates are `hono/html` tagged templates. Every interpolation is escaped; the only `raw()` input is micromark output.
   - Card bodies: `micromark(body)` with defaults (HTML disabled, `javascript:`/`data:` URLs dropped). Same CommonMark subset as the PWA.
-  - Per-type renderers: text (markdown), link (title, host, preview image, `rel="nofollow ugc noopener"`), image (Cloudinary URL with a width-limited transformation and `alt`), table (a `<table>` with header row, horizontally scrollable), calc (inputs with defaults, the default result from `@pb/shared/calc`, "open in app to change values").
+  - Per-type renderers: text (markdown), link (title, host, preview image, `rel="nofollow ugc noopener"`), image (Cloudinary URL with a width-limited transformation and `alt`), table (a `<table>` with header row, horizontally scrollable), calc (inputs with defaults, the default result from `@gobbit/shared/calc`, "open in app to change values").
   - One inline `<style>` (system font, max width 40rem, logical properties so RTL works), no external CSS, no JS.
   - Head: `<title>`, description (`excerpt`, 160), canonical, `og:*` (type `article` for cards, `website` otherwise), `twitter:card=summary_large_image`, `og:locale` from `ogLocale`. The card image reuses `share.service`'s image logic (exported as `ogImageFor(item)`). Deck and category pages use the static `/og/` image.
   - `<html lang dir>` from `htmlLang` on the page's main text (card title + body, or deck name).

@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { v2 as cloudinary } from 'cloudinary';
-import type { AssetSource } from '@pb/shared';
+import type { AssetSource } from '@gobbit/shared';
 import type { CloudinaryCredentials } from '../lib/cloudinary-url';
 
 /** What Cloudinary reports about one stored image. */

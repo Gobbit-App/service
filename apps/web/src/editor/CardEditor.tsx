@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useMemo, useState, type FormEvent, type ReactElement } from 'react';
-import type { Category, Deck, Item, ItemType } from '@pb/shared';
+import type { Category, Deck, Item, ItemType } from '@gobbit/shared';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
 import { useNavigateHref } from '../ui/NavLink';
 import {

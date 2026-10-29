@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
-import { items, type Db } from '@pb/db';
+import { items, type Db } from '@gobbit/db';
 import { escapeLike, toVectorLiteral } from './search.repo';
 
 /** How many same-host items are compared by normalized URL (family-scale decks). */

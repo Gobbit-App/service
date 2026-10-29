@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactElement } from 'react';
-import type { Category, Deck, ItemPatch, PublishRequest, ReviewEntry } from '@pb/shared';
+import type { Category, Deck, ItemPatch, PublishRequest, ReviewEntry } from '@gobbit/shared';
 import { problemMessages } from '../api/problem-messages';
 import { editHref } from '../cards/can-edit-item';
 import { CardBar } from '../cards/CardBar';

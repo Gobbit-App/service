@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isApiError } from '../api/api-error';
 import { confirmMediaAsset, reportUploadFailure, signMediaUpload } from '../api/media';
-import type { MediaAsset, MediaUploadFailureRequest } from '@pb/shared';
+import type { MediaAsset, MediaUploadFailureRequest } from '@gobbit/shared';
 import {
   cachedSigner,
   signAndUpload,

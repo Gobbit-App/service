@@ -17,13 +17,13 @@ import {
   type DbExecutor,
   type IngestJobRow,
   type NewIngestJobRow,
-} from '@pb/db';
+} from '@gobbit/db';
 import {
   SHARE_MAX_RETRIES,
   type IngestChannel,
   type IngestFailureCode,
   type IngestJobStatus,
-} from '@pb/shared';
+} from '@gobbit/shared';
 
 /** Fields the worker writes as the job moves through the pipeline (D93). */
 export type IngestJobPatch = Partial<

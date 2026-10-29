@@ -1,4 +1,4 @@
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 import type { ReactElement, ReactNode } from 'react';
 import { useToggleFavorite } from '../api/favorites';
 import { FavoriteButton } from '../ui/FavoriteButton';

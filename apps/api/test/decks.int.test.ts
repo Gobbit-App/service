@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { deckListSchema, deckWithCategoriesSchema, deckSchema, problemSchema } from '@pb/shared';
+import {
+  deckListSchema,
+  deckWithCategoriesSchema,
+  deckSchema,
+  problemSchema,
+} from '@gobbit/shared';
 import { setupApiTest, fixtureId } from './helpers';
 
 const ctx = setupApiTest();

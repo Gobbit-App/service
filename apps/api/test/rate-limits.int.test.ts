@@ -3,7 +3,7 @@ import {
   RATE_CALLBACK_PER_IP,
   RATE_MAGIC_LINK_PER_EMAIL,
   RATE_MAGIC_LINK_PER_IP,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { createRateLimitsRepo } from '../src/repositories/rate-limits.repo';
 import { createRateLimitService } from '../src/services/rate-limit.service';
 import { RATE_WINDOW_MS, windowStart } from '../src/lib/rate-window';

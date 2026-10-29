@@ -4,7 +4,7 @@ import {
   ASK_TOP_K,
   dominantScript,
   type AskResponse,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { Asker } from '../ai/asker';
 import { NOT_FOUND_ANSWER } from '../ai/ask-prompt';
 import { resolveCitations } from '../ai/ask-citations';

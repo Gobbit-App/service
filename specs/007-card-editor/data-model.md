@@ -33,7 +33,7 @@ This file describes the client-side models.
 
 ### Derived
 
-- `toCreateBody(draft)` → `ItemCreate` (`@pb/api-client` type): `{ type, title, body, payload, categoryIds, sourceUrl? }`, with no `status` (the server default applies; see Q1 in plan.md).
+- `toCreateBody(draft)` → `ItemCreate` (`@gobbit/api-client` type): `{ type, title, body, payload, categoryIds, sourceUrl? }`, with no `status` (the server default applies; see Q1 in plan.md).
 - `toPatch(original: Item, draft)` → `ItemPatch | null`. It contains only the changed keys from `title`, `body`, `payload` (whole), `categoryIds` (order-insensitive compare), `sourceUrl` (string or `null`) and `entities` (whole). It never contains `type` or `status`.
 - `FieldErrors` is `Partial<Record<string, string>>`, keyed by dotted path (`title`, `payload.columns.2`, `payload.fields.1.key`, `categoryIds`, …), the same path syntax as `problem.errors[].path`.
 

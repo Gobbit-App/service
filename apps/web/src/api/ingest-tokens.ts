@@ -1,5 +1,5 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { IngestTokenCreate, IngestTokenCreated, IngestTokenList } from '@pb/shared';
+import type { IngestTokenCreate, IngestTokenCreated, IngestTokenList } from '@gobbit/shared';
 import { api, unwrap } from './client';
 import { queryKeys } from './query-keys';
 

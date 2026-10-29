@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { itemTypes, sourceKinds } from '@pb/shared/enums';
+import { itemTypes, sourceKinds } from '@gobbit/shared/enums';
 import { itemTypeLabel, sourceKindLabel } from './source-kind';
 
 describe('sourceKindLabel', () => {

@@ -57,7 +57,7 @@ description: "Task list for 008-card-media"
 - [X] T016 [P] [US1] Pure signed-params builder in apps/api/src/media/sign-upload.ts (reuses `parseCloudinaryUrl`/`cloudNameFrom` from lib/cloudinary-url.ts)
 - [X] T017 [US1] `media.service.signUpload({ user, deckId })` with `authorize()` + `can`, `rateLimits.enforce(rateKeys.mediaSignUser(userId), MEDIA_SIGN_RATE_PER_HOUR)` in apps/api/src/services/media.service.ts; wire in apps/api/src/services/index.ts
 - [X] T018 [US1] Route + OpenAPI for `POST /decks/{id}/media/sign` per contracts/media-sign.md in apps/api/src/routes/media.ts
-- [X] T019 [US1] `pnpm api:openapi` (regenerate @pb/api-client)
+- [X] T019 [US1] `pnpm api:openapi` (regenerate @gobbit/api-client)
 - [X] T020 [P] [US1] Client call in apps/web/src/api/media.ts; XHR helper in apps/web/src/editor/upload.ts
 - [X] T021 [US1] Sign + upload state machine (idle → signing → uploading(pct) → done/failed/cancelled) in apps/web/src/editor/use-image-upload.ts
 - [X] T022 [US1] `ImageFields.tsx` (camera/gallery `<input type=file accept capture>`, blob thumbnail, progress, cancel, alt, replace/remove); register in apps/web/src/editor/fields/registry.ts in place of `ReadOnlyImage`; enable image in the create-type choice of apps/web/src/editor/CardEditor.tsx

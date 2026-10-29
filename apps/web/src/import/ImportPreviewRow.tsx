@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import type { ImportCategory } from '@pb/shared/import';
+import type { ImportCategory } from '@gobbit/shared/import';
 import { categoryStatus, type PreviewRow, type RowEdit } from './preview-rows';
 import { Button } from '../ui/buttons/Button';
 

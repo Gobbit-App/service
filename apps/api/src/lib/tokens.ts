@@ -1,5 +1,5 @@
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
-import { TOKEN_BYTES } from '@pb/shared';
+import { TOKEN_BYTES } from '@gobbit/shared';
 
 /** Generate a random token as base64url-encoded string. */
 export function generateToken(bytes = TOKEN_BYTES): string {

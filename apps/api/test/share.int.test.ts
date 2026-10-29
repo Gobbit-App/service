@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { categories, decks, ogImages } from '@pb/db';
+import { categories, decks, ogImages } from '@gobbit/db';
 import { MemoryOgStore } from '../src/share/og-store';
 import { FAMILY_ID, fixtureId, setupApiTest } from './helpers';
 

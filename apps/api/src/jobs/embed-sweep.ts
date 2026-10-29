@@ -1,4 +1,4 @@
-import { EMBED_SWEEP_BATCH } from '@pb/shared';
+import { EMBED_SWEEP_BATCH } from '@gobbit/shared';
 import type { EmbeddingsRepo } from '../repositories/embeddings.repo';
 import { EMBED_ITEM_SEND_OPTIONS, QUEUES, type EmbedItemJob, type JobSender } from './queues';
 

@@ -24,7 +24,7 @@ import {
   type ExtractionSummary,
   type IngestRaw,
   type NormalizedSource,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { tstz } from './common';
 import { decks } from './decks';
 import { items } from './items';

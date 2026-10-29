@@ -1,5 +1,5 @@
 import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
-import { itemEventListQuerySchema, itemEventPageSchema } from '@pb/shared';
+import { itemEventListQuerySchema, itemEventPageSchema } from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getActor } from '../lib/current-user';

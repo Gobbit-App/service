@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { INGEST_JOB_RETRIES } from '@pb/shared';
+import { INGEST_JOB_RETRIES } from '@gobbit/shared';
 import { eq } from 'drizzle-orm';
-import { ingestJobs, itemCategories, items, llmCalls, type UserRow } from '@pb/db';
-import { addMember, createAccountUser, createAsset } from '@pb/db/test';
-import { ARTICLE_PAGE, INJECTION_PAGE } from '@pb/db/test/ingest-pages';
+import { ingestJobs, itemCategories, items, llmCalls, type UserRow } from '@gobbit/db';
+import { addMember, createAccountUser, createAsset } from '@gobbit/db/test';
+import { ARTICLE_PAGE, INJECTION_PAGE } from '@gobbit/db/test/ingest-pages';
 import { createFakeExtractor } from '../src/ai/fake-extractor';
 import type { Extractor } from '../src/ai/extractor';
 import type { SafeFetch } from '../src/fetch/safe-fetch';

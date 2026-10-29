@@ -43,7 +43,7 @@ Down: drop table, drop both enums.
 | `items.service.update` | `updated` | actor | `diffFields` |
 | `archive` / `restore` / `remove` / `undelete` | `archived` / `restored` / `deleted` / `undeleted` | actor | — |
 
-## DTOs (`@pb/shared`)
+## DTOs (`@gobbit/shared`)
 
 ### `ItemEvent`
 

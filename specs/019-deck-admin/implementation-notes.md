@@ -15,7 +15,7 @@ No migration, queue or env var. One new route: `PATCH /decks/{id}/members/{userI
 ## Deviations from the plan
 
 - **Header link instead of a deck menu** (the PWA has none): admins get "Deck" (accessible name "Deck settings") next to Activity; `NavLink` gained an optional `label`.
-- **`@pb/shared/authz` points at `authz/index.ts`**, which re-exports `can` and the new `labels.ts`.
+- **`@gobbit/shared/authz` points at `authz/index.ts`**, which re-exports `can` and the new `labels.ts`.
 - **No `countOwners`**: `memberships.repo.updateRole(id, deckId, role, { guardLastOwner })` locks the deck's owner rows `FOR UPDATE` and counts them in its own transaction.
 - **"Everyone" hint** under Categories shows while the deck is not public.
 - **Inline confirmation** for remove / cancel invite instead of a modal.

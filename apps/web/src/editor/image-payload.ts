@@ -1,4 +1,4 @@
-import type { MediaAsset } from '@pb/shared';
+import type { MediaAsset } from '@gobbit/shared';
 import type { ImagePayload } from '../cards/payload-guards';
 
 /** The draft payload once `asset` is confirmed: its id and, when known, its dimensions (D161). */

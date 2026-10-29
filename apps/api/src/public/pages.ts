@@ -6,7 +6,7 @@ import {
   type PublicCategory,
   type PublicDeck,
   type PublicItem,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { excerpt, OG_DESCRIPTION_MAX } from '../share/excerpt';
 import { h, type Html } from './html';
 import { layout, SITE_NAME, type PageHead } from './layout';

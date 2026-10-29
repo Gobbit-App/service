@@ -1,4 +1,4 @@
-import { INGEST_IMAGE_MAX_BYTES } from '@pb/shared';
+import { INGEST_IMAGE_MAX_BYTES } from '@gobbit/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ResendInboundError, createResendInbound } from './resend-inbound';
 

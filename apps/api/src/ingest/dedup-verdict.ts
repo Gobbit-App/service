@@ -3,7 +3,7 @@ import {
   DEDUP_TITLE_SIMILARITY,
   DEDUP_UPDATE_SIMILARITY,
   type DedupVerdict,
-} from '@pb/shared';
+} from '@gobbit/shared';
 
 /** Signals gathered from the database before deciding how to treat an ingested source. */
 export interface DedupSignals {

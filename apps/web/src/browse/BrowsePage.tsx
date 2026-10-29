@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { Category, Item } from '@pb/shared';
+import type { Category, Item } from '@gobbit/shared';
 import type { ImageLoading } from '../cards/ImageCard';
 import type { BrowsePane } from './browse-params';
 import { FooterBand, panelId, tabId } from './FooterBand';

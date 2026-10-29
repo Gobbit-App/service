@@ -7,9 +7,9 @@ import {
   type IngestRaw,
   type MemberRole,
   type NormalizedSource,
-} from '@pb/shared';
-import type { IngestJobRow } from '@pb/db';
-import { lockedHostOf } from '@pb/shared/links';
+} from '@gobbit/shared';
+import type { IngestJobRow } from '@gobbit/db';
+import { lockedHostOf } from '@gobbit/shared/links';
 import type { AssetsRepo } from '../repositories/assets.repo';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';

@@ -1,7 +1,7 @@
 import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { ZodError } from 'zod';
-import { InvalidCursorError } from '@pb/shared';
+import { InvalidCursorError } from '@gobbit/shared';
 import { HttpError, problemFromZodError, problemResponse } from '../errors/http-errors';
 import { mapPgError } from '../errors/pg-error-map';
 import { childLogger, type Logger } from '../lib/logger';

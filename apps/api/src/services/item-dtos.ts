@@ -1,5 +1,5 @@
-import type { ItemRow } from '@pb/db';
-import type { Item, MemberRole } from '@pb/shared';
+import type { ItemRow } from '@gobbit/db';
+import type { Item, MemberRole } from '@gobbit/shared';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
 import type { LinkChecksRepo } from '../repositories/link-checks.repo';

@@ -23,7 +23,7 @@ description: "Task list for 032-waitlist-admin"
 
 ## Phase 1: Foundational (Blocking Prerequisites)
 
-- [ ] T001 [P] `PLATFORM_ADMINS` (comma list → normalized `string[]`, default empty) and `WAITLIST_INVITE_TTL_DAYS` in apps/api/src/env.ts + [unit] cases in env.test.ts; `WAITLIST_INVITE_TTL_DAYS_DEFAULT`, `ADMIN_WAITLIST_PAGE_MAX` in `@pb/shared`
+- [ ] T001 [P] `PLATFORM_ADMINS` (comma list → normalized `string[]`, default empty) and `WAITLIST_INVITE_TTL_DAYS` in apps/api/src/env.ts + [unit] cases in env.test.ts; `WAITLIST_INVITE_TTL_DAYS_DEFAULT`, `ADMIN_WAITLIST_PAGE_MAX` in `@gobbit/shared`
 - [ ] T002 [P] `isPlatformAdmin`, `requirePlatformAdmin` (404 `/problems/not-found`, records `admin.denied` `not_admin`/`signed_out` with `route`) in apps/api/src/access/platform-admin.ts + [unit] platform-admin.test.ts (`expectDecision`)
 - [ ] T002a [P] `admin.config` start-up event (`count`, warn on 0 in production) + [unit]; outcome tuples in apps/api/src/services/waitlist-admin.events.ts
 - [ ] T003 [P] DTOs in packages/shared/src/schemas/waitlist-admin.ts; `meSchema.isPlatformAdmin` in packages/shared/src/schemas/auth.ts

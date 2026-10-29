@@ -1,5 +1,5 @@
 import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
-import { shareListSchema, shareSummarySchema } from '@pb/shared';
+import { shareListSchema, shareSummarySchema } from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';

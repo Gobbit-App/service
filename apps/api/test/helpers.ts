@@ -1,6 +1,6 @@
 import { beforeAll } from 'vitest';
 import type { OpenAPIHono } from '@hono/zod-openapi';
-import type { UserRow } from '@pb/db';
+import type { UserRow } from '@gobbit/db';
 import type { AppEnv } from '../src/types';
 import { createApp } from '../src/app';
 import { parseEnv, type Env } from '../src/env';
@@ -21,7 +21,7 @@ import {
   withTestDb,
   type SampleWorld,
   type TestDb,
-} from '@pb/db/test';
+} from '@gobbit/db/test';
 
 export const TEST_API_URL = 'http://api.test';
 

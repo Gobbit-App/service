@@ -1,4 +1,4 @@
-import type { TextScript } from '@pb/shared';
+import type { TextScript } from '@gobbit/shared';
 
 /** A retrieved card handed to the model as delimited data (D77). */
 export interface AskCard {

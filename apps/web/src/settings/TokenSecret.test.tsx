@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import type { IngestTokenCreated } from '@pb/shared';
+import type { IngestTokenCreated } from '@gobbit/shared';
 import { TokenSecret } from './TokenSecret';
 
 const created: IngestTokenCreated = {

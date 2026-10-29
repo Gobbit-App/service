@@ -3,7 +3,7 @@ import {
   InvalidCursorError,
   PUBLIC_SEARCH_LIMIT_DEFAULT,
   SEARCH_Q_MAX,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { CurrentUser } from '../types';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { SitemapRepo } from '../repositories/sitemap.repo';

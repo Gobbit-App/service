@@ -1,5 +1,5 @@
-import type { IngestJobRow } from '@pb/db';
-import type { ShareChannel } from '@pb/shared';
+import type { IngestJobRow } from '@gobbit/db';
+import type { ShareChannel } from '@gobbit/shared';
 import { describe, expect, it } from 'vitest';
 import { canRetryJob, toShareSummary, type ShareItemRef } from './shares.service';
 

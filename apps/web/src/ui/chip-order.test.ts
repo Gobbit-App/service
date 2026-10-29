@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Category } from '@pb/shared';
+import type { Category } from '@gobbit/shared';
 import {
   orderChips,
   chipHref,

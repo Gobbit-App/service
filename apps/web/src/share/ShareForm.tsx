@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent, type ReactElement } from 'react';
-import type { Deck } from '@pb/shared';
+import type { Deck } from '@gobbit/shared';
 import { isApiError } from '../api/api-error';
 import { useSubmitShare } from '../api/ingest';
 import { problemMessages } from '../api/problem-messages';

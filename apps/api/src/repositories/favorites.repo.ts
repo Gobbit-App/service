@@ -1,5 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import { type Db, favorites } from '@pb/db';
+import { type Db, favorites } from '@gobbit/db';
 
 export function createFavoritesRepo(db: Db) {
   return {

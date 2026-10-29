@@ -50,7 +50,7 @@ Browse's viewport-based `useImageSizes` (009, D144) is folded into it. The servi
 
 **Performance Goals**: no "properly size images" warning; CLS < 0.05; first screen with placeholders < 1.5 s on simulated 4G
 
-**Constraints**: plain CSS, no inline styles; initial bundle +≤ 1 KB gzip; value imports from `@pb/shared` subpaths only
+**Constraints**: plain CSS, no inline styles; initial bundle +≤ 1 KB gzip; value imports from `@gobbit/shared` subpaths only
 
 **Scale/Scope**: lists of up to a few hundred image cards (one shared observer)
 
@@ -59,7 +59,7 @@ Browse's viewport-based `useImageSizes` (009, D144) is folded into it. The servi
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | Not touched |
-| II. One source of truth | Payload types come from `@pb/shared` (012 adds `width`/`height`); the widths stay in `cards/cloudinary.ts`, the only URL builder |
+| II. One source of truth | Payload types come from `@gobbit/shared` (012 adds `width`/`height`); the widths stay in `cards/cloudinary.ts`, the only URL builder |
 | III. Invariants in the DB | Not touched |
 | IV. Private by default | Only `res.cloudinary.com` URLs for this deck's stored images; no Cloudinary fetch URLs for remote images (D162) |
 | V. Tests at the right tier | Unit (URL builders, `sizes` from measurement, box classes, placeholder lifecycle, reduced motion via CSS class), e2e (list image has a measured `sizes` and `width`/`height`), manual Lighthouse; traceability below |

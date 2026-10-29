@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { DeckRow, ItemRow, UserRow } from '@pb/db';
-import { ASK_RATE_LIMIT_PER_HOUR } from '@pb/shared';
-import { addMember, createAccountUser, createDeck, createItem } from '@pb/db/test';
+import type { DeckRow, ItemRow, UserRow } from '@gobbit/db';
+import { ASK_RATE_LIMIT_PER_HOUR } from '@gobbit/shared';
+import { addMember, createAccountUser, createDeck, createItem } from '@gobbit/db/test';
 import type { Asker } from '../src/ai/asker';
 import { createFakeAsker, type FakeAskReply } from '../src/ai/fake-asker';
 import { json, OWNER_EMAIL, setupApiTest, type ApiTestContext } from './helpers';

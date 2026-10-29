@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_BODY_MAX } from '@pb/shared/card-limits';
-import type { ImportRow } from '@pb/shared/import';
+import { CARD_BODY_MAX } from '@gobbit/shared/card-limits';
+import type { ImportRow } from '@gobbit/shared/import';
 import {
   categoryStatus,
   editRow,

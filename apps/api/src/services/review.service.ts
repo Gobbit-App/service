@@ -1,4 +1,4 @@
-import type { IngestJobRow, ItemRow } from '@pb/db';
+import type { IngestJobRow, ItemRow } from '@gobbit/db';
 import {
   can,
   REVIEW_LIMIT,
@@ -9,7 +9,7 @@ import {
   type ReviewCount,
   type ReviewEntry,
   type ReviewList,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
 import { badRequest, conflict, HttpError, notFound } from '../errors/http-errors';
 import type { EmbedQueue } from '../jobs/embed-queue';

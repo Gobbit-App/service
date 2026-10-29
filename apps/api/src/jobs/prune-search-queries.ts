@@ -1,4 +1,4 @@
-import { SEARCH_QUERY_RETENTION_DAYS } from '@pb/shared';
+import { SEARCH_QUERY_RETENTION_DAYS } from '@gobbit/shared';
 import type { SearchQueriesRepo } from '../repositories/search-queries.repo';
 
 const DAY_MS = 86_400_000;

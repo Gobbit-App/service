@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type { Item, ItemPatch, ReviewList } from '@pb/shared';
+import type { Item, ItemPatch, ReviewList } from '@gobbit/shared';
 import { replaceReviewItem } from '../review/review-cache';
 import { api, unwrap } from './client';
 import { reviewListsFilter } from './review';

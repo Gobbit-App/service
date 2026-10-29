@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import type { ReviewList } from '@pb/shared';
+import type { ReviewList } from '@gobbit/shared';
 import { makeItem } from '../test/fixtures';
 import { testQueryClient } from '../test/render';
 import { queryKeys, REVIEW_KEY, SEARCH_KEY } from './query-keys';

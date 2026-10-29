@@ -22,7 +22,7 @@ COPY apps/web/ apps/web/
 ARG GIT_SHA=dev
 ENV GIT_SHA=${GIT_SHA}
 
-RUN pnpm --filter @pb/web build \
+RUN pnpm --filter @gobbit/web build \
   && node -e "require('node:fs').writeFileSync('apps/web/dist/version.json', JSON.stringify({ commit: process.env.GIT_SHA }) + '\n')"
 
 FROM caddy:2-alpine

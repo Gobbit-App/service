@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPublishOutcomes, ingestFailureCodes } from '@pb/shared/ingest-constants';
+import { autoPublishOutcomes, ingestFailureCodes } from '@gobbit/shared/ingest-constants';
 import { makeShare } from '../test/fixtures';
 import { failureCopy, pasteAgainCopy, UNKNOWN_FAILURE } from './failure-copy';
 import { anyProcessing, autoPublishCopy, heldReason, shareTitle, stateLabel } from './share-state';

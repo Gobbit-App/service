@@ -1,4 +1,4 @@
-import type { Category } from '@pb/shared';
+import type { Category } from '@gobbit/shared';
 
 /** Category view type: all, favorites, archived, or a specific category. */
 export type ChipView =

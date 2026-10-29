@@ -1,4 +1,4 @@
-import type { ImportFailure, ImportRequest, ImportResult } from '@pb/shared';
+import type { ImportFailure, ImportRequest, ImportResult } from '@gobbit/shared';
 import { authorize, type MembershipLookup } from '../access/authorize';
 import { HttpError } from '../errors/http-errors';
 import { assertImportRows } from '../ingest/import-rows';

@@ -1,4 +1,4 @@
-import type { TextScript } from '@pb/shared';
+import type { TextScript } from '@gobbit/shared';
 import { z } from 'zod';
 import type { AskInput } from './asker';
 

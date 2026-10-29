@@ -1,6 +1,6 @@
 import { check, index, integer, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { linkCheckStatuses } from '@pb/shared';
+import { linkCheckStatuses } from '@gobbit/shared';
 import { tstz } from './common';
 import { items } from './items';
 

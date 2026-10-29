@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import type { DeckRow } from '@pb/db';
-import type { AssetRow } from '@pb/db';
+import type { DeckRow } from '@gobbit/db';
+import type { AssetRow } from '@gobbit/db';
 import {
   MEDIA_CONFIRM_RATE_PER_HOUR,
   MEDIA_SIGN_RATE_PER_HOUR,
   MEDIA_UPLOAD_FAILURE_RATE_PER_HOUR,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { MemoryMediaStore } from '../media/media-store';
 import { editorUploadFolder } from '../media/sign-upload';
 import type { AssetsRepo, NewAsset } from '../repositories/assets.repo';

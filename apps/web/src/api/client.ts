@@ -1,4 +1,4 @@
-import { createApiClient } from '@pb/api-client';
+import { createApiClient } from '@gobbit/api-client';
 import { ApiError, type Problem } from './api-error';
 
 /** The app's single typed client (same-origin `/api`, D52). */

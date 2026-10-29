@@ -1,4 +1,4 @@
-import type { AutoPublishOutcome, ReviewEntry } from '@pb/shared';
+import type { AutoPublishOutcome, ReviewEntry } from '@gobbit/shared';
 
 type HeldOutcome = Exclude<AutoPublishOutcome, 'published'>;
 

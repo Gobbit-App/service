@@ -1,5 +1,5 @@
-import type { InviteCreate, Member, MemberRole, Membership } from '@pb/shared';
-import type { DeckRow, MembershipRow } from '@pb/db';
+import type { InviteCreate, Member, MemberRole, Membership } from '@gobbit/shared';
+import type { DeckRow, MembershipRow } from '@gobbit/db';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
 import { inviteEmail } from '../mail/templates';

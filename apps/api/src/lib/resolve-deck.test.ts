@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { isUuid, resolveDeck } from './resolve-deck';
-import type { DeckRow } from '@pb/db';
+import type { DeckRow } from '@gobbit/db';
 
 const caller = { accountId: 'caller-account' };
 

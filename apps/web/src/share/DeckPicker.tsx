@@ -1,5 +1,5 @@
 import { useId, type ReactElement } from 'react';
-import type { Deck } from '@pb/shared';
+import type { Deck } from '@gobbit/shared';
 
 /** D108: which pocketbook a share goes to. */
 export function DeckPicker({

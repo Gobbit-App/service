@@ -22,7 +22,7 @@ The API records every stored image in an `assets` table: browser uploads after t
 - Ingest: `media/ingest-uploads.ts` (`IngestUploadStore.upload` → `cloudinary.uploader.upload(dataUri, { folder: gobbit/ingest/<deckId>, tags: [ingest, job:<id>] })`, `deleteForJob` by tag, `MemoryIngestUploads` for tests), called from `ingest.service.ts`. `prune-ingest-jobs` deletes the uploads of failed and discarded jobs.
 - Lifecycle: `prune-deleted-items` (D132) purges cards that were soft-deleted more than 30 days ago, weekly (Sunday 05:00). Their images stay in Cloudinary today.
 - Outbound: `fetch/safe-fetch.ts` (ADR-048) accepts **HTML content types only** and returns `{ html, error }`. There is no binary mode.
-- Worker: `jobs/queues.ts` (`QUEUES`), `worker.ts` (`boss.schedule(QUEUES.x, CRON)`), with crons in `@pb/shared` constants.
+- Worker: `jobs/queues.ts` (`QUEUES`), `worker.ts` (`boss.schedule(QUEUES.x, CRON)`), with crons in `@gobbit/shared` constants.
 - `item_search_text()` (0009) already strips the image `publicId` from search text.
 
 ## Technical Context
@@ -52,7 +52,7 @@ The API records every stored image in an `assets` table: browser uploads after t
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/media.ts` parses the input. `media.service` (`confirmUpload`, `uploadFromUrl`, `deleteForDeck`) and `items.service` (the reference rule) hold the rules. `assets.repo.ts` holds the SQL, including the orphan query. The `media-sweep` job calls `media.service.sweepOrphans` |
-| II. One source of truth | The DTOs and limits are in `@pb/shared/media` and `/media-constants`. The payload change is in `payloads.ts`. `pnpm api:openapi` runs for the new route and the 422 |
+| II. One source of truth | The DTOs and limits are in `@gobbit/shared/media` and `/media-constants`. The payload change is in `payloads.ts`. `pnpm api:openapi` runs for the new route and the 422 |
 | III. Invariants in the DB | `public_id` UNIQUE, dimension CHECKs, FK cascade on decks, migration with a down file. The "same deck" reference rule lives in the service, because it reads across jsonb |
 | IV. Private by default | `uploadFromUrl` goes only through `safe-fetch` (binary mode, same IP guard). The confirmation is signature-verified and folder-scoped per deck. The API secret is never returned. The sweep is scoped to this database |
 | V. Tests at the right tier | Unit (signature and folder check, binary safe-fetch, sweep batching), integration (route, reference rule, sweep against all statuses, migration backfill), e2e (editor upload still works); traceability below |

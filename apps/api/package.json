@@ -1,5 +1,5 @@
 {
-  "name": "@pb/api",
+  "name": "@gobbit/api",
   "private": true,
   "license": "MPL-2.0",
   "type": "module",
@@ -26,8 +26,8 @@
     "@hono/node-server": "^2.1.1",
     "@hono/zod-openapi": "^1.6.3",
     "@mozilla/readability": "^0.6.0",
-    "@pb/db": "workspace:*",
-    "@pb/shared": "workspace:*",
+    "@gobbit/db": "workspace:*",
+    "@gobbit/shared": "workspace:*",
     "@resvg/resvg-js": "^2.6.2",
     "@sindresorhus/slugify": "^3.0.1",
     "cloudinary": "^2.11.0",

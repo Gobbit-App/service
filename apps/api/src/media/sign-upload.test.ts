@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { v2 as cloudinary } from 'cloudinary';
 import { describe, expect, it } from 'vitest';
-import { MEDIA_IMAGE_MAX_BYTES, mediaSignResponseSchema } from '@pb/shared';
+import { MEDIA_IMAGE_MAX_BYTES, mediaSignResponseSchema } from '@gobbit/shared';
 import { signEditorUpload } from './sign-upload';
 
 // Fake credentials: the signature is computed locally, nothing is sent anywhere.

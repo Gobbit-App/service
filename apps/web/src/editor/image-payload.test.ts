@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { MediaAsset } from '@pb/shared';
+import type { MediaAsset } from '@gobbit/shared';
 import { withoutPhoto, withPhoto } from './image-payload';
 
 const asset: MediaAsset = {

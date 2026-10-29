@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { ItemRow, UserRow } from '@pb/db';
-import { addMember, createAccountUser, createItem } from '@pb/db/test';
+import type { ItemRow, UserRow } from '@gobbit/db';
+import { addMember, createAccountUser, createItem } from '@gobbit/db/test';
 import { json, OWNER_EMAIL, setupApiTest } from './helpers';
 
 describe('proposal visibility (D96)', () => {

@@ -1,4 +1,4 @@
-import type { Category, Deck, Item, ShareSummary } from '@pb/shared';
+import type { Category, Deck, Item, ShareSummary } from '@gobbit/shared';
 
 const STAMP = '2026-01-01T00:00:00.000Z';
 

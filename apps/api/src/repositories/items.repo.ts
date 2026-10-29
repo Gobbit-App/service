@@ -22,7 +22,7 @@ import {
   linkChecks,
   type DbExecutor,
   type ItemRow,
-} from '@pb/db';
+} from '@gobbit/db';
 import type {
   CursorData,
   Entities,
@@ -30,7 +30,7 @@ import type {
   ItemType,
   MemberRole,
   SourceKind,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import {
   canSeePrivate,
   itemHasVisibleCategory,

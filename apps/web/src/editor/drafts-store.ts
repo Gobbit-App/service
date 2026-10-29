@@ -1,5 +1,5 @@
 import { clear, createStore, del, get, set, type UseStore } from 'idb-keyval';
-import type { ItemType } from '@pb/shared';
+import type { ItemType } from '@gobbit/shared';
 import type { Draft } from './draft';
 
 /** D145: what one stored draft holds. An unknown `v` is discarded on read. */

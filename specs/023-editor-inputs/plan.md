@@ -12,7 +12,7 @@ Three small editor changes, one PR.
 
 **URL inputs (US1, D205).** A pure function `normalizeUrlInput(raw)` in `apps/web/src/lib/url-input.ts` trims, collapses a doubled scheme (`https://https://…`), lowercases an `http(s)` scheme, turns `//host` into `https://host`, leaves any other scheme (`mailto:`, `javascript:`) alone so validation refuses it, and adds `https://` to everything else. A hook `useUrlInput(value, onChange)` gives every URL input the same behaviour: `https://` on focus when empty (caret at the end), normalise on blur (scheme only → empty). Used by `TextInput type="url"` (link URL, source URL, review inline link) and the share form. On save the draft is normalised again (`toPayload`, `toCreateBody`, `toPatch`, `validateDraft`, share submit), so pressing Enter without leaving the field still stores `https://…`. The server's `httpUrlSchema` is unchanged.
 
-**Optional alt (US2, D206).** `imagePayloadSchema.alt` becomes `z.string().optional()` (empty allowed). The editor labels the field "Description (optional)", stops requiring it and omits an empty alt from the payload. A zod-free helper `imageAlt({ alt, title, titleAdjacent })` in `@pb/shared/image-alt` decides the text alternative: the alt when set, otherwise empty (decorative) when the title is visibly next to the image, otherwise the title. Every renderer today (card list, card page, browse, review queue, editor preview, public pages) shows the title as the card's heading right above the image, so a card without alt renders `alt=""`; the card's `<article>` is already labelled by that heading. OG/share previews carry no `og:image:alt`, so nothing changes there. `pnpm api:openapi` regenerates the client.
+**Optional alt (US2, D206).** `imagePayloadSchema.alt` becomes `z.string().optional()` (empty allowed). The editor labels the field "Description (optional)", stops requiring it and omits an empty alt from the payload. A zod-free helper `imageAlt({ alt, title, titleAdjacent })` in `@gobbit/shared/image-alt` decides the text alternative: the alt when set, otherwise empty (decorative) when the title is visibly next to the image, otherwise the title. Every renderer today (card list, card page, browse, review queue, editor preview, public pages) shows the title as the card's heading right above the image, so a card without alt renders `alt=""`; the card's `<article>` is already labelled by that heading. OG/share previews carry no `og:image:alt`, so nothing changes there. `pnpm api:openapi` regenerates the client.
 
 **Instant categories (US3, D207, D208).** In the editor for an existing card, chip toggles no longer edit the draft. A small controller (`editor/category-saver.ts`, framework-free, unit-tested with fake timers) collects a burst of taps for 600 ms, sends one `PATCH /items/{id} { categoryIds }`, and on success shows the existing app toast "Categories saved" with Undo for 6 s (`UNDO_TOAST_MS`). Undo sends the set from before the burst. Saves are serialised; leaving the editor flushes a pending burst. A published card refuses to lose its last (visible) category before any request. A failure reverts the chips to the stored set and shows an error toast; other edits are untouched. After each confirmed save the editor calls `rebaselineCategories(ids)`, which moves both the draft's and the opening snapshot's `categoryIds` (and the stored-draft base time), so the change never counts as unsaved (FR-010, the seam 022's guard plugs into). New cards keep categories in the create request (FR-011). The existing PATCH already keeps categories the caller can't see and writes one 020 log line per save.
 
@@ -43,7 +43,7 @@ Three small editor changes, one PR.
 
 **Performance Goals**: one PATCH per burst of taps; Undo notice within 1 s of the last tap on a normal connection
 
-**Constraints**: editor validation stays zod-free; `@pb/shared` value imports only via subpaths (`/image-alt` is zod-free); initial bundle ≤ 150 KB gzip (editor is lazy); server URL rule unchanged (FR-003)
+**Constraints**: editor validation stays zod-free; `@gobbit/shared` value imports only via subpaths (`/image-alt` is zod-free); initial bundle ≤ 150 KB gzip (editor is lazy); server URL rule unchanged (FR-003)
 
 **Scale/Scope**: per-card edits; a handful of category taps per edit
 
@@ -52,11 +52,11 @@ Three small editor changes, one PR.
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | No new route or service; the existing `PATCH /items/{id}` → `items.service.update` keeps every rule (D6, visibility, events). |
-| II. One source of truth | `imagePayloadSchema` in `@pb/shared` is the only contract change; `pnpm api:openapi` regenerates `@pb/api-client`; the alt rule is one shared helper used by web and API. |
+| II. One source of truth | `imagePayloadSchema` in `@gobbit/shared` is the only contract change; `pnpm api:openapi` regenerates `@gobbit/api-client`; the alt rule is one shared helper used by web and API. |
 | III. Invariants in the DB | No schema change. Payload byte CHECK still applies; D6 (published needs a category) stays a DB trigger + service rule; the client refusal only avoids a doomed request. |
 | IV. Private by default | Category saves go through the same PATCH, which re-adds hidden categories (`hiddenCategoryIds`); an int test pins it for the save/undo sequence. |
 | V. Tests at the right tier | Unit next to code for every piece of logic; int for the contract and the PATCH sequence; e2e smoke (critical journey) + full (variants, negatives). Traceability below. |
-| VI. Lean web | No new dependency; the editor is already lazy; `@pb/shared/image-alt` is a few lines and zod-free; the toast is the existing one. `pnpm budget` checked. |
+| VI. Lean web | No new dependency; the editor is already lazy; `@gobbit/shared/image-alt` is a few lines and zod-free; the toast is the existing one. `pnpm budget` checked. |
 | VII. Simple, optional, deployable | No env, no migration, no AI. Old clients keep sending alt; old cards keep theirs. |
 
 Post-design re-check: no violations.
@@ -92,7 +92,7 @@ specs/023-editor-inputs/
 ```text
 packages/shared/src/
 ├── schemas/payloads.ts                 # alt optional
-├── media/image-alt.ts (+ .test.ts)     # NEW imageAlt(); subpath `@pb/shared/image-alt`
+├── media/image-alt.ts (+ .test.ts)     # NEW imageAlt(); subpath `@gobbit/shared/image-alt`
 └── package.json                        # + "./image-alt" export
 packages/api-client/src/schema.d.ts     # regenerated
 
@@ -118,7 +118,7 @@ e2e/tests/smoke/editor.spec.ts          # https prefix, optional alt, one-tap re
 e2e/tests/full/editor-inputs.spec.ts    # NEW undo, last category, failure, other URL fields
 ```
 
-**Structure Decision**: the URL rule is web-only (all URL inputs live in the PWA; the server rule stays strict), so it lives in `apps/web/src/lib`. The alt rule is needed by the PWA and the API's HTML pages, so it lives in `@pb/shared` behind a zod-free subpath.
+**Structure Decision**: the URL rule is web-only (all URL inputs live in the PWA; the server rule stays strict), so it lives in `apps/web/src/lib`. The alt rule is needed by the PWA and the API's HTML pages, so it lives in `@gobbit/shared` behind a zod-free subpath.
 
 ## Invariant → test traceability
 

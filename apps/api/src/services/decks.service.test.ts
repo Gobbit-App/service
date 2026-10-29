@@ -4,7 +4,7 @@ import { createDecksService } from './decks.service';
 
 vi.mock('../lib/slug', async () => {
   const { default: slugify } = await import('@sindresorhus/slugify');
-  const { SLUG_MAX } = await import('@pb/shared');
+  const { SLUG_MAX } = await import('@gobbit/shared');
 
   const implementation = (input: string): string => {
     if (input === 'שלום') return '';

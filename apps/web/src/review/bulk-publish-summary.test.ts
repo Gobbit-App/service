@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ReviewEntry } from '@pb/shared';
+import type { ReviewEntry } from '@gobbit/shared';
 import { makeItem } from '../test/fixtures';
 import { bulkPublishSummary, publishedMessage } from './bulk-publish-summary';
 

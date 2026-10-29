@@ -1,6 +1,6 @@
 # Contract: Admin waitlist API
 
-All routes: session auth (cookie or bearer); signed-out → `401 /problems/unauthorized`; signed-in but not in `PLATFORM_ADMINS` → `404 /problems/not-found` (identical body to an unknown route's problem). Tag `admin`, in OpenAPI; `pnpm api:openapi` regenerates `@pb/api-client`. Cookie-authenticated writes pass the existing CSRF middleware.
+All routes: session auth (cookie or bearer); signed-out → `401 /problems/unauthorized`; signed-in but not in `PLATFORM_ADMINS` → `404 /problems/not-found` (identical body to an unknown route's problem). Tag `admin`, in OpenAPI; `pnpm api:openapi` regenerates `@gobbit/api-client`. Cookie-authenticated writes pass the existing CSRF middleware.
 
 ## 1. `GET /admin/waitlist`
 

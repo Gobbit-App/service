@@ -1,4 +1,4 @@
-import type { Item, ReviewCount, ReviewList } from '@pb/shared';
+import type { Item, ReviewCount, ReviewList } from '@gobbit/shared';
 
 /** Drops a proposal from the queue (optimistic publish/discard, D107); untouched data keeps its identity. */
 export function removeReviewEntry(

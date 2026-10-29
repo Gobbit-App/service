@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
-import type { Deck, Item } from '@pb/shared';
-import { can } from '@pb/shared/authz';
+import type { Deck, Item } from '@gobbit/shared';
+import { can } from '@gobbit/shared/authz';
 import {
   expectedItem,
   INVERSE,

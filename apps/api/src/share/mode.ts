@@ -1,4 +1,4 @@
-import type { CategoryVisibility, ItemStatus } from '@pb/shared';
+import type { CategoryVisibility, ItemStatus } from '@gobbit/shared';
 
 /** Describes a shareable item's visibility context. */
 export type ShareSubject = {

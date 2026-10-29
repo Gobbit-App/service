@@ -1,4 +1,4 @@
-import type { Problem } from '@pb/shared';
+import type { Problem } from '@gobbit/shared';
 import { PERSONAL_DECK_PROBLEM } from './http-errors';
 
 export function findPgError(

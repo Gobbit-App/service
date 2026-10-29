@@ -1,4 +1,4 @@
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 
 type SourceKind = Item['sourceKind'];
 

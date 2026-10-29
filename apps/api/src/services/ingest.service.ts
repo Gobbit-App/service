@@ -19,7 +19,7 @@ import {
   type IngestRequest,
   type ItemCreate,
   type MemberRole,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';

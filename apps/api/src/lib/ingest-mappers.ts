@@ -1,5 +1,5 @@
-import type { IngestJob, IngestToken } from '@pb/shared';
-import type { IngestJobRow, IngestTokenRow } from '@pb/db';
+import type { IngestJob, IngestToken } from '@gobbit/shared';
+import type { IngestJobRow, IngestTokenRow } from '@gobbit/db';
 
 const iso = (d: Date | null): string | null => (d ? d.toISOString() : null);
 

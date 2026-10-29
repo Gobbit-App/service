@@ -1,4 +1,4 @@
-import type { LinkCheckRow } from '@pb/db';
+import type { LinkCheckRow } from '@gobbit/db';
 import {
   LINK_CHECK_BATCH,
   LINK_CHECK_DEAD_AFTER,
@@ -8,8 +8,8 @@ import {
   LINK_CHECK_RETRY_DAYS,
   LINK_CHECK_TEXT_MAX,
   type LinkCheckStatus,
-} from '@pb/shared';
-import { lockedHostOf } from '@pb/shared/links';
+} from '@gobbit/shared';
+import { lockedHostOf } from '@gobbit/shared/links';
 import type { ExtractedPage } from '../fetch/extract-page';
 import { classify, normalizedTitle, type LinkProbeClass } from '../fetch/link-status';
 import type { SafeFetch, SafeFetchResult } from '../fetch/safe-fetch';

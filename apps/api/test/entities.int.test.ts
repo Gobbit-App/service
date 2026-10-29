@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { itemSchema } from '@pb/shared';
+import { itemSchema } from '@gobbit/shared';
 import { json, setupApiTest } from './helpers';
 
 /** D97: entities are a cross-type column, written with the card and searchable through search_text. */

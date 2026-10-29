@@ -23,8 +23,8 @@ description: "Task list for 007-card-editor"
 - [X] T004 [P] [unit] packages/shared/src/card-limits.test.ts: values equal `limits.ts`; module graph imports no `zod` (assert via a static import scan)
 - [X] T005 [P] [unit] apps/web/src/editor/draft.test.ts: `emptyDraft`, `draftFromItem` (pads short table rows), `toCreateBody`, `toPatch` (null when unchanged; order-insensitive categories; whole payload on any payload change; whole entities after removal; `sourceUrl: null` when cleared; never `type`/`status`). Port all cases from apps/web/src/review/review-edit.test.ts
 - [X] T006 apps/web/src/editor/draft.ts (D137) to pass T005
-- [X] T007 [P] [unit] apps/web/src/editor/validate.test.ts: title/body code points (emoji, Hebrew, combining marks), payload bytes, link http(s), table shape and empty headings, calc key regex/uniqueness/≤ 6, ≥ 1 category; parity cases fed to both `validate.ts` and the `@pb/shared` Zod item/payload schemas (Node test, zod allowed) must agree
-- [X] T008 apps/web/src/editor/validate.ts (R6) to pass T007; text/link/table checks import only `@pb/shared/card-limits`; calc expression check injected by `CalcFields` (keeps mathjs out)
+- [X] T007 [P] [unit] apps/web/src/editor/validate.test.ts: title/body code points (emoji, Hebrew, combining marks), payload bytes, link http(s), table shape and empty headings, calc key regex/uniqueness/≤ 6, ≥ 1 category; parity cases fed to both `validate.ts` and the `@gobbit/shared` Zod item/payload schemas (Node test, zod allowed) must agree
+- [X] T008 apps/web/src/editor/validate.ts (R6) to pass T007; text/link/table checks import only `@gobbit/shared/card-limits`; calc expression check injected by `CalcFields` (keeps mathjs out)
 - [X] T009 [P] [unit] apps/web/src/editor/problem-fields.test.ts: validation `errors[].path` → field; 400 `categoryIds`; 422 `/problems/item-needs-category` → `categoryIds`; 409; constraint-violation / payload-too-large / 403 / network → form-level
 - [X] T010 apps/web/src/editor/problem-fields.ts to pass T009 (falls back to `api/problem-messages.ts`)
 - [X] T011 [P] [unit] apps/web/src/editor/drafts-store.test.ts (in-memory `DraftsKv`): key builders, set/get/del, unknown `v` discarded, `clear()`
@@ -116,7 +116,7 @@ description: "Task list for 007-card-editor"
 
 - [X] T046 [P] [US4] [unit] apps/web/src/editor/fields/calc-ops.test.ts: add/remove field (≤ 6), key regex, duplicate key, default parsing, key rename updates nothing else silently
 - [X] T047 [US4] apps/web/src/editor/fields/calc-ops.ts to pass T046
-- [X] T048 [US4] apps/web/src/editor/fields/CalcFields.tsx (lazy; imports `validateCalcExpression` from `@pb/shared/calc` only; feeds `validate.ts` the expression check)
+- [X] T048 [US4] apps/web/src/editor/fields/CalcFields.tsx (lazy; imports `validateCalcExpression` from `@gobbit/shared/calc` only; feeds `validate.ts` the expression check)
 - [X] T049 [US4] Add `calc` to the `?type=` enum and the type picker; verify in the `vite build` manifest that mathjs stays in one shared async chunk
 - [X] T050 [P] [US4] [e2e] e2e/tests/smoke/editor.spec.ts: calc card `a * b` live result; invalid expression disables Save
 
@@ -154,7 +154,7 @@ description: "Task list for 007-card-editor"
 - [X] T060 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`; record the before/after budget in implementation-notes.md (SC-006)
 - [X] T061 [P] docs/architecture.md: Phase 6 editor section (routes, draft model, registry seam, drafts store, zod-free client validation); D135–D138, D145; deviations from implementation-notes.md
 - [X] T062 [P] README.md: editor routes, drafts cleared on sign-out
-- [X] T063 [P] CLAUDE.md ground rules: "editor validation is zod-free; the server is authoritative; value imports via `@pb/shared/card-limits` and `/calc`"
+- [X] T063 [P] CLAUDE.md ground rules: "editor validation is zod-free; the server is authoritative; value imports via `@gobbit/shared/card-limits` and `/calc`"
 - [X] T064 PLAN.md: link specs/007-card-editor under Phase 6; demo 1 stays unticked until 008 and a run on the deployed instance
 - [ ] T065 Run quickstart.md (steps 1–12) (needs the deployed instance; local coverage per step in implementation-notes)
 - [X] T066 `/speckit-converge` until it reports Converged (one run: one LOW finding, appended as T067 and done)

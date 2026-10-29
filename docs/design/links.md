@@ -86,7 +86,7 @@ died or turned into something else says so.
 Instagram, Facebook (`fb.watch` too), Threads, TikTok, X (`twitter.com` too) and LinkedIn answer
 server fetches with a login wall, so their cards use what the member shared instead.
 
-- **Registry** (D166): `LOCKED_HOSTS` / `lockedHostOf(url)` in `@pb/shared/links` (exact host or a
+- **Registry** (D166): `LOCKED_HOSTS` / `lockedHostOf(url)` in `@gobbit/shared/links` (exact host or a
   subdomain on a dot boundary, http(s) only). Shared by the API, the worker and the web.
 - **Ingest** (D167, `ai/extract-validate.ts`): a share whose URL is on a locked host always becomes
   a `link` card for the shared URL. `preview.title` is the OG title unless it is generic (the label,

@@ -1,4 +1,4 @@
-import { CARD_BODY_MAX, EXTRACT_TITLE_TARGET } from '@pb/shared';
+import { CARD_BODY_MAX, EXTRACT_TITLE_TARGET } from '@gobbit/shared';
 import type { ProposeCardInput } from './extract-prompt';
 import { truncateAtSentence } from './extract-validate';
 import type { ExtractCall, ExtractInput, Extractor } from './extractor';

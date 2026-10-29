@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { autoPublishOutcomes } from '@pb/shared/ingest-constants';
-import type { ReviewEntry } from '@pb/shared';
+import { autoPublishOutcomes } from '@gobbit/shared/ingest-constants';
+import type { ReviewEntry } from '@gobbit/shared';
 import { heldLine } from './held-line';
 
 type ReviewJob = NonNullable<ReviewEntry['job']>;

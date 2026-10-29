@@ -1,4 +1,4 @@
-import { TABLE_MAX_COLUMNS, TABLE_MAX_ROWS } from '@pb/shared/card-limits';
+import { TABLE_MAX_COLUMNS, TABLE_MAX_ROWS } from '@gobbit/shared/card-limits';
 import type { TablePayload } from '../../cards/payload-guards';
 
 /** Pure edits on a table payload; rows always stay aligned with the columns. */

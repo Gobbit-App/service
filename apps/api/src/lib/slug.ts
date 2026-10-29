@@ -1,5 +1,5 @@
 import slugify from '@sindresorhus/slugify';
-import { SLUG_MAX } from '@pb/shared';
+import { SLUG_MAX } from '@gobbit/shared';
 
 export function toSlug(input: string): string {
   const slugified = slugify(input);

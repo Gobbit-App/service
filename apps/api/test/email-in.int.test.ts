@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { Webhook } from 'svix';
-import { ingestJobs } from '@pb/db';
+import { ingestJobs } from '@gobbit/db';
 import type { IngestQueue } from '../src/jobs/ingest-queue';
 import type { InboundEmail } from '../src/ingest/email-mapping';
 import type { ResendInbound } from '../src/ingest/resend-inbound';

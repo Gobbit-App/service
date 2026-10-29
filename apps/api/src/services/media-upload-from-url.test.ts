@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AssetRow } from '@pb/db';
+import type { AssetRow } from '@gobbit/db';
 import { captureLogger } from '../../test/capture-logger';
 import type { SafeImageFetchResult } from '../fetch/safe-fetch';
 import { MemoryMediaStore } from '../media/media-store';

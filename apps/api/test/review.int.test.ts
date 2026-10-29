@@ -9,9 +9,9 @@ import {
   type IngestJobRow,
   type ItemRow,
   type UserRow,
-} from '@pb/db';
-import { addMember, createAccountUser, createAsset, createDeck, createItem } from '@pb/db/test';
-import type { DedupVerdict } from '@pb/shared';
+} from '@gobbit/db';
+import { addMember, createAccountUser, createAsset, createDeck, createItem } from '@gobbit/db/test';
+import type { DedupVerdict } from '@gobbit/shared';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
 import type { IngestUploadStore } from '../src/media/ingest-uploads';
 import type { StoredImage } from '../src/media/media-store';

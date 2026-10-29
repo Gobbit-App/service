@@ -1,4 +1,4 @@
-import type { ImportDraft } from '@pb/shared';
+import type { ImportDraft } from '@gobbit/shared';
 import { HttpError } from '../errors/http-errors';
 import { parseDirectDraft, suggestedCategory, type DirectDraft } from '../services/ingest.service';
 

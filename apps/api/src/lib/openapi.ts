@@ -1,4 +1,4 @@
-import { problemSchema } from '@pb/shared';
+import { problemSchema } from '@gobbit/shared';
 
 /** D29: every authenticated route accepts the session cookie or the same token as a bearer. */
 export const AUTH_SECURITY: Array<Record<string, string[]>> = [

@@ -1,6 +1,6 @@
 import { eq, inArray, sql, type SQL } from 'drizzle-orm';
-import { can, type MemberRole } from '@pb/shared';
-import { categories, itemCategories, items } from '@pb/db';
+import { can, type MemberRole } from '@gobbit/shared';
+import { categories, itemCategories, items } from '@gobbit/db';
 
 /** True when `role` may see `private` categories (and the cards only they hold). */
 export function canSeePrivate(role: MemberRole | null): boolean {

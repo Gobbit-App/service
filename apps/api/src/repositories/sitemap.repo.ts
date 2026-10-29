@@ -1,5 +1,5 @@
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
-import { categories, decks, itemCategories, items, type DbExecutor } from '@pb/db';
+import { categories, decks, itemCategories, items, type DbExecutor } from '@gobbit/db';
 import { itemHasVisibleCategory } from '../access/visibility';
 
 /** D179: anonymous readers have no role. */

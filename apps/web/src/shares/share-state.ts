@@ -1,4 +1,4 @@
-import type { AutoPublishOutcome, ShareState, ShareSummary } from '@pb/shared';
+import type { AutoPublishOutcome, ShareState, ShareSummary } from '@gobbit/shared';
 
 /** D196: the status line of a share. */
 const STATE_LABEL: Readonly<Record<ShareState, string>> = {

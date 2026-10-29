@@ -1,4 +1,4 @@
-import { SEARCH_Q_MAX, searchModes, type SearchMode } from '@pb/shared/search';
+import { SEARCH_Q_MAX, searchModes, type SearchMode } from '@gobbit/shared/search';
 
 /** Typed `?q=&mode=` of `/d/$slug/search` (D79); a result list is a shareable URL. */
 export interface SearchParams {

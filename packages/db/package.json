@@ -1,5 +1,5 @@
 {
-  "name": "@pb/db",
+  "name": "@gobbit/db",
   "private": true,
   "license": "MPL-2.0",
   "type": "module",
@@ -19,7 +19,7 @@
     "build": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@pb/shared": "workspace:*",
+    "@gobbit/shared": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "pg": "^8.23.0",
     "tsx": "^4.23.15",

@@ -1,5 +1,5 @@
 import { setTimeout as sleep } from 'node:timers/promises';
-import { createDb, createPool } from '@pb/db';
+import { createDb, createPool } from '@gobbit/db';
 import { parseEnv } from '../src/env';
 import { createBoss } from '../src/jobs/boss';
 import { ensureQueues } from '../src/jobs/ensure-queues';

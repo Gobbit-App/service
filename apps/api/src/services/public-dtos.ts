@@ -1,5 +1,5 @@
-import type { CategoryRow, ItemRow } from '@pb/db';
-import type { PublicItem } from '@pb/shared';
+import type { CategoryRow, ItemRow } from '@gobbit/db';
+import type { PublicItem } from '@gobbit/shared';
 
 export type PublicCategorySource = Pick<CategoryRow, 'slug' | 'name' | 'visibility'>;
 

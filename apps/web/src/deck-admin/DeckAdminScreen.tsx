@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import { can } from '@pb/shared/authz';
+import { can } from '@gobbit/shared/authz';
 import { useOnline } from '../api/offline';
 import { categoriesQuery, deckQuery, meQuery } from '../api/queries';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';

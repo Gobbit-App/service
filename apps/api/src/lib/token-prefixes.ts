@@ -1,4 +1,4 @@
-import { INGEST_TOKEN_PREFIX } from '@pb/shared';
+import { INGEST_TOKEN_PREFIX } from '@gobbit/shared';
 
 /**
  * ADR-046: prefixes of tokens that are never sessions. `session-auth` refuses a bearer with one of

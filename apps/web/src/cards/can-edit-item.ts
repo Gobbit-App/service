@@ -1,5 +1,5 @@
-import type { Deck, Item } from '@pb/shared';
-import { can } from '@pb/shared/authz';
+import type { Deck, Item } from '@gobbit/shared';
+import { can } from '@gobbit/shared/authz';
 
 /**
  * R8: who sees "Edit". Mirrors the API (`item.update`, and D96 for proposals: only the creator

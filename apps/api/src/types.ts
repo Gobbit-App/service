@@ -1,5 +1,5 @@
-import type { SessionRow } from '@pb/db';
-import type { ActorVia } from '@pb/shared';
+import type { SessionRow } from '@gobbit/db';
+import type { ActorVia } from '@gobbit/shared';
 
 export interface CurrentUser {
   id: string;

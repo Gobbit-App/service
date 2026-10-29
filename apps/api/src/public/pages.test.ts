@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PublicDeck, PublicItem } from '@pb/shared';
+import type { PublicDeck, PublicItem } from '@gobbit/shared';
 import {
   badRequestPage,
   categoryPage,

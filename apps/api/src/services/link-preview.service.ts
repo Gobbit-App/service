@@ -4,7 +4,7 @@ import {
   LINK_PREVIEW_CACHE_TTL_MS,
   LINK_PREVIEW_RATE_PER_HOUR,
   type LinkPreview,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { authorize, type MembershipLookup } from '../access/authorize';
 import type { ExtractedPage } from '../fetch/extract-page';
 import { fetchLinkPreview } from '../fetch/link-preview';

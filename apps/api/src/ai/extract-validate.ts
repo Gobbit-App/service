@@ -13,8 +13,8 @@ import {
   type ItemCreate,
   type LinkPayload,
   type LinkPreview,
-} from '@pb/shared';
-import { LOCKED_CAPTION_MAX, type LockedHostMatch } from '@pb/shared/links';
+} from '@gobbit/shared';
+import { LOCKED_CAPTION_MAX, type LockedHostMatch } from '@gobbit/shared/links';
 import { isGenericLockedTitle } from '../fetch/locked-host-preview';
 import { proposeCardInputSchema } from './extract-prompt';
 

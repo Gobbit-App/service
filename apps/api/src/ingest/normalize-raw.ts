@@ -1,4 +1,4 @@
-import type { IngestRaw, NormalizedSource } from '@pb/shared';
+import type { IngestRaw, NormalizedSource } from '@gobbit/shared';
 import { extractPage, type ExtractedPage } from '../fetch/extract-page';
 import { buildNormalizedSource } from '../fetch/normalize-source';
 import type { SafeFetch } from '../fetch/safe-fetch';

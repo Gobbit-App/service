@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ShareSummary } from '@pb/shared';
+import type { ShareSummary } from '@gobbit/shared';
 import { ApiError } from '../api/api-error';
 import { makeShare } from '../test/fixtures';
 import { renderWithClient } from '../test/render';

@@ -1,11 +1,11 @@
-import type { ItemRow } from '@pb/db';
+import type { ItemRow } from '@gobbit/db';
 import type {
   MemberRole,
   PublicSearchQuery,
   PublicSearchResponse,
   SearchLogMode,
   SearchResponse,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { SearchRepo } from '../repositories/search.repo';
 import type { SearchQueriesRepo } from '../repositories/search-queries.repo';

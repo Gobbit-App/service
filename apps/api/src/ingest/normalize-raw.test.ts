@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { IngestRaw } from '@pb/shared';
-import { ARTICLE_PAGE, OG_ONLY_PAGE } from '@pb/db/test/ingest-pages';
+import type { IngestRaw } from '@gobbit/shared';
+import { ARTICLE_PAGE, OG_ONLY_PAGE } from '@gobbit/db/test/ingest-pages';
 import type { SafeFetch, SafeFetchResult } from '../fetch/safe-fetch';
 import { normalizeRaw } from './normalize-raw';
 

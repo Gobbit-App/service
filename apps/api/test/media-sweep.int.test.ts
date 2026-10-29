@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq, inArray, sql } from 'drizzle-orm';
-import { assets, items, type AssetRow, type DeckRow } from '@pb/db';
-import type { ItemStatus } from '@pb/shared';
-import { MEDIA_ORPHAN_GRACE_DAYS } from '@pb/shared';
-import { createAsset, createDeck, createItem } from '@pb/db/test';
+import { assets, items, type AssetRow, type DeckRow } from '@gobbit/db';
+import type { ItemStatus } from '@gobbit/shared';
+import { MEDIA_ORPHAN_GRACE_DAYS } from '@gobbit/shared';
+import { createAsset, createDeck, createItem } from '@gobbit/db/test';
 import { MemoryMediaStore } from '../src/media/media-store';
 import { createAssetsRepo } from '../src/repositories/assets.repo';
 import { createOrphanSweeper } from '../src/services/media-sweep';

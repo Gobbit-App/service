@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 import { cardAge } from '../../lib/card-age';
 import { relativeTime } from '../../lib/relative-time';
 import { sourceKindLabel } from '../source-kind';

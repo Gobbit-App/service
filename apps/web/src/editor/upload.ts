@@ -2,8 +2,8 @@ import type {
   MediaAssetConfirmRequest,
   MediaSignResponse,
   MediaUploadFailureRequest,
-} from '@pb/shared';
-import { MEDIA_UPLOAD_FAILURE_MESSAGE_MAX } from '@pb/shared/media-constants';
+} from '@gobbit/shared';
+import { MEDIA_UPLOAD_FAILURE_MESSAGE_MAX } from '@gobbit/shared/media-constants';
 
 /** Why an upload ended without a photo. */
 export type UploadFailure =

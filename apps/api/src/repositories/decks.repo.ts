@@ -1,6 +1,6 @@
 import { and, eq, isNotNull, isNull, ne } from 'drizzle-orm';
-import type { DeckKind, MemberRole } from '@pb/shared';
-import { decks, memberships, type DeckRow, type DbExecutor } from '@pb/db';
+import type { DeckKind, MemberRole } from '@gobbit/shared';
+import { decks, memberships, type DeckRow, type DbExecutor } from '@gobbit/db';
 
 /** Stored slug of a personal deck (Phase 3B). Internal: clients only ever see `me`. */
 export function personalDeckSlug(accountId: string): string {

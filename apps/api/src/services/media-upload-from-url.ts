@@ -1,4 +1,4 @@
-import type { AssetSource, MediaAsset } from '@pb/shared';
+import type { AssetSource, MediaAsset } from '@gobbit/shared';
 import type { SafeImageFetch } from '../fetch/safe-fetch';
 import type { Logger } from '../lib/logger';
 import { toMediaAsset } from '../media/asset-dto';

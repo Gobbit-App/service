@@ -1,5 +1,5 @@
-import type { LinkPreview } from '@pb/shared';
-import type { LockedHostMatch } from '@pb/shared/links';
+import type { LinkPreview } from '@gobbit/shared';
+import type { LockedHostMatch } from '@gobbit/shared/links';
 
 /** Words a login wall or consent page puts around the site's name. */
 const WALL_WORDS = /\b(log ?in|sign ?in|sign ?up|welcome to|join|on|or|and)\b/gu;

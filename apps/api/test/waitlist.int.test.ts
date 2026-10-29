@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { asc, eq } from 'drizzle-orm';
-import { WAITLIST_JOIN_PER_EMAIL_PER_HOUR, WAITLIST_JOIN_PER_IP_PER_HOUR } from '@pb/shared';
-import { waitlistEntries, waitlistEvents, type WaitlistEntryRow } from '@pb/db';
+import { WAITLIST_JOIN_PER_EMAIL_PER_HOUR, WAITLIST_JOIN_PER_IP_PER_HOUR } from '@gobbit/shared';
+import { waitlistEntries, waitlistEvents, type WaitlistEntryRow } from '@gobbit/db';
 import { createWaitlistRepo } from '../src/repositories/waitlist.repo';
 import { buildServices } from '../src/services';
 import { createPruneWaitlist } from '../src/jobs/prune-waitlist';

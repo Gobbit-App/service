@@ -1,4 +1,4 @@
-import { RESERVED_DECK_SLUG } from '@pb/shared/decks';
+import { RESERVED_DECK_SLUG } from '@gobbit/shared/decks';
 
 /** Storage key for the last opened deck slug. */
 export const LAST_DECK_KEY = 'gobbit:last-deck';

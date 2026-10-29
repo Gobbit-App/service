@@ -1,4 +1,4 @@
-import type { ItemListQuery } from '@pb/shared';
+import type { ItemListQuery } from '@gobbit/shared';
 
 /** First segment of every search query key. */
 export const SEARCH_KEY = 'search';

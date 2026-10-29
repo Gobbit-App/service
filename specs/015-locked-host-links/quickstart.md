@@ -31,6 +31,6 @@ Use a public post of your own or a public test account, not other people's conte
 ## 4. Checks
 
 1. Make one of the cards due: `UPDATE link_checks SET next_check_at = now() WHERE item_id = '<id>'` (or delete its row).
-2. Run the sweep: `pnpm --filter @pb/api exec tsx scripts/run-job.ts link-check-sweep`. The row has `status = 'unchecked'` and null `http_status`. The worker log shows no request to the host.
+2. Run the sweep: `pnpm --filter @gobbit/api exec tsx scripts/run-job.ts link-check-sweep`. The row has `status = 'unchecked'` and null `http_status`. The worker log shows no request to the host.
 3. `POST /items/<id>/link-check` answers 422 "Links to TikTok can't be checked automatically".
 4. On the deployed instance, repeat section 2 steps 1–3 and tick demo 4 in `PLAN.md`.

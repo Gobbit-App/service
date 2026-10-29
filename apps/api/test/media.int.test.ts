@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { DeckRow, UserRow } from '@pb/db';
-import { MEDIA_SIGN_RATE_PER_HOUR } from '@pb/shared';
-import { addMember, createAccountUser, createDeck } from '@pb/db/test';
+import type { DeckRow, UserRow } from '@gobbit/db';
+import { MEDIA_SIGN_RATE_PER_HOUR } from '@gobbit/shared';
+import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
 import { json, setupApiTest, type ApiTestContext } from './helpers';
 
 // Fake credentials (split so secret scanners don't flag them): signatures are checked locally.

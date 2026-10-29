@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ItemRow } from '@pb/db';
-import type { LinkPayload, MediaAsset } from '@pb/shared';
+import type { ItemRow } from '@gobbit/db';
+import type { LinkPayload, MediaAsset } from '@gobbit/shared';
 import { createLinkSnapshotHandler } from './link-snapshot';
 
 const updatedAt = new Date('2026-10-22T10:00:00.000Z');

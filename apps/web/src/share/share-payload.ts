@@ -1,4 +1,4 @@
-import { INGEST_IMAGE_MIMES, INGEST_MAX_IMAGES } from '@pb/shared/ingest-constants';
+import { INGEST_IMAGE_MIMES, INGEST_MAX_IMAGES } from '@gobbit/shared/ingest-constants';
 
 /** D98: how long a shared payload waits in IndexedDB for the confirm screen. */
 export const SHARE_TTL_MS = 60 * 60 * 1000;

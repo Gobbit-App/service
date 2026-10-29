@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import type { LinkPreview as FetchedPreview } from '@pb/shared';
+import type { LinkPreview as FetchedPreview } from '@gobbit/shared';
 import { useOnline } from '../../api/offline';
 import { useLinkPreview } from '../use-link-preview';
 import { isHttpUrl } from '../validate';

@@ -4,7 +4,7 @@ import {
   EXTRACT_MAX_CATEGORIES,
   EXTRACT_TITLE_TARGET,
   entityKinds,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { ExtractInput } from './extractor';
 
 export const PROPOSE_CARD_TOOL_NAME = 'propose_card';

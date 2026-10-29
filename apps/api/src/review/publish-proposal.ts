@@ -1,5 +1,5 @@
-import type { Db, ItemRow } from '@pb/db';
-import type { AutoPublishOutcome } from '@pb/shared';
+import type { Db, ItemRow } from '@gobbit/db';
+import type { AutoPublishOutcome } from '@gobbit/shared';
 import type { ItemEventInput } from '../events/item-event';
 import { createCategoriesRepo, type CategoriesRepo } from '../repositories/categories.repo';
 import { createIngestJobsRepo, type IngestJobsRepo } from '../repositories/ingest-jobs.repo';

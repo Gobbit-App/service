@@ -1,5 +1,5 @@
-import type { NewLlmCallRow } from '@pb/db';
-import type { LlmPurpose } from '@pb/shared';
+import type { NewLlmCallRow } from '@gobbit/db';
+import type { LlmPurpose } from '@gobbit/shared';
 import { lineSink } from '../lib/logger';
 
 /**

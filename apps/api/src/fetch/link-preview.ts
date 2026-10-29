@@ -3,7 +3,7 @@ import {
   LINK_PREVIEW_IMAGE_URL_MAX,
   LINK_PREVIEW_TITLE_MAX,
   type LinkPreview,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { ExtractedPage } from './extract-page';
 import type { SafeFetch } from './safe-fetch';
 

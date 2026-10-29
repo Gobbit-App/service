@@ -1,4 +1,4 @@
-import type { SearchResponse } from '@pb/shared';
+import type { SearchResponse } from '@gobbit/shared';
 import { createApiClient, parseApiCliArgs } from './lib/api-cli';
 
 /** D82: `pnpm search:query [--deck search-demo] <query…>` prints the fused hits with their `why`. */

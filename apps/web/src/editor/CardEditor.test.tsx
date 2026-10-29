@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ItemType } from '@pb/shared';
+import type { ItemType } from '@gobbit/shared';
 import { ApiError } from '../api/api-error';
 import { requests, respond } from '../test/api-mock';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';

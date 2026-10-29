@@ -1,8 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { itemEvents, items, users, type DeckRow, type UserRow } from '@pb/db';
-import { addMember, createAccountUser, createCategory, createDeck } from '@pb/db/test';
-import { itemEventPageSchema, type ItemEvent } from '@pb/shared';
+import { itemEvents, items, users, type DeckRow, type UserRow } from '@gobbit/db';
+import { addMember, createAccountUser, createCategory, createDeck } from '@gobbit/db/test';
+import { itemEventPageSchema, type ItemEvent } from '@gobbit/shared';
 import { buildServices } from '../src/services';
 import { createItemsRepo } from '../src/repositories/items.repo';
 import { createPruneDeletedItems } from '../src/jobs/prune-deleted-items';

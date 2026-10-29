@@ -1,4 +1,4 @@
-import type { ExtractionSummary, ItemCreate, NormalizedSource } from '@pb/shared';
+import type { ExtractionSummary, ItemCreate, NormalizedSource } from '@gobbit/shared';
 import {
   correctionMessage,
   shouldEscalate,

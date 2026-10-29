@@ -4,7 +4,7 @@ import {
   magicLinkRequestSchema,
   okSchema,
   tokenExchangeResponseSchema,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { Context } from 'hono';
 import type { AppEnv, Authenticated } from '../types';
 import type { Env } from '../env';

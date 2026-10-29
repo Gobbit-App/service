@@ -19,7 +19,7 @@ Decisions continue the project-wide numbering; Phase 6 reserves D129–D147 (`sp
 
 - **Decision**:
   - `DELETE /items/{id}` stays a soft delete (`deleted_at = now()`), permission `item.delete` (owner, maintainer; co-owners are owners). Status is untouched, so undelete only clears `deleted_at`.
-  - `POST /items/{id}/undelete` (`item.delete`) clears `deleted_at` when it is within `ITEM_UNDELETE_DAYS = 30` (`packages/shared/src/items/constants.ts`, subpath `@pb/shared/item-constants`); later → 410 `/problems/undo-expired`. Live card → idempotent 200.
+  - `POST /items/{id}/undelete` (`item.delete`) clears `deleted_at` when it is within `ITEM_UNDELETE_DAYS = 30` (`packages/shared/src/items/constants.ts`, subpath `@gobbit/shared/item-constants`); later → 410 `/problems/undo-expired`. Live card → idempotent 200.
   - `GET /decks/{id}/items?status=deleted` (`item.delete`, else 403) lists deleted cards with `status <> 'proposed'` and `deleted_at` within the window, ordered `deleted_at DESC, id DESC`, cursor over `(deleted_at, id)`. The DTO gains optional `deletedAt`. `status` in the list query becomes `itemStatuses ∪ {'deleted'}`; the DB enum is unchanged.
   - Proposals soft-deleted by `review.service.discard` or by `publish {mode:'update'}` (D106) are excluded from the listing and are 404 to undelete.
   - A weekly pg-boss job `prune-deleted-items` (`DELETED_ITEM_PRUNE_CRON = '0 5 * * 0'`, singleton queue) hard-deletes items with `deleted_at < now() − 30 days`, proposals included. FKs already handle the rest (`item_categories`, `favorites`, `og_images` cascade; `ingest_jobs.result_item_id`, `llm_calls.item_id` set null), so no FK migration is needed.

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import type { CalcPayload } from './payload-guards';
-import { evaluateCalc, formatCalcResult } from '@pb/shared/calc';
+import { evaluateCalc, formatCalcResult } from '@gobbit/shared/calc';
 
 /** Calculator component for evaluating mathematical expressions. */
 export function CalcCard({ payload }: { payload: CalcPayload }): ReactElement {

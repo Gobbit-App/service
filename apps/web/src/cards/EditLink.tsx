@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { Deck, Item } from '@pb/shared';
+import type { Deck, Item } from '@gobbit/shared';
 import type { ReactElement } from 'react';
 import { meQuery } from '../api/queries';
 import { IconLink } from '../ui/buttons/IconLink';

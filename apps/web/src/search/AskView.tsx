@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import { ASK_QUESTION_MIN } from '@pb/shared/search';
+import { ASK_QUESTION_MIN } from '@gobbit/shared/search';
 import { askDeck } from '../api/queries';
 import { NavLink } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
