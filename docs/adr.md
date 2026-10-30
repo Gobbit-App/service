@@ -540,3 +540,13 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 - **Form**: post/redirect/get through `waitlist.join` only (ADR-061), so the page keeps the no-enumeration rule and the limits.
 
 **Rationale**: link previews and first visits never carry a cookie, so they get real HTML with preview tags at the root, while members (who always have the cookie) keep the app at `/` with no change to `start_url`, bookmarks or the 401 logic. An installed app serves `/` from the service worker, so the SPA has to route its own signed-out users. Rendering in the API reuses the public-page code and lets the form reach the service that enforces the waitlist rules. Moving the app off `/`, a static page in the web image, a landing route inside the SPA and forward auth in Caddy were rejected (D226). Details: [`docs/design/waitlist.md`](design/waitlist.md#landing-page-030-d226d230-d242-adr-063).
+
+## ADR-064: Platform admins from an env list (D234)
+
+**Decision**: Operator-only surfaces live under `/admin/*` and are open only to platform admins, the emails listed in `PLATFORM_ADMINS` (comma-separated, trimmed, lower-cased, empty by default).
+
+- **Guard**: one middleware on `/admin/*` (`access/platform-admin.ts`) runs after session auth and before request validation. Signed-out callers get the usual 401; everyone else gets `404 /problems/not-found` for every admin URL, valid or not, so the surface is invisible (ADR-004). Admin services accept only the branded `PlatformAdmin` it returns.
+- **Accountability (constitution VIII)**: each refusal records `admin.denied` (`not_admin` with the actor id, or `signed_out`; the route label, never the path or body); start-up records `admin.config` with the number of admins, never the emails, at `warn` when production has none. Admin actions record their own events with the admin as actor (032: `waitlist.admin`, `waitlist.admin_list` and `waitlist_events` rows).
+- **Clients**: `GET /me` carries `isPlatformAdmin`, so the PWA shows admin links only to admins; admin data is never persisted offline.
+
+**Rationale**: one or two operators need no grant UI or migration, and an env list can't be widened by a compromised session or a stray DB write. A 404 doesn't advertise the surface. Phase 12 reuses the same guard for `/admin/domains`. Alternatives considered: a `users.is_platform_admin` column (needs a bootstrap path and widens what a DB write grants), owning a "system" deck (overloads deck roles), 403 (reveals the surface). Details: [`docs/design/auth.md`](design/auth.md#platform-admins-d234), [`docs/design/waitlist.md`](design/waitlist.md#admin-032-d234d238-adr-064).

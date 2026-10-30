@@ -1,6 +1,13 @@
-import { and, eq, gt, lt, ne, sql } from 'drizzle-orm';
-import type { WaitlistEventAction, WaitlistKind, WaitlistSource } from '@pb/shared';
+import { and, asc, count, desc, eq, gt, lt, ne, sql, type SQL } from 'drizzle-orm';
+import type {
+  CursorData,
+  WaitlistEventAction,
+  WaitlistKind,
+  WaitlistSource,
+  WaitlistStatus,
+} from '@pb/shared';
 import {
+  users,
   waitlistEntries,
   waitlistEvents,
   type DbExecutor,
@@ -34,8 +41,55 @@ export interface NewWaitlistEvent {
 
 const live = ne(waitlistEntries.status, 'removed');
 
+export interface AdminListQuery {
+  status: WaitlistStatus;
+  kind?: WaitlistKind;
+  /** `createdAt` carries the value of the status's sort column (`adminSortValue`). */
+  cursor?: CursorData;
+  limit: number;
+}
+
+export type AdminListRow = WaitlistEntryRow & { invitedByName: string | null };
+
+/**
+ * 032 contract: the confirmed queue is oldest-confirmed first (who has waited longest);
+ * invited is newest invite first; pending and removed are newest join first. `id` breaks ties.
+ */
+const ADMIN_ORDER = {
+  confirmed: { key: 'confirmedAt', ascending: true },
+  invited: { key: 'invitedAt', ascending: false },
+  pending: { key: 'createdAt', ascending: false },
+  removed: { key: 'createdAt', ascending: false },
+} as const satisfies Record<
+  WaitlistStatus,
+  { key: 'confirmedAt' | 'invitedAt' | 'createdAt'; ascending: boolean }
+>;
+
+/** The sort value a page's cursor carries for `row` (its status's order column). */
+export function adminSortValue(row: WaitlistEntryRow): Date {
+  return row[ADMIN_ORDER[row.status].key] ?? row.createdAt;
+}
+
+function adminOrder(q: AdminListQuery): { where?: SQL; orderBy: SQL[] } {
+  const { key, ascending } = ADMIN_ORDER[q.status];
+  const column = waitlistEntries[key];
+  const by = ascending ? asc : desc;
+  const orderBy = [by(column), by(waitlistEntries.id)];
+  if (!q.cursor) return { orderBy };
+  const after = sql`(${column}, ${waitlistEntries.id})`;
+  const at = sql`(${q.cursor.createdAt}::timestamptz, ${q.cursor.id}::uuid)`;
+  return { where: ascending ? sql`${after} > ${at}` : sql`${after} < ${at}`, orderBy };
+}
+
 /** D217: every status change goes through `waitlist.service`; this module is SQL only. */
 export function createWaitlistRepo(db: DbExecutor) {
+  const selectForAdmin = () =>
+    db
+      .select({ entry: waitlistEntries, invitedByName: users.displayName })
+      .from(waitlistEntries)
+      .leftJoin(users, eq(users.id, waitlistEntries.invitedBy))
+      .$dynamic();
+
   return {
     async findLiveByEmail(email: string): Promise<WaitlistEntryRow | null> {
       const [row] = await db
@@ -53,6 +107,51 @@ export function createWaitlistRepo(db: DbExecutor) {
         .where(eq(waitlistEntries.id, id))
         .limit(1);
       return row ?? null;
+    },
+
+    /** 032: row lock for an admin action; a concurrent invite/remove waits for this one. */
+    async lockById(id: string): Promise<WaitlistEntryRow | null> {
+      const [row] = await db
+        .select()
+        .from(waitlistEntries)
+        .where(eq(waitlistEntries.id, id))
+        .limit(1)
+        .for('update');
+      return row ?? null;
+    },
+
+    /** 032: one entry with the inviter's display name (the admin DTO after an action). */
+    async findForAdmin(id: string): Promise<AdminListRow | null> {
+      const [row] = await selectForAdmin().where(eq(waitlistEntries.id, id)).limit(1);
+      return row ? { ...row.entry, invitedByName: row.invitedByName } : null;
+    },
+
+    /** 032: one page of one status (keyset, `ADMIN_ORDER`), with the inviter's display name. */
+    async listForAdmin(q: AdminListQuery): Promise<AdminListRow[]> {
+      const { where, orderBy } = adminOrder(q);
+      const rows = await selectForAdmin()
+        .where(
+          and(
+            eq(waitlistEntries.status, q.status),
+            q.kind ? eq(waitlistEntries.kind, q.kind) : undefined,
+            where,
+          ),
+        )
+        .orderBy(...orderBy)
+        .limit(q.limit);
+      return rows.map((r) => ({ ...r.entry, invitedByName: r.invitedByName }));
+    },
+
+    /** 032: entries per status (every status present, zeros included), optionally of one kind. */
+    async countsByStatus(kind?: WaitlistKind): Promise<Record<WaitlistStatus, number>> {
+      const rows = await db
+        .select({ status: waitlistEntries.status, n: count() })
+        .from(waitlistEntries)
+        .where(kind ? eq(waitlistEntries.kind, kind) : undefined)
+        .groupBy(waitlistEntries.status);
+      const counts = { pending: 0, confirmed: 0, invited: 0, removed: 0 };
+      for (const r of rows) counts[r.status] = r.n;
+      return counts;
     },
 
     /** Null when a concurrent join already holds the live entry for this email. */

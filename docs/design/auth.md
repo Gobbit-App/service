@@ -25,6 +25,12 @@ _Overview: [architecture.md](../architecture.md). Decisions: [adr.md](../adr.md)
 - `registration.mode` is recorded in `server.ts` after the listener starts, correlated by a per-process `bootId` (the decision logger accepts `bootId` besides `requestId`/`jobId`), not in `app.ts`, which every test builds.
 - The "Join the waitlist" links on `/sign-in` and `/auth/error?reason=closed` ship with 030 (they target `/welcome`).
 
+### Platform admins (D234)
+
+- **Who**: `PLATFORM_ADMINS`, a comma-separated email list (trimmed, lower-cased, empty by default). No column, no UI to grant it; a compromised session can't widen it. `admin.config` records the count (never the emails) at start-up, at `warn` when production has none.
+- **Guard**: `access/platform-admin.ts` — middleware on `/admin/*` runs after session auth (signed-out → 401) and before request validation; anyone else gets `404 /problems/not-found` (ADR-004) and an `admin.denied` event (`not_admin` with `actorId`, or `signed_out`; route label only). It returns a branded `PlatformAdmin` that admin services require.
+- **Web**: `GET /me` carries `isPlatformAdmin`; Settings shows a "Platform" section with the links, and `/admin/*` screens render not-found otherwise. First user: 032's waitlist admin (ADR-064).
+
 ### Sessions (D27–D31)
 
 - `sessions` rows are opaque random tokens stored as hashes, `kind` `cookie | bearer`, sliding lifetime `SESSION_TTL_DAYS` (90): `last_seen_at`/`expires_at` are bumped in one `UPDATE` at most once an hour.

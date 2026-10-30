@@ -20,6 +20,7 @@ import { childLogger, logDbIdleError } from './lib/logger';
 import { checkCloudinaryCredentials } from './media/cloudinary-check';
 import { recordRegistrationMode } from './services/registration-mode';
 import { recordAnalyticsConfig } from './public/analytics';
+import { recordAdminConfig } from './access/platform-admin';
 
 const log = childLogger('api');
 
@@ -104,6 +105,7 @@ async function main() {
   const bootId = randomUUID();
   recordRegistrationMode(env, { bootId });
   recordAnalyticsConfig(env, { bootId });
+  recordAdminConfig(env, { bootId });
   if (env.CLOUDINARY_URL) void checkCloudinaryCredentials(env.CLOUDINARY_URL);
   else log.warn('CLOUDINARY_URL not set; image uploads and OG images are disabled');
 

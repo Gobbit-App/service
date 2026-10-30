@@ -31,6 +31,8 @@ export const meSchema = z.object({
     displayName: z.string(),
   }),
   decks: z.array(deckSchema),
+  /** 032: the address is in `PLATFORM_ADMINS` (the app shows the Waitlist link). */
+  isPlatformAdmin: z.boolean(),
 });
 
 export const callbackQuerySchema = z.object({ token: z.string().min(1).max(256) });

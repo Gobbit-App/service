@@ -57,6 +57,9 @@ x-api-env: &api-env
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR: ${WAITLIST_JOIN_PER_EMAIL_PER_HOUR:-3}
   # D232: Umami website id (a UUID, not a secret). Empty → the landing page has no tracker.
   ANALYTICS_SITE_ID: ${ANALYTICS_SITE_ID:-}
+  # D234/D236: platform admins (comma-separated emails) and the waitlist invite link lifetime.
+  PLATFORM_ADMINS: ${PLATFORM_ADMINS:-}
+  WAITLIST_INVITE_TTL_DAYS: ${WAITLIST_INVITE_TTL_DAYS:-7}
 
 services:
   api:

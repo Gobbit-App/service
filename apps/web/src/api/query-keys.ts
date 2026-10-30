@@ -1,4 +1,4 @@
-import type { ItemListQuery } from '@pb/shared';
+import type { ItemListQuery, WaitlistKind, WaitlistStatus } from '@pb/shared';
 
 /** First segment of every search query key. */
 export const SEARCH_KEY = 'search';
@@ -8,6 +8,9 @@ export const REVIEW_KEY = 'review';
 
 /** First segment of every activity-log key (D188: never persisted). */
 export const EVENTS_KEY = 'events';
+
+/** First segment of every platform-admin key (032: never persisted, the data holds emails). */
+export const ADMIN_KEY = 'admin';
 
 /** Which slice of a deck's items a list shows (D65 routes). */
 export type ItemFilter =
@@ -52,6 +55,11 @@ export const queryKeys = {
   share: (id: string) => ['share', id] as const,
   /** D188: never persisted (see `persist.ts`); `itemId` null = the whole deck. */
   events: (deckSlug: string, itemId: string | null) => [EVENTS_KEY, deckSlug, itemId] as const,
+  /** 032: prefix of every admin waitlist view (actions invalidate them all). */
+  adminWaitlistAll: [ADMIN_KEY, 'waitlist'] as const,
+  /** 032: never persisted (see `persist.ts`); `kind` null = every kind. */
+  adminWaitlist: (status: WaitlistStatus, kind: WaitlistKind | null) =>
+    [ADMIN_KEY, 'waitlist', status, kind] as const,
 };
 
 /** Query-string parameters for `GET /decks/{id}/items`. */

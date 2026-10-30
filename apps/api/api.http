@@ -472,3 +472,17 @@ Content-Type: application/json
 
 ### Confirm (the mailed link; 303 to APP_URL/welcome?confirmed=1 or ?confirm=invalid, 200 JSON without APP_URL)
 GET {{baseUrl}}/waitlist/confirm?token=<token>
+
+### ─── Waitlist admin (Phase 9, 032; platform admins in PLATFORM_ADMINS, 404 for everyone else) ───
+
+### Confirmed queue, longest waiting first (status=pending|confirmed|invited|removed, kind=…, cursor, limit ≤ 100)
+GET {{baseUrl}}/admin/waitlist?status=confirmed&limit=50
+Authorization: Bearer {{token}}
+
+### Invite (201; 200 = resend to an invited entry; 409 pending/removed; body.mailSent false = resend later)
+POST {{baseUrl}}/admin/waitlist/<entryId>/invite
+Authorization: Bearer {{token}}
+
+### Remove a pending or confirmed entry (204; already removed is a no-op; 409 for invited)
+DELETE {{baseUrl}}/admin/waitlist/<entryId>
+Authorization: Bearer {{token}}

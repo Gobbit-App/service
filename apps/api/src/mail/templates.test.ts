@@ -5,7 +5,27 @@ import {
   inviteEmail,
   waitlistConfirmEmail,
   waitlistExistingUserEmail,
+  waitlistInviteEmail,
 } from './templates';
+
+describe('waitlistInviteEmail (032)', () => {
+  const link = 'https://api.example.test/auth/callback?token=abc&x=<y>';
+
+  it('says you are in, with the link, its lifetime and the sign-in fallback', () => {
+    const mail = waitlistInviteEmail({ link, ttlDays: 5 });
+    expect(mail.subject).toBe("You're in — welcome to Gobbit");
+    expect(mail.text).toContain(link);
+    expect(mail.text).toContain('expires in 5 days');
+    expect(mail.text).toContain('sign-in screen');
+    expect(mail.text.trimEnd().endsWith('Gobbit')).toBe(true);
+  });
+
+  it('escapes the link in html', () => {
+    const mail = waitlistInviteEmail({ link, ttlDays: 7 });
+    expect(mail.html).toContain('token=abc&amp;x=&lt;y&gt;');
+    expect(mail.html).not.toContain('<y>');
+  });
+});
 
 describe('waitlistConfirmEmail (D218)', () => {
   const link = 'https://api.example.test/waitlist/confirm?token=abc&x=<y>';

@@ -23,6 +23,11 @@ describe('shouldPersistQuery (D79)', () => {
     expect(shouldPersistQuery(await settledQuery(queryKeys.review('family')))).toBe(false);
     expect(shouldPersistQuery(await settledQuery(queryKeys.reviewCount('family')))).toBe(false);
   });
+
+  it('never persists the admin waitlist, which holds emails (032)', async () => {
+    const key = queryKeys.adminWaitlist('confirmed', null);
+    expect(shouldPersistQuery(await settledQuery(key))).toBe(false);
+  });
 });
 
 describe('revalidateRestored', () => {
