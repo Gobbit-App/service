@@ -77,4 +77,27 @@ describe('IconLink and ButtonLink', () => {
     await userEvent.click(screen.getByRole('link', { name: 'Add card' }));
     expect(navigate.mock.calls.map(([href]) => href)).toEqual(['/settings', '/d/x/new']);
   });
+
+  it('a document ButtonLink leaves navigation to the browser (D226)', () => {
+    const navigate = vi.fn();
+    render(
+      <NavigateContext.Provider value={navigate}>
+        <ButtonLink href="/welcome" icon="send" label="Join the waitlist" document />
+      </NavigateContext.Provider>,
+    );
+    const link = screen.getByRole('link', { name: 'Join the waitlist' });
+    expect(link).toHaveAttribute('href', '/welcome');
+    expect(link).toHaveClass('button', 'button--icon');
+    // Seen after React's handler, then stopped so jsdom does not try to load the page.
+    let preventedByApp: boolean | undefined;
+    const observe = (event: Event) => {
+      preventedByApp = event.defaultPrevented;
+      event.preventDefault();
+    };
+    window.addEventListener('click', observe);
+    link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
+    window.removeEventListener('click', observe);
+    expect(preventedByApp).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
+  });
 });

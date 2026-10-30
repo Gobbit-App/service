@@ -89,6 +89,8 @@ const baseSchema = z.object({
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR: positiveInt(WAITLIST_JOIN_PER_EMAIL_PER_HOUR),
   /** D222: `waitlist` sends unknown emails to the waitlist; `open` lets anyone register. */
   REGISTRATION_MODE: z.enum(registrationModes).default('waitlist'),
+  /** D232: Umami website id; when set, the landing page carries the tracker tag. Off when unset. */
+  ANALYTICS_SITE_ID: z.uuid('ANALYTICS_SITE_ID must be a UUID').optional(),
   /** 032 (D234): comma-separated emails that may run `/admin/*`; trimmed and lower-cased. */
   PLATFORM_ADMINS: commaList.transform((list) => list.map((email) => email.toLowerCase())),
   /** 032: lifetime of the sign-in link in the "You're in" email. */

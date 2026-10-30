@@ -73,6 +73,86 @@ It records `waitlist.prune` with both counts.
 and status; an `invited` entry whose user has ever had a session counts as `joined`. No emails,
 tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC;`.
 
+## Landing page (030, D226–D230, D242, ADR-063)
+
+- **Addresses**: the API renders `GET /welcome` and `GET /welcome/joined` (`routes/landing.ts`,
+  plain `app.get`, outside OpenAPI) with 017's `layout()` and `public/landing.ts`. Canonical and
+  `og:url` are always `${APP_URL}/` (`landingUrl()` in `public-url.ts`); the root is the first
+  sitemap entry. All copy is in `public/landing-copy.ts` (`LANDING_COPY_EN`), so a translation is
+  a second object of the same shape.
+- **Caddy cookie rule**: `@landing` (path `/`, no `gobbit_session` cookie) rewrites `/` to
+  `/welcome?{query}` and sets `X-Gobbit-Via: root`; `@welcome` proxies `/welcome[/joined]` and
+  strips any client-sent `X-Gobbit-Via`. With the cookie, `/` stays the SPA. Vite's dev proxy
+  sends `/welcome[/joined]` to the API but does not emulate the `/` rule.
+- **Signed-out app home (D227)**: a 401 on `/` (only `utm_*` in the query) sends the SPA to
+  `/welcome?from=app` with a full page load (`window.location.replace`); deep links still go to
+  `/sign-in?next=…`. The service worker's navigation denylist skips `/welcome[/joined]`, and links
+  into it from the app are document links (`ButtonLink document`, plain `<a>`).
+- **States**: `default`, `joined` (its own path, `noindex`), `confirmed` (`?confirmed=1`),
+  `confirm-invalid` (`?confirm=invalid`, form shown again), `invalid` (400/429 re-render,
+  `noindex`) and `signed-in` ("Open Gobbit", no form). Anonymous answers are
+  `public, max-age=300`; signed-in and re-rendered ones `private, no-store`; always `Vary: Cookie`.
+- **Form (D228)**: no JavaScript, `POST /welcome` urlencoded → `parseLandingForm` → 028's schema →
+  `waitlist.join({ …, source: 'landing' })`. Every accepted outcome (new, resend, known, existing
+  user, honeypot) is `303 /welcome/joined`; a validation failure is a 400 re-render with one
+  message per field and the typed values (escaped); a per-IP or per-email refusal is a 429
+  re-render with the values, a "Too many tries… about N minutes" notice and `Retry-After`.
+- **CSRF**: same-origin posts pass `hono/csrf` because its allowed list holds the origin of
+  `API_URL` (the app origin + `/api` in every deployment). If a deployment ever splits origins,
+  add `APP_URL`'s origin to `csrfOrigins`.
+- **Decision events (D242)**: `landing.render` per GET (`state`, `via` = `root | app | direct`,
+  `utmSource`) and `landing.form` per POST (`accepted`, `invalid` with field names only, `refused`
+  `per_ip | per_email` at `warn`). Honeypot and existing-user outcomes stay in 028's
+  `waitlist.join` events. Queries: `infra/README.md` § Waitlist.
+- **Preview image**: `og/landing.png` (1200×630) is rendered by `pnpm og:static`
+  (`landingTree()` in `share/og-template.ts`) and committed.
+
+## Landing analytics (031, D231–D233, D243, ADR-062)
+
+- **What**: self-hosted Umami (`umami` service, own `umami` database on the shared Postgres)
+  counts landing visitors without cookies. Setup and checks: `infra/README.md` § Landing analytics.
+- **Tag**: `public/analytics.ts` renders
+  `<script defer src="/stats/script.js" data-website-id data-host-url="/stats" data-domains data-do-not-track="true">`.
+  `layout()` adds it only when the page head carries `analytics` (`analyticsHead(env)`, set only
+  with `ANALYTICS_SITE_ID`), and only the landing renderer sets it, in every state. Public deck
+  pages, error pages, the sitemap and the SPA's `index.html` never carry it (unit, integration and
+  `pnpm budget` checks).
+- **Proxy**: Caddy sends `/stats/script.js` and `/stats/api/send` to Umami with the prefix
+  stripped; any other `/stats/*` is 404, so the dashboard is never on the app origin. The service
+  worker's navigation denylist skips `/stats/`.
+- **Conversion (D233)**: page views of `/welcome/joined` ÷ unique visitors of `/` and `/welcome`
+  in the same period (an Umami funnel). The record is `waitlist_summary`; Umami undercounts.
+  Smoke and the operator opt out with `localStorage umami.disabled = 1`.
+- **Decision event (D243)**: `analytics.config` once at API start-up (`enabled` with `host`, or
+  `disabled`; never the site id), sharing the start-up `bootId` with `registration.mode`.
+
+## Deviations from the 031 plan
+
+- Caddy uses three `handle` blocks (two proxied paths, then `/stats/*` 404) instead of one
+  `@stats` matcher, so the one-day `Cache-Control` applies only to the script.
+- `ANALYTICS_UPSTREAM` defaults to `gobbit-umami:3000` in Compose (a network alias), since `web`
+  is also on `dokploy-network`, where another project's `umami` could answer.
+- Umami v3 images are PostgreSQL-only and drop the `postgresql-` tag prefix: pinned
+  `ghcr.io/umami-software/umami:3.4.1`.
+- `STATS_HOST` defaults to `gobbit-stats.niranhome.win`, a first-level subdomain so Cloudflare's
+  universal certificate covers it.
+- The shell check lives in `apps/web/scripts/shell-check.ts` and runs inside `pnpm budget`.
+- "No tag elsewhere with the variable set" is an integration test
+  (`landing-analytics.int.test.ts`) over the real routes, not only unit tests per renderer.
+
+## Deviations from the 030 plan
+
+- The per-IP check runs inside `POST /welcome` (same 028 bucket, `rate_limit.refused` recorded)
+  instead of `public-rate-limit` middleware, so the 429 can re-render the typed values.
+- A 429 renders the `invalid` state with a page notice and no field errors.
+- `layout()` gained `css` and `headerLink` options and an `imageSize` for the preview image;
+  `sitemapXml` takes the root URL first.
+- The signed-out home goes to `/welcome?from=app` (keeping `utm_*`), so `via` can tell it apart.
+- Caddy uses a named `@welcome` matcher (two paths in one `handle` are not valid Caddyfile) and
+  the `X-Gobbit-Via` header carries the `root` rewrite to the API.
+- `ButtonLink` gained a `document` prop for links that leave the SPA.
+- `/auth/error?reason=closed` shows "Join the waitlist" and "Get a new link" (029 T032).
+
 ## Admin (032, D234–D238, ADR-064)
 
 Platform admins (`PLATFORM_ADMINS`, [auth](auth.md#platform-admins-d234)) work the list from the

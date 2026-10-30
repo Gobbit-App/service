@@ -18,6 +18,9 @@ export const LENIENT_PATHS = [
   '/auth/callback',
   '/sitemap.xml',
   '/robots.txt',
+  // 030: an expired cookie on the landing page shows the anonymous page, not a 401.
+  '/welcome',
+  '/welcome/joined',
 ];
 
 /**

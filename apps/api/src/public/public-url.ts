@@ -1,3 +1,13 @@
+/** 030: the landing page, served at the root for cookieless visitors (D226, D227). */
+export const LANDING_PATH = '/welcome';
+/** 030: the "check your email" page after a join (its own path so 031 can count it). */
+export const LANDING_JOINED_PATH = '/welcome/joined';
+
+/** D229: the landing page's canonical URL is the root, whatever path or state served it. */
+export function landingUrl(origin: string): string {
+  return `${origin}/`;
+}
+
 /** What a public page links to: the deck itself, one category, one card or a search (D182). */
 export type PageTarget =
   | { kind: 'deck'; slug: string }

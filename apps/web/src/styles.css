@@ -135,6 +135,11 @@ h3 {
   margin-top: 0;
 }
 
+.sign-in__join {
+  color: var(--color-muted);
+  margin-top: calc(var(--gutter) * 2);
+}
+
 .app-header {
   position: sticky;
   top: 0;
@@ -825,6 +830,13 @@ h3 {
 .error-state h1,
 .error-state h2 {
   font-size: 1.25rem;
+}
+
+.error-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .update-prompt {

@@ -13,10 +13,12 @@ import './styles.css';
 
 const persister = createIdbPersister();
 
-/** D66: a 401 anywhere sends the user to sign-in with the current path as `next`. */
+/** D66 / D227: a 401 sends the user to sign-in with the current path as `next`, or from the home to the landing page. */
 const queryClient = createAppQueryClient(() => {
   const target = unauthorizedRedirect(window.location);
-  if (target) router.history.replace(target);
+  if (!target) return;
+  if (target.full) window.location.replace(target.href);
+  else router.history.replace(target.href);
 });
 
 const router = createAppRouter({

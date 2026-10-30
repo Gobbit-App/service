@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { ogCardTree, privateCardTree, OG_WIDTH, OG_HEIGHT, type OgChild } from './og-template';
+import {
+  landingTree,
+  LANDING_OG_IMAGE_PATH,
+  ogCardTree,
+  privateCardTree,
+  OG_WIDTH,
+  OG_HEIGHT,
+  type OgChild,
+} from './og-template';
 
 /** Recursively collect all text strings from an OG node tree. */
 function collectText(node: OgChild | undefined): string[] {
@@ -149,5 +157,21 @@ describe('privateCardTree', () => {
 
   it('is identical across calls', () => {
     expect(privateCardTree()).toEqual(privateCardTree());
+  });
+});
+
+describe('landingTree (D229)', () => {
+  it('renders the brand, tagline and call to action at the OG size', () => {
+    const tree = landingTree();
+    expect(tree.props.style).toMatchObject({ width: OG_WIDTH, height: OG_HEIGHT });
+    expect(collectText(tree)).toEqual([
+      'Gobbit',
+      'A pocket of useful cards for your family and community',
+      'Join the waitlist',
+    ]);
+  });
+
+  it('is served from the web image as a static file', () => {
+    expect(LANDING_OG_IMAGE_PATH).toBe('/og/landing.png');
   });
 });

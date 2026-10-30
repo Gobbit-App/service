@@ -10,14 +10,32 @@ export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-/** D66: where a 401 sends the user, or null when they are already on a public page. */
+/** Where a 401 sends the user; `full` targets live outside the SPA (a page load, not a route). */
+export type UnauthorizedTarget = { href: string; full: boolean };
+
+/** D227: the landing page, where the app home sends signed-out visitors. */
+export const LANDING_FROM_APP = '/welcome?from=app';
+
+/** The home with nothing but `utm_*` tags is the "front door" a stranger may have been sent to. */
+function isFrontDoor({ pathname, search }: { pathname: string; search: string }): boolean {
+  if (pathname !== '/') return false;
+  return [...new URLSearchParams(search).keys()].every((key) => key.startsWith('utm_'));
+}
+
+/**
+ * D66 / D227: where a 401 sends the user, or null when they are already on a public page.
+ * The home goes to the landing page (keeping `utm_*` tags), every other page to sign-in.
+ */
 export function unauthorizedRedirect(location: {
   pathname: string;
   search: string;
-}): string | null {
-  return isPublicPath(location.pathname)
-    ? null
-    : signInHref(`${location.pathname}${location.search}`);
+}): UnauthorizedTarget | null {
+  if (isPublicPath(location.pathname)) return null;
+  if (isFrontDoor(location)) {
+    const tags = new URLSearchParams(location.search).toString();
+    return { href: tags ? `${LANDING_FROM_APP}&${tags}` : LANDING_FROM_APP, full: true };
+  }
+  return { href: signInHref(`${location.pathname}${location.search}`), full: false };
 }
 
 export type SignOutDeps = {

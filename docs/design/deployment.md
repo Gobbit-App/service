@@ -15,12 +15,14 @@ phone ─HTTPS─▶ Cloudflare ─tunnel─▶ cloudflared ─▶ Traefik ─�
                                                                                               │
                      /api/*  (prefix stripped) ─────────────────────────────────────────────┼──▶ api:3000 ──▶ db
                      /s/*    (unchanged) ───────────────────────────────────────────────────┤
+                     /stats/script.js, /stats/api/send (prefix stripped) ──────────────────┼──▶ gobbit-umami:3000 (other /stats/* → 404)
                      /assets/*, /icons/*, /og/*, /sw.js, /version.json, index.html ◀────────┘ files in /srv
 ```
 
 - `apps/web/Caddyfile` owns the routing and the response headers (D51, D54). Upstream `{$API_UPSTREAM:api:3000}`. Unknown paths fall back to `index.html`.
 - Cache headers: `/assets/*` immutable for a year (hashed names); `/icons/*`, `/og/*`, `/favicon.svg` one day; everything else (HTML, `sw.js`, the manifest, `version.json`) `no-cache`. Responses are `zstd`/`gzip` encoded.
-- The API has no Traefik labels and is not on `dokploy-network`; only `web` is.
+- The API has no Traefik labels and is not on `dokploy-network`; only `web` is, plus `umami` for its dashboard hostname (`STATS_HOST`, D232).
+- `/stats/script.js` (cached one day) and `/stats/api/send` go to `{$ANALYTICS_UPSTREAM:umami:3000}`; Compose sets `gobbit-umami:3000`, a network alias unique to this project. The CSP needs no change: the tracker is same-origin.
 - `/version.json` (`{ "commit" }`) is written at image build time from `GIT_SHA`. Smoke waits for it as it does for `/health`.
 - Locally, `pnpm dev` runs Vite on 5173 and proxies `/api` (strip) and `/s` to `localhost:3000`, so magic links, cookies and the API share one origin in every setup (D64). `pnpm compose:up` serves the built image on `127.0.0.1:8080`.
 

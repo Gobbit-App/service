@@ -69,6 +69,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `REGISTRATION_MODE` | `waitlist` | `waitlist` closes sign-up: an unknown address asking for a sign-in link joins the waitlist instead; invitees still get accounts. `open` lets anyone sign up (logged at `warn` in production) |
 | `WAITLIST_JOIN_PER_IP_PER_HOUR` | `10` | Waitlist joins and confirms per IP per hour (in memory; 429 beyond) |
 | `WAITLIST_JOIN_PER_EMAIL_PER_HOUR` | `3` | Waitlist joins per address per hour (`rate_limit_counters`; 429 beyond) |
+| `ANALYTICS_SITE_ID` | — | Umami website id (UUID). Set → the landing page (and only it) loads the same-origin tracker `/stats/script.js`; unset → no tracker (`infra/README.md` § Landing analytics) |
 | `PLATFORM_ADMINS` | — | Comma-separated emails of platform admins (`/admin/*`, e.g. the waitlist screen); everyone else gets 404. Empty logs `admin.config` at `warn` in production |
 | `WAITLIST_INVITE_TTL_DAYS` | `7` | Days a waitlist invite's sign-in link stays valid |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
@@ -253,10 +254,11 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 - `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden
 - `RESEND_WEBHOOK_SECRET` – only for email-in, together with `INGEST_EMAIL_DOMAIN` (a plain value; see *Sharing into Gobbit*)
 - `LOG_HASH_KEY` – ≥ 32 random characters (`openssl rand -hex 32`); the API refuses to start in production without it. Keys the `emailHash`/`ipHash` fields of decision events
+- `UMAMI_DATABASE_URL`, `UMAMI_APP_SECRET` – the `umami` service (landing analytics): its own `umami` database on the shared Postgres and a random secret (`openssl rand -hex 32`); setup in `infra/README.md` § Landing analytics
 
 **Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
 
-Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`.
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `STATS_HOST` (Umami dashboard hostname), `ANALYTICS_UPSTREAM`.
 
 ### GitHub Actions
 
@@ -390,6 +392,8 @@ Every change people make to a card (added, proposed, published, edited, archived
 ### Waitlist (Phase 9)
 
 `POST /waitlist` `{ email, kind, note?, utmSource? }` asks for an invite (kind `family`, `community`, `personal` or `other`). Every well-formed request answers `202 { ok: true }`, whether the address is new, already listed or already a user; only the email differs (a confirm link, a sign-in link, or nothing). The confirm link (`GET /waitlist/confirm?token=`, valid 7 days) redirects to `${APP_URL}/welcome?confirmed=1` or `?confirm=invalid`. Joins are limited per IP and per address (`WAITLIST_JOIN_PER_*_PER_HOUR`); unconfirmed entries are pruned weekly. Counts per week, kind, source and status: `SELECT * FROM waitlist_summary ORDER BY week DESC;`. Reading the decision events and clearing a limit: [`infra/README.md`](./infra/README.md#waitlist) § Waitlist.
+
+The landing page is at `https://<host>/` for anyone without a session (and always at `/welcome`): a short description and the waitlist form, no JavaScript. Signed-in members opening `/` get the app; signed-out app users are sent to the landing page, and `/sign-in` links to it. After deploying it: re-scrape the root URL in WhatsApp/Facebook's sharing debugger so old previews refresh, and in Search Console inspect `https://<host>/` and resubmit `/sitemap.xml` (the root is its first entry).
 
 Platform admins (`PLATFORM_ADMINS`) work the list in the PWA at `/admin/waitlist` (Settings → Platform → Waitlist): `GET /admin/waitlist?status=&kind=&cursor=` (default `confirmed`, oldest first, counts per status), `POST /admin/waitlist/{id}/invite` (creates the account and mails a sign-in link valid `WAITLIST_INVITE_TTL_DAYS`; `201` first invite, `200` resend) and `DELETE /admin/waitlist/{id}` (pending or confirmed only). Everyone else gets `404` on `/admin/*`. See [`docs/design/waitlist.md`](./docs/design/waitlist.md#admin-032-d234d238-adr-064).
 

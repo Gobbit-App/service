@@ -2,6 +2,7 @@
  * D57: initial JS ≤ 150 KB gzip. Reads `dist/.vite/manifest.json` (run `pnpm build` first),
  * follows static imports from the entry and fails when the gzipped total is over budget.
  * D139: also fails when a lazy-only library (`@use-gesture`, `papaparse`) lands in an initial chunk.
+ * D232: and when the built `index.html` references the analytics proxy (the tracker is landing-only).
  */
 import { readFile } from 'node:fs/promises';
 import { gzipSync } from 'node:zlib';
@@ -12,6 +13,7 @@ import {
   lazyOnlyViolations,
   type ViteManifest,
 } from './initial-chunks';
+import { shellTrackerViolations } from './shell-check';
 
 const LIMIT_BYTES = 150 * 1024;
 const DIST = new URL('../dist/', import.meta.url);
@@ -36,9 +38,14 @@ async function main(): Promise<void> {
   for (const violation of violations)
     console.error(`✗ lazy-only library in initial JS: ${violation}`);
 
+  const shellViolations = shellTrackerViolations(
+    await readFile(new URL('index.html', DIST), 'utf8'),
+  );
+  for (const violation of shellViolations) console.error(`✗ index.html: ${violation}`);
+
   if (!ok) console.error(`✗ ${summary}`);
-  if (!ok || violations.length > 0) process.exit(1);
-  console.log(`✓ ${summary}; no lazy-only libraries in initial chunks`);
+  if (!ok || violations.length > 0 || shellViolations.length > 0) process.exit(1);
+  console.log(`✓ ${summary}; no lazy-only libraries in initial chunks; no tracker in index.html`);
 }
 
 main().catch((err: unknown) => {

@@ -61,6 +61,7 @@ describe('public pages (D177)', () => {
   it('no page contains a script', () => {
     for (const page of allPages()) {
       expect(page).not.toMatch(/<script/i);
+      expect(page).not.toContain('/stats/'); // D232: the tracker is the landing page's only
       expect(page).toMatch(/^<!doctype html>/);
     }
   });
