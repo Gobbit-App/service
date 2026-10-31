@@ -23,7 +23,7 @@ export default defineConfig({
         id: '/',
         name: 'Gobbit',
         short_name: 'Gobbit',
-        description: "Your family's pocket of useful cards",
+        description: "Your family's deck of useful cards",
         lang: 'en',
         start_url: '/',
         scope: '/',
