@@ -147,6 +147,13 @@ export function gone(detail?: string, type = '/problems/gone'): HttpError {
 /** Phase 3B: problem type for refusals that protect the personal deck. */
 export const PERSONAL_DECK_PROBLEM = '/problems/personal-deck';
 
+/** 032: why an admin invite or remove was refused (409). */
+export const WAITLIST_PROBLEMS = {
+  notConfirmed: '/problems/waitlist-not-confirmed',
+  removed: '/problems/waitlist-removed',
+  invited: '/problems/waitlist-invited',
+} as const;
+
 export function unprocessable(detail?: string, type = '/problems/unprocessable'): HttpError {
   return new HttpError(422, type, 'Unprocessable Content', detail);
 }

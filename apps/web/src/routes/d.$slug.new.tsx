@@ -30,7 +30,7 @@ function NewCard() {
     return (
       <ErrorState
         title="You can't add cards here"
-        message="Your role in this pocketbook doesn't allow adding cards."
+        message="Your role in this deck doesn't allow adding cards."
       />
     );
   }
@@ -39,7 +39,7 @@ function NewCard() {
   if (categories.isError && !categories.data) {
     return (
       <ErrorState
-        message="Couldn't load the categories for this pocketbook."
+        message="Couldn't load the categories for this deck."
         onRetry={() => void categories.refetch()}
       />
     );

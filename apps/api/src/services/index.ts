@@ -47,6 +47,7 @@ import {
 import { buildIngestServices, type IngestWiring } from './ingest-wiring';
 import { createImportsService } from './imports.service';
 import { createWaitlistService } from './waitlist.service';
+import { buildAdminServices, type RegistrationDeps } from './admin-wiring';
 import {
   buildMediaServices,
   resolveLinkCheckFetch,
@@ -70,9 +71,6 @@ export interface ServiceDeps {
   /** Parent logger for decision events (D239); integration tests capture it. */
   logger?: Logger;
 }
-
-/** What the users service needs besides its repos (D222, D241). */
-type RegistrationDeps = Omit<Parameters<typeof createUsersService>[0], 'users' | 'decks'>;
 
 /** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
 export function buildCallbackRepos(tx: DbTx, registration: RegistrationDeps): CallbackRepos {
@@ -188,6 +186,7 @@ export function buildServices({
     rateLimits,
     logHash,
     waitlist,
+    ...buildAdminServices({ db, env, mailer, now, logger, registration }),
     auth: createAuthService({
       env,
       now,

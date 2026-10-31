@@ -42,7 +42,7 @@ function failure(error: unknown): { message: string; canRetry: boolean } {
       return { message: 'Image uploads are not available here.', canRetry: false };
     }
     if (error.status === 403 || error.status === 404) {
-      return { message: "You can't add photos to this pocketbook.", canRetry: false };
+      return { message: "You can't add photos to this deck.", canRetry: false };
     }
     if (error.status === 422) {
       return { message: "The photo couldn't be verified. Try adding it again.", canRetry: true };

@@ -14,7 +14,8 @@ export function registerMeRoutes(app: OpenAPIHono<AppEnv>, services: Services): 
     responses: {
       200: {
         content: { 'application/json': { schema: meSchema } },
-        description: 'The signed-in user and every deck they have a role on',
+        description:
+          'The signed-in user and every deck they have a role on; `isPlatformAdmin` shows the admin entry (032)',
       },
       ...problems('unauthorized'),
     },
@@ -24,7 +25,11 @@ export function registerMeRoutes(app: OpenAPIHono<AppEnv>, services: Services): 
     const user = getUser(c);
     const decks = await services.decks.list(user);
     return c.json(
-      { user: { id: user.id, email: user.email, displayName: user.displayName }, decks },
+      {
+        user: { id: user.id, email: user.email, displayName: user.displayName },
+        decks,
+        isPlatformAdmin: services.platformAdmins.is(user),
+      },
       200,
     );
   });

@@ -9,12 +9,12 @@ export function ingestEmailAddress(token: string, domain: string | null): string
 }
 
 /** A token bound to no deck: shares land in the personal deck unless the request names one. */
-export const UNBOUND_SCOPE = 'My personal pocketbook (default)';
+export const UNBOUND_SCOPE = 'My personal deck (default)';
 
 /** Where a token's shares land: its bound deck, else the request's deck or the personal one. */
 export function tokenScope(token: Pick<IngestToken, 'deckId'>, decks: readonly Deck[]): string {
   if (token.deckId === null) return UNBOUND_SCOPE;
-  return decks.find((d) => d.id === token.deckId)?.name ?? 'A pocketbook you left';
+  return decks.find((d) => d.id === token.deckId)?.name ?? 'A deck you left';
 }
 
 export function lastUsedLabel(lastUsedAt: string | null, locale?: string): string {

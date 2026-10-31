@@ -60,7 +60,7 @@ describe('ShareScreen', () => {
     answer([mine, family]);
     renderWithClient(<ShareScreen requestedDeck="family" />);
 
-    expect(await screen.findByLabelText('Pocketbook')).toHaveValue('family');
+    expect(await screen.findByLabelText('Deck')).toHaveValue('family');
     const send = screen.getByRole('button', { name: 'Send to Gobbit' });
     expect(send).toBeDisabled();
 
@@ -84,7 +84,7 @@ describe('ShareScreen', () => {
 
     expect(await screen.findByText('Shared page')).toBeInTheDocument();
     expect(screen.getByLabelText('Link')).toHaveValue('https://a.example/x');
-    expect(screen.getByLabelText('Pocketbook')).toHaveValue('me');
+    expect(screen.getByLabelText('Deck')).toHaveValue('me');
     fireEvent.click(screen.getByRole('button', { name: 'Send to Gobbit' }));
 
     await screen.findByRole('heading', { name: 'Sent' });
@@ -168,7 +168,7 @@ describe('ShareScreen', () => {
   it('offers only decks the user can add to', async () => {
     answer([club, family]);
     renderWithClient(<ShareScreen requestedDeck="club" />);
-    expect(await screen.findByLabelText('Pocketbook')).toHaveValue('family');
+    expect(await screen.findByLabelText('Deck')).toHaveValue('family');
     expect(screen.getAllByRole('option')).toHaveLength(1);
   });
 

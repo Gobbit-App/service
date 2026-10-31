@@ -167,7 +167,7 @@ describe('ShareRow (D198)', () => {
 
   it('has no Try again when the share cannot be retried', () => {
     renderRow(makeShare({ state: 'failed', failureCode: 'sharer_left', canRetry: false }));
-    expect(screen.getByText("You're no longer a member of this pocketbook.")).toBeInTheDocument();
+    expect(screen.getByText("You're no longer a member of this deck.")).toBeInTheDocument();
     expect(screen.queryByRole('button')).toBeNull();
   });
 });

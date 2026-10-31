@@ -7,7 +7,7 @@ import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { askErrorCopy } from './ask-copy';
 import { Button } from '../ui/buttons/Button';
 
-/** Asks one question of the cards in a pocketbook (D77). */
+/** Asks one question of the cards in a deck (D77). */
 export function AskView({
   deckSlug,
   question,
@@ -28,7 +28,7 @@ export function AskView({
   } else if (isError) {
     body = <ErrorState title="Couldn't answer" message={askErrorCopy(error)} />;
   } else if (data && !data.grounded) {
-    body = <EmptyState title="Nothing in this pocketbook answers that">{data.answer}</EmptyState>;
+    body = <EmptyState title="Nothing in this deck answers that">{data.answer}</EmptyState>;
   } else if (data) {
     body = (
       <>
@@ -46,7 +46,7 @@ export function AskView({
   } else if (isIdle) {
     body = (
       <p className="ask-view__hint">
-        Ask a question and get an answer from the cards in this pocketbook.
+        Ask a question and get an answer from the cards in this deck.
       </p>
     );
   } else {

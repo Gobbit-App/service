@@ -85,7 +85,7 @@ describe('SearchBox', () => {
     render(<SearchBox onSearch={vi.fn()} />);
 
     expect(screen.getByRole('search')).toBeInTheDocument();
-    expect(screen.getByRole('searchbox', { name: 'Search this pocketbook' })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Search this deck' })).toBeInTheDocument();
   });
 
   it('follows a new initialQuery without emitting it', () => {

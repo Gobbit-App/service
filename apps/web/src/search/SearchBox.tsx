@@ -45,7 +45,7 @@ export function SearchBox({
       <input
         type="search"
         className="search-box__input"
-        aria-label="Search this pocketbook"
+        aria-label="Search this deck"
         placeholder="Search cards…"
         enterKeyHint="search"
         autoFocus={autoFocus}

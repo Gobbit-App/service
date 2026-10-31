@@ -23,13 +23,13 @@ description: "Task list for 032-waitlist-admin"
 
 ## Phase 1: Foundational (Blocking Prerequisites)
 
-- [ ] T001 [P] `PLATFORM_ADMINS` (comma list → normalized `string[]`, default empty) and `WAITLIST_INVITE_TTL_DAYS` in apps/api/src/env.ts + [unit] cases in env.test.ts; `WAITLIST_INVITE_TTL_DAYS_DEFAULT`, `ADMIN_WAITLIST_PAGE_MAX` in `@gobbit/shared`
-- [ ] T002 [P] `isPlatformAdmin`, `requirePlatformAdmin` (404 `/problems/not-found`, records `admin.denied` `not_admin`/`signed_out` with `route`) in apps/api/src/access/platform-admin.ts + [unit] platform-admin.test.ts (`expectDecision`)
-- [ ] T002a [P] `admin.config` start-up event (`count`, warn on 0 in production) + [unit]; outcome tuples in apps/api/src/services/waitlist-admin.events.ts
-- [ ] T003 [P] DTOs in packages/shared/src/schemas/waitlist-admin.ts; `meSchema.isPlatformAdmin` in packages/shared/src/schemas/auth.ts
-- [ ] T004 No migration: confirm 028's `0018_waitlist` has `removed_at`, `removed_by`, `waitlist_removed_has_time` and `waitlist_entries_status_confirmed_idx` (they were moved there at planning time); stop and amend 028 if not + hand-written packages/db/migrations/down/0019_waitlist_admin.down.sql; schema in packages/db/src/schema/waitlist.ts
-- [ ] T005 `GET /me` returns `isPlatformAdmin` (apps/api/src/routes/me.ts); [int] true/false case in apps/api/test/admin-waitlist.int.test.ts
-- [ ] T006 Problems `waitlist-not-confirmed`, `waitlist-removed`, `waitlist-invited` in apps/api/src/errors/http-errors.ts
+- [x] T001 [P] `PLATFORM_ADMINS` (comma list → normalized `string[]`, default empty) and `WAITLIST_INVITE_TTL_DAYS` in apps/api/src/env.ts + [unit] cases in env.test.ts; `WAITLIST_INVITE_TTL_DAYS_DEFAULT`, `ADMIN_WAITLIST_PAGE_MAX` in `@gobbit/shared`
+- [x] T002 [P] `isPlatformAdmin`, `requirePlatformAdmin` (404 `/problems/not-found`, records `admin.denied` `not_admin`/`signed_out` with `route`) in apps/api/src/access/platform-admin.ts + [unit] platform-admin.test.ts (`expectDecision`)
+- [x] T002a [P] `admin.config` start-up event (`count`, warn on 0 in production) + [unit]; outcome tuples in apps/api/src/services/waitlist-admin.events.ts
+- [x] T003 [P] DTOs in packages/shared/src/schemas/waitlist-admin.ts; `meSchema.isPlatformAdmin` in packages/shared/src/schemas/auth.ts
+- [x] T004 No migration: confirm 028's `0018_waitlist` has `removed_at`, `removed_by`, `waitlist_removed_has_time` and `waitlist_entries_status_confirmed_idx` (they were moved there at planning time); stop and amend 028 if not + hand-written packages/db/migrations/down/0019_waitlist_admin.down.sql; schema in packages/db/src/schema/waitlist.ts
+- [x] T005 `GET /me` returns `isPlatformAdmin` (apps/api/src/routes/me.ts); [int] true/false case in apps/api/test/admin-waitlist.int.test.ts
+- [x] T006 Problems `waitlist-not-confirmed`, `waitlist-removed`, `waitlist-invited` in apps/api/src/errors/http-errors.ts
 
 **Checkpoint**: Admin identity known to API and client; migration round-trips
 
@@ -43,17 +43,17 @@ description: "Task list for 032-waitlist-admin"
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] [int] 404 matrix: signed-out 401; reader, editor, deck owner, co-owner → 404 on `GET`, `POST …/invite`, `DELETE`, body identical to an unknown route, one `admin.denied` per request, in apps/api/test/admin-waitlist.int.test.ts
-- [ ] T011 [P] [US1] [int] List: default confirmed oldest-confirmed first; status and kind filters; keyset cursor across pages; `counts` follow the kind filter; `limit` > 100 → 400; one `waitlist.admin_list` per call with `actorId`, filters and `returned`, no email
-- [ ] T012 [P] [US1] [unit] WaitlistScreen.test.tsx: tabs with counts, kind select, rows with `dir="auto"` notes, empty and offline states; SettingsScreen.test.tsx: Waitlist link only when `isPlatformAdmin`
-- [ ] T013 [P] [US1] [unit] apps/web/src/api/persist.test.ts: admin waitlist key is not dehydrated
+- [x] T010 [P] [US1] [int] 404 matrix: signed-out 401; reader, editor, deck owner, co-owner → 404 on `GET`, `POST …/invite`, `DELETE`, body identical to an unknown route, one `admin.denied` per request, in apps/api/test/admin-waitlist.int.test.ts
+- [x] T011 [P] [US1] [int] List: default confirmed oldest-confirmed first; status and kind filters; keyset cursor across pages; `counts` follow the kind filter; `limit` > 100 → 400; one `waitlist.admin_list` per call with `actorId`, filters and `returned`, no email
+- [x] T012 [P] [US1] [unit] WaitlistScreen.test.tsx: tabs with counts, kind select, rows with `dir="auto"` notes, empty and offline states; SettingsScreen.test.tsx: Waitlist link only when `isPlatformAdmin`
+- [x] T013 [P] [US1] [unit] apps/web/src/api/persist.test.ts: admin waitlist key is not dehydrated
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] `listForAdmin`, `countsByStatus` in apps/api/src/repositories/waitlist.repo.ts
-- [ ] T015 [US1] `waitlistAdmin.list` (+ `waitlist.admin_list` event) in apps/api/src/services/waitlist-admin.service.ts; wiring in services/index.ts
-- [ ] T016 [US1] `GET /admin/waitlist` in apps/api/src/routes/admin-waitlist.ts; register in app.ts; `pnpm api:openapi`; example in api.http
-- [ ] T017 [US1] apps/web/src/routes/admin.waitlist.tsx (code-split), apps/web/src/admin/WaitlistScreen.tsx, WaitlistRow.tsx, waitlist-queries.ts; key in api/query-keys.ts and `NOT_PERSISTED` in api/persist.ts; "Waitlist" link in settings/SettingsScreen.tsx; styles in styles.css
+- [x] T014 [US1] `listForAdmin`, `countsByStatus` in apps/api/src/repositories/waitlist.repo.ts
+- [x] T015 [US1] `waitlistAdmin.list` (+ `waitlist.admin_list` event) in apps/api/src/services/waitlist-admin.service.ts; wiring in services/index.ts
+- [x] T016 [US1] `GET /admin/waitlist` in apps/api/src/routes/admin-waitlist.ts; register in app.ts; `pnpm api:openapi`; example in api.http
+- [x] T017 [US1] apps/web/src/routes/admin.waitlist.tsx (code-split), apps/web/src/admin/WaitlistScreen.tsx, WaitlistRow.tsx, waitlist-queries.ts; key in api/query-keys.ts and `NOT_PERSISTED` in api/persist.ts; "Waitlist" link in settings/SettingsScreen.tsx; styles in styles.css
 
 **Checkpoint**: Operator can see the confirmed queue on the phone
 
@@ -67,18 +67,18 @@ description: "Task list for 032-waitlist-admin"
 
 ### Tests for User Story 2
 
-- [ ] T020 [P] [US2] [unit] waitlist-admin.service.test.ts: `register` called with `waitlist_invite`; mail sent only after the transaction resolves; provider error → `mailSent: false` and `waitlist.mail` `failed`; `expectDecision('waitlist.admin')` for `invited`, `resent`, `linked_existing` and each refusal reason; `register` called with the admin's id; no email in any field
-- [ ] T021 [P] [US2] [unit] `waitlistInviteEmail` in apps/api/src/mail/templates.test.ts (escaping, TTL wording, link)
-- [ ] T022 [P] [US2] [int] Invite: entry → invited with `invited_by`, `invited_at`, `user_id`; account exists with 0 decks; `sign_in` link expires at `WAITLIST_INVITE_TTL_DAYS`; consuming it under `REGISTRATION_MODE=waitlist` opens a session and creates exactly one personal deck with only `general`
-- [ ] T023 [P] [US2] [int] Rules: pending 409 `waitlist-not-confirmed`; removed 409 `waitlist-removed`; invited → 200 resend, new link, still one user; email already has an account (deck invite) → linked, not duplicated; two concurrent invites → one 201 + one 200, one user, entry invited once; `waitlist_events` `invited` / `invite_resent` with `actor_id`; a forced failure after `markInvited` rolls back both the entry and its event row; the account has `registered_via = 'waitlist_invite'`, `registered_by` = admin
-- [ ] T024 [US2] [e2e:full] Admin invites a confirmed entry from the screen; the invitee opens the link in a new context and lands in "My deck" with `general` and no cards; a non-admin opening `/admin/waitlist` sees not-found, in e2e/tests/full/waitlist-admin.spec.ts (link retrieval per plan Risks; record the choice in implementation-notes.md)
+- [x] T020 [P] [US2] [unit] waitlist-admin.service.test.ts: `register` called with `waitlist_invite`; mail sent only after the transaction resolves; provider error → `mailSent: false` and `waitlist.mail` `failed`; `expectDecision('waitlist.admin')` for `invited`, `resent`, `linked_existing` and each refusal reason; `register` called with the admin's id; no email in any field
+- [x] T021 [P] [US2] [unit] `waitlistInviteEmail` in apps/api/src/mail/templates.test.ts (escaping, TTL wording, link)
+- [x] T022 [P] [US2] [int] Invite: entry → invited with `invited_by`, `invited_at`, `user_id`; account exists with 0 decks; `sign_in` link expires at `WAITLIST_INVITE_TTL_DAYS`; consuming it under `REGISTRATION_MODE=waitlist` opens a session and creates exactly one personal deck with only `general`
+- [x] T023 [P] [US2] [int] Rules: pending 409 `waitlist-not-confirmed`; removed 409 `waitlist-removed`; invited → 200 resend, new link, still one user; email already has an account (deck invite) → linked, not duplicated; two concurrent invites → one 201 + one 200, one user, entry invited once; `waitlist_events` `invited` / `invite_resent` with `actor_id`; a forced failure after `markInvited` rolls back both the entry and its event row; the account has `registered_via = 'waitlist_invite'`, `registered_by` = admin
+- [x] T024 [US2] [e2e:full] Admin invites a confirmed entry from the screen; the invitee opens the link in a new context and lands in "My deck" with `general` and no cards; a non-admin opening `/admin/waitlist` sees not-found, in e2e/tests/full/waitlist-admin.spec.ts (link retrieval per plan Risks; record the choice in implementation-notes.md)
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] `lockById`, `markInvited` (inserts the `waitlist_events` row via `insertEvent` in the same tx) in apps/api/src/repositories/waitlist.repo.ts; callback-style transaction repos in services/index.ts
-- [ ] T026 [US2] `waitlistAdmin.invite` (transaction, mail after commit, `waitlist.admin` + `waitlist.mail` events) in apps/api/src/services/waitlist-admin.service.ts; `waitlistInviteEmail` in apps/api/src/mail/templates.ts
-- [ ] T027 [US2] `POST /admin/waitlist/{id}/invite` in apps/api/src/routes/admin-waitlist.ts; `pnpm api:openapi`
-- [ ] T028 [US2] Invite / Resend actions and the "email couldn't be sent — resend" state in apps/web/src/admin/WaitlistRow.tsx + [unit] WaitlistRow.test.tsx
+- [x] T025 [US2] `lockById`, `markInvited` (inserts the `waitlist_events` row via `insertEvent` in the same tx) in apps/api/src/repositories/waitlist.repo.ts; callback-style transaction repos in services/index.ts
+- [x] T026 [US2] `waitlistAdmin.invite` (transaction, mail after commit, `waitlist.admin` + `waitlist.mail` events) in apps/api/src/services/waitlist-admin.service.ts; `waitlistInviteEmail` in apps/api/src/mail/templates.ts
+- [x] T027 [US2] `POST /admin/waitlist/{id}/invite` in apps/api/src/routes/admin-waitlist.ts; `pnpm api:openapi`
+- [x] T028 [US2] Invite / Resend actions and the "email couldn't be sent — resend" state in apps/web/src/admin/WaitlistRow.tsx + [unit] WaitlistRow.test.tsx
 
 **Checkpoint**: PLAN.md demo 5 runs locally
 
@@ -92,13 +92,13 @@ description: "Task list for 032-waitlist-admin"
 
 ### Tests for User Story 3
 
-- [ ] T030 [P] [US3] [int] pending/confirmed → 204 `removed` with `removed_at`/`removed_by`; invited → 409 `waitlist-invited`; removed → 204 no-op; a direct UPDATE to `removed` without `removed_at` violates `waitlist_removed_has_time`; `waitlist_events` `removed` with `actor_id` (none for the no-op); after the prune deletes the entry its `removed` row is still there; `waitlist.admin` outcomes `removed` / `unchanged` / `refused`·`invited`
-- [ ] T031 [P] [US3] [unit] WaitlistRow.test.tsx: Remove asks to confirm, then DELETEs; not offered for invited rows
+- [x] T030 [P] [US3] [int] pending/confirmed → 204 `removed` with `removed_at`/`removed_by`; invited → 409 `waitlist-invited`; removed → 204 no-op; a direct UPDATE to `removed` without `removed_at` violates `waitlist_removed_has_time`; `waitlist_events` `removed` with `actor_id` (none for the no-op); after the prune deletes the entry its `removed` row is still there; `waitlist.admin` outcomes `removed` / `unchanged` / `refused`·`invited`
+- [x] T031 [P] [US3] [unit] WaitlistRow.test.tsx: Remove asks to confirm, then DELETEs; not offered for invited rows
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] `markRemoved` (repo, with `insertEvent` in the tx; or 028's `waitlist.remove({ id, removedBy })`), `waitlistAdmin.remove` (service, `waitlist.admin` event), `DELETE /admin/waitlist/{id}` (route); `pnpm api:openapi`
-- [ ] T033 [US3] Remove action with confirmation in apps/web/src/admin/WaitlistRow.tsx
+- [x] T032 [US3] `markRemoved` (repo, with `insertEvent` in the tx; or 028's `waitlist.remove({ id, removedBy })`), `waitlistAdmin.remove` (service, `waitlist.admin` event), `DELETE /admin/waitlist/{id}` (route); `pnpm api:openapi`
+- [x] T033 [US3] Remove action with confirmation in apps/web/src/admin/WaitlistRow.tsx
 
 **Checkpoint**: All stories work independently
 
@@ -106,10 +106,10 @@ description: "Task list for 032-waitlist-admin"
 
 ## Phase 5: Close-out
 
-- [ ] T050 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`
-- [ ] T051 [P] docs/design/waitlist.md (admin section, Deviations), docs/design/auth.md (platform admins); docs/architecture.md: one line + ADR index row
-- [ ] T052 [P] docs/adr.md: platform admins ADR from D234
-- [ ] T053 [P] README.md, .env.example, infra/README.md: `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`; infra/README § Waitlist: "history of one entry" and "actions by one admin" `waitlist_events` queries, the `admin.denied` jq filter and the alert thresholds from the plan's Accountability table
+- [x] T050 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`
+- [x] T051 [P] docs/design/waitlist.md (admin section, Deviations), docs/design/auth.md (platform admins); docs/architecture.md: one line + ADR index row
+- [x] T052 [P] docs/adr.md: platform admins ADR from D234
+- [x] T053 [P] README.md, .env.example, infra/README.md: `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`; infra/README § Waitlist: "history of one entry" and "actions by one admin" `waitlist_events` queries, the `admin.denied` jq filter and the alert thresholds from the plan's Accountability table
 - [ ] T054 Run quickstart.md validation
 - [ ] T055 `/speckit-converge` until it reports Converged
 

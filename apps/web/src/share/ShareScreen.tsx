@@ -39,7 +39,7 @@ export function ShareScreen({
         message={
           isNetworkError(decks.error)
             ? "You're offline. Sharing needs a connection."
-            : "Couldn't load your pocketbooks."
+            : "Couldn't load your decks."
         }
         onRetry={() => void decks.refetch()}
       />
@@ -51,7 +51,7 @@ export function ShareScreen({
   if (!initialDeck) {
     return (
       <EmptyState title="Nowhere to share to">
-        You can only read the pocketbooks you're in. Ask an owner to make you an editor.
+        You can only read the decks you're in. Ask an owner to make you an editor.
       </EmptyState>
     );
   }

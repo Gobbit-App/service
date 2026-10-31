@@ -15,14 +15,14 @@ describe('DeckPicker (D108)', () => {
 
   it('shows the current value and one option per deck', () => {
     render(<DeckPicker decks={decks} value="family" onChange={vi.fn()} />);
-    expect(screen.getByLabelText('Pocketbook')).toHaveValue('family');
+    expect(screen.getByLabelText('Deck')).toHaveValue('family');
     expect(screen.getAllByRole('option')).toHaveLength(2);
   });
 
   it('calls onChange with the selected slug', () => {
     const onChange = vi.fn();
     render(<DeckPicker decks={decks} value="family" onChange={onChange} />);
-    fireEvent.change(screen.getByLabelText('Pocketbook'), { target: { value: 'me' } });
+    fireEvent.change(screen.getByLabelText('Deck'), { target: { value: 'me' } });
     expect(onChange).toHaveBeenCalledWith('me');
   });
 });

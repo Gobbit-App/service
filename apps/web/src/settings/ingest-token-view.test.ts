@@ -18,8 +18,8 @@ describe('ingest-token-view', () => {
   });
 
   describe('tokenScope', () => {
-    it('describes a token with no bound deck as the personal pocketbook', () => {
-      expect(tokenScope({ deckId: null }, [])).toBe('My personal pocketbook (default)');
+    it('describes a token with no bound deck as the personal deck', () => {
+      expect(tokenScope({ deckId: null }, [])).toBe('My personal deck (default)');
     });
 
     it('returns the bound deck name when the deck is known', () => {
@@ -29,7 +29,7 @@ describe('ingest-token-view', () => {
 
     it('describes an unknown bound deck as one the user left', () => {
       const decks = [makeDeck({ id: 'd1', name: 'Family' })];
-      expect(tokenScope({ deckId: 'missing' }, decks)).toBe('A pocketbook you left');
+      expect(tokenScope({ deckId: 'missing' }, decks)).toBe('A deck you left');
     });
   });
 

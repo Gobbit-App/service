@@ -51,7 +51,7 @@ function EditCard() {
   if (!deck.data || !categories.data) {
     return (
       <Unavailable
-        message="Couldn't load this card's pocketbook."
+        message="Couldn't load this card's deck."
         onRetry={() => void Promise.all([deck.refetch(), categories.refetch()])}
       />
     );

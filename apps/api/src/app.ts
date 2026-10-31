@@ -48,6 +48,7 @@ import { registerWaitlistRoutes } from './routes/waitlist';
 import { registerLandingRoutes } from './routes/landing';
 import { LANDING_DECISION_LEVELS, type LandingDecisions } from './services/landing.events';
 import { LANDING_JOINED_PATH, LANDING_PATH } from './public/public-url';
+import { registerAdminWaitlistRoutes } from './routes/admin-waitlist';
 import { rateLimitRefusal } from './middleware/rate-limit-refused';
 import { decisionLogger } from './lib/decision-event';
 import { rateLimited } from './errors/http-errors';
@@ -191,6 +192,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
       levels: LANDING_DECISION_LEVELS,
     }),
   });
+  registerAdminWaitlistRoutes(app, services);
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'SessionCookie', {
     type: 'apiKey',

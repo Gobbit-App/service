@@ -16,7 +16,7 @@ export function stateLabel(state: ShareState): string {
 /** D193: why a publisher's share waits for review, or that it skipped review. */
 const AUTO_PUBLISH_COPY: Readonly<Record<AutoPublishOutcome, string>> = {
   published: 'Published directly',
-  held_not_publisher: "you can't publish in this pocketbook",
+  held_not_publisher: "you can't publish in this deck",
   held_needs_category: 'needs a category',
   held_duplicate: 'possible duplicate',
   held_duplicate_check_failed: "the duplicate check didn't finish",

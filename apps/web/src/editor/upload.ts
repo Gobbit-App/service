@@ -53,7 +53,7 @@ export function failureMessage(status: number, detail: string | null): string {
     return "This file type isn't supported. Use a JPG, PNG, WebP or HEIC photo.";
   }
   if (status === 401 || /invalid signature|api_key/i.test(text)) {
-    return 'Photo uploads are misconfigured on the server. Ask the pocketbook owner to check them.';
+    return 'Photo uploads are misconfigured on the server. Ask the deck owner to check them.';
   }
   if (!detail) return "The photo couldn't be uploaded.";
   const shown = detail.length > DETAIL_SHOWN_MAX ? `${detail.slice(0, DETAIL_SHOWN_MAX)}…` : detail;

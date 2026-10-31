@@ -1,4 +1,4 @@
-# Gobbit (Community Pocketbook)
+# Gobbit
 
 A collaborative, categorizable knowledge repository supporting multiple item types (text, links, images, tables, calculations) with role-based access, soft deletion, and keyset pagination. Built with TypeScript, Hono, Drizzle ORM, and PostgreSQL.
 
@@ -70,6 +70,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `WAITLIST_JOIN_PER_IP_PER_HOUR` | `10` | Waitlist joins and confirms per IP per hour (in memory; 429 beyond) |
 | `WAITLIST_JOIN_PER_EMAIL_PER_HOUR` | `3` | Waitlist joins per address per hour (`rate_limit_counters`; 429 beyond) |
 | `ANALYTICS_SITE_ID` | — | Umami website id (UUID). Set → the landing page (and only it) loads the same-origin tracker `/stats/script.js`; unset → no tracker (`infra/README.md` § Landing analytics) |
+| `PLATFORM_ADMINS` | — | Comma-separated emails of platform admins (`/admin/*`, e.g. the waitlist screen); everyone else gets 404. Empty logs `admin.config` at `warn` in production |
+| `WAITLIST_INVITE_TTL_DAYS` | `7` | Days a waitlist invite's sign-in link stays valid |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
@@ -256,7 +258,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 
 **Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
 
-Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `ANALYTICS_SITE_ID`, `STATS_HOST` (Umami dashboard hostname), `ANALYTICS_UPSTREAM`.
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `STATS_HOST` (Umami dashboard hostname), `ANALYTICS_UPSTREAM`.
 
 ### GitHub Actions
 
@@ -393,6 +395,8 @@ Every change people make to a card (added, proposed, published, edited, archived
 
 The landing page is at `https://<host>/` for anyone without a session (and always at `/welcome`): a short description and the waitlist form, no JavaScript. Signed-in members opening `/` get the app; signed-out app users are sent to the landing page, and `/sign-in` links to it. After deploying it: re-scrape the root URL in WhatsApp/Facebook's sharing debugger so old previews refresh, and in Search Console inspect `https://<host>/` and resubmit `/sitemap.xml` (the root is its first entry).
 
+Platform admins (`PLATFORM_ADMINS`) work the list in the PWA at `/admin/waitlist` (Settings → Platform → Waitlist): `GET /admin/waitlist?status=&kind=&cursor=` (default `confirmed`, oldest first, counts per status), `POST /admin/waitlist/{id}/invite` (creates the account and mails a sign-in link valid `WAITLIST_INVITE_TTL_DAYS`; `201` first invite, `200` resend) and `DELETE /admin/waitlist/{id}` (pending or confirmed only). Everyone else gets `404` on `/admin/*`. See [`docs/design/waitlist.md`](./docs/design/waitlist.md#admin-032-d234d238-adr-064).
+
 ### Writing cards (Phase 6)
 
 Members who can edit (owner, maintainer, editor) get **Add card** in a deck (`/d/<slug>/new?type=text|link|table|calc|image`) and **Edit** on cards (`/i/<id>/edit`; "Edit fully" from the review queue). The editor shows a live preview with the same renderer as the list, checks limits as you type (the API stays authoritative) and can create a category inline. Unsaved changes are kept as a local draft in the browser (IndexedDB) and offered on reopen; drafts are deleted on save and on sign-out. Image cards take a photo or pick one (uploaded straight to Cloudinary; needs `CLOUDINARY_URL`), and link cards can **Fetch preview**.
@@ -454,7 +458,7 @@ Either kind dies with `POST /auth/logout-all` (and with `POST /auth/logout` sent
 ## Project Structure
 
 ```
-community-pocketbook/
+service/
 ├── apps/
 │   ├── api/          # Hono HTTP server, services, routes, worker (embeddings, ingestion)
 │   └── web/          # Reader PWA (React + Vite) and its Caddy image

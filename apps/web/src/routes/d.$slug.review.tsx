@@ -22,7 +22,7 @@ function Review() {
   const categories = useQuery(categoriesQuery(slug));
 
   if (deck.isPending || categories.isPending) return <LoadingState label="Loading…" />;
-  if (!deck.data) return <ErrorState message="Couldn't load this pocketbook." />;
+  if (!deck.data) return <ErrorState message="Couldn't load this deck." />;
   if (!can(deck.data.role, 'item.publish')) {
     return <ErrorState title="Not available" message="Only owners and maintainers review cards." />;
   }

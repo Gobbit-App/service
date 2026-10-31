@@ -15,7 +15,7 @@ import { generateToken, hashToken } from '../lib/tokens';
 import { rateKeys } from '../lib/rate-window';
 import type { LogHash } from '../lib/log-hash';
 import { decisionLogger, type DecisionLogger } from '../lib/decision-event';
-import { conflict, notFound, rateLimited } from '../errors/http-errors';
+import { conflict, rateLimited } from '../errors/http-errors';
 import {
   WAITLIST_DECISION_LEVELS,
   type WaitlistConfirmReason,
@@ -165,12 +165,6 @@ export function createWaitlistService(deps: {
     return row.status === 'pending' ? 'expired' : 'used';
   }
 
-  /** 404 when the entry doesn't exist, else 409 for a wrong state (032). */
-  async function wrongState(repo: WaitlistRepo, id: string, detail: string): Promise<never> {
-    const row = await repo.findById(id);
-    throw row ? conflict(detail) : notFound('Waitlist entry not found');
-  }
-
   return {
     /**
      * D218/D219: every well-formed request ends the same way for the caller. Throws only for a
@@ -280,34 +274,6 @@ export function createWaitlistService(deps: {
       const reason = await classifyInvalid(tokenHash);
       decisions.record('waitlist.confirm', { outcome: 'invalid', reason, ...ctx });
       return { confirmed: false };
-    },
-
-    /** 032: `confirmed` → `invited`, with its audit row; pass `repo` to join a caller's transaction. */
-    async markInvited(
-      r: { id: string; invitedBy: string; userId: string },
-      repo?: WaitlistRepo,
-    ): Promise<WaitlistEntryRow> {
-      const run = async (tx: WaitlistRepo) => {
-        const row = await tx.markInvited({ ...r, now: now() });
-        if (!row) return wrongState(tx, r.id, 'Only a confirmed entry can be invited');
-        await tx.insertEvent({ entryId: row.id, action: 'invited', actorId: r.invitedBy });
-        return row;
-      };
-      return repo ? run(repo) : transaction(run);
-    },
-
-    /** 032: any live status → `removed`, with its audit row. */
-    async remove(
-      r: { id: string; removedBy: string },
-      repo?: WaitlistRepo,
-    ): Promise<WaitlistEntryRow> {
-      const run = async (tx: WaitlistRepo) => {
-        const row = await tx.remove({ ...r, now: now() });
-        if (!row) return wrongState(tx, r.id, 'The entry is already removed');
-        await tx.insertEvent({ entryId: row.id, action: 'removed', actorId: r.removedBy });
-        return row;
-      };
-      return repo ? run(repo) : transaction(run);
     },
   };
 }

@@ -237,4 +237,26 @@ describe('env', () => {
       ).toThrow(/LOG_HASH_KEY is required in production/);
     });
   });
+
+  describe('platform admins and invites (032)', () => {
+    it('defaults to no admins and a 7-day invite link', () => {
+      const env = parseEnv({ DATABASE_URL: validUrl });
+      expect(env.PLATFORM_ADMINS).toEqual([]);
+      expect(env.WAITLIST_INVITE_TTL_DAYS).toBe(7);
+    });
+
+    it('trims, lower-cases and drops blanks in PLATFORM_ADMINS', () => {
+      const env = parseEnv({
+        DATABASE_URL: validUrl,
+        PLATFORM_ADMINS: ' Owner@Example.test, ,second@example.test ',
+      });
+      expect(env.PLATFORM_ADMINS).toEqual(['owner@example.test', 'second@example.test']);
+    });
+
+    it.each(['0', 'abc'])('rejects an invite lifetime of %s', (value) => {
+      expect(() => parseEnv({ DATABASE_URL: validUrl, WAITLIST_INVITE_TTL_DAYS: value })).toThrow(
+        /WAITLIST_INVITE_TTL_DAYS/,
+      );
+    });
+  });
 });

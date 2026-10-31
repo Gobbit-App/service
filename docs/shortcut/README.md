@@ -3,7 +3,7 @@
 iOS Safari has no Web Share Target, so iPhone sharing goes through an Apple Shortcut that posts
 to `POST /api/ingest` with an **ingest token** (D99). Tokens are created in the app under
 **Settings → Your tokens**; each is shown once, accepted only by `POST /ingest`, and can be
-bound to one pocketbook (otherwise shares go to the personal one, `/d/me`).
+bound to one deck (otherwise shares go to the personal one, `/d/me`).
 
 The published Shortcut carries no secret: the token and server address are **Import Questions**
 the user answers when adding it.
@@ -30,7 +30,7 @@ the user answers when adding it.
    - Empty form fields are ignored, so it's fine that most shares only fill one of them.
    - At most 3 images, each ≤ 8 MB (JPEG/PNG/WebP/HEIC/HEIF); the body may be up to 25 MB.
    - Do **not** send `channel` or `deckId`: token shares are always `shortcut`, and a bound
-     token always ingests into its pocketbook.
+     token always ingests into its deck.
    - Answers: `202 {id,status}` accepted; `401` unknown/revoked token; `400`/`413` bad input;
      `429` daily cap (`Retry-After`); `503` ingestion off on the server.
 4. Shortcut details → **Setup** → **Add Import Question** twice:

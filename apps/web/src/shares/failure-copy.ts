@@ -5,7 +5,7 @@ export const UNKNOWN_FAILURE = 'Something went wrong.';
 /** D194: why a share failed, in words the sharer can act on; raw codes never reach the screen. */
 const FAILURE_COPY: Readonly<Record<IngestFailureCode, string>> = {
   content_expired: 'The shared copy is no longer kept.',
-  sharer_left: "You're no longer a member of this pocketbook.",
+  sharer_left: "You're no longer a member of this deck.",
   fetch_failed: "The page couldn't be fetched.",
   unreadable_answer: "The assistant's answer was unusable.",
   assistant_unavailable: "The assistant wasn't available.",

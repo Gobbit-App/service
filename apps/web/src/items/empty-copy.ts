@@ -17,6 +17,6 @@ export function emptyListCopy(filter: ItemFilter): { title: string; body: string
     case 'category':
       return { title: 'No cards here yet', body: 'This category has no cards yet.' };
     case 'all':
-      return { title: 'No cards yet', body: 'Cards added to this pocketbook will show up here.' };
+      return { title: 'No cards yet', body: 'Cards added to this deck will show up here.' };
   }
 }

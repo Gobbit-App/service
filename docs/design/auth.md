@@ -25,6 +25,12 @@ _Overview: [architecture.md](../architecture.md). Decisions: [adr.md](../adr.md)
 - `registration.mode` is recorded in `server.ts` after the listener starts, correlated by a per-process `bootId` (the decision logger accepts `bootId` besides `requestId`/`jobId`), not in `app.ts`, which every test builds.
 - The "Join the waitlist" links on `/sign-in` and `/auth/error?reason=closed` ship with 030 (they target `/welcome`).
 
+### Platform admins (D234)
+
+- **Who**: `PLATFORM_ADMINS`, a comma-separated email list (trimmed, lower-cased, empty by default). No column, no UI to grant it; a compromised session can't widen it. `admin.config` records the count (never the emails) at start-up, at `warn` when production has none.
+- **Guard**: `access/platform-admin.ts` — middleware on `/admin/*` runs after session auth (signed-out → 401) and before request validation; anyone else gets `404 /problems/not-found` (ADR-004) and an `admin.denied` event (`not_admin` with `actorId`, or `signed_out`; route label only). It returns a branded `PlatformAdmin` that admin services require.
+- **Web**: `GET /me` carries `isPlatformAdmin`; Settings shows a "Platform" section with the links, and `/admin/*` screens render not-found otherwise. First user: 032's waitlist admin (ADR-064).
+
 ### Sessions (D27–D31)
 
 - `sessions` rows are opaque random tokens stored as hashes, `kind` `cookie | bearer`, sliding lifetime `SESSION_TTL_DAYS` (90): `last_seen_at`/`expires_at` are bumped in one `UPDATE` at most once an hour.
@@ -47,7 +53,7 @@ Supersedes D25's "no deck is auto-created": every account gets exactly one perso
 - **Ensure**: `usersService.ensurePersonalDeck(user)` sits next to `register()`. It inserts with `ON CONFLICT DO NOTHING` and reads the row back (`ensureDefault`), so it is idempotent. `GET /auth/callback` runs consume link, find or create user, ensure deck, open session in one transaction (`buildCallbackRepos` in `services/index.ts`). An ensure failure is logged (`[auth] onboarding failed`) and surfaces as `MagicLinkFailure('onboarding')`.
 - **Address**: the stored slug is `personal-<accountId>` and is never shown. `resolveDeck` maps `me` to the caller's default deck (404 when there is none), and `toDeckDto` returns `slug: 'me'` when `isDefault`. `me` is `RESERVED_DECK_SLUG` in `@gobbit/shared`, which no other deck can take. The default name is `PERSONAL_DECK_NAME` ("My deck") and can be renamed.
 - **409 rules** (`/problems/personal-deck`): deleting the deck, patching `slug` or `isPublic` on it, and inviting a member to it. Renaming is allowed.
-- **Landing (web)**: `pickLanding` in `lib/last-deck.ts` opens the last deck if it is still listed, else `me`, else the only deck, else the home list. The home empty state reads "No pocketbooks yet".
+- **Landing (web)**: `pickLanding` in `lib/last-deck.ts` opens the last deck if it is still listed, else `me`, else the only deck, else the home list. The home empty state reads "No decks yet".
 - **Card editor (web)**: `/d/$slug/new` (`routes/d.$slug.new.tsx`) renders `CardEditor` inside the deck layout. It creates text and link cards only, with the category defaulting to the deck's default one. `useCreateItem` posts to `POST /decks/{id}/items` and invalidates every item list. API field errors show in `role="alert"` (`problemMessages`). The "Add card" link (`AddCardLink`) appears only for roles with `item.create`.
 
 ## Authorization (D33–D35)

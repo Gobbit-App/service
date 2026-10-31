@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as AdminWaitlistRouteImport } from './routes/admin.waitlist'
 import { Route as AuthErrorRouteImport } from './routes/auth.error'
 import { Route as DSlugRouteImport } from './routes/d.$slug'
 import { Route as IItemIdRouteImport } from './routes/i.$itemId'
@@ -49,6 +50,11 @@ const ShareRoute = ShareRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminWaitlistRoute = AdminWaitlistRouteImport.update({
+  id: '/admin/waitlist',
+  path: '/admin/waitlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthErrorRoute = AuthErrorRouteImport.update({
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/admin/waitlist': typeof AdminWaitlistRoute
   '/auth/error': typeof AuthErrorRoute
   '/d/$slug': typeof DSlugRouteWithChildren
   '/i/$itemId': typeof IItemIdRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/admin/waitlist': typeof AdminWaitlistRoute
   '/auth/error': typeof AuthErrorRoute
   '/i/$itemId': typeof IItemIdRoute
   '/d/$slug/archived': typeof DSlugArchivedRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/admin/waitlist': typeof AdminWaitlistRoute
   '/auth/error': typeof AuthErrorRoute
   '/d/$slug': typeof DSlugRouteWithChildren
   '/i/$itemId': typeof IItemIdRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/admin/waitlist'
     | '/auth/error'
     | '/d/$slug'
     | '/i/$itemId'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/admin/waitlist'
     | '/auth/error'
     | '/i/$itemId'
     | '/d/$slug/archived'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/admin/waitlist'
     | '/auth/error'
     | '/d/$slug'
     | '/i/$itemId'
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ShareRoute: typeof ShareRoute
   SignInRoute: typeof SignInRoute
+  AdminWaitlistRoute: typeof AdminWaitlistRoute
   AuthErrorRoute: typeof AuthErrorRoute
   DSlugRoute: typeof DSlugRouteWithChildren
   IItemIdRoute: typeof IItemIdRoute
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/waitlist': {
+      id: '/admin/waitlist'
+      path: '/admin/waitlist'
+      fullPath: '/admin/waitlist'
+      preLoaderRoute: typeof AdminWaitlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/error': {
@@ -479,6 +499,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ShareRoute: ShareRoute,
   SignInRoute: SignInRoute,
+  AdminWaitlistRoute: AdminWaitlistRoute,
   AuthErrorRoute: AuthErrorRoute,
   DSlugRoute: DSlugRouteWithChildren,
   IItemIdRoute: IItemIdRoute,

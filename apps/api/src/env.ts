@@ -7,6 +7,7 @@ import {
   INGEST_DAILY_CAP,
   WAITLIST_JOIN_PER_IP_PER_HOUR,
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR,
+  WAITLIST_INVITE_TTL_DAYS_DEFAULT,
 } from '@gobbit/shared';
 import { registrationModes } from '@gobbit/shared/auth';
 import { cloudNameFrom } from './lib/cloudinary-url';
@@ -24,6 +25,17 @@ export const DEV_LOG_HASH_KEY = 'gobbit-development-log-hash-key-not-secret';
 
 const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
 
+/** `a, b,,c` → `['a', 'b', 'c']`. */
+const commaList = z
+  .string()
+  .default('')
+  .transform((v) =>
+    v
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0),
+  );
+
 const baseSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
@@ -32,15 +44,7 @@ const baseSchema = z.object({
   APP_URL: z.url().optional(),
   COOKIE_DOMAIN: z.string().optional(),
   COOKIE_SECURE: bool('true'),
-  CORS_ORIGINS: z
-    .string()
-    .default('')
-    .transform((v) =>
-      v
-        .split(',')
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0),
-    ),
+  CORS_ORIGINS: commaList,
   MAIL_PROVIDER: z.enum(['resend', 'console']).default('console'),
   RESEND_API_KEY: z.string().optional(),
   MAIL_FROM: z.string().optional(),
@@ -87,6 +91,10 @@ const baseSchema = z.object({
   REGISTRATION_MODE: z.enum(registrationModes).default('waitlist'),
   /** D232: Umami website id; when set, the landing page carries the tracker tag. Off when unset. */
   ANALYTICS_SITE_ID: z.uuid('ANALYTICS_SITE_ID must be a UUID').optional(),
+  /** 032 (D234): comma-separated emails that may run `/admin/*`; trimmed and lower-cased. */
+  PLATFORM_ADMINS: commaList.transform((list) => list.map((email) => email.toLowerCase())),
+  /** 032: lifetime of the sign-in link in the "You're in" email. */
+  WAITLIST_INVITE_TTL_DAYS: positiveInt(WAITLIST_INVITE_TTL_DAYS_DEFAULT),
 });
 
 export const envSchema = baseSchema

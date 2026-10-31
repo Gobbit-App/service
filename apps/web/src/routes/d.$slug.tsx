@@ -75,13 +75,13 @@ function DeckLayout() {
     if (deckSlug) writeLastDeck(deckSlug);
   }, [deckSlug]);
 
-  if (deck.isPending) return <LoadingState label="Loading pocketbook…" />;
+  if (deck.isPending) return <LoadingState label="Loading deck…" />;
   if (deck.isError && !deck.data) {
     return (
       <main className="page">
         <ErrorState
-          title="Pocketbook unavailable"
-          message={accessErrorCopy(deck.error, 'pocketbook')}
+          title="Deck unavailable"
+          message={accessErrorCopy(deck.error, 'deck')}
           onRetry={isRetryable(deck.error) ? () => void deck.refetch() : undefined}
         />
       </main>

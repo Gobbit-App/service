@@ -1,5 +1,6 @@
 import type { SessionRow } from '@gobbit/db';
 import type { ActorVia } from '@gobbit/shared';
+import type { PlatformAdmin } from './access/platform-admin';
 
 export interface CurrentUser {
   id: string;
@@ -37,5 +38,7 @@ export type AppEnv = {
     auth?: Authenticated;
     /** D99: an `ing_` bearer on POST /ingest, resolved by the ingest route (never a session). */
     ingestBearer?: string;
+    /** 032: set by the `/admin/*` guard once the caller is a platform admin (D234). */
+    platformAdmin?: PlatformAdmin;
   };
 };
