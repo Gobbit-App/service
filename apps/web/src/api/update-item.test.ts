@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReviewList } from '@gobbit/shared';
 import { makeItem } from '../test/fixtures';
 import { testQueryClient } from '../test/render';
@@ -12,6 +12,8 @@ vi.mock('./client', () => ({
   api: { PATCH: patchMock },
   unwrap: (request: Promise<unknown>) => request,
 }));
+const { trackContent } = vi.hoisted(() => ({ trackContent: vi.fn() }));
+vi.mock('../analytics/analytics', () => ({ trackContent }));
 const { useUpdateItem } = await import('./update-item');
 
 function setup() {
@@ -22,6 +24,8 @@ function setup() {
   const { result } = renderHook(() => useUpdateItem('family'), { wrapper });
   return { queryClient, invalidate, result };
 }
+
+beforeEach(() => trackContent.mockReset());
 
 describe('useUpdateItem', () => {
   it('patches the item, stores the response and invalidates lists and search', async () => {
@@ -40,6 +44,12 @@ describe('useUpdateItem', () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.itemLists });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: [SEARCH_KEY] });
     expect(invalidate).not.toHaveBeenCalledWith({ queryKey: [REVIEW_KEY] });
+    expect(trackContent).toHaveBeenCalledWith('card-edited', {
+      deckId: updated.deckId,
+      itemId: 'i1',
+      type: 'text',
+      channel: 'editor',
+    });
   });
 
   it('swaps a proposal into the review queue and invalidates the queue', async () => {
@@ -56,6 +66,7 @@ describe('useUpdateItem', () => {
     const cached = queryClient.getQueryData<ReviewList>(queryKeys.review('family'));
     expect(cached?.data[0]?.item.title).toBe('Edited');
     expect(invalidate).toHaveBeenCalledWith({ queryKey: [REVIEW_KEY] });
+    expect(trackContent).not.toHaveBeenCalled(); // D248: proposal edits are not card edits
   });
 
   it('surfaces a failed patch', async () => {
@@ -63,5 +74,6 @@ describe('useUpdateItem', () => {
     const { result } = setup();
     result.current.mutate({ itemId: 'i1', patch: { title: 'x' } });
     await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(trackContent).not.toHaveBeenCalled();
   });
 });

@@ -6,6 +6,20 @@ import { buildAppConfig, CONFIG_CACHE_CONTROL, registerConfigRoutes } from './co
 const FAKE_URL = ['cloudinary://', 'key123', ':', 'not-a-real-secret', '@', 'demo'].join('');
 
 describe('buildAppConfig', () => {
+  it('D245: exposes the analytics site and host only when ANALYTICS_SITE_ID is set', () => {
+    const siteId = '0b8f2f4e-3c1a-4d2b-9e6f-1a2b3c4d5e6f';
+    const base = { CLOUDINARY_URL: undefined, GIT_SHA: undefined, API_URL: 'https://api.example' };
+    expect(buildAppConfig(base).analytics).toBeNull();
+    expect(
+      buildAppConfig({ ...base, ANALYTICS_SITE_ID: siteId, APP_URL: 'https://gobbit.example' })
+        .analytics,
+    ).toEqual({ siteId, host: 'gobbit.example' });
+    expect(buildAppConfig({ ...base, ANALYTICS_SITE_ID: siteId }).analytics).toEqual({
+      siteId,
+      host: 'api.example',
+    });
+  });
+
   it('exposes only the cloud name, commit and search flags', () => {
     const config = buildAppConfig({ CLOUDINARY_URL: FAKE_URL, GIT_SHA: 'abc' });
     expect(config).toEqual({
@@ -13,6 +27,7 @@ describe('buildAppConfig', () => {
       commit: 'abc',
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+      analytics: null,
     });
     expect(JSON.stringify(config)).not.toContain('key123');
     expect(JSON.stringify(config)).not.toContain('not-a-real-secret');
@@ -24,6 +39,7 @@ describe('buildAppConfig', () => {
       commit: 'dev',
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+      analytics: null,
     });
   });
 
@@ -109,6 +125,7 @@ describe('GET /config', () => {
       commit: 'abc',
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+      analytics: null,
     });
     expect(body).not.toContain('not-a-real-secret');
   });

@@ -1,5 +1,6 @@
 import type { Db } from '@gobbit/db';
 import type { Env } from '../env';
+import { analyticsHead } from '../public/analytics';
 import { createShareRepo } from '../repositories/share.repo';
 import { createCloudinaryOgStore, type OgImageStore } from './og-store';
 import type { OgRenderer } from './render';
@@ -31,7 +32,7 @@ export function lazyRenderer(
 
 export function buildShareService(
   db: Db,
-  env: Pick<Env, 'APP_URL' | 'API_URL' | 'CLOUDINARY_URL'>,
+  env: Pick<Env, 'APP_URL' | 'API_URL' | 'CLOUDINARY_URL' | 'ANALYTICS_SITE_ID'>,
   wiring: ShareWiring = {},
 ) {
   const store =
@@ -47,5 +48,6 @@ export function buildShareService(
     origin: env.APP_URL ?? env.API_URL,
     store,
     renderer: ogRenderer ? async () => ogRenderer : lazyRenderer(),
+    analytics: analyticsHead(env),
   });
 }

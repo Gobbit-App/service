@@ -125,6 +125,9 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
   Smoke and the operator opt out with `localStorage umami.disabled = 1`.
 - **Decision event (D243)**: `analytics.config` once at API start-up (`enabled` with `host`, or
   `disabled`; never the site id), sharing the start-up `bootId` with `registration.mode`.
+- **Superseded scope (033)**: "landing only" no longer holds; the app, public pages and share
+  previews are measured too, with route patterns only (ADR-065,
+  [web-pwa](web-pwa.md#app-analytics-033-d244d250-adr-065)).
 
 ## Deviations from the 031 plan
 

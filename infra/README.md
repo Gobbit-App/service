@@ -109,7 +109,7 @@ SELECT registered_via, count(*) FROM users GROUP BY 1;
 
 ## Landing analytics
 
-Self-hosted [Umami](https://umami.is) (v3, PostgreSQL only, pinned in `docker-compose.yml`) counts landing-page visitors (D231–D233, ADR-062). The browser loads `/stats/script.js` and posts to `/stats/api/send` on the app origin; Caddy proxies only those two paths to `ANALYTICS_UPSTREAM` (default `gobbit-umami:3000`, a project-unique alias because `web` is also on `dokploy-network`). The dashboard has its own hostname, `STATS_HOST` (default `gobbit-stats.niranhome.win`), behind Umami's login. Only the landing page carries the tag, and only when `ANALYTICS_SITE_ID` is set.
+Self-hosted [Umami](https://umami.is) (v3, PostgreSQL only, pinned in `docker-compose.yml`) counts landing-page visitors (D231–D233, ADR-062). The browser loads `/stats/script.js` and posts to `/stats/api/send` on the app origin; Caddy proxies only those two paths to `ANALYTICS_UPSTREAM` (default `gobbit-umami:3000`, a project-unique alias because `web` is also on `dokploy-network`). The dashboard has its own hostname, `STATS_HOST` (default `gobbit-stats.niranhome.win`), behind Umami's login. Nothing carries the tag unless `ANALYTICS_SITE_ID` is set. Then the landing page, public pages and share previews carry it, and the SPA loads it for signed-in members; every payload is reduced to route patterns, screen names, the member id and four content events (033, ADR-065).
 
 Setup (once):
 
@@ -117,7 +117,7 @@ Setup (once):
 2. Dokploy secrets: `UMAMI_DATABASE_URL=postgres://umami:<pw>@<box LAN IP>:5433/umami`, `UMAMI_APP_SECRET` (`openssl rand -hex 32`).
 3. Paste the new `docker-compose.yml` into Dokploy → Compose → *Raw* and deploy with `ANALYTICS_SITE_ID` still empty (the API logs `analytics.config` `disabled`).
 4. Open `https://<STATS_HOST>`, sign in as `admin` / `umami`, **change the password** at once, then add a website for the public host (e.g. `gobbit.niranhome.win`).
-5. Set `ANALYTICS_SITE_ID` to the website's id in Dokploy and redeploy. `/welcome` now carries the tag; no other page does.
+5. Set `ANALYTICS_SITE_ID` to the website's id in Dokploy and redeploy. `/welcome`, `/p/…`, `/s/…` and the app now send views (`analytics.config` lists `surfaces`); sign-in, error pages, the sitemap and robots never do.
 6. In your own browsers run `localStorage.setItem('umami.disabled', '1')` on the app origin so you are not counted (smoke tests do the same).
 
 Conversion for a period (D233): an Umami funnel `/` or `/welcome` → `/welcome/joined`. Umami undercounts (blockers, Do Not Track); the record of sign-ups is `waitlist_summary`, and the record of landing views is `landing.render` (D243):

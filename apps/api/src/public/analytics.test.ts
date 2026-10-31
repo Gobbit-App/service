@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { captureLogger, expectDecision } from '../../test/capture-logger';
-import { analyticsHead, analyticsTag, recordAnalyticsConfig, STATS_BASE_PATH } from './analytics';
+import {
+  analyticsHead,
+  analyticsTag,
+  recordAnalyticsConfig,
+  STATS_BASE_PATH,
+  withPage,
+} from './analytics';
 
 const SITE_ID = '2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90';
 const env = { API_URL: 'https://gobbit.example.test/api', APP_URL: 'https://gobbit.example.test' };
@@ -17,6 +23,31 @@ describe('analyticsTag (D232, contract §2)', () => {
     const html = analyticsTag({ siteId: '"><img src=x>', host: 'a"b' }).toString();
     expect(html).not.toContain('"><img');
     expect(html).toContain('data-domains="a&quot;b"');
+  });
+});
+
+describe('analyticsTag with a page (D249, contract §3)', () => {
+  const page = { pattern: '/p/:deck', name: 'Public deck' };
+
+  it('loads page.js first, then the tracker with its before-send hook and no query or hash', () => {
+    const html = analyticsTag({ siteId: SITE_ID, host: 'gobbit.example.test', page }).toString();
+    const [first, second] = html.split('\n');
+    expect(first).toBe(
+      '<script defer src="/analytics/page.js" data-pattern="/p/:deck" data-screen="Public deck"></script>',
+    );
+    expect(second).toContain('src="/stats/script.js"');
+    expect(second).toContain('data-do-not-track="true"');
+    expect(second).toContain('data-exclude-search="true" data-exclude-hash="true"');
+    expect(second).toContain('data-before-send="__gobbitAnalyticsBeforeSend"');
+  });
+
+  it('withPage is undefined when analytics is off', () => {
+    expect(withPage(undefined, page)).toBeUndefined();
+    expect(withPage({ siteId: SITE_ID, host: 'h' }, page)).toEqual({
+      siteId: SITE_ID,
+      host: 'h',
+      page,
+    });
   });
 });
 
@@ -52,7 +83,12 @@ describe('recordAnalyticsConfig (D243)', () => {
     );
     await capture.flush();
     const line = expectDecision(capture.lines, 'analytics.config', { outcome: 'enabled' });
-    expect(line).toMatchObject({ level: 'info', host: 'gobbit.example.test', bootId: 'boot-1' });
+    expect(line).toMatchObject({
+      level: 'info',
+      host: 'gobbit.example.test',
+      bootId: 'boot-1',
+      surfaces: 'landing,app,public,share',
+    });
     expect(JSON.stringify(capture.lines)).not.toContain(SITE_ID);
   });
 
@@ -62,5 +98,6 @@ describe('recordAnalyticsConfig (D243)', () => {
     await capture.flush();
     const line = expectDecision(capture.lines, 'analytics.config', { outcome: 'disabled' });
     expect(line.host).toBeUndefined();
+    expect(line.surfaces).toBeUndefined();
   });
 });

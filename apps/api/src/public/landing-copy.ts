@@ -1,4 +1,5 @@
 import { WAITLIST_NOTE_MAX, type WaitlistKind } from '@gobbit/shared';
+import { ANALYTICS_PRIVACY_NOTE } from '@gobbit/shared/analytics';
 
 /**
  * D230: every string of the landing page. A translation is a second object with the same shape;
@@ -69,7 +70,8 @@ export const LANDING_COPY_EN = {
     tooManyTries: (minutes: number) =>
       `Too many tries. Please try again in about ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`,
   },
-  privacy: 'We use your email only to let you in. No tracking cookies.',
+  // FR-013 (033): the analytics notice ships with app tracking.
+  privacy: `We use your email only to let you in. No tracking cookies. ${ANALYTICS_PRIVACY_NOTE}`,
   footer: 'Gobbit',
 } as const;
 

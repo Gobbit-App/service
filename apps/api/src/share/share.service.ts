@@ -15,6 +15,8 @@ import {
 } from './share-page';
 import { lineSink } from '../lib/logger';
 import { publicUrl } from '../public/public-url';
+import { analyticsTag, withPage, type AnalyticsConfig } from '../public/analytics';
+import { PUBLIC_SCREENS } from '@gobbit/shared/analytics';
 
 /** D61: a first share waits at most this long for its image before falling back. */
 export const OG_RENDER_BUDGET_MS = 3000;
@@ -35,6 +37,8 @@ export interface ShareServiceDeps {
   renderer: () => Promise<OgRenderer>;
   log?: (message: string, err?: unknown) => void;
   renderBudgetMs?: number;
+  /** D249: the tracker for the share preview; undefined = analytics off. */
+  analytics?: AnalyticsConfig;
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -81,6 +85,9 @@ export function createShareService(deps: ShareServiceDeps) {
     log = lineSink('share'),
     renderBudgetMs = OG_RENDER_BUDGET_MS,
   } = deps;
+  // D249: the same tag for every share preview (pattern `/s/:item`, never the id).
+  const sharePageHead = withPage(deps.analytics, PUBLIC_SCREENS.share);
+  const shareAnalytics = sharePageHead ? analyticsTag(sharePageHead).toString() : undefined;
 
   function frame(itemId: string): Pick<ShareMeta, 'canonicalUrl' | 'redirectPath'> {
     const id = encodeURIComponent(itemId);
@@ -178,7 +185,10 @@ export function createShareService(deps: ShareServiceDeps) {
     /** HTML for `/s/:itemId`: OG tags for crawlers, a refresh to `/i/:itemId` for humans. */
     async sharePage(itemId: string): Promise<string> {
       const record = await publicRecord(itemId);
-      return renderSharePage(record ? await publicMeta(record) : privateMeta(itemId));
+      return renderSharePage(
+        record ? await publicMeta(record) : privateMeta(itemId),
+        shareAnalytics,
+      );
     },
 
     /**

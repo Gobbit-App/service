@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { IngestAccepted } from '@gobbit/shared';
+import { trackContent } from '../analytics/analytics';
 import { buildIngestForm, type IngestDraft } from '../share/share-payload';
 import { api, unwrap } from './client';
 import { REVIEW_KEY } from './query-keys';
@@ -16,6 +17,9 @@ export function useSubmitShare() {
         }),
       ),
     // The proposal shows up once the worker is done; the pill refetches on focus as well.
-    onSuccess: () => qc.invalidateQueries({ queryKey: [REVIEW_KEY] }),
+    onSuccess: (_accepted, draft) => {
+      trackContent('card-shared', { deckId: draft.deckId || undefined, channel: 'share-target' });
+      return qc.invalidateQueries({ queryKey: [REVIEW_KEY] });
+    },
   });
 }

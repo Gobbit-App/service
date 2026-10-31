@@ -21,8 +21,11 @@ export type ShareMeta = {
   lang: string;
 };
 
-/** Renders an HTML share page with meta tags for crawlers and redirect for humans. */
-export function renderSharePage(meta: ShareMeta): string {
+/**
+ * Renders an HTML share page with meta tags for crawlers and redirect for humans.
+ * `analyticsTags` is pre-rendered, escaped markup from `analyticsTag()` (D249), or absent.
+ */
+export function renderSharePage(meta: ShareMeta, analyticsTags?: string): string {
   const esc = escapeHtml;
   const lines: string[] = [
     '<!doctype html>',
@@ -47,6 +50,7 @@ export function renderSharePage(meta: ShareMeta): string {
     `<meta name="twitter:image" content="${esc(meta.imageUrl)}">`,
     `<link rel="canonical" href="${esc(meta.canonicalUrl)}">`,
     `<meta http-equiv="refresh" content="0;url=${esc(meta.redirectPath)}">`,
+    ...(analyticsTags ? [analyticsTags] : []),
     '</head>',
     '<body>',
     `<p><a href="${esc(meta.redirectPath)}">Open in Gobbit</a></p>`,

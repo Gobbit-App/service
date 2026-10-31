@@ -7,6 +7,7 @@ import {
   type QueryKey,
 } from '@tanstack/react-query';
 import type { BulkPublishResult, PublishRequest, ReviewCount, ReviewList } from '@gobbit/shared';
+import { deckIdFromCache, trackContent } from '../analytics/analytics';
 import { decrementCount, removeReviewEntries } from '../review/review-cache';
 import { api, unwrap } from './client';
 import { queryKeys } from './query-keys';
@@ -86,13 +87,15 @@ function refreshAfterReview(qc: QueryClient, deckSlug: string): Promise<unknown>
 }
 
 /** Shared optimistic lifecycle of publish and discard; settled refetches the queue and lists. */
-function useReviewAction<TVars extends { itemId: string }>(
+function useReviewAction<TVars extends { itemId: string }, TResult>(
   deckSlug: string,
-  send: (vars: TVars) => Promise<unknown>,
+  send: (vars: TVars) => Promise<TResult>,
+  onSent?: (result: TResult, vars: TVars) => void,
 ) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: send,
+    onSuccess: onSent,
     onMutate: (vars) => removeFromReview(qc, deckSlug, [vars.itemId]),
     onError: (_error, _vars, snapshot) => {
       if (snapshot) restoreReview(qc, deckSlug, snapshot);
@@ -105,8 +108,18 @@ export type PublishVars = { itemId: string } & Partial<PublishRequest>;
 
 /** D106: publish as new, apply as an update, optionally creating the suggested category. */
 export function usePublishProposal(deckSlug: string) {
-  return useReviewAction(deckSlug, ({ itemId, ...body }: PublishVars) =>
-    unwrap(api.POST('/items/{id}/publish', { params: { path: { id: itemId } }, body })),
+  return useReviewAction(
+    deckSlug,
+    ({ itemId, ...body }: PublishVars) =>
+      unwrap(api.POST('/items/{id}/publish', { params: { path: { id: itemId } }, body })),
+    (item, { mode }) =>
+      // D248: publishing as new creates a card; applying a proposal as an update edits one.
+      trackContent(mode === 'update' ? 'card-edited' : 'card-created', {
+        deckId: item.deckId,
+        itemId: item.id,
+        type: item.type,
+        channel: 'review',
+      }),
   );
 }
 
@@ -130,7 +143,16 @@ export function useBulkPublish(deckSlug: string) {
           body: { ids: [...ids] },
         }),
       ),
-    onSuccess: (result) => removeFromReview(qc, deckSlug, result.published),
+    onSuccess: (result) => {
+      if (result.published.length > 0) {
+        trackContent('card-created', {
+          deckId: deckIdFromCache(qc, deckSlug),
+          count: result.published.length,
+          channel: 'bulk-publish',
+        });
+      }
+      return removeFromReview(qc, deckSlug, result.published);
+    },
     onSettled: () => refreshAfterReview(qc, deckSlug),
   });
 }

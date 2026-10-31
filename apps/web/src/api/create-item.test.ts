@@ -10,11 +10,13 @@ vi.mock('./client', () => ({
   api: { POST: postMock },
   unwrap: (request: Promise<unknown>) => request,
 }));
+const { trackContent } = vi.hoisted(() => ({ trackContent: vi.fn() }));
+vi.mock('../analytics/analytics', () => ({ trackContent }));
 const { useCreateItem } = await import('./create-item');
 
 describe('useCreateItem', () => {
   it('posts the card to the deck and invalidates every item list and search on success', async () => {
-    postMock.mockResolvedValueOnce({ data: { id: 'item-1' } });
+    postMock.mockResolvedValueOnce({ id: 'item-1', deckId: 'deck-1', type: 'text' });
     const queryClient = testQueryClient();
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
     const wrapper = ({ children }: { children: ReactNode }) =>
@@ -29,6 +31,12 @@ describe('useCreateItem', () => {
     expect(postMock).toHaveBeenCalledWith('/decks/{id}/items', {
       params: { path: { id: 'me' } },
       body: input,
+    });
+    expect(trackContent).toHaveBeenCalledWith('card-created', {
+      deckId: 'deck-1',
+      itemId: 'item-1',
+      type: 'text',
+      channel: 'editor',
     });
   });
 });

@@ -9,6 +9,7 @@ import type { DecksRepo } from '../repositories/decks.repo';
 import type { SitemapRepo } from '../repositories/sitemap.repo';
 import { resolveRole, type MembershipLookup } from '../access/authorize';
 import type { ShareService } from '../share/share.service';
+import type { AnalyticsConfig } from '../public/analytics';
 import type { PageCache } from '../public/page-cache';
 import { pageCacheKey } from '../public/page-cache';
 import {
@@ -56,6 +57,7 @@ export function createPublicPagesService({
   share,
   cache,
   search,
+  analytics,
 }: {
   publicDecks: Pick<PublicDeckService, 'summaryFor' | 'listFor' | 'itemById'>;
   decks: Pick<DecksRepo, 'findBySlug'>;
@@ -64,6 +66,8 @@ export function createPublicPagesService({
   share: Pick<ShareService, 'ogImageFor' | 'imageUrl' | 'siteImageUrl' | 'origin'>;
   cache: PageCache;
   search: Pick<SearchService, 'retrievePublic'>;
+  /** D249: the tracker for public pages; undefined = analytics off. */
+  analytics?: AnalyticsConfig;
 }) {
   const origin = share.origin;
 
@@ -86,6 +90,7 @@ export function createPublicPagesService({
       publicViewNote: audience === 'member-public-view',
       imageUrl: share.imageUrl,
       siteImage: share.siteImageUrl,
+      analytics,
     };
   }
 

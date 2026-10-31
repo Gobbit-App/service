@@ -69,7 +69,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `REGISTRATION_MODE` | `waitlist` | `waitlist` closes sign-up: an unknown address asking for a sign-in link joins the waitlist instead; invitees still get accounts. `open` lets anyone sign up (logged at `warn` in production) |
 | `WAITLIST_JOIN_PER_IP_PER_HOUR` | `10` | Waitlist joins and confirms per IP per hour (in memory; 429 beyond) |
 | `WAITLIST_JOIN_PER_EMAIL_PER_HOUR` | `3` | Waitlist joins per address per hour (`rate_limit_counters`; 429 beyond) |
-| `ANALYTICS_SITE_ID` | — | Umami website id (UUID). Set → the landing page (and only it) loads the same-origin tracker `/stats/script.js`; unset → no tracker (`infra/README.md` § Landing analytics) |
+| `ANALYTICS_SITE_ID` | — | Umami website id (UUID). Set → the landing page, public pages, share previews and (for signed-in members, lazily) the app load the same-origin tracker `/stats/script.js` and send route patterns, the member id and four content events only (ADR-065); unset → no tracker anywhere (`infra/README.md` § Landing analytics) |
 | `PLATFORM_ADMINS` | — | Comma-separated emails of platform admins (`/admin/*`, e.g. the waitlist screen); everyone else gets 404. Empty logs `admin.config` at `warn` in production |
 | `WAITLIST_INVITE_TTL_DAYS` | `7` | Days a waitlist invite's sign-in link stays valid |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |

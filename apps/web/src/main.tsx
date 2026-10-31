@@ -2,6 +2,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { startAnalytics } from './analytics/analytics';
 import { createIdbPersister, revalidateRestored, shouldPersistQuery } from './api/persist';
 import { CACHE_MAX_AGE_MS, createAppQueryClient } from './api/query-client';
 import { signOut, unauthorizedRedirect } from './api/session';
@@ -38,6 +39,16 @@ const navigate = historyNavigate(router.history);
 
 // D212: long-press shows a control's tooltip on touch screens.
 installTooltipPress();
+
+// 033 (D244–D247): page views by route pattern; the tracker loads on idle, only when configured.
+void startAnalytics({
+  queryClient,
+  onNavigate: (callback) => router.subscribe('onResolved', callback),
+  current: () => ({
+    routeId: router.state.matches.at(-1)?.routeId,
+    pathname: router.state.location.pathname,
+  }),
+});
 
 const root = document.getElementById('root');
 if (!root) throw new Error('index.html is missing #root');

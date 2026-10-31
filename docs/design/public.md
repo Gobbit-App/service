@@ -105,6 +105,10 @@ commit. HTTP: `public, max-age=300` for pages, the sitemap and robots.txt.
 `publicUrl(.., /p/{slug}/i/{id})` with the share cache header (`share.publicTarget`). Private mode is
 unchanged.
 
+## Analytics on public pages (033, D249)
+
+With `ANALYTICS_SITE_ID` set, the deck, category, card and search pages set `analytics.page` (`{ pattern, screen }`, e.g. `/p/:deck/i/:item`, "Public card") on their head, and share previews of private cards (`/s/:item`) do the same. `layout()` then renders `<script defer src="/analytics/page.js" data-pattern data-screen>` before Umami's tag (`data-before-send`, `data-exclude-search`). `page.js` sends page views only: pattern, screen name, referrer origin, no id, no events, nothing offline. Error pages, the sitemap and robots never carry it. The share preview's instant redirect may win the race against the view (best effort).
+
 ## Public search (018, D182)
 
 - `GET /public/{slug}/search?q=&limit=` (OpenAPI, `limit` 1–20, default 10) answers
