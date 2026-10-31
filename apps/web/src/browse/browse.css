@@ -1,9 +1,15 @@
 /*
- * Browse (D139–D144). Imported only by BrowseScreen, so it stays in the Browse chunk.
- * Paging is native scroll-snap; only transform/opacity ever transition (SC-004).
+ * Browse (D139–D144, redesigned in 034: D244–D251). Imported only by BrowseScreen, so it
+ * stays in the Browse chunk. Cards page sideways on a native horizontal snap track; each page
+ * scrolls vertically on its own. Only transform/opacity ever animate.
  */
 
 .browse {
+  --browse-top: calc(var(--safe-top) + 60px);
+  --browse-bottom: calc(var(--safe-bottom) + 96px);
+  --browse-glass: color-mix(in srgb, var(--color-bg) 76%, transparent);
+  --browse-glass-line: color-mix(in srgb, var(--color-border) 70%, transparent);
+
   position: fixed;
   inset: 0;
   z-index: 10;
@@ -11,298 +17,474 @@
 }
 
 .browse__stage {
+  position: relative;
   height: 100%;
 }
 
-/* The snap container: one card per screen; the page never scroll-chains past it. */
-.browse__pages {
+/* ---------- Top bar (D247): close · category rail · counter, then progress ---------- */
+
+.browse-top {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  padding-top: var(--safe-top);
+  border-bottom: 1px solid var(--browse-glass-line);
+  background: var(--browse-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
+}
+
+.browse-top__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  height: 58px;
+  padding: 0 calc(8px + var(--safe-right)) 0 calc(4px + var(--safe-left));
+}
+
+.browse-top__row > .icon-button {
+  color: var(--color-text);
+}
+
+.browse-top__counter {
+  min-width: 3.5ch;
+  padding-inline-start: 4px;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.browse-top__progress {
+  height: 2px;
+  overflow: hidden;
+}
+
+.browse-top__progress-fill {
+  display: block;
   height: 100%;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  scroll-snap-type: y mandatory;
+  background: var(--color-accent);
+  transform-origin: left center;
+  transition: transform 250ms ease-out;
+}
+
+[dir='rtl'] .browse-top__progress-fill {
+  transform-origin: right center;
+}
+
+/* The chip rail: scrolls on its own, edges fade out. */
+.browse-rail {
+  min-width: 0;
+}
+
+.browse-rail__list {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  list-style: none;
   scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent
+  );
 }
 
-.browse__pages::-webkit-scrollbar {
+.browse-rail__list::-webkit-scrollbar {
   display: none;
 }
 
-.browse-page {
+.browse-rail__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.browse-rail__chip:hover {
+  background: color-mix(in srgb, var(--color-text) 14%, transparent);
+}
+
+.browse-rail__chip[aria-current='true'] {
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-weight: 600;
+}
+
+.browse-rail__chip:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Track and pages (D244) ---------- */
+
+.browse__track {
   display: flex;
-  flex-direction: column;
-  height: 100dvh;
+  height: 100%;
+  overflow: auto hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.browse__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* One page per screen width; it scrolls vertically and never chains to the track. */
+.browse-page {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  padding: var(--browse-top) 0 var(--browse-bottom);
+  overflow: hidden auto;
+  overscroll-behavior-y: contain;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
 
-/* The middle zone: horizontal swipes do nothing; long cards scroll, then chain to the next. */
-.browse-page__content {
-  flex: 1 1 auto;
-  min-height: 0;
-  width: 100%;
+.browse-sheet {
   max-width: 640px;
   margin: 0 auto;
-  padding: 0 var(--gutter);
-  overflow-y: auto;
-  overscroll-behavior: auto;
+  padding: 20px calc(var(--gutter) + 4px + var(--safe-right)) 0
+    calc(var(--gutter) + 4px + var(--safe-left));
 }
 
-.browse-page__content:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
+/* The card, flat and large: the content is the page. */
+.browse-sheet .card {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
 }
 
-.browse-page__content .card {
+.browse-sheet .card__title {
+  margin: 0 0 16px;
+  font-size: clamp(1.375rem, 5.5vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * Headings take focus only so a screen reader announces the new page (BrowseStack); they are
+ * not controls, so no focus ring — a box round the title on every move would read as a bug.
+ */
+.browse-sheet .card__title:focus,
+.browse-end__title:focus {
+  outline: none;
+}
+
+.browse-sheet .card__body {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.browse-sheet .cloud-image__img,
+.browse-sheet .cloud-image__placeholder,
+.browse-sheet .link-card__image {
+  border-radius: 16px;
+}
+
+.browse-sheet .card__meta {
+  margin-top: 16px;
+}
+
+/* State pages (loading, empty, offline): the copy in the middle of the screen. */
+.browse-page--state .browse-sheet {
+  display: grid;
+  align-content: center;
+  min-height: 100%;
+}
+
+/* ---------- Details and Source (D246) ---------- */
+
+.browse-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.browse-section__heading {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.browse-section__line {
   margin: 0;
 }
 
-.browse-page--state .browse-page__content {
+.browse-section__facts {
   display: grid;
-  align-content: center;
+  grid-template-columns: max-content 1fr;
+  gap: 6px var(--gap);
+  margin: 0;
 }
 
-/* Header/footer zones (contract §2): a quarter of the screen, at least 88 px; vertical stays native. */
-.browse-band {
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  min-height: max(25dvh, 88px);
-  padding: 0 calc(var(--gutter) + var(--safe-right)) 0 calc(var(--gutter) + var(--safe-left));
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.browse-band--header {
-  padding-top: var(--safe-top);
-  background: linear-gradient(var(--color-surface), var(--color-bg));
-}
-
-.browse-band--footer {
-  padding-bottom: var(--safe-bottom);
-  background: linear-gradient(var(--color-bg), var(--color-surface));
-}
-
-.browse-band__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--gap);
-}
-
-/* D215: the position menu ("3 / 12"); its menu offers Previous card / Next card. */
-.browse-band__position {
+.browse-section__facts dt {
   color: var(--color-muted);
-  font-variant-numeric: tabular-nums;
 }
 
-.browse-band__row--category {
-  justify-content: center;
+.browse-section__facts dd {
+  margin: 0;
 }
 
-.browse-band .browse-dots {
-  align-self: center;
+/* ---------- End page (D248) ---------- */
+
+.browse-page--end {
+  display: grid;
+  place-items: center;
 }
 
-/* Category name + menu. */
-.browse-category {
-  position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
+.browse-end {
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+  padding: 0 var(--gutter);
   text-align: center;
 }
 
-.browse-category__name {
-  max-width: 100%;
-  min-height: var(--tap);
-  padding: 0 14px;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font: inherit;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
+.browse-end__title {
+  margin: 0;
+  font-size: 1.5rem;
 }
 
-.browse-category__menu {
+.browse-end__actions {
+  display: grid;
+  gap: 10px;
+  min-width: min(280px, 100%);
+}
+
+/* These buttons keep their words on narrow screens (they are the page's only content). */
+.browse-end .button--icon,
+.browse-hint .button--icon {
+  gap: 8px;
+  padding-inline: 18px;
+}
+
+.browse-end .button--icon .button__label,
+.browse-hint .button--icon .button__label {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+/* Their label is on screen, so no D212 tooltip either (it covered the hint's last tip). */
+.browse-end .button--icon[data-tip]:not([aria-disabled='true'])::after,
+.browse-hint .button--icon[data-tip]:not([aria-disabled='true'])::after {
+  display: none;
+}
+
+/* ---------- Dock (D249): Previous · card actions · Next ---------- */
+
+.browse-dock {
   position: absolute;
-  top: calc(100% + 4px);
+  bottom: calc(var(--safe-bottom) + 14px);
   left: 50%;
   z-index: 2;
-  min-width: 200px;
-  max-height: 50dvh;
-  margin: 0;
-  padding: 4px;
-  overflow-y: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  box-shadow: var(--shadow);
-  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  width: min(calc(100% - 2 * var(--gutter)), 520px);
+  padding: 5px;
+  border: 1px solid var(--browse-glass-line);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
   transform: translateX(-50%);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
 }
 
-.browse-category__menu button {
-  display: block;
-  width: 100%;
-  min-height: var(--tap);
-  padding: 0 12px;
-  border: 0;
-  border-radius: calc(var(--radius) - 4px);
-  background: transparent;
+.browse-dock__step {
+  flex: 0 0 auto;
   color: var(--color-text);
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
 }
 
-.browse-category__menu button[aria-checked='true'] {
-  background: var(--color-accent-soft);
-  font-weight: 600;
-}
-
-/* Pane tabs and dots. */
-.browse-tabs {
+.browse-dock__actions {
   display: flex;
   flex: 1 1 auto;
-  gap: 4px;
   justify-content: center;
+  min-width: 0;
 }
 
-.browse-tabs__tab {
-  min-height: var(--tap);
-  padding: 0 14px;
+.browse-dock .card__bar {
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
   border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--color-muted);
-  font: inherit;
-  cursor: pointer;
 }
 
-.browse-tabs__tab[aria-selected='true'] {
-  background: var(--color-accent-soft);
-  color: var(--color-text);
-  font-weight: 600;
-}
-
-.browse-tabs__tab:disabled {
-  cursor: default;
-}
-
-.browse-dots {
-  display: flex;
-  gap: 6px;
-}
-
-.browse-dots__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-border);
-  transition: transform 150ms ease-out;
-}
-
-.browse-dots__dot.is-active {
-  background: var(--color-accent);
-  transform: scale(1.4);
-}
-
-/* Details/Source panes. */
-.browse-pane__heading {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.browse-pane__line {
-  margin: 0;
-}
-
-.browse-pane__facts {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 4px var(--gap);
-  margin: 0;
-}
-
-.browse-pane__facts dt {
-  color: var(--color-muted);
-}
-
-.browse-pane__facts dd {
-  margin: 0;
+.browse-dock .card__bar > .menu-button {
+  margin-inline-start: 0;
 }
 
 .browse__notice {
-  position: fixed;
-  bottom: calc(max(25dvh, 88px) + 8px);
+  position: absolute;
+  bottom: calc(var(--browse-bottom) + 4px);
   left: 50%;
-  z-index: 11;
+  z-index: 3;
   margin: 0;
   padding: 8px 14px;
   border-radius: var(--radius-pill);
   background: var(--color-banner);
   color: var(--color-banner-text);
+  white-space: nowrap;
   transform: translateX(-50%);
   pointer-events: none;
 }
 
-/* First-run hint (FR-012): the three zones, labelled over the screen. */
+/*
+ * The app's offline banner is sticky over everything; in Browse it would cover the top bar
+ * (close and the category chips). Here it becomes a pill under the bar that never takes taps.
+ */
+body:has(.browse) .offline-banner {
+  position: fixed;
+  top: calc(var(--safe-top) + 68px);
+  left: 50%;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* ---------- First-run hint: a bottom sheet ---------- */
+
 .browse-hint {
   position: fixed;
   inset: 0;
   z-index: 12;
   display: flex;
-  flex-direction: column;
-  background: rgb(0 0 0 / 70%);
-  color: #fff;
-  text-align: center;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(0 0 0 / 45%);
 }
 
-.browse-hint__zone {
+.browse-hint__sheet {
   display: grid;
-  place-content: center;
-  gap: var(--gap);
-  padding: var(--gutter);
+  gap: 16px;
+  width: min(100%, 520px);
+  padding: 24px calc(var(--gutter) + 8px) calc(24px + var(--safe-bottom));
+  border-radius: 24px 24px 0 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 -10px 40px rgb(0 0 0 / 25%);
+  animation: browse-sheet-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.browse-hint__zone--header,
-.browse-hint__zone--footer {
-  min-height: max(25dvh, 88px);
-  border: 2px dashed rgb(255 255 255 / 60%);
-  border-width: 0 0 2px;
-}
-
-.browse-hint__zone--footer {
-  border-width: 2px 0 0;
-}
-
-.browse-hint__zone--middle {
-  flex: 1 1 auto;
-}
-
-.browse-hint h2,
-.browse-hint p {
+.browse-hint__title {
   margin: 0;
+  font-size: 1.25rem;
+}
+
+.browse-hint__tips {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: tip;
+}
+
+.browse-hint__tips li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  counter-increment: tip;
+}
+
+.browse-hint__tips li::before {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 700;
+  content: counter(tip);
+}
+
+.browse-hint__ok {
+  justify-self: stretch;
+}
+
+@keyframes browse-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+/* ---------- Depth while paging (D250): scroll-driven, where supported ---------- */
+
+@keyframes browse-depth {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view(inline)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .browse-page {
+      animation: browse-depth linear both;
+      animation-timeline: view(inline);
+    }
+  }
 }
 
 /* Reduced motion: paging is instant (motion.ts) and nothing animates. */
 @media (prefers-reduced-motion: reduce) {
-  .browse__pages {
-    scroll-behavior: auto;
+  .browse-top__progress-fill,
+  .browse-rail__chip {
+    transition: none;
   }
 
-  .browse-dots__dot {
-    transition: none;
+  .browse-hint__sheet {
+    animation: none;
   }
 }

@@ -12,27 +12,22 @@ import {
 } from './browse-params';
 
 describe('parseBrowseSearch', () => {
-  it('defaults to All on the content pane with no card', () => {
-    expect(parseBrowseSearch({})).toEqual({ c: 'all', pane: 'content' });
+  it('defaults to All with no card', () => {
+    expect(parseBrowseSearch({})).toEqual({ c: 'all' });
   });
 
   it('keeps valid values', () => {
-    expect(parseBrowseSearch({ c: 'food', i: 'abc', pane: 'details' })).toEqual({
-      c: 'food',
-      i: 'abc',
-      pane: 'details',
-    });
+    expect(parseBrowseSearch({ c: 'food', i: 'abc' })).toEqual({ c: 'food', i: 'abc' });
   });
 
-  it('falls back to content for an unknown pane', () => {
-    expect(parseBrowseSearch({ pane: 'history' }).pane).toBe('content');
-    expect(parseBrowseSearch({ pane: 3 }).pane).toBe('content');
+  it('ignores the old pane parameter (D246)', () => {
+    expect(parseBrowseSearch({ c: 'food', pane: 'details' })).toEqual({ c: 'food' });
   });
 
   it('drops empty, overlong or non-string values', () => {
-    expect(parseBrowseSearch({ c: '', i: '  ' })).toEqual({ c: 'all', pane: 'content' });
+    expect(parseBrowseSearch({ c: '', i: '  ' })).toEqual({ c: 'all' });
     expect(parseBrowseSearch({ c: 'x'.repeat(65) }).c).toBe('all');
-    expect(parseBrowseSearch({ c: { a: 1 }, i: ['x'] })).toEqual({ c: 'all', pane: 'content' });
+    expect(parseBrowseSearch({ c: { a: 1 }, i: ['x'] })).toEqual({ c: 'all' });
   });
 
   it('reads numeric slugs the router parsed as numbers', () => {

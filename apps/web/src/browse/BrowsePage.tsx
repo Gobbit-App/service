@@ -1,57 +1,29 @@
 import type { ReactElement } from 'react';
 import type { Category, Item } from '@gobbit/shared';
-import type { ImageLoading } from '../cards/ImageCard';
-import type { BrowsePane } from './browse-params';
-import { FooterBand, panelId, tabId } from './FooterBand';
-import { HeaderBand, type HeaderBandProps } from './HeaderBand';
-import { ContentPane } from './panes/ContentPane';
-import { DetailsPane } from './panes/DetailsPane';
-import { SourcePane } from './panes/SourcePane';
+import { Card } from '../cards/Card';
+import { CardDetails } from './sections/CardDetails';
+import { CardSource } from './sections/CardSource';
 
 export interface BrowsePageProps {
   item: Item;
   deckSlug: string;
   categories: readonly Category[];
-  pane: BrowsePane;
-  onPane: (pane: BrowsePane) => void;
-  /** The current card: binds the gestures, is in the a11y tree, loads its image first. */
+  /** The current card: in the a11y tree, loads its image first. */
   current: boolean;
-  /** Current ±1: renders its card; the rest are empty 100dvh placeholders (D144). */
+  /** Current ±1: renders its card; the rest are empty full-width placeholders (D144). */
   mounted: boolean;
-  header: Omit<HeaderBandProps, 'active' | 'onNextCard'>;
-  onNextCard: (() => void) | null;
 }
 
-function PaneBody({
-  item,
-  deckSlug,
-  categories,
-  pane,
-  image,
-}: Pick<BrowsePageProps, 'item' | 'deckSlug' | 'categories' | 'pane'> & {
-  image: ImageLoading;
-}): ReactElement {
-  switch (pane) {
-    case 'details':
-      return <DetailsPane item={item} categories={categories} />;
-    case 'source':
-      return <SourcePane item={item} />;
-    case 'content':
-      return <ContentPane item={item} deckSlug={deckSlug} categories={categories} image={image} />;
-  }
-}
-
-/** One snap page (contract §2): header band, the card's pane, footer band. */
+/**
+ * D244/D246: one page of the horizontal track. It scrolls vertically on its own: the card,
+ * then its Details and Source. Its actions live in the dock (D249), so the card has no bar.
+ */
 export function BrowsePage({
   item,
   deckSlug,
   categories,
-  pane,
-  onPane,
   current,
   mounted,
-  header,
-  onNextCard,
 }: BrowsePageProps): ReactElement {
   if (!mounted) {
     return <section className="browse-page" data-item-id={item.id} aria-hidden="true" inert />;
@@ -60,26 +32,21 @@ export function BrowsePage({
     <section
       className="browse-page"
       data-item-id={item.id}
+      aria-labelledby={`card-title-${item.id}`}
       aria-hidden={current ? undefined : true}
       inert={!current}
     >
-      <HeaderBand {...header} onNextCard={onNextCard} active={current} />
-      <div
-        className="browse-page__content"
-        role="tabpanel"
-        id={panelId(item.id)}
-        aria-labelledby={tabId(item.id, pane)}
-        tabIndex={0}
-      >
-        <PaneBody
+      <div className="browse-sheet">
+        <Card
           item={item}
           deckSlug={deckSlug}
           categories={categories}
-          pane={pane}
           image={{ priority: current }}
+          actions={false}
         />
+        <CardDetails item={item} categories={categories} />
+        <CardSource item={item} />
       </div>
-      <FooterBand pageId={item.id} pane={pane} onPane={onPane} active={current} />
     </section>
   );
 }
