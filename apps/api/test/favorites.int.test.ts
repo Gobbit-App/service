@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { eq, and } from 'drizzle-orm';
 import { setupApiTest, fixtureId } from './helpers';
-import { favorites } from '@pb/db';
+import { favorites } from '@gobbit/db';
 
 describe('favorites', () => {
   const ctx = setupApiTest();

@@ -1,4 +1,4 @@
-import { ITEM_UNDELETE_DAYS } from '@pb/shared';
+import { ITEM_UNDELETE_DAYS } from '@gobbit/shared';
 import type { ItemsRepo } from '../repositories/items.repo';
 import { lineSink } from '../lib/logger';
 

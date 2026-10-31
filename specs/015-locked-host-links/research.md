@@ -16,7 +16,7 @@ Decisions continue the project-wide D numbering. Phase 7 reserves D156–D173. T
 
 ## D166 — Locked-host registry
 
-- **Decision**: `packages/shared/src/links/locked-hosts.ts` exported from `@pb/shared/links`. It is zod-free, so the web can import it without pulling in schemas:
+- **Decision**: `packages/shared/src/links/locked-hosts.ts` exported from `@gobbit/shared/links`. It is zod-free, so the web can import it without pulling in schemas:
 
   ```ts
   export const LOCKED_HOSTS = {
@@ -96,5 +96,5 @@ Decisions continue the project-wide D numbering. Phase 7 reserves D156–D173. T
 ## Other choices (no new D-number)
 
 - **No migration**: `unchecked` is already in 014's `link_check_status` enum. The preview fields are already in 014's link payload.
-- **Constants**: `LOCKED_CAPTION_MAX = 500` lives in `@pb/shared/links` next to the 014 constants.
+- **Constants**: `LOCKED_CAPTION_MAX = 500` lives in `@gobbit/shared/links` next to the 014 constants.
 - **Search**: the caption in `preview.description` is searchable like any link preview (014's `item_search_text` keeps strings and only strips `preview.publicId`).

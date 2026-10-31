@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent, type ReactElement } from 'react';
-import type { Deck, IngestTokenCreated } from '@pb/shared';
-import { INGEST_TOKEN_LABEL_MAX } from '@pb/shared/ingest-constants';
+import type { Deck, IngestTokenCreated } from '@gobbit/shared';
+import { INGEST_TOKEN_LABEL_MAX } from '@gobbit/shared/ingest-constants';
 import { useCreateIngestToken } from '../api/ingest-tokens';
 import { problemMessages } from '../api/problem-messages';
 import { UNBOUND_SCOPE } from './ingest-token-view';

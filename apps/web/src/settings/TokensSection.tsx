@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
-import type { Deck, IngestToken, IngestTokenCreated } from '@pb/shared';
-import { INGEST_TOKENS_MAX } from '@pb/shared/ingest-constants';
+import type { Deck, IngestToken, IngestTokenCreated } from '@gobbit/shared';
+import { INGEST_TOKENS_MAX } from '@gobbit/shared/ingest-constants';
 import { bindableDecks } from './ingest-token-view';
 import { NewTokenForm } from './NewTokenForm';
 import { SettingsSection } from './SettingsSection';

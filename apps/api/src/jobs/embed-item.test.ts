@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { NewLlmCallRow } from '@pb/db';
+import type { NewLlmCallRow } from '@gobbit/db';
 import type { Embedder, EmbedResult } from '../ai/embedder';
 import type { LlmCallSink } from '../ai/llm-calls';
 import type { EmbeddingTarget, EmbeddingsRepo } from '../repositories/embeddings.repo';

@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ReviewList } from '@pb/shared';
+import type { ReviewList } from '@gobbit/shared';
 import { queryKeys } from '../api/query-keys';
 import { makeDeck, makeItem } from '../test/fixtures';
 import { renderWithClient, testQueryClient } from '../test/render';

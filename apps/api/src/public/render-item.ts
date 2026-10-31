@@ -5,9 +5,9 @@ import {
   tablePayloadSchema,
   type CalcPayload,
   type PublicItem,
-} from '@pb/shared';
-import { evaluateCalc, formatCalcResult } from '@pb/shared/calc';
-import { imageAlt } from '@pb/shared/image-alt';
+} from '@gobbit/shared';
+import { evaluateCalc, formatCalcResult } from '@gobbit/shared/calc';
+import { imageAlt } from '@gobbit/shared/image-alt';
 import { h, type Html } from './html';
 import { renderMarkdown } from './markdown';
 

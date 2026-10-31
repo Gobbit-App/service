@@ -7,9 +7,9 @@ import {
   problemSchema,
   type WaitlistKind,
   type WaitlistStatus,
-} from '@pb/shared';
-import { waitlistEntries, waitlistEvents, type UserRow, type WaitlistEntryRow } from '@pb/db';
-import { addMember, createAccountUser, createDeck } from '@pb/db/test';
+} from '@gobbit/shared';
+import { waitlistEntries, waitlistEvents, type UserRow, type WaitlistEntryRow } from '@gobbit/db';
+import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
 import { SESSION_COOKIE } from '../src/lib/cookies';
 import { createLogHash } from '../src/lib/log-hash';
 import { createPruneWaitlist } from '../src/jobs/prune-waitlist';

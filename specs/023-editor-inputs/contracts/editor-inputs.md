@@ -12,7 +12,7 @@
 { "type": "image", "title": "School notice", "payload": { "publicId": "gobbit/items/<deckId>/abc", "alt": "" } }
 ```
 
-Both → `201` (create) / `200` (update). The stored payload is what was sent (plus server-owned `width`/`height`). OpenAPI: `alt?: string` in the image payload; `pnpm api:openapi` regenerates `@pb/api-client`.
+Both → `201` (create) / `200` (update). The stored payload is what was sent (plus server-owned `width`/`height`). OpenAPI: `alt?: string` in the image payload; `pnpm api:openapi` regenerates `@gobbit/api-client`.
 
 ## 2. Instant category save (existing `PATCH /items/{id}`)
 

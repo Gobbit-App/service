@@ -1,8 +1,8 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
-import type { AdminWaitlistEntry, WaitlistKind, WaitlistStatus } from '@pb/shared';
-import { waitlistKinds, waitlistStatuses } from '@pb/shared/enums';
-import { WAITLIST_KIND_LABELS, WAITLIST_STATUS_LABELS } from '@pb/shared/waitlist-constants';
+import type { AdminWaitlistEntry, WaitlistKind, WaitlistStatus } from '@gobbit/shared';
+import { waitlistKinds, waitlistStatuses } from '@gobbit/shared/enums';
+import { WAITLIST_KIND_LABELS, WAITLIST_STATUS_LABELS } from '@gobbit/shared/waitlist-constants';
 import { isNetworkError } from '../api/network-state';
 import { useOnline } from '../api/offline';
 import { Button } from '../ui/buttons/Button';

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import type { ItemRow } from '@pb/db';
-import { publicItemSchema } from '@pb/shared';
+import type { ItemRow } from '@gobbit/db';
+import { publicItemSchema } from '@gobbit/shared';
 import { toPublicItem } from './public-dtos';
 
 const at = new Date('2026-10-01T10:00:00.000Z');

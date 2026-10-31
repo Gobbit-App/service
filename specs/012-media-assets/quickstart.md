@@ -24,7 +24,7 @@ pnpm db:rollback && pnpm db:migrate     # the down file round-trips
 
 1. Upload a photo in the editor and cancel the card (don't save). Note the `public_id`.
 2. Backdate it: `UPDATE assets SET created_at = now() - interval '8 days' WHERE public_id = '<id>'`.
-3. Run the sweep now: `pnpm --filter @pb/api exec tsx scripts/run-job.ts media-sweep` (or wait for 06:00).
+3. Run the sweep now: `pnpm --filter @gobbit/api exec tsx scripts/run-job.ts media-sweep` (or wait for 06:00).
 4. The worker log shows `media-sweep` with `deleted: 1`. The image URL `https://res.cloudinary.com/<cloud>/image/upload/f_auto,q_auto,c_limit,w_720/<id>` now answers 404. The row is gone.
 5. Repeat with a saved card's image: it is kept (`deleted: 0`).
 6. On the deployed instance: repeat steps 1–4 once and tick demo 1 in `PLAN.md` together with the camera upload from 008.

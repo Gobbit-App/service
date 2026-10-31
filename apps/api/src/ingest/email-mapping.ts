@@ -3,7 +3,7 @@ import {
   INGEST_MAX_IMAGES,
   INGEST_TEXT_MAX,
   INGEST_TITLE_MAX,
-} from '@pb/shared';
+} from '@gobbit/shared';
 
 /** Inbound email as delivered by the mail webhook. */
 export interface InboundEmail {

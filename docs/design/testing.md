@@ -10,14 +10,14 @@ Location: `**/*.test.ts` (next to source)
 Environment: Node  
 Test data: mocked/inline  
 Examples:
-- `@pb/shared/src/schemas/pagination.test.ts`: cursor encoding, Zod parse
+- `@gobbit/shared/src/schemas/pagination.test.ts`: cursor encoding, Zod parse
 - Service unit tests with mocked repos
 
 ### Integration tests
 
 Location: `**/*.int.test.ts` (under `test/`)  
 Environment: Node + Docker (Testcontainers PostgreSQL)  
-Test data: built with `@pb/db/test` factories (`createSampleWorld()`)  
+Test data: built with `@gobbit/db/test` factories (`createSampleWorld()`)  
 Examples:
 - Repository tests (actual SQL via Drizzle)
 - Service tests calling real repos
@@ -78,7 +78,7 @@ Tagging: every test title includes `@smoke`
 - Local development only: the script refuses `NODE_ENV=production` outright (Oct 1). A deployed instance is never seeded; the owner's first magic-link sign-in creates the user (D25).
 - `SMOKE_SESSION_TOKEN` (D43, ≥32 chars) upserts one 365-day `bearer` session for the owner (`user_agent = 'smoke'`); re-running with a new token rotates it. No other users are seeded.
 
-### Test factories (`@pb/db/test`)
+### Test factories (`@gobbit/db/test`)
 
 Integration tests build their own data; nothing depends on seeded rows.
 

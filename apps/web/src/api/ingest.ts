@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { IngestAccepted } from '@pb/shared';
+import type { IngestAccepted } from '@gobbit/shared';
 import { buildIngestForm, type IngestDraft } from '../share/share-payload';
 import { api, unwrap } from './client';
 import { REVIEW_KEY } from './query-keys';

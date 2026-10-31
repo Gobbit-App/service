@@ -1,4 +1,4 @@
-import type { AdminWaitlistCounts, AdminWaitlistEntry } from '@pb/shared';
+import type { AdminWaitlistCounts, AdminWaitlistEntry } from '@gobbit/shared';
 
 /** A confirmed entry (the default admin view); override fields per test. */
 export function makeWaitlistEntry(overrides: Partial<AdminWaitlistEntry> = {}): AdminWaitlistEntry {

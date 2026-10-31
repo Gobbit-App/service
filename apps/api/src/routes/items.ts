@@ -6,7 +6,7 @@ import {
   itemSchema,
   itemPatchSchema,
   problemSchema,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getActor } from '../lib/current-user';

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { IMPORT_ROWS_PER_REQUEST } from '@pb/shared/ingest-constants';
+import { IMPORT_ROWS_PER_REQUEST } from '@gobbit/shared/ingest-constants';
 import { ApiCliError, type ApiRequest } from './api-cli';
 import {
   IMPORT_NOTES_USAGE,

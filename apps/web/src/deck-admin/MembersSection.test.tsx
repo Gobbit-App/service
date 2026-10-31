@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Deck, Member } from '@pb/shared';
+import type { Deck, Member } from '@gobbit/shared';
 import { ApiError } from '../api/api-error';
 import { makeDeck } from '../test/fixtures';
 import { renderWithClient } from '../test/render';

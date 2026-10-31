@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lockedHostOf } from '@pb/shared/links';
+import { lockedHostOf } from '@gobbit/shared/links';
 import { isGenericLockedPreview, isGenericLockedTitle } from './locked-host-preview';
 
 const instagram = lockedHostOf('https://www.instagram.com/p/abc/')!;

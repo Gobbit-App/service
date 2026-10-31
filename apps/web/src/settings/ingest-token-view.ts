@@ -1,6 +1,6 @@
-import type { Deck, IngestToken } from '@pb/shared';
-import { can } from '@pb/shared/authz';
-import { INGEST_TOKEN_PREFIX } from '@pb/shared/ingest-constants';
+import type { Deck, IngestToken } from '@gobbit/shared';
+import { can } from '@gobbit/shared/authz';
+import { INGEST_TOKEN_PREFIX } from '@gobbit/shared/ingest-constants';
 
 /** D104: the email-in address is the token without its `ing_` prefix at the inbound domain. */
 export function ingestEmailAddress(token: string, domain: string | null): string | null {

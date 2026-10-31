@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { NormalizedSource } from '@pb/shared';
+import type { NormalizedSource } from '@gobbit/shared';
 import { ExtractResponseError, type ExtractInput } from './extractor';
 import { createOpenAiChatExtractor, PROPOSE_CARD_FUNCTION_TOOL } from './openai-chat-extractor';
 import type { OpenAiExtractClient } from './openai-chat-extractor';

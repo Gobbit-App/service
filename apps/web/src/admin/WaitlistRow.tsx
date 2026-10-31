@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
-import type { AdminWaitlistEntry } from '@pb/shared';
-import { WAITLIST_KIND_LABELS } from '@pb/shared/waitlist-constants';
+import type { AdminWaitlistEntry } from '@gobbit/shared';
+import { WAITLIST_KIND_LABELS } from '@gobbit/shared/waitlist-constants';
 import { Button } from '../ui/buttons/Button';
 import { useInviteEntry, useRemoveEntry } from './waitlist-queries';
 import { waitlistActions, waitlistErrorMessages, waitlistWhen } from './waitlist-copy';

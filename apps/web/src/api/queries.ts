@@ -8,7 +8,7 @@ import type {
   ItemPage,
   Me,
   SearchResponse,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { api, unwrap } from './client';
 import { itemListQuery, queryKeys, type ItemFilter } from './query-keys';
 

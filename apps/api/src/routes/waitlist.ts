@@ -1,5 +1,5 @@
 import { createRoute, type OpenAPIHono } from '@hono/zod-openapi';
-import { waitlistJoinResponseSchema, waitlistJoinSchema } from '@pb/shared';
+import { waitlistJoinResponseSchema, waitlistJoinSchema } from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Env } from '../env';
 import type { Services } from '../services';

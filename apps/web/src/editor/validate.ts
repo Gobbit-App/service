@@ -7,7 +7,7 @@ import {
   TABLE_MAX_ROWS,
   codePointLength,
   utf8Bytes,
-} from '@pb/shared/card-limits';
+} from '@gobbit/shared/card-limits';
 import {
   parseCalcDefault,
   toPayload,

@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { EXTRACT_TIMEOUT_MS } from '@pb/shared';
+import { EXTRACT_TIMEOUT_MS } from '@gobbit/shared';
 import { buildExtractPrompt, PROPOSE_CARD_TOOL, PROPOSE_CARD_TOOL_NAME } from './extract-prompt';
 import {
   EXTRACT_MAX_TOKENS,

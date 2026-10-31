@@ -1,5 +1,5 @@
 import { useId, type ReactElement } from 'react';
-import type { Category } from '@pb/shared';
+import type { Category } from '@gobbit/shared';
 import { Button } from '../ui/buttons/Button';
 
 /**

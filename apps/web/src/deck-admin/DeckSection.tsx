@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent, type ReactElement } from 'react';
-import type { Category, Deck } from '@pb/shared';
+import type { Category, Deck } from '@gobbit/shared';
 import { CopyButton } from '../settings/CopyButton';
 import { SettingsSection } from '../settings/SettingsSection';
 import { AdminError } from './AdminError';

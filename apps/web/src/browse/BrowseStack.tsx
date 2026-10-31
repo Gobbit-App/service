@@ -7,7 +7,7 @@ import {
   useState,
   type ReactElement,
 } from 'react';
-import type { Category, Item } from '@pb/shared';
+import type { Category, Item } from '@gobbit/shared';
 import type { BrowsePane } from './browse-params';
 import { writeBrowseReturn } from './browse-return';
 import { BrowsePage } from './BrowsePage';

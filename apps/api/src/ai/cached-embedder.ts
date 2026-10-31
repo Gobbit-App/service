@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
-import { EMBEDDING_DIMS } from '@pb/shared';
+import { EMBEDDING_DIMS } from '@gobbit/shared';
 import type { Embedder, EmbedResult } from './embedder';
 
 /** `model + ':' + sha256hex(text)` — the committed eval cache key (D81). */

@@ -1,6 +1,6 @@
-import type { ItemRow } from '@pb/db';
-import { LINK_SNAPSHOT_REQUEUE_MAX, type LinkPayload, type LinkPreview } from '@pb/shared';
-import { lockedHostOf, type LockedHostMatch } from '@pb/shared/links';
+import type { ItemRow } from '@gobbit/db';
+import { LINK_SNAPSHOT_REQUEUE_MAX, type LinkPayload, type LinkPreview } from '@gobbit/shared';
+import { lockedHostOf, type LockedHostMatch } from '@gobbit/shared/links';
 import { isGenericLockedPreview } from '../fetch/locked-host-preview';
 import type { Logger } from '../lib/logger';
 import type { ItemsRepo } from '../repositories/items.repo';

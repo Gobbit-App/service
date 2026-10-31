@@ -50,7 +50,7 @@ Web-only change. No API, schema, migration or env change.
 
 **Performance Goals**: N/A (no network work added)
 
-**Constraints**: web initial bundle ≤ 150 KB gzip (the guard and dialog are in the editor/review route chunks, the back function and header in the initial chunk); plain CSS; `@pb/shared` subpath imports only
+**Constraints**: web initial bundle ≤ 150 KB gzip (the guard and dialog are in the editor/review route chunks, the back function and header in the initial chunk); plain CSS; `@gobbit/shared` subpath imports only
 
 **Scale/Scope**: every signed-in screen's header; the editor and the review inline edit
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { NormalizedSource } from '@pb/shared';
+import type { NormalizedSource } from '@gobbit/shared';
 import { createFakeExtractor } from './fake-extractor';
 import type { ExtractInput } from './extractor';
 import { validateProposal } from './extract-validate';

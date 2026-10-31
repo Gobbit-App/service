@@ -10,7 +10,7 @@ Decisions continue the project-wide D numbering. Phase 8 reserves D174–D191. T
 
 ## D189 — Parsing
 
-- **Decision**: a pure parser in `@pb/shared/import`, run on the device (preview) and in the CLI. Rules:
+- **Decision**: a pure parser in `@gobbit/shared/import`, run on the device (preview) and in the CLI. Rules:
   - **Lines**: one card per non-empty line. A line that is only a URL → link card. `title — body`, `title – body` or `title: body` (first separator, title ≤ 80 chars) → split. Otherwise the first sentence (≤ 80 chars, at `.`, `?`, `!` or a line break) is the title and the full line the body. Any URL in the line becomes `sourceUrl`.
   - **Markdown**: `#`-headings set the current category name; list items and paragraphs become cards (same line rules); `---`, code fences and images are skipped.
   - **CSV**: header row required; columns `title`, `body`, `category`, `url` (case-insensitive, extra columns ignored); parsed with `papaparse`.

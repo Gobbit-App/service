@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMBEDDING_DIMS } from '@pb/shared';
+import { EMBEDDING_DIMS } from '@gobbit/shared';
 import { axisVector, blendVectors, createFakeEmbedder } from './fake-embedder';
 
 function norm(v: number[]): number {

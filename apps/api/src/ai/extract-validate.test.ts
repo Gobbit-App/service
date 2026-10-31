@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_BODY_MAX, codePointLength } from '@pb/shared';
-import { LOCKED_CAPTION_MAX, lockedHostOf } from '@pb/shared/links';
+import { CARD_BODY_MAX, codePointLength } from '@gobbit/shared';
+import { LOCKED_CAPTION_MAX, lockedHostOf } from '@gobbit/shared/links';
 import {
   correctionMessage,
   shouldEscalate,

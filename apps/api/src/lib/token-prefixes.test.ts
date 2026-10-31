@@ -1,4 +1,4 @@
-import { INGEST_TOKEN_PREFIX } from '@pb/shared';
+import { INGEST_TOKEN_PREFIX } from '@gobbit/shared';
 import { describe, expect, it } from 'vitest';
 import { NON_SESSION_TOKEN_PREFIXES, nonSessionPrefixOf } from './token-prefixes';
 

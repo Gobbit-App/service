@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 import { isApiError } from '../api/api-error';
 import { api, unwrap } from '../api/client';
 import { applyUpdatedItem } from '../api/update-item';

@@ -1,6 +1,6 @@
 import { v5 } from 'uuid';
 import { z } from 'zod';
-import { MIN_SEEDED_TOKEN_LENGTH } from '@pb/shared';
+import { MIN_SEEDED_TOKEN_LENGTH } from '@gobbit/shared';
 
 export const SEED_NAMESPACE = '6f1c2b1e-4a53-4b8e-9d5e-2a7c9f0e1b3d';
 

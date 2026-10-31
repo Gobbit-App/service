@@ -5,7 +5,7 @@ import type {
   WaitlistKind,
   WaitlistSource,
   WaitlistStatus,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import {
   users,
   waitlistEntries,
@@ -13,7 +13,7 @@ import {
   type DbExecutor,
   type WaitlistEntryRow,
   type WaitlistEventRow,
-} from '@pb/db';
+} from '@gobbit/db';
 
 export interface NewPendingEntry {
   email: string;

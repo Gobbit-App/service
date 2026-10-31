@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
-import type { Deck, Member, MemberRole } from '@pb/shared';
-import { can, ROLE_LABELS } from '@pb/shared/authz';
-import { memberRoles } from '@pb/shared/enums';
+import type { Deck, Member, MemberRole } from '@gobbit/shared';
+import { can, ROLE_LABELS } from '@gobbit/shared/authz';
+import { memberRoles } from '@gobbit/shared/enums';
 import { SettingsSection } from '../settings/SettingsSection';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
 import { AdminError } from './AdminError';

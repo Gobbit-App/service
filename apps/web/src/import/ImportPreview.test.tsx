@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { IMPORT_ROWS_PER_PREVIEW } from '@pb/shared/ingest-constants';
-import type { ImportCategory, ImportRow } from '@pb/shared/import';
+import { IMPORT_ROWS_PER_PREVIEW } from '@gobbit/shared/ingest-constants';
+import type { ImportCategory, ImportRow } from '@gobbit/shared/import';
 import { ImportPreview } from './ImportPreview';
 import { importableRows, previewRows, type PreviewRow } from './preview-rows';
 

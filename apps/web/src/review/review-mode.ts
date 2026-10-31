@@ -1,4 +1,4 @@
-import type { ReviewEntry } from '@pb/shared';
+import type { ReviewEntry } from '@gobbit/shared';
 
 /** How the review card presents a proposal (D106). */
 export type ReviewMode =

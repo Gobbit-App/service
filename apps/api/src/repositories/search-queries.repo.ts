@@ -1,5 +1,5 @@
 import { lt } from 'drizzle-orm';
-import { searchQueries, type Db, type NewSearchQueryRow } from '@pb/db';
+import { searchQueries, type Db, type NewSearchQueryRow } from '@gobbit/db';
 
 export function createSearchQueriesRepo(db: Db) {
   return {

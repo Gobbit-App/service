@@ -1,5 +1,5 @@
 import { LRUCache } from 'lru-cache';
-import { QUERY_EMBEDDING_CACHE_MAX, QUERY_EMBEDDING_CACHE_TTL_MS } from '@pb/shared';
+import { QUERY_EMBEDDING_CACHE_MAX, QUERY_EMBEDDING_CACHE_TTL_MS } from '@gobbit/shared';
 import type { Embedder } from './embedder';
 import { recordLlmCall, type LlmCallSink } from './llm-calls';
 import { lineSink } from '../lib/logger';

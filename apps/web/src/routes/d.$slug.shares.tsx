@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { can } from '@pb/shared/authz';
+import { can } from '@gobbit/shared/authz';
 import { deckQuery } from '../api/queries';
 import { SharesScreen } from '../shares/SharesScreen';
 import { ErrorState } from '../ui/StatusViews';

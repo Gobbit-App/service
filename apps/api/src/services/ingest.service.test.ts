@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { UserRow } from '@pb/db';
-import { INGEST_IMAGE_MAX_BYTES } from '@pb/shared';
+import type { UserRow } from '@gobbit/db';
+import { INGEST_IMAGE_MAX_BYTES } from '@gobbit/shared';
 import { HttpError } from '../errors/http-errors';
 import { assertSubmissionShape, channelFor, type IngestFile } from './ingest.service';
 

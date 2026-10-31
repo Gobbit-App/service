@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { LinkHealth } from '@pb/shared';
+import type { LinkHealth } from '@gobbit/shared';
 
 export const LINK_HEALTH_COPY: Record<LinkHealth['status'], string> = {
   dead: 'Link may be dead',

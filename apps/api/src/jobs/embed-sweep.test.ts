@@ -1,4 +1,4 @@
-import { EMBED_SWEEP_BATCH } from '@pb/shared';
+import { EMBED_SWEEP_BATCH } from '@gobbit/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createEmbedSweep } from './embed-sweep';
 import { EMBED_ITEM_SEND_OPTIONS, QUEUES, type JobSender } from './queues';

@@ -62,7 +62,7 @@ Project override of the core template. Written for outside readers: the reposito
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | The decision lives in `users.service.register` and `auth.service`; routes only map `MagicLinkFailure('closed')` as they already do for other reasons |
-| II. One source of truth | `registrationModes` and `RegistrationReason` in `@pb/shared` (env schema and services read the same lists); `closed` joins `MagicLinkFailureReason` in `auth.service.ts` and the web's `AuthErrorReason`, as the existing reasons do today; no DTO or OpenAPI change |
+| II. One source of truth | `registrationModes` and `RegistrationReason` in `@gobbit/shared` (env schema and services read the same lists); `closed` joins `MagicLinkFailureReason` in `auth.service.ts` and the web's `AuthErrorReason`, as the existing reasons do today; no DTO or OpenAPI change |
 | III. Invariants in the DB | Uniqueness of users and waitlist entries is already enforced by indexes (users; 028). New enum column + FK with a hand-written down file |
 | IV. Private by default | Closed by default; same response for every email; events carry keyed hashes, never the address |
 | V. Tests at the right tier | Unit decision table for `register`; int matrix for request + callback in both modes; e2e smoke assertion + full journey (see E2E tier) |

@@ -56,7 +56,7 @@ No API, schema or migration changes. Reasoning is in [research.md](./research.md
 
 **Performance Goals**: no main-thread task over 50 ms while swiping through 20 image cards on a mid-range Android phone (SC-004); the next card's image is ready on arrival
 
-**Constraints**: web initial bundle ≤ 150 KB gzip, with Browse in its own route chunk; offline for cached categories; plain CSS; `@pb/shared` subpath imports only; same origin
+**Constraints**: web initial bundle ≤ 150 KB gzip, with Browse in its own route chunk; offline for cached categories; plain CSS; `@gobbit/shared` subpath imports only; same origin
 
 **Scale/Scope**: categories of tens to a few hundred cards (pages of `ITEM_PAGE_SIZE` = 20)
 
@@ -163,7 +163,7 @@ docs/architecture.md                  # Browse section + ADR-052 (close-out)
 - **Migrations**: none.
 - **Env / config**: none.
 - **API client**: no `pnpm api:openapi`.
-- **Dependencies**: `pnpm --filter @pb/web add @use-gesture/react`; the lockfile changes.
+- **Dependencies**: `pnpm --filter @gobbit/web add @use-gesture/react`; the lockfile changes.
 - **Deploy order / flags**: the normal CI → Dokploy flow. Browse is reachable as soon as it is deployed. No flag, since nothing changes for members who don't open it.
 
 ## Risks

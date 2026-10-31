@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
-import { API_BODY_MAX_BYTES, INGEST_BODY_MAX_BYTES } from '@pb/shared';
+import { API_BODY_MAX_BYTES, INGEST_BODY_MAX_BYTES } from '@gobbit/shared';
 import { problemResponse } from '../errors/http-errors';
 
 /** Paths that accept image uploads (D101); everything else gets the 1 MB default. */

@@ -26,7 +26,7 @@ pnpm db:rollback && pnpm db:migrate      # down file round-trips (search_text re
 ## 3. Link checks (demo 3, part 2)
 
 1. Remove the test page (404).
-2. Run the sweep now: `pnpm --filter @pb/api exec tsx scripts/run-job.ts link-check-sweep`. In SQL, `link_checks` shows `consecutive_failures = 1` and the status is not `dead`.
+2. Run the sweep now: `pnpm --filter @gobbit/api exec tsx scripts/run-job.ts link-check-sweep`. In SQL, `link_checks` shows `consecutive_failures = 1` and the status is not `dead`.
 3. `UPDATE link_checks SET next_check_at = now()`, then run the sweep again. The status is `dead`, and the card shows "Link may be dead".
 4. As a reader, the badge is visible, and there are no "Check again"/"Dismiss" actions and no "Links to check".
 5. As an editor, open `/d/<slug>/links`: the card is listed. Tap "Dismiss": the badge disappears for everyone, and the list is empty.

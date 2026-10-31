@@ -1,4 +1,4 @@
-import { LINK_CHECK_READ_BYTES } from '@pb/shared';
+import { LINK_CHECK_READ_BYTES } from '@gobbit/shared';
 import type { Env } from '../env';
 import type { MembershipLookup } from '../access/authorize';
 import { extractPage } from '../fetch/extract-page';

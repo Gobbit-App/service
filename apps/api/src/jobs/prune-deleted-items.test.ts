@@ -1,4 +1,4 @@
-import { ITEM_UNDELETE_DAYS } from '@pb/shared';
+import { ITEM_UNDELETE_DAYS } from '@gobbit/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createPruneDeletedItems } from './prune-deleted-items';
 

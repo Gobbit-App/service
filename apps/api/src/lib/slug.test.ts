@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { toSlug } from './slug';
-import { SLUG_MAX } from '@pb/shared';
+import { SLUG_MAX } from '@gobbit/shared';
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

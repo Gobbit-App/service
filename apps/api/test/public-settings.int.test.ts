@@ -1,13 +1,13 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { CategoryRow, DeckRow, UserRow } from '@pb/db';
+import type { CategoryRow, DeckRow, UserRow } from '@gobbit/db';
 import {
   addMember,
   createAccountUser,
   createCategory,
   createDeck,
   defaultCategory,
-} from '@pb/db/test';
-import { categorySchema, deckSchema, type MemberRole } from '@pb/shared';
+} from '@gobbit/db/test';
+import { categorySchema, deckSchema, type MemberRole } from '@gobbit/shared';
 import { createDecksRepo } from '../src/repositories/decks.repo';
 import { json, OTHER_EMAIL, OWNER_EMAIL, setupApiTest } from './helpers';
 

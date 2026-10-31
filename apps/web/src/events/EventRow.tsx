@@ -1,4 +1,4 @@
-import type { ItemEvent } from '@pb/shared';
+import type { ItemEvent } from '@gobbit/shared';
 import type { ReactElement } from 'react';
 import { relativeTime } from '../lib/relative-time';
 import { NavLink } from '../ui/NavLink';

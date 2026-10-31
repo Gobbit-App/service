@@ -1,5 +1,5 @@
-import type { Db } from '@pb/db';
-import { INGEST_COMBINED_DAILY_CAP, ingestDailyCaps } from '@pb/shared';
+import type { Db } from '@gobbit/db';
+import { INGEST_COMBINED_DAILY_CAP, ingestDailyCaps } from '@gobbit/shared';
 import type { Embedder } from '../ai/embedder';
 import { runDedup } from '../ingest/run-dedup';
 import { createDedupRepo } from '../repositories/dedup.repo';

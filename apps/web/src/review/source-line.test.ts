@@ -1,4 +1,4 @@
-import type { ReviewEntry } from '@pb/shared';
+import type { ReviewEntry } from '@gobbit/shared';
 import { describe, expect, it } from 'vitest';
 import { sourceLine } from './source-line';
 

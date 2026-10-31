@@ -2,7 +2,7 @@
 
 No new routes. Changes to existing behaviour only. Errors are `application/problem+json` (RFC 9457).
 
-## 1. `lockedHostOf(url)` (`@pb/shared/links`)
+## 1. `lockedHostOf(url)` (`@gobbit/shared/links`)
 
 | Input | Output |
 |-------|--------|

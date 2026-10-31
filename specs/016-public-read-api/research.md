@@ -29,7 +29,7 @@ Decisions continue the project-wide D numbering. Phase 8 reserves D174–D191. T
 
 ## D175 — Anonymous read limiter
 
-- **Decision**: `lib/anon-rate-limiter.ts`, an in-process fixed one-hour window per client IP, held in an `lru-cache` (max 10,000 IPs, TTL one hour). `PUBLIC_READ_PER_HOUR = 600` in `@pb/shared` limits. Over the limit: 429 problem with `Retry-After` from `retryAfterSeconds()`. A middleware applies it to `/public/*` (016) and to 017's page routes; 018's search adds its own, lower bucket on the same limiter.
+- **Decision**: `lib/anon-rate-limiter.ts`, an in-process fixed one-hour window per client IP, held in an `lru-cache` (max 10,000 IPs, TTL one hour). `PUBLIC_READ_PER_HOUR = 600` in `@gobbit/shared` limits. Over the limit: 429 problem with `Retry-After` from `retryAfterSeconds()`. A middleware applies it to `/public/*` (016) and to 017's page routes; 018's search adds its own, lower bucket on the same limiter.
 - The IP comes from `clientIp(c, env.CLIENT_IP_HEADER)`, the same as magic-link limits.
 - **Rationale**: the DB-backed `rate-limit.service` writes a row per counted request. That is right for expensive or security-relevant actions (sign-in, embeddings), but it would turn every anonymous page view into a database write and defeat 017's page cache. One API instance runs today, so an in-process counter is exact.
 - **Alternatives considered**:

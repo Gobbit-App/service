@@ -1,5 +1,5 @@
 import { infiniteQueryOptions } from '@tanstack/react-query';
-import type { ItemEventPage } from '@pb/shared';
+import type { ItemEventPage } from '@gobbit/shared';
 import { api, unwrap } from './client';
 import { queryKeys } from './query-keys';
 

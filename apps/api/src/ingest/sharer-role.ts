@@ -1,4 +1,4 @@
-import type { MemberRole } from '@pb/shared';
+import type { MemberRole } from '@gobbit/shared';
 import { resolveRole, type MembershipLookup } from '../access/authorize';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { UsersRepo } from '../repositories/users.repo';

@@ -1,5 +1,5 @@
 import { useMemo, type ReactElement, type ReactNode } from 'react';
-import type { Category, Item } from '@pb/shared';
+import type { Category, Item } from '@gobbit/shared';
 import { cardAge } from '../lib/card-age';
 import { chipHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';

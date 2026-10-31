@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { EMBEDDING_DIMS } from '@pb/shared';
+import { EMBEDDING_DIMS } from '@gobbit/shared';
 import type { Embedder } from './embedder';
 
 /** Unit vector of `dims` with 1 at `axis` (tests build orthogonal "meanings"). */

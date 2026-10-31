@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RRF_K, SUBSTRING_BOOST } from '@pb/shared';
+import { RRF_K, SUBSTRING_BOOST } from '@gobbit/shared';
 import { type ArmRow, fuseRrf } from './rrf';
 
 const T0 = new Date('2026-01-01T00:00:00Z');

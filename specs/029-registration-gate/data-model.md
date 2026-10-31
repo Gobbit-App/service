@@ -6,7 +6,7 @@ One small migration (D241). Reads `users` through the existing unique email inde
 
 | Change | Detail |
 |--------|--------|
-| enum `registration_reason` | `deck_invite`, `waitlist_invite`, `open_sign_in` (from `registrationReasons` in `@pb/shared`) |
+| enum `registration_reason` | `deck_invite`, `waitlist_invite`, `open_sign_in` (from `registrationReasons` in `@gobbit/shared`) |
 | `users.registered_via` | `registration_reason`, **nullable**: users created before this migration stay null |
 | `users.registered_by` | uuid, nullable, FK `users(id)` `ON DELETE SET NULL`. The inviter (`deck_invite`) or the admin (`waitlist_invite`); null for `open_sign_in` |
 
@@ -20,7 +20,7 @@ Down file: drop both columns, then the enum. No backfill: the reason of older us
 
 An invalid value fails start-up (Zod enum), like every other env setting.
 
-## Shared types (`@pb/shared`, `auth/registration.ts`)
+## Shared types (`@gobbit/shared`, `auth/registration.ts`)
 
 | Name | Value |
 |------|-------|

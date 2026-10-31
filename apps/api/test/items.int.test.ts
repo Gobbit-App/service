@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import type { DeckRow } from '@pb/db';
-import { createAsset, createDeck } from '@pb/db/test';
+import type { DeckRow } from '@gobbit/db';
+import { createAsset, createDeck } from '@gobbit/db/test';
 import { setupApiTest, fixtureId } from './helpers';
-import { itemSchema } from '@pb/shared';
+import { itemSchema } from '@gobbit/shared';
 
 const ctx = setupApiTest();
 let generalId: string;

@@ -8,7 +8,7 @@ Plan: `specs/032-waitlist-admin/plan.md`, tasks: `tasks.md`. Branch `feat/032-wa
 - **`PlatformAdmin` is a branded user type** returned by the guard; the admin service accepts only that. `GET /me` reads the same list through `platformAdmins.is(user)`.
 - **Concurrency**: the invite locks the entry `FOR UPDATE` (`waitlistRepo.lockById`) and calls `usersService.register` inside the same transaction. A deck invite that creates the same user concurrently can still hit the unique email index; that transaction rolls back (500) and a retry links the existing user (`linked_existing`). Rare enough with one or two admins; noted rather than handled.
 - **028's placeholder `markInvited` / `remove` are gone from `waitlist.service`**; the only writers are `waitlist-admin.service` (with the admin actor and decision events).
-- **Labels**: `WAITLIST_KIND_LABELS` and `WAITLIST_STATUS_LABELS` live in `@pb/shared/waitlist-constants` (028 shipped no labels); 030 can reuse them for the landing form.
+- **Labels**: `WAITLIST_KIND_LABELS` and `WAITLIST_STATUS_LABELS` live in `@gobbit/shared/waitlist-constants` (028 shipped no labels); 030 can reuse them for the landing form.
 - **Malformed ids answer `404` before any DB call** (an admin typo is just "not found").
 - **`waitlist.admin_list` carries `page: 'first' | 'next'`** instead of the cursor itself.
 - **Wiring**: `buildAdminServices` / `adminTxRepos` in `apps/api/src/admin-wiring.ts` (the `RegistrationDeps` type moved there) keep `app.ts` small.

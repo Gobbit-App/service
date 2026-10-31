@@ -1,6 +1,6 @@
 /**
  * Phase 6 card lifecycle constants (D132). The API, worker and web read these, never literals.
- * Web imports them from the `@pb/shared/item-constants` subpath (bundle budget).
+ * Web imports them from the `@gobbit/shared/item-constants` subpath (bundle budget).
  */
 
 /** D132: a deleted card can be undeleted for this many days; the weekly purge removes it after. */

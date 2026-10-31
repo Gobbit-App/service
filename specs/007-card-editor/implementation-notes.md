@@ -35,7 +35,7 @@ The plan was written against `main` before 006 existed. Differences:
 
 ## Deviations (editor UI)
 
-- **Calc expression check via `useCalcCheck`**: rather than `CalcFields` handing the check to `validate.ts`, `CardEditor` loads `@pb/shared/calc` through a dynamic import while the type is calc (`editor/use-calc-check.ts`) and passes `validateCalcExpression` as `ValidateOptions.calcExpression`. Save stays disabled ("Loading the calculator…") until it has loaded; a failed load shows a form error. mathjs stays in the calc async chunk.
+- **Calc expression check via `useCalcCheck`**: rather than `CalcFields` handing the check to `validate.ts`, `CardEditor` loads `@gobbit/shared/calc` through a dynamic import while the type is calc (`editor/use-calc-check.ts`) and passes `validateCalcExpression` as `ValidateOptions.calcExpression`. Save stays disabled ("Loading the calculator…") until it has loaded; a failed load shows a form error. mathjs stays in the calc async chunk.
 - **`setTitleIfEmpty` lives on `FieldsProps`** (optional) instead of only on `LinkFieldsProps`, so the registry can pass one prop shape to every type.
 - **Field styles in `styles.css`**: `.field`, `.limit-meter` and the pressed-chip style are global because the review queue's inline edit uses the same field components. Editor layout stays in `editor/editor.css`.
 - **Client errors show once the draft is dirty**: an untouched new card doesn't open with "Title is required"; Save is disabled with the count from the start. Server errors always show.

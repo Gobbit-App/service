@@ -8,7 +8,7 @@ Project override of the core template. Written for outside readers: the reposito
 
 ## Summary
 
-**Parse.** A pure, deterministic parser in `@pb/shared/import` turns text into `ImportRow`s: `parseNotes(text, format)` for plain lines, markdown and CSV. No LLM is involved (D189).
+**Parse.** A pure, deterministic parser in `@gobbit/shared/import` turns text into `ImportRow`s: `parseNotes(text, format)` for plain lines, markdown and CSV. No LLM is involved (D189).
 
 - The PWA Import screen (`/d/$slug/import`, lazy) parses on the device, shows a preview with tick/edit/invalid markers, and submits the ticked rows.
 - The CLI (`pnpm import:notes <file> --deck <slug>`) uses the same parser.
@@ -42,7 +42,7 @@ A migration adds `import` to the `ingest_channel` enum.
   - `INGEST_CHANNEL_DAILY_CAPS` is a per-channel override map.
   - Web `review/source-line.ts` `CHANNEL_LABELS`.
 - Review: `GET /decks/{id}/review` (`REVIEW_LIMIT`), `POST /items/{id}/publish` (`PublishRequest`, edits/merge target), `POST /items/{id}/discard`; `review.service` runs each in `transaction`.
-- Limits: `ITEM_BODY_MAX` (600 code points), payload bytes, title max in `@pb/shared`.
+- Limits: `ITEM_BODY_MAX` (600 code points), payload bytes, title max in `@gobbit/shared`.
 - No CSV parser in the repo.
 
 ## Technical Context
@@ -72,7 +72,7 @@ A migration adds `import` to the `ingest_channel` enum.
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/imports.ts` → `imports.service` → `ingest.service.proposeDirect`; `routes/review.ts` bulk → `review.service.publishMany` |
-| II. One source of truth | Parser, `importRequestSchema`, `bulkPublishSchema`, caps in `@pb/shared`; same parser in web and CLI |
+| II. One source of truth | Parser, `importRequestSchema`, `bulkPublishSchema`, caps in `@gobbit/shared`; same parser in web and CLI |
 | III. Invariants in the DB | Card limits remain DB CHECKs; channel enum in DB; caps counted from `ingest_jobs` |
 | IV. Private by default | Admin-only import; proposals stay unpublished until reviewed |
 | V. Tests at the right tier | Unit (parser fixtures incl. Hebrew, CSV quoting), int (import caps, permissions, bulk publish skips), e2e full journey |
@@ -89,7 +89,7 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D189 | Deterministic import parser in `@pb/shared/import` (`parseNotes(text, format)`, formats `lines`, `markdown`, `csv`, auto-detect by extension/content); line rules: URL-only → link card, `title — body` / `title: body` split, else first sentence (≤ 80 chars) as title; markdown: heading → category name, list item/paragraph → card; CSV header `title,body,category,url` via `papaparse`; rows validated against card limits; no LLM | no |
+| D189 | Deterministic import parser in `@gobbit/shared/import` (`parseNotes(text, format)`, formats `lines`, `markdown`, `csv`, auto-detect by extension/content); line rules: URL-only → link card, `title — body` / `title: body` split, else first sentence (≤ 80 chars) as title; markdown: heading → category name, list item/paragraph → card; CSV header `title,body,category,url` via `papaparse`; rows validated against card limits; no LLM | no |
 | D190 | `POST /decks/{id}/imports` `{ label, rows ≤ IMPORT_ROWS_PER_REQUEST (100) }`, `item.publish`; per row `proposeDirect` with channel `import` (migration adds the enum value), `clientLabel = label`; `import` daily cap 150 rows, excluded from the combined cap; 200 `{ imported, duplicates, failed: [{ index, problem }] }`; stops at the cap and reports the rest; CLI `pnpm import:notes <file> --deck <slug> [--dry-run]` with `GOBBIT_API_URL` + `GOBBIT_TOKEN` (session bearer) | no |
 | D191 | `POST /decks/{id}/review/publish` `{ ids ≤ 50 }`, `item.publish`; publishes `new`-verdict proposals as is, one transaction each; skips `possible_duplicate`/`update` (`needs-decision`) and non-proposed (`already-handled`); 200 `{ published: [id], skipped: [{ id, reason }] }`; review queue select mode + `source` filter (`clientLabel`) | no |
 
@@ -143,7 +143,7 @@ scripts/import-notes.ts                      # NEW CLI (tsx); package.json "impo
 e2e/tests/full/import.spec.ts                # NEW
 ```
 
-**Structure Decision**: parsing lives in `@pb/shared` (not the API) so the preview is instant and offline, and the server receives already-structured drafts, the same shape as MCP's `proposeDirect`. The server still validates each draft.
+**Structure Decision**: parsing lives in `@gobbit/shared` (not the API) so the preview is instant and offline, and the server receives already-structured drafts, the same shape as MCP's `proposeDirect`. The server still validates each draft.
 
 ## Invariant → test traceability
 
@@ -155,7 +155,7 @@ e2e/tests/full/import.spec.ts                # NEW
 | FR-004 limits and report | `imports.service`, caps | `imports.int.test.ts` (int: > 100 rows 400; daily cap reached mid-import → partial result; combined cap unaffected; failed rows reported with index) |
 | FR-005 admins only | `item.publish` | `imports.int.test.ts` (int: editor/reader 403, non-member 404) |
 | FR-006 bulk publish | `review.service.publishMany` | `review.int.test.ts` (int: `new` published; duplicates/updates skipped `needs-decision`; already handled `already-handled`; > 50 ids 400; other deck's ids skipped; events written) |
-| FR-007 same parser | `@pb/shared/import` used by web and CLI | `import-notes.test.ts` (unit: CLI chunks by 100, dry run prints, uses `parseNotes`) |
+| FR-007 same parser | `@gobbit/shared/import` used by web and CLI | `import-notes.test.ts` (unit: CLI chunks by 100, dry run prints, uses `parseNotes`) |
 | FR-008 no AI | `proposeDirect` | `imports.int.test.ts` (int: `llm_calls` has no `extract*` rows after import) |
 | Journey | — | `e2e/tests/full/import.spec.ts` (e2e:full) |
 

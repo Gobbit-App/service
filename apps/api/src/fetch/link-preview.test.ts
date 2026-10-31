@@ -3,7 +3,7 @@ import {
   LINK_PREVIEW_DESCRIPTION_MAX,
   LINK_PREVIEW_IMAGE_URL_MAX,
   LINK_PREVIEW_TITLE_MAX,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { toLinkPreview } from './link-preview';
 
 const og = (o: Partial<Record<'title' | 'description' | 'image' | 'siteName', string>> = {}) => ({

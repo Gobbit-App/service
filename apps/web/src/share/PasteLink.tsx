@@ -1,5 +1,5 @@
-import type { Deck } from '@pb/shared';
-import { can } from '@pb/shared/authz';
+import type { Deck } from '@gobbit/shared';
+import { can } from '@gobbit/shared/authz';
 import type { ReactElement } from 'react';
 import { ButtonLink } from '../ui/buttons/ButtonLink';
 

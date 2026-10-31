@@ -1,6 +1,6 @@
 # Data Model: Card media
 
-No new tables, columns, constraints or migrations. Everything below is either an existing payload shape or a transient DTO in `@pb/shared` (`packages/shared/src/media/`, subpath `@pb/shared/media`).
+No new tables, columns, constraints or migrations. Everything below is either an existing payload shape or a transient DTO in `@gobbit/shared` (`packages/shared/src/media/`, subpath `@gobbit/shared/media`).
 
 ## Existing payloads used (unchanged, `packages/shared/src/schemas/payloads.ts`)
 
@@ -45,6 +45,6 @@ The client sends the fields named in `folder`, `tags`, `allowed_formats` and `ti
 | Ingest (Phase 5) | `gobbit/ingest/<deckId>` | `ingest`, `job:<jobId>` | `deleteForJob` on a failed or discarded job |
 | Editor (this feature) | `gobbit/items/<deckId>` | `editor`, `deck:<deckId>` | Phase 7 orphan sweep: lists by `deck:` tag and keeps ids referenced by an item's `payload.publicId` |
 
-## Limits added (`@pb/shared/media`)
+## Limits added (`@gobbit/shared/media`)
 
 `MEDIA_IMAGE_MAX_BYTES = 8 MB` (equal to `INGEST_IMAGE_MAX_BYTES`), `MEDIA_IMAGE_MIMES` (= `INGEST_IMAGE_MIMES`), `MEDIA_SIGN_RATE_PER_HOUR = 60`, `LINK_PREVIEW_RATE_PER_HOUR = 30`, `LINK_PREVIEW_TITLE_MAX = 200`, `LINK_PREVIEW_DESCRIPTION_MAX = 500`, `LINK_PREVIEW_CACHE_MAX = 200`, `LINK_PREVIEW_CACHE_TTL_MS = 3_600_000`.

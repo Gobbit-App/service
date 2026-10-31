@@ -1,4 +1,4 @@
-import type { ItemCreateInput } from '@pb/shared';
+import type { ItemCreateInput } from '@gobbit/shared';
 
 /** Category slugs the sample cards are tagged with (created in the `family` sample deck). */
 export const SAMPLE_CATEGORIES = [

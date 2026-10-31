@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import type { MemberRole } from '@pb/shared';
+import type { MemberRole } from '@gobbit/shared';
 import { describe, expect, it } from 'vitest';
 import { ActivityLink } from './ActivityLink';
 

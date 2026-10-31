@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import type { Category, Item } from '@pb/shared';
+import type { Category, Item } from '@gobbit/shared';
 import { deckQuery } from '../../api/queries';
 import { Card } from '../../cards/Card';
 import { CardActionBar } from '../../cards/CardActionBar';

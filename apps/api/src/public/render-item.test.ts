@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PublicItem } from '@pb/shared';
+import type { PublicItem } from '@gobbit/shared';
 import { defaultCalcResult, renderItem, USER_LINK_REL, type ImageUrlFor } from './render-item';
 
 const imageUrl: ImageUrlFor = (id, t) => `https://res.cloudinary.com/demo/image/upload/${t}/${id}`;

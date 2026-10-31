@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ItemCreateInput } from '@pb/shared';
+import type { ItemCreateInput } from '@gobbit/shared';
 import { api, unwrap } from './client';
 import { queryKeys, SEARCH_KEY } from './query-keys';
 

@@ -1,6 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { CategoryRow, DeckRow, ItemRow, UserRow } from '@pb/db';
-import { addMember, createAccountUser, createCategory, createDeck, createItem } from '@pb/db/test';
+import type { CategoryRow, DeckRow, ItemRow, UserRow } from '@gobbit/db';
+import {
+  addMember,
+  createAccountUser,
+  createCategory,
+  createDeck,
+  createItem,
+} from '@gobbit/db/test';
 import { createAnonRateLimiter, type AnonRateLimiter } from '../src/lib/anon-rate-limiter';
 import { setupApiTest, TEST_API_URL } from './helpers';
 

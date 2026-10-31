@@ -1,7 +1,7 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { ARTICLE_PAGE } from '@pb/db/test/ingest-pages';
+import { ARTICLE_PAGE } from '@gobbit/db/test/ingest-pages';
 import { createSafeFetch, createSafeImageFetch } from './safe-fetch';
 import { isBlockedAddress } from './ip-guard';
 

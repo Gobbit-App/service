@@ -3,7 +3,7 @@ import {
   waitlistKinds,
   type WaitlistJoinInput as WaitlistJoinFields,
   type WaitlistKind,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { LANDING_COPY_EN, type LandingCopy } from './landing-copy';
 
 /** Fields that can carry a message on the page; `utm_source` and the honeypot never do. */

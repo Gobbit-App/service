@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { parseEnv, type Env } from './env';
-import { createPool, createDb, type Db } from '@pb/db';
+import { createPool, createDb, type Db } from '@gobbit/db';
 import type { PgBoss } from 'pg-boss';
 import { createApp } from './app';
 import { createMailer } from './mail/create-mailer';

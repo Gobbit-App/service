@@ -1,4 +1,4 @@
-import type { ShareSummary } from '@pb/shared';
+import type { ShareSummary } from '@gobbit/shared';
 import type { ReactElement } from 'react';
 import { isApiError } from '../api/api-error';
 import { relativeTime } from '../lib/relative-time';

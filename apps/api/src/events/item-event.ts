@@ -1,11 +1,11 @@
-import type { NewItemEventRow } from '@pb/db';
+import type { NewItemEventRow } from '@gobbit/db';
 import {
   ITEM_EVENT_TITLE_MAX,
   itemEventKindsWithChanges,
   type ActorVia,
   type ItemEventField,
   type ItemEventKind,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { Actor } from '../types';
 
 /** D187: what a repository write logs; the deck, card and title come from the written row. */

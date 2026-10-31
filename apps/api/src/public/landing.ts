@@ -1,4 +1,4 @@
-import { WAITLIST_NOTE_MAX } from '@pb/shared';
+import { WAITLIST_NOTE_MAX } from '@gobbit/shared';
 import { LANDING_OG_IMAGE_PATH, OG_HEIGHT, OG_WIDTH } from '../share/og-template';
 import type { AnalyticsHead } from './analytics';
 import { h, type Html } from './html';

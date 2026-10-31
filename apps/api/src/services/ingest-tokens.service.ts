@@ -3,7 +3,7 @@ import {
   type IngestTokenCreate,
   type IngestTokenCreated,
   type IngestTokenList,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestTokensRepo } from '../repositories/ingest-tokens.repo';
 import { authorize, type MembershipLookup } from '../access/authorize';

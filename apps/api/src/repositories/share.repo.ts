@@ -1,6 +1,6 @@
 import { asc, desc, eq } from 'drizzle-orm';
-import { categories, decks, itemCategories, items, ogImages, type Db } from '@pb/db';
-import type { CategoryVisibility, DeckKind, ItemStatus, ItemType } from '@pb/shared';
+import { categories, decks, itemCategories, items, ogImages, type Db } from '@gobbit/db';
+import type { CategoryVisibility, DeckKind, ItemStatus, ItemType } from '@gobbit/shared';
 
 /** Everything `/s/:itemId` needs to decide the share mode and build the preview (D58–D60). */
 export type ShareRecord = {

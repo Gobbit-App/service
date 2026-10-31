@@ -1,4 +1,4 @@
-import { type Db, type DbTx } from '@pb/db';
+import { type Db, type DbTx } from '@gobbit/db';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
 import { createDecksRepo } from '../repositories/decks.repo';

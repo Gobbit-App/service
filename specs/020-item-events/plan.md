@@ -65,7 +65,7 @@ Project override of the core template. Written for outside readers: the reposito
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | Services build the event; repositories insert it; `routes/events.ts` → `events.service` → `item-events.repo` |
-| II. One source of truth | `itemEventKinds`, `actorVias`, `itemEventSchema` in `@pb/shared`; `ActorVia` type derives from `actorVias` |
+| II. One source of truth | `itemEventKinds`, `actorVias`, `itemEventSchema` in `@gobbit/shared`; `ActorVia` type derives from `actorVias` |
 | III. Invariants in the DB | FKs (cascade / set null), enums, `changes` only on `updated`/`merged` (CHECK); same transaction as the change |
 | IV. Private by default | Owner/maintainer only; field names, not values; title snapshot only |
 | V. Tests at the right tier | Unit (`diffFields`), int (one line per path, rollback, permissions, FK behaviour), e2e full journey |
@@ -112,7 +112,7 @@ packages/shared/src/
 └── authz/permissions.ts + can.ts            # + 'event.list'
 
 apps/api/src/
-├── types.ts                                 # ActorVia from @pb/shared actorVias
+├── types.ts                                 # ActorVia from @gobbit/shared actorVias
 ├── events/diff-fields.ts                    # NEW: changed field names (pure)
 ├── events/item-event.ts                     # NEW: ItemEventInput type, builder from Actor
 ├── repositories/item-events.repo.ts         # NEW: insert(tx, e), list(q)

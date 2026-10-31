@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ShareList, ShareSummary } from '@pb/shared';
-import { SHARE_POLL_MS } from '@pb/shared/ingest-constants';
+import type { ShareList, ShareSummary } from '@gobbit/shared';
+import { SHARE_POLL_MS } from '@gobbit/shared/ingest-constants';
 import { api, unwrap } from '../api/client';
 import { queryKeys } from '../api/query-keys';
 import { anyProcessing } from './share-state';

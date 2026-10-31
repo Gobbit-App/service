@@ -1,4 +1,4 @@
-import { ASK_RATE_LIMIT_PER_HOUR } from '@pb/shared';
+import { ASK_RATE_LIMIT_PER_HOUR } from '@gobbit/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { Asker, AskInput, AskOutput } from '../ai/asker';
 import { NOT_FOUND_ANSWER } from '../ai/ask-prompt';

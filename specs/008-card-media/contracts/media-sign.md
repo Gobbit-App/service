@@ -1,6 +1,6 @@
 # Contract: `POST /decks/{id}/media/sign`
 
-Issues a signed permission for one direct image upload to Cloudinary (D133). Defined with `@hono/zod-openapi` in `apps/api/src/routes/media.ts`; schemas are in `@pb/shared/media`.
+Issues a signed permission for one direct image upload to Cloudinary (D133). Defined with `@hono/zod-openapi` in `apps/api/src/routes/media.ts`; schemas are in `@gobbit/shared/media`.
 
 **Auth**: session cookie or `Authorization: Bearer` (session). Ingest tokens (`ing_`) are rejected (ADR-046).
 

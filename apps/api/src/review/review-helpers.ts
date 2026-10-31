@@ -1,5 +1,5 @@
-import type { IngestJobRow, ItemRow } from '@pb/db';
-import type { BulkPublishSkipReason, DedupVerdict, Entities } from '@pb/shared';
+import type { IngestJobRow, ItemRow } from '@gobbit/db';
+import type { BulkPublishSkipReason, DedupVerdict, Entities } from '@gobbit/shared';
 
 /** Characters of shared text shown as the source line when no URL was shared. */
 export const SOURCE_PREVIEW_CHARS = 140;

@@ -40,7 +40,7 @@ There is no `updated_at` trigger, because every write sets `checked_at`.
   - this is the same procedure as 0009, and the down file restores the 0009 body.
 - A new partial index, `items_link_preview_public_id_idx` on `((payload #>> '{preview,publicId}')) WHERE type = 'link'`. It is used by the 012 sweep and the D160 lookup.
 
-## Payload change (`@pb/shared` `payloads.ts`)
+## Payload change (`@gobbit/shared` `payloads.ts`)
 
 ```ts
 linkPayloadSchema = z.object({
@@ -58,7 +58,7 @@ linkPayloadSchema = z.object({
 
 The payload stays backwards compatible: every existing link payload still parses.
 
-## DTO change (`@pb/shared` `schemas/item.ts`)
+## DTO change (`@gobbit/shared` `schemas/item.ts`)
 
 ```ts
 linkHealthSchema = z.object({
@@ -71,7 +71,7 @@ itemListQuerySchema += { flag: z.enum(['link']).optional() };
 
 ## Queues and constants
 
-`@pb/shared` `links/constants.ts`, a new zod-free subpath `@pb/shared/links`:
+`@gobbit/shared` `links/constants.ts`, a new zod-free subpath `@gobbit/shared/links`:
 
 | Constant | Value |
 |----------|-------|

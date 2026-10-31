@@ -1,5 +1,5 @@
-import { can, type MemberRole, type Permission } from '@pb/shared';
-import type { MembershipRow } from '@pb/db';
+import { can, type MemberRole, type Permission } from '@gobbit/shared';
+import type { MembershipRow } from '@gobbit/db';
 import type { CurrentUser } from '../types';
 import { forbidden, notFound } from '../errors/http-errors';
 

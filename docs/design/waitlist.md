@@ -183,7 +183,7 @@ alerts: `infra/README.md` § Waitlist admin.
 - The invite registers the user inside the locked transaction; a concurrent deck invite for the
   same address can fail it with a unique-index 500 (retry links the existing user).
 - 028's placeholder `markInvited` / `remove` were removed from `waitlist.service`.
-- `WAITLIST_KIND_LABELS` / `WAITLIST_STATUS_LABELS` were added to `@pb/shared/waitlist-constants`.
+- `WAITLIST_KIND_LABELS` / `WAITLIST_STATUS_LABELS` were added to `@gobbit/shared/waitlist-constants`.
 - The `@full` e2e journey removes a pending entry (e2e can't read mail); invite → first sign-in is
   an integration test. Details: `specs/032-waitlist-admin/implementation-notes.md`.
 

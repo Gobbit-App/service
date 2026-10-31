@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent, type ReactElement } from 'react';
-import type { Deck, MemberRole } from '@pb/shared';
-import { ROLE_LABELS } from '@pb/shared/authz';
-import { memberRoles } from '@pb/shared/enums';
+import type { Deck, MemberRole } from '@gobbit/shared';
+import { ROLE_LABELS } from '@gobbit/shared/authz';
+import { memberRoles } from '@gobbit/shared/enums';
 import { AdminError } from './AdminError';
 import { useInviteMember } from './deck-admin-queries';
 import { Button } from '../ui/buttons/Button';

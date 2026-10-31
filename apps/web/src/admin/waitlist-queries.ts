@@ -4,7 +4,7 @@ import type {
   AdminWaitlistPage,
   WaitlistKind,
   WaitlistStatus,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { api, unwrap } from '../api/client';
 import { queryKeys } from '../api/query-keys';
 

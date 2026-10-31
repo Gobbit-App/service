@@ -7,7 +7,7 @@ import {
   type DeckWithCategories,
   type DeckCreate,
   type DeckPatch,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { toDeckDto, toCategoryDto } from '../lib/mappers';
 import { toSlug } from '../lib/slug';
 import { resolveDeck } from '../lib/resolve-deck';

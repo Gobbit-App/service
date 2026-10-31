@@ -1,5 +1,5 @@
 import { lazy, type ComponentType } from 'react';
-import type { ItemType } from '@pb/shared';
+import type { ItemType } from '@gobbit/shared';
 import { LinkEditorFields } from './LinkEditorFields';
 import { ImageFields } from './ImageFields';
 import { TextFields } from './TextFields';

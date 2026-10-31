@@ -13,7 +13,7 @@ import {
   waitlistStatuses,
   waitlistEventActions,
   registrationReasons,
-} from '@pb/shared';
+} from '@gobbit/shared';
 
 export const tstz = () => timestamp({ withTimezone: true, precision: 3, mode: 'date' });
 

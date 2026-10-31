@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { can } from '@pb/shared/authz';
+import { can } from '@gobbit/shared/authz';
 import { categoriesQuery, configQuery, deckQuery } from '../api/queries';
 import { backTarget } from '../app/back-target';
 import { isCreatableType, type CreatableType } from '../editor/creatable-types';

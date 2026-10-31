@@ -1,6 +1,6 @@
 import type { ReactElement, MouseEvent } from 'react';
 import { useEffect, useRef } from 'react';
-import type { Category } from '@pb/shared';
+import type { Category } from '@gobbit/shared';
 import { chipHref, orderChips, sameView, type ChipView } from './chip-order';
 
 /** Renders a row of category chips for navigation. */

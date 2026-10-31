@@ -1,6 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AdminWaitlistEntry } from '@pb/shared';
+import type { AdminWaitlistEntry } from '@gobbit/shared';
 import { ApiError } from '../api/api-error';
 import { renderWithClient } from '../test/render';
 import { makeWaitlistEntry } from './test-fixtures';

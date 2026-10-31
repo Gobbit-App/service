@@ -2,7 +2,7 @@
 
 No migration. Reads and writes existing tables (`decks`, `categories`, `memberships`).
 
-## DTOs (`@pb/shared`)
+## DTOs (`@gobbit/shared`)
 
 ### `MemberRolePatch` (`schemas/membership.ts`)
 

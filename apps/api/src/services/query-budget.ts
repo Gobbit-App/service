@@ -2,7 +2,7 @@ import {
   PUBLIC_QUERY_EMBED_GLOBAL_PER_HOUR,
   PUBLIC_QUERY_EMBED_PER_HOUR,
   QUERY_EMBEDDING_BUDGET_PER_HOUR,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { QueryBudgetKey } from '../ai/query-embedder';
 import { rateKeys } from '../lib/rate-window';
 import type { RateLimitService } from './rate-limit.service';

@@ -2,7 +2,7 @@ import {
   MEDIA_IMAGE_EXTENSIONS,
   MEDIA_IMAGE_MAX_BYTES,
   MEDIA_IMAGE_MIMES,
-} from '@pb/shared/media-constants';
+} from '@gobbit/shared/media-constants';
 
 /** `accept` for the file inputs; extensions too, because iOS may report HEIC with no type. */
 export const IMAGE_ACCEPT = [

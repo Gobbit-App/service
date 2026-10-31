@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Deck, Item } from '@pb/shared';
+import type { Deck, Item } from '@gobbit/shared';
 import { useCreateItem } from '../api/create-item';
 import { useOnline } from '../api/offline';
 import { useUpdateItem } from '../api/update-item';

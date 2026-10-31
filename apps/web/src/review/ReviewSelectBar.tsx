@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { BULK_PUBLISH_MAX } from '@pb/shared/ingest-constants';
+import { BULK_PUBLISH_MAX } from '@gobbit/shared/ingest-constants';
 import { Button } from '../ui/buttons/Button';
 
 /** D191: the queue's select mode toggle and, while selecting, select all and publish. */

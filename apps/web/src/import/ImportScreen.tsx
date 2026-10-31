@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
-import { can } from '@pb/shared/authz';
-import { parseNotes, type ImportRunResult } from '@pb/shared/import';
+import { can } from '@gobbit/shared/authz';
+import { parseNotes, type ImportRunResult } from '@gobbit/shared/import';
 import { problemMessages } from '../api/problem-messages';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';

@@ -18,9 +18,9 @@ Mapper (Row → DTO, Date → ISO string)
 HTTP Response (JSON, status code, problem+json on error)
 ```
 
-### Single source of truth: @pb/shared schemas
+### Single source of truth: @gobbit/shared schemas
 
-All DTOs, constraints, and enums live in @pb/shared:
+All DTOs, constraints, and enums live in @gobbit/shared:
 - **Limits** (CARD_TITLE_MAX=120, CARD_BODY_MAX=600, PAGE_LIMIT_MAX=50, PAYLOAD_MAX_BYTES=8192, etc.)
 - **Enums** (deckKinds, categoryVisibilities, itemTypes, itemStatuses, sourceKinds)
 - **Validation** (Zod schemas for create/patch inputs, payloads, pagination, problems)
@@ -139,7 +139,7 @@ All errors (except 5xx) follow the Problem schema:
 
 ### Logging
 
-The API and the worker write JSON lines to stdout through pino (`lib/logger.ts`). Each line is `{"level":"info","time":"<ISO>","component":"<area>","msg":"…", …fields}`, and errors go under `err` (`type`, `message`, `stack`, `code`). Modules take a child logger (`childLogger('media')`). The older string sinks (`log(message, err?)` deps used by mailers, queues and services) default to `lineSink(component, level)`, which writes the same JSON shape, so tests still inject plain functions. `@pb/db`'s idle-client error handler writes one JSON line by default, and the API and worker pass `logDbIdleError`. `LOG_LEVEL` (`trace`…`fatal`, `silent`) defaults to `info`, or `silent` under Vitest. Filter with `jq`, e.g. `docker logs <api> | jq 'select(.level=="error")'`.
+The API and the worker write JSON lines to stdout through pino (`lib/logger.ts`). Each line is `{"level":"info","time":"<ISO>","component":"<area>","msg":"…", …fields}`, and errors go under `err` (`type`, `message`, `stack`, `code`). Modules take a child logger (`childLogger('media')`). The older string sinks (`log(message, err?)` deps used by mailers, queues and services) default to `lineSink(component, level)`, which writes the same JSON shape, so tests still inject plain functions. `@gobbit/db`'s idle-client error handler writes one JSON line by default, and the API and worker pass `logDbIdleError`. `LOG_LEVEL` (`trace`…`fatal`, `silent`) defaults to `info`, or `silent` under Vitest. Filter with `jq`, e.g. `docker logs <api> | jq 'select(.level=="error")'`.
 
 ### Decision events
 

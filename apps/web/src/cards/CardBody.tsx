@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ReactElement } from 'react';
-import type { Item } from '@pb/shared';
-import { imageAlt } from '@pb/shared/image-alt';
+import type { Item } from '@gobbit/shared';
+import { imageAlt } from '@gobbit/shared/image-alt';
 import { ImageCard, type ImageLoading } from './ImageCard';
 import { LinkCard } from './LinkCard';
 import { TableCard } from './TableCard';

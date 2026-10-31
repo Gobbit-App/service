@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { createDb, createPool } from '@pb/db';
+import { createDb, createPool } from '@gobbit/db';
 import { parseEnv } from '../src/env';
 import { parseCloudinaryUrl } from '../src/lib/cloudinary-url';
 import { createCloudinaryMediaStore } from '../src/media/media-store';

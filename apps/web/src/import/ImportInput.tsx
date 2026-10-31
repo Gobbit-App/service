@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { detectFormat, importFormats, type ImportFormat } from '@pb/shared/import';
+import { detectFormat, importFormats, type ImportFormat } from '@gobbit/shared/import';
 import { Button } from '../ui/buttons/Button';
 
 const FORMAT_LABELS: Record<ImportFormat, string> = {

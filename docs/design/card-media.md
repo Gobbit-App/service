@@ -20,7 +20,7 @@ Image cards from the editor (upload a photo, or take one on a phone) and "Fetch 
 
 **Link preview (D134)**: `POST /decks/{id}/link-preview` (`link-preview.service`): `item.create`, then `rateKeys.linkPreviewUser` at 30/user/hour, then an `lru-cache` (200 entries, 1 h, keyed by the parsed URL; empty results are cached too). The page is fetched only through `fetch/safe-fetch.ts` (ADR-048) and read by `extract-page`: OG title (else `<title>`, ≤ 200 code points), OG description (≤ 500), absolute http(s) OG image (≤ 2048 chars). Any failure answers `200 { preview: null }`; the reason is only logged. In the editor, `LinkEditorFields` puts `FetchPreview` in the 007 `previewSlot`: text the member already wrote wins over fetched text, a fetched image replaces the old one, and an empty card title takes the fetched title. Any failure reads "No preview available" and Save stays on.
 
-**Bundle**: initial JS unchanged at 112.5 KB gzip; the image and preview code sits in the editor's lazy chunks (`CardEditor` chunk 7.4 KB gzip). Web code imports the zod-free `@pb/shared/media-constants`.
+**Bundle**: initial JS unchanged at 112.5 KB gzip; the image and preview code sits in the editor's lazy chunks (`CardEditor` chunk 7.4 KB gzip). Web code imports the zod-free `@gobbit/shared/media-constants`.
 
 ## Media assets (Phase 7, `specs/012-media-assets`, ADR-054)
 
@@ -74,7 +74,7 @@ Every stored image renders through `cards/CloudImage.tsx` (image cards today, li
 - **No `siteName`** in the preview: the link payload has no field for it, so it is dropped.
 - **The fetch failure reason is not returned** (`{ preview: null }`), only logged, so the route can't be used to probe hosts.
 - **No signed upload preset**: signed params alone (folder, tags, formats) plus the client-side 8 MB check; Cloudinary's account limit is the backstop. A signed preset with a size cap can be added later by signing its name.
-- **Schemas in `schemas/media.ts`**, exported from `@pb/shared` and `@pb/shared/media`; the web imports the zod-free `@pb/shared/media-constants` (research named `@pb/shared/media`).
+- **Schemas in `schemas/media.ts`**, exported from `@gobbit/shared` and `@gobbit/shared/media`; the web imports the zod-free `@gobbit/shared/media-constants` (research named `@gobbit/shared/media`).
 - **`LINK_PREVIEW_IMAGE_URL_MAX` = 2048** is new: longer image URLs are dropped.
 - **Order of checks**: access before the rate limit on both routes; the sign route's 503 comes after the access check and before the rate limit, so a server without Cloudinary doesn't use up a member's hourly count. The preview rate limit counts cache hits too.
 - **Upload state**: starting an upload clears the stored `publicId`, so cancelling or failing a replacement leaves no photo (Save then asks for one). A restored draft keeps only a finished `publicId`.
@@ -87,5 +87,5 @@ Every stored image renders through `cards/CloudImage.tsx` (image cards today, li
 
 ## Deviations from the 023 plan
 
-- **Alt is optional** (`imagePayloadSchema.alt: z.string().optional()`, D206). Renderers use `imageAlt` from `@pb/shared/image-alt`: a non-blank alt wins, otherwise `alt=""` when the title is the heading right above the image (every current renderer, including the public page), otherwise the title. Agent-extracted image cards keep their generated alt.
+- **Alt is optional** (`imagePayloadSchema.alt: z.string().optional()`, D206). Renderers use `imageAlt` from `@gobbit/shared/image-alt`: a non-blank alt wins, otherwise `alt=""` when the title is the heading right above the image (every current renderer, including the public page), otherwise the title. Agent-extracted image cards keep their generated alt.
 - **A non-string `alt` is refused with 400** (request validation), not 422.

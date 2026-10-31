@@ -24,7 +24,7 @@ Project override of the core template. Written for outside readers: the reposito
 - `search.service.retrieve(user, idOrSlug, q, limit, mode)`: resolves and authorizes the deck, normalises the query, embeds it (`queryEmbedder.embed(q, { userId, deckId })`), runs `searchRepo.hybrid({ deckId, role, qNormalized, vector, model })`, fuses with `fuseRrf`, logs to `search_queries` (fire and forget).
 - `query-embedder.ts`: LRU cache by `model + query`; `withinBudget(userId)` checked only on a cache miss; failures return `null` (text-only).
 - `search-wiring.ts`: `withinBudget` = `rateLimits.check(rateKeys.queryEmbedUser(userId), QUERY_EMBEDDING_BUDGET_PER_HOUR)`.
-- `search_queries`: `user_id` nullable, `mode text` with CHECK `IN ('search', 'ask')`; `@pb/shared` `searchModes = ['search', 'ask']`.
+- `search_queries`: `user_id` nullable, `mode text` with CHECK `IN ('search', 'ask')`; `@gobbit/shared` `searchModes = ['search', 'ask']`.
 - `llm_calls`: `user_id` nullable.
 - Search eval: `packages/db/test/fixtures/search-cards.ts`, `search-eval.json`, committed `search-embeddings.json`; `pnpm test:search` / `test:search:update`.
 - PWA: `/d/$slug/search` reads `q` from the URL.
@@ -56,7 +56,7 @@ Project override of the core template. Written for outside readers: the reposito
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/public.ts` / `routes/public-pages.ts` → `search.service.retrievePublic` → `search.repo` |
-| II. One source of truth | `publicSearchQuerySchema`, `publicSearchResponseSchema`, `searchModes` in `@pb/shared`; OpenAPI regenerated |
+| II. One source of truth | `publicSearchQuerySchema`, `publicSearchResponseSchema`, `searchModes` in `@gobbit/shared`; OpenAPI regenerated |
 | III. Invariants in the DB | Mode CHECK extended in the migration; visibility stays in SQL |
 | IV. Private by default | `role = null`; `PublicItem` DTO; no user id or IP in the query log; the IP appears only in hourly rate-limit keys, as for magic links |
 | V. Tests at the right tier | Unit (budget keys, fallback), int (leaks, caps, logging), search eval (AMKA), smoke (privacy step) |

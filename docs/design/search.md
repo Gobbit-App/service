@@ -23,7 +23,7 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
 ```
 
 - The response is `{ data: [{ item, why, score }], semantic }`. `semantic` is false when the vector arm didn't run (no key, over budget, provider error).
-- The web highlights matches client-side with `highlight()` from `@pb/shared/search`, which folds text the same way the SQL does.
+- The web highlights matches client-side with `highlight()` from `@gobbit/shared/search`, which folds text the same way the SQL does.
 - Without an embedding key (`OPENROUTER_API_KEY` or `OPENAI_API_KEY`, ADR-044), search runs text-only and nothing is enqueued.
 
 ## Public search (018, D182, D183)
@@ -48,7 +48,7 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
 
 ## Embeddings worker (`apps/api/src/worker.ts`)
 
-- The worker is a separate process from the same API image (`pnpm --filter @pb/api worker`; the `worker` service in Compose). It runs pg-boss 12 in the app database, schema `pgboss`.
+- The worker is a separate process from the same API image (`pnpm --filter @gobbit/api worker`; the `worker` service in Compose). It runs pg-boss 12 in the app database, schema `pgboss`.
 - Queues:
   - `embed-item`: one item per job, a singleton per item id, 3 retries with backoff.
   - `embed-sweep`: every minute, queues up to 50 stale items.
@@ -67,11 +67,11 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
   - The lazy `AskView` chunk, when Ask is enabled and selected.
 - Search queries use `keepPreviousData` and are excluded from the persisted cache. Search needs the network, and the offline state says so.
 - Recent searches (8 per deck) live in `localStorage`.
-- Value imports come from `@pb/shared/search`, never the package root, which would pull `mathjs` into the initial chunk.
+- Value imports come from `@gobbit/shared/search`, never the package root, which would pull `mathjs` into the initial chunk.
 
 ## Evaluation and demo data (D81, D82)
 
-- `searchCards` in `@pb/db/test`: 40 cards in Hebrew, Greek and English, covering every card type.
+- `searchCards` in `@gobbit/db/test`: 40 cards in Hebrew, Greek and English, covering every card type.
 - `search-eval.json`: 40 query → expected-key pairs. Kinds: substring, phone, typo, URL, no-result, cross-lingual and meaning.
 - `pnpm test:search` (vitest project `search`, `*.search.test.ts`):
   - Loads the deck into a Testcontainers database.

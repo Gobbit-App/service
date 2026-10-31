@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_BODY_MAX, importDraftSchema, type ImportDraftInput } from '@pb/shared';
+import { CARD_BODY_MAX, importDraftSchema, type ImportDraftInput } from '@gobbit/shared';
 import { assertImportRows, importRowDraft } from './import-rows';
 
 const row = (input: ImportDraftInput) => importDraftSchema.parse(input);

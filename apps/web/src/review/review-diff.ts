@@ -1,4 +1,4 @@
-import type { Entities, Item } from '@pb/shared';
+import type { Entities, Item } from '@gobbit/shared';
 
 export type DiffField = 'title' | 'body' | 'url' | 'sourceUrl' | 'entities';
 

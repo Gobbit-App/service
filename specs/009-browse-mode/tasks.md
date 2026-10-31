@@ -25,7 +25,7 @@ description: "Task list for 009-browse-mode"
 
 **Purpose**: dependency, route shell, pure helpers and test plumbing shared by every story
 
-- [X] T001 Add the dependency: `pnpm --filter @pb/web add @use-gesture/react`. Record the gzip size from `pnpm build:web` in implementation-notes.md
+- [X] T001 Add the dependency: `pnpm --filter @gobbit/web add @use-gesture/react`. Record the gzip size from `pnpm build:web` in implementation-notes.md
 - [X] T002 [P] [unit] `browse/browse-params.test.ts`: defaults, invalid `pane` → `content`, `c` ↔ `ItemFilter` mapping (data-model §1)
 - [X] T003 [P] [unit] `browse/category-cycle.test.ts`: All first, then `orderChips` order; Favorites/Archived excluded; next/prev with no wrap; unknown slug → `all`
 - [X] T004 [P] [unit] `browse/edge-guard.test.ts`: 0–23 px and the last 24 px are guarded; 24 px and inward are not; narrow viewports

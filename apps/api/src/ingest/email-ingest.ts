@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { INGEST_TOKEN_PREFIX, ingestRequestSchema } from '@pb/shared';
+import { INGEST_TOKEN_PREFIX, ingestRequestSchema } from '@gobbit/shared';
 import { HttpError } from '../errors/http-errors';
 import type { IngestService } from '../services/ingest.service';
 import type { IngestTokensService } from '../services/ingest-tokens.service';

@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NAME_MAX } from '@pb/shared/card-limits';
+import { NAME_MAX } from '@gobbit/shared/card-limits';
 import { ApiError } from '../../api/api-error';
 import { requests, respond } from '../../test/api-mock';
 import { makeCategory, makeDeck } from '../../test/fixtures';

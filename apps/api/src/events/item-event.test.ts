@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ITEM_EVENT_TITLE_MAX } from '@pb/shared';
+import { ITEM_EVENT_TITLE_MAX } from '@gobbit/shared';
 import type { Actor } from '../types';
 import { eventFrom, toEventRow } from './item-event';
 

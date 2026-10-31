@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { ImportRunResult } from '@pb/shared/import';
+import type { ImportRunResult } from '@gobbit/shared/import';
 import type { PreviewRow } from './preview-rows';
 import { Button } from '../ui/buttons/Button';
 import { ButtonLink } from '../ui/buttons/ButtonLink';

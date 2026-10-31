@@ -1,4 +1,4 @@
-import { llmCalls, type Db, type NewLlmCallRow } from '@pb/db';
+import { llmCalls, type Db, type NewLlmCallRow } from '@gobbit/db';
 
 export function createLlmCallsRepo(db: Db) {
   return {

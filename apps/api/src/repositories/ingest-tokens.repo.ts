@@ -1,5 +1,5 @@
 import { and, count, desc, eq, isNull } from 'drizzle-orm';
-import { ingestTokens, users, type DbExecutor, type IngestTokenRow } from '@pb/db';
+import { ingestTokens, users, type DbExecutor, type IngestTokenRow } from '@gobbit/db';
 import type { CurrentUser } from '../types';
 
 export interface NewIngestTokenValues {

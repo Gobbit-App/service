@@ -12,11 +12,11 @@ decision records in [`adr.md`](adr.md). Commands, env vars and setup are in the 
 
 | Package | Path | Role |
 | --- | --- | --- |
-| `@pb/shared` | `packages/shared` | Zod DTO schemas, enums, limits, authz matrix (`can()`), utils. Single source of truth for domain rules. Web code imports subpaths only (`/search`, `/calc`, `/card-limits`, …) |
-| `@pb/db` | `packages/db` | Drizzle schema, migrations (+ hand-written `down/`), owner-only seed, test factories (`@pb/db/test`) |
-| `@pb/api` | `apps/api` | Hono REST API (`@hono/zod-openapi`) and the pg-boss worker (`src/worker.ts`), same image |
-| `@pb/api-client` | `packages/api-client` | `openapi.json` + generated types, `openapi-fetch` client; CI fails on drift (ADR-035) |
-| `@pb/web` | `apps/web` | Reader PWA: React 19, Vite, TanStack Router/Query, `vite-plugin-pwa`; served by its own Caddy image |
+| `@gobbit/shared` | `packages/shared` | Zod DTO schemas, enums, limits, authz matrix (`can()`), utils. Single source of truth for domain rules. Web code imports subpaths only (`/search`, `/calc`, `/card-limits`, …) |
+| `@gobbit/db` | `packages/db` | Drizzle schema, migrations (+ hand-written `down/`), owner-only seed, test factories (`@gobbit/db/test`) |
+| `@gobbit/api` | `apps/api` | Hono REST API (`@hono/zod-openapi`) and the pg-boss worker (`src/worker.ts`), same image |
+| `@gobbit/api-client` | `packages/api-client` | `openapi.json` + generated types, `openapi-fetch` client; CI fails on drift (ADR-035) |
+| `@gobbit/web` | `apps/web` | Reader PWA: React 19, Vite, TanStack Router/Query, `vite-plugin-pwa`; served by its own Caddy image |
 | `e2e` | `e2e/` | Playwright, `@smoke` and `@full` tiers |
 
 All ESM, strict TypeScript, no build step: packages export `.ts`, run with `tsx`, checked with
@@ -106,7 +106,7 @@ only on `POST /ingest`.
 | Tier | Files | Runs on |
 | --- | --- | --- |
 | Unit | `*.test.ts` next to code | Node, mocked deps |
-| Integration | `*.int.test.ts` | Testcontainers Postgres, template DB cloned per file (ADR-020); data from `@pb/db/test` factories |
+| Integration | `*.int.test.ts` | Testcontainers Postgres, template DB cloned per file (ADR-020); data from `@gobbit/db/test` factories |
 | Search eval | `*.search.test.ts` | recall@5 ≥ 0.9 against a committed embedding cache (ADR-043) |
 | E2E | `e2e/tests/{smoke,full}` | `@smoke` journeys on every PR and deploy, `@full` nightly (ADR-053); each test owns a `smoke-<id>` deck |
 
@@ -126,7 +126,7 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [005](adr.md#adr-005-soft-deletes-via-deleted_at-timestamp) | Soft deletes via `deleted_at` |
 | [006](adr.md#adr-006-denormalized-deck_id-in-item_categories) | `deck_id` in `item_categories` for a composite FK |
 | [007](adr.md#adr-007-default-category-auto-created-and-protected) | Default category auto-created and protected |
-| [008](adr.md#adr-008-payload-validation-in-pbshared-re-validated-on-patch) | Payload schemas in `@pb/shared`, re-validated on PATCH |
+| [008](adr.md#adr-008-payload-validation-in-pbshared-re-validated-on-patch) | Payload schemas in `@gobbit/shared`, re-validated on PATCH |
 | [009](adr.md#adr-009-limit-50-rejects-doesnt-clamp) | Limit > 50 rejects |
 | [010](adr.md#adr-010-rfc-9457-problemjson-for-all-errors) | RFC 9457 problem+json for all errors |
 | [011](adr.md#adr-011-migration-rollback-via-downsql) | Rollback via hand-written `.down.sql` |

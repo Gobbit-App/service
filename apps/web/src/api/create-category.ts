@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Category, Deck } from '@pb/shared';
+import type { Category, Deck } from '@gobbit/shared';
 import { isApiError } from './api-error';
 import { api, unwrap } from './client';
 import { categoriesQuery } from './queries';

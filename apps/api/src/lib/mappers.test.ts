@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { toDeckDto, toCategoryDto, toItemDto } from './mappers';
-import { deckSchema, categorySchema, itemSchema } from '@pb/shared';
-import type { DeckRow, CategoryRow, ItemRow } from '@pb/db';
+import { deckSchema, categorySchema, itemSchema } from '@gobbit/shared';
+import type { DeckRow, CategoryRow, ItemRow } from '@gobbit/db';
 
 describe('mappers', () => {
   describe('toDeckDto', () => {

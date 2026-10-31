@@ -6,7 +6,7 @@ import {
   type QueryFilters,
   type QueryKey,
 } from '@tanstack/react-query';
-import type { BulkPublishResult, PublishRequest, ReviewCount, ReviewList } from '@pb/shared';
+import type { BulkPublishResult, PublishRequest, ReviewCount, ReviewList } from '@gobbit/shared';
 import { decrementCount, removeReviewEntries } from '../review/review-cache';
 import { api, unwrap } from './client';
 import { queryKeys } from './query-keys';

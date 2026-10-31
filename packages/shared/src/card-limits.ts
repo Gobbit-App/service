@@ -1,6 +1,6 @@
 /**
  * Zod-free card limits for the web editor (R6). Value imports from the web go through the
- * `@pb/shared/card-limits` subpath so neither zod nor mathjs reaches the editor chunk.
+ * `@gobbit/shared/card-limits` subpath so neither zod nor mathjs reaches the editor chunk.
  */
 export {
   CARD_TITLE_MAX,

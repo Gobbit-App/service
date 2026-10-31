@@ -1,7 +1,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import type pg from 'pg';
-import type { Db } from '@pb/db';
+import type { Db } from '@gobbit/db';
 import type { MiddlewareHandler } from 'hono';
 import type { AppEnv } from './types';
 import type { Env } from './env';
@@ -43,7 +43,7 @@ import { registerPublicRoutes } from './routes/public';
 import { rateLimitedHtml, registerPublicPagesRoutes } from './routes/public-pages';
 import { publicRateLimit } from './middleware/public-rate-limit';
 import { createAnonRateLimiter, type AnonRateLimiter } from './lib/anon-rate-limiter';
-import { PUBLIC_READ_PER_HOUR, PUBLIC_SEARCH_PER_HOUR } from '@pb/shared';
+import { PUBLIC_READ_PER_HOUR, PUBLIC_SEARCH_PER_HOUR } from '@gobbit/shared';
 import { registerWaitlistRoutes } from './routes/waitlist';
 import { registerLandingRoutes } from './routes/landing';
 import { LANDING_DECISION_LEVELS, type LandingDecisions } from './services/landing.events';

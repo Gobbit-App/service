@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { IngestTokenCreated } from '@pb/shared';
+import type { IngestTokenCreated } from '@gobbit/shared';
 import { CopyButton } from './CopyButton';
 import { ingestEmailAddress } from './ingest-token-view';
 import { Button } from '../ui/buttons/Button';

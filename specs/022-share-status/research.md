@@ -48,7 +48,7 @@ Decisions continue the project-wide D numbering. This feature owns **D192–D199
 
 ## D194 — Failure reason codes
 
-- **Decision**: a closed list in `@pb/shared/ingest`, stored in the new column `ingest_jobs.failure_code` (text, CHECK in list, NULL unless `failed`). `error` keeps the detail for the debug view.
+- **Decision**: a closed list in `@gobbit/shared/ingest`, stored in the new column `ingest_jobs.failure_code` (text, CHECK in list, NULL unless `failed`). `error` keeps the detail for the debug view.
   - `content_expired`: raw missing.
   - `sharer_left`: sharer gone or not a member.
   - `fetch_failed`: the source couldn't be fetched (safe-fetch or normalize error).

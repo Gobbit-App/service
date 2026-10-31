@@ -1,4 +1,4 @@
-import { INGEST_TEXT_MAX, type IngestRaw, type NormalizedSource } from '@pb/shared';
+import { INGEST_TEXT_MAX, type IngestRaw, type NormalizedSource } from '@gobbit/shared';
 import type { ExtractedPage } from './extract-page';
 
 /** Result of fetching the raw URL. Absent when no fetch was attempted. */

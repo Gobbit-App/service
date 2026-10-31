@@ -7,7 +7,7 @@ import {
   reviewCountSchema,
   reviewListQuerySchema,
   reviewListSchema,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getActor, getUser } from '../lib/current-user';

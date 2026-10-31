@@ -82,7 +82,7 @@ right tier (unit / int / search / e2e), and every row of the plan's traceability
 - [ ] T013 [US1] Repository method in apps/api/src/repositories/[repo].ts
 - [ ] T014 [US1] Service rule + `can()` check in apps/api/src/services/[service].ts
 - [ ] T015 [US1] Route + OpenAPI definition in apps/api/src/routes/[route].ts
-- [ ] T016 [US1] `pnpm api:openapi` (regenerate @pb/api-client)
+- [ ] T016 [US1] `pnpm api:openapi` (regenerate @gobbit/api-client)
 - [ ] T017 [US1] Web screen/component in apps/web/src/routes/[route].tsx + apps/web/src/[feature]/
 
 **Checkpoint**: User Story 1 is fully functional and testable on its own

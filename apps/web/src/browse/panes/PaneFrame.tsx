@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 
 /**
  * The Details and Source panes' frame. The title keeps the card's `card-title-<id>` id, so

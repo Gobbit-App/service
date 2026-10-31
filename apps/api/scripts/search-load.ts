@@ -1,5 +1,5 @@
-import { PAGE_LIMIT_MAX, type Deck, type Item, type ItemPage } from '@pb/shared';
-import { searchCards } from '@pb/db/test/search-cards';
+import { PAGE_LIMIT_MAX, type Deck, type Item, type ItemPage } from '@gobbit/shared';
+import { searchCards } from '@gobbit/db/test/search-cards';
 import {
   ApiCliError,
   cardsToCreate,

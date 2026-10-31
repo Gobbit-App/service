@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Entities, Item } from '@pb/shared';
+import type { Entities, Item } from '@gobbit/shared';
 import { entitiesText, reviewDiff } from './review-diff';
 
 function item(overrides: Partial<Item> = {}): Item {

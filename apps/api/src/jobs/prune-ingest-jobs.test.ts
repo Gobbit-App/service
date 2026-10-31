@@ -1,4 +1,4 @@
-import { INGEST_RAW_RETENTION_DAYS } from '@pb/shared';
+import { INGEST_RAW_RETENTION_DAYS } from '@gobbit/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createPruneIngestJobs } from './prune-ingest-jobs';
 

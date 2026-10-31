@@ -119,8 +119,8 @@ It exposes these functions:
 
 **Decision**:
 - `editor/validate.ts` implements mirror checks returning `FieldErrors` (`Record<FieldPath, string>`). Paths match the server's `problem.errors[].path`, e.g. `title`, `payload.rows.3.1`, `categoryIds`.
-- The numbers come from a new zod-free subpath `@pb/shared/card-limits` (`src/card-limits.ts` re-exports from `limits.ts` and `utils/utf8-bytes.ts`).
-- Calc expressions are checked by `validateCalcExpression`, re-exported from the existing `@pb/shared/calc` subpath, and imported only by `CalcFields` (lazy), which shares the mathjs chunk with `CalcCard`.
+- The numbers come from a new zod-free subpath `@gobbit/shared/card-limits` (`src/card-limits.ts` re-exports from `limits.ts` and `utils/utf8-bytes.ts`).
+- Calc expressions are checked by `validateCalcExpression`, re-exported from the existing `@gobbit/shared/calc` subpath, and imported only by `CalcFields` (lazy), which shares the mathjs chunk with `CalcCard`.
 - Server errors map through `problem-fields.ts`:
   - `/problems/validation` and `bad-request`: `errors[].path`.
   - `/problems/item-needs-category`: `categoryIds`.
@@ -128,8 +128,8 @@ It exposes these functions:
   - Otherwise: a form-level message via `problemMessages`.
 
 **Rationale**:
-- Code check: `@pb/shared` item and payload schemas import zod, and `payloads.ts` imports mathjs. The web imports no zod today, and every web subpath (`/authz`, `/calc`, `/decks`, `/search`, `/ingest-constants`) is zod-free.
-- The phase plan's "validateDraft uses the `@pb/shared` item schemas" would add zod (and, through `payloads.ts`, mathjs) to the editor chunk and risk the budget for no gain: the server stays authoritative.
+- Code check: `@gobbit/shared` item and payload schemas import zod, and `payloads.ts` imports mathjs. The web imports no zod today, and every web subpath (`/authz`, `/calc`, `/decks`, `/search`, `/ingest-constants`) is zod-free.
+- The phase plan's "validateDraft uses the `@gobbit/shared` item schemas" would add zod (and, through `payloads.ts`, mathjs) to the editor chunk and risk the budget for no gain: the server stays authoritative.
 
 **Alternatives considered**:
 - Import the Zod schemas in the lazy editor chunk: about 15 KB+ gzip in the chunk, and mathjs in the text editor too.

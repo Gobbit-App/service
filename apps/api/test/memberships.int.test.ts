@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { MemberRole } from '@pb/shared';
-import type { UserRow } from '@pb/db';
-import { addMember, createAccountUser } from '@pb/db/test';
+import type { MemberRole } from '@gobbit/shared';
+import type { UserRow } from '@gobbit/db';
+import { addMember, createAccountUser } from '@gobbit/db/test';
 import { json, setupApiTest } from './helpers';
 
 describe('memberships and the permission matrix (P2.4, D33–D36)', () => {

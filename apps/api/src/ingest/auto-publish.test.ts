@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { DeckRow, ItemRow } from '@pb/db';
-import type { DedupVerdict, IngestChannel, MemberRole } from '@pb/shared';
+import type { DeckRow, ItemRow } from '@gobbit/db';
+import type { DedupVerdict, IngestChannel, MemberRole } from '@gobbit/shared';
 import { autoPublish, autoPublishHold, type AutoPublishDeps } from './auto-publish';
 
 const fresh: DedupVerdict = { action: 'new', itemId: null, similarity: null, via: 'none' };

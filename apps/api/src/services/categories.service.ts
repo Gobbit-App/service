@@ -1,4 +1,4 @@
-import type { Category, CategoryCreate, CategoryPatch } from '@pb/shared';
+import type { Category, CategoryCreate, CategoryPatch } from '@gobbit/shared';
 import { type CategoriesRepo } from '../repositories/categories.repo';
 import { type DecksRepo } from '../repositories/decks.repo';
 import { type CurrentUser } from '../types';

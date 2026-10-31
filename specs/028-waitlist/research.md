@@ -11,8 +11,8 @@ Decisions continue the project-wide D numbering. Phase 9 reserves D217–D240; t
   - D175: an in-process per-IP LRU (`lib/anon-rate-limiter.ts`) through `middleware/public-rate-limit.ts` for anonymous routes, so strangers don't write counter rows.
 - **Mail**: `Mailer` (`ResendMailer` / `ConsoleMailer` / `MemoryMailer`) with templates in `apps/api/src/mail/templates.ts` (`signInEmail`, `inviteEmail`, `escapeHtml`).
 - **Redirects**: `lib/auth-redirect.ts` builds `${APP_URL}…` landing URLs, falling back to the API when `APP_URL` is unset.
-- **Pruning**: weekly pg-boss jobs (`prune-search-queries`, `prune-ingest-jobs`, `prune-deleted-items`) with cron constants in `@pb/shared` and a factory per job (`jobs/prune-search-queries.ts`).
-- **Database**: enums are `pgEnum`s declared from `@pb/shared` tuples (`schema/common.ts`); `set_updated_at()` trigger function from `0002_invariants`; hand-written SQL is appended to generated migrations (`0007_default_deck`). No view exists yet. Latest migration: `0017_share_status`.
+- **Pruning**: weekly pg-boss jobs (`prune-search-queries`, `prune-ingest-jobs`, `prune-deleted-items`) with cron constants in `@gobbit/shared` and a factory per job (`jobs/prune-search-queries.ts`).
+- **Database**: enums are `pgEnum`s declared from `@gobbit/shared` tuples (`schema/common.ts`); `set_updated_at()` trigger function from `0002_invariants`; hand-written SQL is appended to generated migrations (`0007_default_deck`). No view exists yet. Latest migration: `0017_share_status`.
 
 ## D217 — `waitlist_entries` table and statuses
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { setupApiTest, fixtureId } from './helpers';
-import { categoryListSchema, categorySchema } from '@pb/shared';
+import { categoryListSchema, categorySchema } from '@gobbit/shared';
 
 describe('categories routes', () => {
   const ctx = setupApiTest();

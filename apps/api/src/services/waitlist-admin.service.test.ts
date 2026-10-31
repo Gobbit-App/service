@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { WaitlistEntryRow } from '@pb/db';
-import { decodeCursor, encodeCursor, type AdminWaitlistQuery } from '@pb/shared';
+import type { WaitlistEntryRow } from '@gobbit/db';
+import { decodeCursor, encodeCursor, type AdminWaitlistQuery } from '@gobbit/shared';
 import { captureLogger, expectDecision } from '../../test/capture-logger';
 import { decisionLogger } from '../lib/decision-event';
 import { hashToken } from '../lib/tokens';

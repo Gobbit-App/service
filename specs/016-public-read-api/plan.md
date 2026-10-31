@@ -64,7 +64,7 @@ The public surface (016–018) is recorded in **ADR-056**.
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/public.ts` (parse, headers) → `public-deck.service` (deck rule, DTO) → existing repositories with `role: null`; `categories.service.update` for the new PATCH |
-| II. One source of truth | `PublicDeck`, `PublicItem`, `PublicItemPage`, `CategoryPatch` schemas in `@pb/shared`; OpenAPI regenerated |
+| II. One source of truth | `PublicDeck`, `PublicItem`, `PublicItemPage`, `CategoryPatch` schemas in `@gobbit/shared`; OpenAPI regenerated |
 | III. Invariants in the DB | Visibility is already enforced in SQL (`visibleCategoriesWhere`); the personal-deck rule stays in the service and the existing CHECKs; no new invariant needs a constraint |
 | IV. Private by default | `role = null` is the narrowest view; the DTO is an allow-list; the same 404 for every reason; no cookies read; per-IP limit |
 | V. Tests at the right tier | Unit (DTO allow-list, limiter), int (access matrix incl. leak cases), smoke (anonymous read of a public deck) |

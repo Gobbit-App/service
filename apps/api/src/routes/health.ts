@@ -1,7 +1,7 @@
 import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
 import type { AppEnv } from '../types';
 import type pg from 'pg';
-import { getLatestMigrationTag } from '@pb/db';
+import { getLatestMigrationTag } from '@gobbit/db';
 
 export const healthResponseSchema = z.object({
   ok: z.boolean(),

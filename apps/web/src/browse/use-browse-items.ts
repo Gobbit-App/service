@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 import { itemsQuery } from '../api/queries';
 import type { ItemFilter } from '../api/query-keys';
 

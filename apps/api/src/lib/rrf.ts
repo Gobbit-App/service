@@ -1,4 +1,4 @@
-import { RRF_K, SUBSTRING_BOOST, type SearchWhy } from '@pb/shared';
+import { RRF_K, SUBSTRING_BOOST, type SearchWhy } from '@gobbit/shared';
 
 /** One candidate from the hybrid query: ranks are 1-based within each arm, null when absent from that arm. */
 export interface ArmRow {

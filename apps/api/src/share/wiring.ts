@@ -1,4 +1,4 @@
-import type { Db } from '@pb/db';
+import type { Db } from '@gobbit/db';
 import type { Env } from '../env';
 import { createShareRepo } from '../repositories/share.repo';
 import { createCloudinaryOgStore, type OgImageStore } from './og-store';

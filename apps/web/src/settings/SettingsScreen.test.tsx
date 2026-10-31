@@ -1,6 +1,6 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AppConfig, IngestToken } from '@pb/shared';
+import type { AppConfig, IngestToken } from '@gobbit/shared';
 import { ApiError } from '../api/api-error';
 import { queryKeys } from '../api/query-keys';
 import { makeDeck } from '../test/fixtures';

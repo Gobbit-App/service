@@ -1,4 +1,4 @@
-import { WAITLIST_PENDING_RETENTION_DAYS } from '@pb/shared';
+import { WAITLIST_PENDING_RETENTION_DAYS } from '@gobbit/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { captureLogger, expectDecision } from '../../test/capture-logger';
 import { decisionLogger } from '../lib/decision-event';

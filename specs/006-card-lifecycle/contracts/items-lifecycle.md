@@ -1,6 +1,6 @@
 # Contract: Item lifecycle routes (006)
 
-All routes are under the API root (the web reaches it at `/api`, stripped by Caddy). Auth is a session (`gobbit_session` cookie or `Authorization: Bearer`); `ing_` ingest tokens get 401 (ADR-046). Errors are `application/problem+json` (RFC 9457). The responses below are in addition to the usual 400 `/problems/validation`, 401 and 404 (the deck or card doesn't exist, or the caller can't see it). Schemas come from `@pb/shared` (`itemSchema`, `itemPageSchema`, `itemListQuerySchema`); run `pnpm api:openapi` after the route changes.
+All routes are under the API root (the web reaches it at `/api`, stripped by Caddy). Auth is a session (`gobbit_session` cookie or `Authorization: Bearer`); `ing_` ingest tokens get 401 (ADR-046). Errors are `application/problem+json` (RFC 9457). The responses below are in addition to the usual 400 `/problems/validation`, 401 and 404 (the deck or card doesn't exist, or the caller can't see it). Schemas come from `@gobbit/shared` (`itemSchema`, `itemPageSchema`, `itemListQuerySchema`); run `pnpm api:openapi` after the route changes.
 
 The service methods behind every route take an `Actor` (`{ user, via: 'session' }`, D130). The routes add nothing beyond parsing.
 

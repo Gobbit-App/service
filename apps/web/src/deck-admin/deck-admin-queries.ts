@@ -6,7 +6,7 @@ import type {
   InviteCreateInput,
   Member,
   MemberRole,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { api, unwrap } from '../api/client';
 import { queryKeys } from '../api/query-keys';
 

@@ -84,11 +84,11 @@ A share that fails in the worker today disappears: the reason sits in `ingest_jo
 | Principle | How this plan complies (or "N/A") |
 |-----------|-----------------------------------|
 | I. Layered API | `routes/my-shares.ts` parses → `shares.service` (access: sharer + `deck.read` / `item.create`; retry rules) → `ingestJobsRepo` (list, conditional retry update). Auto-publish rules live in `ingest/auto-publish.ts`; SQL stays in repos; `publishProposal` is shared by `review.service` and the worker. |
-| II. One source of truth for contracts | `ShareSummary`, failure codes, auto-publish outcomes, `DeckPatch.autoPublishShares` in `@pb/shared`; `pnpm api:openapi` regenerates the client; the DB CHECK lists are tested equal to the shared constants. |
+| II. One source of truth for contracts | `ShareSummary`, failure codes, auto-publish outcomes, `DeckPatch.autoPublishShares` in `@gobbit/shared`; `pnpm api:openapi` regenerates the client; the DB CHECK lists are tested equal to the shared constants. |
 | III. Invariants live in the database | `0017_share_status` + hand-written down file. CHECKs: `failure_code` ∈ list and only when `failed`; `auto_publish` ∈ list; `retry_count` 0–3. D95's "published needs ≥ 1 category" trigger still guards auto-publish. |
 | IV. Private by default | **Amended (1.1.1 → 1.2.0)**: one automated publish path, only for a sharer who can publish, on a deck whose owner opted in (ADR-058). Shares are visible only to their sharer (404 for others); the summary never includes shared text; `ing_` tokens can't read shares; logs carry codes only. |
 | V. Tests at the right tier | Unit: classifier, gate, copy, components. Int: shares API access/retry/caps, worker auto-publish + failure codes + log line, deck setting. E2E smoke (review entry, Sent → Your shares) + full (list states, setting). Regression for the incident at int. Traceability below. |
-| VI. Lean, offline-first web | Lazy `/d/$slug/shares`; list persisted in the query cache for offline reading; actions disabled offline; subpath import `@pb/shared/ingest` for codes; no service-worker API caching. |
+| VI. Lean, offline-first web | Lazy `/d/$slug/shares`; list persisted in the query cache for offline reading; actions disabled offline; subpath import `@gobbit/shared/ingest` for codes; no service-worker API caching. |
 | VII. Simple, optional, deployable | No new deps, env vars or services; migration backfills; normal CI → Dokploy flow. |
 
 Post-design re-check: still passes. IV holds because of the amendment, which is committed with this plan.

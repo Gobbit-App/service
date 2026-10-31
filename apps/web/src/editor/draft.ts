@@ -1,4 +1,4 @@
-import type { Entities, Item, ItemCreateInput, ItemPatch, ItemType } from '@pb/shared';
+import type { Entities, Item, ItemCreateInput, ItemPatch, ItemType } from '@gobbit/shared';
 import {
   asCalcPayload,
   asTablePayload,

@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { makeItem } from '../test/fixtures';
 import type { PagesData } from './favorite-cache';

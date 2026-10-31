@@ -1,7 +1,13 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { CategoryRow, DeckRow, ItemRow, UserRow } from '@pb/db';
-import { SEARCH_Q_MAX } from '@pb/shared';
-import { addMember, createAccountUser, createCategory, createDeck, createItem } from '@pb/db/test';
+import type { CategoryRow, DeckRow, ItemRow, UserRow } from '@gobbit/db';
+import { SEARCH_Q_MAX } from '@gobbit/shared';
+import {
+  addMember,
+  createAccountUser,
+  createCategory,
+  createDeck,
+  createItem,
+} from '@gobbit/db/test';
 import { createFakeEmbedder } from '../src/ai/fake-embedder';
 import { createAnonRateLimiter, type AnonRateLimiter } from '../src/lib/anon-rate-limiter';
 import { json, setupApiTest } from './helpers';

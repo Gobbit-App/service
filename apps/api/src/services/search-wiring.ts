@@ -1,4 +1,4 @@
-import type { Db } from '@pb/db';
+import type { Db } from '@gobbit/db';
 import type { Env } from '../env';
 import type { Asker } from '../ai/asker';
 import type { Embedder } from '../ai/embedder';

@@ -73,9 +73,9 @@ Full text of every ADR; the one-line index is in [architecture.md](architecture.
 
 **Cascade exception**: When deck is deleted, the trigger cleanup is allowed (pg_trigger_depth > 1 check).
 
-## ADR-008: Payload validation in @pb/shared, re-validated on PATCH
+## ADR-008: Payload validation in @gobbit/shared, re-validated on PATCH
 
-**Decision**: `payloadSchemaFor(type)` lives in @pb/shared. Service re-validates payload on PATCH.
+**Decision**: `payloadSchemaFor(type)` lives in @gobbit/shared. Service re-validates payload on PATCH.
 
 **Rationale**:
 - Schema is single source of truth for all consumers (API, tests, migrations)
@@ -284,7 +284,7 @@ Full text of every ADR; the one-line index is in [architecture.md](architecture.
 
 ## ADR-032: Owner-only seed with test factories (D49)
 
-**Decision**: The seed creates only the owner (plus the optional smoke session); integration and smoke tests build their own data with `@pb/db/test` factories or per-test `smoke-<id>` decks.
+**Decision**: The seed creates only the owner (plus the optional smoke session); integration and smoke tests build their own data with `@gobbit/db/test` factories or per-test `smoke-<id>` decks.
 
 **Rationale**: The deployed database contains no fabricated people or cards, and tests don't depend on shared mutable state.
 
@@ -377,7 +377,7 @@ Filtering inside each arm means a hidden category can never rank or leak. Fusing
 
 ## ADR-045: Share target in a hand-written service worker (D98)
 
-**Decision**: `vite-plugin-pwa` switches from `generateSW` to `injectManifest` with `src/sw.ts`. The generated worker's rules are ported 1:1 (precache, navigation fallback and denylist, Cloudinary CacheFirst, `SKIP_WAITING`), and a `fetch` handler takes the manifest `share_target` POST to `/share`, stores it in IndexedDB and redirects to the confirm screen. The SW and the share chunk import `@pb/shared/ingest-constants` (zod-free).
+**Decision**: `vite-plugin-pwa` switches from `generateSW` to `injectManifest` with `src/sw.ts`. The generated worker's rules are ported 1:1 (precache, navigation fallback and denylist, Cloudinary CacheFirst, `SKIP_WAITING`), and a `fetch` handler takes the manifest `share_target` POST to `/share`, stores it in IndexedDB and redirects to the confirm screen. The SW and the share chunk import `@gobbit/shared/ingest-constants` (zod-free).
 
 **Rationale**: `generateSW` can't answer a POST. A server-side `action: /api/...` would skip the deck picker and the sign-in hand-off. One SW file keeps offline behaviour in one place.
 
@@ -501,7 +501,7 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
   - rate or average (ratio to baseline, duration).
 
   The plan names the alert thresholds with their defaults. Because events are named and their values come from closed sets, log-based metrics and alerts can be built without parsing free text.
-- **Operator control**: limits and thresholds that shape the user's experience are env-tunable with defaults in `@pb/shared`, and documented in a runbook.
+- **Operator control**: limits and thresholds that shape the user's experience are env-tunable with defaults in `@gobbit/shared`, and documented in a runbook.
 - **Tests**: each event in a plan is asserted in a test.
 - **Existing code**: code that predates the principle is brought into line when it is next changed, and through a retrofit feature tracked in `PLAN.md`. Today, rate-limit refusals, for example, appear only as a generic request line with status 429.
 

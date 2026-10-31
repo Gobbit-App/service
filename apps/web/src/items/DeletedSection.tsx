@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import type { Deck } from '@pb/shared';
+import type { Deck } from '@gobbit/shared';
 import type { ReactElement } from 'react';
 import { itemsQuery } from '../api/queries';
 import { CardActionBar } from '../cards/CardActionBar';

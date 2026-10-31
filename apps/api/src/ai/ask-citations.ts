@@ -1,4 +1,4 @@
-import type { AskCitation } from '@pb/shared';
+import type { AskCitation } from '@gobbit/shared';
 
 /** D77: keep cited ids that were retrieved, in citation order, de-duplicated; titles from the retrieved cards. */
 export function resolveCitations(

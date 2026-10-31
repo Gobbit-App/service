@@ -5,7 +5,7 @@
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type pg from 'pg';
-import type { Db } from '@pb/db';
+import type { Db } from '@gobbit/db';
 import { createApp } from '../src/app';
 import { parseEnv } from '../src/env';
 import { MemoryMailer } from '../src/mail/memory-mailer';

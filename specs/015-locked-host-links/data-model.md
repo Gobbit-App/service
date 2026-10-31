@@ -12,7 +12,7 @@
 | `link_checks.status` | `unchecked` | Written for locked hosts, never probed (D168) |
 | `ingest_jobs.raw` | `text`, `url`, `images[0]` | Caption, post URL and preview photo (D167) |
 
-## Shared code (`@pb/shared/links`, zod-free)
+## Shared code (`@gobbit/shared/links`, zod-free)
 
 | Export | Value |
 |--------|-------|

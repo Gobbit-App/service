@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
-import { IMPORT_ROWS_PER_PREVIEW } from '@pb/shared/ingest-constants';
-import type { ImportCategory } from '@pb/shared/import';
+import { IMPORT_ROWS_PER_PREVIEW } from '@gobbit/shared/ingest-constants';
+import type { ImportCategory } from '@gobbit/shared/import';
 import { ImportPreviewRow } from './ImportPreviewRow';
 import { editRow, importableRows, toggleRow, type PreviewRow } from './preview-rows';
 import { Button } from '../ui/buttons/Button';

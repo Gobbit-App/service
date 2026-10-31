@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import type { Deck, IngestToken } from '@pb/shared';
+import type { Deck, IngestToken } from '@gobbit/shared';
 import { useRevokeIngestToken } from '../api/ingest-tokens';
 import { problemMessages } from '../api/problem-messages';
 import { lastUsedLabel, tokenScope } from './ingest-token-view';

@@ -1,5 +1,5 @@
 import { and, asc, eq, isNull, sql, type SQL } from 'drizzle-orm';
-import { items, type Db } from '@pb/db';
+import { items, type Db } from '@gobbit/db';
 
 /** D74: the hash the stored vector must match; `item_embedding_hash()` lives in 0008_search. */
 function expectedHash(model: string): SQL<string> {

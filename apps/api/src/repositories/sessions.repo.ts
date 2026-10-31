@@ -1,6 +1,6 @@
 import { and, eq, gt, isNull } from 'drizzle-orm';
-import type { SessionKind } from '@pb/shared';
-import { sessions, users, type DbExecutor, type SessionRow } from '@pb/db';
+import type { SessionKind } from '@gobbit/shared';
+import { sessions, users, type DbExecutor, type SessionRow } from '@gobbit/db';
 import type { CurrentUser } from '../types';
 
 export interface NewSession {

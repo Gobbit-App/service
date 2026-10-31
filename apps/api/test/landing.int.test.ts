@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { WAITLIST_JOIN_PER_EMAIL_PER_HOUR } from '@pb/shared';
-import { waitlistEntries, type WaitlistEntryRow } from '@pb/db';
+import { WAITLIST_JOIN_PER_EMAIL_PER_HOUR } from '@gobbit/shared';
+import { waitlistEntries, type WaitlistEntryRow } from '@gobbit/db';
 import { createAnonRateLimiter } from '../src/lib/anon-rate-limiter';
 import { RATE_WINDOW_MS, windowStart } from '../src/lib/rate-window';
 import { SESSION_COOKIE } from '../src/lib/cookies';

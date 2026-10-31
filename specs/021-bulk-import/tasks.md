@@ -88,7 +88,7 @@ description: "Task list for 021-bulk-import"
 
 ### Implementation for User Story 3
 
-- [x] T031 [US3] scripts/import-notes.ts (uses `@pb/api-client` and `parseNotes`); `"import:notes"` in package.json
+- [x] T031 [US3] scripts/import-notes.ts (uses `@gobbit/api-client` and `parseNotes`); `"import:notes"` in package.json
 
 **Checkpoint**: All three stories work independently
 

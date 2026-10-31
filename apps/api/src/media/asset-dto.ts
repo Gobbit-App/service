@@ -1,5 +1,5 @@
-import type { MediaAsset } from '@pb/shared';
-import type { AssetRow } from '@pb/db';
+import type { MediaAsset } from '@gobbit/shared';
+import type { AssetRow } from '@gobbit/db';
 
 /** The API shape of one recorded image (D157). */
 export function toMediaAsset(row: AssetRow): MediaAsset {

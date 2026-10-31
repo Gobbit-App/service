@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { can } from '@pb/shared/authz';
+import { can } from '@gobbit/shared/authz';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { ReviewQueue } from '../review/ReviewQueue';
 import { parseReviewSearch } from '../review/review-search';

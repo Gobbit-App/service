@@ -23,7 +23,7 @@ description: "Task list for 022-share-status"
 
 ## Phase 1: Foundational (Blocking Prerequisites)
 
-- [X] T001 [P] Constants in packages/shared/src/ingest/constants.ts (exported from `@pb/shared/ingest`):
+- [X] T001 [P] Constants in packages/shared/src/ingest/constants.ts (exported from `@gobbit/shared/ingest`):
   - `ingestFailureCodes = ['content_expired','sharer_left','fetch_failed','unreadable_answer','assistant_unavailable','image_unavailable','unknown']`
   - `autoPublishOutcomes = ['published','held_not_publisher','held_needs_category','held_duplicate','held_duplicate_check_failed','held_publish_failed']`
   - `shareChannels = ['pwa','shortcut','paste','email']`

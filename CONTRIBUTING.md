@@ -23,7 +23,7 @@ pnpm compose:up
 - **pnpm only** — do not commit `package-lock.json` or `yarn.lock`.
 - TypeScript strict, ESM, no build step.
 - Layering: routes (parse) → services (rules) → repositories (SQL).
-- All request/response DTOs live in `@pb/shared` as Zod schemas.
+- All request/response DTOs live in `@gobbit/shared` as Zod schemas.
 - Schema changes need a generated migration (`pnpm db:generate`) **and** a hand-written down file in `packages/db/migrations/down/`.
 - Errors are `application/problem+json` (RFC 7807) via the central handler.
 

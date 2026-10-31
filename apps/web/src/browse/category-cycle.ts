@@ -1,4 +1,4 @@
-import type { Category } from '@pb/shared';
+import type { Category } from '@gobbit/shared';
 import { orderChips } from '../ui/chip-order';
 import { ALL_CATEGORIES } from './browse-params';
 

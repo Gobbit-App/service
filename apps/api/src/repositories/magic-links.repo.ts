@@ -1,6 +1,6 @@
 import { and, eq, gt, isNull } from 'drizzle-orm';
-import type { MagicLinkPurpose } from '@pb/shared';
-import { magicLinks, type DbExecutor, type MagicLinkRow } from '@pb/db';
+import type { MagicLinkPurpose } from '@gobbit/shared';
+import { magicLinks, type DbExecutor, type MagicLinkRow } from '@gobbit/db';
 
 export interface NewMagicLink {
   email: string;

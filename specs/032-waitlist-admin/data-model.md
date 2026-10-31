@@ -20,7 +20,7 @@ Existing 028 invariants this feature relies on (tested here from the admin path)
 | `removed` | invite | — | 409 `/problems/waitlist-removed` |
 | `invited` | remove | — | 409 `/problems/waitlist-invited` |
 
-## DTOs (`@pb/shared`, `schemas/waitlist-admin.ts`)
+## DTOs (`@gobbit/shared`, `schemas/waitlist-admin.ts`)
 
 ### `AdminWaitlistQuery`
 
@@ -56,8 +56,8 @@ Existing 028 invariants this feature relies on (tested here from the admin path)
 | Name | Where | Default |
 |------|-------|---------|
 | `PLATFORM_ADMINS` | `env.ts` → `string[]` (trimmed, lower-cased) | empty |
-| `WAITLIST_INVITE_TTL_DAYS` | `env.ts` | `WAITLIST_INVITE_TTL_DAYS_DEFAULT` = 7 (`@pb/shared`) |
-| `ADMIN_WAITLIST_PAGE_MAX` | `@pb/shared` | 100 |
+| `WAITLIST_INVITE_TTL_DAYS` | `env.ts` | `WAITLIST_INVITE_TTL_DAYS_DEFAULT` = 7 (`@gobbit/shared`) |
+| `ADMIN_WAITLIST_PAGE_MAX` | `@gobbit/shared` | 100 |
 
 ## Mail
 

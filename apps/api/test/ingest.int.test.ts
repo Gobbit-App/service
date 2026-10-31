@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { assets, ingestJobs, type UserRow } from '@pb/db';
-import { addMember, createAccountUser } from '@pb/db/test';
+import { assets, ingestJobs, type UserRow } from '@gobbit/db';
+import { addMember, createAccountUser } from '@gobbit/db/test';
 import type { IngestQueue } from '../src/jobs/ingest-queue';
 import { MemoryIngestUploads } from '../src/media/ingest-uploads';
 import { json, OTHER_EMAIL, setupApiTest } from './helpers';

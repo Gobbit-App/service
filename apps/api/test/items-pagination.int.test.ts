@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { setupApiTest, fixtureId } from './helpers';
-import type { ItemPage } from '@pb/shared';
+import type { ItemPage } from '@gobbit/shared';
 
 describe('items pagination and filters', () => {
   const ctx = setupApiTest();

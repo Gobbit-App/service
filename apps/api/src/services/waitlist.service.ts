@@ -1,5 +1,5 @@
-import { WAITLIST_CONFIRM_TTL_DAYS, type WaitlistKind, type WaitlistSource } from '@pb/shared';
-import type { WaitlistEntryRow } from '@pb/db';
+import { WAITLIST_CONFIRM_TTL_DAYS, type WaitlistKind, type WaitlistSource } from '@gobbit/shared';
+import type { WaitlistEntryRow } from '@gobbit/db';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
 import {

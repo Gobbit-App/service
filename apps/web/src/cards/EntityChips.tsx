@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { Entities } from '@pb/shared';
+import type { Entities } from '@gobbit/shared';
 import { Icon } from '../ui/icons/Icon';
 
 export type EntityKind = keyof Entities;

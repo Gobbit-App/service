@@ -45,5 +45,5 @@ Decisions continue the project-wide D numbering; Phase 6 reserves D129–D147 (s
 ## Other choices (no new D-number)
 
 - **CSP**: the browser now POSTs to `https://api.cloudinary.com`, so `apps/web/Caddyfile` `connect-src` gains that origin. Today it lists only `'self' https://res.cloudinary.com`. `img-src` already allows `https:` and `blob:` (local thumbnail before the upload finishes).
-- **Shared constants**: `MEDIA_IMAGE_MAX_BYTES`, `MEDIA_IMAGE_MIMES`, `LINK_PREVIEW_*_MAX` and the DTO schemas live in `packages/shared/src/media/` with a new subpath export `@pb/shared/media`, because the web may not import values from the root (constitution VI).
+- **Shared constants**: `MEDIA_IMAGE_MAX_BYTES`, `MEDIA_IMAGE_MIMES`, `LINK_PREVIEW_*_MAX` and the DTO schemas live in `packages/shared/src/media/` with a new subpath export `@gobbit/shared/media`, because the web may not import values from the root (constitution VI).
 - **Route file**: `apps/api/src/routes/media.ts` (`registerMediaRoutes`) holds both endpoints, following the `/decks/{id}/…` pattern of `routes/categories.ts`. The services go in `apps/api/src/services/`; the pure signing helper goes in `apps/api/src/media/sign-upload.ts`, next to `ingest-uploads.ts`.

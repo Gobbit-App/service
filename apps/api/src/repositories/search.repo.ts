@@ -1,5 +1,5 @@
 import { and, inArray, isNull, sql, type SQL } from 'drizzle-orm';
-import { itemColumns, items, type Db, type ItemRow } from '@pb/db';
+import { itemColumns, items, type Db, type ItemRow } from '@gobbit/db';
 import {
   HNSW_EF_SEARCH,
   SEARCH_ARM_TOP_N,
@@ -7,7 +7,7 @@ import {
   VECTOR_MAX_DISTANCE,
   WORD_SIMILARITY_THRESHOLD,
   type MemberRole,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { canSeePrivate, itemHasVisibleCategory } from '../access/visibility';
 import type { ArmRow } from '../lib/rrf';
 

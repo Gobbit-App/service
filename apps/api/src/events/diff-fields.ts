@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
-import type { ItemRow } from '@pb/db';
-import { itemEventFields, type ItemEventField } from '@pb/shared';
+import type { ItemRow } from '@gobbit/db';
+import { itemEventFields, type ItemEventField } from '@gobbit/shared';
 
 /** The card fields D186 compares, with categories as ids. */
 export type ItemFields = Pick<

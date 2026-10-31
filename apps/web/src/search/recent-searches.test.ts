@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { RECENT_SEARCHES_MAX } from '@pb/shared';
+import { RECENT_SEARCHES_MAX } from '@gobbit/shared';
 import { pushRecentSearch, readRecentSearches, recentSearchesKey } from './recent-searches';
 
 function fakeStorage(seed: Record<string, string> = {}) {

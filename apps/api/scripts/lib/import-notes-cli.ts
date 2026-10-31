@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 import { parseArgs } from 'node:util';
-import type { Category } from '@pb/shared';
-import { IMPORT_LABEL_MAX } from '@pb/shared/ingest-constants';
+import type { Category } from '@gobbit/shared';
+import { IMPORT_LABEL_MAX } from '@gobbit/shared/ingest-constants';
 import {
   detectFormat,
   importFormats,
@@ -11,7 +11,7 @@ import {
   type ImportFormat,
   type ImportRow,
   type ImportRunResult,
-} from '@pb/shared/import';
+} from '@gobbit/shared/import';
 import { ApiCliError, type ApiRequest } from './api-cli';
 
 /** D190: `pnpm import:notes <file> --deck <slug> [--format] [--label] [--dry-run]`. */

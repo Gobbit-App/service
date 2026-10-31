@@ -5,7 +5,7 @@ import {
   type ImportCategory,
   type ImportRow,
   type ImportRowDraft,
-} from '@pb/shared/import';
+} from '@gobbit/shared/import';
 
 /** D189: a parsed row in the preview; invalid rows start unticked and can't be ticked. */
 export type PreviewRow = ImportRow & { key: number; included: boolean };

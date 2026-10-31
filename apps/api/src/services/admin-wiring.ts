@@ -1,4 +1,4 @@
-import type { Db, DbTx } from '@pb/db';
+import type { Db, DbTx } from '@gobbit/db';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
 import type { Logger } from '../lib/logger';

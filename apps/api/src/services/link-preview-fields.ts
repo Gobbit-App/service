@@ -1,5 +1,5 @@
-import type { AssetRow } from '@pb/db';
-import type { LinkPayload } from '@pb/shared';
+import type { AssetRow } from '@gobbit/db';
+import type { LinkPayload } from '@gobbit/shared';
 import { unprocessableField } from '../errors/http-errors';
 import type { AssetsRepo } from '../repositories/assets.repo';
 

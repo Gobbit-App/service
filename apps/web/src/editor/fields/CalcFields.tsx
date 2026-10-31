@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
-import { evaluateCalc, formatCalcResult } from '@pb/shared/calc';
-import { PAYLOAD_MAX_BYTES } from '@pb/shared/card-limits';
+import { evaluateCalc, formatCalcResult } from '@gobbit/shared/calc';
+import { PAYLOAD_MAX_BYTES } from '@gobbit/shared/card-limits';
 import type { CalcDraftField } from '../draft';
 import {
   addField,
@@ -32,7 +32,7 @@ function LiveResult({ payload }: Pick<FieldsProps<'calc'>, 'payload'>): ReactEle
 }
 
 /**
- * US4: field list, expression and result label (lazy; mathjs comes with `@pb/shared/calc`,
+ * US4: field list, expression and result label (lazy; mathjs comes with `@gobbit/shared/calc`,
  * the same async chunk as `CalcCard`). The expression check itself runs in `validate.ts`.
  */
 export function CalcFields({

@@ -1,4 +1,4 @@
-import { RECENT_SEARCHES_MAX } from '@pb/shared/search';
+import { RECENT_SEARCHES_MAX } from '@gobbit/shared/search';
 
 /** localStorage key for a deck's recent searches. */
 export const recentSearchesKey = (deckSlug: string) => `gobbit:recent-searches:${deckSlug}`;

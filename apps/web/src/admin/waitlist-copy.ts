@@ -1,4 +1,4 @@
-import type { AdminWaitlistEntry } from '@pb/shared';
+import type { AdminWaitlistEntry } from '@gobbit/shared';
 import { isApiError } from '../api/api-error';
 import { GENERIC_SAVE_ERROR, problemMessages } from '../api/problem-messages';
 import { relativeTime } from '../lib/relative-time';

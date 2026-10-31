@@ -25,7 +25,7 @@ description: "Task list for 017-public-pages"
 
 **Purpose**: Rendering building blocks, URL helper, cache, routing.
 
-- [x] T001 `pnpm --filter @pb/api add micromark`
+- [x] T001 `pnpm --filter @gobbit/api add micromark`
 - [x] T002 [P] `markdown.ts` (micromark, HTML off) + [unit] test (raw HTML escaped, `javascript:` and `data:` links dropped, lists and links kept) in apps/api/src/public/
 - [x] T003 [P] `public-url.ts` (`publicUrl(deck, path)`, `appPath(target)`) + [unit] test in apps/api/src/public/
 - [x] T004 [P] `page-cache.ts` (`get`, `set`, `purgeDeck`) + [unit] test (TTL, generation bump, max entries) in apps/api/src/public/

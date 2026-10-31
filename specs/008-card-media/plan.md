@@ -62,11 +62,11 @@ The web work fills the image fields and adds the link-preview button in the edit
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/media.ts` parses; `services/media.service.ts` and `services/link-preview.service.ts` hold access (`authorize()` + `can('item.create')`), rate limits and mapping; no SQL beyond the existing rate-limit repo. Invisible deck → 404. MCP (Phase 13) calls the same services |
-| II. One source of truth | DTOs and limits in `packages/shared/src/media/` (subpath `@pb/shared/media`); `pnpm api:openapi` after the routes; the preview DTO reuses `linkPayloadSchema.preview` |
+| II. One source of truth | DTOs and limits in `packages/shared/src/media/` (subpath `@gobbit/shared/media`); `pnpm api:openapi` after the routes; the preview DTO reuses `linkPayloadSchema.preview` |
 | III. Invariants in the DB | No schema change; the payload size CHECK still applies, and preview caps keep within it |
 | IV. Private by default | Outbound only via `createSafeFetch()`; failure reasons not returned; the Cloudinary secret stays server-side; ingest tokens can't call these routes (D99) |
 | V. Tests at the right tier | Unit (signing params, preview mapping/trim, upload helper, fields), int (access, 429, 503, safe-fetch path against a local fixture server), e2e (`editor.spec.ts`); traceability below |
-| VI. Lean web | Fields are in the lazy editor chunk; values imported from `@pb/shared/media`, not the root; the upload goes direct to Cloudinary and needs a CSP `connect-src` update |
+| VI. Lean web | Fields are in the lazy editor chunk; values imported from `@gobbit/shared/media`, not the root; the upload goes direct to Cloudinary and needs a CSP `connect-src` update |
 | VII. Simple, optional | No new dependencies; works with no `CLOUDINARY_URL` (503 + image type disabled); no AI key involved |
 
 No violations.
@@ -136,7 +136,7 @@ apps/web/src/
 ├── editor/fields/FetchPreview.test.tsx
 ├── editor/fields/registry.ts      # image → ImageFields (replaces ReadOnlyImage, from 007)
 ├── editor/CardEditor.tsx          # create-type choice: image enabled only when cloudName != null (from 007)
-└── api/media.ts                   # NEW: client calls via @pb/api-client
+└── api/media.ts                   # NEW: client calls via @gobbit/api-client
 apps/web/Caddyfile                 # CSP connect-src + https://api.cloudinary.com
 
 e2e/tests/smoke/editor.spec.ts     # + image card, link preview, image-disabled path

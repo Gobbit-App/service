@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { favorites, ingestJobs, itemCategories, items, type DeckRow } from '@pb/db';
+import { favorites, ingestJobs, itemCategories, items, type DeckRow } from '@gobbit/db';
 import {
   addFavorite,
   addMember,
@@ -9,8 +9,8 @@ import {
   createDeck,
   createItem,
   defaultCategory,
-} from '@pb/db/test';
-import { itemSchema, type MemberRole } from '@pb/shared';
+} from '@gobbit/db/test';
+import { itemSchema, type MemberRole } from '@gobbit/shared';
 import { createItemsRepo } from '../src/repositories/items.repo';
 import { createPruneDeletedItems } from '../src/jobs/prune-deleted-items';
 import { json, OTHER_EMAIL, OWNER_EMAIL, setupApiTest } from './helpers';

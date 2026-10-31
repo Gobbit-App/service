@@ -1,5 +1,5 @@
-import { RESERVED_DECK_SLUG } from '@pb/shared';
-import type { DeckRow } from '@pb/db';
+import { RESERVED_DECK_SLUG } from '@gobbit/shared';
+import type { DeckRow } from '@gobbit/db';
 import { notFound } from '../errors/http-errors';
 import type { CurrentUser } from '../types';
 

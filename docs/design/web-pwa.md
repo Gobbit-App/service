@@ -43,7 +43,7 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 - **Satori template without JSX**: the OG card is built from plain vnode objects (`share/og-template.ts`), so the API needs no JSX/React toolchain.
 - **Fonts from `@fontsource`** (Inter, Noto Sans Hebrew) instead of font files committed under `apps/api/assets/fonts/`; Inter covers Greek.
 - **Cloudinary SDK** (`cloudinary`) for the upload instead of hand-signed requests.
-- **Subpath exports from `@pb/shared`** (`./enums`, `./authz`, `./calc`, `./text-script`) so the web bundle doesn't pull Zod schemas or `mathjs` into the initial chunk.
+- **Subpath exports from `@gobbit/shared`** (`./enums`, `./authz`, `./calc`, `./text-script`) so the web bundle doesn't pull Zod schemas or `mathjs` into the initial chunk.
 - **One private image** (`/og/private.png`) instead of one per deck kind: the deck kind of a private item is not disclosed either.
 - **Share origin** is `APP_URL`, falling back to `API_URL`.
 - **`X-Robots-Tag: noindex`** on share pages.
@@ -54,12 +54,12 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 
 ## Deck settings (Phase 8, D184–D185)
 
-`/d/$slug/settings` is a lazy route. Owners and maintainers (`deck.update`) get **Deck** (name; the public switch, enabled for owners only, asks first and lists the categories that will be public; the `/p/<slug>` address with Copy), **Categories** (rename, "Who sees": Admins only / Members / Everyone) and **Members**. Editors and readers see the member list only; the personal deck shows its name only. Owners also invite (role select with the labels from `@pb/shared/authz` `ROLE_LABELS`), change roles and remove or cancel invites, with an inline confirmation. Offline, every control is disabled. Writes refresh the deck, deck list, categories and members queries under both the slug and id keys.
+`/d/$slug/settings` is a lazy route. Owners and maintainers (`deck.update`) get **Deck** (name; the public switch, enabled for owners only, asks first and lists the categories that will be public; the `/p/<slug>` address with Copy), **Categories** (rename, "Who sees": Admins only / Members / Everyone) and **Members**. Editors and readers see the member list only; the personal deck shows its name only. Owners also invite (role select with the labels from `@gobbit/shared/authz` `ROLE_LABELS`), change roles and remove or cancel invites, with an inline confirmation. Offline, every control is disabled. Writes refresh the deck, deck list, categories and members queries under both the slug and id keys.
 
 ## Deviations from the 019 plan
 
 - **Header link instead of a deck menu**: the PWA has no deck menu, so admins get a "Deck" link (accessible name "Deck settings") next to Activity; `NavLink` gained an optional `label` (`aria-label`).
-- **`@pb/shared/authz` points at `authz/index.ts`** (re-exports `can` and the new `labels.ts`).
+- **`@gobbit/shared/authz` points at `authz/index.ts`** (re-exports `can` and the new `labels.ts`).
 - **No `countOwners`**: the last-owner guard lives inside `memberships.repo.updateRole` (`{ guardLastOwner }`), which locks the deck's owner rows `FOR UPDATE` and counts them in the same transaction.
 - **Refusal copy** in `deck-admin/admin-errors.ts` + `AdminError`, on top of `problemMessages`.
 - **"Everyone" hint** under Categories shows while the deck is not public.

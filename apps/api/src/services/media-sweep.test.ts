@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MEDIA_DELETE_CHUNK, MEDIA_ORPHAN_GRACE_DAYS, MEDIA_SWEEP_BATCH } from '@pb/shared';
+import { MEDIA_DELETE_CHUNK, MEDIA_ORPHAN_GRACE_DAYS, MEDIA_SWEEP_BATCH } from '@gobbit/shared';
 import { captureLogger } from '../../test/capture-logger';
 import { MemoryMediaStore } from '../media/media-store';
 import type { OrphanAsset } from '../repositories/assets.repo';

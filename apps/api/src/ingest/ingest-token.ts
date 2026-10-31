@@ -1,4 +1,4 @@
-import { INGEST_TOKEN_DISPLAY_PREFIX, INGEST_TOKEN_PREFIX } from '@pb/shared';
+import { INGEST_TOKEN_DISPLAY_PREFIX, INGEST_TOKEN_PREFIX } from '@gobbit/shared';
 import {
   bearerWithPrefix,
   createPrefixedToken,

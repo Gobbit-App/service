@@ -1,4 +1,4 @@
-import type { NormalizedSource } from '@pb/shared';
+import type { NormalizedSource } from '@gobbit/shared';
 
 /** A deck category offered to the model (id + display name). */
 export interface ExtractCategory {

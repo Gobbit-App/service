@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import type { Category } from '@pb/shared';
+import type { Category } from '@gobbit/shared';
 import { isNetworkError } from '../api/network-state';
 import type { ItemFilter } from '../api/query-keys';
 import { emptyListCopy } from '../items/empty-copy';

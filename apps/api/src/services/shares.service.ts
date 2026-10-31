@@ -1,4 +1,4 @@
-import type { IngestJobRow, ItemRow } from '@pb/db';
+import type { IngestJobRow, ItemRow } from '@gobbit/db';
 import {
   RETRYABLE_FAILURES,
   SHARE_MAX_RETRIES,
@@ -9,7 +9,7 @@ import {
   type ShareChannel,
   type ShareState,
   type ShareSummary,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { authorize, type MembershipLookup } from '../access/authorize';
 import { conflict, gone, notFound, unprocessable } from '../errors/http-errors';
 import type { IngestQueue } from '../jobs/ingest-queue';

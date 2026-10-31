@@ -5,7 +5,7 @@ import {
   type AdminWaitlistInviteResult,
   type AdminWaitlistPage,
   type AdminWaitlistQuery,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
 import { waitlistInviteEmail } from '../mail/templates';

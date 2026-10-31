@@ -1,9 +1,9 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { DeckRow, UserRow } from '@pb/db';
-import { LINK_PREVIEW_RATE_PER_HOUR } from '@pb/shared';
-import { addMember, createAccountUser, createDeck } from '@pb/db/test';
+import type { DeckRow, UserRow } from '@gobbit/db';
+import { LINK_PREVIEW_RATE_PER_HOUR } from '@gobbit/shared';
+import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
 import { createSafeFetch } from '../src/fetch/safe-fetch';
 import { isBlockedAddress } from '../src/fetch/ip-guard';
 import { json, setupApiTest, type ApiTestContext } from './helpers';

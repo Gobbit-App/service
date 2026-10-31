@@ -28,7 +28,7 @@ description: "Task list for 015-locked-host-links"
 - [x] T001 [unit] Registry tests (contract §1 table, uppercase, trailing dot, ports, look-alikes, non-http) in packages/shared/src/links/locked-hosts.test.ts
 - [x] T002 `LOCKED_HOSTS`, `lockedHostOf` in packages/shared/src/links/locked-hosts.ts; `LOCKED_CAPTION_MAX` in packages/shared/src/links/constants.ts; re-export from packages/shared/src/links/index.ts (no zod import)
 
-**Checkpoint**: `@pb/shared/links` exports the registry
+**Checkpoint**: `@gobbit/shared/links` exports the registry
 
 ---
 
@@ -61,7 +61,7 @@ description: "Task list for 015-locked-host-links"
 **Independent Test**: Each listed host shows its label; other sites don't.
 
 - [x] T020 [P] [US2] [unit] `LinkCard` label for locked hosts (incl. subdomains), domain line otherwise, in apps/web/src/cards/LinkCard.test.tsx
-- [x] T021 [US2] Label in apps/web/src/cards/LinkCard.tsx (import from `@pb/shared/links`); `.link-card__host` in apps/web/src/styles.css
+- [x] T021 [US2] Label in apps/web/src/cards/LinkCard.tsx (import from `@gobbit/shared/links`); `.link-card__host` in apps/web/src/styles.css
 
 ---
 

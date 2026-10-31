@@ -4,7 +4,7 @@ import type {
   MediaAssetConfirmRequest,
   MediaSignResponse,
   MediaUploadFailureRequest,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { api, unwrap } from './client';
 
 /** D133: a signed permission for one direct upload to Cloudinary (never cached). */

@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { SearchWhy } from '@pb/shared';
+import type { SearchWhy } from '@gobbit/shared';
 
 /** Maps a search match reason to the short tag label shown on a result. */
 export function resultTagLabel(why: SearchWhy): 'text' | 'meaning' {

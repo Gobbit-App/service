@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { hashToken } from '../src/lib/tokens';
 import { SESSION_COOKIE } from '../src/lib/cookies';
 import { personalDeckSlug } from '../src/repositories/decks.repo';
-import { createAccountUser, createDeck } from '@pb/db/test';
+import { createAccountUser, createDeck } from '@gobbit/db/test';
 import {
   json,
   OWNER_EMAIL,

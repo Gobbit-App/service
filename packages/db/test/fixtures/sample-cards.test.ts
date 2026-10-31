@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { itemCreateSchema } from '@pb/shared';
+import { itemCreateSchema } from '@gobbit/shared';
 import { SAMPLE_CATEGORIES, sampleCards } from './sample-cards';
 
 describe('sample cards fixture', () => {

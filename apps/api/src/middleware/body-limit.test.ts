@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
-import { API_BODY_MAX_BYTES } from '@pb/shared';
+import { API_BODY_MAX_BYTES } from '@gobbit/shared';
 import { bodyLimits } from './body-limit';
 
 function appWithLimits(): Hono {

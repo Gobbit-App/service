@@ -10,7 +10,7 @@ Project override of the core template. Written for outside readers: the reposito
 
 Links to social apps that hide their pages behind a login become useful cards from what the member shared:
 
-- One registry of locked hosts, with labels, in `@pb/shared/links` (D166).
+- One registry of locked hosts, with labels, in `@gobbit/shared/links` (D166).
 - Ingest forces a link card for these URLs and builds its preview from the OG data when it is usable, else from the shared caption and the first shared image (D167).
 - The link editor gets "Add photo" for every link card, and a member-added photo survives URL changes.
 - `LinkCard` shows the host's label. 014's snapshot job tries these pages once, and 014's link checks record them as `unchecked` without contacting the host (D168).
@@ -53,7 +53,7 @@ No migration and no new route. This extends ADR-055.
 
 **Performance Goals**: no extra outbound requests for locked hosts beyond one optional snapshot fetch per card; no change to ingest latency
 
-**Constraints**: `@pb/shared/links` stays zod-free (web bundle); plain CSS; no scraping behind logins
+**Constraints**: `@gobbit/shared/links` stays zod-free (web bundle); plain CSS; no scraping behind logins
 
 **Scale/Scope**: 8 host entries; affects every link card render (one string check)
 
@@ -77,7 +77,7 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D166 | `LOCKED_HOSTS` + `lockedHostOf(url)` in `@pb/shared/links` (zod-free; exact host or dot-boundary subdomain; `http(s)` only; no redirect following) | no |
+| D166 | `LOCKED_HOSTS` + `lockedHostOf(url)` in `@gobbit/shared/links` (zod-free; exact host or dot-boundary subdomain; `http(s)` only; no redirect following) | no |
 | D167 | Locked-host shares are link cards; preview = usable OG, else extracted title + caption (≤ 500) + first shared image as `preview.publicId`; link editor "Add photo"; only `link_snapshot` previews are dropped on URL change | no (extends ADR-055) |
 | D168 | `LinkCard` host label; snapshot job tries once and discards generic OG; sweep writes `unchecked` without a probe; manual check → 422 | no (extends ADR-055) |
 
@@ -122,7 +122,7 @@ apps/web/src/
 e2e/tests/full/links.spec.ts            # + label, Add photo
 ```
 
-**Structure Decision**: the registry sits with 014's link constants in `@pb/shared/links`, so the web imports one zod-free subpath. `LinkPhoto` is its own field component rather than a mode of `ImageFields`, because it edits `preview.publicId` and has no alt text.
+**Structure Decision**: the registry sits with 014's link constants in `@gobbit/shared/links`, so the web imports one zod-free subpath. `LinkPhoto` is its own field component rather than a mode of `ImageFields`, because it edits `preview.publicId` and has no alt text.
 
 ## Invariant → test traceability
 

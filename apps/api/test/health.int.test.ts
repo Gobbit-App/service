@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { latestJournalTag } from '@pb/db';
+import { latestJournalTag } from '@gobbit/db';
 import { setupApiTest } from './helpers';
 
 describe('health and API access control', () => {

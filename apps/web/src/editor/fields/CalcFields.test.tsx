@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PAYLOAD_MAX_BYTES } from '@pb/shared/card-limits';
+import { PAYLOAD_MAX_BYTES } from '@gobbit/shared/card-limits';
 import { makeDeck } from '../../test/fixtures';
 import { emptyPayload, type DraftPayloadByType } from '../draft';
 import { payloadBytes } from '../validate';

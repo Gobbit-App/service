@@ -6,7 +6,7 @@ import {
   FETCH_TIMEOUT_MS,
   MEDIA_IMAGE_MAX_BYTES,
   MEDIA_IMAGE_MIMES,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import {
   BlockedAddressError,
   createGuardedLookup,

@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import type { UserRow } from '@pb/db';
-import { addMember, createAccountUser, createDeck } from '@pb/db/test';
+import type { UserRow } from '@gobbit/db';
+import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
 import { json, OWNER_EMAIL, setupApiTest, tokenFromMail } from './helpers';
 
 const APP_URL = 'http://app.test';

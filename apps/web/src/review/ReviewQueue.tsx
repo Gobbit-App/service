@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
-import type { Category, Deck } from '@pb/shared';
+import type { Category, Deck } from '@gobbit/shared';
 import { problemMessages } from '../api/problem-messages';
 import { reviewQuery, useBulkPublish, useDiscardProposal, usePublishProposal } from '../api/review';
 import { useUpdateItem } from '../api/update-item';

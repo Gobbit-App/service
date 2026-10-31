@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { NewLlmCallRow } from '@pb/db';
-import type { NormalizedSource } from '@pb/shared';
+import type { NewLlmCallRow } from '@gobbit/db';
+import type { NormalizedSource } from '@gobbit/shared';
 import { createFakeExtractor } from '../ai/fake-extractor';
 import { ExtractResponseError, type Extractor } from '../ai/extractor';
 import { runExtraction, type RunExtractionInput } from './run-extraction';

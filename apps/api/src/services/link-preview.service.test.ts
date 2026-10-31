@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import type { DeckRow } from '@pb/db';
-import { LINK_PREVIEW_RATE_PER_HOUR } from '@pb/shared';
+import type { DeckRow } from '@gobbit/db';
+import { LINK_PREVIEW_RATE_PER_HOUR } from '@gobbit/shared';
 import { HttpError } from '../errors/http-errors';
 import type { SafeFetch, SafeFetchResult } from '../fetch/safe-fetch';
 import type { CurrentUser } from '../types';

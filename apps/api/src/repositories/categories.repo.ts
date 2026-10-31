@@ -1,7 +1,7 @@
 import { eq, isNull, asc, and, inArray, sql } from 'drizzle-orm';
-import type { CategoryRow, DbExecutor } from '@pb/db';
-import { categories, itemCategories, items } from '@pb/db';
-import type { CategoryVisibility, MemberRole } from '@pb/shared';
+import type { CategoryRow, DbExecutor } from '@gobbit/db';
+import { categories, itemCategories, items } from '@gobbit/db';
+import type { CategoryVisibility, MemberRole } from '@gobbit/shared';
 import { visibleCategoriesWhere } from '../access/visibility';
 
 export function createCategoriesRepo(db: DbExecutor) {

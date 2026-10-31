@@ -1,4 +1,4 @@
-import type { ItemCreateInput } from '@pb/shared';
+import type { ItemCreateInput } from '@gobbit/shared';
 
 /**
  * D81: the search fixture deck (three languages, every card type) used by `pnpm test:search`

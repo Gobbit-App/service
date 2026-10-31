@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactElement } from 'react';
-import { SEARCH_DEBOUNCE_MS } from '@pb/shared/search';
+import { SEARCH_DEBOUNCE_MS } from '@gobbit/shared/search';
 import { useDebounced } from './use-debounced';
 
 /** Search input that emits trimmed queries, debounced while typing and immediately on submit. */

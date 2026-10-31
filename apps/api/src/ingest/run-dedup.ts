@@ -1,4 +1,4 @@
-import type { DedupVerdict } from '@pb/shared';
+import type { DedupVerdict } from '@gobbit/shared';
 import type { Embedder } from '../ai/embedder';
 import { recordLlmCall, type LlmCallSink } from '../ai/llm-calls';
 import type { DedupRepo } from '../repositories/dedup.repo';

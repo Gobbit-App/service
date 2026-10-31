@@ -1,5 +1,5 @@
-import type { ItemRow } from '@pb/db';
-import type { LinkPayload } from '@pb/shared';
+import type { ItemRow } from '@gobbit/db';
+import type { LinkPayload } from '@gobbit/shared';
 import { lineSink } from '../lib/logger';
 import { LINK_SNAPSHOT_SEND_OPTIONS, QUEUES, type JobSender, type LinkSnapshotJob } from './queues';
 

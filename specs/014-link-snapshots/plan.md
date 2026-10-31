@@ -75,7 +75,7 @@ Both parts are recorded in **ADR-055**.
 | Principle | How this plan complies |
 |-----------|------------------------|
 | I. Layered API | `routes/items.ts` (filter, two routes) → `link-checks.service` (rules, classification) and `items.service` (server-owned preview fields, enqueue) → `link-checks.repo`, `items.repo.updatePayloadIf`; jobs call services |
-| II. One source of truth | Payload, DTO, query and constants in `@pb/shared` (`/links` subpath for the web); `pnpm api:openapi` |
+| II. One source of truth | Payload, DTO, query and constants in `@gobbit/shared` (`/links` subpath for the web); `pnpm api:openapi` |
 | III. Invariants in the DB | `link_checks` FK cascade, CHECKs; search text exclusion in `item_search_text()`; migration + down file |
 | IV. Private by default | Copies and probes only via `safe-fetch` (IP guard, caps, timeouts); no Cloudinary remote fetch; readers stop sending requests to third-party image hosts once a snapshot exists; checks are unauthenticated GETs with the existing user agent |
 | V. Tests at the right tier | Unit (classification, state machine, server-owned fields, enqueue rules), int (job against fixture server, conditional write, sweep, routes, search text, orphan reference), e2e (badge + actions); traceability below |
@@ -121,7 +121,7 @@ packages/db/
 └── migrations/down/0013_link_checks.sql
 
 packages/shared/src/
-├── links/constants.ts                       # NEW (subpath @pb/shared/links)
+├── links/constants.ts                       # NEW (subpath @gobbit/shared/links)
 ├── links/index.ts                           # NEW
 ├── schemas/payloads.ts                      # link preview + publicId?, width?, height?
 ├── schemas/item.ts                          # + linkHealth, list `flag`

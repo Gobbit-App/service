@@ -2,7 +2,7 @@ import {
   DEFAULT_ASK_MODEL,
   DEFAULT_EXTRACT_ESCALATION_MODEL,
   DEFAULT_EXTRACT_MODEL,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { Env } from '../env';
 import type { Asker } from './asker';
 import type { Embedder } from './embedder';

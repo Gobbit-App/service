@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { createAccountUser, openSession } from '@pb/db/test';
+import { createAccountUser, openSession } from '@gobbit/db/test';
 import { SESSION_COOKIE } from '../src/lib/cookies';
 import { json, sessionTokenFromSetCookie, setupApiTest } from './helpers';
 

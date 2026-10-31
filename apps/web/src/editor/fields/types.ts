@@ -1,4 +1,4 @@
-import type { Deck, ItemType } from '@pb/shared';
+import type { Deck, ItemType } from '@gobbit/shared';
 import type { DraftPayloadByType } from '../draft';
 import type { FieldErrors } from '../validate';
 

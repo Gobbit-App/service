@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { users, type DeckRow, type UserRow } from '@pb/db';
-import { addMember, createAccountUser, createDeck } from '@pb/db/test';
+import { users, type DeckRow, type UserRow } from '@gobbit/db';
+import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
 import { createMembershipsRepo } from '../src/repositories/memberships.repo';
 import { json, OTHER_EMAIL, setupApiTest } from './helpers';
 

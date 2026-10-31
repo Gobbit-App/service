@@ -1,4 +1,4 @@
-import type { CategoryRow, DeckRow, ItemRow } from '@pb/db';
+import type { CategoryRow, DeckRow, ItemRow } from '@gobbit/db';
 import {
   decodeCursor,
   encodeCursor,
@@ -6,7 +6,7 @@ import {
   type PublicItem,
   type PublicItemListQuery,
   type PublicItemPage,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { notFound } from '../errors/http-errors';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { DecksRepo } from '../repositories/decks.repo';

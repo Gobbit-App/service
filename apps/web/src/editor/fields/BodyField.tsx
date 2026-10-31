@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { CARD_BODY_MAX, codePointLength } from '@pb/shared/card-limits';
+import { CARD_BODY_MAX, codePointLength } from '@gobbit/shared/card-limits';
 import { LimitMeter } from './LimitMeter';
 import { TextInput } from './TextInput';
 

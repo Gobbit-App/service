@@ -71,7 +71,7 @@ One exported object `LANDING_COPY_EN` with `lang: 'en'`, `dir: 'ltr'`, `title`, 
 | `LANDING_OG_IMAGE_PATH` | `/og/landing.png` | `share/og-template.ts` (shared with `og-static.ts`) |
 | `LANDING_JOINED_PATH` | `/welcome/joined` | `public/public-url.ts` (031 counts this page view) |
 | Cache | `PAGE_CACHE_CONTROL`, `PRIVATE_CACHE_CONTROL` | existing, `public/responses.ts` |
-| Limits | `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `WAITLIST_NOTE_MAX`, `WAITLIST_UTM_MAX` | 028, `@pb/shared` |
+| Limits | `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `WAITLIST_NOTE_MAX`, `WAITLIST_UTM_MAX` | 028, `@gobbit/shared` |
 
 ## In-process state
 

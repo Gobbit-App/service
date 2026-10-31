@@ -1,4 +1,4 @@
-import { LINK_CHECK_CRON } from '@pb/shared';
+import { LINK_CHECK_CRON } from '@gobbit/shared';
 import type { SweepSummary } from '../services/link-checks.service';
 import { QUEUES } from './queues';
 

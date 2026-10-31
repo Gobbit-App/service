@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { AssetRow } from '@pb/db';
-import type { LinkPayload } from '@pb/shared';
+import type { AssetRow } from '@gobbit/db';
+import type { LinkPayload } from '@gobbit/shared';
 import { HttpError } from '../errors/http-errors';
 import { createLinkPreviewFields } from './link-preview-fields';
 

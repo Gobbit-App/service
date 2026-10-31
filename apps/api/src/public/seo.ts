@@ -1,4 +1,4 @@
-import type { DeckKind } from '@pb/shared';
+import type { DeckKind } from '@gobbit/shared';
 import { h } from './html';
 import { landingUrl } from './public-url';
 

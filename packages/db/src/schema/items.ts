@@ -16,7 +16,7 @@ import {
   PAYLOAD_DB_BACKSTOP_BYTES,
   EMBEDDING_DIMS,
   type Entities,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import { itemStatusEnum, itemTypeEnum, sourceKindEnum, timestamps, tstz } from './common';
 import { users } from './users';
 import { decks } from './decks';

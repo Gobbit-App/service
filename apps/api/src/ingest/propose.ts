@@ -1,11 +1,11 @@
-import type { ItemRow } from '@pb/db';
+import type { ItemRow } from '@gobbit/db';
 import type {
   DedupVerdict,
   ExtractionSummary,
   IngestChannel,
   ItemCreate,
   SourceKind,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { CategoriesRepo } from '../repositories/categories.repo';

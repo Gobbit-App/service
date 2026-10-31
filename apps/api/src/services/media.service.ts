@@ -6,8 +6,8 @@ import {
   type MediaAssetConfirmRequest,
   type MediaSignResponse,
   type MediaUploadFailureRequest,
-} from '@pb/shared';
-import type { DeckRow } from '@pb/db';
+} from '@gobbit/shared';
+import type { DeckRow } from '@gobbit/db';
 import { authorize, type MembershipLookup } from '../access/authorize';
 import { serviceUnavailable, unprocessableField } from '../errors/http-errors';
 import type { CloudinaryCredentials } from '../lib/cloudinary-url';

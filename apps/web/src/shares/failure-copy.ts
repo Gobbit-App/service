@@ -1,4 +1,4 @@
-import type { IngestFailureCode, ShareSummary } from '@pb/shared';
+import type { IngestFailureCode, ShareSummary } from '@gobbit/shared';
 
 export const UNKNOWN_FAILURE = 'Something went wrong.';
 

@@ -1,4 +1,4 @@
-import type { ItemEvent } from '@pb/shared';
+import type { ItemEvent } from '@gobbit/shared';
 
 const KIND_LABELS: Record<ItemEvent['kind'], string> = {
   created: 'Added',

@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull, sql, type SQL } from 'drizzle-orm';
-import { itemEvents, users, type DbExecutor, type ItemEventRow } from '@pb/db';
-import type { CursorData } from '@pb/shared';
+import { itemEvents, users, type DbExecutor, type ItemEventRow } from '@gobbit/db';
+import type { CursorData } from '@gobbit/shared';
 import { toEventRow, type ItemEventInput } from '../events/item-event';
 
 /** A log line with its actor's name; `actorName` is null for a deleted account ("Former member"). */

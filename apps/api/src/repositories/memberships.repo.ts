@@ -1,6 +1,6 @@
 import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
-import type { MemberRole } from '@pb/shared';
-import { memberships, users, type DbExecutor, type MembershipRow } from '@pb/db';
+import type { MemberRole } from '@gobbit/shared';
+import { memberships, users, type DbExecutor, type MembershipRow } from '@gobbit/db';
 
 export interface MembershipWithUser {
   membership: MembershipRow;

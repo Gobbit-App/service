@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { ReviewEntry } from '@pb/shared';
+import type { ReviewEntry } from '@gobbit/shared';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import { renderInRouter } from '../test/render-in-router';
 

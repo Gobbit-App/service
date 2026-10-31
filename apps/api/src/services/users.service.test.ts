@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { RegistrationMode } from '@pb/shared/auth';
+import type { RegistrationMode } from '@gobbit/shared/auth';
 import { captureLogger, expectDecision } from '../../test/capture-logger';
 import { decisionLogger } from '../lib/decision-event';
 import { createLogHash } from '../lib/log-hash';

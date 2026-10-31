@@ -1,4 +1,4 @@
-import { ITEM_UNDELETE_DAYS } from '@pb/shared/item-constants';
+import { ITEM_UNDELETE_DAYS } from '@gobbit/shared/item-constants';
 
 const DAY_MS = 86_400_000;
 

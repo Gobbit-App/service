@@ -1,4 +1,4 @@
-import type { Item } from '@pb/shared';
+import type { Item } from '@gobbit/shared';
 import { useLinkCheck, type LinkCheckAction } from '../api/link-checks';
 import { lifecycleErrorMessage } from '../api/problem-messages';
 import { LINK_HEALTH_COPY } from '../cards/LinkHealthBadge';

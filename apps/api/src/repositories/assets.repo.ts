@@ -1,5 +1,5 @@
 import { and, asc, eq, getTableColumns, inArray, lt, sql } from 'drizzle-orm';
-import { assets, items, type AssetRow, type DbExecutor, type NewAssetRow } from '@pb/db';
+import { assets, items, type AssetRow, type DbExecutor, type NewAssetRow } from '@gobbit/db';
 
 export type NewAsset = Omit<NewAssetRow, 'id' | 'createdAt'>;
 

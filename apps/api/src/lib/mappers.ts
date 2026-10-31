@@ -5,8 +5,8 @@ import {
   type LinkHealth,
   type Deck,
   type MemberRole,
-} from '@pb/shared';
-import type { CategoryRow, ItemRow, DeckRow } from '@pb/db';
+} from '@gobbit/shared';
+import type { CategoryRow, ItemRow, DeckRow } from '@gobbit/db';
 
 /** The personal deck is addressed as `me` whatever its stored slug (Phase 3B). */
 export function toDeckDto(r: DeckRow, role: MemberRole): Deck {

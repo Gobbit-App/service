@@ -56,7 +56,7 @@ repository is public (constitution, Constraints).
 | Principle | How this plan complies (or "N/A") |
 |-----------|-----------------------------------|
 | I. Layered API | [routes parse, services rule, repos SQL; access via authorize()/can()] |
-| II. One source of truth for contracts | [schemas in @pb/shared; `pnpm api:openapi`] |
+| II. One source of truth for contracts | [schemas in @gobbit/shared; `pnpm api:openapi`] |
 | III. Invariants live in the database | [migration + down file; CHECK/trigger for new invariants] |
 | IV. Private by default | [visibility filters on every read; tokens scoped; safe-fetch] |
 | V. Tests at the right tier | [tiers used; e2e tier (smoke/full/none) and why; traceability table below] |
@@ -142,7 +142,7 @@ e2e/tests/full/          # Playwright @full specs (nightly)
 |----------|-------------------|--------------------|--------------------------|-------|---------------------------------------|---------------------------|------|
 | [e.g., waitlist join] | [`waitlist.join` log] | [accepted, refused · per_ip, per_email] | [requestId, entryId, emailHash] | [info] | [aggregate by reason; refusal rate] | [refused > 50/h] | [`waitlist.service.test.ts`, unit] |
 
-**Operator controls**: [env vars that tune limits or thresholds, defaults in `@pb/shared`, runbook entry]
+**Operator controls**: [env vars that tune limits or thresholds, defaults in `@gobbit/shared`, runbook entry]
 
 ## Rollout
 

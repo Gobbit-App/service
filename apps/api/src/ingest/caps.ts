@@ -1,4 +1,4 @@
-import { INGEST_CAP_WINDOW_MS, type IngestChannel } from '@pb/shared';
+import { INGEST_CAP_WINDOW_MS, type IngestChannel } from '@gobbit/shared';
 import { rateLimited } from '../errors/http-errors';
 
 /** Retry-After for the daily cap: the window is rolling, so an hour is a fair hint. */

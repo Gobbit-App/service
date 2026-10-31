@@ -1,6 +1,6 @@
 import { check, index, integer, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { assetSources } from '@pb/shared';
+import { assetSources } from '@gobbit/shared';
 import { tstz } from './common';
 import { decks } from './decks';
 import { users } from './users';

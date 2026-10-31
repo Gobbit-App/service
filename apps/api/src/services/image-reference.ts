@@ -1,4 +1,4 @@
-import type { ItemType } from '@pb/shared';
+import type { ItemType } from '@gobbit/shared';
 import { unprocessableField } from '../errors/http-errors';
 import type { AssetsRepo } from '../repositories/assets.repo';
 

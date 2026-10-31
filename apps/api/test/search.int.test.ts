@@ -1,7 +1,13 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import type { DeckRow, ItemRow, UserRow } from '@pb/db';
-import { EMBEDDING_DIMS } from '@pb/shared';
-import { addMember, createAccountUser, createCategory, createDeck, createItem } from '@pb/db/test';
+import type { DeckRow, ItemRow, UserRow } from '@gobbit/db';
+import { EMBEDDING_DIMS } from '@gobbit/shared';
+import {
+  addMember,
+  createAccountUser,
+  createCategory,
+  createDeck,
+  createItem,
+} from '@gobbit/db/test';
 import { axisVector, createFakeEmbedder } from '../src/ai/fake-embedder';
 import { createEmbedItemHandler } from '../src/jobs/embed-item';
 import { createEmbeddingsRepo } from '../src/repositories/embeddings.repo';

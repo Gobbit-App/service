@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { encodeCursor, type PublicItem } from '@pb/shared';
+import { encodeCursor, type PublicItem } from '@gobbit/shared';
 import type { CurrentUser } from '../types';
 import type { SitemapRepo } from '../repositories/sitemap.repo';
 import { createPageCache } from '../public/page-cache';

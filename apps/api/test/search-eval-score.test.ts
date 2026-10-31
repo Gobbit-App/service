@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { SearchEvalCase } from '@pb/db/test';
+import type { SearchEvalCase } from '@gobbit/db/test';
 import { formatEvalReport, isEvalHit, scoreEval } from './search-eval-score';
 
 const hit = (expect: string[]): SearchEvalCase => ({

@@ -4,7 +4,7 @@ import {
   adminWaitlistInviteResultSchema,
   adminWaitlistPageSchema,
   adminWaitlistQuerySchema,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import type { PlatformAdmin } from '../access/platform-admin';

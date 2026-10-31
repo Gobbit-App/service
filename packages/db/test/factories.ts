@@ -9,7 +9,7 @@ import {
   type SessionKind,
   type ItemCreateInput,
   type ItemStatus,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { Db } from '../src/client';
 import {
   accounts,

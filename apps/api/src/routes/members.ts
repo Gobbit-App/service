@@ -5,7 +5,7 @@ import {
   memberListSchema,
   memberRolePatchSchema,
   memberSchema,
-} from '@pb/shared';
+} from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';

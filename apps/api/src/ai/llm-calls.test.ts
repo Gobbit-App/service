@@ -1,4 +1,4 @@
-import type { NewLlmCallRow } from '@pb/db';
+import type { NewLlmCallRow } from '@gobbit/db';
 import { describe, expect, it, vi } from 'vitest';
 import {
   type LlmCallContext,
