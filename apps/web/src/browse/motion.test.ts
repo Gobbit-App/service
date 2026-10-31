@@ -50,7 +50,11 @@ describe('pageElement / scrollToPage', () => {
     const page = pageElement(root, 'a') as HTMLElement;
     page.scrollIntoView = vi.fn();
     scrollToPage(root, 'a', 'instant');
-    expect(page.scrollIntoView).toHaveBeenCalledWith({ block: 'start', behavior: 'instant' });
+    expect(page.scrollIntoView).toHaveBeenCalledWith({
+      inline: 'start',
+      block: 'nearest',
+      behavior: 'instant',
+    });
     expect(() => scrollToPage(root, 'missing', 'smooth')).not.toThrow();
   });
 });

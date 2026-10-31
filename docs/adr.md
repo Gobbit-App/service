@@ -550,3 +550,13 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 - **Clients**: `GET /me` carries `isPlatformAdmin`, so the PWA shows admin links only to admins; admin data is never persisted offline.
 
 **Rationale**: one or two operators need no grant UI or migration, and an env list can't be widened by a compromised session or a stray DB write. A 404 doesn't advertise the surface. Phase 12 reuses the same guard for `/admin/domains`. Alternatives considered: a `users.is_platform_admin` column (needs a bootstrap path and widens what a DB write grants), owning a "system" deck (overloads deck roles), 403 (reveals the surface). Details: [`docs/design/auth.md`](design/auth.md#platform-admins-d234), [`docs/design/waitlist.md`](design/waitlist.md#admin-032-d234d238-adr-064).
+
+## ADR-065: Browse pages sideways on a native track; no gesture library (D244–D251)
+
+**Decision**: Browse (034) pages cards on a native horizontal scroll-snap track (`x mandatory`, `scroll-snap-stop: always`, `overscroll-behavior-x: contain`). Each page scrolls vertically on its own, with the card's details and source under its content. A top bar (close, category chip rail, "n / total" with a progress bar) and a floating dock (Previous card · card actions · Next card) replace the swipe zones, pane tabs and position menu. An end page follows the last card. ←/→ and PageUp/PageDown move cards; ↑/↓ stay native. Depth while paging is scroll-driven CSS (`animation-timeline: view(inline)`), progressive and off under reduced motion. `@use-gesture/react` is removed. This supersedes the zone, pane and vertical-paging parts of ADR-052; its native snapping, ±1 mounting and lazy chunk still hold.
+
+**Rationale**:
+- 009 nested a vertical card scroller inside a vertical pager, so tall cards fought the pager and swipes felt broken. Separating the axes (x pages, y reads) removes the conflict.
+- Native scrolling gives finger tracking, momentum and rubber-banding with no JS on the gesture path. It needs no edge guard: the OS back gestures win before page scrolling.
+- Sections in the scroll and a chip rail are patterns modern app users already know, and every move keeps a button and a key.
+- Alternatives considered: keeping vertical paging (D139's same-axis problem), a JS pager with `@use-gesture` and transforms (more code, worse momentum, main-thread work per frame). Details: [`docs/design/browse-mode.md`](design/browse-mode.md).

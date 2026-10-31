@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { makeItem } from '../../test/fixtures';
-import { SourcePane, sourceLink } from './SourcePane';
+import { CardSource, sourceLink } from './CardSource';
 
 const now = new Date('2026-03-01T12:00:00.000Z');
 
-describe('SourcePane', () => {
+describe('CardSource', () => {
   it('shows the source kind and links the host of the source URL', () => {
     const item = makeItem({
       sourceKind: 'link',
@@ -13,7 +13,7 @@ describe('SourcePane', () => {
       createdAt: '2026-02-28T12:00:00.000Z',
       updatedAt: '2026-02-28T12:00:00.000Z',
     });
-    render(<SourcePane item={item} now={now} />);
+    render(<CardSource item={item} now={now} />);
     expect(screen.getByText('Saved from a link')).toBeInTheDocument();
     const link = screen.getByRole('link', { name: 'www.example.com' });
     expect(link).toHaveAttribute('href', 'https://www.example.com/menu?x=1');
@@ -27,20 +27,20 @@ describe('SourcePane', () => {
       createdAt: '2026-02-01T12:00:00.000Z',
       updatedAt: '2026-02-28T12:00:00.000Z',
     });
-    render(<SourcePane item={item} now={now} />);
+    render(<CardSource item={item} now={now} />);
     expect(screen.getByText('Added 4 weeks ago')).toBeInTheDocument();
     expect(screen.getByText('Edited yesterday')).toBeInTheDocument();
   });
 
   it('shows "Published …" only when the card was verified', () => {
-    const { rerender } = render(<SourcePane item={makeItem()} now={now} />);
+    const { rerender } = render(<CardSource item={makeItem()} now={now} />);
     expect(screen.queryByText(/^Published/)).not.toBeInTheDocument();
-    rerender(<SourcePane item={makeItem({ verifiedAt: '2026-02-27T12:00:00.000Z' })} now={now} />);
+    rerender(<CardSource item={makeItem({ verifiedAt: '2026-02-27T12:00:00.000Z' })} now={now} />);
     expect(screen.getByText('Published 2 days ago')).toBeInTheDocument();
   });
 
   it('never links a non-http source', () => {
-    render(<SourcePane item={makeItem({ sourceUrl: 'javascript:alert(1)' })} now={now} />);
+    render(<CardSource item={makeItem({ sourceUrl: 'javascript:alert(1)' })} now={now} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(sourceLink(null)).toBeNull();
     expect(sourceLink('not a url')).toBeNull();

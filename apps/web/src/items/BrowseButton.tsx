@@ -15,7 +15,7 @@ export function BrowseButton({ deckSlug, c }: { deckSlug: string; c: string }): 
     void navigate({
       to: '/d/$slug/browse',
       params: { slug: deckSlug },
-      search: { c, i, pane: 'content' },
+      search: { c, i },
       state: (prev) => ({ ...prev, ...fromListState(c) }),
     });
   };
