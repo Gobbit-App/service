@@ -52,13 +52,13 @@ CSP is unchanged (Caddy): the page uses only inline styles (`style-src 'self' 'u
 
 ```html
 <html lang="en" dir="ltr">
-<title>Gobbit — a pocket of useful cards for your family and community</title>
+<title>Gobbit — a deck of useful cards for your family and community</title>
 <meta name="description" content="…≤ 160 characters…">
 <link rel="canonical" href="https://app.example.test/">
 <meta name="robots" content="index">                      <!-- noindex for the 400 re-render -->
 <meta property="og:site_name" content="Gobbit">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Gobbit — a pocket of useful cards for your family and community">
+<meta property="og:title" content="Gobbit — a deck of useful cards for your family and community">
 <meta property="og:description" content="…">
 <meta property="og:url" content="https://app.example.test/">
 <meta property="og:image" content="https://app.example.test/og/landing.png">

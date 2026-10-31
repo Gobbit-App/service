@@ -166,7 +166,7 @@ describe('landingTree (D229)', () => {
     expect(tree.props.style).toMatchObject({ width: OG_WIDTH, height: OG_HEIGHT });
     expect(collectText(tree)).toEqual([
       'Gobbit',
-      'A pocket of useful cards for your family and community',
+      'A deck of useful cards for your family and community',
       'Join the waitlist',
     ]);
   });

@@ -8,12 +8,12 @@ export const LANDING_COPY_EN = {
   lang: 'en',
   dir: 'ltr',
   locale: 'en_US',
-  title: 'Gobbit — a pocket of useful cards for your family and community',
+  title: 'Gobbit — a deck of useful cards for your family and community',
   description:
     'Keep the phone numbers, how-tos, links and recipes your people keep asking about as short cards anyone can find in seconds, even offline.',
   header: { signIn: 'Sign in', openApp: 'Open Gobbit' },
   hero: {
-    heading: 'A pocket of useful cards',
+    heading: 'Every useful gobbit, in one deck',
     lead: 'Gobbit keeps the things your family or community keeps asking about — phone numbers, how-tos, links, recipes — as short cards anyone can find in seconds, even offline.',
     invite: "We're letting people in a few at a time. Join the waitlist and we'll email you.",
   },

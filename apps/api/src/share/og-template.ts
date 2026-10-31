@@ -322,7 +322,7 @@ export function landingTree(): OgNode {
             style: { display: 'flex', flexDirection: 'column', width: 620 },
             children: [
               textNode('Gobbit', { fontSize: 96, fontWeight: 700, color: OG_COLORS.accent }),
-              textNode('A pocket of useful cards for your family and community', {
+              textNode('A deck of useful cards for your family and community', {
                 fontSize: 44,
                 fontWeight: 700,
                 color: OG_COLORS.text,

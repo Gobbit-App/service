@@ -22,7 +22,7 @@ function SignIn() {
   return (
     <main className="page page--narrow">
       <h1 className="brand">Gobbit</h1>
-      <p className="lead">Your family's pocket of useful cards.</p>
+      <p className="lead">Your family's deck of useful gobbits.</p>
       <SignInForm onSubmit={requestLink} />
       {/* D226: a plain anchor; /welcome is API-rendered, outside the SPA. */}
       <p className="sign-in__join">
