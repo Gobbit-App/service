@@ -1,7 +1,14 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactElement } from 'react';
 import { Button } from '../ui/buttons/Button';
 
-/** FR-012: the one-time overlay naming the three zones. Dismiss only (contract §4). */
+/** The three tips of the first-run sheet (033). */
+export const HINT_TIPS = [
+  'Swipe sideways to flip through cards',
+  'Scroll down for details and source',
+  'Tap a category at the top to switch',
+] as const;
+
+/** FR-010: a one-time bottom sheet with the three moves. Dismiss only. */
 export function FirstRunHint({ onDismiss }: { onDismiss: () => void }): ReactElement {
   const titleId = useId();
   const button = useRef<HTMLButtonElement>(null);
@@ -23,23 +30,23 @@ export function FirstRunHint({ onDismiss }: { onDismiss: () => void }): ReactEle
   };
 
   return (
-    <div
-      className="browse-hint"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      onKeyDown={onKeyDown}
-    >
-      <div className="browse-hint__zone browse-hint__zone--header">
-        <p>Swipe sideways here to change category</p>
-      </div>
-      <div className="browse-hint__zone browse-hint__zone--middle">
-        <h2 id={titleId}>How to browse</h2>
-        <p>Swipe up or down for the next or previous card</p>
-        <Button ref={button} icon="check" label="Got it" onClick={onDismiss} />
-      </div>
-      <div className="browse-hint__zone browse-hint__zone--footer">
-        <p>Swipe sideways here for details and source</p>
+    <div className="browse-hint" onKeyDown={onKeyDown}>
+      <div className="browse-hint__sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <h2 className="browse-hint__title" id={titleId}>
+          How to browse
+        </h2>
+        <ol className="browse-hint__tips">
+          {HINT_TIPS.map((tip) => (
+            <li key={tip}>{tip}</li>
+          ))}
+        </ol>
+        <Button
+          ref={button}
+          icon="check"
+          label="Got it"
+          className="browse-hint__ok"
+          onClick={onDismiss}
+        />
       </div>
     </div>
   );

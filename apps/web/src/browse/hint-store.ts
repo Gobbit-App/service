@@ -1,7 +1,7 @@
 import { defaultStore, type KeyValueStore } from '../lib/last-deck';
 
-/** Data-model §4: bump the version to show the overlay again after a redesign of the zones. */
-export const BROWSE_HINT_KEY = 'gobbit:browse-hint:v1';
+/** Bump the version to show the hint again after a redesign (033: v2, D251). */
+export const BROWSE_HINT_KEY = 'gobbit:browse-hint:v2';
 const DISMISSED = 'dismissed';
 
 /** True unless the hint was dismissed on this device; unreadable storage shows it again. */

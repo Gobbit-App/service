@@ -1,33 +1,29 @@
-import type { ReactElement, ReactNode } from 'react';
+import { useEffect, type ReactElement, type ReactNode } from 'react';
 import type { Category } from '@gobbit/shared';
 import { isNetworkError } from '../api/network-state';
 import type { ItemFilter } from '../api/query-keys';
 import { emptyListCopy } from '../items/empty-copy';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
-import { filterKey, type BrowsePane } from './browse-params';
-import { BrowseStack, type BrowseStackProps } from './BrowseStack';
-import { FooterBand } from './FooterBand';
-import { HeaderBand } from './HeaderBand';
+import { filterKey } from './browse-params';
+import { BrowseStack, type BrowseEndProps } from './BrowseStack';
+import type { BrowsePosition } from './TopBar';
 import { useBrowseItems } from './use-browse-items';
 
 export const OFFLINE_COPY = "You're offline and these cards aren't saved on this device yet.";
 
-/** Contract §4: one page with an active header (category change still works) and no cards. */
+/** Contract §4: one page with the list's copy; the top bar stays usable, no dock. */
 function StatePage({
-  header,
-  pane,
+  onPosition,
   children,
 }: {
-  header: BrowseStackProps['header'];
-  pane: BrowsePane;
+  onPosition: (position: BrowsePosition | null) => void;
   children: ReactNode;
 }): ReactElement {
+  useEffect(() => onPosition(null), [onPosition]);
   return (
-    <div className="browse__pages">
+    <div className="browse__track">
       <section className="browse-page browse-page--state">
-        <HeaderBand {...header} position={null} onPrevCard={null} onNextCard={null} active />
-        <div className="browse-page__content">{children}</div>
-        <FooterBand pageId="state" pane={pane} onPane={() => undefined} active={false} disabled />
+        <div className="browse-sheet">{children}</div>
       </section>
     </div>
   );
@@ -39,10 +35,9 @@ export function BrowseCards({
   filter,
   categories,
   targetId,
-  pane,
-  onPane,
   onSettle,
-  header,
+  onPosition,
+  end,
   keysEnabled,
 }: {
   deckSlug: string;
@@ -50,18 +45,13 @@ export function BrowseCards({
   categories: readonly Category[];
   /** The address's `i`. */
   targetId: string | undefined;
-  pane: BrowsePane;
-  onPane: (pane: BrowsePane) => void;
   onSettle: (itemId: string) => void;
-  header: BrowseStackProps['header'];
+  onPosition: (position: BrowsePosition | null) => void;
+  end: BrowseEndProps;
   keysEnabled: boolean;
 }): ReactElement {
   const { query, items, seeking, notFound, total } = useBrowseItems(deckSlug, filter, targetId);
-  const state = (body: ReactNode) => (
-    <StatePage header={header} pane={pane}>
-      {body}
-    </StatePage>
-  );
+  const state = (body: ReactNode) => <StatePage onPosition={onPosition}>{body}</StatePage>;
 
   if (query.isPending || seeking) return state(<LoadingState label="Loading cards…" />);
   if (query.isError && !query.data) {
@@ -93,10 +83,9 @@ export function BrowseCards({
       initialId={targetId && !notFound ? targetId : first.id}
       addressId={targetId}
       notFound={notFound}
-      pane={pane}
-      onPane={onPane}
       onSettle={onSettle}
-      header={header}
+      onPosition={onPosition}
+      end={end}
       keysEnabled={keysEnabled}
     />
   );

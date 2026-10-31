@@ -8,17 +8,26 @@ import {
   type ReactElement,
 } from 'react';
 import type { Category, Item } from '@gobbit/shared';
-import type { BrowsePane } from './browse-params';
 import { writeBrowseReturn } from './browse-return';
+import { BrowseDock } from './BrowseDock';
 import { BrowsePage } from './BrowsePage';
-import type { HeaderBandProps } from './HeaderBand';
-import { positionLabel } from './HeaderBand';
+import type { CycleEntry } from './category-cycle';
+import { END_PAGE_ID, END_TITLE_ID, EndPage, endTitle } from './EndPage';
 import { pagingBehavior, scrollToPage } from './motion';
+import { positionLabel, type BrowsePosition } from './TopBar';
 import { useBrowseKeys } from './use-browse-keys';
 import { usePrefetchAhead } from './use-browse-items';
 import { useCurrentCard } from './use-current-card';
 
 export const NOT_FOUND_COPY = "That card isn't available here";
+
+/** What the end page needs to offer the next category and the way out (D248). */
+export interface BrowseEndProps {
+  current: CycleEntry;
+  nextCategory: CycleEntry | null;
+  onCategory: (slug: string) => void;
+  onClose: () => void;
+}
 
 export interface BrowseStackProps {
   deckSlug: string;
@@ -37,26 +46,26 @@ export interface BrowseStackProps {
   addressId: string | undefined;
   /** The deep-linked card wasn't found (the stack opens on the first card). */
   notFound: boolean;
-  pane: BrowsePane;
-  onPane: (pane: BrowsePane) => void;
   onSettle: (itemId: string) => void;
-  header: Omit<HeaderBandProps, 'active' | 'position' | 'onPrevCard' | 'onNextCard'>;
+  /** The top bar's counter and progress follow the current card. */
+  onPosition: (position: BrowsePosition | null) => void;
+  end: BrowseEndProps;
   /** Off while the first-run hint is open. */
   keysEnabled: boolean;
 }
 
-/** Focus follows the card (contract §3) unless the reader is working elsewhere on the page. */
-function focusTitle(container: HTMLElement | null, itemId: string): void {
+/** Focus follows the page's heading unless the reader is working elsewhere on the screen. */
+function focusHeading(container: HTMLElement | null, headingId: string): void {
   const active = document.activeElement;
   const idle = !active || active === document.body;
   if (!idle && !container?.contains(active)) return;
-  const title = document.getElementById(`card-title-${itemId}`);
+  const title = document.getElementById(headingId);
   if (!title || title === active) return;
   title.setAttribute('tabindex', '-1');
   title.focus({ preventScroll: true });
 }
 
-/** US1: the snap container of one category's cards, tracked by id, ±1 mounted. */
+/** D244: one category's cards on a horizontal snap track, tracked by id, ±1 mounted. */
 export function BrowseStack({
   deckSlug,
   filterKey,
@@ -69,17 +78,22 @@ export function BrowseStack({
   initialId,
   addressId,
   notFound,
-  pane,
-  onPane,
   onSettle,
-  header,
+  onPosition,
+  end,
   keysEnabled,
 }: BrowseStackProps): ReactElement {
   const container = useRef<HTMLDivElement>(null);
   const [startId] = useState(initialId);
-  const pagesKey = useMemo(() => items.map((item) => item.id).join(' '), [items]);
+  const showEnd = !hasNextPage;
+  const pagesKey = useMemo(
+    () => items.map((item) => item.id).join(' ') + (showEnd ? ' end' : ''),
+    [items, showEnd],
+  );
   const { currentId, settledId } = useCurrentCard({ container, initialId: startId, pagesKey });
-  const found = items.findIndex((item) => item.id === currentId);
+  const atEnd = showEnd && currentId === END_PAGE_ID;
+  // On the end page the last card stays the reader's place (D248).
+  const found = atEnd ? items.length - 1 : items.findIndex((item) => item.id === currentId);
   const index = found >= 0 ? found : 0;
   const current = items[index];
 
@@ -99,22 +113,22 @@ export function BrowseStack({
     scrollToPage(container.current, startId, 'instant');
   }, [startId]);
 
-  const currentRef = useRef(current?.id);
+  const visibleRef = useRef(currentId);
   useEffect(() => {
-    currentRef.current = current?.id;
-  }, [current]);
+    visibleRef.current = currentId;
+  }, [currentId]);
 
   useEffect(() => {
-    // Rotation/resize changes the page height: snap back onto the card being read.
+    // Rotation/resize changes the page width: snap back onto the page being read.
     const onResize = () => {
-      if (currentRef.current) scrollToPage(container.current, currentRef.current, 'instant');
+      if (visibleRef.current) scrollToPage(container.current, visibleRef.current, 'instant');
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
   useEffect(() => {
-    if (!settledId || settledId === addressId) return;
+    if (!settledId || settledId === END_PAGE_ID || settledId === addressId) return;
     // Opened on the first card with no `i` (category change): the address stays clean.
     if (addressId === undefined && settledId === startId) return;
     onSettle(settledId);
@@ -124,15 +138,24 @@ export function BrowseStack({
   useEffect(() => {
     if (!currentItemId) return;
     writeBrowseReturn({ deckSlug, filterKey, itemId: currentItemId });
-    focusTitle(container.current, currentItemId);
   }, [deckSlug, filterKey, currentItemId]);
 
-  const prevId = items[index - 1]?.id;
-  const nextId = items[index + 1]?.id;
+  useEffect(() => {
+    if (!currentItemId) return;
+    focusHeading(container.current, atEnd ? END_TITLE_ID : `card-title-${currentItemId}`);
+  }, [currentItemId, atEnd]);
+
+  useEffect(() => {
+    onPosition({ index, total, loaded: items.length });
+  }, [onPosition, index, total, items.length]);
+  useEffect(() => () => onPosition(null), [onPosition]);
+
   const goTo = useCallback(
     (id: string) => scrollToPage(container.current, id, pagingBehavior()),
     [],
   );
+  const prevId = atEnd ? current?.id : items[index - 1]?.id;
+  const nextId = atEnd ? undefined : (items[index + 1]?.id ?? (showEnd ? END_PAGE_ID : undefined));
   const prevCard = useMemo(() => (prevId ? () => goTo(prevId) : null), [goTo, prevId]);
   const nextCard = useMemo(() => (nextId ? () => goTo(nextId) : null), [goTo, nextId]);
   const keys = useMemo(
@@ -143,33 +166,34 @@ export function BrowseStack({
 
   return (
     <>
-      <div className="browse__pages" ref={container}>
+      <div className="browse__track" ref={container}>
         {items.map((item, i) => (
           <BrowsePage
             key={item.id}
             item={item}
             deckSlug={deckSlug}
             categories={categories}
-            pane={pane}
-            onPane={onPane}
-            current={i === index}
+            current={!atEnd && i === index}
             mounted={Math.abs(i - index) <= 1}
-            header={{
-              ...header,
-              position: { index: i, total },
-              onPrevCard: i === index ? prevCard : null,
-            }}
-            onNextCard={i === index ? nextCard : null}
           />
         ))}
+        {showEnd && <EndPage {...end} active={atEnd} />}
       </div>
+      {current && !atEnd && (
+        <BrowseDock
+          item={current}
+          deckSlug={deckSlug}
+          onPrevCard={prevCard}
+          onNextCard={nextCard}
+        />
+      )}
       {notice !== null && (
         <p className="browse__notice" role="status">
           {NOT_FOUND_COPY}
         </p>
       )}
       <p className="visually-hidden" aria-live="polite">
-        {current ? `Card ${positionLabel(index, total)}` : ''}
+        {atEnd ? endTitle(end.current) : current ? `Card ${positionLabel(index, total)}` : ''}
       </p>
     </>
   );

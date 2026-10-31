@@ -13,7 +13,7 @@ import {
 import { historyIndex, writeBrowseOpener } from '../browse/browse-return';
 import { useNavigateHref } from '../ui/NavLink';
 
-/** D139–D141: full-screen Browse; the component (and use-gesture) is a lazy route chunk. */
+/** D139–D141: full-screen Browse; the component is a lazy route chunk. */
 export const Route = createFileRoute('/d/$slug/browse')({
   validateSearch: parseBrowseSearch,
   component: BrowseRoute,
@@ -44,7 +44,7 @@ function BrowseRoute() {
     );
   }, [slug, listC]);
 
-  // Card, category and pane changes replace the entry, keeping `fromList` (contract §1).
+  // Card and category changes replace the entry, keeping `fromList` (contract §1).
   const onChange = useCallback(
     (next: BrowseSearch) =>
       void navigate({
