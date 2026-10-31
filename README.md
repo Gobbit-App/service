@@ -1,4 +1,4 @@
-# Gobbit (Community Pocketbook)
+# Gobbit
 
 A collaborative, categorizable knowledge repository supporting multiple item types (text, links, images, tables, calculations) with role-based access, soft deletion, and keyset pagination. Built with TypeScript, Hono, Drizzle ORM, and PostgreSQL.
 
@@ -458,7 +458,7 @@ Either kind dies with `POST /auth/logout-all` (and with `POST /auth/logout` sent
 ## Project Structure
 
 ```
-community-pocketbook/
+service/
 ├── apps/
 │   ├── api/          # Hono HTTP server, services, routes, worker (embeddings, ingestion)
 │   └── web/          # Reader PWA (React + Vite) and its Caddy image

@@ -7,7 +7,7 @@ import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { ShareRow } from './ShareRow';
 import { sharesQuery } from './shares-queries';
 
-export const SHARING_OFF = 'Sharing is off for this pocketbook.';
+export const SHARING_OFF = 'Sharing is off for this deck.';
 
 /**
  * D198: "Your shares" — the caller's shares to this deck over the last 30 days with their live
@@ -32,7 +32,7 @@ export function SharesScreen({
   if (query.isError && !query.data) {
     return (
       <ErrorState
-        message={accessErrorCopy(query.error, 'pocketbook')}
+        message={accessErrorCopy(query.error, 'deck')}
         onRetry={isRetryable(query.error) ? () => void query.refetch() : undefined}
       />
     );
@@ -55,7 +55,7 @@ export function SharesScreen({
         <EmptyState title={sharingOff ? SHARING_OFF : 'No shares yet'}>
           {sharingOff
             ? 'Shares need an assistant, and none is set up on this server.'
-            : 'Links, photos and notes you share to this pocketbook in the last 30 days show up here.'}
+            : 'Links, photos and notes you share to this deck in the last 30 days show up here.'}
         </EmptyState>
       ) : (
         <ul className="shares__list">

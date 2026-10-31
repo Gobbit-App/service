@@ -14,7 +14,7 @@ describe('accessErrorCopy', () => {
   });
 
   it('explains offline and generic failures', () => {
-    expect(accessErrorCopy(new TypeError('Failed to fetch'), 'pocketbook')).toMatch(/offline/);
+    expect(accessErrorCopy(new TypeError('Failed to fetch'), 'deck')).toMatch(/offline/);
     expect(accessErrorCopy(new ApiError(500, null), 'card')).toBe("Couldn't load this card.");
     expect(isRetryable(new ApiError(500, null))).toBe(true);
   });

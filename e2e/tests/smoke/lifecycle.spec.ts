@@ -77,7 +77,7 @@ test('demo 2: archive, undo, archive, search misses, restore, search hits @smoke
 
 test('links to a deck or card the user cannot see show unavailable @smoke', async ({ page }) => {
   await page.goto(webUrl('/d/smoke-no-such-deck'));
-  await expect(page.getByRole('heading', { name: 'Pocketbook unavailable' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Deck unavailable' })).toBeVisible();
 
   await page.goto(webUrl('/i/00000000-0000-4000-8000-00000000dead'));
   await expect(page.getByRole('heading', { name: 'Card unavailable' })).toBeVisible();

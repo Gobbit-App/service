@@ -56,7 +56,7 @@ describe('authErrorCopy', () => {
 
   it('should return correct copy for "onboarding"', () => {
     const copy = authErrorCopy('onboarding');
-    expect(copy.title).toBe("We couldn't set up your pocketbook");
+    expect(copy.title).toBe("We couldn't set up your deck");
     expect(copy.body).toBe(
       'Sign-in stopped before it finished. Try the same link again, or request a new one below.',
     );

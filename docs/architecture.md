@@ -1,4 +1,4 @@
-# Architecture — Gobbit (Community Pocketbook)
+# Architecture — Gobbit
 
 A one-page map of the system. Detail lives in [`design/`](design/) (one doc per area) and the full
 decision records in [`adr.md`](adr.md). Commands, env vars and setup are in the root `README.md`.

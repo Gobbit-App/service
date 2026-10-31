@@ -60,7 +60,7 @@ describe('SearchResults', () => {
 
   it('shows the prompt for a blank query with no recents', () => {
     renderWithClient(<SearchResults {...props()} q="" />);
-    expect(screen.getByText('Search this pocketbook')).toBeInTheDocument();
+    expect(screen.getByText('Search this deck')).toBeInTheDocument();
   });
 
   it('shows the connection state offline with recents and makes no request', () => {

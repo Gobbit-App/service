@@ -37,7 +37,7 @@ export function authErrorCopy(reason: AuthErrorReason): { title: string; body: s
       };
     case 'onboarding':
       return {
-        title: "We couldn't set up your pocketbook",
+        title: "We couldn't set up your deck",
         body: 'Sign-in stopped before it finished. Try the same link again, or request a new one below.',
       };
     case 'closed':
