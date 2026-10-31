@@ -50,7 +50,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `DATABASE_URL` | `postgres://pb:pb@localhost:5432/pb` | PostgreSQL connection string |
+| `DATABASE_URL` | `postgres://gobbit:gobbit@localhost:5432/gobbit` | PostgreSQL connection string |
 | `PORT` | `3000` | API server port |
 | `NODE_ENV` | `development` | Environment (development, test, production) |
 | `API_URL` | `http://localhost:${PORT}` | Public API address used in magic links (**required in production**). Local `.env`: `http://localhost:5173/api` (through the Vite proxy) |
@@ -142,6 +142,8 @@ pnpm compose:up
 pnpm db:seed
 ```
 
+The local database, user and default password are `gobbit` (they were `pb` before 027). A Compose volume created with the old names won't accept the new user: run `pnpm compose:down -v` once (this deletes the local data), update `DATABASE_URL` and `POSTGRES_PASSWORD` in your `.env` from `.env.example`, then `pnpm compose:up` and seed again.
+
 The `web` service carries the Traefik labels for the deployed setup (router `gobbit`, ``Host(`${PUBLIC_HOST}`)`` → `web:80`) and joins `dokploy-network`; its Caddy routes `/api/*` (stripped), `/s/*`, `/p/*`, `/sitemap.xml` and `/robots.txt` to the API. The API is internal only.
 
 The app is at `http://localhost:8080`; the API is also published directly at `http://localhost:3000`.
@@ -157,7 +159,7 @@ To reproduce it locally (stop anything already on ports 5432/3000/8080 first):
 ```bash
 CLOUDINARY_URL=cloudinary://e2e-key:e2e-secret@e2e-cloud pnpm compose:up
 TOKEN=$(openssl rand -hex 32)
-DATABASE_URL=postgres://pb:pb@localhost:5432/pb SEED_OWNER_EMAIL=owner@example.test SMOKE_SESSION_TOKEN=$TOKEN pnpm db:seed
+DATABASE_URL=postgres://gobbit:gobbit@localhost:5432/gobbit SEED_OWNER_EMAIL=owner@example.test SMOKE_SESSION_TOKEN=$TOKEN pnpm db:seed
 BASE_URL=http://localhost:8080/api SMOKE_SESSION_TOKEN=$TOKEN CLOUDINARY_API_SECRET=e2e-secret pnpm test:e2e --grep @smoke
 ```
 

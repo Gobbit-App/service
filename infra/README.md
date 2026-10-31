@@ -146,14 +146,14 @@ Into a throwaway database on any machine with Docker:
 ```bash
 # 1. fetch the latest dump from the NAS bucket (mc / aws s3 cp / the NAS UI)
 # 2. start an empty pgvector Postgres
-docker run -d --name pb-restore -e POSTGRES_USER=pb -e POSTGRES_PASSWORD=pb -e POSTGRES_DB=pb \
+docker run -d --name gobbit-restore -e POSTGRES_USER=gobbit -e POSTGRES_PASSWORD=gobbit -e POSTGRES_DB=gobbit \
   -p 127.0.0.1:55432:5432 pgvector/pgvector:pg17
 # 3a. plain SQL dump (.sql or .sql.gz)
-gunzip -c <dump>.sql.gz | psql postgres://pb:pb@127.0.0.1:55432/pb
+gunzip -c <dump>.sql.gz | psql postgres://gobbit:gobbit@127.0.0.1:55432/gobbit
 # 3b. custom-format dump (.dump)
-pg_restore --no-owner -d postgres://pb:pb@127.0.0.1:55432/pb <dump>.dump
+pg_restore --no-owner -d postgres://gobbit:gobbit@127.0.0.1:55432/gobbit <dump>.dump
 # 4. check: the latest migration and a row count
-psql postgres://pb:pb@127.0.0.1:55432/pb -c "select status from health" -c "select count(*) from decks"
+psql postgres://gobbit:gobbit@127.0.0.1:55432/gobbit -c "select status from health" -c "select count(*) from decks"
 ```
 
 Demo for PLAN.md Phase 0 step 7: the restored database shows the health row (and, once there are any, the decks). Write the date and the time it took here:

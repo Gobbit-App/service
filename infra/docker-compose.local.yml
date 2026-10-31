@@ -7,14 +7,14 @@ services:
   db:
     image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_USER: pb
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pb}
-      POSTGRES_DB: pb
+      POSTGRES_USER: gobbit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gobbit}
+      POSTGRES_DB: gobbit
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U pb -d pb']
+      test: ['CMD-SHELL', 'pg_isready -U gobbit -d gobbit']
       interval: 5s
     ports:
       - 127.0.0.1:${DB_PORT:-5432}:5432
@@ -32,7 +32,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://pb:${POSTGRES_PASSWORD:-pb}@db:5432/pb
+      DATABASE_URL: postgres://gobbit:${POSTGRES_PASSWORD:-gobbit}@db:5432/gobbit
       # Development lets the API boot without CLOUDINARY_URL (editor image uploads and OG uploads off).
       NODE_ENV: ${NODE_ENV:-development}
       API_URL: ${API_URL:-http://localhost:8080/api}
@@ -47,7 +47,7 @@ services:
     image: gobbit-api:local
     pull_policy: never
     environment:
-      DATABASE_URL: postgres://pb:${POSTGRES_PASSWORD:-pb}@db:5432/pb
+      DATABASE_URL: postgres://gobbit:${POSTGRES_PASSWORD:-gobbit}@db:5432/gobbit
       NODE_ENV: ${NODE_ENV:-development}
       # The worker shares the API environment (x-api-env); keep its mail settings local too.
       MAIL_PROVIDER: ${MAIL_PROVIDER:-console}
