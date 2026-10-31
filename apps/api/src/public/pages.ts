@@ -7,7 +7,9 @@ import {
   type PublicDeck,
   type PublicItem,
 } from '@gobbit/shared';
+import { PUBLIC_SCREENS } from '@gobbit/shared/analytics';
 import { excerpt, OG_DESCRIPTION_MAX } from '../share/excerpt';
+import { withPage, type AnalyticsConfig } from './analytics';
 import { h, type Html } from './html';
 import { layout, SITE_NAME, type PageHead } from './layout';
 import { openInAppPath, publicPath, publicUrl, type PageTarget } from './public-url';
@@ -30,6 +32,8 @@ export type PageContext = {
   imageUrl: ImageUrlFor;
   /** Absolute URL of the static site image (deck and category pages). */
   siteImage: string;
+  /** D249: set when analytics is on; each page adds its own screen. Error pages never get it. */
+  analytics?: AnalyticsConfig;
 };
 
 type DeckRef = Pick<PublicDeck, 'slug' | 'name'>;
@@ -87,6 +91,7 @@ export function deckPage(ctx: PageContext, { deck, items, nextCursor }: DeckPage
     ogType: 'website',
     robots: ctx.robots,
     ...languageOf(deck.name),
+    analytics: withPage(ctx.analytics, PUBLIC_SCREENS.deck),
   };
   return layout(
     head,
@@ -122,6 +127,7 @@ export function categoryPage(
     ogType: 'website',
     robots: ctx.robots,
     ...languageOf(`${category.name} ${deck.name}`),
+    analytics: withPage(ctx.analytics, PUBLIC_SCREENS.category),
   };
   return layout(
     head,
@@ -146,6 +152,7 @@ export function itemPage(ctx: PageContext, { deck, item, ogImage }: ItemPageMode
     ogType: 'article',
     robots: ctx.robots,
     ...languageOf(`${item.title} ${item.body}`),
+    analytics: withPage(ctx.analytics, PUBLIC_SCREENS.item),
   };
   return layout(
     head,
@@ -186,6 +193,7 @@ export function searchPage(
     ogType: 'website',
     robots: 'noindex',
     ...languageOf(`${q} ${deck.name}`),
+    analytics: withPage(ctx.analytics, PUBLIC_SCREENS.search),
   };
   return layout(
     head,

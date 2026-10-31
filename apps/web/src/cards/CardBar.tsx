@@ -30,7 +30,7 @@ export function ReaderActions({ item }: { item: Item }): ReactElement {
   return (
     <>
       <CardFavorite item={item} />
-      <ShareButton itemId={item.id} title={item.title} />
+      <ShareButton itemId={item.id} title={item.title} deckId={item.deckId} type={item.type} />
     </>
   );
 }

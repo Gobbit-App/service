@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { Item, ItemPatch, ReviewList } from '@gobbit/shared';
+import { trackContent } from '../analytics/analytics';
 import { replaceReviewItem } from '../review/review-cache';
 import { api, unwrap } from './client';
 import { reviewListsFilter } from './review';
@@ -34,6 +35,17 @@ export function useUpdateItem(deckSlug: string) {
   return useMutation({
     mutationFn: ({ itemId, patch }: UpdateItemVars): Promise<Item> =>
       unwrap(api.PATCH('/items/{id}', { params: { path: { id: itemId } }, body: patch })),
-    onSuccess: (item) => applyUpdatedItem(qc, deckSlug, item),
+    onSuccess: (item) => {
+      // D248: editing a proposal is review work, not a card edit; publishing counts instead.
+      if (item.status !== 'proposed') {
+        trackContent('card-edited', {
+          deckId: item.deckId,
+          itemId: item.id,
+          type: item.type,
+          channel: 'editor',
+        });
+      }
+      return applyUpdatedItem(qc, deckSlug, item);
+    },
   });
 }

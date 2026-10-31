@@ -5,6 +5,7 @@ import {
   type QueryKey,
 } from '@tanstack/react-query';
 import type { Item } from '@gobbit/shared';
+import { trackContent } from '../analytics/analytics';
 import { api, unwrap } from './client';
 import { insertIntoPages, removeFromPages, type PagesData } from './favorite-cache';
 import { queryKeys, SEARCH_KEY, type ItemFilter } from './query-keys';
@@ -158,6 +159,13 @@ export async function sendLifecycle({ item, action }: LifecycleChange): Promise<
   }
 }
 
+/** D248: delete is `card-deleted`; archive, restore and undelete are edits on their own channel. */
+function trackLifecycle({ item, action }: LifecycleChange): void {
+  const props = { deckId: item.deckId, itemId: item.id, type: item.type };
+  if (action === 'delete') trackContent('card-deleted', { ...props, channel: 'card-menu' });
+  else trackContent('card-edited', { ...props, channel: action });
+}
+
 /**
  * D146: optimistic update → request → rollback on failure → refetch. Imperative (not tied
  * to a component) so the toast's Undo still works after the card view has unmounted.
@@ -167,6 +175,7 @@ export async function runLifecycle(qc: QueryClient, change: LifecycleChange): Pr
   const snapshot = await applyLifecycle(qc, change);
   try {
     await sendLifecycle(change);
+    trackLifecycle(change);
   } catch (error) {
     rollbackLifecycle(qc, change.item.id, snapshot);
     throw error;

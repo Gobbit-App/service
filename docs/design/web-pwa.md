@@ -66,3 +66,25 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 - **Inline confirmation** for remove / cancel invite instead of a modal dialog.
 - **Integration test file** is `apps/api/test/member-role.int.test.ts`; two co-owners demoting each other at once may see `403` (the first change already removed the second caller's permission) or `409`.
 - **E2E (T023)**: a second admin can't sign in from e2e, so the owner sets a category public, makes the deck public and invites a co-owner; role changes of accepted members are covered by the integration and component tests.
+
+## App analytics (033, D244–D250, ADR-065)
+
+- **Off by default**: `GET /config` carries `analytics: null` unless `ANALYTICS_SITE_ID` is set; then nothing is loaded and nothing is sent.
+- **Loading** (`analytics/analytics.ts`, in the main chunk): `startAnalytics` (from `main.tsx`) waits for the first resolved route and a member in the `me` cache, then on idle imports `analytics/tracker.ts` (own chunk), which installs `window.__gobbitAnalyticsBeforeSend` and appends `/stats/script.js` with `data-auto-track="false"`, `data-do-not-track="true"`, `data-domains`, `data-exclude-search`, `data-exclude-hash` and `data-before-send`.
+- **Screens** (`analytics/catalogue.ts`): `Record<RouteId, Screen | null>` over the router's generated ids. `null` = untracked (`/sign-in`, `/auth/error`, layouts); an unknown id sends `/other`. One page view per change of real pathname.
+- **Sanitiser**: the hook runs `sanitizePayload` (`@gobbit/shared/analytics`) with the current screen, member id and online state. Rules: [contract](../../specs/033-app-analytics/contracts/analytics.md).
+- **Identity**: the member id is read from the `me` cache at send time; a member change calls `identify` (new Umami session).
+- **Content events**: `trackContent(name, props)` from mutation success paths: create/update item, archive/restore/undelete/delete, review publish, bulk publish, notes import, share button (sheet or copied link), share target. A no-op before load, offline or with DNT; never throws into the caller.
+- **Privacy note**: Settings → Privacy and the landing page say what is measured.
+
+## Deviations from the 033 plan
+
+- `useReviewAction` gained an optional `onSent` callback so publish can send its event with the server's answer (create vs update).
+- `ShareButton` takes optional `deckId` and `type` (passed by `CardBar`) to fill the `card-shared` event.
+- `analytics.config` carries `surfaces` as a comma-joined string (`landing,app,public,share`), like the other log fields, not an array.
+- `/analytics/page.js` is unit-tested by importing its source with Vite's `?raw` and running it with a stubbed `document.currentScript`.
+- The web image precaches `/analytics/page.js` with the rest of `public/` (harmless: only API-rendered pages load it).
+- The `@smoke` "no `/stats/` request" check runs only when `/config` says analytics is off (PR CI); post-deploy with analytics on it is skipped, and the payload check lives in `@full` (`app-analytics.spec.ts`) with a stubbed tracker.
+- The integration test checks the share preview tag on an unknown card id: a public card's `/s/` redirects to `/p/` (D181) and is counted there.
+- The tracker staying out of the initial chunks is checked by `pnpm budget` (initial 120 KB gzip); `initial-chunks.test.ts` needed no change.
+

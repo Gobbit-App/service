@@ -3,11 +3,49 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { act } from '@testing-library/react';
 import { ShareButton } from './ShareButton';
+
+const { trackContent } = vi.hoisted(() => ({ trackContent: vi.fn() }));
+vi.mock('../analytics/analytics', () => ({ trackContent }));
 import type { ShareNavigator } from '../lib/share';
 
 describe('ShareButton', () => {
   afterEach(() => {
     vi.useRealTimers();
+    trackContent.mockReset();
+  });
+
+  it('sends card-shared with ids only after a share or copy (D248)', async () => {
+    const user = userEvent.setup();
+    const shared: ShareNavigator = { share: vi.fn().mockResolvedValue(undefined) };
+    const { unmount } = render(
+      <ShareButton itemId="i1" title="Secret title" deckId="d1" type="link" nav={shared} />,
+    );
+    await user.click(screen.getByRole('button'));
+    expect(trackContent).toHaveBeenLastCalledWith('card-shared', {
+      deckId: 'd1',
+      itemId: 'i1',
+      type: 'link',
+      channel: 'share-sheet',
+    });
+    unmount();
+
+    const copied: ShareNavigator = {
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    };
+    render(<ShareButton itemId="i1" title="Secret title" nav={copied} />);
+    await user.click(screen.getByRole('button'));
+    expect(trackContent).toHaveBeenLastCalledWith(
+      'card-shared',
+      expect.objectContaining({ channel: 'copy-link' }),
+    );
+    expect(JSON.stringify(trackContent.mock.calls)).not.toContain('Secret');
+  });
+
+  it('sends nothing when sharing fails', async () => {
+    const user = userEvent.setup();
+    render(<ShareButton itemId="i1" title="T" nav={{}} />);
+    await user.click(screen.getByRole('button'));
+    expect(trackContent).not.toHaveBeenCalled();
   });
 
   it('calls share method with url and title, no toast', async () => {

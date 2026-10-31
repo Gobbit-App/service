@@ -58,10 +58,10 @@ const allPages = () => [
 ];
 
 describe('public pages (D177)', () => {
-  it('no page contains a script', () => {
+  it('no page contains a script while analytics is off', () => {
     for (const page of allPages()) {
       expect(page).not.toMatch(/<script/i);
-      expect(page).not.toContain('/stats/'); // D232: the tracker is the landing page's only
+      expect(page).not.toContain('/stats/'); // D249: the tracker only with ANALYTICS_SITE_ID
       expect(page).toMatch(/^<!doctype html>/);
     }
   });
@@ -189,5 +189,41 @@ describe('search (D182)', () => {
     const page = searchPage(ctx, { deck, q: '', items: [], semantic: true });
     expect(page).toContain('role="search"');
     expect(page).not.toContain('No public cards match.');
+  });
+});
+
+describe('analytics (D249)', () => {
+  const on: PageContext = { ...ctx, analytics: { siteId: 'site-1', host: 'gobbit.example' } };
+  const scripts = (html: string) => html.match(/<script[^>]*>/g) ?? [];
+
+  it('each public page names its own pattern and screen, never the slug or title', () => {
+    const pages: [string, string, string][] = [
+      [deckPage(on, { deck, items: [card()], nextCursor: null }), '/p/:deck', 'Public deck'],
+      [
+        categoryPage(on, { deck, category: deck.categories[0]!, items: [], nextCursor: null }),
+        '/p/:deck/c/:category',
+        'Public category',
+      ],
+      [itemPage(on, { deck, item: card(), ogImage: 'x' }), '/p/:deck/i/:item', 'Public card'],
+      [
+        searchPage(on, { deck, q: 'water', items: [], semantic: true }),
+        '/p/:deck/search',
+        'Public search',
+      ],
+    ];
+    for (const [html, pattern, name] of pages) {
+      const tags = scripts(html).join('\n');
+      expect(tags).toContain(
+        `src="/analytics/page.js" data-pattern="${pattern}" data-screen="${name}"`,
+      );
+      expect(tags).toContain('data-before-send="__gobbitAnalyticsBeforeSend"');
+      expect(tags).not.toMatch(/our-street|Water|Emergency/);
+    }
+  });
+
+  it('error pages never carry the tracker', () => {
+    for (const page of [notFoundPage(), rateLimitedPage(), badRequestPage()]) {
+      expect(page).not.toMatch(/<script/i);
+    }
   });
 });

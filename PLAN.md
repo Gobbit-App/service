@@ -193,7 +193,7 @@ Mechanical renames with no new behaviour, so they skip spec-kit (constitution, D
 
 ## Phase 9 — Landing page and waitlist
 
-Specs (in order): [`028-waitlist`](specs/028-waitlist/spec.md) (demos 2, 6) → [`029-registration-gate`](specs/029-registration-gate/spec.md) (demo 1) ∥ [`030-landing-page`](specs/030-landing-page/spec.md) (demo 3) → [`031-landing-analytics`](specs/031-landing-analytics/spec.md) (demo 4) ∥ [`032-waitlist-admin`](specs/032-waitlist-admin/spec.md) (demo 5) → [`033-app-analytics`](specs/033-app-analytics/spec.md) (demo 7). Decisions D217–D243 (028: D217–D221, D239–D240; 029: D222–D225, D241; 030: D226–D230, D242; 031: D231–D233, D243; 032: D234–D238). Runs after the Usability pass (025–027 renames included).
+Specs (in order): [`028-waitlist`](specs/028-waitlist/spec.md) (demos 2, 6) → [`029-registration-gate`](specs/029-registration-gate/spec.md) (demo 1) ∥ [`030-landing-page`](specs/030-landing-page/spec.md) (demo 3) → [`031-landing-analytics`](specs/031-landing-analytics/spec.md) (demo 4) ∥ [`032-waitlist-admin`](specs/032-waitlist-admin/spec.md) (demo 5) → [`033-app-analytics`](specs/033-app-analytics/spec.md) (demo 7). Decisions D217–D250 (028: D217–D221, D239–D240; 029: D222–D225, D241; 030: D226–D230, D242; 031: D231–D233, D243; 032: D234–D238; 033: D244–D250). Runs after the Usability pass (025–027 renames included).
 
 Rules:
 - **Closed by default.** `REGISTRATION_MODE` is `waitlist` unless set to `open`. Accounts are created only through one guarded entry point: a deck invite or a platform admin's waitlist invite. An unknown email asking for a sign-in link gets the waitlist confirmation mail instead; the API answer is the same as for a known email.

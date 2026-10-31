@@ -23,7 +23,8 @@
     "./image-alt": "./src/media/image-alt.ts",
     "./links": "./src/links/index.ts",
     "./events": "./src/events/index.ts",
-    "./import": "./src/import/index.ts"
+    "./import": "./src/import/index.ts",
+    "./analytics": "./src/analytics/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

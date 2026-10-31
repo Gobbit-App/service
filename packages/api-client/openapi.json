@@ -204,13 +204,32 @@
                         "emailDomain",
                         "shortcutUrl"
                       ]
+                    },
+                    "analytics": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "siteId": {
+                          "type": "string"
+                        },
+                        "host": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "siteId",
+                        "host"
+                      ]
                     }
                   },
                   "required": [
                     "cloudinaryCloudName",
                     "commit",
                     "search",
-                    "ingest"
+                    "ingest",
+                    "analytics"
                   ]
                 }
               }

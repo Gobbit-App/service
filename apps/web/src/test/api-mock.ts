@@ -32,6 +32,7 @@ export const clientModule = {
         commit: 'test',
         search: { semantic: false, ask: false },
         ingest: { enabled: mockConfig.ingestEnabled, emailDomain: null, shortcutUrl: null },
+        analytics: null,
       });
     }
     return respond(String(request));

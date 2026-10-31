@@ -9,6 +9,8 @@ const POST = vi.fn();
 const DELETE = vi.fn();
 const unwrap = vi.fn();
 vi.mock('./client', () => ({ api: { POST, DELETE }, unwrap }));
+const trackContent = vi.fn();
+vi.mock('../analytics/analytics', () => ({ trackContent }));
 const { applyLifecycle, belongsTo, expectedItem, rollbackLifecycle, runLifecycle } =
   await import('./item-lifecycle');
 
@@ -39,6 +41,7 @@ beforeEach(() => {
   POST.mockReset();
   DELETE.mockReset();
   unwrap.mockReset();
+  trackContent.mockReset();
 });
 
 describe('expectedItem', () => {
@@ -120,6 +123,23 @@ describe('runLifecycle', () => {
     unwrap.mockResolvedValue(undefined);
     await runLifecycle(qc, { item: card, deckSlug: 'family', action: 'delete' });
     expect(DELETE).toHaveBeenCalledWith('/items/{id}', { params: { path: { id: 'i1' } } });
+    expect(trackContent).toHaveBeenCalledWith('card-deleted', {
+      deckId: card.deckId,
+      itemId: 'i1',
+      type: card.type,
+      channel: 'card-menu',
+    });
+  });
+
+  it('archive, restore and undelete are card edits on their own channel (D248)', async () => {
+    unwrap.mockResolvedValue(undefined);
+    for (const action of ['archive', 'restore', 'undelete'] as const) {
+      await runLifecycle(seed(), { item: card, deckSlug: 'family', action });
+      expect(trackContent).toHaveBeenLastCalledWith(
+        'card-edited',
+        expect.objectContaining({ itemId: 'i1', channel: action }),
+      );
+    }
   });
 
   it('rolls back and rethrows when the request fails', async () => {
@@ -135,5 +155,6 @@ describe('runLifecycle', () => {
 
     expect(ids(qc, allKey)).toEqual(['i1', 'i0']);
     expect(ids(qc, archivedKey)).toEqual([]);
+    expect(trackContent).not.toHaveBeenCalled();
   });
 });

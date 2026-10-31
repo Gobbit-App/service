@@ -195,3 +195,17 @@ describe('share service — public pages (D177, D181)', () => {
     expect(setup(null, { store: null }).service.imageUrl('a/b', 'w_10')).toBeNull();
   });
 });
+
+describe('share service — analytics (D249)', () => {
+  it('adds the share-preview tracker only when analytics is on', async () => {
+    const off = await setup(null).service.sharePage(ITEM_ID);
+    expect(off).not.toMatch(/<script/i);
+
+    const on = await setup(makeRecord(), {
+      analytics: { siteId: 'site-1', host: 'gobbit.example' },
+    }).service.sharePage(ITEM_ID);
+    expect(on).toContain('data-pattern="/s/:item" data-screen="Share preview"');
+    expect(on).toContain('data-before-send="__gobbitAnalyticsBeforeSend"');
+    expect(on.match(/<script[^>]*>/g)?.join('')).not.toContain(ITEM_ID);
+  });
+});

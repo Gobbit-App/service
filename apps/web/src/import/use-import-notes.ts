@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { importInChunks, type ImportRowDraft, type ImportRunResult } from '@gobbit/shared/import';
+import { deckIdFromCache, trackContent } from '../analytics/analytics';
 import { isApiError } from '../api/api-error';
 import { api, unwrap } from '../api/client';
 import { problemMessages } from '../api/problem-messages';
@@ -34,6 +35,16 @@ export function useImportNotes(deckSlug: string) {
           ),
         { describeError },
       ),
+    onSuccess: ({ imported }) => {
+      // D248: proposals made from notes, counted on their own channel.
+      if (imported > 0) {
+        trackContent('card-created', {
+          deckId: deckIdFromCache(qc, deckSlug),
+          count: imported,
+          channel: 'import',
+        });
+      }
+    },
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.review(deckSlug) }),
   });
 }

@@ -35,6 +35,7 @@ describe('appConfigSchema', () => {
         commit: 'dev',
         search: OFF,
         ingest: INGEST_OFF,
+        analytics: null,
       }).commit,
     ).toBe('dev');
   });
@@ -45,6 +46,7 @@ describe('appConfigSchema', () => {
       commit: 'abc',
       search: OFF,
       ingest: INGEST_OFF,
+      analytics: { siteId: 'site-1', host: 'gobbit.example', secret: 'nope' },
       apiSecret: 'nope',
     });
     expect(parsed).toEqual({
@@ -52,6 +54,7 @@ describe('appConfigSchema', () => {
       commit: 'abc',
       search: OFF,
       ingest: INGEST_OFF,
+      analytics: { siteId: 'site-1', host: 'gobbit.example' },
     });
   });
 });

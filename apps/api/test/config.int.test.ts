@@ -18,6 +18,7 @@ describe('GET /config (D55)', () => {
       commit: 'abc123',
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+      analytics: null,
     });
 
     const raw = JSON.stringify(body);
@@ -37,6 +38,7 @@ describe('GET /config without Cloudinary', () => {
       commit: 'dev',
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+      analytics: null,
     });
   });
 });

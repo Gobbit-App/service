@@ -92,6 +92,10 @@ export interface paths {
                                 emailDomain: string | null;
                                 shortcutUrl: string | null;
                             };
+                            analytics: {
+                                siteId: string;
+                                host: string;
+                            } | null;
                         };
                     };
                 };

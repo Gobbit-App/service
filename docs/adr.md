@@ -550,3 +550,17 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 - **Clients**: `GET /me` carries `isPlatformAdmin`, so the PWA shows admin links only to admins; admin data is never persisted offline.
 
 **Rationale**: one or two operators need no grant UI or migration, and an env list can't be widened by a compromised session or a stray DB write. A 404 doesn't advertise the surface. Phase 12 reuses the same guard for `/admin/domains`. Alternatives considered: a `users.is_platform_admin` column (needs a bootstrap path and widens what a DB write grants), owning a "system" deck (overloads deck roles), 403 (reveals the surface). Details: [`docs/design/auth.md`](design/auth.md#platform-admins-d234), [`docs/design/waitlist.md`](design/waitlist.md#admin-032-d234d238-adr-064).
+
+## ADR-065: App analytics: route patterns, member id, four content events (D244–D250)
+
+**Decision**: When `ANALYTICS_SITE_ID` is set, the same self-hosted Umami (ADR-062) also measures the app, the public pages and share previews. What leaves the browser is a route pattern, a fixed screen name, the referrer's origin, the member's Gobbit user id and four content events with ids and fixed labels only. This supersedes ADR-062's "landing page only" rule.
+
+- **SPA**: `GET /config` carries `analytics: { siteId, host } | null`. After the first route resolves and a member is known, the app loads the tracker chunk on idle (`data-auto-track="false"`); page views come from the router, one per real path change. `index.html` stays tracker-free; sign-in and auth errors are never tracked.
+- **One choke point**: every payload passes Umami's `data-before-send` hook, which runs the pure `sanitizePayload` from `@gobbit/shared/analytics`: `url` = pattern from a catalogue typed against the router's generated route ids (a new route without an entry fails `tsc`), `title` = screen name, referrer reduced to an origin, event data kept to an allow-list (UUID ids, enum labels, positive count); offline sends, unknown events and identify without a member are cancelled. Nothing is queued.
+- **Identity**: `id` = the user id from the `me` cache at send time; any member change calls `identify`, which clears Umami's session token.
+- **Events**: `card-created`, `card-edited`, `card-deleted`, `card-shared`, sent from mutation success paths only (bulk = one event with a count).
+- **Public pages and share previews**: the API renderers set a pattern and screen on the page head; the tag is preceded by the first-party `/analytics/page.js` (page views only, no id, no events). Error pages, the sitemap and robots never carry it. The CSP is unchanged.
+- **Checked, never the record (D250)**: `analytics.config` lists the surfaces; Umami's `card-created` is compared with `item_events` creations, app views with session creations. The landing page and Settings tell members what is measured.
+
+**Rationale**: the owner wants to know which screens and content flows members use, joined to Gobbit data, without names, slugs, titles or search terms in any recorded address. Typing the catalogue against the router keeps patterns from drifting; one sanitiser covers payloads the tracker builds itself. Server-side events, regex rewriting of the real path, a hashed id and a build-time site id were rejected (D244–D248). Details: [`docs/design/web-pwa.md`](design/web-pwa.md#app-analytics-033-d244d250-adr-065), [`docs/design/public.md`](design/public.md#analytics-on-public-pages-033-d249).
+
