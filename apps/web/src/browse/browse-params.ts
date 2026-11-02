@@ -2,11 +2,9 @@ import type { ItemFilter } from '../api/query-keys';
 import { chipHref, deckHref } from '../ui/chip-order';
 
 /**
- * D141: the Browse address, `/d/$slug/browse?c=&i=&pane=`. This module is part of the route
- * tree (initial chunk), so it stays dependency-free: no gesture code, no zod.
+ * D141: the Browse address, `/d/$slug/browse?c=&i=`. D246: the old `pane` parameter is
+ * ignored. This module is part of the route tree (initial chunk), so it stays dependency-free.
  */
-export const browsePanes = ['content', 'details', 'source'] as const;
-export type BrowsePane = (typeof browsePanes)[number];
 
 /** The `c` value for the deck's All view. */
 export const ALL_CATEGORIES = 'all';
@@ -18,7 +16,6 @@ export interface BrowseSearch {
   c: string;
   /** The current card's id; absent → the first card. */
   i?: string;
-  pane: BrowsePane;
 }
 
 /** The router may hand numbers for JSON-looking values (`?c=2024`). */
@@ -29,16 +26,9 @@ function asParam(value: unknown): string | null {
   return trimmed.length > 0 && trimmed.length <= PARAM_MAX ? trimmed : null;
 }
 
-function isPane(value: unknown): value is BrowsePane {
-  return typeof value === 'string' && (browsePanes as readonly string[]).includes(value);
-}
-
 /** Lenient parse (data-model §1): anything malformed falls back to the defaults. */
 export function parseBrowseSearch(search: Record<string, unknown>): BrowseSearch {
-  const parsed: BrowseSearch = {
-    c: asParam(search.c) ?? ALL_CATEGORIES,
-    pane: isPane(search.pane) ? search.pane : 'content',
-  };
+  const parsed: BrowseSearch = { c: asParam(search.c) ?? ALL_CATEGORIES };
   const i = asParam(search.i);
   if (i) parsed.i = i;
   return parsed;

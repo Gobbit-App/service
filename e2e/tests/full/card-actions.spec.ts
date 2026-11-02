@@ -6,7 +6,7 @@ import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
  * 024 card actions (D210–D216, `@full`): accessible names and contrast in both themes, labels
  * that hide on narrow screens, long-press tooltips, offline menu items and no editor styles
  * leaking onto the card bar. The critical path (archive/delete through "More actions", the
- * position menu) runs in the `@smoke` lifecycle and browse specs.
+ * Browse dock) runs in the `@smoke` lifecycle and browse specs.
  */
 
 function textCard(deck: WebDeck) {

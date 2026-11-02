@@ -42,7 +42,10 @@ export function Card({
   preview?: boolean;
   /** D144: image loading hints (Browse: measured width, priority for the current card). */
   image?: ImageLoading;
-  /** The card's action bar (e.g. CardActionBar); defaults to Favorite + Share. */
+  /**
+   * The card's action bar (e.g. CardActionBar); defaults to Favorite + Share. `false` renders
+   * no bar (Browse puts the actions in its dock, D249).
+   */
   actions?: ReactNode;
 }): ReactElement {
   const cloudName = useCloudName();

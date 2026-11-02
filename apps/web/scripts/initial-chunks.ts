@@ -60,12 +60,11 @@ export function checkBudget(
 }
 
 /**
- * D139: lazy-only libraries, found by config keys that survive minification. `@use-gesture`
- * belongs to the Browse chunk, `papaparse` to the Import chunk (D189); in an initial chunk
- * either would cost every page load.
+ * D139: lazy-only libraries, found by config keys that survive minification. `papaparse`
+ * belongs to the Import chunk (D189); in an initial chunk it would cost every page load.
+ * (`@use-gesture` left with the Browse redesign, D251.)
  */
 export const LAZY_ONLY_MARKERS: readonly { library: string; markers: readonly string[] }[] = [
-  { library: '@use-gesture', markers: ['preventScrollAxis', 'lockDirection'] },
   { library: 'papaparse', markers: ['delimitersToGuess'] },
 ];
 

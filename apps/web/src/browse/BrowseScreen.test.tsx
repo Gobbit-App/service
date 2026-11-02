@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FakeIntersectionObserver,
@@ -7,6 +7,7 @@ import {
 import { makeCategory, makeItem } from '../test/fixtures';
 import { renderWithClient } from '../test/render';
 import type { BrowseSearch } from './browse-params';
+import { END_PAGE_ID } from './EndPage';
 import { BROWSE_HINT_KEY, dismissHint } from './hint-store';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
@@ -34,7 +35,7 @@ function stubReducedMotion(reduce: boolean) {
 function renderScreen(search: Partial<BrowseSearch> = {}) {
   const onChange = vi.fn();
   const onClose = vi.fn();
-  const full: BrowseSearch = { c: 'all', pane: 'content', ...search };
+  const full: BrowseSearch = { c: 'all', ...search };
   const result = renderWithClient(
     <BrowseScreen deckSlug="family" search={full} onChange={onChange} onClose={onClose} />,
   );
@@ -46,6 +47,12 @@ function pageOf(id: string): HTMLElement {
   if (!page) throw new Error(`no page ${id}`);
   return page;
 }
+
+function rail(): HTMLElement {
+  return screen.getByRole('navigation', { name: 'Categories' });
+}
+
+const sideways = (behavior: string) => ({ inline: 'start', block: 'nearest', behavior });
 
 beforeEach(() => {
   respond.mockReset();
@@ -68,14 +75,25 @@ afterEach(() => {
 });
 
 describe('BrowseScreen', () => {
-  it('renders the cards as pages with at most three carrying content', async () => {
+  it('renders one page per card plus the end page, only the current one exposed', async () => {
     renderScreen();
     expect(await screen.findByRole('heading', { name: 'Card 1' })).toBeInTheDocument();
-    expect(document.querySelectorAll('.browse-page')).toHaveLength(6);
-    expect(document.querySelectorAll('.browse-page__content').length).toBeLessThanOrEqual(3);
+    expect(document.querySelectorAll('.browse-page')).toHaveLength(7);
+    expect(pageOf(END_PAGE_ID)).toHaveAttribute('aria-hidden', 'true');
+    // ±1 mounted (D144): card 4 is an empty placeholder.
+    expect(pageOf('i4')).toBeEmptyDOMElement();
     expect(pageOf('i1')).not.toHaveAttribute('aria-hidden');
     expect(pageOf('i2')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByText('Card 1 of 6')).toBeInTheDocument();
+    expect(screen.getByText('1 / 6')).toBeInTheDocument();
+  });
+
+  it('shows Details and Source under the card on the same page (D246)', async () => {
+    renderScreen();
+    await screen.findByRole('heading', { name: 'Card 1' });
+    const page = pageOf('i1');
+    expect(within(page).getByRole('region', { name: 'Details' })).toBeInTheDocument();
+    expect(within(page).getByRole('region', { name: 'Source' })).toBeInTheDocument();
   });
 
   it('gives only the current card image priority, sized by CloudImage (D144, D161)', async () => {
@@ -105,7 +123,7 @@ describe('BrowseScreen', () => {
   it('opens on the deep-linked card', async () => {
     renderScreen({ i: 'i4' });
     expect(await screen.findByRole('heading', { name: 'Card 4' })).toBeInTheDocument();
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start', behavior: 'instant' });
+    expect(scrollIntoView).toHaveBeenCalledWith(sideways('instant'));
     expect(scrollIntoView.mock.contexts.at(-1)).toBe(pageOf('i4'));
     expect(screen.queryByText(NOT_FOUND_COPY)).not.toBeInTheDocument();
   });
@@ -116,15 +134,24 @@ describe('BrowseScreen', () => {
     expect(screen.getByRole('heading', { name: 'Card 1' })).toBeInTheDocument();
   });
 
-  it('pages with PageDown/ArrowDown and keeps PageUp at the first card', async () => {
+  it('pages with ArrowRight/PageDown and keeps ArrowLeft at the first card', async () => {
     renderScreen();
     await screen.findByRole('heading', { name: 'Card 1' });
     scrollIntoView.mockClear();
-    fireEvent.keyDown(document.body, { key: 'PageUp' });
+    fireEvent.keyDown(document.body, { key: 'ArrowLeft' });
     expect(scrollIntoView).not.toHaveBeenCalled();
-    fireEvent.keyDown(document.body, { key: 'ArrowDown' });
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start', behavior: 'smooth' });
+    fireEvent.keyDown(document.body, { key: 'ArrowRight' });
+    expect(scrollIntoView).toHaveBeenCalledWith(sideways('smooth'));
     expect(scrollIntoView.mock.contexts.at(-1)).toBe(pageOf('i2'));
+  });
+
+  it('leaves ArrowUp/ArrowDown to the page scroll', async () => {
+    renderScreen();
+    await screen.findByRole('heading', { name: 'Card 1' });
+    scrollIntoView.mockClear();
+    fireEvent.keyDown(document.body, { key: 'ArrowDown' });
+    fireEvent.keyDown(document.body, { key: 'ArrowUp' });
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it('pages instantly under reduced motion', async () => {
@@ -132,7 +159,19 @@ describe('BrowseScreen', () => {
     renderScreen();
     await screen.findByRole('heading', { name: 'Card 1' });
     fireEvent.keyDown(document.body, { key: 'PageDown' });
-    expect(scrollIntoView).toHaveBeenLastCalledWith({ block: 'start', behavior: 'auto' });
+    expect(scrollIntoView).toHaveBeenLastCalledWith(sideways('auto'));
+  });
+
+  it('moves with the dock buttons, Previous inert on the first card', async () => {
+    renderScreen();
+    await screen.findByRole('heading', { name: 'Card 1' });
+    scrollIntoView.mockClear();
+    const previous = screen.getByRole('button', { name: 'Previous card' });
+    expect(previous).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(previous);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next card' }));
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(pageOf('i2'));
   });
 
   it('follows the observed card and replaces the address once it settles', async () => {
@@ -142,54 +181,63 @@ describe('BrowseScreen', () => {
     expect(await screen.findByRole('heading', { name: 'Card 2' })).toBeInTheDocument();
     expect(screen.getByText('Card 2 of 6')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Card 2' })).toHaveFocus();
-    await waitFor(() =>
-      expect(onChange).toHaveBeenCalledWith({ c: 'all', pane: 'content', i: 'i2' }),
-    );
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith({ c: 'all', i: 'i2' }));
   });
 
-  it('changes category with ArrowRight/ArrowLeft, never past the ends', async () => {
-    const { onChange } = renderScreen();
-    await screen.findByRole('heading', { name: 'Card 1' });
-    fireEvent.keyDown(document.body, { key: 'ArrowLeft' });
-    expect(onChange).not.toHaveBeenCalled();
-    // Retried until the categories have loaded (the cycle is just All before that).
-    await waitFor(() => {
-      fireEvent.keyDown(document.body, { key: 'ArrowRight' });
-      expect(onChange).toHaveBeenCalledWith({ c: 'food', pane: 'content' });
-    });
+  it('ends on a page that continues to the next category, without changing the address', async () => {
+    const { onChange, onClose } = renderScreen({ i: 'i6' });
+    await screen.findByRole('heading', { name: 'Card 6' });
+    // Next on the last card goes to the end page (D248).
+    fireEvent.click(screen.getByRole('button', { name: 'Next card' }));
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(pageOf(END_PAGE_ID));
+    onChange.mockClear();
+    act(() => FakeIntersectionObserver.intersect(pageOf(END_PAGE_ID), 0.9));
+    const title = await screen.findByRole('heading', { name: "You've seen every card" });
+    expect(title).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'Next card' })).not.toBeInTheDocument();
+    expect(screen.getByText('6 / 6')).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue to Food' }));
+    expect(onChange).toHaveBeenCalledWith({ c: 'food' });
+    expect(onChange).not.toHaveBeenCalledWith(expect.objectContaining({ i: END_PAGE_ID }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to the list' }));
+    expect(onClose).toHaveBeenCalledWith('all');
+  });
+
+  it('switches category from the rail, marking the current chip', async () => {
+    const { onChange } = renderScreen({ c: 'food' });
+    const food = await within(
+      await screen.findByRole('navigation', { name: 'Categories' }),
+    ).findByRole('button', { name: 'Food' });
+    expect(food).toHaveAttribute('aria-current', 'true');
+    fireEvent.click(within(rail()).getByRole('button', { name: 'School' }));
+    expect(onChange).toHaveBeenCalledWith({ c: 'school' });
   });
 
   it('closes on Escape and on the close button, to the current category', async () => {
     const { onClose } = renderScreen({ c: 'food' });
-    await screen.findByRole('button', { name: 'Category: Food' });
+    await screen.findByRole('navigation', { name: 'Categories' });
     fireEvent.keyDown(document.body, { key: 'Escape' });
-    fireEvent.click(await screen.findByRole('button', { name: 'Close browse' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close browse' }));
     expect(onClose).toHaveBeenCalledTimes(2);
     expect(onClose).toHaveBeenCalledWith('food');
   });
 
   it('falls back to All for an unknown category', async () => {
-    const { onChange } = renderScreen({ c: 'nope', pane: 'details' });
-    await waitFor(() => expect(onChange).toHaveBeenCalledWith({ c: 'all', pane: 'details' }));
+    const { onChange } = renderScreen({ c: 'nope' });
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith({ c: 'all' }));
   });
 
-  it('switches the pane from the tabs', async () => {
-    const { onChange } = renderScreen({ i: 'i1' });
-    await screen.findByRole('heading', { name: 'Card 1' });
-    fireEvent.click(screen.getByRole('tab', { name: 'Source' }));
-    expect(onChange).toHaveBeenCalledWith({ c: 'all', i: 'i1', pane: 'source' });
-  });
-
-  it('shows the list copy for an empty category, with the header still working', async () => {
+  it('shows the list copy for an empty category, with the rail still working', async () => {
     respond.mockImplementation((request) =>
       Promise.resolve(
         request.endsWith('/categories') ? { data: categories } : { data: [], nextCursor: null },
       ),
     );
-    renderScreen({ c: 'food' });
+    const { onChange } = renderScreen({ c: 'food' });
     expect(await screen.findByText('No cards here yet')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Category: Food' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: /^Card / })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Next card' })).not.toBeInTheDocument();
+    fireEvent.click(await within(rail()).findByRole('button', { name: 'All' }));
+    expect(onChange).toHaveBeenCalledWith({ c: 'all' });
   });
 
   describe('first-run hint', () => {
@@ -200,11 +248,21 @@ describe('BrowseScreen', () => {
       const dialog = await screen.findByRole('dialog', { name: 'How to browse' });
       const gotIt = screen.getByRole('button', { name: 'Got it' });
       expect(gotIt).toHaveFocus();
+      scrollIntoView.mockClear();
       fireEvent.keyDown(document.body, { key: 'ArrowRight' });
+      expect(scrollIntoView).not.toHaveBeenCalled();
       fireEvent.keyDown(dialog, { key: 'Escape' });
       expect(onClose).not.toHaveBeenCalled();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(localStorage.getItem(BROWSE_HINT_KEY)).toBe('dismissed');
+    });
+
+    it('keeps focus on its only button', async () => {
+      renderScreen();
+      const dialog = await screen.findByRole('dialog', { name: 'How to browse' });
+      expect(within(dialog).getAllByRole('listitem')).toHaveLength(3);
+      fireEvent.keyDown(dialog, { key: 'Tab' });
+      expect(screen.getByRole('button', { name: 'Got it' })).toHaveFocus();
     });
   });
 });
