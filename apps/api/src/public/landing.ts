@@ -3,6 +3,7 @@ import { LANDING_OG_IMAGE_PATH, OG_HEIGHT, OG_WIDTH } from '../share/og-template
 import type { AnalyticsHead } from './analytics';
 import { h, type Html } from './html';
 import { LANDING_COPY_EN, type LandingCopy } from './landing-copy';
+import { heroHeading } from './landing-definition';
 import type { LandingField, LandingFormErrors, LandingFormValues } from './landing-form';
 import { LANDING_CSS } from './landing-styles';
 import { layout, type PageHead } from './layout';
@@ -122,7 +123,7 @@ export function landingPage(view: LandingView): string {
   const copy = view.copy ?? LANDING_COPY_EN;
   const uses = copy.uses.map((use) => h`<li><h2>${use.title}</h2><p>${use.body}</p></li>`);
   const main = h`<section class="hero">
-<h1>${copy.hero.heading}</h1>
+${heroHeading(copy)}
 <p>${copy.hero.lead}</p>
 ${view.state === 'signed-in' ? '' : h`<p>${copy.hero.invite}</p>`}
 </section>

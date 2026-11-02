@@ -14,7 +14,21 @@ export const LANDING_COPY_EN = {
     'Keep the phone numbers, how-tos, links and recipes your people keep asking about as short cards anyone can find in seconds, even offline.',
   header: { signIn: 'Sign in', openApp: 'Open Gobbit' },
   hero: {
-    heading: 'Every useful gobbit, in one deck',
+    /** Split around the defined word so a translation can place it anywhere in the sentence. */
+    heading: { before: 'Every useful ', term: 'gobbit', after: ', in one deck' },
+    /** The dictionary entry shown when the visitor hovers, focuses or taps the term. */
+    definition: {
+      headword: 'gob·bit',
+      pronunciation: '/ˈɡɒb.ɪt/',
+      partOfSpeech: 'noun',
+      plural: 'pl. gobbits',
+      senses: [
+        'A small, useful piece of know-how — a phone number, a how-to, a link — kept where your people can find it.',
+        'One card in a Gobbit deck.',
+      ],
+      example: '“Don’t ask me again — there’s a gobbit for that.”',
+      origin: 'From gobbet (“a morsel”) + bit.',
+    },
     lead: 'Gobbit keeps the things your family or community keeps asking about — phone numbers, how-tos, links, recipes — as short cards anyone can find in seconds, even offline.',
     invite: "We're letting people in a few at a time. Join the waitlist and we'll email you.",
   },

@@ -33,7 +33,10 @@ describe('landingPage states (D226, D228)', () => {
 
   it('the default page has the hero, three uses, the form and the privacy line, no status', () => {
     const html = page({ state: 'default' });
-    expect(html).toContain(`<h1>${LANDING_COPY_EN.hero.heading}</h1>`);
+    const { before, term, after } = LANDING_COPY_EN.hero.heading;
+    expect(html).toMatch(
+      new RegExp(`<h1>${before}<span class="term">.*>${term}</dfn>.*</span>${after}</h1>`, 's'),
+    );
     for (const use of LANDING_COPY_EN.uses) expect(html).toContain(use.title);
     expect(html).toContain('<form class="join" method="post" action="/welcome">');
     expect(html).toContain(LANDING_COPY_EN.privacy);
