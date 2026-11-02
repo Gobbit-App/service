@@ -24,8 +24,12 @@ const token = (n: number, overrides: Partial<IngestToken> = {}): IngestToken => 
   ...overrides,
 });
 
-function config(ingest: Partial<AppConfig['ingest']> = {}): AppConfig {
+function config(
+  ingest: Partial<AppConfig['ingest']> = {},
+  analytics: AppConfig['analytics'] = null,
+): AppConfig {
   return {
+    analytics,
     cloudinaryCloudName: null,
     commit: 'test',
     search: { semantic: false, ask: false },
@@ -38,7 +42,9 @@ function setup({
   ingest = {},
   create = async () => ({ ...token(9, { label: 'Phone' }), token: 'ing_secret9' }),
   isPlatformAdmin = false,
+  analytics = null,
 }: {
+  analytics?: AppConfig['analytics'];
   tokens?: IngestToken[];
   ingest?: Partial<AppConfig['ingest']>;
   create?: () => Promise<unknown>;
@@ -56,7 +62,7 @@ function setup({
     throw new Error(`unexpected ${request}`);
   });
   const queryClient = testQueryClient();
-  queryClient.setQueryData(queryKeys.config, config(ingest));
+  queryClient.setQueryData(queryKeys.config, config(ingest, analytics));
   return renderWithClient(<SettingsScreen />, { queryClient });
 }
 
@@ -64,6 +70,17 @@ describe('SettingsScreen', () => {
   beforeEach(() => {
     respond.mockReset();
     requests.mockClear();
+  });
+
+  it('shows the analytics privacy note only when analytics is on (FR-013)', async () => {
+    const { unmount } = setup();
+    await screen.findByRole('list', { name: 'Your tokens' });
+    expect(screen.queryByRole('heading', { name: 'Privacy' })).not.toBeInTheDocument();
+    unmount();
+
+    setup({ analytics: { siteId: 'site-1', host: 'gobbit.example' } });
+    expect(await screen.findByRole('heading', { name: 'Privacy' })).toBeInTheDocument();
+    expect(screen.getByText(/member id/)).toBeInTheDocument();
   });
 
   it('lists tokens with their scope and last use', async () => {

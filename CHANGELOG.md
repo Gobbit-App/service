@@ -10,6 +10,14 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-01 — App analytics (033)
+
+- **Action required (privacy)**: no new variables, but with `ANALYTICS_SITE_ID` set this deploy
+  also measures the app (members identified by their Gobbit user id), public pages and share
+  previews: route patterns, screen names and four content events only. The landing page and
+  Settings now carry a privacy note; make sure invitees see it before the next invite batch.
+  There is no per-surface switch: unset `ANALYTICS_SITE_ID` to turn analytics off everywhere.
+
 ### 2026-10-29 — Landing analytics (031, #66)
 
 - **Action required (before deploying the new compose)**: `UMAMI_DATABASE_URL`,

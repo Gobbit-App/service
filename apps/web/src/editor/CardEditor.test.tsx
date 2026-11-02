@@ -170,6 +170,7 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
       commit: 'test',
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+      analytics: null,
     });
     return renderInRouter(
       <CardEditor

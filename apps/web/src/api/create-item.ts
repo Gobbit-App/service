@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ItemCreateInput } from '@gobbit/shared';
+import { trackContent } from '../analytics/analytics';
 import { api, unwrap } from './client';
 import { queryKeys, SEARCH_KEY } from './query-keys';
 
@@ -14,10 +15,17 @@ export function useCreateItem(deckSlug: string) {
           body: input,
         }),
       ),
-    onSuccess: () =>
-      Promise.all([
+    onSuccess: (item) => {
+      trackContent('card-created', {
+        deckId: item.deckId,
+        itemId: item.id,
+        type: item.type,
+        channel: 'editor',
+      });
+      return Promise.all([
         qc.invalidateQueries({ queryKey: queryKeys.itemLists }),
         qc.invalidateQueries({ queryKey: [SEARCH_KEY] }),
-      ]),
+      ]);
+    },
   });
 }

@@ -18,8 +18,22 @@ test('shell loads and /version.json reports the deployed commit @smoke', async (
 });
 
 test('the deck list shows the smoke deck @smoke', async ({ page, webDeck }) => {
+  const stats: string[] = [];
+  page.on('request', (req) => {
+    if (new URL(req.url()).pathname.startsWith('/stats/')) stats.push(req.url());
+  });
   await page.goto(webUrl('/?all=true'));
   await expect(page.getByRole('link', { name: `Smoke ${webDeck.slug}` })).toBeVisible();
+
+  // FR-010/SC-005 (033): with analytics off the app never asks for the tracker.
+  const config = (await (await page.request.get(webUrl('/api/config'))).json()) as {
+    analytics: unknown;
+  };
+  if (!config.analytics) {
+    await page.getByRole('link', { name: `Smoke ${webDeck.slug}` }).click();
+    await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+    expect(stats).toEqual([]);
+  }
 });
 
 test('a signed-out deep link lands on sign-in with next @smoke', async ({ browser }) => {

@@ -34,6 +34,7 @@ import { createRateLimitService } from './rate-limit.service';
 import { createAuthService, type CallbackRepos, type CallbackTransaction } from './auth.service';
 import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
+import { analyticsHead } from '../public/analytics';
 import { createItemDtoMapper } from './item-dtos';
 import { createImageReferenceCheck } from './image-reference';
 import { createLinkPreviewFields } from './link-preview-fields';
@@ -231,6 +232,7 @@ export function buildServices({
       share,
       cache: pageCache,
       search: searchServices.search,
+      analytics: analyticsHead(env),
     }),
     items: createItemsService({
       decks,

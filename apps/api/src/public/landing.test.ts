@@ -37,6 +37,8 @@ describe('landingPage states (D226, D228)', () => {
     for (const use of LANDING_COPY_EN.uses) expect(html).toContain(use.title);
     expect(html).toContain('<form class="join" method="post" action="/welcome">');
     expect(html).toContain(LANDING_COPY_EN.privacy);
+    // FR-013: the analytics notice names the member id and the Do Not Track opt-out.
+    expect(LANDING_COPY_EN.privacy).toMatch(/member id.*Do Not Track/s);
     expect(html).not.toContain('role="status"');
   });
 

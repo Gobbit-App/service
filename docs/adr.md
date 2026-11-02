@@ -560,3 +560,16 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 - Native scrolling gives finger tracking, momentum and rubber-banding with no JS on the gesture path. It needs no edge guard: the OS back gestures win before page scrolling.
 - Sections in the scroll and a chip rail are patterns modern app users already know, and every move keeps a button and a key.
 - Alternatives considered: keeping vertical paging (D139's same-axis problem), a JS pager with `@use-gesture` and transforms (more code, worse momentum, main-thread work per frame). Details: [`docs/design/browse-mode.md`](design/browse-mode.md).
+
+## ADR-066: App analytics: route patterns, member id, four content events (D252–D258)
+
+**Decision**: When `ANALYTICS_SITE_ID` is set, the same self-hosted Umami (ADR-062) also measures the app, the public pages and share previews. What leaves the browser is a route pattern, a fixed screen name, the referrer's origin, the member's Gobbit user id and four content events with ids and fixed labels only. This supersedes ADR-062's "landing page only" rule.
+
+- **SPA**: `GET /config` carries `analytics: { siteId, host } | null`. After the first route resolves and a member is known, the app loads the tracker chunk on idle (`data-auto-track="false"`); page views come from the router, one per real path change. `index.html` stays tracker-free; sign-in and auth errors are never tracked.
+- **One choke point**: every payload passes Umami's `data-before-send` hook, which runs the pure `sanitizePayload` from `@gobbit/shared/analytics`: `url` = pattern from a catalogue typed against the router's generated route ids (a new route without an entry fails `tsc`), `title` = screen name, referrer reduced to an origin, event data kept to an allow-list (UUID ids, enum labels, positive count); offline sends, unknown events and identify without a member are cancelled. Nothing is queued.
+- **Identity**: `id` = the user id from the `me` cache at send time; any member change calls `identify`, which clears Umami's session token.
+- **Events**: `card-created`, `card-edited`, `card-deleted`, `card-shared`, sent from mutation success paths only (bulk = one event with a count).
+- **Public pages and share previews**: the API renderers set a pattern and screen on the page head; the tag is preceded by the first-party `/analytics/page.js` (page views only, no id, no events). Error pages, the sitemap and robots never carry it. The CSP is unchanged.
+- **Checked, never the record (D258)**: `analytics.config` lists the surfaces; Umami's `card-created` is compared with `item_events` creations, app views with session creations. The landing page and Settings tell members what is measured.
+
+**Rationale**: the owner wants to know which screens and content flows members use, joined to Gobbit data, without names, slugs, titles or search terms in any recorded address. Typing the catalogue against the router keeps patterns from drifting; one sanitiser covers payloads the tracker builds itself. Server-side events, regex rewriting of the real path, a hashed id and a build-time site id were rejected (D252–D256). Details: [`docs/design/web-pwa.md`](design/web-pwa.md#app-analytics-033-d252d258-adr-066), [`docs/design/public.md`](design/public.md#analytics-on-public-pages-033-d257).
