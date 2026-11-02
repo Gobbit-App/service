@@ -6,7 +6,7 @@ import { buildAppConfig, CONFIG_CACHE_CONTROL, registerConfigRoutes } from './co
 const FAKE_URL = ['cloudinary://', 'key123', ':', 'not-a-real-secret', '@', 'demo'].join('');
 
 describe('buildAppConfig', () => {
-  it('D245: exposes the analytics site and host only when ANALYTICS_SITE_ID is set', () => {
+  it('D253: exposes the analytics site and host only when ANALYTICS_SITE_ID is set', () => {
     const siteId = '0b8f2f4e-3c1a-4d2b-9e6f-1a2b3c4d5e6f';
     const base = { CLOUDINARY_URL: undefined, GIT_SHA: undefined, API_URL: 'https://api.example' };
     expect(buildAppConfig(base).analytics).toBeNull();

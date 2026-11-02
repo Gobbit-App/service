@@ -109,7 +109,7 @@ SELECT registered_via, count(*) FROM users GROUP BY 1;
 
 ## Landing analytics
 
-Self-hosted [Umami](https://umami.is) (v3, PostgreSQL only, pinned in `docker-compose.yml`) counts landing-page visitors (D231–D233, ADR-062). The browser loads `/stats/script.js` and posts to `/stats/api/send` on the app origin; Caddy proxies only those two paths to `ANALYTICS_UPSTREAM` (default `gobbit-umami:3000`, a project-unique alias because `web` is also on `dokploy-network`). The dashboard has its own hostname, `STATS_HOST` (default `gobbit-stats.niranhome.win`), behind Umami's login. Nothing carries the tag unless `ANALYTICS_SITE_ID` is set. Then the landing page, public pages and share previews carry it, and the SPA loads it for signed-in members; every payload is reduced to route patterns, screen names, the member id and four content events (033, ADR-065).
+Self-hosted [Umami](https://umami.is) (v3, PostgreSQL only, pinned in `docker-compose.yml`) counts landing-page visitors (D231–D233, ADR-062). The browser loads `/stats/script.js` and posts to `/stats/api/send` on the app origin; Caddy proxies only those two paths to `ANALYTICS_UPSTREAM` (default `gobbit-umami:3000`, a project-unique alias because `web` is also on `dokploy-network`). The dashboard has its own hostname, `STATS_HOST` (default `gobbit-stats.niranhome.win`), behind Umami's login. Nothing carries the tag unless `ANALYTICS_SITE_ID` is set. Then the landing page, public pages and share previews carry it, and the SPA loads it for signed-in members; every payload is reduced to route patterns, screen names, the member id and four content events (033, ADR-066).
 
 Setup (once):
 

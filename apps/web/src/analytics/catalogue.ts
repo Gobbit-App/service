@@ -9,7 +9,7 @@ const deckScreen = (segment: string, name: string): Screen => ({
 });
 
 /**
- * D244: every route id → the pattern and fixed name analytics may see; null = not tracked
+ * D252: every route id → the pattern and fixed name analytics may see; null = not tracked
  * (sign-in, auth error, layout routes). Typed as a full record, so a new route fails `tsc`
  * until it is listed here.
  */
@@ -39,7 +39,7 @@ export const SCREENS: Record<RouteId, Screen | null> = {
   '/d/$slug/c/$category': { pattern: '/d/:deck/c/:category', name: 'Category' },
 };
 
-/** D244: the screen of the deepest matched route; unknown ids count as "Other", never the path. */
+/** D252: the screen of the deepest matched route; unknown ids count as "Other", never the path. */
 export function screenFor(routeId: string | undefined): Screen | null {
   if (!routeId) return null;
   return routeId in SCREENS ? SCREENS[routeId as RouteId] : OTHER_SCREEN;

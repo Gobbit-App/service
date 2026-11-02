@@ -31,7 +31,7 @@ afterEach(() => {
   delete win.__gobbitAnalyticsBeforeSend;
 });
 
-describe('public page before-send hook (D246, D249)', () => {
+describe('public page before-send hook (D254, D257)', () => {
   it('sends the pattern, the screen name and the referrer origin only', () => {
     const hook = load({ pattern: '/p/:deck/i/:item', screen: 'Public card' });
     expect(hook('event', view)).toEqual({

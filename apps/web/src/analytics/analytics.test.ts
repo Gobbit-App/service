@@ -72,7 +72,7 @@ afterEach(() => {
   stop = undefined;
 });
 
-describe('startAnalytics (D244–D247)', () => {
+describe('startAnalytics (D252–D255)', () => {
   it('does nothing when analytics is off (FR-010)', async () => {
     const { load, started } = setup({ analytics: null });
     stop = await started;
@@ -145,7 +145,7 @@ describe('startAnalytics (D244–D247)', () => {
   });
 });
 
-describe('trackContent (D248)', () => {
+describe('trackContent (D256)', () => {
   it('is a no-op before analytics starts', () => {
     expect(() => trackContent('card-created', { channel: 'editor' })).not.toThrow();
   });

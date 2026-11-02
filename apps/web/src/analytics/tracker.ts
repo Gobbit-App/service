@@ -17,14 +17,14 @@ type TrackerWindow = Window & { umami?: Umami } & Partial<
 export type InstallOptions = {
   siteId: string;
   host: string;
-  /** Read at send time: the screen showing now, the member, online state (D246, D247). */
+  /** Read at send time: the screen showing now, the member, online state (D254, D255). */
   getContext: () => SanitizeContext;
   doc?: Document;
   win?: TrackerWindow;
 };
 
 /**
- * D246 (contract §2): defines the before-send hook, then appends Umami's tracker with manual page
+ * D254 (contract §2): defines the before-send hook, then appends Umami's tracker with manual page
  * views, no query or hash, Do Not Track honoured and only this host. Resolves to the tracker, or
  * null when it can't load (blocked, offline, Umami down) — analytics then stays off silently.
  */

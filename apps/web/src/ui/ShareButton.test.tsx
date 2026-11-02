@@ -14,7 +14,7 @@ describe('ShareButton', () => {
     trackContent.mockReset();
   });
 
-  it('sends card-shared with ids only after a share or copy (D248)', async () => {
+  it('sends card-shared with ids only after a share or copy (D256)', async () => {
     const user = userEvent.setup();
     const shared: ShareNavigator = { share: vi.fn().mockResolvedValue(undefined) };
     const { unmount } = render(

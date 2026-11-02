@@ -26,7 +26,7 @@ describe('analyticsTag (D232, contract §2)', () => {
   });
 });
 
-describe('analyticsTag with a page (D249, contract §3)', () => {
+describe('analyticsTag with a page (D257, contract §3)', () => {
   const page = { pattern: '/p/:deck', name: 'Public deck' };
 
   it('loads page.js first, then the tracker with its before-send hook and no query or hash', () => {

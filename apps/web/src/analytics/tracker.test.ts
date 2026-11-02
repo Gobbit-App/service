@@ -30,7 +30,7 @@ function install(screen: Screen | null = { pattern: '/d/:deck', name: 'Deck' }) 
   return { result, script };
 }
 
-describe('installTracker (D246, contract §2)', () => {
+describe('installTracker (D254, contract §2)', () => {
   it('appends the same-origin tracker with manual views and the before-send hook', () => {
     const { script } = install();
     expect(script.getAttribute('src')).toBe('/stats/script.js');

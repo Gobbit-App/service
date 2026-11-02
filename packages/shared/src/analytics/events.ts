@@ -1,6 +1,6 @@
 import { itemTypes, type ItemType } from '../enums';
 
-/** D248: the only custom events the app sends. */
+/** D256: the only custom events the app sends. */
 export const contentEventNames = [
   'card-created',
   'card-edited',
@@ -9,7 +9,7 @@ export const contentEventNames = [
 ] as const;
 export type ContentEventName = (typeof contentEventNames)[number];
 
-/** D248: where the action happened; a fixed label, never free text. */
+/** D256: where the action happened; a fixed label, never free text. */
 export const contentChannels = [
   'editor',
   'review',
@@ -25,7 +25,7 @@ export const contentChannels = [
 ] as const;
 export type ContentChannel = (typeof contentChannels)[number];
 
-/** D248: the whole allow-list of event data; ids only, a count for bulk actions. */
+/** D256: the whole allow-list of event data; ids only, a count for bulk actions. */
 export type ContentEventProps = {
   deckId?: string;
   itemId?: string;
@@ -45,7 +45,7 @@ export function isContentEventName(value: unknown): value is ContentEventName {
 }
 
 /**
- * D246: keeps only allow-listed keys with valid values (UUIDs, a positive integer count, fixed
+ * D254: keeps only allow-listed keys with valid values (UUIDs, a positive integer count, fixed
  * labels); anything else is dropped. Returns null without a valid channel.
  */
 export function cleanEventData(data: unknown): ContentEventProps | null {

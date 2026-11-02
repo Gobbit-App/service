@@ -159,7 +159,7 @@ export async function sendLifecycle({ item, action }: LifecycleChange): Promise<
   }
 }
 
-/** D248: delete is `card-deleted`; archive, restore and undelete are edits on their own channel. */
+/** D256: delete is `card-deleted`; archive, restore and undelete are edits on their own channel. */
 function trackLifecycle({ item, action }: LifecycleChange): void {
   const props = { deckId: item.deckId, itemId: item.id, type: item.type };
   if (action === 'delete') trackContent('card-deleted', { ...props, channel: 'card-menu' });

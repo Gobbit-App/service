@@ -12,7 +12,7 @@ import { screenFor } from './catalogue';
 import type { InstallOptions } from './tracker';
 import type { Umami } from './types';
 
-/** Where the app is: the deepest matched route id and the real path (never sent, D244). */
+/** Where the app is: the deepest matched route id and the real path (never sent, D252). */
 export type Place = { routeId: string | undefined; pathname: string };
 
 export type AnalyticsDeps = {
@@ -20,7 +20,7 @@ export type AnalyticsDeps = {
   /** Calls back after every resolved navigation; returns an unsubscribe. */
   onNavigate: (callback: () => void) => () => void;
   current: () => Place;
-  /** The tracker chunk, loaded on demand (D246); tests pass a fake. */
+  /** The tracker chunk, loaded on demand (D254); tests pass a fake. */
   load?: () => Promise<{ installTracker: (options: InstallOptions) => Promise<Umami | null> }>;
   /** Runs after the app is interactive (FR-011). */
   whenIdle?: (run: () => void) => void;
@@ -56,7 +56,7 @@ async function analyticsConfig(queryClient: QueryClient): Promise<AppConfig['ana
   }
 }
 
-/** D247: a new identified session whenever the member changes (sign-in as someone else). */
+/** D255: a new identified session whenever the member changes (sign-in as someone else). */
 function syncIdentity(s: Session): void {
   if (!s.umami || !s.memberId || s.memberId === s.identified) return;
   s.identified = s.memberId;
@@ -64,7 +64,7 @@ function syncIdentity(s: Session): void {
 }
 
 /**
- * D244–D247: one page view per tracked screen change, sent only after the tracker loaded (on idle,
+ * D252–D255: one page view per tracked screen change, sent only after the tracker loaded (on idle,
  * once a member is known). The real path only de-duplicates; the hook sends the pattern.
  */
 export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
@@ -150,7 +150,7 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
 }
 
 /**
- * D248: one of the four content events, after the server accepted the action. A no-op while
+ * D256: one of the four content events, after the server accepted the action. A no-op while
  * analytics is off, not loaded yet or offline; never throws into the caller (FR-009).
  */
 export function trackContent(name: ContentEventName, props: ContentEventProps): void {

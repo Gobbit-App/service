@@ -196,7 +196,7 @@ describe('share service — public pages (D177, D181)', () => {
   });
 });
 
-describe('share service — analytics (D249)', () => {
+describe('share service — analytics (D257)', () => {
   it('adds the share-preview tracker only when analytics is on', async () => {
     const off = await setup(null).service.sharePage(ITEM_ID);
     expect(off).not.toMatch(/<script/i);

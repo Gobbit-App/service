@@ -32,7 +32,7 @@ export type PageContext = {
   imageUrl: ImageUrlFor;
   /** Absolute URL of the static site image (deck and category pages). */
   siteImage: string;
-  /** D249: set when analytics is on; each page adds its own screen. Error pages never get it. */
+  /** D257: set when analytics is on; each page adds its own screen. Error pages never get it. */
   analytics?: AnalyticsConfig;
 };
 

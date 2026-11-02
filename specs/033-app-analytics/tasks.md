@@ -57,7 +57,7 @@
 
 ## Phase 7: Polish
 
-- [x] T025 Docs: ADR-065, `docs/architecture.md` row + index, `docs/design/web-pwa.md` and `public.md` sections, `waitlist.md` pointer, `infra/README.md`, `README.md`, `CHANGELOG.md` (**Action required**), `PLAN.md`, `CLAUDE.md`
+- [x] T025 Docs: ADR-066, `docs/architecture.md` row + index, `docs/design/web-pwa.md` and `public.md` sections, `waitlist.md` pointer, `infra/README.md`, `README.md`, `CHANGELOG.md` (**Action required**), `PLAN.md`, `CLAUDE.md`
 - [x] T026 `implementation-notes.md`; deviations copied to `docs/design/web-pwa.md`
 - [x] T027 `pnpm typecheck`, `lint`, `format:check`, `test:unit`, `test:int`
 - [ ] T028 Quickstart §4 on the deployed instance (Umami views vs sessions, `card-created` vs `item_events`) and PLAN.md demo 7 — after deploy

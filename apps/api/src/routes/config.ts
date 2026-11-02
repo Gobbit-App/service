@@ -32,7 +32,7 @@ export const CONFIG_CACHE_CONTROL = 'public, max-age=300';
 
 /**
  * D55: the public config is derived from env once; only the cloud name leaves the server.
- * D245: the analytics site id is public already (031's landing tag).
+ * D253: the analytics site id is public already (031's landing tag).
  */
 export function buildAppConfig(env: ConfigEnv): AppConfig {
   return appConfigSchema.parse({
@@ -47,7 +47,7 @@ export function buildAppConfig(env: ConfigEnv): AppConfig {
       emailDomain: hasExtractProvider(env) ? emailIngestDomain(env) : null,
       shortcutUrl: env.SHORTCUT_URL ?? null,
     },
-    // D245: the SPA loads the tracker only when this is set.
+    // D253: the SPA loads the tracker only when this is set.
     analytics: env.API_URL
       ? (analyticsHead({ ...env, API_URL: env.API_URL, APP_URL: env.APP_URL }) ?? null)
       : null,

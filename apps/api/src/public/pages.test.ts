@@ -61,7 +61,7 @@ describe('public pages (D177)', () => {
   it('no page contains a script while analytics is off', () => {
     for (const page of allPages()) {
       expect(page).not.toMatch(/<script/i);
-      expect(page).not.toContain('/stats/'); // D249: the tracker only with ANALYTICS_SITE_ID
+      expect(page).not.toContain('/stats/'); // D257: the tracker only with ANALYTICS_SITE_ID
       expect(page).toMatch(/^<!doctype html>/);
     }
   });
@@ -192,7 +192,7 @@ describe('search (D182)', () => {
   });
 });
 
-describe('analytics (D249)', () => {
+describe('analytics (D257)', () => {
   const on: PageContext = { ...ctx, analytics: { siteId: 'site-1', host: 'gobbit.example' } };
   const scripts = (html: string) => html.match(/<script[^>]*>/g) ?? [];
 

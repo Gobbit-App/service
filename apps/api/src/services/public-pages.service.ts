@@ -66,7 +66,7 @@ export function createPublicPagesService({
   share: Pick<ShareService, 'ogImageFor' | 'imageUrl' | 'siteImageUrl' | 'origin'>;
   cache: PageCache;
   search: Pick<SearchService, 'retrievePublic'>;
-  /** D249: the tracker for public pages; undefined = analytics off. */
+  /** D257: the tracker for public pages; undefined = analytics off. */
   analytics?: AnalyticsConfig;
 }) {
   const origin = share.origin;

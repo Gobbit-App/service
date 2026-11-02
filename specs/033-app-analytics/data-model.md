@@ -8,7 +8,7 @@ No database change. Everything below is a payload or a typed constant.
 |-------|------|------|
 | `analytics` | `{ siteId: string; host: string } \| null` | `null` when `ANALYTICS_SITE_ID` is unset; `host` = `APP_URL` host, else `API_URL` host (031's `analyticsHead` rule) |
 
-## Screen (route pattern catalogue, D244)
+## Screen (route pattern catalogue, D252)
 
 `{ pattern: string; name: string }`: `pattern` starts with `/` and contains no real value (placeholders `:deck`, `:item`, `:category`), no query and no fragment; `name` comes from a fixed list.
 
@@ -41,7 +41,7 @@ No database change. Everything below is a payload or a typed constant.
 | `id` | the member's Gobbit user id (app only), else absent |
 | `tag` | removed |
 
-## Content event (D248)
+## Content event (D256)
 
 | Field | Type | Rule |
 |-------|------|------|
@@ -54,6 +54,6 @@ No database change. Everything below is a payload or a typed constant.
 
 Any other `data` key is dropped. No state is kept and nothing is queued.
 
-## Identity (D247)
+## Identity (D255)
 
 The facade keeps the last identified id in memory only. Before each send it compares that id with the current `me` user id; on a change it calls `umami.identify(id)`, or the no-member form that the hook cancels, so Umami's session token resets.

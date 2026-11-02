@@ -67,7 +67,7 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 - **Integration test file** is `apps/api/test/member-role.int.test.ts`; two co-owners demoting each other at once may see `403` (the first change already removed the second caller's permission) or `409`.
 - **E2E (T023)**: a second admin can't sign in from e2e, so the owner sets a category public, makes the deck public and invites a co-owner; role changes of accepted members are covered by the integration and component tests.
 
-## App analytics (033, D244–D250, ADR-065)
+## App analytics (033, D252–D258, ADR-066)
 
 - **Off by default**: `GET /config` carries `analytics: null` unless `ANALYTICS_SITE_ID` is set; then nothing is loaded and nothing is sent.
 - **Loading** (`analytics/analytics.ts`, in the main chunk): `startAnalytics` (from `main.tsx`) waits for the first resolved route and a member in the `me` cache, then on idle imports `analytics/tracker.ts` (own chunk), which installs `window.__gobbitAnalyticsBeforeSend` and appends `/stats/script.js` with `data-auto-track="false"`, `data-do-not-track="true"`, `data-domains`, `data-exclude-search`, `data-exclude-hash` and `data-before-send`.

@@ -22,7 +22,7 @@ pnpm test:e2e --grep @full    # app-analytics.spec: stubbed tracker, sentinel sc
 
    Then open DevTools → Network → `/stats/api/send`. Every body should hold only patterns (`/d/:deck`, `/i/:item`, `/d/:deck/search`, …), screen names, UUIDs and fixed labels. `payload.id` should be your user id, and there should be one `card-created` event.
 3. Sign out and sign in as another member. The next request carries the new id and no `x-umami-cache` header.
-4. **Weekly cross-check** (operator, D250). Take Umami's `card-created` events with channel `editor` + `review` for the week and compare them with:
+4. **Weekly cross-check** (operator, D258). Take Umami's `card-created` events with channel `editor` + `review` for the week and compare them with:
 
    ```sql
    select count(*) from item_events

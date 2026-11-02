@@ -36,7 +36,7 @@ export function useUpdateItem(deckSlug: string) {
     mutationFn: ({ itemId, patch }: UpdateItemVars): Promise<Item> =>
       unwrap(api.PATCH('/items/{id}', { params: { path: { id: itemId } }, body: patch })),
     onSuccess: (item) => {
-      // D248: editing a proposal is review work, not a card edit; publishing counts instead.
+      // D256: editing a proposal is review work, not a card edit; publishing counts instead.
       if (item.status !== 'proposed') {
         trackContent('card-edited', {
           deckId: item.deckId,

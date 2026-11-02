@@ -8,7 +8,7 @@ const UNKNOWN_ITEM = '00000000-0000-4000-8000-0000000000ff';
 const SITE_ID = '2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90';
 const TAG = `<script defer src="/stats/script.js" data-website-id="${SITE_ID}" data-host-url="/stats" data-domains="app.test" data-do-not-track="true"></script>`;
 
-/** D232 (031), D249 (033): with analytics configured, the landing, public pages and share previews carry the tracker. */
+/** D232 (031), D257 (033): with analytics configured, the landing, public pages and share previews carry the tracker. */
 describe('landing analytics tag (D232)', () => {
   const ctx = setupApiTest({
     env: { APP_URL, CORS_ORIGINS: APP_URL, ANALYTICS_SITE_ID: SITE_ID },
@@ -68,7 +68,7 @@ describe('landing analytics tag (D232)', () => {
     expect(res.headers.get('Location')).toBe('/welcome/joined');
   });
 
-  /** D249 (033): public pages and share previews carry the pattern-only variant. */
+  /** D257 (033): public pages and share previews carry the pattern-only variant. */
   it.each([
     ['deck', () => `/p/${deck.slug}`, '/p/:deck', 'Public deck'],
     [

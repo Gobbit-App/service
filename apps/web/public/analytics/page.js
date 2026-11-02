@@ -1,6 +1,6 @@
 /* global document, window */
 /*
- * D246/D249: the before-send hook for API-rendered public pages and share previews.
+ * D254/D257: the before-send hook for API-rendered public pages and share previews.
  * Loaded (defer) right before Umami's tracker; the page sets its route pattern and screen name
  * as data attributes. Same rules as `sanitizePayload` in @gobbit/shared/analytics, minus the
  * member id and events: anonymous pages send page views only.

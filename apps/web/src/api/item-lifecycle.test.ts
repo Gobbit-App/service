@@ -131,7 +131,7 @@ describe('runLifecycle', () => {
     });
   });
 
-  it('archive, restore and undelete are card edits on their own channel (D248)', async () => {
+  it('archive, restore and undelete are card edits on their own channel (D256)', async () => {
     unwrap.mockResolvedValue(undefined);
     for (const action of ['archive', 'restore', 'undelete'] as const) {
       await runLifecycle(seed(), { item: card, deckSlug: 'family', action });

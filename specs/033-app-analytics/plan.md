@@ -8,11 +8,11 @@ Project override of the core template. Written for outside readers: the reposito
 
 ## Summary
 
-**App.** `GET /config` tells the SPA whether analytics is on (`analytics: { siteId, host } | null`). Once a member is signed in and the app is idle, a lazy `analytics/tracker` chunk loads Umami's same-origin tracker with auto-tracking off and installs one before-send hook. Page views come from the router: route pattern and fixed screen name from a catalogue typed against the generated route ids (D244, D245). Every payload passes one pure sanitiser (`@gobbit/shared/analytics`), which sets the member's user id, reduces the referrer to its origin, filters event data to ids and fixed labels, and cancels everything while offline (D246, D247). Mutation success paths call `trackContent()` for the four content events (D248).
+**App.** `GET /config` tells the SPA whether analytics is on (`analytics: { siteId, host } | null`). Once a member is signed in and the app is idle, a lazy `analytics/tracker` chunk loads Umami's same-origin tracker with auto-tracking off and installs one before-send hook. Page views come from the router: route pattern and fixed screen name from a catalogue typed against the generated route ids (D252, D253). Every payload passes one pure sanitiser (`@gobbit/shared/analytics`), which sets the member's user id, reduces the referrer to its origin, filters event data to ids and fixed labels, and cancels everything while offline (D254, D255). Mutation success paths call `trackContent()` for the four content events (D256).
 
-**Public pages and share previews.** `layout()`'s opt-in `analytics` head gains a `page` (pattern + screen). Public deck pages and `/s/…` render a small first-party `/analytics/page.js` before the tracker, so no real path leaves the page (D249).
+**Public pages and share previews.** `layout()`'s opt-in `analytics` head gains a `page` (pattern + screen). Public deck pages and `/s/…` render a small first-party `/analytics/page.js` before the tracker, so no real path leaves the page (D257).
 
-**Records.** `analytics.config` announces the covered surfaces. The activity log stays the record for content counts. The privacy line on the landing page and in Settings says what is measured (D250).
+**Records.** `analytics.config` announces the covered surfaces. The activity log stays the record for content counts. The privacy line on the landing page and in Settings says what is measured (D258).
 
 No migration, no new API route (one new field on `/config`), no npm dependency, no new service.
 
@@ -54,14 +54,14 @@ No migration, no new API route (one new field on `/config`), no npm dependency, 
 |-----------|------------------------|
 | I. Layered API | Only `buildAppConfig` (route) and the public renderers change; no service or repository change |
 | II. One source of truth for contracts | `appConfigSchema.analytics` in `@gobbit/shared`; event names, channels, props allow-list and the sanitiser in `@gobbit/shared/analytics` (one subpath, used by web; the API uses the pattern constants); `pnpm api:openapi` regenerates the client |
-| III. Invariants live in the database | Nothing stored; the activity log stays the record (D250) |
-| IV. Private by default | Patterns, fixed names, ids only; one sanitiser on every payload incl. tracker-built ones (D246); sign-in/auth-error untracked; anonymous pages carry no id; tested per catalogue entry (SC-003) |
+| III. Invariants live in the database | Nothing stored; the activity log stays the record (D258) |
+| IV. Private by default | Patterns, fixed names, ids only; one sanitiser on every payload incl. tracker-built ones (D254); sign-in/auth-error untracked; anonymous pages carry no id; tested per catalogue entry (SC-003) |
 | V. Tests at the right tier | Unit for the sanitiser/catalogue/facade/tags, int for public pages, smoke for "off means silent", full for the end-to-end payload check; traceability below |
 | VI. Lean, offline-first web | Tracker in a lazy chunk after idle; `index.html` untouched; offline cancels sends, nothing queued; `pnpm budget` unchanged |
 | VII. Simple, optional, deployable | Optional (`ANALYTICS_SITE_ID` unset → `/config.analytics = null` → nothing loads); no new dependency or service |
 | VIII. Accountable by default | No decision about a member is made from analytics (spec edge case: forged collects); `analytics.config` announces surfaces; Umami cross-checked against `item_events` and sessions (Accountability table) |
 
-**Owner-approved change of scope**: 031's FR-002 ("landing only") is superseded by this spec; ADR-065 records it. Identified sessions without a consent banner are accepted for the invite-only phase with the privacy notice (FR-013); Phase 11 revisits.
+**Owner-approved change of scope**: 031's FR-002 ("landing only") is superseded by this spec; ADR-066 records it. Identified sessions without a consent banner are accepted for the invite-only phase with the privacy notice (FR-013); Phase 11 revisits.
 
 ## Decisions this plan pins down
 
@@ -69,13 +69,13 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D244 | Route pattern catalogue keyed by generated route ids (`Record<RouteId, Screen \| null>`); API renderers pass the public/share pattern; `/other` fallback | ADR-065 |
-| D245 | `/config.analytics`; tracker loaded lazily after idle and only with a member; `data-auto-track="false"`; page views from router `onResolved`, one per pathname change | ADR-065 |
-| D246 | One pure sanitiser on every payload via `data-before-send`; first-party `/analytics/page.js` for public pages; offline cancels | ADR-065 |
-| D247 | Distinct id = Gobbit user id from the `me` cache at send time; `identify` on every member change clears Umami's session token | ADR-065 |
-| D248 | Four content events from mutation success paths, props allow-list, bulk = count, undelete = edited, no queue | no (in ADR-065 summary) |
-| D249 | Public pages and share previews: opt-in `analytics.page` on the head; share-preview view best effort (`keepalive` vs `meta refresh 0`) | no |
-| D250 | `analytics.config.surfaces`; weekly cross-check with `item_events`; privacy line on landing and Settings | no |
+| D252 | Route pattern catalogue keyed by generated route ids (`Record<RouteId, Screen \| null>`); API renderers pass the public/share pattern; `/other` fallback | ADR-066 |
+| D253 | `/config.analytics`; tracker loaded lazily after idle and only with a member; `data-auto-track="false"`; page views from router `onResolved`, one per pathname change | ADR-066 |
+| D254 | One pure sanitiser on every payload via `data-before-send`; first-party `/analytics/page.js` for public pages; offline cancels | ADR-066 |
+| D255 | Distinct id = Gobbit user id from the `me` cache at send time; `identify` on every member change clears Umami's session token | ADR-066 |
+| D256 | Four content events from mutation success paths, props allow-list, bulk = count, undelete = edited, no queue | no (in ADR-066 summary) |
+| D257 | Public pages and share previews: opt-in `analytics.page` on the head; share-preview view best effort (`keepalive` vs `meta refresh 0`) | no |
+| D258 | `analytics.config.surfaces`; weekly cross-check with `item_events`; privacy line on landing and Settings | no |
 
 ## Project Structure
 
@@ -125,7 +125,7 @@ apps/web/
 
 e2e/tests/smoke/<deck journey>.spec.ts    # + no /stats/ request when off
 e2e/tests/full/app-analytics.spec.ts      # NEW stubbed tracker payload check
-docs/design/web-pwa.md (analytics section), docs/design/public.md, docs/adr.md (ADR-065), docs/architecture.md (one line + ADR row), CHANGELOG.md (no env change; note behaviour), PLAN.md, infra/README.md (Umami: nothing new)
+docs/design/web-pwa.md (analytics section), docs/design/public.md, docs/adr.md (ADR-066), docs/architecture.md (one line + ADR row), CHANGELOG.md (no env change; note behaviour), PLAN.md, infra/README.md (Umami: nothing new)
 ```
 
 **Structure Decision**: the privacy rules live in one shared pure module so both the SPA hook and the tests use the same code; the browser-only parts (loader, facade) live in `apps/web/src/analytics/`, with only the facade in the initial chunk. Public pages keep the 031 opt-in per head.
@@ -174,8 +174,8 @@ Constitution VIII, ADR-060. Analytics makes no decision about a member; it is a 
 | Risk | Likelihood / impact | Mitigation |
 |------|---------------------|------------|
 | A path, slug or text leaks through a tracker-built payload | L / H | Before-send hook on every request; typed catalogue; sentinel e2e scan |
-| Previous member's session carried after sign-out | M / M | `identify` on every change clears the session token (D247); unit test |
-| Share preview views lost to the immediate redirect | H / L | Documented best effort (D249); `/p` and app views are counted |
+| Previous member's session carried after sign-out | M / M | `identify` on every change clears the session token (D255); unit test |
+| Share preview views lost to the immediate redirect | H / L | Documented best effort (D257); `/p` and app views are counted |
 | Umami tracker contract changes on upgrade | L / M | Image pinned; facade wraps every call; quickstart re-run on upgrade |
 | Bundle budget creep | L / M | Facade only in the main chunk; `pnpm budget` in CI |
 | Forged collect requests claim member ids | M / L | Numbers indicative only; never used for decisions (spec edge case) |

@@ -66,7 +66,7 @@ describe('useUpdateItem', () => {
     const cached = queryClient.getQueryData<ReviewList>(queryKeys.review('family'));
     expect(cached?.data[0]?.item.title).toBe('Edited');
     expect(invalidate).toHaveBeenCalledWith({ queryKey: [REVIEW_KEY] });
-    expect(trackContent).not.toHaveBeenCalled(); // D248: proposal edits are not card edits
+    expect(trackContent).not.toHaveBeenCalled(); // D256: proposal edits are not card edits
   });
 
   it('surfaces a failed patch', async () => {

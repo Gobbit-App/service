@@ -113,7 +113,7 @@ export function usePublishProposal(deckSlug: string) {
     ({ itemId, ...body }: PublishVars) =>
       unwrap(api.POST('/items/{id}/publish', { params: { path: { id: itemId } }, body })),
     (item, { mode }) =>
-      // D248: publishing as new creates a card; applying a proposal as an update edits one.
+      // D256: publishing as new creates a card; applying a proposal as an update edits one.
       trackContent(mode === 'update' ? 'card-edited' : 'card-created', {
         deckId: item.deckId,
         itemId: item.id,

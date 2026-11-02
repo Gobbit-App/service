@@ -1,5 +1,5 @@
 /**
- * D250 / FR-013: the one privacy notice for analytics, shown on the landing page and in Settings.
+ * D258 / FR-013: the one privacy notice for analytics, shown on the landing page and in Settings.
  * Says what is measured, with which id, what never is, and how to turn it off.
  */
 export const ANALYTICS_PRIVACY_NOTE =

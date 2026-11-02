@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SCREENS, screenFor } from './catalogue';
 
-describe('screen catalogue (D244)', () => {
+describe('screen catalogue (D252)', () => {
   it('every pattern uses placeholders only: no $param, query or fragment', () => {
     for (const screen of Object.values(SCREENS)) {
       if (!screen) continue;

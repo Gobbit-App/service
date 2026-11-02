@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test, webUrl } from '../../fixtures/web';
 
 /**
- * 033 app analytics (D244–D248, `@full`, SC-003). `/config` is answered with analytics on and
+ * 033 app analytics (D252–D256, `@full`, SC-003). `/config` is answered with analytics on and
  * Umami's tracker is replaced by a stub that runs the app's before-send hook exactly like the real
  * one (`data-before-send`, then the request) and records what would be sent. Browsing a deck,
  * searching a sentinel term and creating a card must leave only route patterns, screen names, ids

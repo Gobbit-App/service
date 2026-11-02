@@ -37,7 +37,7 @@ export interface ShareServiceDeps {
   renderer: () => Promise<OgRenderer>;
   log?: (message: string, err?: unknown) => void;
   renderBudgetMs?: number;
-  /** D249: the tracker for the share preview; undefined = analytics off. */
+  /** D257: the tracker for the share preview; undefined = analytics off. */
   analytics?: AnalyticsConfig;
 }
 
@@ -85,7 +85,7 @@ export function createShareService(deps: ShareServiceDeps) {
     log = lineSink('share'),
     renderBudgetMs = OG_RENDER_BUDGET_MS,
   } = deps;
-  // D249: the same tag for every share preview (pattern `/s/:item`, never the id).
+  // D257: the same tag for every share preview (pattern `/s/:item`, never the id).
   const sharePageHead = withPage(deps.analytics, PUBLIC_SCREENS.share);
   const shareAnalytics = sharePageHead ? analyticsTag(sharePageHead).toString() : undefined;
 

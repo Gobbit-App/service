@@ -40,7 +40,7 @@ const navigate = historyNavigate(router.history);
 // D212: long-press shows a control's tooltip on touch screens.
 installTooltipPress();
 
-// 033 (D244–D247): page views by route pattern; the tracker loads on idle, only when configured.
+// 033 (D252–D255): page views by route pattern; the tracker loads on idle, only when configured.
 void startAnalytics({
   queryClient,
   onNavigate: (callback) => router.subscribe('onResolved', callback),

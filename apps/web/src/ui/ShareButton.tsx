@@ -9,7 +9,7 @@ import { shareItem, shareUrl, type ShareNavigator } from '../lib/share';
 export function ShareButton(props: {
   itemId: string;
   title: string;
-  /** D248: ids for the `card-shared` event; never the title. */
+  /** D256: ids for the `card-shared` event; never the title. */
   deckId?: string;
   type?: ItemType;
   origin?: string;

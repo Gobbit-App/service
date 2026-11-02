@@ -69,7 +69,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `REGISTRATION_MODE` | `waitlist` | `waitlist` closes sign-up: an unknown address asking for a sign-in link joins the waitlist instead; invitees still get accounts. `open` lets anyone sign up (logged at `warn` in production) |
 | `WAITLIST_JOIN_PER_IP_PER_HOUR` | `10` | Waitlist joins and confirms per IP per hour (in memory; 429 beyond) |
 | `WAITLIST_JOIN_PER_EMAIL_PER_HOUR` | `3` | Waitlist joins per address per hour (`rate_limit_counters`; 429 beyond) |
-| `ANALYTICS_SITE_ID` | — | Umami website id (UUID). Set → the landing page, public pages, share previews and (for signed-in members, lazily) the app load the same-origin tracker `/stats/script.js` and send route patterns, the member id and four content events only (ADR-065); unset → no tracker anywhere (`infra/README.md` § Landing analytics) |
+| `ANALYTICS_SITE_ID` | — | Umami website id (UUID). Set → the landing page, public pages, share previews and (for signed-in members, lazily) the app load the same-origin tracker `/stats/script.js` and send route patterns, the member id and four content events only (ADR-066); unset → no tracker anywhere (`infra/README.md` § Landing analytics) |
 | `PLATFORM_ADMINS` | — | Comma-separated emails of platform admins (`/admin/*`, e.g. the waitlist screen); everyone else gets 404. Empty logs `admin.config` at `warn` in production |
 | `WAITLIST_INVITE_TTL_DAYS` | `7` | Days a waitlist invite's sign-in link stays valid |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
@@ -403,16 +403,16 @@ Platform admins (`PLATFORM_ADMINS`) work the list in the PWA at `/admin/waitlist
 
 Members who can edit (owner, maintainer, editor) get **Add card** in a deck (`/d/<slug>/new?type=text|link|table|calc|image`) and **Edit** on cards (`/i/<id>/edit`; "Edit fully" from the review queue). The editor shows a live preview with the same renderer as the list, checks limits as you type (the API stays authoritative) and can create a category inline. Unsaved changes are kept as a local draft in the browser (IndexedDB) and offered on reopen; drafts are deleted on save and on sign-out. Image cards take a photo or pick one (uploaded straight to Cloudinary; needs `CLOUDINARY_URL`), and link cards can **Fetch preview**.
 
-### Browse mode (Phase 6)
+### Browse mode (Phase 6, redesigned in 034)
 
-**Browse** on a deck's All or category list opens `/d/<slug>/browse?c=<category>&i=<card>&pane=content|details|source`: one card per screen.
+**Browse** on a deck's All or category list opens `/d/<slug>/browse?c=<category>&i=<card>`: one card per screen, full page.
 
-- **Swipes**: up/down for the next or previous card, across the header to change category, across the footer for the Details and Source panes.
-- **Without gestures**: every action also has a button and a key (PageUp/PageDown, ArrowLeft/ArrowRight, Escape to close).
+- **Swipe sideways** for the next or previous card; **scroll down** a card for its details and source; **tap a category** in the top bar's chip rail to switch. After the last card, an end page offers the next category or the way back to the list.
+- **Without gestures**: the floating dock has Previous card, the card's actions and Next card; keys are ArrowLeft/ArrowRight and PageUp/PageDown for cards, Escape to close.
 - **Offline**: Browse works for categories already cached.
 - **Closing** returns to the list at the current card.
 
-The gesture library (`@use-gesture/react`) loads only with this route; `pnpm budget` fails if it reaches the initial chunks.
+Paging is native CSS scroll-snap; there is no gesture library.
 
 ### Interactive API
 

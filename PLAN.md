@@ -182,6 +182,7 @@ Specs (in order): [`025` deck wording](#025-027-renames) → [`022-editor-naviga
 - [x] **2. Inputs** — a link card saved as `example.org` stores `https://example.org`; an image card saves without alt text; re-filing a card is one tap with Undo (023, PR #57).
 - [x] **3. Card actions** — every card's actions sit inside it as icons; no text-only action buttons, glyph icons or browse arrows remain; delete is readable in both themes (024, merges after #56 and #57).
 - [x] **4. No "pocketbook"** — no user-visible "pocketbook" anywhere in the app or live docs (025); `@pb/*` packages and local `pb` database names are gone (026, 027; PRs #68, #69).
+- [ ] **5. Browse that feels native** — open Browse on a phone: the card fills the screen; swiping sideways flips cards smoothly; scrolling down shows details and source; a chip switches category; after the last card, "Continue to …" moves on (034 [`034-browse-redesign`](specs/034-browse-redesign/spec.md), D244–D251).
 
 ### 025–027 renames
 
@@ -193,7 +194,7 @@ Mechanical renames with no new behaviour, so they skip spec-kit (constitution, D
 
 ## Phase 9 — Landing page and waitlist
 
-Specs (in order): [`028-waitlist`](specs/028-waitlist/spec.md) (demos 2, 6) → [`029-registration-gate`](specs/029-registration-gate/spec.md) (demo 1) ∥ [`030-landing-page`](specs/030-landing-page/spec.md) (demo 3) → [`031-landing-analytics`](specs/031-landing-analytics/spec.md) (demo 4) ∥ [`032-waitlist-admin`](specs/032-waitlist-admin/spec.md) (demo 5) → [`033-app-analytics`](specs/033-app-analytics/spec.md) (demo 7). Decisions D217–D250 (028: D217–D221, D239–D240; 029: D222–D225, D241; 030: D226–D230, D242; 031: D231–D233, D243; 032: D234–D238; 033: D244–D250). Runs after the Usability pass (025–027 renames included).
+Specs (in order): [`028-waitlist`](specs/028-waitlist/spec.md) (demos 2, 6) → [`029-registration-gate`](specs/029-registration-gate/spec.md) (demo 1) ∥ [`030-landing-page`](specs/030-landing-page/spec.md) (demo 3) → [`031-landing-analytics`](specs/031-landing-analytics/spec.md) (demo 4) ∥ [`032-waitlist-admin`](specs/032-waitlist-admin/spec.md) (demo 5) → [`033-app-analytics`](specs/033-app-analytics/spec.md) (demo 7). Decisions D217–D243, D252–D258 (028: D217–D221, D239–D240; 029: D222–D225, D241; 030: D226–D230, D242; 031: D231–D233, D243; 032: D234–D238; 033: D252–D258). Runs after the Usability pass (025–027 renames included).
 
 Rules:
 - **Closed by default.** `REGISTRATION_MODE` is `waitlist` unless set to `open`. Accounts are created only through one guarded entry point: a deck invite or a platform admin's waitlist invite. An unknown email asking for a sign-in link gets the waitlist confirmation mail instead; the API answer is the same as for a known email.

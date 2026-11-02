@@ -112,16 +112,11 @@ describe('checkBudget', () => {
 });
 
 describe('lazyOnlyViolations', () => {
-  it('flags an initial chunk that bundles @use-gesture', () => {
+  it('flags an initial chunk that bundles papaparse', () => {
     const chunks = [
-      { file: 'index.js', code: 'const a={preventScrollAxis:"y"}' },
+      { file: 'index.js', code: 'var c={delimitersToGuess:[",","\\t"]}' },
       { file: 'react.js', code: 'export{}' },
     ];
-    expect(lazyOnlyViolations(chunks)).toEqual(['@use-gesture in index.js']);
-  });
-
-  it('flags an initial chunk that bundles papaparse', () => {
-    const chunks = [{ file: 'index.js', code: 'var c={delimitersToGuess:[",","\\t"]}' }];
     expect(lazyOnlyViolations(chunks)).toEqual(['papaparse in index.js']);
   });
 

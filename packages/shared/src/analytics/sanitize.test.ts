@@ -29,7 +29,7 @@ const pageView = {
   id: 'someone-else',
 };
 
-describe('sanitizePayload (D246)', () => {
+describe('sanitizePayload (D254)', () => {
   it('rewrites a page view to the pattern, the screen name and the referrer origin', () => {
     expect(sanitizePayload('event', pageView, ctx())).toEqual({
       website: 'site',
@@ -98,7 +98,7 @@ describe('sanitizePayload (D246)', () => {
     ).toBeNull();
   });
 
-  it('applies the public screens unchanged (D249)', () => {
+  it('applies the public screens unchanged (D257)', () => {
     const out = sanitizePayload(
       'event',
       { ...pageView, url: '/p/smith-family/i/x' },

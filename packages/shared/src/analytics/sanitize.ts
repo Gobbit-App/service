@@ -1,7 +1,7 @@
 import { cleanEventData, isContentEventName, isUuidLike } from './events';
 import type { Screen } from './screens';
 
-/** What the before-send hook knows at send time (D246, D247). */
+/** What the before-send hook knows at send time (D254, D255). */
 export type SanitizeContext = {
   /** The screen showing now; null = untracked (sign-in, auth error). */
   screen: Screen | null;
@@ -28,7 +28,7 @@ export type TrackerPayload = {
   data?: unknown;
 };
 
-/** D246: an external referrer's origin, else empty (same origin, invalid, missing). */
+/** D254: an external referrer's origin, else empty (same origin, invalid, missing). */
 export function referrerOrigin(referrer: string | undefined, origin: string): string {
   if (!referrer) return '';
   try {
@@ -44,9 +44,9 @@ export function referrerOrigin(referrer: string | undefined, origin: string): st
 const KEPT = ['website', 'hostname', 'screen', 'language'] as const;
 
 /**
- * D246: the one choke point every analytics request passes (page view, event, identify).
+ * D254: the one choke point every analytics request passes (page view, event, identify).
  * Rewrites the address to the route pattern and the title to the screen name, reduces the
- * referrer to its origin, sets the member id (D247), keeps only allow-listed event data and
+ * referrer to its origin, sets the member id (D255), keeps only allow-listed event data and
  * returns null (cancel) when offline, untracked, or not one of the four content events.
  */
 export function sanitizePayload(

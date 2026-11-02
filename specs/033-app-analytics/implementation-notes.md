@@ -21,3 +21,4 @@ Plan: `specs/033-app-analytics/plan.md`, tasks: `tasks.md`. Branch `feat/033-app
 - No change to `initial-chunks.test.ts`: `pnpm budget` shows the tracker as its own non-initial chunk (initial 120 KB gzip of 150).
 - E2E specs were not run locally (no smoke session on this machine); CI runs `@smoke` on the PR and `@full` nightly.
 - T028 (quickstart §4 on the deployed instance, demo 7) waits for the deploy.
+- Renumbered after `034-browse-redesign` merged first with D244–D251 and ADR-065: 033 uses D252–D258 (was D244–D250) and ADR-066 (was ADR-065).

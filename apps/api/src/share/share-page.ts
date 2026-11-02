@@ -23,7 +23,7 @@ export type ShareMeta = {
 
 /**
  * Renders an HTML share page with meta tags for crawlers and redirect for humans.
- * `analyticsTags` is pre-rendered, escaped markup from `analyticsTag()` (D249), or absent.
+ * `analyticsTags` is pre-rendered, escaped markup from `analyticsTag()` (D257), or absent.
  */
 export function renderSharePage(meta: ShareMeta, analyticsTags?: string): string {
   const esc = escapeHtml;

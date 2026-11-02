@@ -36,7 +36,7 @@ export function useImportNotes(deckSlug: string) {
         { describeError },
       ),
     onSuccess: ({ imported }) => {
-      // D248: proposals made from notes, counted on their own channel.
+      // D256: proposals made from notes, counted on their own channel.
       if (imported > 0) {
         trackContent('card-created', {
           deckId: deckIdFromCache(qc, deckSlug),

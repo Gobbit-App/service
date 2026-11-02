@@ -17,7 +17,7 @@ export const appConfigSchema = z.object({
     /** iCloud link of the "Share to Gobbit" Shortcut, null until published. */
     shortcutUrl: z.string().nullable(),
   }),
-  /** D245: Umami site and public host when analytics is configured, else null (nothing loads). */
+  /** D253: Umami site and public host when analytics is configured, else null (nothing loads). */
   analytics: z
     .object({
       siteId: z.string(),
