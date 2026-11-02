@@ -194,13 +194,13 @@ Mechanical renames with no new behaviour, so they skip spec-kit (constitution, D
 
 ## Phase 9 — Landing page and waitlist
 
-Specs (in order): [`028-waitlist`](specs/028-waitlist/spec.md) (demos 2, 6) → [`029-registration-gate`](specs/029-registration-gate/spec.md) (demo 1) ∥ [`030-landing-page`](specs/030-landing-page/spec.md) (demo 3) → [`031-landing-analytics`](specs/031-landing-analytics/spec.md) (demo 4) ∥ [`032-waitlist-admin`](specs/032-waitlist-admin/spec.md) (demo 5) → [`033-app-analytics`](specs/033-app-analytics/spec.md) (demo 7). Decisions D217–D243, D252–D258 (028: D217–D221, D239–D240; 029: D222–D225, D241; 030: D226–D230, D242; 031: D231–D233, D243; 032: D234–D238; 033: D252–D258). Runs after the Usability pass (025–027 renames included).
+Specs (in order): [`028-waitlist`](specs/028-waitlist/spec.md) (demos 2, 6) → [`029-registration-gate`](specs/029-registration-gate/spec.md) (demo 1) ∥ [`030-landing-page`](specs/030-landing-page/spec.md) (demo 3) → [`031-landing-analytics`](specs/031-landing-analytics/spec.md) (demo 4) ∥ [`032-waitlist-admin`](specs/032-waitlist-admin/spec.md) (demo 5) → [`033-app-analytics`](specs/033-app-analytics/spec.md) (demo 7) → [`035-analytics-consent`](specs/035-analytics-consent/spec.md) (demo 8). Decisions D217–D243, D252–D258 (028: D217–D221, D239–D240; 029: D222–D225, D241; 030: D226–D230, D242; 031: D231–D233, D243; 032: D234–D238; 033: D252–D258). Runs after the Usability pass (025–027 renames included).
 
 Rules:
 - **Closed by default.** `REGISTRATION_MODE` is `waitlist` unless set to `open`. Accounts are created only through one guarded entry point: a deck invite or a platform admin's waitlist invite. An unknown email asking for a sign-in link gets the waitlist confirmation mail instead; the API answer is the same as for a known email.
 - **Double opt-in, no enumeration.** `POST /waitlist` answers `202` for every well-formed request; a filled honeypot is dropped silently; unconfirmed entries are pruned.
 - **Landing is server-rendered.** `/welcome`, and `/` for visitors without a session cookie, are API-rendered no-JS HTML (like `/p/*`); signed-in users keep the app at `/`.
-- **Analytics**, self-hosted and cookieless, served same-origin under `/stats/*`, and off when not configured. 031 covered only the landing page; 033 extends it to the app and public pages (route patterns only, members identified by user id, four content events), superseding 031's "landing page only" rule.
+- **Analytics**, self-hosted and cookieless, served same-origin under `/stats/*`, and off when not configured. 031 covered only the landing page; 033 extends it to the app and public pages (route patterns only, members identified by user id, four content events), superseding 031's "landing page only" rule. 035 replaces Do Not Track with explicit consent, on unless declined: members answer a prompt (changeable in Settings → Privacy) and the choice is kept on their account; anonymous pages show a banner whose choice stays in the browser.
 - **Platform admins** (`PLATFORM_ADMINS`, reused by Phase 12) review and invite waitlist entries; everyone else gets 404 on `/admin/*`.
 
 - MCP (Phase 13): the sign-in inside the OAuth consent flow (`/connect`) passes through the same registration gate, so MCP never becomes a way around the waitlist.
@@ -212,6 +212,7 @@ Rules:
 - [ ] **5. Admin waitlist view and invite** — invite one waitlist entry; they sign in and land in their own empty deck with the `general` category (the deck itself comes from Phase 3B; this demo checks the waitlist gate does not bypass it).
 - [ ] **6. Signal review** — a SQL view `waitlist_summary` returns counts by kind, status and week.
 - [ ] **7. App analytics** — the dashboard shows active members, most-used screens and cards created/edited/shared/deleted for the last 7 days, with no deck or card names in any recorded address.
+- [ ] **8. Analytics consent** — a member with Do Not Track on shows up on the dashboard. After they choose "No thanks" (prompt or Settings → Privacy), nothing more is recorded from any of their devices. A visitor who declines the banner on the landing page sends nothing from public pages either.
 ## Phase 10 — Curation agents
 
 - MCP (Phase 13): MCP proposals use the same review queue; the dashboard splits acceptance rate by channel (`mcp` included), and MCP `search` misses count toward gap detection.
