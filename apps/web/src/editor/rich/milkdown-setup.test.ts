@@ -1,4 +1,8 @@
+import { RICH_TEXT_FIXTURES } from '@gobbit/shared/rich-text/fixtures';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { TextCard } from '../../cards/TextCard';
 import { roundTrip, withRichEditor } from './test-editor';
 
 const trim = (s: string) => s.replace(/\n+$/, '');
@@ -61,5 +65,30 @@ describe('paste (FR-011)', () => {
 
   it('drops an image with no alt text', async () => {
     expect(await pasted('<p>A<img src="https://example.com/x.png">B</p>')).toBe('AB');
+  });
+});
+
+describe('shared fixtures survive the editor (SC-002)', () => {
+  /**
+   * Each text run with the set of elements and classes around it: what the reader sees, not the
+   * nesting order (bold may be written outside a style directive, see implementation notes).
+   */
+  const looks = (body: string): string[] => {
+    const root = document.createElement('div');
+    root.innerHTML = renderToStaticMarkup(createElement(TextCard, { body }));
+    const runs: string[] = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const around: string[] = [];
+      for (let el = node.parentElement; el && el !== root; el = el.parentElement)
+        around.push([el.tagName.toLowerCase(), ...el.classList].join('.'));
+      runs.push(`${node.textContent} <${around.sort().join(' ')}>`);
+    }
+    return runs;
+  };
+
+  // The editor may rewrite how Markdown is written (FR-013) but never how it renders.
+  it.each(RICH_TEXT_FIXTURES)('$name', async ({ body }) => {
+    expect(looks(await roundTrip(body))).toEqual(looks(body));
   });
 });

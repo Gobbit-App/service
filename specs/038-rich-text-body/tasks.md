@@ -128,7 +128,7 @@ description: "Tasks for 038 rich-text card bodies"
 - [x] T044 [P] CLAUDE.md ground rule (body grammar, `@gobbit/shared/rich-text`)
 - [x] T045 PLAN.md: link 038
 - [x] T046 Run quickstart.md validation
-- [ ] T047 `/speckit-converge` until Converged
+- [x] T047 `/speckit-converge` until Converged
 
 ---
 
@@ -140,3 +140,7 @@ description: "Tasks for 038 rich-text card bodies"
 ## Implementation Strategy
 
 MVP = Phase 1 + US1 (line breaks everywhere). Then US2 (editor), US3 (styles visible), US4 (plain text). One PR for the feature (small enough stream), committed per phase.
+
+## Phase 7: Convergence
+
+- [x] T048 Round-trip every `RICH_TEXT_FIXTURES` body through the editor and check it renders the same as the original in apps/web/src/editor/rich/milkdown-setup.test.ts per SC-002 (partial)
