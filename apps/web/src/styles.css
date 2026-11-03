@@ -79,6 +79,18 @@ img {
   display: block;
 }
 
+/* Form controls never set the page width: a long <select> option or input size shrinks to fit. */
+input,
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+select {
+  text-overflow: ellipsis;
+}
+
 a {
   color: var(--color-accent);
 }
@@ -1020,6 +1032,7 @@ h3 {
 
 .card-editor {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 
@@ -1045,7 +1058,10 @@ h3 {
 
 .card-editor input,
 .card-editor textarea,
-.card-editor select {
+.card-editor select,
+.admin-form__row > input,
+.admin-form__row > select,
+.admin-member > select {
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -1056,7 +1072,10 @@ h3 {
 }
 
 .card-editor input:not([type='radio']):not([type='checkbox']),
-.card-editor select {
+.card-editor select,
+.admin-form__row > input,
+.admin-form__row > select,
+.admin-member > select {
   min-height: var(--tap);
 }
 
@@ -1078,6 +1097,7 @@ h3 {
 
 .field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
 }
 
@@ -1727,16 +1747,19 @@ h3 {
 
 /* ---------- Deck settings (Phase 8, D184) ---------- */
 
+/* Inside main.page, which already provides the gutter. */
 .import-screen {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--gap);
-  padding: var(--gap) var(--gutter);
+  padding-block: var(--gap);
 }
 
 .import-input,
 .import-preview,
 .import-result {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--gap);
 }
 
@@ -1846,8 +1869,9 @@ h3 {
   margin: 0;
 }
 
+/* Inside main.page, which already provides the gutter. */
 .deck-admin {
-  padding: var(--gap) var(--gutter);
+  padding-block: var(--gap);
 }
 
 .deck-admin__title {
