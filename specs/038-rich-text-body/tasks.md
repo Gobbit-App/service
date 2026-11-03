@@ -19,13 +19,13 @@ description: "Tasks for 038 rich-text card bodies"
 
 **Purpose**: the shared grammar and vocabulary every renderer and the editor use (D282–D284, D287)
 
-- [ ] T001 Add deps: `remark-directive`, `remark-breaks`, `unist-util-visit` (+ dev `@types/mdast`, `mdast-util-directive`) to packages/shared/package.json; `remark-directive`, `remark-breaks` to apps/web/package.json; `unified`, `remark-parse`, `remark-breaks`, `remark-directive`, `remark-rehype`, `rehype-sanitize`, `rehype-stringify`, `mdast-util-to-string` to apps/api/package.json (remove `micromark`); `pnpm install`
-- [ ] T002 [P] Style vocabulary in packages/shared/src/rich-text/constants.ts: `STYLE_NAMES` (`u`, `small`, `large`, `color`), `TEXT_SIZES` (`small`, `large`), `PALETTE` (`red`, `orange`, `green`, `blue`, `purple`, `grey`, each `{ light, dark }` hex), class helpers (`rt-small`, `rt-large`, `rt-color rt-color--<name>`)
-- [ ] T003 [P] WCAG contrast helper in packages/shared/src/rich-text/contrast.ts
-- [ ] T004 [P] [unit] Palette ≥ 4.5:1 on `#ffffff` (light) and `#1a2629` (dark) in packages/shared/src/rich-text/palette.test.ts
-- [ ] T005 `remarkNormalizeStyles` + `remarkStylesToHast` in packages/shared/src/rich-text/remark-styles.ts per contracts/body-markdown.md §2–3 (unknown/invalid → label or exact source; leaf/container → paragraph/unwrap; size inside heading unwrapped)
-- [ ] T006 [P] [unit] Normaliser and mapping cases from the contract table in packages/shared/src/rich-text/remark-styles.test.ts
-- [ ] T007 Subpath `./rich-text` → packages/shared/src/rich-text/index.ts in packages/shared/package.json
+- [x] T001 Add deps: `remark-directive`, `remark-breaks`, `unist-util-visit` (+ dev `@types/mdast`, `mdast-util-directive`) to packages/shared/package.json; `remark-directive`, `remark-breaks` to apps/web/package.json; `unified`, `remark-parse`, `remark-breaks`, `remark-directive`, `remark-rehype`, `rehype-sanitize`, `rehype-stringify`, `mdast-util-to-string` to apps/api/package.json (remove `micromark`); `pnpm install`
+- [x] T002 [P] Style vocabulary in packages/shared/src/rich-text/constants.ts: `STYLE_NAMES` (`u`, `small`, `large`, `color`), `TEXT_SIZES` (`small`, `large`), `PALETTE` (`red`, `orange`, `green`, `blue`, `purple`, `grey`, each `{ light, dark }` hex), class helpers (`rt-small`, `rt-large`, `rt-color rt-color--<name>`)
+- [x] T003 [P] WCAG contrast helper in packages/shared/src/rich-text/contrast.ts
+- [x] T004 [P] [unit] Palette ≥ 4.5:1 on `#ffffff` (light) and `#1a2629` (dark) in packages/shared/src/rich-text/palette.test.ts
+- [x] T005 `remarkNormalizeStyles` + `remarkStylesToHast` in packages/shared/src/rich-text/remark-styles.ts per contracts/body-markdown.md §2–3 (unknown/invalid → label or exact source; leaf/container → paragraph/unwrap; size inside heading unwrapped)
+- [x] T006 [P] [unit] Normaliser and mapping cases from the contract table in packages/shared/src/rich-text/remark-styles.test.ts
+- [x] T007 Subpath `./rich-text` → packages/shared/src/rich-text/index.ts in packages/shared/package.json
 
 **Checkpoint**: `@gobbit/shared/rich-text` parses and maps the grammar
 
@@ -39,15 +39,15 @@ description: "Tasks for 038 rich-text card bodies"
 
 ### Tests
 
-- [ ] T008 [P] [US1] [unit] Breaks, paragraphs and existing-shape regression fixtures (SC-004) in apps/web/src/cards/TextCard.test.tsx
-- [ ] T009 [P] [US1] [unit] Server renderer: breaks, regression fixtures, raw HTML dropped, unsafe link protocols removed in apps/api/src/rich-text/render.test.ts
-- [ ] T010 [P] [US1] [unit] Same HTML from the web reader and the API renderer for a shared fixture set (SC-002, FR-004) in apps/web/src/cards/rich-text-parity.test.tsx (fixtures in packages/shared/src/rich-text/fixtures.ts)
+- [x] T008 [P] [US1] [unit] Breaks, paragraphs and existing-shape regression fixtures (SC-004) in apps/web/src/cards/TextCard.test.tsx
+- [x] T009 [P] [US1] [unit] Server renderer: breaks, regression fixtures, raw HTML dropped, unsafe link protocols removed in apps/api/src/rich-text/render.test.ts
+- [x] T010 [P] [US1] [unit] Same HTML from the web reader and the API renderer for a shared fixture set (SC-002, FR-004) in apps/web/src/cards/rich-text-parity.test.tsx (fixtures in packages/shared/src/rich-text/fixtures.ts)
 
 ### Implementation
 
-- [ ] T011 [US1] Reader: `remarkPlugins={[remarkBreaks, remarkDirective, remarkNormalizeStyles, remarkStylesToHast]}` in apps/web/src/cards/TextCard.tsx
-- [ ] T012 [US1] Server pipeline in apps/api/src/rich-text/render.ts (remark-parse → breaks → directive → shared plugins → remark-rehype → rehype-sanitize with `rt-*` classes and `u` → rehype-stringify); apps/api/src/public/markdown.ts delegates to it
-- [ ] T013 [US1] Update apps/api/src/public/markdown.test.ts for dropped (not escaped) raw HTML (D285)
+- [x] T011 [US1] Reader: `remarkPlugins={[remarkBreaks, remarkDirective, remarkNormalizeStyles, remarkStylesToHast]}` in apps/web/src/cards/TextCard.tsx
+- [x] T012 [US1] Server pipeline in apps/api/src/rich-text/render.ts (remark-parse → breaks → directive → shared plugins → remark-rehype → rehype-sanitize with `rt-*` classes and `u` → rehype-stringify); apps/api/src/public/markdown.ts delegates to it
+- [x] T013 [US1] Update apps/api/src/public/markdown.test.ts for dropped (not escaped) raw HTML (D285)
 
 **Checkpoint**: US1 independently shippable
 
@@ -90,13 +90,13 @@ description: "Tasks for 038 rich-text card bodies"
 
 ### Tests
 
-- [ ] T029 [P] [US3] [unit] Both stylesheets carry the shared palette hexes in packages/shared/src/rich-text/palette.test.ts (reads apps/web/src/cards/rich-text.css and apps/api/src/public/styles.ts)
-- [ ] T030 [P] [US3] [e2e:full] Red + large text visible on the card and on the public page in e2e/tests/full/rich-text.spec.ts
+- [x] T029 [P] [US3] [unit] Both stylesheets carry the shared palette hexes in packages/shared/src/rich-text/palette.test.ts (reads apps/web/src/cards/rich-text.css and apps/api/src/public/styles.ts)
+- [x] T030 [P] [US3] [e2e:full] Red + large text visible on the card and on the public page in e2e/tests/full/rich-text.spec.ts
 
 ### Implementation
 
-- [ ] T031 [US3] apps/web/src/cards/rich-text.css (`--rt-<name>` light/dark, `.rt-small`, `.rt-large`, `.rt-color--*`), imported by TextCard
-- [ ] T032 [US3] Same rules in apps/api/src/public/styles.ts
+- [x] T031 [US3] apps/web/src/cards/rich-text.css (`--rt-<name>` light/dark, `.rt-small`, `.rt-large`, `.rt-color--*`), imported by TextCard
+- [x] T032 [US3] Same rules in apps/api/src/public/styles.ts
 
 ---
 
@@ -106,16 +106,16 @@ description: "Tasks for 038 rich-text card bodies"
 
 ### Tests
 
-- [ ] T033 [P] [US4] [unit] `toPlainText`, `toModelText`, `stripStyleDirectives` in apps/api/src/rich-text/plain-text.test.ts
-- [ ] T034 [P] [US4] [unit] Excerpts of styled bodies have no syntax (SC-003) in apps/api/src/share/excerpt.test.ts
-- [ ] T035 [P] [US4] [unit] Agent body with directives is stripped in apps/api/src/ai/extract-validate.test.ts
-- [ ] T036 [P] [US4] [int] A word inside `:color[…]{.red}` is found by search in apps/api/test/search.int.test.ts
+- [x] T033 [P] [US4] [unit] `toPlainText`, `toModelText`, `stripStyleDirectives` in apps/api/src/rich-text/plain-text.test.ts
+- [x] T034 [P] [US4] [unit] Excerpts of styled bodies have no syntax (SC-003) in apps/api/src/share/excerpt.test.ts
+- [x] T035 [P] [US4] [unit] Agent body with directives is stripped in apps/api/src/ai/extract-validate.test.ts
+- [x] T036 [P] [US4] [int] A word inside `:color[…]{.red}` is found by search in apps/api/test/search.int.test.ts
 
 ### Implementation
 
-- [ ] T037 [US4] apps/api/src/rich-text/plain-text.ts; `excerpt()` uses `toPlainText` (remove `stripMarkdown`) in apps/api/src/share/excerpt.ts
-- [ ] T038 [US4] Language detection on plain text in apps/api/src/share/share.service.ts and apps/api/src/public/pages.ts
-- [ ] T039 [US4] `toModelText` in apps/api/src/ai/ask-prompt.ts and apps/api/src/jobs/ingest.ts examples; `stripStyleDirectives` in apps/api/src/ai/extract-validate.ts; prompt line in apps/api/src/ai/extract-prompt.ts
+- [x] T037 [US4] apps/api/src/rich-text/plain-text.ts; `excerpt()` uses `toPlainText` (remove `stripMarkdown`) in apps/api/src/share/excerpt.ts
+- [x] T038 [US4] Language detection on plain text in apps/api/src/share/share.service.ts and apps/api/src/public/pages.ts
+- [x] T039 [US4] `toModelText` in apps/api/src/ai/ask-prompt.ts and apps/api/src/jobs/ingest.ts examples; `stripStyleDirectives` in apps/api/src/ai/extract-validate.ts; prompt line in apps/api/src/ai/extract-prompt.ts
 
 ---
 
