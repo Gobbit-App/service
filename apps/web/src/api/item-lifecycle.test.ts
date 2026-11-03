@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import type { Item } from '@gobbit/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeItem } from '../test/fixtures';
+import { makeItem, makeReminder } from '../test/fixtures';
 import type { PagesData } from './favorite-cache';
 import { queryKeys, SEARCH_KEY } from './query-keys';
 
@@ -11,7 +11,7 @@ const unwrap = vi.fn();
 vi.mock('./client', () => ({ api: { POST, DELETE }, unwrap }));
 const trackContent = vi.fn();
 vi.mock('../analytics/analytics', () => ({ trackContent }));
-const { applyLifecycle, belongsTo, expectedItem, rollbackLifecycle, runLifecycle } =
+const { applyLifecycle, belongsTo, expectedItem, nextListData, rollbackLifecycle, runLifecycle } =
   await import('./item-lifecycle');
 
 const allKey = queryKeys.items('family', { kind: 'all' });
@@ -65,6 +65,30 @@ describe('belongsTo', () => {
     expect(belongsTo({ kind: 'all' }, { ...card, deletedAt: 'x' })).toBe(false);
     expect(belongsTo({ kind: 'category', slug: 'general' }, card)).toBeNull();
     expect(belongsTo({ kind: 'category', slug: 'general' }, archived)).toBe(false);
+  });
+});
+
+describe('Upcoming (037)', () => {
+  const upcoming = { kind: 'upcoming' } as const;
+  const hidden = makeReminder({ hidden: true }, { id: 'r1' });
+
+  it('keeps hidden reminders (any status) for the refetch and drops revealed or deleted ones', () => {
+    expect(belongsTo(upcoming, hidden)).toBeNull();
+    expect(belongsTo(upcoming, { ...hidden, status: 'archived' })).toBeNull();
+    expect(belongsTo(upcoming, makeReminder({ hidden: false }))).toBe(false);
+    expect(belongsTo(upcoming, { ...hidden, deletedAt: 'x' })).toBe(false);
+    expect(belongsTo(upcoming, card)).toBe(false);
+  });
+
+  it('replaces a listed reminder in place (the list sorts ascending) and never inserts', () => {
+    const later = makeReminder({ hidden: true }, { id: 'r2' });
+    const data = pages(hidden, later);
+    const archived = { ...hidden, status: 'archived' as const };
+    const next = nextListData(upcoming, data, archived)!;
+    expect(next.pages[0].data.map((i) => i.id)).toEqual(['r1', 'r2']);
+    expect(next.pages[0].data[0]!.status).toBe('archived');
+    const other = makeReminder({ hidden: true }, { id: 'r3' });
+    expect(nextListData(upcoming, data, other)).toBe(data);
   });
 });
 

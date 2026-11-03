@@ -1,6 +1,6 @@
 /**
  * 037 reminder constants (D299). API, worker and web read these, never literals; web imports them
- * from the `@gobbit/shared/reminders` subpath (bundle budget). Env values may only lower the caps.
+ * from the zod-free `@gobbit/shared/reminder-constants` subpath (bundle budget). Env values may only lower the caps.
  */
 
 export const showBeforeUnits = ['minutes', 'hours', 'days'] as const;

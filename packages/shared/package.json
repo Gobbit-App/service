@@ -27,7 +27,8 @@
     "./analytics": "./src/analytics/index.ts",
     "./rich-text": "./src/rich-text/index.ts",
     "./rich-text/fixtures": "./src/rich-text/fixtures.ts",
-    "./reminders": "./src/reminders/index.ts"
+    "./reminders": "./src/reminders/index.ts",
+    "./reminder-constants": "./src/reminders/client.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

@@ -4,6 +4,7 @@ import {
   setFavoriteOnItem,
   removeFromPages,
   insertIntoPages,
+  replaceInPages,
   type PagesData,
 } from './favorite-cache';
 import { makeItem } from '../test/fixtures';
@@ -186,5 +187,26 @@ describe('insertIntoPages', () => {
     };
     expect(ids(insertIntoPages(full, at('o1', 1), rank))).toEqual([['d5', 'o1']]);
     expect(ids(insertIntoPages(partial, at('o1', 1), rank))).toEqual([['d5']]);
+  });
+});
+
+describe('replaceInPages (037 Upcoming)', () => {
+  const data: PagesData = {
+    pages: [
+      { data: [makeItem({ id: 'a' }), makeItem({ id: 'b' })], nextCursor: 'c1' },
+      { data: [makeItem({ id: 'c' })], nextCursor: null },
+    ],
+    pageParams: [null, 'c1'],
+  };
+
+  it('swaps a listed card in place, keeping the order', () => {
+    const next = replaceInPages(data, makeItem({ id: 'c', title: 'New' }))!;
+    expect(next.pages.map((p) => p.data.map((i) => i.id))).toEqual([['a', 'b'], ['c']]);
+    expect(next.pages[1]!.data[0]!.title).toBe('New');
+  });
+
+  it('returns the same data when the card is not listed, and leaves undefined alone', () => {
+    expect(replaceInPages(data, makeItem({ id: 'z' }))).toBe(data);
+    expect(replaceInPages(undefined, makeItem({ id: 'z' }))).toBeUndefined();
   });
 });

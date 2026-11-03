@@ -17,6 +17,7 @@ import {
 } from './draft';
 import type { ImagePayload, TablePayload } from '../cards/payload-guards';
 import { normalizeUrlInput } from '../lib/url-input';
+import { checkReminder, type ReminderDraftPayload } from './reminder-draft';
 
 /** Errors keyed by dotted path, the same syntax as `problem.errors[].path` (e.g. `payload.rows.3.1`). */
 export type FieldErrors = Partial<Record<string, string>>;
@@ -31,6 +32,8 @@ export type ValidateOptions = {
   calcExpression?: CalcExpressionCheck;
   /** A proposal may have no category yet; publishing assigns one (D6 applies to published). */
   categoriesOptional?: boolean;
+  /** The clock for the reminder deadline check (tests). */
+  now?: Date;
 };
 
 export const CATEGORY_REQUIRED = 'Pick at least one category';
@@ -165,6 +168,9 @@ export function validateDraft(draft: Draft, options: ValidateOptions = {}): Fiel
       break;
     case 'image':
       checkImage(draft.payload as ImagePayload, errors);
+      break;
+    case 'reminder':
+      checkReminder(draft.payload as ReminderDraftPayload, errors, options.now);
       break;
     case 'text':
       break;

@@ -1,0 +1,84 @@
+/* 037 reminders: card status line, dismiss dialog, editor fields */
+
+.reminder-status {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.reminder-status--muted {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.reminder-status--warning {
+  color: var(--color-danger);
+}
+
+.dismiss-dialog {
+  width: min(26rem, calc(100vw - 2 * var(--gap)));
+  padding: var(--gap);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.dismiss-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.dismiss-dialog__title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  overflow-wrap: anywhere;
+}
+
+.dismiss-dialog__done {
+  font-size: 1.1rem;
+}
+
+.dismiss-dialog__done input {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.dismiss-dialog textarea {
+  width: 100%;
+}
+
+.dismiss-dialog__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--gap);
+}
+
+.reminder-fields__row {
+  display: flex;
+  gap: 8px;
+}
+
+.reminder-fields__row input {
+  width: 6rem;
+}
+
+.reminder-fields__show-before,
+.reminder-fields__dismiss {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.reminder-fields__show-before legend,
+.reminder-fields__dismiss legend {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.reminder-fields__people {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 0 1.5rem;
+}

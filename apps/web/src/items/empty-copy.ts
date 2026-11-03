@@ -14,6 +14,11 @@ export function emptyListCopy(filter: ItemFilter): { title: string; body: string
       };
     case 'deleted':
       return { title: 'Nothing deleted', body: 'Deleted cards stay here for 30 days.' };
+    case 'upcoming':
+      return {
+        title: 'Nothing upcoming',
+        body: 'Reminders that are not showing yet are listed here.',
+      };
     case 'category':
       return { title: 'No cards here yet', body: 'This category has no cards yet.' };
     case 'all':

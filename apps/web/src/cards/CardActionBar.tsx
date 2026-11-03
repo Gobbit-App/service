@@ -1,6 +1,6 @@
 import type { Deck, Item } from '@gobbit/shared';
 import { can } from '@gobbit/shared/authz';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import type { LifecycleAction } from '../api/item-lifecycle';
 import { linkCheckActions } from '../api/link-checks';
 import { useOnline } from '../api/offline';
@@ -12,8 +12,21 @@ import type { IconName } from '../ui/icons/Icon';
 import { MoreMenu, type MenuAction } from '../ui/MoreMenu';
 import { CardBar, ReaderActions } from './CardBar';
 import { EditLink } from './EditLink';
+import { DismissDialog } from '../reminders/DismissDialog';
 
 export const OFFLINE_REASON = 'needs a connection';
+
+export const DISMISS_LABEL = 'Dismiss';
+
+/** 037 (D294): the Dismiss action shows for eligible dismissers of a pending, live reminder. */
+export function canDismissReminder(item: Item): boolean {
+  return (
+    item.deletedAt === undefined &&
+    item.status === 'published' &&
+    item.reminder?.state === 'pending' &&
+    item.reminder.canDismiss
+  );
+}
 
 const LIFECYCLE_ICON: Record<LifecycleAction, IconName> = {
   archive: 'archive',
@@ -50,6 +63,7 @@ export function CardActionBar({
   const lifecycleActions = availableActions(item, role);
   const linkActions = linkCheckActions(item, role);
   const offline = online ? null : OFFLINE_REASON;
+  const [dismissing, setDismissing] = useState(false);
 
   if (item.deletedAt !== undefined) {
     return (
@@ -105,6 +119,17 @@ export function CardActionBar({
     <CardBar>
       <EditLink item={item} role={role} />
       <ReaderActions item={item} />
+      {canDismissReminder(item) && (
+        <IconButton
+          icon="check"
+          label={DISMISS_LABEL}
+          disabledReason={offline}
+          onClick={() => setDismissing(true)}
+        />
+      )}
+      {dismissing && (
+        <DismissDialog item={item} deckSlug={deckSlug} onClose={() => setDismissing(false)} />
+      )}
       {barAction && (
         <IconButton
           icon={LIFECYCLE_ICON[barAction]}

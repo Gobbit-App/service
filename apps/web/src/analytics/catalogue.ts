@@ -25,6 +25,7 @@ export const SCREENS: Record<RouteId, Screen | null> = {
   '/i/$itemId': { pattern: '/i/:item', name: 'Card' },
   '/d/$slug/': { pattern: '/d/:deck', name: 'Deck' },
   '/d/$slug/archived': deckScreen('archived', 'Archived'),
+  '/d/$slug/upcoming': deckScreen('upcoming', 'Upcoming'),
   '/d/$slug/browse': deckScreen('browse', 'Browse'),
   '/d/$slug/favorites': deckScreen('favorites', 'Favorites'),
   '/d/$slug/import': deckScreen('import', 'Import'),

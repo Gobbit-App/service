@@ -21,7 +21,9 @@ export type ItemFilter =
   /** D165: flagged link cards ("Links to check", `item.update` roles). */
   | { kind: 'links' }
   /** D132: Recently deleted (item.delete roles); never shown as a chip. */
-  | { kind: 'deleted' };
+  | { kind: 'deleted' }
+  /** 037 (D292): reminders not revealed yet, soonest reveal first (from the deck ⋯ menu). */
+  | { kind: 'upcoming' };
 
 /** Cards per page for the infinite list (P3.3). */
 export const ITEM_PAGE_SIZE = 20;
@@ -84,6 +86,9 @@ export function itemListQuery(
       break;
     case 'deleted':
       query.status = 'deleted';
+      break;
+    case 'upcoming':
+      query.status = 'upcoming';
       break;
     case 'links':
       query.flag = 'link';
