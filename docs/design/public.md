@@ -58,7 +58,7 @@ instance (one instance today). The limiter is injectable through `createApp({ an
 - `services/public-pages.service.ts` reads through `public-deck.service` (`summaryFor`, `listFor`,
   `itemById`), so the deck rule, `role = null` filter and allow-list DTO are the same as `/public/*`.
 - Rendering lives in `apps/api/src/public/`: `html.ts` (`hono/html`, escaped by default), `markdown.ts`
-  (`micromark`, raw HTML and dangerous protocols off), `render-item.ts` (one renderer per card type;
+  (unified: the shared rich-text grammar, raw HTML dropped, `rehype-sanitize`; 038), `render-item.ts` (one renderer per card type;
   stored images through the media store's delivery URL), `pages.ts`, `layout.ts`, `styles.ts`
   (inline CSS, no JavaScript), `seo.ts` (OG/Twitter tags, canonical, sitemap and robots).
 - Every public URL comes from `publicUrl(origin, target)` / `publicPath(target)` in `public-url.ts`;
@@ -162,3 +162,19 @@ With `ANALYTICS_SITE_ID` set, the deck, category, card and search pages set `ana
 - **Search eval (T012)**: the AMKA card and its two pairs are in the fixtures, but the embedding cache
   isn't refreshed yet (no key); the hybrid recall check stays skipped until `pnpm test:search:update`
   runs with a key.
+
+## Rich text on public pages (038, D285, ADR-069)
+
+`public/markdown.ts` renders a body with `remark-parse → remark-breaks → remark-directive →
+remarkNormalizeStyles → remarkStylesToHast → remark-rehype → rehype-sanitize → rehype-stringify`. The
+pipeline is the same as the reader's, so `:u`, sizes and palette colours render as in the app. Raw HTML
+is dropped, as the app's `skipHtml` does, and only `http`, `https` and `mailto` links survive. The
+`rt-*` rules in the inline stylesheet are generated from the shared `PALETTE`, with light and dark
+values. Excerpts, OG descriptions and list summaries go through `toPlainText` (Markdown tree, no regex).
+
+## Deviations from the 038 plan
+
+- **Unsafe links lose `href`**: rehype-sanitize keeps `<a>text</a>` where the micromark renderer printed
+  plain text. The text still shows and nothing is clickable.
+- **Public CSS generated** from `PALETTE` (`public/rich-text-css.ts`), so it can't drift from the app's
+  palette.

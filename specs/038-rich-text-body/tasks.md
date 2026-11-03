@@ -61,24 +61,24 @@ description: "Tasks for 038 rich-text card bodies"
 
 ### Tests
 
-- [ ] T014 [P] [US2] [unit] Markdown round-trip (every style, Enter/Shift+Enter → `\n`, nested styles, unknown directives normalised) on a headless editor in apps/web/src/editor/rich/milkdown-setup.test.ts
-- [ ] T015 [P] [US2] [unit] No-op: mounting/undo-to-start reports the original string; an edit reports new Markdown (FR-013) in apps/web/src/editor/rich/RichBodyEditor.test.tsx
-- [ ] T016 [P] [US2] [unit] Toolbar: names, pressed state, disabled undo/redo, roving arrow/Home/End focus in apps/web/src/editor/rich/FormatToolbar.test.tsx
-- [ ] T017 [P] [US2] [unit] BodyField meter counts stored Markdown; load failure shows retry and keeps value in apps/web/src/editor/fields/BodyField.test.tsx
-- [ ] T018 [P] [US2] [e2e:smoke] Format a word bold + Shift+Enter line, save, see `<strong>` and `<br>` on the card in e2e/tests/smoke/editor.spec.ts
-- [ ] T019 [P] [US2] [e2e:full] Keyboard-only toolbar, headings/lists/quote/code block, link, clear formatting, undo/redo, paste keeps only supported styles, phone width wrap in e2e/tests/full/rich-text.spec.ts
+- [x] T014 [P] [US2] [unit] Markdown round-trip (every style, Enter/Shift+Enter → `\n`, nested styles, unknown directives normalised) on a headless editor in apps/web/src/editor/rich/milkdown-setup.test.ts
+- [x] T015 [P] [US2] [unit] No-op: mounting/undo-to-start reports the original string; an edit reports new Markdown (FR-013) in apps/web/src/editor/rich/RichBodyEditor.test.tsx
+- [x] T016 [P] [US2] [unit] Toolbar: names, pressed state, disabled undo/redo, roving arrow/Home/End focus in apps/web/src/editor/rich/FormatToolbar.test.tsx
+- [x] T017 [P] [US2] [unit] BodyField meter counts stored Markdown; load failure shows retry and keeps value in apps/web/src/editor/fields/BodyField.test.tsx
+- [x] T018 [P] [US2] [e2e:smoke] Format a word bold + Shift+Enter line, save, see `<strong>` and `<br>` on the card in e2e/tests/smoke/editor.spec.ts
+- [x] T019 [P] [US2] [e2e:full] Keyboard-only toolbar, headings/lists/quote/code block, link, clear formatting, undo/redo, paste keeps only supported styles, phone width wrap in e2e/tests/full/rich-text.spec.ts
 
 ### Implementation
 
-- [ ] T020 [US2] Add `@milkdown/kit` to apps/web/package.json
-- [ ] T021 [P] [US2] New icons (`bold`, `italic`, `underline`, `text-small`, `text-large`, `code`, `text-color`, `heading-1`…`heading-4`, `paragraph`, `list-ordered`, `quote`, `code-block`, `redo`, `clear-format`) in apps/web/src/ui/icons/icon-paths.ts
-- [ ] T022 [US2] Style marks (`underline`, `textSize`, `textColor` ↔ `textDirective`) in apps/web/src/editor/rich/style-marks.ts
-- [ ] T023 [US2] Editor factory (commonmark, history, listener, remark plugins, `break` → `\n`, `Mod-u`) in apps/web/src/editor/rich/milkdown-setup.ts
-- [ ] T024 [US2] Toolbar commands + active-state queries in apps/web/src/editor/rich/commands.ts
-- [ ] T025 [US2] `FormatToolbar`, `ColorPicker`, `LinkRow` in apps/web/src/editor/rich/ (+ rich-editor.css, sticky + wrap, FR-015)
-- [ ] T026 [US2] `RichBodyEditor` (lifecycle, baseline no-op, disabled, external value sync) in apps/web/src/editor/rich/RichBodyEditor.tsx
-- [ ] T027 [US2] BodyField renders lazy `RichBodyEditor` with `LimitMeter` and a retry fallback in apps/web/src/editor/fields/BodyField.tsx (review inline edit gets it through the same field)
-- [ ] T028 [US2] Update editor/review unit tests that typed into the body textarea (mock the rich editor) in apps/web/src/editor/*.test.tsx, apps/web/src/review/*.test.tsx
+- [x] T020 [US2] Add `@milkdown/kit` to apps/web/package.json
+- [x] T021 [P] [US2] New icons (`bold`, `italic`, `underline`, `text-small`, `text-large`, `code`, `text-color`, `heading-1`…`heading-4`, `paragraph`, `list-ordered`, `quote`, `code-block`, `redo`, `clear-format`) in apps/web/src/ui/icons/icon-paths.ts
+- [x] T022 [US2] Style marks (`underline`, `textSize`, `textColor` ↔ `textDirective`) in apps/web/src/editor/rich/style-marks.ts
+- [x] T023 [US2] Editor factory (commonmark, history, listener, remark plugins, `break` → `\n`, `Mod-u`) in apps/web/src/editor/rich/milkdown-setup.ts
+- [x] T024 [US2] Toolbar commands + active-state queries in apps/web/src/editor/rich/commands.ts
+- [x] T025 [US2] `FormatToolbar`, `ColorPicker`, `LinkRow` in apps/web/src/editor/rich/ (+ rich-editor.css, sticky + wrap, FR-015)
+- [x] T026 [US2] `RichBodyEditor` (lifecycle, baseline no-op, disabled, external value sync) in apps/web/src/editor/rich/RichBodyEditor.tsx
+- [x] T027 [US2] BodyField renders lazy `RichBodyEditor` with `LimitMeter` and a retry fallback in apps/web/src/editor/fields/BodyField.tsx (review inline edit gets it through the same field)
+- [x] T028 [US2] Update editor/review unit tests that typed into the body textarea (mock the rich editor) in apps/web/src/editor/*.test.tsx, apps/web/src/review/*.test.tsx
 
 **Checkpoint**: US2 shippable; budget checked (`pnpm build:web && pnpm budget`)
 
@@ -121,13 +121,13 @@ description: "Tasks for 038 rich-text card bodies"
 
 ## Phase 6: Close-out
 
-- [ ] T040 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` + `pnpm build:web && pnpm budget`
-- [ ] T041 e2e: `@smoke` editor journey and `@full` rich-text spec pass
-- [ ] T042 [P] docs/design/card-editor.md + docs/design/public.md: rich-text section and Deviations
-- [ ] T043 [P] docs/adr.md ADR-069; docs/architecture.md index row + one line
-- [ ] T044 [P] CLAUDE.md ground rule (body grammar, `@gobbit/shared/rich-text`)
-- [ ] T045 PLAN.md: link 038
-- [ ] T046 Run quickstart.md validation
+- [x] T040 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` + `pnpm build:web && pnpm budget`
+- [x] T041 e2e: `@smoke` editor journey and `@full` rich-text spec pass
+- [x] T042 [P] docs/design/card-editor.md + docs/design/public.md: rich-text section and Deviations
+- [x] T043 [P] docs/adr.md ADR-069; docs/architecture.md index row + one line
+- [x] T044 [P] CLAUDE.md ground rule (body grammar, `@gobbit/shared/rich-text`)
+- [x] T045 PLAN.md: link 038
+- [x] T046 Run quickstart.md validation
 - [ ] T047 `/speckit-converge` until Converged
 
 ---

@@ -19,7 +19,8 @@ pnpm test:e2e -- full/rich-text.spec.ts             # toolbar keyboard, colours,
 
 1. `pnpm dev`, sign in, open `/d/me/new`.
 2. Type `Milk`, Shift+Enter, `Eggs`; select `Eggs`, tap **Bold** and the red swatch. The meter
-   counts the Markdown (`Milk\n:color[**Eggs**]{.red}`).
+   counts the Markdown (`Milk\n**:color[Eggs]{.red}**`; bold is written
+   outside the style directives).
 3. Save. The card shows two lines, "Eggs" bold and red; switch the OS to dark mode — the red is
    the dark-theme red.
 4. Reopen the editor and Save without changes: no PATCH is sent.
