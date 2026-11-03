@@ -13,6 +13,8 @@ import {
   type Draft,
   type LinkDraftPayload,
 } from './draft';
+import { blankCalc, blankTable, sampleCalc, sampleTable } from './sample-payloads';
+import type { TablePayload } from '../cards/payload-guards';
 
 const calcItem = makeItem({
   type: 'calc',
@@ -43,10 +45,16 @@ describe('emptyDraft', () => {
     expect(emptyDraft('link', null).categoryIds).toEqual([]);
   });
 
-  it('gives each type an editable empty payload', () => {
+  it('gives each type an editable payload; table and calc start from a sample (D270)', () => {
     expect(emptyDraft('link', null).payload).toEqual({ url: '' });
-    expect(emptyDraft('table', null).payload).toEqual({ columns: ['', ''], rows: [['', '']] });
-    expect((emptyDraft('calc', null).payload as CalcDraftPayload).fields).toHaveLength(1);
+    expect(emptyDraft('table', null).payload).toEqual(sampleTable());
+    expect(emptyDraft('calc', null).payload).toEqual(sampleCalc());
+  });
+
+  it('never shares the sample between drafts', () => {
+    const a = emptyDraft('table', null).payload as TablePayload;
+    a.rows[0]![0] = 'Eggs';
+    expect(emptyDraft('table', null).payload).toEqual(sampleTable());
   });
 });
 
@@ -55,7 +63,7 @@ describe('withType', () => {
     const draft = { ...emptyDraft('link', 'c1'), title: 'T', body: 'B' };
     const next = withType({ ...draft, payload: { url: 'https://a.example/' } }, 'table');
     expect(next.type).toBe('table');
-    expect(next.payload).toEqual({ columns: ['', ''], rows: [['', '']] });
+    expect(next.payload).toEqual(sampleTable());
     expect(next).toMatchObject({ title: 'T', body: 'B', categoryIds: ['c1'] });
   });
 
@@ -118,6 +126,13 @@ describe('draftFromItem', () => {
         ['1', '2', '3'],
       ],
     });
+  });
+
+  it('falls back to a blank payload, never the sample, for an unreadable card (D270)', () => {
+    const table = makeItem({ type: 'table', payload: { nope: true } });
+    const calc = makeItem({ type: 'calc', payload: { nope: true } });
+    expect(draftFromItem(table).payload).toEqual(blankTable());
+    expect(draftFromItem(calc).payload).toEqual(blankCalc());
   });
 
   it('turns calc unit and default into text inputs', () => {

@@ -169,7 +169,8 @@
   width: 9rem;
 }
 
-.table-fields__tools {
+.table-fields__tools,
+.calc-fields__tools {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;

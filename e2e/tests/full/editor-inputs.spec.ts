@@ -3,7 +3,8 @@ import { expect, SMOKE_CATEGORY, test, webUrl, type WebDeck } from '../../fixtur
 
 /**
  * 023 editor inputs (`@full`): the URL rule on every URL input (D205), Undo, refusal and failure
- * of instant category saves (D207). The happy paths are in smoke/editor.spec.ts.
+ * of instant category saves (D207), and the table/calc samples with Clear (D270, D271). The happy
+ * paths are in smoke/editor.spec.ts.
  */
 
 function textCard(deck: WebDeck) {
@@ -129,4 +130,47 @@ test('the share form adds https:// to a bare link @full', async ({ page, webDeck
   await link.blur();
   await expect(link).toHaveValue('https://example.org/recipe');
   await expect(page.getByRole('button', { name: 'Send to Gobbit' })).toBeEnabled();
+});
+
+test('a new table starts from a sample that is not unsaved work; Clear empties it @full', async ({
+  page,
+  webDeck,
+}) => {
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=table`));
+  await expect(page.getByLabel('Column 1 heading')).toHaveValue('Item');
+  await expect(page.getByLabel('Row 1, Item')).toHaveValue('Milk');
+
+  // Untouched, the sample is the starting point (D270): Cancel leaves without asking.
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  await expect(page.getByRole('dialog', { name: 'Discard changes?' })).toHaveCount(0);
+
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=table`));
+  await page.getByRole('button', { name: 'Clear table' }).click();
+  await expect(page.getByLabel('Column 1 heading')).toHaveValue('');
+  await expect(page.getByLabel('Column 2 heading')).toHaveValue('');
+  await expect(page.getByRole('textbox', { name: /^Row \d/ })).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Clear table' })).toHaveCount(0);
+
+  // Undo brings the sample back.
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.getByLabel('Column 1 heading')).toHaveValue('Item');
+});
+
+test('a new calc starts from a working sample; Clear empties it @full', async ({
+  page,
+  webDeck,
+}) => {
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=calc`));
+  await expect(page.getByText('Total: 30').first()).toBeVisible();
+
+  await page.getByRole('button', { name: 'Clear calculation' }).click();
+  await expect(page.getByLabel('Expression', { exact: true })).toHaveValue('');
+  await expect(page.getByLabel('Result label', { exact: true })).toHaveValue('');
+  await expect(page.getByRole('group', { name: /^Field \d/ })).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Clear calculation' })).toHaveCount(0);
+
+  // A cleared calc is a change: leaving asks.
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByRole('dialog', { name: 'Discard changes?' })).toBeVisible();
 });
