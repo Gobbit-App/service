@@ -63,7 +63,8 @@ test('@smoke - a member opening / gets the app, not the landing page', async ({ 
 
 /**
  * D232 (031): when analytics is configured the tracker loads from the same origin under the CSP;
- * when not (PR CI) the page has no tag. The browser opts out first, so smoke is never counted.
+ * when not (PR CI) the page has no tag. The browser allows it on the device (opt-in, D281) and
+ * opts out of Umami itself, so smoke is never counted.
  */
 test('@smoke - the landing tracker is same-origin and allowed by the CSP, or absent', async ({
   anon,
@@ -84,7 +85,13 @@ test('@smoke - the landing tracker is same-origin and allowed by the CSP, or abs
 
   const context = await browser.newContext();
   try {
-    await context.addInitScript(() => window.localStorage.setItem('umami.disabled', '1'));
+    await context.addInitScript(() => {
+      window.localStorage.setItem('umami.disabled', '1');
+      window.localStorage.setItem(
+        'gobbit.analytics.consent',
+        JSON.stringify({ value: 'allowed', at: new Date().toISOString() }),
+      );
+    });
     const page = await context.newPage();
     const cspErrors: string[] = [];
     page.on('console', (msg) => {

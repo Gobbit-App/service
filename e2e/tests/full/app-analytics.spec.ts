@@ -2,7 +2,8 @@ import type { Page } from '@playwright/test';
 import { expect, test, webUrl } from '../../fixtures/web';
 
 /**
- * 033 app analytics (D252–D256, `@full`, SC-003). `/config` is answered with analytics on and
+ * 033 app analytics (D252–D256, `@full`, SC-003). `/config` is answered with analytics on, `/me`
+ * with the member's Allow (opt-in, D281; the real answer of the shared owner is never changed) and
  * Umami's tracker is replaced by a stub that runs the app's before-send hook exactly like the real
  * one (`data-before-send`, then the request) and records what would be sent. Browsing a deck,
  * searching a sentinel term and creating a card must leave only route patterns, screen names, ids
@@ -54,6 +55,17 @@ async function stubAnalytics(page: Page): Promise<string[]> {
       json: { ...config, analytics: { siteId: SITE_ID, host } },
     });
   });
+  await page.route('**/api/me', async (route) => {
+    const res = await route.fetch();
+    const me = (await res.json()) as Record<string, unknown>;
+    await route.fulfill({
+      response: res,
+      json: {
+        ...me,
+        analyticsConsent: { value: 'allowed', at: '2026-11-01T10:00:00.000Z', source: 'prompt' },
+      },
+    });
+  });
   await page.route('**/stats/script.js', (route) =>
     route.fulfill({ contentType: 'text/javascript', body: TRACKER_STUB }),
   );
@@ -87,6 +99,8 @@ test('in-app analytics sends route patterns, screen names and ids only @full', a
   await page.goto(webUrl(`/d/${webDeck.slug}/new`));
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Body', { exact: true }).fill(`Body with ${SENTINEL}`);
+  // Content events need the tracker (loaded once `/me` says Allow); don't save before it's in.
+  await page.waitForFunction(() => 'umami' in window, undefined, { timeout: 15_000 });
   const created = page.waitForResponse(
     (res) => res.request().method() === 'POST' && /\/decks\/[^/]+\/items$/.test(res.url()),
   );

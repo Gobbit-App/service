@@ -29,14 +29,15 @@ export type AnalyticsDecisions = {
     outcome: 'enabled' | 'disabled';
     /** Comma-separated `ANALYTICS_SURFACES` (decision fields are scalars). */
     surfaces?: string;
-    /** D265: analytics is on unless declined (035); set only when enabled. */
-    consent?: 'opt_out';
+    /** D265/D281: nothing is sent until allowed (opt-in); set only when enabled. */
+    consent?: 'opt_in';
   };
 };
 
 /**
  * D264 (035 contract §4): the only analytics tag on an API-rendered page. `page.js` reads the
- * visitor's choice, defines the before-send hook and injects Umami's tracker unless they declined;
+ * visitor's choice, defines the before-send hook and injects Umami's tracker once they allowed it
+ * (D281);
  * without `page` (the landing) payloads pass unchanged, with it they are rewritten to the pattern
  * and screen name (D257). Limited to the public host so copies elsewhere send nothing.
  */
@@ -73,7 +74,7 @@ export function recordAnalyticsConfig(
     outcome: head ? 'enabled' : 'disabled',
     host: head?.host,
     surfaces: head ? ANALYTICS_SURFACES.join(',') : undefined,
-    consent: head ? 'opt_out' : undefined,
+    consent: head ? 'opt_in' : undefined,
     bootId: ctx.bootId,
   });
 }

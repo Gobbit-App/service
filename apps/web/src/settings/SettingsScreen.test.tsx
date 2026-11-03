@@ -85,8 +85,8 @@ describe('SettingsScreen', () => {
     unmount();
 
     setup({ analytics: { siteId: 'site-1', host: 'gobbit.example' } });
-    expect(await screen.findByRole('switch', { name: 'Usage analytics' })).toBeChecked();
-    expect(screen.getByText(/member id/)).toBeInTheDocument();
+    expect(await screen.findByRole('switch', { name: 'Usage analytics' })).not.toBeChecked();
+    expect(screen.getByText(/linked to your account/)).toBeInTheDocument();
   });
 
   it('lists tokens with their scope and last use', async () => {

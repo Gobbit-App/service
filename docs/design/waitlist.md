@@ -117,7 +117,8 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
   counts landing visitors without cookies. Setup and checks: `infra/README.md` § Landing analytics.
 - **Tag**: `public/analytics.ts` renders
   `<script defer src="/analytics/page.js" data-website-id data-domains>`; `page.js` injects
-  `/stats/script.js` unless the visitor declined, and reveals the hidden consent banner and the
+  `/stats/script.js` only once the visitor allowed it (opt-in, D281), opens the consent `<dialog>`
+  while unanswered and reveals the
   "Analytics" button in the privacy note (035, D264, ADR-068; Do Not Track is not consulted).
   `layout()` adds it only when the page head carries `analytics` (`analyticsHead(env)`, set only
   with `ANALYTICS_SITE_ID`), and only the landing renderer sets it, in every state. Public deck

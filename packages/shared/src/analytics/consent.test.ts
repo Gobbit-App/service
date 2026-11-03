@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { analyticsAllowed, parseDeviceConsent, type AnalyticsConsentValue } from './consent';
 
-describe('analyticsAllowed (D261)', () => {
+describe('analyticsAllowed (D261, opt-in D281)', () => {
   const cases: [AnalyticsConsentValue | null, AnalyticsConsentValue, boolean][] = [
     ['allowed', 'declined', true],
     ['allowed', 'unanswered', true],
     ['declined', 'allowed', false],
     ['declined', 'unanswered', false],
     ['unanswered', 'declined', false],
-    ['unanswered', 'unanswered', true],
-    ['unanswered', 'allowed', true],
+    ['unanswered', 'unanswered', false],
+    ['unanswered', 'allowed', false],
     [null, 'declined', false],
-    [null, 'unanswered', true],
+    [null, 'unanswered', false],
     [null, 'allowed', true],
   ];
   it.each(cases)('member %s, device %s → %s', (member, device, expected) => {

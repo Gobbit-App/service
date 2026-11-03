@@ -1287,27 +1287,24 @@ h3 {
   gap: var(--gap);
 }
 
-/* ---------- Analytics consent (035, D263, D266) ---------- */
+/* ---------- Analytics consent (035, D263, D266; a modal since D281) ---------- */
 
-/* In the document flow above the page: never covers a dock or a save action. */
 .consent-prompt {
-  margin: var(--gap) var(--gutter) 0;
-  padding: 12px 14px;
+  width: min(24rem, calc(100vw - 2 * var(--gap)));
+  padding: var(--gap);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--color-surface);
+  color: var(--color-text);
 }
 
-.consent-prompt__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.consent-prompt::backdrop {
+  background: rgb(0 0 0 / 0.6);
 }
 
 .consent-prompt h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .consent-prompt p {

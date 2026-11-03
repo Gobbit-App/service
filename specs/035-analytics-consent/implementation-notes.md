@@ -22,6 +22,29 @@ Plan: `specs/035-analytics-consent/plan.md`, tasks: `tasks.md`. Branch `035-anal
 - **`consent-banner.test.ts`** was added at close-out. The banner was first covered only through the landing, pages and integration tests.
 - **Cross-check query**: `infra/README.md` counts `item_events` creations by members who haven't declined. It joins on `actor_user_id`.
 
+## Amendment after merge: opt-in with a modal question (D281)
+
+- **D281**: "on unless declined" is an opt-out, and EU/UK rules don't accept that for analytics linked to an account. The rule is now opt-in:
+  - `analyticsAllowed` is true only for an `allowed` answer: the account's for members, the device's for visitors.
+  - A visitor's device Allow never covers member analytics.
+  - This amends D261, D263, D264 and D266 (see the ADR-068 amendment).
+- **Wall**:
+  - Both surfaces are native modal `<dialog>`s.
+  - Allow and No thanks share the same style, there is no close button, and `cancel` (Escape) is prevented.
+  - `page.js` reopens the visitor dialog if it closes unanswered.
+  - The member dialog waits until the browser is online, because the answer is saved on the account.
+  - The editor, new-card and Browse routes still never show it.
+- **Copy** (`privacy.ts`):
+  - Short, and claims only what we can back up: no cookies, and linked to the account for members.
+  - Lists what is never sent: content, searches, email.
+  - Settings says "Off unless you allow it".
+- **The facade asks for `me` itself**: on a direct load of a screen that never reads `me` (the new-card editor), the tracker used to wait forever. Under opt-in the answer lives on the account, so `startAnalytics` now prefetches `me` once when no member is known, except on `/sign-in` and `/auth/error`. Found by `full/app-analytics.spec.ts`.
+- **Decision event**: `analytics.config` logs `consent: 'opt_in'`; the `infra/README.md` alert and cross-check now count members who allowed.
+- **E2E**:
+  - `full/analytics-consent.spec.ts` asserts that nothing loads before an answer and that Escape doesn't skip the question; it covers Allow and No thanks for members and visitors.
+  - `full/app-analytics.spec.ts` stubs the member's Allow.
+  - `smoke/landing.spec.ts` stores a device Allow before checking the tracker.
+
 ## Known issue left open (not this feature)
 
 - `e2e/tests/full/landing.spec.ts` (030) fails in the `api-smoke` project. `browser.newContext()` inherits the project's `extraHTTPHeaders` (the smoke bearer token), so its "strangers" are signed in. `analytics-consent.spec.ts` avoids this with `newContext({ extraHTTPHeaders: {} })`. The 030 spec needs the same fix in its own PR.

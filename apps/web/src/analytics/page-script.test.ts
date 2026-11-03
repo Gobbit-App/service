@@ -19,7 +19,7 @@ function load(dataset: Record<string, string>): Hook {
 
 const tracker = () =>
   document.head.querySelector<HTMLScriptElement>('script[src="/stats/script.js"]');
-const banner = () => document.querySelector<HTMLElement>('[data-consent-banner]')!;
+const banner = () => document.querySelector<HTMLDialogElement>('[data-consent-banner]')!;
 const opener = () => document.querySelector<HTMLButtonElement>('[data-consent-open]')!;
 const current = () => document.querySelector<HTMLElement>('[data-consent-current]')!;
 const store = (value: string) =>
@@ -31,11 +31,11 @@ const store = (value: string) =>
 /** The markup `consent-banner.ts` renders (kept in sync by the API's own tests). */
 function renderBanner(): void {
   document.body.innerHTML = `
-<section class="consent" data-consent-banner hidden>
-<p data-consent-current data-allowed="You allowed counting on {date}." data-declined="You said no on {date}." hidden></p>
-<button type="button" data-consent-choice="allowed">OK</button>
+<dialog class="consent" data-consent-banner>
+<p data-consent-current data-allowed="You allowed this on {date}." data-declined="You said no on {date}." hidden></p>
+<button type="button" data-consent-choice="allowed">Allow</button>
 <button type="button" data-consent-choice="declined">No thanks</button>
-</section>
+</dialog>
 <button type="button" data-consent-open hidden>Analytics</button>`;
 }
 
@@ -55,7 +55,6 @@ beforeEach(() => {
   localStorage.clear();
   document.head.innerHTML = '';
   document.body.innerHTML = '';
-  Element.prototype.scrollIntoView = vi.fn();
 });
 
 afterEach(() => {
@@ -64,6 +63,8 @@ afterEach(() => {
 });
 
 describe('public page before-send hook (D254, D257)', () => {
+  beforeEach(() => store('allowed'));
+
   it('sends the pattern, the screen name and the referrer origin only', () => {
     const hook = load({ ...SITE, pattern: '/p/:deck/i/:item', screen: 'Public card' });
     expect(hook('event', view)).toEqual({
@@ -100,8 +101,15 @@ describe('public page before-send hook (D254, D257)', () => {
   });
 });
 
-describe('visitor consent (D261, D264)', () => {
-  it('injects the tracker when not answered, without Do Not Track', () => {
+describe('visitor consent (D261, D264, opt-in D281)', () => {
+  it('loads nothing and cancels every payload while not answered', () => {
+    const hook = load({ ...SITE, pattern: '/p/:deck', screen: 'Public deck' });
+    expect(tracker()).toBeNull();
+    expect(hook('event', view)).toBeNull();
+  });
+
+  it('injects the tracker once allowed, without Do Not Track', () => {
+    store('allowed');
     load({ ...SITE, pattern: '/p/:deck', screen: 'Public deck' });
     const tag = tracker()!;
     expect(tag.dataset).toMatchObject({
@@ -116,6 +124,7 @@ describe('visitor consent (D261, D264)', () => {
   });
 
   it('the landing tag has no exclude-* attributes', () => {
+    store('allowed');
     load(SITE);
     expect(tracker()!.hasAttribute('data-exclude-search')).toBe(false);
   });
@@ -128,45 +137,69 @@ describe('visitor consent (D261, D264)', () => {
   });
 
   it('unreadable or malformed storage counts as not answered', () => {
+    renderBanner();
     localStorage.setItem(DEVICE_CONSENT_KEY, '{not json');
     load(SITE);
-    expect(tracker()).not.toBeNull();
-    document.head.innerHTML = '';
-    localStorage.setItem(DEVICE_CONSENT_KEY, JSON.stringify({ value: 'declined' }));
+    expect(tracker()).toBeNull();
+    expect(banner().open).toBe(true);
+    renderBanner();
+    localStorage.setItem(DEVICE_CONSENT_KEY, JSON.stringify({ value: 'allowed' }));
     load(SITE);
-    expect(tracker()).not.toBeNull();
+    expect(tracker()).toBeNull();
+    expect(banner().open).toBe(true);
   });
 
-  it('shows the banner only while not answered and reveals the opener', () => {
+  it('opens the dialog only while not answered and reveals the opener', () => {
     renderBanner();
     load(SITE);
-    expect(banner().hidden).toBe(false);
+    expect(banner().open).toBe(true);
     expect(opener().hidden).toBe(false);
 
     renderBanner();
-    store('allowed');
+    store('declined');
     load(SITE);
-    expect(banner().hidden).toBe(true);
+    expect(banner().open).toBe(false);
   });
 
-  it('“No thanks” stores the choice, hides the banner and cancels at once', () => {
+  it('Escape never skips the question, and a dialog closed unanswered opens again', () => {
+    renderBanner();
+    load(SITE);
+    const cancel = new Event('cancel', { cancelable: true });
+    banner().dispatchEvent(cancel);
+    expect(cancel.defaultPrevented).toBe(true);
+    banner().removeAttribute('open');
+    banner().dispatchEvent(new Event('close'));
+    expect(banner().open).toBe(true);
+  });
+
+  it('“Allow” stores the choice, closes the dialog and injects the tracker at once', () => {
+    renderBanner();
+    const hook = load(SITE);
+    banner().querySelector<HTMLButtonElement>('[data-consent-choice="allowed"]')!.click();
+    expect(banner().open).toBe(false);
+    expect(tracker()).not.toBeNull();
+    expect(hook('event', view)).toEqual(view);
+  });
+
+  it('“No thanks” stores the choice, closes the dialog and cancels at once', () => {
     renderBanner();
     const hook = load(SITE);
     banner().querySelector<HTMLButtonElement>('[data-consent-choice="declined"]')!.click();
-    expect(banner().hidden).toBe(true);
+    expect(banner().open).toBe(false);
+    expect(tracker()).toBeNull();
     expect(JSON.parse(localStorage.getItem(DEVICE_CONSENT_KEY)!)).toMatchObject({
       value: 'declined',
     });
     expect(hook('event', view)).toBeNull();
   });
 
-  it('“OK” after a decline injects the tracker without a reload', () => {
+  it('“Allow” after a decline injects the tracker without a reload', () => {
     renderBanner();
     store('declined');
     const hook = load(SITE);
     expect(tracker()).toBeNull();
     opener().click();
-    expect(banner().hidden).toBe(false);
+    expect(banner().open).toBe(true);
     expect(current().hidden).toBe(false);
     expect(current().textContent).toMatch(/^You said no on .+\.$/);
     banner().querySelector<HTMLButtonElement>('[data-consent-choice="allowed"]')!.click();

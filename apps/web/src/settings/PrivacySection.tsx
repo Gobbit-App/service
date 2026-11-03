@@ -5,7 +5,7 @@ import { useSetAnalyticsConsent } from '../api/analytics-consent';
 import { useOnline } from '../api/offline';
 import { SettingsSection } from './SettingsSection';
 
-/** D266: "Since {date}" for an answer, "Not answered yet (on)" otherwise. */
+/** D266: "Since {date}" for an answer, "Not answered yet (off)" otherwise (D281). */
 export function consentStatus(consent: AnalyticsConsent | undefined): string {
   if (!consent?.at || consent.value === 'unanswered') return ANALYTICS_SETTINGS.unanswered;
   const date = new Date(consent.at);
@@ -15,7 +15,7 @@ export function consentStatus(consent: AnalyticsConsent | undefined): string {
 
 /**
  * D266: Settings → Privacy. With analytics off on this server, one line and nothing else
- * (FR-013); otherwise what is measured and a switch (on unless declined). Offline the switch is
+ * (FR-013); otherwise what is measured and a switch (off until allowed, D281). Offline the switch is
  * disabled — nothing is queued.
  */
 export function PrivacySection({
@@ -37,7 +37,7 @@ export function PrivacySection({
     );
   }
 
-  const on = consent?.value !== 'declined';
+  const on = consent?.value === 'allowed';
   const disabled = !online || save.isPending || !consent;
 
   return (

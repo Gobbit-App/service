@@ -1,13 +1,14 @@
 /* global document, window */
 /*
- * D264 (035): the consent-aware analytics loader for API-rendered pages (landing, public pages,
- * share previews). The page renders only this script plus a hidden banner; this file:
+ * D264 (035, opt-in since D281): the consent-aware analytics loader for API-rendered pages
+ * (landing, public pages, share previews). The page renders only this script plus a closed
+ * consent dialog; this file:
  *  1. reads the visitor's choice from localStorage (never sent anywhere);
- *  2. defines the before-send hook: nothing when declined, else the 033 rewrite to the route
+ *  2. defines the before-send hook: nothing unless allowed, else the 033 rewrite to the route
  *     pattern and screen name (public pages, D257) or the payload as is (landing, 031);
- *  3. injects Umami's tracker unless declined;
- *  4. shows the banner while unanswered, reveals the "Analytics" button, and applies a choice
- *     at once (no reload).
+ *  3. injects Umami's tracker only once allowed;
+ *  4. opens the dialog as a modal while unanswered (it can't be dismissed without an answer),
+ *     reveals the "Analytics" button, and applies a choice at once (no reload).
  * Mirrors `analyticsAllowed(null, device)` and `parseDeviceConsent` in @gobbit/shared/analytics.
  */
 (function () {
@@ -39,8 +40,8 @@
   }
 
   var choice = readChoice();
-  var declined = function () {
-    return Boolean(choice && choice.value === 'declined');
+  var allowed = function () {
+    return Boolean(choice && choice.value === 'allowed');
   };
 
   function referrerOrigin(referrer) {
@@ -56,7 +57,7 @@
 
   window[HOOK] = function (type, payload) {
     try {
-      if (declined() || !payload) return null;
+      if (!allowed() || !payload) return null;
       if (!pattern) return payload; // landing (031): sent as is
       if (!screenName || !navigator.onLine) return null;
       if (type !== 'event' || payload.name !== undefined) return null; // page views only
@@ -74,7 +75,7 @@
   };
 
   function inject() {
-    if (injected || declined() || !data.websiteId) return;
+    if (injected || !allowed() || !data.websiteId) return;
     injected = true;
     var s = document.createElement('script');
     s.defer = true;
@@ -108,6 +109,18 @@
     current.hidden = false;
   }
 
+  function openBanner() {
+    if (!banner || banner.open) return;
+    if (typeof banner.showModal === 'function') banner.showModal();
+    else banner.setAttribute('open', '');
+  }
+
+  function closeBanner() {
+    if (!banner || !banner.open) return;
+    if (typeof banner.close === 'function') banner.close();
+    else banner.removeAttribute('open');
+  }
+
   function choose(value) {
     choice = { value: value, at: new Date().toISOString() };
     try {
@@ -115,7 +128,7 @@
     } catch {
       /* kept for this page only */
     }
-    if (banner) banner.hidden = true;
+    closeBanner();
     if (value === 'allowed') inject();
   }
 
@@ -126,17 +139,22 @@
         choose(event.currentTarget.getAttribute('data-consent-choice'));
       });
     }
-    if (!choice) banner.hidden = false;
+    // D281: Escape never skips the question; a dialog closed without an answer opens again.
+    banner.addEventListener('cancel', function (event) {
+      if (!choice) event.preventDefault();
+    });
+    banner.addEventListener('close', function () {
+      if (!choice) openBanner();
+    });
+    if (!choice) openBanner();
   }
 
   var openers = document.querySelectorAll('[data-consent-open]');
   for (var o = 0; o < openers.length; o++) {
     openers[o].hidden = false;
     openers[o].addEventListener('click', function () {
-      if (!banner) return;
       showCurrent();
-      banner.hidden = false;
-      banner.scrollIntoView({ block: 'nearest' });
+      openBanner();
     });
   }
 

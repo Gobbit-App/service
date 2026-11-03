@@ -19,7 +19,7 @@ const appConfig = (analytics: AppConfig['analytics']): AppConfig => ({
   ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
 });
 
-const me = (id: string, value: AnalyticsConsentValue = 'unanswered'): Me => ({
+const me = (id: string, value: AnalyticsConsentValue = 'allowed'): Me => ({
   user: { id, email: 'a@b.c', displayName: 'A' },
   decks: [],
   isPlatformAdmin: false,
@@ -35,14 +35,16 @@ type SetupOptions = {
   consent?: AnalyticsConsentValue;
   device?: AnalyticsConsentValue;
   place?: Place;
+  fetchMe?: () => Promise<void>;
 };
 
 function setup({
   analytics = ANALYTICS,
   member = MEMBER,
-  consent = 'unanswered',
+  consent = 'allowed',
   device = 'unanswered',
   place = { routeId: '/d/$slug/', pathname: '/d/smith-family' },
+  fetchMe = vi.fn(async () => {}),
 }: SetupOptions = {}) {
   const queryClient = testQueryClient();
   queryClient.setQueryData(queryKeys.config, appConfig(analytics));
@@ -64,6 +66,7 @@ function setup({
     isOnline: () => true,
     deviceConsent: () => deviceState.value,
     origin: 'https://gobbit.example',
+    fetchMe,
     current: () => state.place,
     onNavigate: (cb) => {
       navigate = cb;
@@ -133,6 +136,38 @@ describe('startAnalytics (D252–D255)', () => {
     expect(umami.track).not.toHaveBeenCalled(); // still on sign-in
   });
 
+  it('asks for the member itself when no screen did (a direct load of the editor)', async () => {
+    const ref: { client?: ReturnType<typeof setup>['queryClient'] } = {};
+    const fetchMe = vi.fn(async () => {
+      ref.client!.setQueryData(queryKeys.me, me(MEMBER));
+    });
+    const s = setup({
+      member: null,
+      place: { routeId: '/d/$slug/new', pathname: '/d/smith-family/new' },
+      fetchMe,
+    });
+    ref.client = s.queryClient;
+    stop = await s.started;
+    await settle();
+    expect(fetchMe).toHaveBeenCalledTimes(1);
+    expect(s.load).toHaveBeenCalledTimes(1);
+    expect(s.umami.track).toHaveBeenCalledTimes(1);
+  });
+
+  it('never asks for the member on sign-in, or when it is already known', async () => {
+    const onSignIn = vi.fn(async () => {});
+    stop = await setup({
+      member: null,
+      place: { routeId: '/sign-in', pathname: '/sign-in' },
+      fetchMe: onSignIn,
+    }).started;
+    stop();
+    const known = vi.fn(async () => {});
+    stop = await setup({ fetchMe: known }).started;
+    expect(onSignIn).not.toHaveBeenCalled();
+    expect(known).not.toHaveBeenCalled();
+  });
+
   it('sends one view per tracked path, none for untracked screens', async () => {
     const { umami, started, go } = setup();
     stop = await started;
@@ -168,7 +203,7 @@ describe('startAnalytics (D252–D255)', () => {
   });
 });
 
-describe('consent gating (D261, D262)', () => {
+describe('consent gating (D261, D262, opt-in D281)', () => {
   it('loads nothing for a member who declined', async () => {
     const { load, started } = setup({ consent: 'declined' });
     stop = await started;
@@ -177,8 +212,15 @@ describe('consent gating (D261, D262)', () => {
     expect(() => trackContent('card-created', { channel: 'editor' })).not.toThrow();
   });
 
-  it('a device "No thanks" keeps an unanswered member silent (FR-010)', async () => {
-    const { load, started } = setup({ device: 'declined' });
+  it('loads nothing for a member who hasn’t answered', async () => {
+    const { load, started } = setup({ consent: 'unanswered' });
+    stop = await started;
+    await settle();
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('a visitor "Allow" on this device never covers an unanswered member', async () => {
+    const { load, started } = setup({ consent: 'unanswered', device: 'allowed' });
     stop = await started;
     await settle();
     expect(load).not.toHaveBeenCalled();
@@ -209,14 +251,6 @@ describe('consent gating (D261, D262)', () => {
     go({ routeId: '/i/$itemId', pathname: `/i/${DECK}` });
     trackContent('card-created', { channel: 'editor' });
     expect(umami.track).toHaveBeenCalledTimes(1); // only the first view
-    expect(context().consented).toBe(false);
-  });
-
-  it('a device decline after load cancels in the hook', async () => {
-    const { started, context, deviceState } = setup();
-    stop = await started;
-    await settle();
-    deviceState.value = 'declined';
     expect(context().consented).toBe(false);
   });
 });
