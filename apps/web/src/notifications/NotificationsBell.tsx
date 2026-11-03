@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { bellState, pendingQuery } from '../api/pending';
 import { IconLink } from '../ui/buttons/IconLink';
+import { usePendingRefresh } from './use-pending-refresh';
 import './notifications.css';
 
 export const NOTIFICATIONS_HREF = '/notifications';
@@ -12,6 +13,7 @@ export const NOTIFICATIONS_HREF = '/notifications';
  * name carries the counts.
  */
 export function NotificationsBell(): ReactElement {
+  usePendingRefresh();
   const { light, label } = bellState(useQuery(pendingQuery()).data);
   return (
     <IconLink

@@ -146,4 +146,4 @@ Each event carries `requestId` (taken from `Actor.requestId`), the user, the dec
 - `GET /me/pending` lives in its own `pending.service` and scans at most 1000 pending reminders
   per call (`PENDING_SCAN_MAX`), 100 per section (`PENDING_LIST_MAX`).
 - The bell shows a light, not a number; the counts are in its accessible name. The pending list
-  refetches on focus and every minute; the service worker doesn't message open pages on push.
+  refetches on focus and every minute; a push also refreshes it in open windows (the service worker posts `gobbit:pending-changed`, `usePendingRefresh` invalidates).

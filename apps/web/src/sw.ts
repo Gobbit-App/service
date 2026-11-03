@@ -14,7 +14,12 @@ import {
 } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
-import { openFromNotification, parsePushPayload, showReminder } from './push/sw-push';
+import {
+  openFromNotification,
+  parsePushPayload,
+  showReminder,
+  tellOpenWindows,
+} from './push/sw-push';
 import { savePending } from './share/share-store';
 import { handleShareTarget, isShareTargetPost } from './share/share-target';
 
@@ -39,7 +44,10 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   const message = parsePushPayload(event.data ? () => event.data?.json() : undefined);
   event.waitUntil(
-    showReminder(message, (title, options) => self.registration.showNotification(title, options)),
+    Promise.all([
+      showReminder(message, (title, options) => self.registration.showNotification(title, options)),
+      tellOpenWindows(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true })),
+    ]),
   );
 });
 

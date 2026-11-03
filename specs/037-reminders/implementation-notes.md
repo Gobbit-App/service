@@ -86,7 +86,7 @@ Decisions the plan didn't make, and deviations from it. At close-out, deviations
   the counts are in its accessible name ("Notifications, 2 pending, 1 overdue").
 - **Freshness**: the pending query refetches on focus (a notification tap brings the app forward)
   and every minute while open; every lifecycle change and dismiss invalidates it through
-  `invalidateAfterLifecycle`. The service worker doesn't message open pages on push.
+  `invalidateAfterLifecycle`. A push also refreshes open windows: the service worker posts `gobbit:pending-changed` (`tellOpenWindows`) and the bell's `usePendingRefresh` invalidates the pending query (T034, converge F1).
 - **Offline**: the list comes from the persisted query cache with "Showing the last known list";
   a first load with no cache shows the offline error with retry.
 - **E2E**: none — the API rules are covered by `pending.int.test.ts` and the UI by unit tests; the
