@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Two clarifications open: nag cadence after the deadline (User Story 2, scenario 2 / FR-008) and whether readers can be named as dismissers (User Story 5, scenario 3 / FR-013).
+- Clarifications resolved 2026-11-03 (spec "Clarifications"): email and push once at the deadline; readers can't be named as dismissers; creator and deck admins see hidden reminders in a separate Upcoming list and can delete them.
 - "Web Push" and "VAPID" from the request are kept out of the spec text (it says "push", "push keys"); the plan records the protocol choice.
 - No extension hooks registered (`.specify/extensions.yml` absent).
