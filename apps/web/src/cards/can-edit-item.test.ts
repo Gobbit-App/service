@@ -34,6 +34,13 @@ describe('canEditItem (R8)', () => {
 describe('editHref', () => {
   it('builds the edit route, optionally back to review', () => {
     expect(editHref('i1')).toBe('/i/i1/edit');
-    expect(editHref('i1', 'review')).toBe('/i/i1/edit?from=review');
+    expect(editHref('i1', { from: 'review' })).toBe('/i/i1/edit?from=review');
+  });
+
+  it('carries the opener page, encoded (D320)', () => {
+    expect(editHref('i1', { back: '/d/f/browse?c=all&i=i1' })).toBe(
+      '/i/i1/edit?back=%2Fd%2Ff%2Fbrowse%3Fc%3Dall%26i%3Di1',
+    );
+    expect(editHref('i1', { back: null })).toBe('/i/i1/edit');
   });
 });

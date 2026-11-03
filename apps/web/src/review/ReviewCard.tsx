@@ -190,7 +190,7 @@ export function ReviewCard({
                 key: 'edit-fully',
                 label: 'Edit fully',
                 icon: 'external',
-                href: editHref(item.id, 'review'),
+                href: editHref(item.id, { from: 'review' }),
               },
             ]}
           />

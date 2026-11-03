@@ -5,15 +5,16 @@ import { AppHeader } from '../app/AppHeader';
 import { backTarget } from '../app/back-target';
 import { canEditItem } from '../cards/can-edit-item';
 import { CardEditor } from '../editor/CardEditor';
+import { parseEditSearch } from '../editor/edit-search';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
 
-type EditCardSearch = { from?: 'review' };
-
-/** D135: the card editor in edit mode (`/i/:itemId/edit?from=review`), outside the deck layout. */
+/**
+ * D135: the card editor in edit mode (`/i/:itemId/edit?from=review|back=…`), outside the deck
+ * layout.
+ */
 export const Route = createFileRoute('/i/$itemId_/edit')({
-  validateSearch: (search: Record<string, unknown>): EditCardSearch =>
-    search['from'] === 'review' ? { from: 'review' } : {},
+  validateSearch: parseEditSearch,
   component: EditCard,
 });
 
@@ -27,7 +28,7 @@ function Unavailable({ message, onRetry }: { message: string; onRetry?: () => vo
 
 function EditCard() {
   const { itemId } = Route.useParams();
-  const { from } = Route.useSearch();
+  const { from, back: opener } = Route.useSearch();
   const item = useQuery(itemQuery(itemId));
   const deckId = item.data?.deckId;
   const enabled = deckId !== undefined;
@@ -66,6 +67,7 @@ function EditCard() {
     itemId: item.data.id,
     deckSlug: deck.data.slug,
     from,
+    back: opener,
   });
   return (
     <>
@@ -78,6 +80,7 @@ function EditCard() {
           item={item.data}
           categories={categories.data}
           from={from}
+          opener={opener}
           backHref={back}
         />
       </main>

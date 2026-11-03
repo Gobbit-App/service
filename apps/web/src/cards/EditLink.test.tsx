@@ -30,6 +30,29 @@ describe('EditLink', () => {
     expect(navigate).toHaveBeenCalledWith('/i/i1/edit');
   });
 
+  it('from Browse, Edit carries the page it was opened on (D320)', () => {
+    window.history.replaceState(null, '', '/d/family/browse?c=all&i=i1');
+    try {
+      renderWithClient(<EditLink item={makeItem({ id: 'i1' })} role="editor" />);
+      expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute(
+        'href',
+        `/i/i1/edit?back=${encodeURIComponent('/d/family/browse?c=all&i=i1')}`,
+      );
+    } finally {
+      window.history.replaceState(null, '', '/');
+    }
+  });
+
+  it("on the card's own page, Edit needs no back", () => {
+    window.history.replaceState(null, '', '/i/i1');
+    try {
+      renderWithClient(<EditLink item={makeItem({ id: 'i1' })} role="editor" />);
+      expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', '/i/i1/edit');
+    } finally {
+      window.history.replaceState(null, '', '/');
+    }
+  });
+
   it("an editor sees Edit on their own proposal, not on someone else's", async () => {
     renderWithClient(
       <>
