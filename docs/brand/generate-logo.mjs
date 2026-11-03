@@ -1,5 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { GLYPHS } from './glyphs.mjs';
+import { brandG } from './brand-g.mjs';
 
 export const C = {
   dark: '#195b5c',
@@ -57,8 +58,9 @@ function bite({ s, c, h, w, theta, accent }) {
   return { mask, crumbs };
 }
 
-/** Brand letter (Inter ExtraBold) scaled to `height` and centred on (cx, cy). */
-const glyph = (ch, cx, cy, height, fill) => {
+/** Brand letter (Inter ExtraBold, or a custom `G:<variant>` from brand-g.mjs) scaled to `height` and centred on (cx, cy). */
+const glyph = (ch, cx, cy, height, fill, accent = C.accent) => {
+  if (ch.startsWith('G:')) return brandG(ch.slice(2), cx, cy, height, fill, accent);
   const { bb, d } = GLYPHS[ch];
   const k = height / (bb[3] - bb[1]);
   const tx = cx - ((bb[0] + bb[2]) / 2) * k,
@@ -166,7 +168,14 @@ export function logo(o = {}) {
   const letterEl = !letter
     ? ''
     : letterPlace === 'center'
-      ? glyph(letter, 0, bodyTop + (door ? bodyH * 0.36 : bodyH / 2), bodyH * 0.5 * letterScale, lc)
+      ? glyph(
+          letter,
+          0,
+          bodyTop + (door ? bodyH * 0.36 : bodyH / 2),
+          bodyH * 0.5 * letterScale,
+          lc,
+          accent,
+        )
       : letterPlace === 'door'
         ? glyph(letter, 0, bodyTop + bodyH * 0.7, bodyH * 0.5 * letterScale, lc)
         : glyph(letter, bx + bodyW * 0.22, bodyTop + bodyW * 0.27, bodyW * 0.26 * letterScale, lc);
