@@ -1,66 +1,4 @@
-/** Remove markdown formatting to get plain text. */
-export function stripMarkdown(md: string): string {
-  let result = md;
-
-  // Remove code fences (``` with optional language)
-  result = result.replace(/```[\s\S]*?```/g, (match) => {
-    const inner = match.replace(/^```.*?\n/, '').replace(/\n```$/, '');
-    return inner;
-  });
-
-  // Remove inline code backticks
-  result = result.replace(/`([^`]+)`/g, '$1');
-
-  // Images ![alt](url) -> alt
-  result = result.replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1');
-
-  // Links [text](url) -> text
-  result = result.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
-
-  // Autolinks <url> -> url
-  result = result.replace(/<(https?:\/\/[^>]+)>/g, '$1');
-
-  // Remove HTML tags
-  result = result.replace(/<[^>]+>/g, '');
-
-  // Remove heading # at line start
-  result = result.replace(/^#+\s+/gm, '');
-
-  // Remove blockquote > at line start
-  result = result.replace(/^>\s*/gm, '');
-
-  // Remove list markers at line start (-, *, +, 1.)
-  result = result.replace(/^[-*+]\s+/gm, '');
-  result = result.replace(/^\d+\.\s+/gm, '');
-
-  // Remove table separator rows (|---|---|)
-  result = result.replace(/^\|[\s\-|]*\|$/gm, '');
-
-  // Remove table pipes -> space
-  result = result.replace(/\|/g, ' ');
-
-  // Remove strikethrough ~~text~~
-  result = result.replace(/~~([^~]+)~~/g, '$1');
-
-  // Remove bold emphasis: ** and __
-  result = result.replace(/\*\*([^*]+)\*\*/g, '$1');
-  result = result.replace(/__([^_]+)__/g, '$1');
-
-  // Remove italic emphasis: * and _ (only at word boundaries)
-  result = result.replace(/(?<!\w)\*([^*]+)\*(?!\w)/g, '$1');
-  result = result.replace(/(?<!\w)_([^_]+)_(?!\w)/g, '$1');
-
-  // Remove horizontal rules (---, ***)
-  result = result.replace(/^(-{3,}|\*{3,})$/gm, '');
-
-  // Collapse all whitespace runs (including newlines) to one space
-  result = result.replace(/\s+/g, ' ');
-
-  // Trim
-  result = result.trim();
-
-  return result;
-}
+import { toPlainText } from '../rich-text/plain-text';
 
 /** Truncate text to max code points, with smart word boundary detection. */
 export function truncateText(text: string, max: number): string {
@@ -106,9 +44,9 @@ export function truncateText(text: string, max: number): string {
   return result;
 }
 
-/** Get excerpt: strip markdown and truncate. */
+/** Get excerpt: the body's plain words (D288), truncated. */
 export function excerpt(md: string, max: number): string {
-  return truncateText(stripMarkdown(md), max);
+  return truncateText(toPlainText(md), max);
 }
 
 /** Max code points for OG description. */

@@ -1,5 +1,6 @@
 import type { TextScript } from '@gobbit/shared';
 import { z } from 'zod';
+import { stripStyleDirectives } from '../rich-text/plain-text';
 import type { AskInput } from './asker';
 
 export const ASK_TOOL_NAME = 'answer';
@@ -71,7 +72,7 @@ export function buildAskPrompt(input: AskInput): { system: string; user: string 
     (card) =>
       `<card id="${escapeAngles(card.id)}">\n` +
       `<title>${escapeAngles(card.title)}</title>\n` +
-      `<body>${escapeAngles(card.body)}</body>\n` +
+      `<body>${escapeAngles(stripStyleDirectives(card.body))}</body>\n` +
       `<details>${escapeAngles(card.details)}</details>\n` +
       '</card>',
   );

@@ -2,6 +2,7 @@ import { htmlLang, ogLocale } from '@gobbit/shared';
 import { isUuid } from '../lib/resolve-deck';
 import type { ShareRecord, ShareRepo } from '../repositories/share.repo';
 import { ogContentHash, ogPublicId, type OgContent } from './content-hash';
+import { toPlainText } from '../rich-text/plain-text';
 import { excerpt, OG_DESCRIPTION_MAX, OG_IMAGE_EXCERPT_MAX } from './excerpt';
 import { shareMode } from './mode';
 import { ogCardTree, OG_HEIGHT, OG_WIDTH } from './og-template';
@@ -168,7 +169,7 @@ export function createShareService(deps: ShareServiceDeps) {
   async function publicMeta(record: ShareRecord): Promise<ShareMeta> {
     const { item } = record;
     const imageUrl = await imageFor(record);
-    const text = `${item.title} ${item.body}`;
+    const text = `${item.title} ${toPlainText(item.body)}`;
     return {
       ...frame(item.id),
       title: item.title,

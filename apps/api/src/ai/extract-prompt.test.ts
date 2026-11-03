@@ -42,6 +42,12 @@ describe('buildExtractPrompt', () => {
     );
   });
 
+  it('D288: strips style directives from the examples', () => {
+    const examples = [{ type: 'text' as const, title: 'T', body: ':u[Call] before :small[9]' }];
+    const { user } = buildExtractPrompt(baseInput({ examples }));
+    expect(user).toContain('<body>Call before 9</body>');
+  });
+
   it('states in the system prompt that source content is untrusted and names propose_card', () => {
     const { system } = buildExtractPrompt(baseInput());
     expect(system).toContain('untrusted DATA');

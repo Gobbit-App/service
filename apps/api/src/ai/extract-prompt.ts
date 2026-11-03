@@ -5,6 +5,7 @@ import {
   EXTRACT_TITLE_TARGET,
   entityKinds,
 } from '@gobbit/shared';
+import { stripStyleDirectives } from '../rich-text/plain-text';
 import type { ExtractInput } from './extractor';
 
 export const PROPOSE_CARD_TOOL_NAME = 'propose_card';
@@ -32,7 +33,7 @@ export const PROPOSE_CARD_TOOL = {
       },
       body: {
         type: 'string',
-        description: `Card body, at most ${CARD_BODY_MAX} characters, in the source's language.`,
+        description: `Card body, at most ${CARD_BODY_MAX} characters, in the source's language. Plain Markdown only: no colours, sizes or underline.`,
       },
       link: {
         type: 'object',
@@ -128,7 +129,7 @@ export function buildExtractPrompt(input: ExtractInput): {
     (example) =>
       `<example type="${escapeAngles(example.type)}">` +
       `<title>${escapeAngles(example.title)}</title>` +
-      `<body>${escapeAngles(example.body)}</body>` +
+      `<body>${escapeAngles(stripStyleDirectives(example.body))}</body>` +
       '</example>',
   );
 

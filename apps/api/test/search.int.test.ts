@@ -31,6 +31,7 @@ describe('deck search (P4.2, D75/D76)', () => {
   let shalom: ItemRow;
   let dentist: ItemRow;
   let secret: ItemRow;
+  let styled: ItemRow;
 
   const normalize = async (text: string): Promise<string> =>
     (await ctx.t.pool.query<{ n: string }>('select search_normalize($1) as n', [text])).rows[0]!.n;
@@ -69,6 +70,13 @@ describe('deck search (P4.2, D75/D76)', () => {
       card: { type: 'text', title: 'Wifi password archived', body: 'unpublished' },
       status: 'archived',
     });
+    styled = await createItem(ctx.t.db, deck, {
+      card: {
+        type: 'text',
+        title: 'Soup night',
+        body: 'Bring :color[cardamom]{.red}\nand :u[saffron]',
+      },
+    });
     const otherDeck = await createDeck(ctx.t.db, ctx.world.owner);
     await createItem(ctx.t.db, otherDeck, {
       card: { type: 'text', title: 'Wifi password elsewhere', body: 'other deck' },
@@ -97,6 +105,11 @@ describe('deck search (P4.2, D75/D76)', () => {
     const data = await hits('wifi');
     expect(data.map((h) => h.item.id)).toContain(wifi.id);
     expect(data.find((h) => h.item.id === wifi.id)?.why).toMatch(/text|both/);
+  });
+
+  it('038: finds a word inside a style directive (FR-018)', async () => {
+    expect((await hits('cardamom')).map((h) => h.item.id)).toContain(styled.id);
+    expect((await hits('saffron')).map((h) => h.item.id)).toContain(styled.id);
   });
 
   it('tolerates a typo through trigram word similarity', async () => {
