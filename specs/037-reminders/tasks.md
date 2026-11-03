@@ -63,10 +63,10 @@ own docs slice).
 
 ## Phase 6: US4 — notification area (P2)
 
-- [ ] T028 `GET /me/pending` (repo query + service using dismissers)
-- [ ] T029 [P] [int] pending: overdue first, only eligible, upcoming = own hidden
-- [ ] T030 Web: bell in BottomBar with light + aria-label, `/notifications` screen
-- [ ] T031 [P] [unit] Bell + NotificationsScreen tests
+- [x] T028 `GET /me/pending` (repo query + service using dismissers)
+- [x] T029 [P] [int] pending: overdue first, only eligible, upcoming = own hidden
+- [x] T030 Web: bell in BottomBar with light + aria-label, `/notifications` screen
+- [x] T031 [P] [unit] Bell + NotificationsScreen tests
 
 ## Phase 7: Close-out
 

@@ -1,0 +1,72 @@
+/* 037 (D298): the bell's light and the /notifications screen */
+
+.notifications-bell {
+  position: relative;
+}
+
+.notifications-bell__light {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+}
+
+.notifications-bell__light--pending {
+  background: var(--color-accent);
+}
+
+.notifications-bell__light--overdue {
+  background: var(--color-danger);
+}
+
+.notifications-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notifications-entry {
+  display: grid;
+  gap: 2px;
+  padding: 12px var(--gap);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.notifications-entry__title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.notifications-entry__meta {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.notifications-entry__meta--overdue {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.notifications-offline {
+  margin: 0 0 var(--gap);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.notifications-section {
+  margin-bottom: calc(var(--gap) * 2);
+}
+
+.notifications-section > h2 {
+  margin: 0 0 8px;
+  font-size: 1.0625rem;
+}

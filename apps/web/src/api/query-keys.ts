@@ -34,6 +34,8 @@ export const queryKeys = {
   ingestTokens: ['me', 'ingest-tokens'] as const,
   /** 037 (D297): the member's reminder email switch. */
   notificationPreferences: ['me', 'notification-preferences'] as const,
+  /** 037 (D298): what is waiting on the member across their decks (bell + /notifications). */
+  pending: ['me', 'pending'] as const,
   decks: ['decks'] as const,
   deck: (idOrSlug: string) => ['decks', idOrSlug] as const,
   categories: (idOrSlug: string) => ['decks', idOrSlug, 'categories'] as const,
