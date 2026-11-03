@@ -1,3 +1,5 @@
+import { RICH_TEXT_CSS } from './rich-text-css';
+
 /**
  * D177: the one inline stylesheet of public pages. System fonts, a narrow column and logical
  * properties only (`margin-inline`, `padding-inline`), so RTL pages need no extra rules. Colours
@@ -39,4 +41,5 @@ form.search button{font:inherit;padding:.4rem .9rem;border:1px solid var(--accen
 footer{margin-block-start:2rem;font-size:.85rem;color:var(--muted)}
 `
   .trim()
-  .replace(/\n/g, '');
+  .replace(/\n/g, '')
+  .concat(RICH_TEXT_CSS);

@@ -31,7 +31,7 @@ test('Undo puts the categories back on the server @full', async ({ page, api, we
   const restored = page.waitForResponse(
     (res) => res.url().endsWith(`/api/items/${card.id}`) && res.request().method() === 'PATCH',
   );
-  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
   expect((await restored).status()).toBe(200);
 
   await expect(page.getByText('Categories restored')).toBeVisible();
@@ -153,7 +153,7 @@ test('a new table starts from a sample that is not unsaved work; Clear empties i
   await expect(page.getByRole('button', { name: 'Clear table' })).toHaveCount(0);
 
   // Undo brings the sample back.
-  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.getByRole('status').getByRole('button', { name: 'Undo' }).click();
   await expect(page.getByLabel('Column 1 heading')).toHaveValue('Item');
 });
 

@@ -1,0 +1,53 @@
+/* 038 (D287): card-body styles. Hexes mirror PALETTE in @gobbit/shared/rich-text (palette test). */
+:root {
+  --rt-red: #b42318;
+  --rt-orange: #b54708;
+  --rt-green: #067647;
+  --rt-blue: #175cd3;
+  --rt-purple: #6941c6;
+  --rt-grey: #475467;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rt-red: #fda29b;
+    --rt-orange: #fdb022;
+    --rt-green: #75e0a7;
+    --rt-blue: #84caff;
+    --rt-purple: #bdb4fe;
+    --rt-grey: #cdd5df;
+  }
+}
+
+.rt-small {
+  font-size: 0.85em;
+}
+
+.rt-large {
+  font-size: 1.25em;
+  line-height: 1.3;
+}
+
+.rt-color--red {
+  color: var(--rt-red);
+}
+
+.rt-color--orange {
+  color: var(--rt-orange);
+}
+
+.rt-color--green {
+  color: var(--rt-green);
+}
+
+.rt-color--blue {
+  color: var(--rt-blue);
+}
+
+.rt-color--purple {
+  color: var(--rt-purple);
+}
+
+.rt-color--grey {
+  color: var(--rt-grey);
+}

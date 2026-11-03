@@ -8,6 +8,7 @@ import {
   type PublicItem,
 } from '@gobbit/shared';
 import { PUBLIC_SCREENS } from '@gobbit/shared/analytics';
+import { toPlainText } from '../rich-text/plain-text';
 import { excerpt, OG_DESCRIPTION_MAX } from '../share/excerpt';
 import { withPage, type AnalyticsConfig } from './analytics';
 import { h, type Html } from './html';
@@ -153,7 +154,7 @@ export function itemPage(ctx: PageContext, { deck, item, ogImage }: ItemPageMode
     image: ogImage,
     ogType: 'article',
     robots: ctx.robots,
-    ...languageOf(`${item.title} ${item.body}`),
+    ...languageOf(`${item.title} ${toPlainText(item.body)}`),
     analytics: withPage(ctx.analytics, PUBLIC_SCREENS.item),
   };
   return layout(

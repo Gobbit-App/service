@@ -97,3 +97,28 @@ Create and edit every card type (text, link, table, calc; image is read-only unt
 - **The last-category refusal counts only visible categories**: a published card with hidden categories is still refused, though the server would accept.
 - **The 023 smoke test checks the saved categories through the API** rather than via the header back control, which 022 reworks.
 - **Seam at merge with 022**: `rebaselineAfterCategorySave` moves both the draft's categories and the `useEditorBaseline` baseline (`rebaseline({ categoryIds })`), then `autosave.rebase(updatedAt)`.
+
+## Rich-text body (038, `specs/038-rich-text-body`, D282–D290, ADR-069)
+
+- **Grammar**: the body is Markdown (≤ 600 code points, unchanged limit) plus four text directives: `:u[…]`, `:small[…]`, `:large[…]`, `:color[…]{.red|orange|green|blue|purple|grey}`. A single newline is a line break everywhere (D283). The vocabulary, palette and the two remark plugins (`remarkNormalizeStyles`, `remarkStylesToHast`) live in `@gobbit/shared/rich-text`; unknown or malformed directives fall back to their text. Raw HTML never renders.
+- **Editor** (`apps/web/src/editor/rich/`): Milkdown 7 (`@milkdown/kit`, commonmark + history) in a `React.lazy` chunk. `initial-chunks` fails the budget if ProseMirror reaches an initial chunk. `style-marks.ts` maps three marks (`underline`, `textSize`, `textColor`) to and from text directives. `milkdown-setup.ts` builds the editor (directive + normaliser + hard breaks in the remark pipeline, `break` → `\n`, `Mod-u`, paste filter), and `commands.ts` has the toolbar commands and active-state queries.
+- **Toolbar**: `FormatToolbar` is a `role="toolbar"` with one tab stop and roving arrow/Home/End focus (`use-roving-focus.ts`). It is sticky at the top of the field and wraps on a phone. It offers Bold, Italic, Underline, inline code, small/large text, colour (`ColorPicker`, Default + six swatches), link (`LinkRow`, Apply/Remove), Heading 1–4, paragraph, lists, quote, code block, clear formatting, and Undo/Redo. Every action is an `IconButton` with `pressed` state (ADR-059).
+- **No-op saves (FR-013)**: `RichBodyEditor` keeps the stored string while the serialised document equals its baseline, so opening, focusing or undoing to the start never changes the body. `replace()` loads a restored draft without reporting an edit.
+- **Field**: `BodyField` renders the lazy editor under the same "Body" label and `LimitMeter`, which counts the stored Markdown. If the chunk fails, a status line with Retry and a plain textarea keep the field usable. The review queue's inline edit uses the same field.
+- **Tests**: the round-trip, paste, commands and toolbar unit tests run a headless editor (`test-editor.ts`). Other component tests mock the editor with `test/rich-editor-mock.tsx`. E2E: `@smoke` formats, saves and reads a body (`smoke/editor.spec.ts`); `@full` covers the keyboard-only toolbar, blocks, colour, paste, phone fit and styled text on the card and public page (`full/rich-text.spec.ts`).
+
+## Deviations from the 038 plan
+
+- **No separate `toModelText`**: `stripStyleDirectives` (API `rich-text/plain-text.ts`) cuts only the style directives from the exact source and serves Ask, the extract examples and agent output.
+- **Palette tests next to each stylesheet**: the app and public sheets have separate tests, and the public rules are generated from `PALETTE`.
+- **Unsafe links lose `href`** but keep their text (rehype-sanitize), where the old renderer printed plain text.
+- **Style directives need a label**: `:u`, `:small`, `:large` or `:color` without `[…]` stay as their source text.
+- **Editor breaks**: Milkdown doesn't use `remark-breaks`; a `remarkHardBreaks` plugin turns its soft breaks into real ones.
+- **Mark order**: bold around a styled run is written `**:large[…]**`.
+- **Colon escapes**: `unescapeHarmlessColons` removes remark-directive's `\:` escape wherever no directive could start, so `10:30` and Hebrew text stay byte-for-byte.
+- **Trailing newline** from Milkdown's serializer is stripped, so an untouched body stays equal.
+- **Clear formatting keeps lists and quotes**: it removes inline marks, headings and code blocks only.
+- **Plain-textarea fallback** with Retry when the editor chunk fails to load.
+- **Pasted images become their alt text** (`plainPaste`); with no alt they disappear.
+- **Two "Undo" buttons** (toolbar and category toast): e2e scopes the toast's to its `status` region.
+- **E2E selection timing**: keyboard specs select with Ctrl/Cmd+A and give native caret moves a 150 ms beat, because ProseMirror reads native selections on `selectionchange`.

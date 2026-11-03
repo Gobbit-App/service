@@ -1116,6 +1116,24 @@ h3 {
   font-size: 0.875rem;
 }
 
+/* 038: the body field before the rich editor chunk loads, and its plain fallback. */
+.rich-editor__fallback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.rich-editor__loading {
+  min-height: 12rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
 [aria-invalid='true'] {
   border-color: var(--color-danger) !important;
 }

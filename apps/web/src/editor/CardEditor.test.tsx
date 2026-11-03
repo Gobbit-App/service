@@ -11,6 +11,7 @@ import { renderInRouter } from '../test/render-in-router';
 import { configQuery } from '../api/queries';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
+vi.mock('./rich/RichBodyEditor', () => import('../test/rich-editor-mock'));
 // jsdom has no IndexedDB: every draft goes to one in-memory store.
 vi.mock('./drafts-store', async (importOriginal) => {
   const { memoryDraftsKv } = await import('../test/memory-drafts-kv');
@@ -44,6 +45,9 @@ async function renderCreate(type: 'text' | 'link' = 'text', onTypeChange = vi.fn
 const saveButton = () => screen.getByRole('button', { name: 'Save card' });
 const type = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
+/** The body editor loads on demand; wait for it before typing. */
+const typeBody = async (value: string) =>
+  fireEvent.change(await screen.findByLabelText('Body'), { target: { value } });
 const bodyOf = (request: string) =>
   (requests.mock.calls.find(([r]) => r === request)?.[1] as { body: unknown } | undefined)?.body;
 
@@ -63,7 +67,7 @@ describe('CardEditor: create', () => {
     expect(screen.getByRole('button', { name: 'General' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Misc' })).toHaveAttribute('aria-pressed', 'false');
     type('Title', 'Plumber');
-    type('Body', 'Call Sam');
+    await typeBody('Call Sam');
     fireEvent.click(saveButton());
 
     await waitFor(() =>
@@ -106,7 +110,7 @@ describe('CardEditor: create', () => {
   it('disables Save over 600 body code points and says why', async () => {
     await renderCreate();
     type('Title', 'Long');
-    type('Body', '😀'.repeat(601));
+    await typeBody('😀'.repeat(601));
     expect(saveButton()).toBeDisabled();
     expect(screen.getByText('Fix 1 field')).toBeInTheDocument();
     expect(screen.getByLabelText('Body')).toHaveAttribute('aria-invalid', 'true');
