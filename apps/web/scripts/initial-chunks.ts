@@ -62,10 +62,12 @@ export function checkBudget(
 /**
  * D139: lazy-only libraries, found by config keys that survive minification. `papaparse`
  * belongs to the Import chunk (D189); in an initial chunk it would cost every page load.
- * (`@use-gesture` left with the Browse redesign, D251.)
+ * (`@use-gesture` left with the Browse redesign, D251.) The body editor (Milkdown + ProseMirror)
+ * loads only with the editor (038, D286, FR-016).
  */
 export const LAZY_ONLY_MARKERS: readonly { library: string; markers: readonly string[] }[] = [
   { library: 'papaparse', markers: ['delimitersToGuess'] },
+  { library: 'milkdown', markers: ['ProseMirror-hideselection', 'editorViewOptions'] },
 ];
 
 /** The lazy-only libraries found in initial chunks, as `library in file` strings. */
