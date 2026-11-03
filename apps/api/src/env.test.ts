@@ -238,6 +238,43 @@ describe('env', () => {
     });
   });
 
+  describe('reminder notifications (037)', () => {
+    const vapid = {
+      VAPID_PUBLIC_KEY: 'pub',
+      VAPID_PRIVATE_KEY: 'priv',
+      VAPID_SUBJECT: 'mailto:ops@example.test',
+    };
+
+    it('defaults the retry and sweep limits and leaves push off', () => {
+      const env = parseEnv({ DATABASE_URL: validUrl });
+      expect(env.NOTIFY_MAX_ATTEMPTS).toBeGreaterThan(0);
+      expect(env.NOTIFY_RETRY_BASE_SECONDS).toBeGreaterThan(0);
+      expect(env.REMINDER_SWEEP_BATCH).toBeGreaterThan(0);
+      expect(env.VAPID_PUBLIC_KEY).toBeUndefined();
+    });
+
+    it('accepts all three VAPID values', () => {
+      expect(parseEnv({ DATABASE_URL: validUrl, ...vapid }).VAPID_SUBJECT).toBe(
+        vapid.VAPID_SUBJECT,
+      );
+    });
+
+    it.each(['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT'] as const)(
+      'refuses VAPID without %s',
+      (key) => {
+        const partial: Record<string, string> = { DATABASE_URL: validUrl, ...vapid };
+        delete partial[key];
+        expect(() => parseEnv(partial)).toThrow(/must be set together/);
+      },
+    );
+
+    it('refuses a VAPID_SUBJECT that is not mailto: or https://', () => {
+      expect(() =>
+        parseEnv({ DATABASE_URL: validUrl, ...vapid, VAPID_SUBJECT: 'ops@example.test' }),
+      ).toThrow(/VAPID_SUBJECT/);
+    });
+  });
+
   describe('platform admins and invites (032)', () => {
     it('defaults to no admins and a 7-day invite link', () => {
       const env = parseEnv({ DATABASE_URL: validUrl });

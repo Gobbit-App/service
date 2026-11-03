@@ -57,7 +57,8 @@ function sameRule(a: DismissRule, b: DismissRule): boolean {
 }
 
 /** Stored payloads were validated on write; `userIds` may be absent on older shapes. */
-function storedPayload(row: Pick<ItemRow, 'payload'>): ReminderPayload {
+/** The stored payload with `dismiss.userIds` always present (also read by notify.service). */
+export function storedPayload(row: Pick<ItemRow, 'payload'>): ReminderPayload {
   const p = row.payload as ReminderPayload;
   return { ...p, dismiss: { mode: p.dismiss.mode, userIds: p.dismiss.userIds ?? [] } };
 }

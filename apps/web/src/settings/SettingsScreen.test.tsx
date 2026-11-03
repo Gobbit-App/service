@@ -34,6 +34,7 @@ function config(
     commit: 'test',
     search: { semantic: false, ask: false },
     ingest: { enabled: true, emailDomain: null, shortcutUrl: null, ...ingest },
+    push: null,
   };
 }
 

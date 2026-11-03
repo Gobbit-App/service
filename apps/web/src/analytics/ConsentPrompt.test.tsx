@@ -23,6 +23,7 @@ const config = (analytics: AppConfig['analytics']): AppConfig => ({
   commit: 'test',
   search: { semantic: false, ask: false },
   ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+  push: null,
 });
 
 function setup({

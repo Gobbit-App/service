@@ -39,6 +39,7 @@ export const clientModule = {
         search: { semantic: false, ask: false },
         ingest: { enabled: mockConfig.ingestEnabled, emailDomain: null, shortcutUrl: null },
         analytics: null,
+        push: null,
       });
     }
     return respond(String(request));

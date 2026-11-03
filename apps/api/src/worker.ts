@@ -23,6 +23,9 @@ import { fetchLinkPreview } from './fetch/link-preview';
 import { createLinkSnapshotHandler } from './jobs/link-snapshot';
 import { createLinkSnapshotQueue, noopLinkSnapshotQueue } from './jobs/link-snapshot-queue';
 import { scheduleLinkCheckSweep } from './jobs/link-check-sweep';
+import { scheduleReminderSweep } from './jobs/reminder-sweep';
+import { buildNotifyService } from './push/push-wiring';
+import { createMailer } from './mail/create-mailer';
 import { createLinkChecksRepo } from './repositories/link-checks.repo';
 import { createLinkChecksService, createLinkProbe } from './services/link-checks.service';
 import { createAssetUploader } from './services/media-upload-from-url';
@@ -95,6 +98,12 @@ async function main() {
     const { pruned, uploadsDeleted } = await pruneIngest();
     log.info({ pruned, uploadsDeleted }, 'pruned ingest jobs');
   });
+
+  // D295: reminders past their deadline notify the people who may dismiss them (email, push).
+  await scheduleReminderSweep(
+    boss,
+    buildNotifyService({ db, env, mailer: createMailer(env), logger: log }),
+  );
 
   // D132: cards deleted more than ITEM_UNDELETE_DAYS ago are purged weekly
   const pruneDeletedItems = createPruneDeletedItems({ items: createItemsRepo(db) });
