@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Docs-only changes skip test, image and deploy. The jobs report "skipped", which a required
+  # Docs/plan-only changes skip test, image and deploy. The jobs report "skipped", which a required
   # status check treats as passing (trigger-level paths-ignore would leave the check pending).
   changes:
     runs-on: ubuntu-latest
@@ -49,12 +49,18 @@ jobs:
         with:
           base: ${{ steps.base.outputs.sha }}
           predicate-quantifier: every
-          # Everything except files no build, test or image reads (*.md is prettier-ignored).
+          # Everything except files no build, test or image reads: docs and plans (*.md, .claude and
+          # .specify are prettier/eslint-ignored; non-md specs/ files are formatted by pre-commit).
           filters: |
             code:
               - '**'
               - '!**/*.md'
               - '!docs/**'
+              - '!specs/**'
+              - '!plans/**'
+              - '!.specify/**'
+              - '!.claude/**'
+              - '!.github/ISSUE_TEMPLATE/**'
               - '!LICENSE'
               - '!apps/api/api.http'
 
