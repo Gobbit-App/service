@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import {
   categories,
   decks,
@@ -25,6 +25,12 @@ export interface ReminderStateRow {
   dismissedAt: Date | null;
   resolution: string | null;
   notifiedDeadline: Date | null;
+}
+
+/** D298: a pending reminder with its deadline (from `reminders`, the source of truth). */
+export interface PendingReminderRow {
+  item: ItemRow;
+  deadline: Date;
 }
 
 const stateColumns = {
@@ -125,6 +131,29 @@ export function createRemindersRepo(db: DbExecutor) {
         .where(and(inArray(itemCategories.itemId, [...itemIds]), isNull(categories.deletedAt)));
       for (const r of rows) result.get(r.itemId)?.push(r.visibility);
       return result;
+    },
+
+    /**
+     * D298: live, published, pending reminders in `deckIds`, soonest deadline first (overdue ones
+     * lead). `limit` bounds the scan; the service filters by who may act.
+     */
+    async pendingIn(deckIds: readonly string[], limit: number): Promise<PendingReminderRow[]> {
+      if (deckIds.length === 0) return [];
+      return await db
+        .select({ item: itemColumns, deadline: reminders.deadline })
+        .from(items)
+        .innerJoin(reminders, eq(reminders.itemId, items.id))
+        .where(
+          and(
+            inArray(items.deckId, [...deckIds]),
+            eq(items.type, 'reminder'),
+            eq(items.status, 'published'),
+            isNull(items.deletedAt),
+            eq(reminders.outcome, 'pending'),
+          ),
+        )
+        .orderBy(asc(reminders.deadline), asc(items.id))
+        .limit(limit);
     },
 
     /**
