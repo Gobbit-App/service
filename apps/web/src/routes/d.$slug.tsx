@@ -11,17 +11,10 @@ import { useCallback, useEffect } from 'react';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
 import { backTarget } from '../app/back-target';
-import { DeckSettingsLink } from '../deck-admin/DeckSettingsLink';
-import { ActivityLink } from '../events/ActivityLink';
+import { BottomBar } from '../app/BottomBar';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { writeLastDeck } from '../lib/last-deck';
 import { categoryFromFilter, isBrowsePath } from '../browse/browse-params';
-import { ImportLink } from '../import/ImportLink';
-import { AddCardLink } from '../items/AddCardLink';
-import { BrowseButton } from '../items/BrowseButton';
-import { ReviewPill } from '../review/ReviewPill';
-import { SharesLink } from '../shares/SharesLink';
-import { PasteLink } from '../share/PasteLink';
 import { SearchBox } from '../search/SearchBox';
 import { parseSearchParams } from '../search/search-params';
 import { viewFromPath, type ChipView } from '../ui/chip-order';
@@ -31,7 +24,7 @@ import { ErrorState, LoadingState } from '../ui/StatusViews';
 
 const ALL: ChipView = { kind: 'all' };
 
-/** Deck layout (D65): header, chip row and the selected list view. */
+/** Deck layout (D65): header, chip row, the selected list view and the bottom bar (D274). */
 export const Route = createFileRoute('/d/$slug')({
   component: DeckLayout,
 });
@@ -45,14 +38,9 @@ function DeckLayout() {
   const deckSlug = deck.data?.slug;
   const adding = pathname.endsWith('/new');
   const searching = pathname.endsWith('/search');
-  const reviewing = pathname.endsWith('/review');
-  const logging = pathname.endsWith('/log');
-  const configuring = pathname.endsWith('/settings');
-  const importing = pathname.endsWith('/import');
-  const sharing = pathname.endsWith('/shares');
   const browsing = isBrowsePath(pathname);
   const view = viewFromPath(pathname)?.view ?? null;
-  // Browse cycles All + categories only, so the button shows on those lists (contract §1).
+  // D277: Browse opens on the list's category, or All from any other deck page.
   const browseC = view ? categoryFromFilter(view) : null;
   const { q, mode } = parseSearchParams(useSearch({ strict: false }));
   const routerNavigate = useNavigate();
@@ -95,15 +83,9 @@ function DeckLayout() {
     <>
       <AppHeader
         title={deck.data.name}
-        back={backTarget(adding ? { kind: 'new-card', deckSlug: slug } : { kind: 'deck' })}
-        actions={
-          <>
-            {browseC !== null && <BrowseButton deckSlug={slug} c={browseC} />}
-            {can(deck.data.role, 'item.publish') && <ReviewPill deckSlug={slug} />}
-            <ActivityLink deckSlug={slug} role={deck.data.role} />
-            <DeckSettingsLink deckSlug={slug} role={deck.data.role} />
-          </>
-        }
+        back={backTarget(
+          view?.kind === 'all' ? { kind: 'deck' } : { kind: 'deck-page', deckSlug: slug },
+        )}
       />
       <SearchBox initialQuery={searching ? q : ''} onSearch={onSearch} />
       <ChipRow
@@ -115,23 +97,10 @@ function DeckLayout() {
         onNavigate={navigate}
       />
       <main className="page">
-        {!adding &&
-          !searching &&
-          !reviewing &&
-          !logging &&
-          !configuring &&
-          !importing &&
-          !sharing &&
-          can(deck.data.role, 'item.create') && (
-            <div className="deck-actions">
-              <AddCardLink deckSlug={slug} role={deck.data.role} />
-              <PasteLink deckSlug={slug} role={deck.data.role} />
-              <ImportLink deckSlug={slug} role={deck.data.role} />
-              <SharesLink deckSlug={slug} role={deck.data.role} />
-            </div>
-          )}
         <Outlet />
       </main>
+      {/* D274: the editor keeps its own save bar, so the bottom bar steps aside there. */}
+      {!adding && <BottomBar deck={deck.data} browseC={browseC} />}
     </>
   );
 }

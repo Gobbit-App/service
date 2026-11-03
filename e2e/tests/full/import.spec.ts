@@ -15,7 +15,8 @@ test('the owner imports pasted notes and bulk-publishes them from review @full',
   const titles = NOTES.map((note) => `${note} ${webDeck.slug}`);
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await page.getByRole('link', { name: 'Import notes' }).click();
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Import' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/import$`));
 
   await page.getByLabel('Paste your notes').fill(titles.join('\n'));

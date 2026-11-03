@@ -21,6 +21,28 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 - Runtime config (D55): `GET /api/config` → `{ cloudinaryCloudName, commit }`, cached for the session in the persisted query cache. One web image works in every environment.
 - Styling: plain CSS with custom properties and `prefers-color-scheme` (`styles.css`); no UI kit. Initial JS is asserted ≤ 150 KB gzip in CI (`pnpm budget`, reads the Vite manifest).
 
+## Palette (D272)
+
+Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49535e`, light green `#b2e29b`, deep teal `#195b5c`. The same values drive the app tokens (`styles.css`), the public pages and landing (`apps/api/src/public/styles.ts`, shared by `landing-styles.ts`), the OG images and icons (`OG_COLORS`, re-rendered with `pnpm og:static`), `theme-color` and the manifest.
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| `--color-bg` | `#f3faf4` (mint tint) | `#121a1c` |
+| `--color-surface` | `#ffffff` | `#1a2629` |
+| `--color-text` | `#232b31` (dark slate) | `#e8f3ea` |
+| `--color-muted` | `#49535e` (slate) | `#a3b5b0` |
+| `--color-border` | `#cfe3d4` | `#2c3e41` |
+| `--color-accent` | `#195b5c` (teal) | `#b2e29b` (light green) |
+| `--color-accent-text` | `#ffffff` | `#121a1c` |
+| `--color-accent-soft` | `#d7f0db` (mint) | `#1f4243` |
+| `--color-highlight` | `#b2e29b` (search hit marks) | `#195b5c` |
+| `--color-danger` | `#a12b2b` | `#f08a8a` |
+| `--color-banner` / `-text` | `#195b5c` / `#ffffff` | `#d7f0db` / `#121a1c` |
+
+- Contrast (WCAG 2.x): every text pair is ≥ 4.5:1 in both themes — lowest are muted on accent-soft (light 6.48:1, dark 5.10:1) and danger on surface (dark 6.43:1); accent-text on accent is 7.80:1 (light) and 11.97:1 (dark). `styles.test.ts` asserts the pairs from the tokens. No brand colour needed adjusting.
+- Focus rings stay `--color-accent` (light green on a light background would be under 3:1). The public pages gained `--on-accent` (button text) and `--danger` (the landing form's errors, formerly a fixed red that failed in dark mode).
+- The icon is a lifted-teal → teal gradient (`#2a7a7b` → `#195b5c`) with a mint monogram.
+
 ## Offline model (D56)
 
 - The service worker (`src/sw.ts`, vite-plugin-pwa `injectManifest`, typechecked with `tsconfig.sw.json`) precaches the app shell and caches Cloudinary images `CacheFirst` (30 days, 600 entries: the blurred placeholders share it, D162). It never caches API responses, and `og/**` is not precached.
@@ -88,7 +110,30 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 - The integration test checks the share preview tag on an unknown card id: a public card's `/s/` redirects to `/p/` (D181) and is counted there.
 - The tracker staying out of the initial chunks is checked by `pnpm budget` (initial 120 KB gzip); `initial-chunks.test.ts` needed no change.
 
-## Analytics consent (035, D259–D266, ADR-067)
+
+## Family quick start (D267–D269)
+
+- **D267 back targets**: every page inside a deck (settings, review, favorites, archived, a category, the log…) goes back to the deck's main page; only the main page goes to the deck list. Pages outside a deck (`/settings`, `/share`) go back to the deck opened last (`lib/last-deck`), else the deck list. All through `backTarget()` (`app/back-target.ts`, kinds `deck-page` and `top`).
+- **D268 Browse first for non-admins**: entry points (deck list links, the landing redirect) send roles without `deck.update` (editors, readers) to `/d/$slug/browse?c=all`; owners and maintainers land on the list. Only entry points use `deckEntryHref()` (`app/deck-entry.ts`), so closing Browse still returns to the list without bouncing.
+- **D269 New deck**: the deck list's "New deck" form (`decks/NewDeckForm.tsx`, opened by the bottom bar's +, D279) always creates a `shared` deck (`POST /decks` defaults to `personal`) and opens its settings, where members are invited.
+
+## Bottom bar and one Settings page (036, D274–D280, ADR-067)
+
+- **Bar** (`app/BottomBar.tsx`): one fixed `<nav>` at the bottom of the deck pages, the deck list and `/settings`: ⋯ menu at the start, Browse and Review (`item.publish`, not on the personal deck) in the middle, the + at the end. It never hides on scroll; a spacer keeps the last content clear. Browse (full screen) and the new-card editor have none; the editor pages outside the deck layout (`/i/$id/edit`) have none either.
+- **+** (D275): the existing `MoreMenu` (D213) with an `onLongPress` from `ui/use-long-press.ts` (pointer events, 500 ms, 10 px slop, no library, ADR-065). A short press opens New card, Paste or share, Import (`item.publish`) and Shares (`createActions`, `app/create-actions.ts`); holding it opens the new card. Readers get no +. On the deck list the + is a plain "New deck" button (D279).
+- **⋯** (D276, `app/deck-menu-actions.ts`): Settings, Activity (`event.list`), Waitlist (platform admins) and Sign out, with the signed-in email as its description (`MenuAction.detail`, `aria-describedby`). Sign-out runs through `app/use-sign-out.ts` (keeps the 022 leave guard). The header keeps only back, title and page actions.
+- **Settings** (D278): one entry. Inside a deck, `/d/$slug/settings` renders `deck-admin/UnifiedSettings.tsx`: "This deck" (`DeckAdminScreen`), then "Your account" (`SettingsScreen`). `/settings` shows the account half only.
+- **Toasts** (D280): `--bottom-bar-h` on `:root`; `.toast` and `.update-prompt` sit above it.
+
+## Deviations from the 036 plan
+
+- Bar actions are icon-only with tooltips (`BrowseButton`, `ReviewPill`, `MoreMenu` triggers), so there is no label collapse below 360 px to test.
+- D279: the deck list's + opens the form through component state, not `?new=1`; the form's own collapsed "New deck" button is gone, so there is one "New deck" control.
+- D280: `--bottom-bar-h` is always set, not only while a bar is mounted; pages without a bar (editor, Browse) show toasts slightly higher.
+- The old `AddCardLink`, `PasteLink`, `ImportLink`, `SharesLink`, `DeckSettingsLink` and `ActivityLink` components were deleted rather than restyled; their routes are unchanged.
+- The `@smoke` sign-out journey now leaves the editor before signing out from ⋯ (the editor has no bar); the leave guard on sign-out stays covered by `use-sign-out.test.tsx`. The long press runs in `@full` (`bottom-bar.spec.ts`); `@smoke` covers the short press → New card.
+
+## Analytics consent (035, D259–D266, ADR-068)
 
 - **Rule**: `analyticsAllowed(member, device)` (`@gobbit/shared/analytics`): an account answer wins; when the account hasn't answered, a declined device stops sending; anonymous pages use the device choice only. Do Not Track and GPC are not consulted. `umami.disabled` (operator, smoke) still wins.
 - **Member choice**: `GET /me` → `analyticsConsent { value: unanswered | allowed | declined, at, source }`; `PUT /me/analytics-consent` (`api/analytics-consent.ts`) writes the answer into the `me` cache. Server side: `analytics-consent.service` → `users.repo.setAnalyticsConsent` (row locked, audit row in the same transaction, same value = no write, `analytics.consent` event).
@@ -101,6 +146,6 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 ## Deviations from the 035 plan
 
 - e2e member flows stub `/me` and the consent PUT in the page (the smoke owner is shared by parallel specs); the real write is covered by `analytics-consent.int.test.ts`.
-- "DNT on still sends" is unit-tested only (Playwright can't set `navigator.doNotTrack`); the visitor decline is checked on `/welcome` reload, `/p` by `page-script.test.ts`.
+- The visitor decline is checked on a `/welcome` reload; `/p` is covered by `page-script.test.ts`. DNT-on, two-device decline and no-cookie checks were added at convergence (`full/analytics-consent.spec.ts`).
 - Two latent 033 e2e bugs fixed: `app-analytics.spec.ts` keeps its record in `sessionStorage` across loads; `smoke/public.spec.ts` allows the `page.js` loader.
 - Down migration named `0020_analytics_consent.down.sql` (repo convention). Detail: `specs/035-analytics-consent/implementation-notes.md`.

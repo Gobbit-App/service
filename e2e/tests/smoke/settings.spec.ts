@@ -17,8 +17,10 @@ test('creates an ingest token, shows it once and revokes it from settings @smoke
 }) => {
   const label = `${LABEL_PREFIX}${Date.now()}`;
 
-  await page.goto(webUrl('/'));
-  await page.getByRole('link', { name: 'Settings', exact: true }).click();
+  await page.goto(webUrl('/?all=true'));
+  // D276/D278: one Settings entry, in the bottom bar's ⋯ menu.
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Settings' }).click();
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole('heading', { name: 'Your tokens' })).toBeVisible();
 

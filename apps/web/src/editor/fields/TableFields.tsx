@@ -10,6 +10,8 @@ import {
   canAddColumn,
   canAddRow,
   canRemoveColumn,
+  clearTable,
+  isBlankTable,
   moveColumn,
   moveRow,
   removeColumn,
@@ -18,6 +20,9 @@ import {
   setHeading,
 } from './table-ops';
 import type { FieldsProps } from './types';
+import { useClearWithUndo } from './use-clear-with-undo';
+
+export const TABLE_CLEARED = 'Table cleared';
 
 /** US3: grid editor within 12 rows × 6 columns and the 8192-byte payload budget (lazy). */
 export function TableFields({
@@ -29,6 +34,7 @@ export function TableFields({
   const { columns, rows } = payload;
   const headingName = (c: number) => columns[c] || `Column ${c + 1}`;
   const listErrors = [errors['payload.columns'], errors['payload.rows']].filter(Boolean);
+  const clear = useClearWithUndo(payload, onChange, clearTable, TABLE_CLEARED);
 
   return (
     <div className="editor__fields">
@@ -139,6 +145,15 @@ export function TableFields({
           disabled={disabled || !canAddColumn(payload)}
           onClick={() => onChange(addColumn(payload))}
         />
+        {!isBlankTable(payload) && (
+          <Button
+            icon="eraser"
+            label="Clear table"
+            variant="ghost"
+            disabled={disabled}
+            onClick={clear}
+          />
+        )}
       </div>
       <p className="muted">
         {rows.length} / {TABLE_MAX_ROWS} rows · {columns.length} / {TABLE_MAX_COLUMNS} columns ·{' '}

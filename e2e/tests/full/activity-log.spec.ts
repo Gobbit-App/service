@@ -34,7 +34,8 @@ test('the owner sees a publish and an archive in Activity and a card history @fu
   expect((await api.post(`items/${archived.id}/archive`)).status()).toBe(200);
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await page.getByRole('link', { name: 'Activity' }).click();
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Activity' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/log$`));
   await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible();
 

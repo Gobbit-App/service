@@ -1,10 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { isNetworkError } from '../api/network-state';
 import { decksQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
+import { BottomBar } from '../app/BottomBar';
+import { ALL_CATEGORIES } from '../browse/browse-params';
+import { deckEntryHref, opensInBrowse } from '../app/deck-entry';
+import { NewDeckForm } from '../decks/NewDeckForm';
 import { pickLanding, readLastDeck } from '../lib/last-deck';
-import { deckHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 
@@ -18,6 +22,7 @@ export const Route = createFileRoute('/')({
 function Home() {
   const { all } = Route.useSearch();
   const decks = useQuery(decksQuery());
+  const [creating, setCreating] = useState(false);
 
   if (decks.isPending) return <LoadingState label="Loading decks…" />;
   if (decks.isError && !decks.data) {
@@ -41,7 +46,20 @@ function Home() {
         decks.data.map((d) => d.slug),
         readLastDeck(),
       );
-  if (landing) return <Navigate to="/d/$slug" params={{ slug: landing }} replace />;
+  if (landing) {
+    // D268: members who don't run the deck land in Browse.
+    const role = decks.data.find((d) => d.slug === landing)?.role;
+    return role && opensInBrowse(role) ? (
+      <Navigate
+        to="/d/$slug/browse"
+        params={{ slug: landing }}
+        search={{ c: ALL_CATEGORIES }}
+        replace
+      />
+    ) : (
+      <Navigate to="/d/$slug" params={{ slug: landing }} replace />
+    );
+  }
 
   return (
     <>
@@ -53,14 +71,20 @@ function Home() {
           <ul className="deck-list">
             {decks.data.map((deck) => (
               <li key={deck.id}>
-                <NavLink href={deckHref(deck.slug)} className="deck-list__link">
+                <NavLink href={deckEntryHref(deck)} className="deck-list__link">
                   <span dir="auto">{deck.name}</span>
                 </NavLink>
               </li>
             ))}
           </ul>
         )}
+        {creating && (
+          <div className="new-deck__slot">
+            <NewDeckForm onClose={() => setCreating(false)} />
+          </div>
+        )}
       </main>
+      <BottomBar onNewDeck={() => setCreating(true)} />
     </>
   );
 }

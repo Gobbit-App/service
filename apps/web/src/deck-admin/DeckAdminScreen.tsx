@@ -10,7 +10,7 @@ import { DeckSection } from './DeckSection';
 import { MembersSection } from './MembersSection';
 
 /**
- * D184: deck settings (`/d/$slug/settings`). Admins (`deck.update`) get Deck, Categories and
+ * D184/D278: the "This deck" half of Settings (`/d/$slug/settings`). Admins (`deck.update`) get Deck, Categories and
  * Members; other roles see the member list only; the personal deck has its name only.
  * Offline, everything is read-only.
  */
@@ -35,7 +35,7 @@ export function DeckAdminScreen({ deckSlug }: { deckSlug: string }): ReactElemen
 
   return (
     <div className="deck-admin">
-      <h2 className="deck-admin__title">Deck settings</h2>
+      <h2 className="deck-admin__title">This deck</h2>
       {!online && (
         <p className="settings-notice" role="status">
           You’re offline. Settings are read-only until you reconnect.

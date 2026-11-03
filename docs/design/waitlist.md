@@ -118,7 +118,7 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
 - **Tag**: `public/analytics.ts` renders
   `<script defer src="/analytics/page.js" data-website-id data-domains>`; `page.js` injects
   `/stats/script.js` unless the visitor declined, and reveals the hidden consent banner and the
-  "Analytics" button in the privacy note (035, D264, ADR-067; Do Not Track is not consulted).
+  "Analytics" button in the privacy note (035, D264, ADR-068; Do Not Track is not consulted).
   `layout()` adds it only when the page head carries `analytics` (`analyticsHead(env)`, set only
   with `ANALYTICS_SITE_ID`), and only the landing renderer sets it, in every state. Public deck
   pages, error pages, the sitemap and the SPA's `index.html` never carry it (unit, integration and

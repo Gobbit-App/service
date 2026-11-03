@@ -9,15 +9,18 @@ const INVITEE = 'smoke-invitee@example.test';
  * sign in from e2e (the invite needs the emailed magic link), so role changes of accepted
  * members and the role gates are covered by the integration and component suites.
  */
-test('the owner makes the deck public and invites a co-owner from Deck settings @full', async ({
+test('the owner makes the deck public and invites a co-owner from Settings @full', async ({
   page,
   api,
   webDeck,
 }) => {
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await page.getByRole('link', { name: 'Deck settings' }).click();
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Settings' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/settings$`));
-  await expect(page.getByRole('heading', { name: 'Deck settings' })).toBeVisible();
+  // D278: one page — the deck half first, then the account half.
+  await expect(page.getByRole('heading', { name: 'This deck' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your account' })).toBeVisible();
 
   const visibility = page.getByLabel(`Who sees ${SMOKE_CATEGORY.name}`);
   const categoryPatch = page.waitForResponse(

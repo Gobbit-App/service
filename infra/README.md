@@ -132,7 +132,7 @@ Conversion for a period (D233): an Umami funnel `/` or `/welcome` → `/welcome/
 | Consent changes | `jq -c 'select(.event=="analytics.consent" and .outcome=="changed") \| [.from,.value,.source]'` | more than 5 changes to `declined` in 24 hours |
 | App vs record | Umami's `card-created` events vs `item_events` creations by members who haven't declined (query below) | Umami < 50% of that count over 7 days |
 
-Analytics consent (035, D265, ADR-067) is on unless declined. Members answer in the app (prompt or Settings → Privacy; one value per account, every change is an `analytics_consent_events` row); visitors answer in the banner on API pages, and that choice stays in their browser. Read the declined count before the cross-check:
+Analytics consent (035, D265, ADR-068) is on unless declined. Members answer in the app (prompt or Settings → Privacy; one value per account, every change is an `analytics_consent_events` row); visitors answer in the banner on API pages, and that choice stays in their browser. Read the declined count before the cross-check:
 
 ```sql
 SELECT coalesce(analytics_consent::text, 'unanswered') AS choice, count(*) FROM users GROUP BY 1;

@@ -60,7 +60,7 @@ One migration, one new route, no npm dependency, no new service.
 | VII. Simple, optional, deployable | Unconfigured → no prompt, banner or link; no new dependency or env var |
 | VIII. Accountable by default | Audit table + `analytics.consent`; `analytics.config.consent`; counts query and alert note (Accountability table) |
 
-**Owner-approved change of scope**: supersedes 031 FR-004 (DNT part) and 033 FR-008/FR-013 (DNT parts); ADR-067 records it and amends ADR-062/066's "Do Not Track honoured".
+**Owner-approved change of scope**: supersedes 031 FR-004 (DNT part) and 033 FR-008/FR-013 (DNT parts); ADR-068 records it and amends ADR-062/066's "Do Not Track honoured".
 
 ## Decisions this plan pins down
 
@@ -68,12 +68,12 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D259 | Choice on `users` (null = not answered) + `analytics_consent_events` audit row, same transaction, no-op not recorded | ADR-067 |
-| D260 | `GET /me.analyticsConsent`; `PUT /me/analytics-consent` (own user only); `analytics-consent.service` | ADR-067 |
-| D261 | One rule `analyticsAllowed(member, device)`; DNT/GPC not consulted; `umami.disabled` untouched | ADR-067 |
+| D259 | Choice on `users` (null = not answered) + `analytics_consent_events` audit row, same transaction, no-op not recorded | ADR-068 |
+| D260 | `GET /me.analyticsConsent`; `PUT /me/analytics-consent` (own user only); `analytics-consent.service` | ADR-068 |
+| D261 | One rule `analyticsAllowed(member, device)`; DNT/GPC not consulted; `umami.disabled` untouched | ADR-068 |
 | D262 | SPA facade gates load and every payload on the rule; reacts to `me` cache changes without reload | no |
 | D263 | Member prompt in-flow in `RootLayout`; never on sign-in/auth-error/editor/new/Browse; closed = this app start only | no |
-| D264 | Anonymous pages: `page.js` reads `localStorage`, shows the server-rendered hidden banner, injects the tracker unless declined | ADR-067 |
+| D264 | Anonymous pages: `page.js` reads `localStorage`, shows the server-rendered hidden banner, injects the tracker unless declined | ADR-068 |
 | D265 | `analytics.consent` event, `analytics.config.consent`, counts by SQL beside 033's cross-check | no |
 | D266 | All copy in `@gobbit/shared/analytics`; Settings switch with date; offline disabled | no |
 
@@ -135,7 +135,7 @@ apps/web/
 
 e2e/tests/smoke/landing.spec.ts              # new head; banner does not block joining
 e2e/tests/full/analytics-consent.spec.ts     # NEW
-docs: design/web-pwa.md (analytics section), design/public.md, design/waitlist.md (landing note), adr.md (ADR-067), architecture.md (one line + ADR row), infra/README.md (counts query, alert), CHANGELOG.md, PLAN.md, specs/README.md
+docs: design/web-pwa.md (analytics section), design/public.md, design/waitlist.md (landing note), adr.md (ADR-068), architecture.md (one line + ADR row), infra/README.md (counts query, alert), CHANGELOG.md, PLAN.md, specs/README.md
 ```
 
 **Structure Decision**: the rule and copy live in shared pure modules so the SPA and tests use the same code; `page.js` mirrors the anonymous half of the rule and is tested against the same table. Server-side changes follow route → service → repository.
@@ -192,7 +192,7 @@ Constitution VIII, ADR-060.
 | Prompt shifts layout on screens tests click | L / M | In-flow at the top, not on editor/Browse; smoke journeys run unchanged in CI |
 | `page.js` grows past 2 KB gzip | L / L | Unit test measures gzip size |
 | Visitor clears site data → banner again | H / L | Expected (spec edge case) |
-| Opt-out default questioned for wider launch | M / M | Phase 11 privacy review (spec assumption); ADR-067 notes it |
+| Opt-out default questioned for wider launch | M / M | Phase 11 privacy review (spec assumption); ADR-068 notes it |
 
 ## Settle before starting
 

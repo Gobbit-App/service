@@ -61,7 +61,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await page.keyboard.press('Escape');
 
     await page.goto(webUrl(`/d/${webDeck.slug}`));
-    await expect(page.getByRole('link', { name: 'Add card' })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Deck actions' })).toBeVisible();
     expect(await axeViolations(page)).toEqual([]);
 
     // the other pages that use the shared buttons: account settings and deck admin
@@ -78,11 +78,13 @@ test('icon labels hide on narrow screens and show on wide ones @full', async ({
   page,
   webDeck,
 }) => {
-  const label = page.getByRole('link', { name: 'Add card' }).locator('.button__label');
+  // D274: the deck page's actions are icon-only in the bottom bar; Settings keeps a labelled one.
+  const create = page.getByRole('button', { name: 'Create token' });
+  const label = create.locator('.button__label');
 
   await page.setViewportSize({ width: 360, height: 780 });
-  await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await expect(page.getByRole('link', { name: 'Add card' })).toBeVisible();
+  await page.goto(webUrl('/settings'));
+  await expect(create).toBeVisible();
   const narrow = await label.boundingBox();
   expect(narrow?.width ?? 0).toBeLessThanOrEqual(1);
 

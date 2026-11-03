@@ -13,7 +13,7 @@
 
 ## Phase 1: Setup
 
-- [x] T001 Plan settled (2026-11-02): D259–D266, ADR-067; migration `0020_analytics_consent`; no env changes
+- [x] T001 Plan settled (2026-11-02): D259–D266, ADR-068; migration `0020_analytics_consent`; no env changes
 
 ## Phase 2: Foundational (data, rule, copy)
 
@@ -61,7 +61,7 @@
 
 - [x] T027 [e2e:smoke] `e2e/tests/smoke/landing.spec.ts`: new head; banner does not block joining
 - [x] T028 [e2e:full] `e2e/tests/full/analytics-consent.spec.ts`: DNT on still sends; decline in prompt → nothing, second context no prompt and nothing; settings re-enable → view; visitor decline on landing → `/p` sends nothing, no cookie
-- [x] T029 Docs: ADR-067 in `docs/adr.md`, `docs/architecture.md` line + index row, `docs/design/web-pwa.md`, `public.md`, `waitlist.md`, `infra/README.md` (counts query, alert), `CHANGELOG.md`, `PLAN.md`, `specs/README.md`, `CLAUDE.md` analytics line
+- [x] T029 Docs: ADR-068 in `docs/adr.md`, `docs/architecture.md` line + index row, `docs/design/web-pwa.md`, `public.md`, `waitlist.md`, `infra/README.md` (counts query, alert), `CHANGELOG.md`, `PLAN.md`, `specs/README.md`, `CLAUDE.md` analytics line
 - [x] T030 `pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm build:web && pnpm budget`; `implementation-notes.md`
 
 ## Dependencies

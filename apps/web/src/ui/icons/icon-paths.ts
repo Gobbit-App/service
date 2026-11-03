@@ -46,6 +46,7 @@ export const ICON_PATHS = {
   'bell-off': 'M6 16V11A6 6 0 0 1 15.5 6.1 M18 10.5V16L19.5 17.5H8 M10 20H14 M4 4L20 20',
   list: 'M8 6H20M8 12H20M8 18H20M4 6H4.01M4 12H4.01M4 18H4.01',
   clipboard: 'M9 4H15V6.5H9Z M9 5H6V20.5H18V5H15',
+  eraser: 'M8.5 19.5L4 15L14 5L19.5 10.5L10.5 19.5Z M8.5 9.5L14.5 15.5 M10.5 19.5H20',
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

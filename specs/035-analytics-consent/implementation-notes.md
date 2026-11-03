@@ -1,6 +1,6 @@
 # Implementation notes: 035-analytics-consent
 
-Plan: `specs/035-analytics-consent/plan.md`, tasks: `tasks.md`. Branch `035-analytics-consent`. Covered: consent columns and the audit table (migration `0020`), `GET /me` / `PUT /me/analytics-consent`, the shared `analyticsAllowed` rule, SPA gating, the member prompt, Settings → Privacy, the consent-aware `page.js` loader with the server-rendered banner, the copy and the docs (ADR-067). E2E tier: smoke + full. Smoke checks the new landing head on every PR. The prompt, banner and decline flows need analytics on and a stubbed tracker, so they run nightly.
+Plan: `specs/035-analytics-consent/plan.md`, tasks: `tasks.md`. Branch `035-analytics-consent`. Covered: consent columns and the audit table (migration `0020`), `GET /me` / `PUT /me/analytics-consent`, the shared `analyticsAllowed` rule, SPA gating, the member prompt, Settings → Privacy, the consent-aware `page.js` loader with the server-rendered banner, the copy and the docs (ADR-068). E2E tier: smoke + full. Smoke checks the new landing head on every PR. The prompt, banner and decline flows need analytics on and a stubbed tracker, so they run nightly.
 
 ## Decisions not specified by the plan
 

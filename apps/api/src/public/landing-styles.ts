@@ -37,12 +37,12 @@ form.join fieldset{border:0;margin:0;padding:0;display:grid;gap:.25rem}
 form.join legend{font-weight:600;padding:0;margin-block-end:.35rem}
 form.join label.choice{display:flex;align-items:center;gap:.6rem;min-height:44px;padding-inline:.25rem;cursor:pointer}
 form.join input[type=radio]{width:1.25rem;height:1.25rem;margin:0;accent-color:var(--accent)}
-form.join button{font:inherit;font-weight:600;min-height:44px;padding:.5rem 1rem;border:1px solid var(--accent);border-radius:.5rem;background:var(--accent);color:var(--bg);cursor:pointer}
-form.join [aria-invalid=true]{border-color:#b3261e}
-.error{color:#b3261e;font-weight:400;font-size:.9rem;margin:0}
-.notice{border:1px solid #b3261e;border-radius:.5rem;padding:.6rem .75rem;margin:0}
+form.join button{font:inherit;font-weight:600;min-height:44px;padding:.5rem 1rem;border:1px solid var(--accent);border-radius:.5rem;background:var(--accent);color:var(--on-accent);cursor:pointer}
+form.join [aria-invalid=true]{border-color:var(--danger)}
+.error{color:var(--danger);font-weight:400;font-size:.9rem;margin:0}
+.notice{border:1px solid var(--danger);border-radius:.5rem;padding:.6rem .75rem;margin:0}
 .hp{position:absolute;inset-inline-start:-10000px;width:1px;height:1px;overflow:hidden}
-a.button{display:inline-flex;align-items:center;min-height:44px;padding:.5rem 1rem;border-radius:.5rem;background:var(--accent);color:var(--bg);text-decoration:none;font-weight:600}
+a.button{display:inline-flex;align-items:center;min-height:44px;padding:.5rem 1rem;border-radius:.5rem;background:var(--accent);color:var(--on-accent);text-decoration:none;font-weight:600}
 `
   .trim()
   .replace(/\n/g, '');

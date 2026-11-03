@@ -21,7 +21,9 @@ test('a text card added from the editor shows in the list and survives a reload 
 }) => {
   const title = `Editor text ${webDeck.slug}`;
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await page.getByRole('link', { name: 'Add card' }).click();
+  // D275: a short press on the bar's + opens the create menu.
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'New card' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new$`));
   await expect(page.getByRole('heading', { name: 'New card' })).toBeVisible();
 
@@ -86,6 +88,8 @@ test('the category chips start on the deck default category @smoke', async ({ pa
 test('a table card keeps a moved row and stops at 12 rows @smoke', async ({ page, webDeck }) => {
   const title = `Editor table ${webDeck.slug}`;
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=table`));
+  // A new table starts from a sample (D270); start from scratch.
+  await page.getByRole('button', { name: 'Clear table' }).click();
 
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Column 1 heading').fill('Day');
@@ -118,6 +122,8 @@ test('a calc card shows its live result; a bad expression disables Save @smoke',
 }) => {
   const title = `Editor calc ${webDeck.slug}`;
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=calc`));
+  // A new calc starts from a sample (D270); start from scratch.
+  await page.getByRole('button', { name: 'Clear calculation' }).click();
 
   await page.getByLabel('Title', { exact: true }).fill(title);
   const first = page.getByRole('group', { name: 'Field 1' });
@@ -231,12 +237,11 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   // The smoke session is shared by the suite: answer the logout call locally so the server
   // session survives, while the app still runs its sign-out cleanup (drafts included).
   await page.route('**/auth/logout', (route) => route.fulfill({ status: 204 }));
-  await page.getByRole('button', { name: 'Sign out' }).click();
-  // 022: the restored text is unsaved, so leaving for sign-in asks first.
-  await page
-    .getByRole('dialog', { name: 'Discard changes?' })
-    .getByRole('button', { name: 'Discard' })
-    .click();
+  // D276: Sign out lives in the bottom bar's ⋯ menu, which the editor doesn't show; the draft
+  // stays stored when the editor is left without saving.
+  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('menuitem', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/sign-in/);
   // The app leaves for /sign-in first and clears local data afterwards; navigating away before
   // that finishes would abort it.

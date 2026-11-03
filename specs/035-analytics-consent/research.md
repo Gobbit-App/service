@@ -1,6 +1,6 @@
 # Research: Analytics consent (035)
 
-Decisions continue the project D series in the range reserved for this feature (D259–D266). Builds on 031 (D231–D233, D243, ADR-062) and 033 (D252–D258, ADR-066). The durable part becomes ADR-067.
+Decisions continue the project D series in the range reserved for this feature (D259–D266). Builds on 031 (D231–D233, D243, ADR-062) and 033 (D252–D258, ADR-066). The durable part becomes ADR-068.
 
 ## Facts this plan relies on
 

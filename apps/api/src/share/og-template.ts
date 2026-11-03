@@ -14,11 +14,13 @@ export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
 export const OG_TEMPLATE_FONT = 'Inter, Noto Sans Hebrew';
 
+/** D272: the green brand palette, shared with the web tokens and public pages. */
 export const OG_COLORS = {
-  background: '#fbf6ef',
-  accent: '#b4532a',
-  text: '#2b211a',
-  muted: '#7a6a5d',
+  background: '#f3faf4',
+  accent: '#195b5c',
+  text: '#232b31',
+  muted: '#49535e',
+  mint: '#d7f0db',
 } as const;
 
 export type OgCardInput = {
