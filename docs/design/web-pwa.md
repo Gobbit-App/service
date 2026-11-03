@@ -20,6 +20,7 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 - Session (D66): the app calls `GET /api/me` on boot; any 401 sends the user to `/sign-in?next=<path>`. The magic-link request carries `next`; the API callback redirects to `APP_URL + next` only for same-origin paths (`//host` and absolute URLs are dropped). Sign-out navigates to `/sign-in` first, then calls `POST /api/auth/logout`, clears the persisted cache and the local editor drafts, so no route re-fetches with a dead cookie.
 - Runtime config (D55): `GET /api/config` → `{ cloudinaryCloudName, commit }`, cached for the session in the persisted query cache. One web image works in every environment.
 - Styling: plain CSS with custom properties and `prefers-color-scheme` (`styles.css`); no UI kit. Initial JS is asserted ≤ 150 KB gzip in CI (`pnpm budget`, reads the Vite manifest).
+- Phone fit: every page fits a 360px viewport with no sideways scroll. Grid forms declare `grid-template-columns: minmax(0, 1fr)` (an implicit `auto` column grows to the longest `<select>` option), form controls carry `min-width: 0; max-width: 100%`, and screens rendered inside `main.page` add no gutter of their own. Guarded by `e2e/tests/full/mobile-fit.spec.ts` (`@full`).
 
 ## Palette (D272)
 
