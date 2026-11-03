@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import { classNames, tipText } from './buttons/button-props';
 import { Icon, type IconName } from './icons/Icon';
 import { isPlainClick, useNavigateHref } from './NavLink';
+import { useLongPress } from './use-long-press';
 
 export interface MenuAction {
   key: string;
@@ -23,6 +24,8 @@ export interface MenuAction {
   tone?: 'danger';
   /** Shown in the item's tooltip; the item stays focusable but does nothing. */
   disabledReason?: string | null;
+  /** D276: a muted second line (e.g. the signed-in email under "Sign out"). */
+  detail?: string;
 }
 
 const ITEM = '[role="menuitem"]';
@@ -62,7 +65,9 @@ export function MoreMenu({
   icon = 'more',
   trigger,
   className,
+  triggerClassName,
   disabled = false,
+  onLongPress,
 }: {
   actions: readonly MenuAction[];
   /** Accessible name of the menu button. */
@@ -71,7 +76,11 @@ export function MoreMenu({
   /** Visible content of the trigger instead of the icon (e.g. "3 / 12"). */
   trigger?: ReactNode;
   className?: string;
+  /** Extra class on the trigger button. */
+  triggerClassName?: string;
   disabled?: boolean;
+  /** D275: press and hold runs this instead of opening the menu. */
+  onLongPress?: () => void;
 }): ReactElement {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
@@ -79,6 +88,7 @@ export function MoreMenu({
   const root = useRef<HTMLDivElement>(null);
   const menuId = useId();
   const navigate = useNavigateHref();
+  const longPress = useLongPress(disabled ? undefined : onLongPress);
 
   // Before paint: place the menu, then focus its first item.
   useLayoutEffect(() => {
@@ -153,14 +163,17 @@ export function MoreMenu({
       <button
         ref={button}
         type="button"
-        className={trigger ? 'menu-button__trigger' : 'icon-button'}
+        className={classNames(trigger ? 'menu-button__trigger' : 'icon-button', triggerClassName)}
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         data-tip={open ? undefined : label}
         disabled={disabled}
-        onClick={() => setOpen((was) => !was)}
+        {...longPress.bind}
+        onClick={() => {
+          if (!longPress.consumeClick()) setOpen((was) => !was);
+        }}
         onKeyDown={onTriggerKeyDown}
       >
         {trigger ?? <Icon name={icon} />}
@@ -183,7 +196,20 @@ export function MoreMenu({
               const content = (
                 <>
                   <Icon name={action.icon} />
-                  <span>{action.label}</span>
+                  {action.detail ? (
+                    <span className="menu__text">
+                      <span>{action.label}</span>
+                      <span
+                        id={`${menuId}-${action.key}-detail`}
+                        className="menu__detail"
+                        dir="auto"
+                      >
+                        {action.detail}
+                      </span>
+                    </span>
+                  ) : (
+                    <span>{action.label}</span>
+                  )}
                 </>
               );
               const common = {
@@ -191,6 +217,9 @@ export function MoreMenu({
                 tabIndex: -1,
                 className: itemClass,
                 'aria-disabled': action.disabledReason ? true : undefined,
+                // The detail describes the item; the label alone names it.
+                'aria-label': action.detail ? action.label : undefined,
+                'aria-describedby': action.detail ? `${menuId}-${action.key}-detail` : undefined,
                 'data-tip': action.disabledReason
                   ? tipText(action.label, undefined, action.disabledReason)
                   : undefined,

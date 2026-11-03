@@ -1,15 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { useRouteContext, useRouter } from '@tanstack/react-router';
-import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
-import { meQuery } from '../api/queries';
-import { IconButton } from '../ui/buttons/IconButton';
+import type { ReactElement, ReactNode } from 'react';
 import { IconLink } from '../ui/buttons/IconLink';
-import { useNavigateHref } from '../ui/NavLink';
-import { onArrival } from './on-arrival';
 
 /**
- * Top bar of signed-in pages: back control, page title, page actions (e.g. the review pill)
- * and sign-out (D66: `/me` runs on boot).
+ * Top bar of signed-in pages: back control, page title and the page's own actions. Settings,
+ * Activity and Sign out live in the bottom bar's ⋯ menu (D276, ADR-067).
  */
 export function AppHeader({
   title,
@@ -21,27 +15,6 @@ export function AppHeader({
   back: string | null;
   actions?: ReactNode;
 }): ReactElement {
-  const me = useQuery(meQuery());
-  const { signOut } = useRouteContext({ from: '__root__' });
-  const navigate = useNavigateHref();
-  const { history } = useRouter();
-  const [signingOut, setSigningOut] = useState(false);
-  const cancelPending = useRef<(() => void) | null>(null);
-  useEffect(() => () => cancelPending.current?.(), []);
-
-  /**
-   * Leave the private page first, so queries cleared by sign-out can't trigger a 401 redirect;
-   * sign out only once the page was left (022: an editor with unsaved changes may hold it).
-   */
-  const handleSignOut = () => {
-    cancelPending.current?.();
-    cancelPending.current = onArrival(history, '/sign-in', () => {
-      setSigningOut(true);
-      void signOut();
-    });
-    navigate('/sign-in');
-  };
-
   return (
     <header className="app-header">
       {back === null ? (
@@ -53,20 +26,6 @@ export function AppHeader({
         {title}
       </h1>
       {actions}
-      <IconLink
-        href="/settings"
-        icon="settings"
-        label="Settings"
-        className="app-header__settings"
-      />
-      <IconButton
-        icon="sign-out"
-        label="Sign out"
-        tip={me.data ? `Sign out (${me.data.user.email})` : undefined}
-        className="app-header__sign-out"
-        onClick={handleSignOut}
-        disabled={signingOut}
-      />
     </header>
   );
 }

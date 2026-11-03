@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { expect, test, webUrl } from '../../fixtures/web';
 
 /**
- * D269 "New deck" on the deck list (`@full`). The created deck is shared (its settings offer the
+ * D269/D279 "New deck" (the bottom bar's + on the deck list, `@full`). The created deck is shared (its settings offer the
  * invite form), opens on its settings, and its back goes to the deck's main page (D267). Each run
  * deletes the deck it made (D50).
  */
@@ -37,5 +37,7 @@ test('a blank name cannot be submitted and Cancel closes the form @full', async 
   await expect(page.getByRole('button', { name: 'Create deck' })).toBeDisabled();
   await page.getByRole('button', { name: 'Cancel' }).click();
   await expect(page.getByLabel('Deck name')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'New deck' })).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'Actions' }).getByRole('button', { name: 'New deck' }),
+  ).toBeVisible();
 });

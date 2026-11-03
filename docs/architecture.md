@@ -185,3 +185,4 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [064](adr.md#adr-064-platform-admins-from-an-env-list-d234) | Platform admins come from `PLATFORM_ADMINS`; `/admin/*` answers 404 to everyone else and records each refusal |
 | [065](adr.md#adr-065-browse-pages-sideways-on-a-native-track-no-gesture-library-d244d251) | Browse pages sideways on a native track; details and source in the scroll; chip rail, dock, end page; no gesture library |
 | [066](adr.md#adr-066-app-analytics-route-patterns-member-id-four-content-events-d252d258) | App analytics: SPA, public pages and share previews send route patterns, the member id and four content events through one sanitiser; supersedes 062's landing-only rule |
+| [067](adr.md#adr-067-one-fixed-bottom-bar-for-deck-actions-one-settings-page-d274d280) | One fixed bottom bar (⋯, Browse, Review, + with long press); one Settings page inside a deck |

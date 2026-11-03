@@ -10,17 +10,14 @@ const { respond, requests } = await import('../test/api-mock');
 const { NewDeckForm } = await import('./NewDeckForm');
 
 const navigate = vi.fn();
+const onClose = vi.fn();
 
 function renderForm() {
   return renderWithClient(
     <NavigateContext.Provider value={navigate}>
-      <NewDeckForm />
+      <NewDeckForm onClose={onClose} />
     </NavigateContext.Provider>,
   );
-}
-
-function openForm() {
-  fireEvent.click(screen.getByRole('button', { name: 'New deck' }));
 }
 
 describe('NewDeckForm (D269)', () => {
@@ -28,18 +25,17 @@ describe('NewDeckForm (D269)', () => {
     respond.mockReset();
     requests.mockClear();
     navigate.mockReset();
+    onClose.mockReset();
   });
 
-  it('starts collapsed to one button', () => {
+  it('focuses the name field', () => {
     renderForm();
-    expect(screen.getByRole('button', { name: 'New deck' })).toBeInTheDocument();
-    expect(screen.queryByLabelText('Deck name')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Deck name')).toHaveFocus();
   });
 
   it('creates a shared deck and opens its settings', async () => {
     respond.mockResolvedValue({ ...makeDeck({ slug: 'family', kind: 'shared' }), categories: [] });
     renderForm();
-    openForm();
     fireEvent.change(screen.getByLabelText('Deck name'), { target: { value: ' Family ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create deck' }));
     await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/d/family/settings'));
@@ -49,7 +45,6 @@ describe('NewDeckForm (D269)', () => {
 
   it('does not submit a blank name', () => {
     renderForm();
-    openForm();
     fireEvent.change(screen.getByLabelText('Deck name'), { target: { value: '   ' } });
     expect(screen.getByRole('button', { name: 'Create deck' })).toBeDisabled();
     expect(requests).not.toHaveBeenCalled();
@@ -60,7 +55,6 @@ describe('NewDeckForm (D269)', () => {
       new ApiError(400, { errors: [{ path: 'name', message: 'Name is too long' }] }),
     );
     renderForm();
-    openForm();
     fireEvent.change(screen.getByLabelText('Deck name'), { target: { value: 'x' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create deck' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Name is too long');
@@ -68,10 +62,9 @@ describe('NewDeckForm (D269)', () => {
     expect(screen.getByLabelText('Deck name')).toBeInTheDocument();
   });
 
-  it('cancel collapses the form', () => {
+  it('cancel closes the form', () => {
     renderForm();
-    openForm();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(screen.queryByLabelText('Deck name')).not.toBeInTheDocument();
+    expect(onClose).toHaveBeenCalledOnce();
   });
 });

@@ -63,7 +63,8 @@ test('a failed share is retried and turns to processing @full', async ({ page, w
   );
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await page.getByRole('link', { name: 'Your shares' }).click();
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Shares' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/shares$`));
 
   const row = page.getByRole('listitem').filter({ hasText: 'a.example' });

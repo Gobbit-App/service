@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { AppHeader } from '../app/AppHeader';
 import { backTarget } from '../app/back-target';
+import { BottomBar } from '../app/BottomBar';
 import { readLastDeck } from '../lib/last-deck';
 import { SettingsScreen } from '../settings/SettingsScreen';
 
@@ -16,6 +17,7 @@ function Settings() {
       <main className="page">
         <SettingsScreen />
       </main>
+      <BottomBar />
     </>
   );
 }
