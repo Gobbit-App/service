@@ -110,3 +110,9 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 - The integration test checks the share preview tag on an unknown card id: a public card's `/s/` redirects to `/p/` (D181) and is counted there.
 - The tracker staying out of the initial chunks is checked by `pnpm budget` (initial 120 KB gzip); `initial-chunks.test.ts` needed no change.
 
+
+## Family quick start (D267–D269)
+
+- **D267 back targets**: every page inside a deck (settings, review, favorites, archived, a category, the log…) goes back to the deck's main page; only the main page goes to the deck list. Pages outside a deck (`/settings`, `/share`) go back to the deck opened last (`lib/last-deck`), else the deck list. All through `backTarget()` (`app/back-target.ts`, kinds `deck-page` and `top`).
+- **D268 Browse first for non-admins**: entry points (deck list links, the landing redirect) send roles without `deck.update` (editors, readers) to `/d/$slug/browse?c=all`; owners and maintainers land on the list. Only entry points use `deckEntryHref()` (`app/deck-entry.ts`), so closing Browse still returns to the list without bouncing.
+- **D269 New deck**: the deck list has a collapsed "New deck" form (`decks/NewDeckForm.tsx`); it always creates a `shared` deck (`POST /decks` defaults to `personal`) and opens its settings, where members are invited.

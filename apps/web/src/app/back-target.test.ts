@@ -6,9 +6,18 @@ describe('backTarget', () => {
     expect(backTarget({ kind: 'home' })).toBeNull();
   });
 
-  it('sends top-level screens and deck screens to the deck list', () => {
+  it('sends top-level screens and the deck main page to the deck list', () => {
     expect(backTarget({ kind: 'top' })).toBe(DECK_LIST_HREF);
+    expect(backTarget({ kind: 'top', lastDeck: null })).toBe(DECK_LIST_HREF);
     expect(backTarget({ kind: 'deck' })).toBe(DECK_LIST_HREF);
+  });
+
+  it('sends a top-level screen back to the last deck when there is one', () => {
+    expect(backTarget({ kind: 'top', lastDeck: 'family' })).toBe('/d/family');
+  });
+
+  it('sends every page inside a deck to the deck main page', () => {
+    expect(backTarget({ kind: 'deck-page', deckSlug: 'family' })).toBe('/d/family');
   });
 
   it('sends a new card and a card page to their deck', () => {

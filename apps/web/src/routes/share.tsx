@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { AppHeader } from '../app/AppHeader';
 import { backTarget } from '../app/back-target';
+import { readLastDeck } from '../lib/last-deck';
 import { ShareScreen } from '../share/ShareScreen';
 
 type ShareSearch = { pending?: string; deck?: string; failed?: boolean };
@@ -29,7 +30,10 @@ function Share() {
   const { pending, deck, failed } = Route.useSearch();
   return (
     <>
-      <AppHeader title="Share to Gobbit" back={backTarget({ kind: 'top' })} />
+      <AppHeader
+        title="Share to Gobbit"
+        back={backTarget({ kind: 'top', lastDeck: readLastDeck() })}
+      />
       <main className="page">
         <ShareScreen pendingId={pending} requestedDeck={deck} failed={failed} />
       </main>
