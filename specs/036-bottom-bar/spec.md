@@ -34,7 +34,7 @@ The top keeps only the back control and the title. There is one Settings page; i
 
 ## Requirements
 
-- **FR-001**: The deck pages (list, category, favorites, archived, links, search, review, log, settings, import, shares) and the deck list MUST end in a bottom bar fixed to the bottom of the viewport, above the safe-area inset. It MUST stay visible while the page scrolls, and page content MUST NOT be hidden behind it.
+- **FR-001**: The deck pages (list, category, favorites, archived, links, search, review, log, settings, import, shares), the deck list and `/settings` MUST end in a bottom bar fixed to the bottom of the viewport, above the safe-area inset. It MUST stay visible while the page scrolls, and page content MUST NOT be hidden behind it.
 - **FR-002**: The bar MUST hold, in this order:
   - the ⋯ menu at the left end;
   - in the middle, Browse (deck pages only) and Review (deck pages, roles with `item.publish` only, with its count as today);
