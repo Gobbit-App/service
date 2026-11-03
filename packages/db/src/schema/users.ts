@@ -23,7 +23,7 @@ export const users = pgTable(
     registeredVia: registrationReasonEnum(),
     /** D241: the inviter (`deck_invite`) or admin (`waitlist_invite`); null for `open_sign_in`. */
     registeredBy: uuid().references((): AnyPgColumn => users.id, { onDelete: 'set null' }),
-    /** D259: the member's analytics choice; null = not answered (on unless declined). */
+    /** D259: the member's analytics choice; null = not answered (off, opt-in D281). */
     analyticsConsent: analyticsConsentEnum(),
     /** D259: when the current choice was made. */
     analyticsConsentAt: tstz(),

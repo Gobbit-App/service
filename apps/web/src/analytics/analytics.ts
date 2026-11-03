@@ -8,8 +8,9 @@ import {
   type SanitizeContext,
   type Screen,
 } from '@gobbit/shared/analytics';
-import { configQuery } from '../api/queries';
+import { configQuery, meQuery } from '../api/queries';
 import { queryKeys } from '../api/query-keys';
+import { isPublicPath } from '../api/session';
 import { screenFor } from './catalogue';
 import { readDeviceConsent } from './device-consent';
 import type { InstallOptions } from './tracker';
@@ -31,6 +32,8 @@ export type AnalyticsDeps = {
   /** This browser's visitor choice (D264); read at every send, tests pass a fake. */
   deviceConsent?: () => AnalyticsConsentValue;
   origin?: string;
+  /** Asks for `me` when no screen did (a direct load of e.g. `/new`); tests pass a fake. */
+  fetchMe?: () => Promise<void>;
 };
 
 type Session = {
@@ -39,7 +42,7 @@ type Session = {
   memberId: string | undefined;
   /** The member's own answer from the `me` cache (D262). */
   consent: AnalyticsConsentValue | undefined;
-  /** D261: a member is known and the rule says yes, checked at every send. */
+  /** D261/D281: a member is known and has allowed it, checked at every send. */
   allowed: () => boolean;
   identified: string | undefined;
   lastPath: string | undefined;
@@ -79,8 +82,9 @@ function syncIdentity(s: Session): void {
 /**
  * D252–D255: one page view per tracked screen change, sent only after the tracker loaded (on idle,
  * once a member is known). The real path only de-duplicates; the hook sends the pattern.
- * D261/D262: nothing loads or sends unless `analyticsAllowed(member, device)` holds; the hook
- * also cancels (`consented: false`) if the answer turns to no after the tracker loaded.
+ * D261/D262 (opt-in, D281): nothing loads or sends until the member allowed it
+ * (`analyticsAllowed`); the hook also cancels (`consented: false`) if the answer turns to no
+ * after the tracker loaded.
  */
 export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
   const {
@@ -92,6 +96,7 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
     isOnline = () => navigator.onLine,
     deviceConsent = readDeviceConsent,
     origin = window.location.origin,
+    fetchMe = () => queryClient.prefetchQuery(meQuery()),
   } = deps;
 
   const config = await analyticsConfig(queryClient);
@@ -164,6 +169,9 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
 
   pageView(); // sets the current screen
   loadWhenReady();
+  // D281: the answer lives on the account, so a screen that doesn't read `me` (the editor)
+  // would otherwise never load the tracker. Public pages (sign-in) have no member to ask about.
+  if (!s.memberId && !isPublicPath(current().pathname)) void fetchMe().catch(() => {});
 
   return () => {
     unsubscribeCache();

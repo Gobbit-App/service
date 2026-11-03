@@ -221,14 +221,13 @@ describe('analytics (D257, D264)', () => {
     }
   });
 
-  it('renders the hidden banner after the header and the Analytics button in the footer (D264)', () => {
+  it('renders the closed consent dialog after the header and the Analytics button in the footer (D264)', () => {
     const html = deckPage(on, { deck, items: [card()], nextCursor: null });
     const header = html.indexOf('</header>');
-    const banner = html.indexOf('<section class="consent" data-consent-banner');
+    const banner = html.indexOf('<dialog class="consent" data-consent-banner');
     expect(banner).toBeGreaterThan(header);
     expect(banner).toBeLessThan(html.indexOf('<h1>'));
-    expect(html).toMatch(/<section class="consent"[^>]* hidden>/);
-    expect(html).toContain('data-consent-choice="allowed">OK</button>');
+    expect(html).toContain('data-consent-choice="allowed">Allow</button>');
     expect(html).toContain('data-consent-choice="declined">No thanks</button>');
     const footer = html.slice(html.lastIndexOf('<footer>'));
     expect(footer).toContain('data-consent-open hidden>Analytics</button>');

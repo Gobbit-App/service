@@ -85,7 +85,7 @@ describe('recordAnalyticsConfig (D243, D265)', () => {
       host: 'gobbit.example.test',
       bootId: 'boot-1',
       surfaces: 'landing,app,public,share',
-      consent: 'opt_out',
+      consent: 'opt_in',
     });
     expect(JSON.stringify(capture.lines)).not.toContain(SITE_ID);
   });

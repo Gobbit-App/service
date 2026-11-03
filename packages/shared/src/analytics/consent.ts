@@ -1,5 +1,5 @@
 /**
- * 035: analytics consent (D259–D264). One rule decides whether anything is sent; Do Not Track
+ * 035: analytics consent (D259–D264, opt-in since D281). One rule decides whether anything is sent; Do Not Track
  * and Global Privacy Control are not consulted (FR-001).
  */
 
@@ -22,17 +22,17 @@ export const DEVICE_CONSENT_KEY = 'gobbit.analytics.consent';
 export type DeviceConsent = { value: AnalyticsConsentChoice; at: string };
 
 /**
- * D261: whether analytics may send anything.
- * `member` is null on anonymous pages; a member's own answer wins over the device's, and a
- * device "No thanks" keeps a member who hasn't answered silent (FR-010).
+ * D261, amended by D281: whether analytics may send anything. Opt-in: nothing is sent until
+ * someone says yes. `member` is null on anonymous pages, where this browser's visitor choice
+ * decides; a member's own answer decides for them (a visitor "yes" never covers member analytics,
+ * which is linked to the account).
  */
 export function analyticsAllowed(
   member: AnalyticsConsentValue | null,
   device: AnalyticsConsentValue,
 ): boolean {
-  if (member === 'allowed') return true;
-  if (member === 'declined') return false;
-  return device !== 'declined';
+  if (member !== null) return member === 'allowed';
+  return device === 'allowed';
 }
 
 function isChoice(value: unknown): value is AnalyticsConsentChoice {

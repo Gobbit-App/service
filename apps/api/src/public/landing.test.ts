@@ -40,8 +40,10 @@ describe('landingPage states (D226, D228)', () => {
     for (const use of LANDING_COPY_EN.uses) expect(html).toContain(use.title);
     expect(html).toContain('<form class="join" method="post" action="/welcome">');
     expect(html).toContain(LANDING_COPY_EN.privacy);
-    // 035 FR-012: the notice names the member id and the banner / Analytics opt-out, not DNT.
-    expect(LANDING_COPY_EN.privacy).toMatch(/No thanks.*Analytics.*member id/s);
+    // 035 FR-012 / D281: opt-in, linked to the account, the Analytics button; not DNT.
+    expect(LANDING_COPY_EN.privacy).toMatch(
+      /With your permission.*linked to your account.*Analytics/s,
+    );
     expect(LANDING_COPY_EN.privacy).not.toMatch(/do not track/i);
     expect(html).not.toContain('role="status"');
   });
@@ -148,9 +150,9 @@ describe('analytics tag and consent banner (D232, D264)', () => {
     expect(html).not.toContain('/stats/script.js');
   });
 
-  it.each(ALL_STATES)('%s renders the hidden banner and the Analytics button', (state) => {
+  it.each(ALL_STATES)('%s renders the closed consent dialog and the Analytics button', (state) => {
     const html = page({ state, analytics });
-    expect(html).toMatch(/<section class="consent" data-consent-banner[^>]* hidden>/);
+    expect(html).toMatch(/<dialog class="consent" data-consent-banner[^>]*>/);
     const footer = html.slice(html.lastIndexOf('<footer>'));
     expect(footer).toContain('data-consent-open hidden>Analytics</button>');
   });

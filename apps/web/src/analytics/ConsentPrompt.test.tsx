@@ -41,21 +41,37 @@ function setup({
   return { queryClient };
 }
 
-const region = () => screen.queryByRole('region', { name: 'Help improve Gobbit?' });
+const region = () => screen.queryByRole('dialog', { name: 'Help improve Gobbit?' });
 
 beforeEach(() => {
+  vi.restoreAllMocks();
   respond.mockReset();
   requests.mockClear();
   routeState.routeId = '/d/$slug/';
 });
 
-describe('ConsentPrompt (D263)', () => {
-  it('asks an unanswered member in a labelled region, without taking focus', () => {
+describe('ConsentPrompt (D263, a wall since D281)', () => {
+  it('asks an unanswered member in a labelled dialog with two equal answers', () => {
     setup();
     expect(region()).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Allow' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'No thanks' })).toBeInTheDocument();
-    expect(document.activeElement).toBe(document.body);
+    const allow = screen.getByRole('button', { name: 'Allow' });
+    const decline = screen.getByRole('button', { name: 'No thanks' });
+    expect(allow.className).toBe(decline.className);
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+  });
+
+  it('Escape does not skip the question', () => {
+    setup();
+    const cancel = new Event('cancel', { cancelable: true });
+    region()!.dispatchEvent(cancel);
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(region()).toBeInTheDocument();
+  });
+
+  it('waits while offline (the answer is saved on the account)', () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    setup();
+    expect(region()).toBeNull();
   });
 
   it('shows nothing when analytics is off or the member already answered', () => {
@@ -97,12 +113,5 @@ describe('ConsentPrompt (D263)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Allow' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Couldn’t save your choice');
     expect(region()).toBeInTheDocument();
-  });
-
-  it('close hides it for this app start without saving', () => {
-    setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(region()).toBeNull();
-    expect(requests).not.toHaveBeenCalledWith('PUT /me/analytics-consent', expect.anything());
   });
 });

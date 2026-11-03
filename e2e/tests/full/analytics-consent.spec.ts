@@ -2,7 +2,7 @@ import type { Browser, Page } from '@playwright/test';
 import { expect, signIn, test, webUrl } from '../../fixtures/web';
 
 /**
- * 035 analytics consent (D262–D266, `@full`). Analytics is switched on for the browser by
+ * 035 analytics consent (D262–D266, opt-in wall D281, `@full`). Analytics is switched on by
  * answering `/config` with a site id, and Umami's tracker is a stub that records each request
  * for `/stats/script.js` and every payload the before-send hook lets through.
  *
@@ -51,6 +51,11 @@ const unanswered = (): MemberState => ({
   puts: [],
 });
 
+const allowed = (): MemberState => ({
+  consent: { value: 'allowed', at: '2026-11-01T10:00:00.000Z', source: 'prompt' },
+  puts: [],
+});
+
 /** Pass the same `state` to several pages to play one account on several devices. */
 async function stubMember(page: Page, state: MemberState = unanswered()): Promise<MemberState> {
   await page.route('**/api/config', async (route) => {
@@ -81,7 +86,9 @@ const sentCount = (page: Page) =>
     () => (window as unknown as { __analyticsSent?: unknown[] }).__analyticsSent?.length ?? 0,
   );
 
-test('a member who says "No thanks" sends nothing and Settings shows it off @full', async ({
+const QUESTION = 'Help improve Gobbit?';
+
+test('an unanswered member sends nothing; "No thanks" keeps it off and Settings shows it @full', async ({
   page,
   webDeck,
 }) => {
@@ -89,17 +96,18 @@ test('a member who says "No thanks" sends nothing and Settings shows it off @ful
   const member = await stubMember(page);
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  const prompt = page.getByRole('region', { name: 'Help improve Gobbit?' });
+  const prompt = page.getByRole('dialog', { name: QUESTION });
   await expect(prompt).toBeVisible();
-  // Unanswered counts as allowed (D261): the deck view is already recorded.
-  await expect.poll(() => sentCount(page), { timeout: 15_000 }).toBeGreaterThan(0);
+  // Opt-in (D281): nothing loads before the answer, and Escape doesn't skip the question.
+  await page.waitForLoadState('networkidle');
+  expect(tracker.loads).toBe(0);
+  await page.keyboard.press('Escape');
+  await expect(prompt).toBeVisible();
 
   await prompt.getByRole('button', { name: 'No thanks' }).click();
   await expect(prompt).toBeHidden();
   expect(member.puts).toEqual([{ value: 'declined', source: 'prompt' }]);
 
-  // A fresh load with the answer stored: the tracker is never requested, nothing is recorded.
-  tracker.loads = 0;
   await page.goto(webUrl(`/d/${webDeck.slug}/search?q=anything`));
   await page.waitForLoadState('networkidle');
   expect(tracker.loads).toBe(0);
@@ -109,7 +117,20 @@ test('a member who says "No thanks" sends nothing and Settings shows it off @ful
   const toggle = page.getByRole('switch', { name: 'Usage analytics' });
   await expect(toggle).not.toBeChecked();
   await expect(page.getByText(/^Since /)).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Help improve Gobbit?' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: QUESTION })).toHaveCount(0);
+});
+
+test('"Allow" on the wall starts counting without a reload @full', async ({ page, webDeck }) => {
+  const tracker = await stubTracker(page);
+  const member = await stubMember(page);
+
+  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  const prompt = page.getByRole('dialog', { name: QUESTION });
+  await prompt.getByRole('button', { name: 'Allow' }).click();
+  await expect(prompt).toBeHidden();
+  expect(member.puts).toEqual([{ value: 'allowed', source: 'prompt' }]);
+  await expect.poll(() => sentCount(page), { timeout: 15_000 }).toBeGreaterThan(0);
+  expect(tracker.loads).toBe(1);
 });
 
 test('a "No thanks" from one device silences the other once it refreshes @full', async ({
@@ -117,12 +138,13 @@ test('a "No thanks" from one device silences the other once it refreshes @full',
   browser,
   webDeck,
 }) => {
-  const member = await stubMember(page);
+  const member = await stubMember(page, allowed());
   await stubTracker(page);
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  const prompt = page.getByRole('region', { name: 'Help improve Gobbit?' });
-  await prompt.getByRole('button', { name: 'No thanks' }).click();
-  await expect(prompt).toBeHidden();
+  await expect.poll(() => sentCount(page), { timeout: 15_000 }).toBeGreaterThan(0);
+  await page.goto(webUrl('/settings'));
+  await page.getByRole('switch', { name: 'Usage analytics' }).click();
+  await expect.poll(() => member.puts).toEqual([{ value: 'declined', source: 'settings' }]);
 
   // SC-002: a second device of the same account (own storage, same stored answer).
   const other = await browser.newContext({ extraHTTPHeaders: {} });
@@ -137,13 +159,13 @@ test('a "No thanks" from one device silences the other once it refreshes @full',
     await second.waitForLoadState('networkidle');
     expect(tracker.loads).toBe(0);
     expect(await sentCount(second)).toBe(0);
-    await expect(second.getByRole('region', { name: 'Help improve Gobbit?' })).toHaveCount(0);
+    await expect(second.getByRole('dialog', { name: QUESTION })).toHaveCount(0);
   } finally {
     await other.close();
   }
 });
 
-test('Do Not Track does not switch analytics off for a member who has not answered @full', async ({
+test('Do Not Track does not switch analytics off for a member who allowed it @full', async ({
   page,
   webDeck,
 }) => {
@@ -153,7 +175,7 @@ test('Do Not Track does not switch analytics off for a member who has not answer
     Object.defineProperty(Navigator.prototype, 'globalPrivacyControl', { get: () => true });
   });
   const tracker = await stubTracker(page);
-  await stubMember(page);
+  await stubMember(page, allowed());
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   expect(await page.evaluate(() => navigator.doNotTrack)).toBe('1');
   await expect.poll(() => sentCount(page), { timeout: 15_000 }).toBeGreaterThan(0);
@@ -161,11 +183,12 @@ test('Do Not Track does not switch analytics off for a member who has not answer
 });
 
 test('the prompt never covers the card editor @full', async ({ page, webDeck }) => {
-  await stubTracker(page);
+  const tracker = await stubTracker(page);
   await stubMember(page);
   await page.goto(webUrl(`/d/${webDeck.slug}/new`));
   await expect(page.getByLabel('Title', { exact: true })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Help improve Gobbit?' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: QUESTION })).toHaveCount(0);
+  expect(tracker.loads).toBe(0);
 });
 
 /** A visitor with no session cookie (the fixture's `page` carries the smoke session). */
@@ -179,7 +202,7 @@ async function stranger(browser: Browser, run: (page: Page) => Promise<void>): P
   }
 }
 
-test('a visitor who says "No thanks" never loads the tracker again @full', async ({
+test('a visitor is asked before anything loads; "No thanks" sticks @full', async ({
   anon,
   browser,
 }) => {
@@ -189,17 +212,20 @@ test('a visitor who says "No thanks" never loads the tracker again @full', async
   await stranger(browser, async (page) => {
     const tracker = await stubTracker(page);
     await page.goto(webUrl('/welcome'));
-    const banner = page.getByRole('region', { name: 'Analytics choice' });
+    const banner = page.getByRole('dialog', { name: 'Analytics choice' });
     await expect(banner).toBeVisible();
-    await expect.poll(() => tracker.loads).toBe(1);
+    await page.waitForLoadState('networkidle');
+    expect(tracker.loads).toBe(0);
+    await page.keyboard.press('Escape');
+    await expect(banner).toBeVisible();
 
     await banner.getByRole('button', { name: 'No thanks' }).click();
     await expect(banner).toBeHidden();
 
     await page.reload();
-    await page.waitForLoadState('load');
-    await expect(page.getByRole('region', { name: 'Analytics choice' })).toBeHidden();
-    expect(tracker.loads).toBe(1);
+    await page.waitForLoadState('networkidle');
+    await expect(banner).toBeHidden();
+    expect(tracker.loads).toBe(0);
     expect(await sentCount(page)).toBe(0);
     // SC-006: the choice lives in localStorage; nothing is stored as a cookie.
     expect(await page.context().cookies()).toEqual([]);
@@ -208,5 +234,19 @@ test('a visitor who says "No thanks" never loads the tracker again @full', async
     await page.getByRole('button', { name: 'Analytics', exact: true }).click();
     await expect(banner).toBeVisible();
     await expect(banner.getByText(/^You said no on /)).toBeVisible();
+  });
+});
+
+test('a visitor "Allow" loads the tracker at once @full', async ({ anon, browser }) => {
+  const html = await (await anon.get(webUrl('/welcome'))).text();
+  test.skip(!html.includes('src="/analytics/page.js"'), 'analytics is off on this server');
+
+  await stranger(browser, async (page) => {
+    const tracker = await stubTracker(page);
+    await page.goto(webUrl('/welcome'));
+    const banner = page.getByRole('dialog', { name: 'Analytics choice' });
+    await banner.getByRole('button', { name: 'Allow' }).click();
+    await expect(banner).toBeHidden();
+    await expect.poll(() => tracker.loads).toBe(1);
   });
 });

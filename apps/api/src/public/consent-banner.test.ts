@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { ANALYTICS_BANNER } from '@gobbit/shared/analytics';
 import { CONSENT_CSS, consentBanner, consentOpenButton } from './consent-banner';
 
-describe('consentBanner (D264)', () => {
+describe('consentBanner (D264, D281)', () => {
   const html = consentBanner().toString();
 
-  it('is a hidden, labelled region with both choices', () => {
-    expect(html).toMatch(
-      /^<section class="consent" data-consent-banner aria-label="[^"]+" hidden>/,
-    );
+  it('is a closed, labelled dialog with both choices', () => {
+    expect(html).toMatch(/^<dialog class="consent" data-consent-banner aria-label="[^"]+"/);
+    expect(html).not.toMatch(/^<dialog[^>]*\sopen/);
+    expect(html).toContain(`<h2>${ANALYTICS_BANNER.title}</h2>`);
     expect(html).toContain(`aria-label="${ANALYTICS_BANNER.label}"`);
     expect(html).toContain('data-consent-choice="allowed"');
     expect(html).toContain('data-consent-choice="declined"');
@@ -32,7 +32,11 @@ describe('consentOpenButton', () => {
 });
 
 describe('CONSENT_CSS', () => {
-  it('never fixes the banner over the page', () => {
-    expect(CONSENT_CSS).not.toMatch(/position:\s*(fixed|sticky)/);
+  it('dims the page behind the dialog', () => {
+    expect(CONSENT_CSS).toContain('.consent::backdrop');
+  });
+
+  it('gives both answers the same look (D281)', () => {
+    expect(CONSENT_CSS).not.toContain('data-consent-choice');
   });
 });

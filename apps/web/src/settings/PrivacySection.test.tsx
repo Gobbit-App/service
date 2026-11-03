@@ -40,8 +40,8 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('consentStatus', () => {
   it('describes the answer', () => {
-    expect(consentStatus(UNANSWERED)).toBe('Not answered yet (on)');
-    expect(consentStatus(undefined)).toBe('Not answered yet (on)');
+    expect(consentStatus(UNANSWERED)).toBe('Not answered yet (off)');
+    expect(consentStatus(undefined)).toBe('Not answered yet (off)');
     expect(consentStatus(DECLINED)).toMatch(/^Since .+/);
   });
 });
@@ -53,16 +53,38 @@ describe('PrivacySection (D266)', () => {
     expect(screen.queryByRole('switch')).toBeNull();
   });
 
-  it('an unanswered member sees the switch on', () => {
+  it('an unanswered member sees the switch off (opt-in, D281)', () => {
     setup(UNANSWERED);
-    expect(toggle()).toBeChecked();
-    expect(screen.getByText('Not answered yet (on)')).toBeInTheDocument();
-    expect(screen.getByText(/never record what you write/)).toBeInTheDocument();
+    expect(toggle()).not.toBeChecked();
+    expect(screen.getByText('Not answered yet (off)')).toBeInTheDocument();
+    expect(screen.getByText(/Never your content, searches or email/)).toBeInTheDocument();
+  });
+
+  it('turning it on saves "allowed" from settings', async () => {
+    respond.mockResolvedValueOnce({
+      value: 'allowed',
+      at: '2026-11-03T10:00:00.000Z',
+      source: 'settings',
+    });
+    const { queryClient } = setup(UNANSWERED);
+    fireEvent.click(toggle());
+    await waitFor(() =>
+      expect(queryClient.getQueryData<Me>(queryKeys.me)?.analyticsConsent.value).toBe('allowed'),
+    );
+    const call = requests.mock.calls.find(([r]) => r === 'PUT /me/analytics-consent');
+    expect((call?.[1] as { body: unknown }).body).toEqual({
+      value: 'allowed',
+      source: 'settings',
+    });
   });
 
   it('turning it off saves "declined" from settings', async () => {
     respond.mockResolvedValueOnce({ ...DECLINED, source: 'settings' });
-    const { queryClient } = setup(UNANSWERED);
+    const { queryClient } = setup({
+      value: 'allowed',
+      at: '2026-11-01T10:00:00.000Z',
+      source: 'prompt',
+    });
     fireEvent.click(toggle());
     await waitFor(() =>
       expect(queryClient.getQueryData<Me>(queryKeys.me)?.analyticsConsent.value).toBe('declined'),

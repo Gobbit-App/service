@@ -10,6 +10,15 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-03 — Analytics consent is opt-in (035 amendment, D281)
+
+- **Action required (privacy)**: no new variables. Analytics now sends nothing until the person
+  allows it. Members who never answered stop being counted and see a modal "Help improve
+  Gobbit?" question (Allow / No thanks) on their next visit; visitors see the same kind of
+  question on the landing, public and share pages. A visitor's device Allow never counts for a
+  member. `analytics.config` now logs `consent: "opt_in"` (update any alert that expects
+  `opt_out`, see `infra/README.md` § Landing analytics). Expect lower counts until people answer.
+
 ### 2026-11-03 — Analytics consent (035)
 
 - **Action required (privacy)**: no new variables. Do Not Track is no longer honoured; analytics

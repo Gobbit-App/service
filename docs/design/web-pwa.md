@@ -136,12 +136,12 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 
 ## Analytics consent (035, D259–D266, ADR-068)
 
-- **Rule**: `analyticsAllowed(member, device)` (`@gobbit/shared/analytics`): an account answer wins; when the account hasn't answered, a declined device stops sending; anonymous pages use the device choice only. Do Not Track and GPC are not consulted. `umami.disabled` (operator, smoke) still wins.
+- **Rule** (opt-in since D281): `analyticsAllowed(member, device)` (`@gobbit/shared/analytics`): a member counts only with an account `allowed`; anonymous pages only with a device `allowed`; a device Allow never covers a member. Do Not Track and GPC are not consulted. `umami.disabled` (operator, smoke) still wins.
 - **Member choice**: `GET /me` → `analyticsConsent { value: unanswered | allowed | declined, at, source }`; `PUT /me/analytics-consent` (`api/analytics-consent.ts`) writes the answer into the `me` cache. Server side: `analytics-consent.service` → `users.repo.setAnalyticsConsent` (row locked, audit row in the same transaction, same value = no write, `analytics.consent` event).
 - **Facade** (`analytics/analytics.ts`): nothing loads until `me` is known and the rule allows; the before-send hook gets `consented` and cancels every payload while it is false; a cache change to allowed loads the tracker and sends the current view, without a reload.
 - **Device choice** (`analytics/device-consent.ts`): `localStorage['gobbit.analytics.consent']` `{ value, at }`, read through the shared parser; storage errors = not answered. Only `page.js` writes it.
-- **Prompt** (`analytics/ConsentPrompt.tsx`, in `__root.tsx` above the outlet): in-flow labelled region "Help improve Gobbit?" with Allow / No thanks / close (close = this app start only). Shown only when configured, unanswered and on a route `prompt-routes.ts` allows (never sign-in, auth error, editor, new card or Browse). Never takes focus; a failed save keeps it with an alert; buttons disabled offline.
-- **Settings → Privacy** (`settings/PrivacySection.tsx`): "Usage analytics" switch with "Since {date}" or "Not answered yet (on)", disabled offline ("Changing this needs a connection"); unconfigured shows only "This server doesn’t measure usage." Copy for all surfaces lives in `@gobbit/shared/analytics` `privacy.ts`.
+- **Prompt** (`analytics/ConsentPrompt.tsx`, in `__root.tsx`; a wall since D281): native modal `<dialog>` "Help improve Gobbit?" with Allow / No thanks in the same style, no close; Escape is cancelled. Shown only when configured, online, unanswered and on a route `prompt-routes.ts` allows (never sign-in, auth error, editor, new card or Browse). A failed save keeps it open with an alert.
+- **Settings → Privacy** (`settings/PrivacySection.tsx`): "Usage analytics" switch with "Since {date}" or "Not answered yet (off)" (off until allowed), disabled offline ("Changing this needs a connection"); unconfigured shows only "This server doesn’t measure usage." Copy for all surfaces lives in `@gobbit/shared/analytics` `privacy.ts`.
 - **Anonymous pages**: see [public](public.md#analytics-on-public-pages-033-d257) and [waitlist](waitlist.md#landing-analytics-031-d231d233-d243-adr-062).
 
 ## Deviations from the 035 plan
@@ -149,4 +149,5 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 - e2e member flows stub `/me` and the consent PUT in the page (the smoke owner is shared by parallel specs); the real write is covered by `analytics-consent.int.test.ts`.
 - The visitor decline is checked on a `/welcome` reload; `/p` is covered by `page-script.test.ts`. DNT-on, two-device decline and no-cookie checks were added at convergence (`full/analytics-consent.spec.ts`).
 - Two latent 033 e2e bugs fixed: `app-analytics.spec.ts` keeps its record in `sessionStorage` across loads; `smoke/public.spec.ts` allows the `page.js` loader.
+- D281 (after merge): opt-in with a modal question for members and visitors, replacing "on unless declined" and the in-flow prompt/banner; see the ADR-068 amendment.
 - Down migration named `0020_analytics_consent.down.sql` (repo convention). Detail: `specs/035-analytics-consent/implementation-notes.md`.
