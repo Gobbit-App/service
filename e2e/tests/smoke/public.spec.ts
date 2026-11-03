@@ -85,7 +85,11 @@ webTest(
     const html = await page.text();
     expect(html).toContain('<meta property="og:title" content="Smoke table">');
     expect(html).toContain('Porridge with fruit');
-    expect(html).not.toMatch(/<script/i);
+    // No JS on public pages; with analytics on, only the first-party consent loader (D265).
+    const scripts = (html.match(/<script\b[^>]*>/gi) ?? []).filter(
+      (tag) => !tag.startsWith('<script defer src="/analytics/page.js" '),
+    );
+    expect(scripts).toEqual([]);
 
     const deckPage = await (await anon.get(webUrl(`/p/${webDeck.slug}`))).text();
     expect(deckPage).toContain('Smoke table');

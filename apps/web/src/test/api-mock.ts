@@ -24,7 +24,13 @@ export const mockConfig: { cloudinaryCloudName: string | null; ingestEnabled: bo
 };
 
 export const clientModule = {
-  api: { GET: tag('GET'), POST: tag('POST'), PATCH: tag('PATCH'), DELETE: tag('DELETE') },
+  api: {
+    GET: tag('GET'),
+    POST: tag('POST'),
+    PATCH: tag('PATCH'),
+    PUT: tag('PUT'),
+    DELETE: tag('DELETE'),
+  },
   unwrap: (request: unknown) => {
     if (request === 'GET /config') {
       return Promise.resolve({

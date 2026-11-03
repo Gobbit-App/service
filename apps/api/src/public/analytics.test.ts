@@ -11,11 +11,11 @@ import {
 const SITE_ID = '2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90';
 const env = { API_URL: 'https://gobbit.example.test/api', APP_URL: 'https://gobbit.example.test' };
 
-describe('analyticsTag (D232, contract §2)', () => {
-  it('is a deferred, same-origin script with Do Not Track on', () => {
+describe('analyticsTag (D264, 035 contract §4)', () => {
+  it('on the landing is only page.js with the site id and host, no Umami tag, no Do Not Track', () => {
     expect(STATS_BASE_PATH).toBe('/stats');
     expect(analyticsTag({ siteId: SITE_ID, host: 'gobbit.example.test' }).toString()).toBe(
-      `<script defer src="/stats/script.js" data-website-id="${SITE_ID}" data-host-url="/stats" data-domains="gobbit.example.test" data-do-not-track="true"></script>`,
+      `<script defer src="/analytics/page.js" data-website-id="${SITE_ID}" data-domains="gobbit.example.test"></script>`,
     );
   });
 
@@ -26,19 +26,16 @@ describe('analyticsTag (D232, contract §2)', () => {
   });
 });
 
-describe('analyticsTag with a page (D257, contract §3)', () => {
+describe('analyticsTag with a page (D257, D264)', () => {
   const page = { pattern: '/p/:deck', name: 'Public deck' };
 
-  it('loads page.js first, then the tracker with its before-send hook and no query or hash', () => {
+  it('is one page.js tag carrying the pattern and screen name', () => {
     const html = analyticsTag({ siteId: SITE_ID, host: 'gobbit.example.test', page }).toString();
-    const [first, second] = html.split('\n');
-    expect(first).toBe(
-      '<script defer src="/analytics/page.js" data-pattern="/p/:deck" data-screen="Public deck"></script>',
+    expect(html).toBe(
+      `<script defer src="/analytics/page.js" data-website-id="${SITE_ID}" data-domains="gobbit.example.test" data-pattern="/p/:deck" data-screen="Public deck"></script>`,
     );
-    expect(second).toContain('src="/stats/script.js"');
-    expect(second).toContain('data-do-not-track="true"');
-    expect(second).toContain('data-exclude-search="true" data-exclude-hash="true"');
-    expect(second).toContain('data-before-send="__gobbitAnalyticsBeforeSend"');
+    expect(html).not.toContain('/stats/script.js');
+    expect(html).not.toContain('do-not-track');
   });
 
   it('withPage is undefined when analytics is off', () => {
@@ -73,7 +70,7 @@ describe('analyticsHead', () => {
   });
 });
 
-describe('recordAnalyticsConfig (D243)', () => {
+describe('recordAnalyticsConfig (D243, D265)', () => {
   it('records enabled with the host and never the site id', async () => {
     const capture = captureLogger();
     recordAnalyticsConfig(
@@ -88,6 +85,7 @@ describe('recordAnalyticsConfig (D243)', () => {
       host: 'gobbit.example.test',
       bootId: 'boot-1',
       surfaces: 'landing,app,public,share',
+      consent: 'opt_out',
     });
     expect(JSON.stringify(capture.lines)).not.toContain(SITE_ID);
   });
@@ -99,5 +97,6 @@ describe('recordAnalyticsConfig (D243)', () => {
     const line = expectDecision(capture.lines, 'analytics.config', { outcome: 'disabled' });
     expect(line.host).toBeUndefined();
     expect(line.surfaces).toBeUndefined();
+    expect(line.consent).toBeUndefined();
   });
 });

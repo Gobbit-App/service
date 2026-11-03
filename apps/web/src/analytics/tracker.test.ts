@@ -39,7 +39,6 @@ describe('installTracker (D254, contract §2)', () => {
       websiteId: 'site-1',
       hostUrl: '/stats',
       domains: 'gobbit.example',
-      doNotTrack: 'true',
       autoTrack: 'false',
       excludeSearch: 'true',
       excludeHash: 'true',

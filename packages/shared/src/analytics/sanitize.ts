@@ -11,6 +11,8 @@ export type SanitizeContext = {
   online: boolean;
   /** The page's own origin; a same-origin referrer is sent as empty. */
   origin: string;
+  /** 035 (D262): false when the consent rule says no; every request is cancelled. */
+  consented?: boolean;
 };
 
 /** The fields of Umami's tracker payload this hook reads or writes. */
@@ -54,7 +56,7 @@ export function sanitizePayload(
   payload: TrackerPayload | null | undefined,
   ctx: SanitizeContext,
 ): TrackerPayload | null {
-  if (!payload || !ctx.online || !ctx.screen) return null;
+  if (!payload || !ctx.online || !ctx.screen || ctx.consented === false) return null;
   const memberId = isUuidLike(ctx.memberId) ? ctx.memberId : undefined;
 
   const clean: TrackerPayload = {};

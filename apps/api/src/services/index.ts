@@ -20,6 +20,11 @@ import { decisionLogger } from '../lib/decision-event';
 import { logger as rootLogger, type Logger } from '../lib/logger';
 import { WAITLIST_DECISION_LEVELS, type WaitlistDecisions } from './waitlist.events';
 import { AUTH_DECISION_LEVELS, type AuthDecisions } from './auth.events';
+import {
+  ANALYTICS_CONSENT_DECISION_LEVELS,
+  type AnalyticsConsentDecisions,
+} from './analytics-consent.events';
+import { createAnalyticsConsentService } from './analytics-consent.service';
 import { createPageCache } from '../public/page-cache';
 import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
@@ -184,6 +189,14 @@ export function buildServices({
 
   return {
     users: usersService,
+    analyticsConsent: createAnalyticsConsentService({
+      users,
+      now,
+      decisions: decisionLogger<AnalyticsConsentDecisions>('analytics', {
+        parent: logger,
+        levels: ANALYTICS_CONSENT_DECISION_LEVELS,
+      }),
+    }),
     rateLimits,
     logHash,
     waitlist,

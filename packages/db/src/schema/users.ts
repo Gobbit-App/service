@@ -1,7 +1,13 @@
-import { pgTable, text, uuid, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { check, pgTable, text, uuid, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { accounts } from './accounts';
-import { registrationReasonEnum, timestamps } from './common';
+import {
+  analyticsConsentEnum,
+  analyticsConsentSourceEnum,
+  registrationReasonEnum,
+  timestamps,
+  tstz,
+} from './common';
 
 export const users = pgTable(
   'users',
@@ -17,11 +23,21 @@ export const users = pgTable(
     registeredVia: registrationReasonEnum(),
     /** D241: the inviter (`deck_invite`) or admin (`waitlist_invite`); null for `open_sign_in`. */
     registeredBy: uuid().references((): AnyPgColumn => users.id, { onDelete: 'set null' }),
+    /** D259: the member's analytics choice; null = not answered (on unless declined). */
+    analyticsConsent: analyticsConsentEnum(),
+    /** D259: when the current choice was made. */
+    analyticsConsentAt: tstz(),
+    /** D259: where the current choice was made. */
+    analyticsConsentSource: analyticsConsentSourceEnum(),
     ...timestamps,
   },
   (t) => [
     uniqueIndex('users_email_active_uq')
       .on(t.email)
       .where(sql`deleted_at is null`),
+    check(
+      'users_analytics_consent_complete',
+      sql`(${t.analyticsConsent} IS NULL AND ${t.analyticsConsentAt} IS NULL AND ${t.analyticsConsentSource} IS NULL) OR (${t.analyticsConsent} IS NOT NULL AND ${t.analyticsConsentAt} IS NOT NULL AND ${t.analyticsConsentSource} IS NOT NULL)`,
+    ),
   ],
 );

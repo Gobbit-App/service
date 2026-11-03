@@ -21,6 +21,7 @@ export * from './link-checks';
 export * from './item-events';
 export * from './waitlist-entries';
 export * from './waitlist-events';
+export * from './analytics-consent-events';
 
 import { accounts } from './accounts';
 import { users } from './users';
@@ -42,6 +43,7 @@ import { linkChecks } from './link-checks';
 import { itemEvents } from './item-events';
 import { waitlistEntries } from './waitlist-entries';
 import { waitlistEvents } from './waitlist-events';
+import { analyticsConsentEvents } from './analytics-consent-events';
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -64,6 +66,7 @@ export type LinkCheckRow = typeof linkChecks.$inferSelect;
 export type ItemEventRow = typeof itemEvents.$inferSelect;
 export type WaitlistEntryRow = typeof waitlistEntries.$inferSelect;
 export type WaitlistEventRow = typeof waitlistEvents.$inferSelect;
+export type AnalyticsConsentEventRow = typeof analyticsConsentEvents.$inferSelect;
 
 export type NewDeckRow = typeof decks.$inferInsert;
 export type NewCategoryRow = typeof categories.$inferInsert;

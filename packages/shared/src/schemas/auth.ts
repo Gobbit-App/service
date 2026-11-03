@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { deckSchema } from './deck';
+import { analyticsConsentSchema } from './analytics-consent';
 
 /** Maximum length of an email address (RFC 5321 path limit). */
 export const EMAIL_MAX = 254;
@@ -33,6 +34,8 @@ export const meSchema = z.object({
   decks: z.array(deckSchema),
   /** 032: the address is in `PLATFORM_ADMINS` (the app shows the Waitlist link). */
   isPlatformAdmin: z.boolean(),
+  /** 035 (D260): the member's analytics choice; follows them across devices. */
+  analyticsConsent: analyticsConsentSchema,
 });
 
 export const callbackQuerySchema = z.object({ token: z.string().min(1).max(256) });

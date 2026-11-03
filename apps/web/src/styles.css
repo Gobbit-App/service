@@ -1188,6 +1188,53 @@ h3 {
   gap: var(--gap);
 }
 
+/* ---------- Analytics consent (035, D263, D266) ---------- */
+
+/* In the document flow above the page: never covers a dock or a save action. */
+.consent-prompt {
+  margin: var(--gap) var(--gutter) 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.consent-prompt__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.consent-prompt h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.consent-prompt p {
+  margin: 6px 0 10px;
+}
+
+.consent-prompt__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.switch input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-accent);
+}
+
 /* ---------- Settings: ingest tokens (Phase 5, D99) ---------- */
 
 .muted {

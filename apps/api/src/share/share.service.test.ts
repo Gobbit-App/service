@@ -205,7 +205,10 @@ describe('share service — analytics (D257)', () => {
       analytics: { siteId: 'site-1', host: 'gobbit.example' },
     }).service.sharePage(ITEM_ID);
     expect(on).toContain('data-pattern="/s/:item" data-screen="Share preview"');
-    expect(on).toContain('data-before-send="__gobbitAnalyticsBeforeSend"');
+    // 035 (D264): only the consent-aware loader; it injects Umami's tag itself.
+    expect(on).toContain('<script defer src="/analytics/page.js" data-website-id="site-1"');
+    expect(on).not.toContain('/stats/script.js');
+    expect(on).not.toContain('data-do-not-track');
     expect(on.match(/<script[^>]*>/g)?.join('')).not.toContain(ITEM_ID);
   });
 });

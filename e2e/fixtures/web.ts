@@ -1,4 +1,4 @@
-import type { APIRequestContext } from '@playwright/test';
+import type { APIRequestContext, BrowserContext } from '@playwright/test';
 import { resolveE2eEnv } from '../lib/env';
 import { test as apiTest, expect, type SmokeDeck } from './api';
 
@@ -10,6 +10,14 @@ const SESSION_COOKIE = 'gobbit_session';
 /** Absolute URL on the web origin (the project's baseURL stays on the API for `request`). */
 export function webUrl(path: string): string {
   return `${webBaseURL}${path}`;
+}
+
+/** Signs a browser context in as the smoke owner (a second device in multi-context specs). */
+export async function signIn(context: BrowserContext): Promise<void> {
+  if (!token) return;
+  await context.addCookies([
+    { name: SESSION_COOKIE, value: token, url: webBaseURL, httpOnly: true, sameSite: 'Lax' },
+  ]);
 }
 
 export const SMOKE_CATEGORY = { name: 'Smoke chips', slug: 'smoke-chips' } as const;
@@ -93,11 +101,7 @@ export const test = apiTest.extend<{ webDeck: WebDeck }>({
     }
   },
   context: async ({ context }, use) => {
-    if (token) {
-      await context.addCookies([
-        { name: SESSION_COOKIE, value: token, url: webBaseURL, httpOnly: true, sameSite: 'Lax' },
-      ]);
-    }
+    await signIn(context);
     await use(context);
   },
   webDeck: async ({ api, smokeDeck }, use) => {

@@ -1,14 +1,17 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { AppConfig, Deck, Me } from '@gobbit/shared';
-import type {
-  ContentEventName,
-  ContentEventProps,
-  SanitizeContext,
-  Screen,
+import {
+  analyticsAllowed,
+  type AnalyticsConsentValue,
+  type ContentEventName,
+  type ContentEventProps,
+  type SanitizeContext,
+  type Screen,
 } from '@gobbit/shared/analytics';
 import { configQuery } from '../api/queries';
 import { queryKeys } from '../api/query-keys';
 import { screenFor } from './catalogue';
+import { readDeviceConsent } from './device-consent';
 import type { InstallOptions } from './tracker';
 import type { Umami } from './types';
 
@@ -25,6 +28,8 @@ export type AnalyticsDeps = {
   /** Runs after the app is interactive (FR-011). */
   whenIdle?: (run: () => void) => void;
   isOnline?: () => boolean;
+  /** This browser's visitor choice (D264); read at every send, tests pass a fake. */
+  deviceConsent?: () => AnalyticsConsentValue;
   origin?: string;
 };
 
@@ -32,6 +37,10 @@ type Session = {
   umami: Umami | null;
   screen: Screen | null;
   memberId: string | undefined;
+  /** The member's own answer from the `me` cache (D262). */
+  consent: AnalyticsConsentValue | undefined;
+  /** D261: a member is known and the rule says yes, checked at every send. */
+  allowed: () => boolean;
   identified: string | undefined;
   lastPath: string | undefined;
 };
@@ -44,8 +53,12 @@ const defaultIdle = (run: () => void) => {
   else setTimeout(run, 2000);
 };
 
-function memberIdOf(queryClient: QueryClient): string | undefined {
-  return queryClient.getQueryData<Me>(queryKeys.me)?.user.id;
+function memberOf(queryClient: QueryClient): {
+  memberId: string | undefined;
+  consent: AnalyticsConsentValue | undefined;
+} {
+  const me = queryClient.getQueryData<Me>(queryKeys.me);
+  return { memberId: me?.user.id, consent: me?.analyticsConsent?.value };
 }
 
 async function analyticsConfig(queryClient: QueryClient): Promise<AppConfig['analytics']> {
@@ -66,6 +79,8 @@ function syncIdentity(s: Session): void {
 /**
  * D252–D255: one page view per tracked screen change, sent only after the tracker loaded (on idle,
  * once a member is known). The real path only de-duplicates; the hook sends the pattern.
+ * D261/D262: nothing loads or sends unless `analyticsAllowed(member, device)` holds; the hook
+ * also cancels (`consented: false`) if the answer turns to no after the tracker loaded.
  */
 export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
   const {
@@ -75,6 +90,7 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
     load = () => import('./tracker'),
     whenIdle = defaultIdle,
     isOnline = () => navigator.onLine,
+    deviceConsent = readDeviceConsent,
     origin = window.location.origin,
   } = deps;
 
@@ -84,7 +100,9 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
   const s: Session = {
     umami: null,
     screen: null,
-    memberId: memberIdOf(queryClient),
+    ...memberOf(queryClient),
+    allowed: () =>
+      Boolean(s.memberId && s.consent) && analyticsAllowed(s.consent!, deviceConsent()),
     identified: undefined,
     lastPath: undefined,
   };
@@ -96,12 +114,13 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
     memberId: s.memberId,
     online: isOnline(),
     origin,
+    consented: s.allowed(),
   });
 
   function pageView(): void {
     const place = current();
     s.screen = screenFor(place.routeId);
-    if (!s.umami || !s.screen || !s.memberId || place.pathname === s.lastPath) return;
+    if (!s.umami || !s.screen || !s.allowed() || place.pathname === s.lastPath) return;
     s.lastPath = place.pathname;
     try {
       syncIdentity(s);
@@ -112,7 +131,7 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
   }
 
   function loadWhenReady(): void {
-    if (loading || !s.memberId) return;
+    if (loading || !s.allowed()) return; // D262: never loaded while the answer is no
     loading = true;
     whenIdle(() => {
       load()
@@ -130,10 +149,14 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
   const unsubscribeCache = queryClient.getQueryCache().subscribe((event) => {
     const key = event.query.queryKey;
     if (key.length !== 1 || key[0] !== queryKeys.me[0]) return;
-    const memberId = memberIdOf(queryClient);
-    if (memberId === s.memberId) return;
-    s.memberId = memberId;
-    s.lastPath = undefined; // a new member's first screen is a new view
+    const next = memberOf(queryClient);
+    if (next.memberId === s.memberId && next.consent === s.consent) return;
+    const wasAllowed = s.allowed();
+    const memberChanged = next.memberId !== s.memberId;
+    Object.assign(s, next);
+    // A new member's first screen, or the screen showing when the answer turned to yes, is a
+    // new view (D262: no reload needed).
+    if (memberChanged || (!wasAllowed && s.allowed())) s.lastPath = undefined;
     loadWhenReady();
     pageView();
   });
@@ -155,7 +178,7 @@ export async function startAnalytics(deps: AnalyticsDeps): Promise<() => void> {
  */
 export function trackContent(name: ContentEventName, props: ContentEventProps): void {
   const s = session;
-  if (!s?.umami || !navigator.onLine) return;
+  if (!s?.umami || !navigator.onLine || !s.allowed()) return;
   try {
     syncIdentity(s);
     s.umami.track(name, { ...props });

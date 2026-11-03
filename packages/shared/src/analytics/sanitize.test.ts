@@ -56,6 +56,13 @@ describe('sanitizePayload (D254)', () => {
     expect(sanitizePayload('event', null, ctx())).toBeNull();
   });
 
+  it('cancels page views, events and identify when consent says no (035, D262)', () => {
+    const declined = ctx({ consented: false });
+    expect(sanitizePayload('event', pageView, declined)).toBeNull();
+    expect(sanitizePayload('identify', pageView, declined)).toBeNull();
+    expect(sanitizePayload('event', pageView, ctx({ consented: true }))).not.toBeNull();
+  });
+
   it('sends no id without a member, and never a non-UUID id (FR-005)', () => {
     expect(sanitizePayload('event', pageView, ctx({ memberId: null }))).not.toHaveProperty('id');
     expect(sanitizePayload('event', pageView, ctx({ memberId: 'a@b.c' }))).not.toHaveProperty('id');

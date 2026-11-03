@@ -120,7 +120,7 @@ Setup (once):
 5. Set `ANALYTICS_SITE_ID` to the website's id in Dokploy and redeploy. `/welcome`, `/p/…`, `/s/…` and the app now send views (`analytics.config` lists `surfaces`); sign-in, error pages, the sitemap and robots never do.
 6. In your own browsers run `localStorage.setItem('umami.disabled', '1')` on the app origin so you are not counted (smoke tests do the same).
 
-Conversion for a period (D233): an Umami funnel `/` or `/welcome` → `/welcome/joined`. Umami undercounts (blockers, Do Not Track); the record of sign-ups is `waitlist_summary`, and the record of landing views is `landing.render` (D243):
+Conversion for a period (D233): an Umami funnel `/` or `/welcome` → `/welcome/joined`. Umami undercounts (blockers, visitors and members who declined); the record of sign-ups is `waitlist_summary`, and the record of landing views is `landing.render` (D243):
 
 | Check | Query | Alert when (default) |
 | --- | --- | --- |
@@ -128,6 +128,21 @@ Conversion for a period (D233): an Umami funnel `/` or `/welcome` → `/welcome/
 | Record of views | `jq -c 'select(.event=="landing.render" and .state=="default" and .via!="app")' \| wc -l` (per day) | — |
 | Umami vs record | Umami's daily visitors for the website vs the count above | renders > 0 and Umami 0 for 24 hours while `enabled`; Umami < 20% of renders over 7 days |
 | Collect endpoint | Caddy access log for `/stats/api/send` | 5xx > 5% over 1 hour |
+| Consent mode | `jq -c 'select(.event=="analytics.config") \| .consent'` | anything but `opt_out` while `enabled` |
+| Consent changes | `jq -c 'select(.event=="analytics.consent" and .outcome=="changed") \| [.from,.value,.source]'` | more than 5 changes to `declined` in 24 hours |
+| App vs record | Umami's `card-created` events vs `item_events` creations by members who haven't declined (query below) | Umami < 50% of that count over 7 days |
+
+Analytics consent (035, D265, ADR-067) is on unless declined. Members answer in the app (prompt or Settings → Privacy; one value per account, every change is an `analytics_consent_events` row); visitors answer in the banner on API pages, and that choice stays in their browser. Read the declined count before the cross-check:
+
+```sql
+SELECT coalesce(analytics_consent::text, 'unanswered') AS choice, count(*) FROM users GROUP BY 1;
+-- who changed what, when (latest first)
+SELECT user_id, from_value, to_value, source, created_at FROM analytics_consent_events ORDER BY created_at DESC LIMIT 50;
+-- card creations by members who haven't declined (last 7 days), for the cross-check
+SELECT count(*) FROM item_events e JOIN users u ON u.id = e.actor_user_id
+WHERE e.kind = 'created' AND e.created_at > now() - interval '7 days'
+  AND u.analytics_consent IS DISTINCT FROM 'declined';
+```
 
 ## Backups (Phase 0 step 7)
 
