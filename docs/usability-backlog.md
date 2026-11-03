@@ -30,3 +30,11 @@ Logged first, then planned in `PLAN.md` § Usability pass. Each item names the f
 ### Branding
 
 - [x] Remove every mention of "pocketbook" → 025–027
+
+## 2026-11-03
+
+### Family quick start
+
+- [x] Create a new deck from the app and invite family members → fix/deck-nav-and-new-deck (D269)
+- [x] Non-admins open a deck in Browse → fix/deck-nav-and-new-deck (D268)
+- [x] Back is inconsistent: inside a deck's sub-page it must go to the deck's main page; only the main page goes to the deck list → fix/deck-nav-and-new-deck (D267)

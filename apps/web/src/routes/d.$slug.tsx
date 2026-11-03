@@ -95,7 +95,9 @@ function DeckLayout() {
     <>
       <AppHeader
         title={deck.data.name}
-        back={backTarget(adding ? { kind: 'new-card', deckSlug: slug } : { kind: 'deck' })}
+        back={backTarget(
+          view?.kind === 'all' ? { kind: 'deck' } : { kind: 'deck-page', deckSlug: slug },
+        )}
         actions={
           <>
             {browseC !== null && <BrowseButton deckSlug={slug} c={browseC} />}

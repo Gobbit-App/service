@@ -1,5 +1,5 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { expect, SMOKE_CATEGORY, test, webUrl, type WebDeck } from '../../fixtures/web';
 
 /**
  * 022 editor navigation (`@full`): the header back matrix (D200), the unsaved-changes guard
@@ -29,7 +29,15 @@ test('the header back goes one level up, and the deck list has none @full', asyn
     [`/d/${webDeck.slug}/new`, `/d/${webDeck.slug}`],
     [`/i/${card.id}/edit`, `/i/${card.id}`],
     [`/i/${card.id}/edit?from=review`, `/d/${webDeck.slug}/review`],
-    ['/settings', '/?all=true'],
+    // D267: every page inside a deck goes up to the deck's main page…
+    [`/d/${webDeck.slug}/settings`, `/d/${webDeck.slug}`],
+    [`/d/${webDeck.slug}/review`, `/d/${webDeck.slug}`],
+    [`/d/${webDeck.slug}/favorites`, `/d/${webDeck.slug}`],
+    [`/d/${webDeck.slug}/archived`, `/d/${webDeck.slug}`],
+    [`/d/${webDeck.slug}/c/${SMOKE_CATEGORY.slug}`, `/d/${webDeck.slug}`],
+    // …a page outside any deck returns to the deck opened last…
+    ['/settings', `/d/${webDeck.slug}`],
+    // …and only the deck's main page goes up to the deck list.
     [`/d/${webDeck.slug}`, '/?all=true'],
   ];
   for (const [from, to] of cases) {
