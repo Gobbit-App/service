@@ -82,7 +82,7 @@ describe('SettingsScreen', () => {
     const { unmount } = setup();
     await screen.findByRole('list', { name: 'Your tokens' });
     expect(screen.getByText('This server doesn’t measure usage.')).toBeInTheDocument();
-    expect(screen.queryByRole('switch')).toBeNull();
+    expect(screen.queryByRole('switch', { name: 'Usage analytics' })).toBeNull();
     unmount();
 
     setup({ analytics: { siteId: 'site-1', host: 'gobbit.example' } });

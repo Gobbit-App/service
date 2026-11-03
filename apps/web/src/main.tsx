@@ -32,6 +32,11 @@ const router = createAppRouter({
       },
       // Loaded on demand: the drafts store is not part of the initial bundle.
       clearDrafts: async () => (await import('./editor/drafts-store')).clearDrafts(),
+      // 037: the next person on this device must not get this member's reminders.
+      forgetPush: async () => {
+        const push = await import('./push/push-client');
+        await push.forgetPushOnSignOut(push.browserPushDeps());
+      },
     }),
 });
 

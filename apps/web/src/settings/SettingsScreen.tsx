@@ -5,6 +5,7 @@ import { isNetworkError } from '../api/network-state';
 import { configQuery, decksQuery, meQuery } from '../api/queries';
 import { ButtonLink } from '../ui/buttons/ButtonLink';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
+import { NotificationsSection } from './NotificationsSection';
 import { PrivacySection } from './PrivacySection';
 import { SendInSection } from './SendInSection';
 import { SettingsSection } from './SettingsSection';
@@ -12,7 +13,8 @@ import { TokensSection } from './TokensSection';
 
 /**
  * D99/D104: what ingest tokens are for and how to use them, then the tokens themselves; platform
- * admins also get the waitlist link (032); Privacy holds the analytics switch (035, D266).
+ * admins also get the waitlist link (032); Notifications holds the reminder email switch and
+ * this device's push (037, D297); Privacy holds the analytics switch (035, D266).
  * `/me` never blocks the screen.
  */
 export function SettingsScreen(): ReactElement {
@@ -63,6 +65,7 @@ export function SettingsScreen(): ReactElement {
         decks={decks.data}
         emailDomain={ingest.emailDomain}
       />
+      <NotificationsSection pushKey={config.data.push?.publicKey ?? null} />
       <PrivacySection
         configured={Boolean(config.data.analytics)}
         consent={me.data?.analyticsConsent}

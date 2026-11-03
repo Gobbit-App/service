@@ -1386,6 +1386,14 @@ h3 {
   margin-bottom: calc(var(--gap) * 2);
 }
 
+/* 037: Settings → Notifications push controls */
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .settings-section > h2 {
   margin: 0 0 8px;
   font-size: 1.0625rem;
