@@ -30,3 +30,9 @@ Logged first, then planned in `PLAN.md` § Usability pass. Each item names the f
 ### Branding
 
 - [x] Remove every mention of "pocketbook" → 025–027
+
+## 2026-11-03
+
+### Card editor
+
+- [x] Table/calc: start new cards from a sample with a Clear button → fix/editor-sample-payloads
