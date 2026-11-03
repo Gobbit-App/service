@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { CalcDraftField, CalcDraftPayload } from '../draft';
-import { addField, calcValues, canAddField, nextFieldKey, removeField, setField } from './calc-ops';
+import {
+  addField,
+  calcValues,
+  canAddField,
+  clearCalc,
+  isBlankCalc,
+  nextFieldKey,
+  removeField,
+  setField,
+} from './calc-ops';
 
 const field = (key: string, extra: Partial<CalcDraftField> = {}): CalcDraftField => ({
   key,
@@ -64,5 +73,27 @@ describe('calcValues', () => {
       field('c', { default: 'x' }),
     ]);
     expect(calcValues(p)).toEqual({ a: 2.5, b: undefined, c: undefined });
+  });
+});
+
+describe('clear (D270)', () => {
+  it('clears to one blank field and no expression or result label', () => {
+    expect(clearCalc()).toEqual({
+      fields: [{ key: 'a', label: '', unit: '', default: '' }],
+      expression: '',
+      resultLabel: '',
+    });
+  });
+
+  it('is blank only when nothing was written; keys alone do not count', () => {
+    const blank = clearCalc();
+    expect(isBlankCalc(blank)).toBe(true);
+    expect(isBlankCalc({ ...blank, fields: [field('price', { label: '' })] })).toBe(true);
+    expect(isBlankCalc(calc([field('a')]))).toBe(false);
+    expect(isBlankCalc({ ...blank, expression: 'a * 2' })).toBe(false);
+    expect(isBlankCalc({ ...blank, resultLabel: 'Total' })).toBe(false);
+    expect(isBlankCalc({ ...blank, fields: [field('a', { label: '', default: '3' })] })).toBe(
+      false,
+    );
   });
 });

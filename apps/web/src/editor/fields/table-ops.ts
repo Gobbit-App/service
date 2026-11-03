@@ -1,5 +1,6 @@
 import { TABLE_MAX_COLUMNS, TABLE_MAX_ROWS } from '@gobbit/shared/card-limits';
 import type { TablePayload } from '../../cards/payload-guards';
+import { blankTable } from '../sample-payloads';
 
 /** Pure edits on a table payload; rows always stay aligned with the columns. */
 
@@ -50,6 +51,18 @@ export function moveColumn(t: TablePayload, index: number, direction: Direction)
 
 export function setHeading(t: TablePayload, index: number, value: string): TablePayload {
   return { ...t, columns: t.columns.map((c, i) => (i === index ? value : c)) };
+}
+
+const hasText = (value: string): boolean => value.trim() !== '';
+
+/** D270: true when no heading or cell has text (the shape does not matter), so Clear is hidden. */
+export function isBlankTable(t: TablePayload): boolean {
+  return !t.columns.some(hasText) && !t.rows.some((row) => row.some(hasText));
+}
+
+/** D270: back to two empty columns and one empty row. */
+export function clearTable(): TablePayload {
+  return blankTable();
 }
 
 export function setCell(t: TablePayload, row: number, column: number, value: string): TablePayload {

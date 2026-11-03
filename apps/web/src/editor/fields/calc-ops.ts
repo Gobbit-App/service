@@ -1,5 +1,6 @@
 import { CALC_MAX_FIELDS } from '@gobbit/shared/card-limits';
 import { parseCalcDefault, type CalcDraftField, type CalcDraftPayload } from '../draft';
+import { blankCalc } from '../sample-payloads';
 
 /** Pure edits on a calc draft. Renaming a key never rewrites the expression. */
 
@@ -35,6 +36,22 @@ export function setField(
   changes: Partial<CalcDraftField>,
 ): CalcDraftPayload {
   return { ...p, fields: p.fields.map((f, i) => (i === index ? { ...f, ...changes } : f)) };
+}
+
+const hasText = (value: string): boolean => value.trim() !== '';
+
+/**
+ * D270: true when nothing was written (labels, units, defaults, expression, result label), so
+ * Clear is hidden. Keys are identifiers the editor fills in itself and do not count.
+ */
+export function isBlankCalc(p: CalcDraftPayload): boolean {
+  const fieldHasText = (f: CalcDraftField) => [f.label, f.unit, f.default].some(hasText);
+  return !p.fields.some(fieldHasText) && !hasText(p.expression) && !hasText(p.resultLabel);
+}
+
+/** D270: back to one blank field and an empty expression and result label. */
+export function clearCalc(): CalcDraftPayload {
+  return blankCalc();
 }
 
 /**

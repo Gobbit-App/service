@@ -5,6 +5,8 @@ import {
   addRow,
   canAddColumn,
   canAddRow,
+  clearTable,
+  isBlankTable,
   moveColumn,
   moveRow,
   removeColumn,
@@ -88,5 +90,19 @@ describe('cells', () => {
       ['x', '4'],
     ]);
     expect(t.rows[1]).toEqual(['3', '4']);
+  });
+});
+
+describe('clear (D270)', () => {
+  it('clears to two empty columns and one empty row', () => {
+    expect(clearTable()).toEqual({ columns: ['', ''], rows: [['', '']] });
+  });
+
+  it('is blank only when no heading or cell has text', () => {
+    expect(isBlankTable(clearTable())).toBe(true);
+    expect(isBlankTable({ columns: ['', ' ', ''], rows: [] })).toBe(true);
+    expect(isBlankTable(t)).toBe(false);
+    expect(isBlankTable({ columns: ['', ''], rows: [['', 'x']] })).toBe(false);
+    expect(isBlankTable({ columns: ['Item', ''], rows: [['', '']] })).toBe(false);
   });
 });

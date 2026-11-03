@@ -7,6 +7,7 @@ import {
 } from '../cards/payload-guards';
 import { normalizeUrlInput } from '../lib/url-input';
 import { jsonEqual, sameIds } from './equal';
+import { blankCalc, blankTable, sampleCalc, sampleTable } from './sample-payloads';
 
 /** Link payload while editing; unknown keys (e.g. `preview.image` from ingest) are kept. */
 export type LinkDraftPayload = {
@@ -57,8 +58,8 @@ export type Draft = {
 
 export { CREATABLE_TYPES, isCreatableType, type CreatableType } from './creatable-types';
 
-/** A fresh payload for a type. */
-export function emptyPayload(type: ItemType): DraftPayload {
+/** A blank payload for a type (also the fallback for an unreadable stored payload). */
+export function blankPayload(type: ItemType): DraftPayload {
   switch (type) {
     case 'text':
       return {};
@@ -67,31 +68,40 @@ export function emptyPayload(type: ItemType): DraftPayload {
     case 'image':
       return { publicId: '', alt: '' };
     case 'table':
-      return { columns: ['', ''], rows: [['', '']] };
+      return blankTable();
     case 'calc':
-      return {
-        fields: [{ key: 'a', label: '', unit: '', default: '' }],
-        expression: '',
-        resultLabel: '',
-      };
+      return blankCalc();
   }
 }
 
+/** D270: what a new card of a type starts with; table and calc start from a sample. */
+export function newPayload(type: ItemType): DraftPayload {
+  switch (type) {
+    case 'table':
+      return sampleTable();
+    case 'calc':
+      return sampleCalc();
+    default:
+      return blankPayload(type);
+  }
+}
+
+/** A new card: empty title and body, the type's starting payload (a sample for table/calc). */
 export function emptyDraft(type: ItemType, defaultCategoryId: string | null): Draft {
   return {
     type,
     title: '',
     body: '',
-    payload: emptyPayload(type),
+    payload: newPayload(type),
     categoryIds: defaultCategoryId ? [defaultCategoryId] : [],
     sourceUrl: '',
     entities: null,
   };
 }
 
-/** Switches a new card's type: the payload resets, title/body/categories stay. */
+/** Switches a new card's type: the payload resets to the type's start, title/body/categories stay. */
 export function withType(draft: Draft, type: ItemType): Draft {
-  return draft.type === type ? draft : { ...draft, type, payload: emptyPayload(type) };
+  return draft.type === type ? draft : { ...draft, type, payload: newPayload(type) };
 }
 
 function calcFieldToDraft(field: {
@@ -121,10 +131,10 @@ function payloadFromItem(item: Item): DraftPayload {
       return structuredClone(raw) as ImagePayload;
     case 'table':
       // Pads rows shorter than the column count (and trims longer ones) so a save is valid.
-      return asTablePayload(raw) ?? emptyPayload('table');
+      return asTablePayload(raw) ?? blankPayload('table');
     case 'calc': {
       const calc = asCalcPayload(raw);
-      if (!calc) return emptyPayload('calc');
+      if (!calc) return blankPayload('calc');
       return {
         fields: calc.fields.map(calcFieldToDraft),
         expression: calc.expression,

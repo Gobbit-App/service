@@ -34,3 +34,6 @@ Logged first, then planned in `PLAN.md` § Usability pass. Each item names the f
 ## 2026-11-03
 
 - [x] Palette: move to the green brand palette → chore/green-palette
+### Card editor
+
+- [x] Table/calc: start new cards from a sample with a Clear button → fix/editor-sample-payloads

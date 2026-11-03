@@ -86,6 +86,8 @@ test('the category chips start on the deck default category @smoke', async ({ pa
 test('a table card keeps a moved row and stops at 12 rows @smoke', async ({ page, webDeck }) => {
   const title = `Editor table ${webDeck.slug}`;
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=table`));
+  // A new table starts from a sample (D270); start from scratch.
+  await page.getByRole('button', { name: 'Clear table' }).click();
 
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Column 1 heading').fill('Day');
@@ -118,6 +120,8 @@ test('a calc card shows its live result; a bad expression disables Save @smoke',
 }) => {
   const title = `Editor calc ${webDeck.slug}`;
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=calc`));
+  // A new calc starts from a sample (D270); start from scratch.
+  await page.getByRole('button', { name: 'Clear calculation' }).click();
 
   await page.getByLabel('Title', { exact: true }).fill(title);
   const first = page.getByRole('group', { name: 'Field 1' });
