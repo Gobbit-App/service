@@ -70,5 +70,9 @@ own docs slice).
 
 ## Phase 7: Close-out
 
-- [ ] T032 docs/design/reminders.md, ADR-070 + architecture.md row, README env, CHANGELOG (VAPID **Action required** only to enable push), implementation-notes.md
-- [ ] T033 `pnpm api:openapi`, typecheck, lint, unit, int; /speckit-converge
+- [x] T032 docs/design/reminders.md, ADR-070 + architecture.md row, README env, CHANGELOG (VAPID **Action required** only to enable push), implementation-notes.md
+- [x] T033 `pnpm api:openapi`, typecheck, lint, unit, int; /speckit-converge
+
+## Phase 8: Convergence
+
+- [x] T034 Refresh the bell and /notifications when a push arrives while the app is open (service worker messages open clients; the app invalidates the pending query) per FR-024 (partial)
