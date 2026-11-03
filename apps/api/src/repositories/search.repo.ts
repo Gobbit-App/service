@@ -8,7 +8,7 @@ import {
   WORD_SIMILARITY_THRESHOLD,
   type MemberRole,
 } from '@gobbit/shared';
-import { canSeePrivate, itemHasVisibleCategory } from '../access/visibility';
+import { canSeePrivate, itemHasVisibleCategory, itemRevealedWhere } from '../access/visibility';
 import type { ArmRow } from '../lib/rrf';
 
 /** Escapes LIKE metacharacters so user input matches literally (default escape char `\`). */
@@ -36,13 +36,17 @@ interface HybridQuery {
 }
 
 export function createSearchRepo(db: Db) {
-  /** D75: published, live, in the deck, and (below maintainer) in a visible category. */
+  /**
+   * D75: published, live, in the deck, and (below maintainer) in a visible category; D292: only
+   * revealed reminders, none for anonymous readers.
+   */
   function baseWhere(deckId: string, role: MemberRole | null): SQL {
     const visibility = canSeePrivate(role) ? sql`true` : itemHasVisibleCategory(role);
     return sql`${items.deckId} = ${deckId}
       and ${items.status} = 'published'
       and ${items.deletedAt} is null
-      and ${visibility}`;
+      and ${visibility}
+      and ${itemRevealedWhere(role)}`;
   }
 
   function textArm(q: HybridQuery): SQL {

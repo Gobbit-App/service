@@ -62,4 +62,16 @@ describe('shareMode', () => {
     };
     expect(shareMode(subject)).toBe('private');
   });
+
+  it('keeps a reminder private even on a public deck in a public category (D292)', () => {
+    expect(
+      shareMode({
+        type: 'reminder',
+        status: 'published',
+        deletedAt: null,
+        deckIsPublic: true,
+        categoryVisibilities: ['public'],
+      }),
+    ).toBe('private');
+  });
 });

@@ -31,3 +31,13 @@ export function itemHasVisibleCategory(role: MemberRole | null): SQL {
       and ${visibleCategoriesWhere(role)}
   )`;
 }
+
+/**
+ * D292: the reveal predicate, applied wherever `itemHasVisibleCategory()` is. Members never see a
+ * reminder before its reveal time on lists, search or counts (the creator and private-category
+ * roles still open it by id, and in Upcoming); anonymous readers never see reminders at all.
+ */
+export function itemRevealedWhere(role: MemberRole | null): SQL {
+  if (role === null) return sql`${items.type} <> 'reminder'`;
+  return sql`(${items.revealAt} is null or ${items.revealAt} <= now())`;
+}

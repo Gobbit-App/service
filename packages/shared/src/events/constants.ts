@@ -10,6 +10,9 @@ export const itemEventKinds = [
   'undeleted',
   'discarded',
   'merged',
+  /** D294: a reminder was dismissed with or without being marked done. */
+  'completed',
+  'dismissed',
 ] as const;
 export type ItemEventKind = (typeof itemEventKinds)[number];
 

@@ -11,6 +11,8 @@ const KIND_LABELS: Record<ItemEvent['kind'], string> = {
   undeleted: 'Undeleted',
   discarded: 'Discarded',
   merged: 'Merged a proposal into',
+  completed: 'Marked done',
+  dismissed: 'Dismissed',
 };
 
 const FIELD_LABELS: Record<string, string> = {

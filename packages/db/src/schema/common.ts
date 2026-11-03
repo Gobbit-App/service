@@ -15,6 +15,7 @@ import {
   registrationReasons,
   analyticsConsentChoices,
   analyticsConsentSources,
+  reminderOutcomes,
 } from '@gobbit/shared';
 
 export const tstz = () => timestamp({ withTimezone: true, precision: 3, mode: 'date' });
@@ -43,3 +44,4 @@ export const analyticsConsentSourceEnum = pgEnum(
   'analytics_consent_source',
   analyticsConsentSources,
 );
+export const reminderOutcomeEnum = pgEnum('reminder_outcome', reminderOutcomes);

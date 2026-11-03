@@ -10,6 +10,14 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-03 — Reminder cards (037)
+
+- New optional variables `REMINDER_MAX_DEADLINE_DAYS` (default `1825`),
+  `REMINDER_MAX_SHOW_BEFORE_DAYS` (`365`) and `REMINDER_RESOLUTION_MAX` (`600`). They can only
+  lower these defaults; a higher value stops the API from starting. Migration `0021_reminders`
+  (runs on API start) adds `items.reveal_at`, the `reminders` table with its triggers and the
+  notification tables used later by 037. Nothing to do on deploy.
+
 ### 2026-11-03 — Analytics consent is opt-in (035 amendment, D281)
 
 - **Action required (privacy)**: no new variables. Analytics now sends nothing until the person

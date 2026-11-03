@@ -72,6 +72,9 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `ANALYTICS_SITE_ID` | — | Umami website id (UUID). Set → the landing page, public pages, share previews and (for signed-in members, lazily) the app load the same-origin tracker `/stats/script.js` and send route patterns, the member id and four content events only (ADR-066); unset → no tracker anywhere (`infra/README.md` § Landing analytics) |
 | `PLATFORM_ADMINS` | — | Comma-separated emails of platform admins (`/admin/*`, e.g. the waitlist screen); everyone else gets 404. Empty logs `admin.config` at `warn` in production |
 | `WAITLIST_INVITE_TTL_DAYS` | `7` | Days a waitlist invite's sign-in link stays valid |
+| `REMINDER_MAX_DEADLINE_DAYS` | `1825` | Furthest reminder deadline from now, in days (may only lower the default) |
+| `REMINDER_MAX_SHOW_BEFORE_DAYS` | `365` | Longest reminder show-before period, in days (may only lower the default) |
+| `REMINDER_RESOLUTION_MAX` | `600` | Longest reminder resolution note, in characters (may only lower the default) |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |

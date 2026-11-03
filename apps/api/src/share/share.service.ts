@@ -70,6 +70,7 @@ function imagePublicIdOf(record: ShareRecord): string | null {
 
 function modeOf(record: ShareRecord) {
   return shareMode({
+    type: record.item.type,
     status: record.item.status,
     deletedAt: record.item.deletedAt,
     deckIsPublic: record.deck.isPublic,

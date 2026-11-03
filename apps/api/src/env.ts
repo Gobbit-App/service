@@ -8,6 +8,9 @@ import {
   WAITLIST_JOIN_PER_IP_PER_HOUR,
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR,
   WAITLIST_INVITE_TTL_DAYS_DEFAULT,
+  REMINDER_MAX_DEADLINE_DAYS,
+  REMINDER_MAX_SHOW_BEFORE_DAYS,
+  REMINDER_RESOLUTION_MAX,
 } from '@gobbit/shared';
 import { registrationModes } from '@gobbit/shared/auth';
 import { cloudNameFrom } from './lib/cloudinary-url';
@@ -24,6 +27,9 @@ const bool = (fallback: 'true' | 'false') =>
 export const DEV_LOG_HASH_KEY = 'gobbit-development-log-hash-key-not-secret';
 
 const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
+
+/** D299: an env value that may only lower a shared cap. */
+const cappedInt = (cap: number) => z.coerce.number().int().positive().max(cap).default(cap);
 
 /** `a, b,,c` → `['a', 'b', 'c']`. */
 const commaList = z
@@ -95,6 +101,12 @@ const baseSchema = z.object({
   PLATFORM_ADMINS: commaList.transform((list) => list.map((email) => email.toLowerCase())),
   /** 032: lifetime of the sign-in link in the "You're in" email. */
   WAITLIST_INVITE_TTL_DAYS: positiveInt(WAITLIST_INVITE_TTL_DAYS_DEFAULT),
+  /** D299: furthest reminder deadline from now, in days (may only lower the shared cap). */
+  REMINDER_MAX_DEADLINE_DAYS: cappedInt(REMINDER_MAX_DEADLINE_DAYS),
+  /** D299: longest reminder show-before period, in days (may only lower the shared cap). */
+  REMINDER_MAX_SHOW_BEFORE_DAYS: cappedInt(REMINDER_MAX_SHOW_BEFORE_DAYS),
+  /** D299: longest dismiss resolution, in characters (may only lower the shared cap). */
+  REMINDER_RESOLUTION_MAX: cappedInt(REMINDER_RESOLUTION_MAX),
 });
 
 export const envSchema = baseSchema

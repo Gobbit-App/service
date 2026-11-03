@@ -49,6 +49,8 @@ export const items = pgTable(
     embeddingModel: text(),
     embeddedHash: text(),
     embeddedAt: tstz(),
+    /** D291: reminders only — deadline minus show-before; set by trigger `items_reminder_sync`. */
+    revealAt: tstz(),
   },
   (t) => [
     unique('items_id_deck_uq').on(t.id, t.deckId),
@@ -57,6 +59,12 @@ export const items = pgTable(
     index('items_deleted_idx')
       .on(t.deckId, t.deletedAt.desc(), t.id.desc())
       .where(sql`${t.deletedAt} IS NOT NULL`),
+    // D292: hidden reminders per deck (the Upcoming list and the reveal test).
+    index('items_reveal_idx')
+      .on(t.deckId, t.revealAt)
+      .where(sql`${t.revealAt} IS NOT NULL`),
+    // D291: only reminders have a reveal time (text compare: the enum value is new in 0021).
+    check('items_reveal_at_chk', sql`(${t.type}::text = 'reminder') = (${t.revealAt} IS NOT NULL)`),
     index('items_search_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
     index('items_embedding_hnsw_idx')
       .using('hnsw', t.embedding.op('vector_cosine_ops'))

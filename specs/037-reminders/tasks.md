@@ -21,28 +21,28 @@ own docs slice).
 
 ## Phase 1: Foundational
 
-- [ ] T001 Shared `reminders/` subpath in packages/shared/src/reminders/: `schema.ts` (`reminderPayloadSchema`, units, limits, `dismissReminderSchema`, `reminderStateSchema`), `schedule.ts` (`revealAt(deadline, showBefore)`, `showBeforeMs`, `formatDue` helpers), `dismissers.ts` (D293 pure function); export from `./reminders` in package.json
-- [ ] T002 [P] [unit] packages/shared/src/reminders/schema.test.ts — deadline/amount/unit bounds, userIds only with `people`, strict keys, timeZone
-- [ ] T003 [P] [unit] packages/shared/src/reminders/schedule.test.ts — revealAt per unit, 0 show-before, DST-independent (instant arithmetic)
-- [ ] T004 [P] [unit] packages/shared/src/reminders/dismissers.test.ts — me / writers / people, lost access, category visibility, owner fallback, personal deck
-- [ ] T005 Item type `reminder` in `itemTypes` + `payloadSchemaFor`; `itemEventKinds` + `completed`, `dismissed`; `Item.reminder` DTO; `itemListStatuses` + `upcoming` (packages/shared/src/schemas)
-- [ ] T006 Migration `0021_reminders` (+ down): enums, `items.reveal_at` + CHECK + index, `reminders`, `push_subscriptions`, `notification_deliveries`, `users.reminder_emails`, sync triggers; Drizzle schema files in packages/db/src/schema
-- [ ] T007 [int] packages/db trigger test: reveal_at/reminders row follow payload edits; type change rejected by CHECK
+- [x] T001 Shared `reminders/` subpath in packages/shared/src/reminders/: `schema.ts` (`reminderPayloadSchema`, units, limits, `dismissReminderSchema`, `reminderStateSchema`), `schedule.ts` (`revealAt(deadline, showBefore)`, `showBeforeMs`, `formatDue` helpers), `dismissers.ts` (D293 pure function); export from `./reminders` in package.json
+- [x] T002 [P] [unit] packages/shared/src/reminders/schema.test.ts — deadline/amount/unit bounds, userIds only with `people`, strict keys, timeZone
+- [x] T003 [P] [unit] packages/shared/src/reminders/schedule.test.ts — revealAt per unit, 0 show-before, DST-independent (instant arithmetic)
+- [x] T004 [P] [unit] packages/shared/src/reminders/dismissers.test.ts — me / writers / people, lost access, category visibility, owner fallback, personal deck
+- [x] T005 Item type `reminder` in `itemTypes` + `payloadSchemaFor`; `itemEventKinds` + `completed`, `dismissed`; `Item.reminder` DTO; `itemListStatuses` + `upcoming` (packages/shared/src/schemas)
+- [x] T006 Migration `0021_reminders` (+ down): enums, `items.reveal_at` + CHECK + index, `reminders`, `push_subscriptions`, `notification_deliveries`, `users.reminder_emails`, sync triggers; Drizzle schema files in packages/db/src/schema
+- [x] T007 [int] packages/db trigger test: reveal_at/reminders row follow payload edits; type change rejected by CHECK
 
 ## Phase 2: US1 — create, hide, reveal (P1) 🎯 MVP
 
-- [ ] T008 `itemRevealedWhere()` in apps/api/src/access/visibility.ts; apply in items.repo (list, link flags, archived), search.repo arms, categories count, favorites, dedup
-- [ ] T009 Exclude `type = 'reminder'` on public-deck.service reads, public search, sitemap, share previews
-- [ ] T010 `loadItem` allows a hidden reminder only to its creator and `category.read_private` roles (404 otherwise)
-- [ ] T011 `status=upcoming` list in items.repo/service (owner/maintainer: all hidden; others: own)
-- [ ] T012 reminders.service: validate on create/update (future deadline, max distance, dismissers are writers, personal deck → `me`, only creator changes `dismiss`), DTO enrichment (`reminder` field via reminders.repo + dismissers)
-- [ ] T013 [P] [int] apps/api/src/routes/reminders.int.test.ts — hidden from list/search/category counts/favorites for readers; visible to creator + owner by id and in Upcoming; revealed after reveal time; public/sitemap/share never show reminders
+- [x] T008 `itemRevealedWhere()` in apps/api/src/access/visibility.ts; apply in items.repo (list, link flags, archived), search.repo arms, categories count, favorites, dedup
+- [x] T009 Exclude `type = 'reminder'` on public-deck.service reads, public search, sitemap, share previews
+- [x] T010 `loadItem` allows a hidden reminder only to its creator and `category.read_private` roles (404 otherwise)
+- [x] T011 `status=upcoming` list in items.repo/service (owner/maintainer: all hidden; others: own)
+- [x] T012 reminders.service: validate on create/update (future deadline, max distance, dismissers are writers, personal deck → `me`, only creator changes `dismiss`), DTO enrichment (`reminder` field via reminders.repo + dismissers)
+- [x] T013 [P] [int] apps/api/src/routes/reminders.int.test.ts — hidden from list/search/category counts/favorites for readers; visible to creator + owner by id and in Upcoming; revealed after reveal time; public/sitemap/share never show reminders
 
 ## Phase 3: US2 — dismiss with an outcome (P1)
 
-- [ ] T014 `POST /items/{id}/dismiss` route + reminders.service.dismiss (eligibility, archive, outcome, item event, decision event) ; restore clears outcome; restore/undelete/publish after deadline marks notified
-- [ ] T015 Creator may delete own reminder; `reminder.*` decision events catalog (`reminders.events.ts`)
-- [ ] T016 [P] [int] dismiss: eligible vs not (403), done/resolution recorded, archived, activity event; restore → pending; delete by creator editor
+- [x] T014 `POST /items/{id}/dismiss` route + reminders.service.dismiss (eligibility, archive, outcome, item event, decision event) ; restore clears outcome; restore/undelete/publish after deadline marks notified
+- [x] T015 Creator may delete own reminder; `reminder.*` decision events catalog (`reminders.events.ts`)
+- [x] T016 [P] [int] dismiss: eligible vs not (403), done/resolution recorded, archived, activity event; restore → pending; delete by creator editor
 
 ## Phase 4: Web (US1–US2 UI)
 

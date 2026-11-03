@@ -21,6 +21,7 @@ import {
   items,
   linkChecks,
   type DbExecutor,
+  type DbTx,
   type ItemRow,
 } from '@gobbit/db';
 import type {
@@ -34,6 +35,7 @@ import type {
 import {
   canSeePrivate,
   itemHasVisibleCategory,
+  itemRevealedWhere,
   visibleCategoriesWhere,
 } from '../access/visibility';
 import type { ItemEventInput } from '../events/item-event';
@@ -49,7 +51,12 @@ interface ItemListFilters {
   favoriteOf?: string;
   /** D191: only proposals whose ingest job carries this client label (an import's label). */
   clientLabel?: string;
+  /** D292: also list reminders before their reveal time (deleted listing, Upcoming). */
+  includeHidden?: boolean;
 }
+
+/** Writes another module adds to an items transaction. */
+export type InTx = (tx: DbTx) => Promise<void>;
 
 export function createItemsRepo(db: DbExecutor) {
   function filterConditions(q: ItemListFilters): SQL[] {
@@ -61,6 +68,10 @@ export function createItemsRepo(db: DbExecutor) {
 
     if (!canSeePrivate(q.role)) {
       conditions.push(itemHasVisibleCategory(q.role));
+    }
+
+    if (!q.includeHidden) {
+      conditions.push(itemRevealedWhere(q.role));
     }
 
     if (q.categoryId) {
@@ -150,13 +161,22 @@ export function createItemsRepo(db: DbExecutor) {
       return item ?? null;
     },
 
-    /** D38: false when every category of the item is hidden from `role` (→ 404). */
+    /**
+     * D38: false when every category of the item is hidden from `role` (→ 404). Anonymous readers
+     * never see a reminder (D292); members' reveal rule is the service's (it needs the user).
+     */
     async isVisibleTo(id: string, role: MemberRole | null): Promise<boolean> {
       if (canSeePrivate(role)) return true;
       const [row] = await db
         .select({ id: items.id })
         .from(items)
-        .where(and(eq(items.id, id), itemHasVisibleCategory(role)))
+        .where(
+          and(
+            eq(items.id, id),
+            itemHasVisibleCategory(role),
+            role === null ? itemRevealedWhere(role) : undefined,
+          ),
+        )
         .limit(1);
       return row !== undefined;
     },
@@ -181,6 +201,46 @@ export function createItemsRepo(db: DbExecutor) {
         .from(items)
         .where(and(...conditions))
         .orderBy(desc(items.createdAt), desc(items.id))
+        .limit(q.limit);
+    },
+
+    /**
+     * D292: reminders not revealed yet, soonest reveal first; `createdBy` narrows to one author
+     * (members without private access see only their own). Cursor = `(revealAt, id)` of the last
+     * row of the previous page.
+     */
+    async listUpcoming(
+      q: ItemListFilters & {
+        createdBy?: string;
+        /** Proposals are listed only for reviewers, or the caller's own (D96). */
+        proposalsOf: 'all' | string;
+        after?: { revealAt: string; id: string };
+        limit: number;
+      },
+    ): Promise<ItemRow[]> {
+      const conditions = [
+        ...filterConditions({ ...q, includeHidden: true }),
+        eq(items.type, 'reminder'),
+        isNull(items.deletedAt),
+        sql`${items.revealAt} > now()`,
+      ];
+      if (q.createdBy) conditions.push(eq(items.createdBy, q.createdBy));
+      if (q.proposalsOf !== 'all') {
+        conditions.push(
+          sql`(${items.status} <> 'proposed' or ${items.createdBy} = ${q.proposalsOf})`,
+        );
+      }
+      if (q.after) {
+        conditions.push(
+          sql`(${items.revealAt}, ${items.id}) > (${q.after.revealAt}::timestamptz, ${q.after.id}::uuid)`,
+        );
+      }
+
+      return await db
+        .select(itemColumns)
+        .from(items)
+        .where(and(...conditions))
+        .orderBy(items.revealAt, items.id)
         .limit(q.limit);
     },
 
@@ -283,7 +343,7 @@ export function createItemsRepo(db: DbExecutor) {
       },
     ): Promise<ItemRow[]> {
       const conditions = [
-        ...filterConditions(q),
+        ...filterConditions({ ...q, includeHidden: true }),
         isNotNull(items.deletedAt),
         gte(items.deletedAt, q.deletedSince),
         ne(items.status, 'proposed'),
@@ -304,7 +364,12 @@ export function createItemsRepo(db: DbExecutor) {
     },
 
     /** D132: clears `deleted_at`; the deferred D95 trigger re-checks the published-has-category rule. */
-    async undelete(id: string, events: readonly ItemEventInput[] = []): Promise<ItemRow> {
+    async undelete(
+      id: string,
+      events: readonly ItemEventInput[] = [],
+      /** D294: extra writes in the same transaction (reminder state). */
+      inTx?: InTx,
+    ): Promise<ItemRow> {
       return await db.transaction(async (tx) => {
         const [item] = await tx
           .update(items)
@@ -312,6 +377,7 @@ export function createItemsRepo(db: DbExecutor) {
           .where(eq(items.id, id))
           .returning(itemColumns);
         await insertItemEvents(tx, item!, events);
+        if (inTx) await inTx(tx);
         return item!;
       });
     },
@@ -339,6 +405,8 @@ export function createItemsRepo(db: DbExecutor) {
       categoryIds?: string[],
       /** D187: logged in the same transaction. */
       events: readonly ItemEventInput[] = [],
+      /** D294: extra writes in the same transaction (reminder state). */
+      inTx?: InTx,
     ): Promise<ItemRow> {
       return await db.transaction(async (tx) => {
         if (Object.keys(patch).length > 0) {
@@ -374,6 +442,7 @@ export function createItemsRepo(db: DbExecutor) {
           .limit(1);
 
         await insertItemEvents(tx, updatedItem!, events);
+        if (inTx) await inTx(tx);
         return updatedItem!;
       });
     },

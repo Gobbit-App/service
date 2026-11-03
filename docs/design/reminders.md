@@ -1,0 +1,99 @@
+# Reminders (037)
+
+Plan: [`specs/037-reminders`](../../specs/037-reminders/plan.md) · Decisions D291–D299 ·
+[ADR-070](../adr.md#adr-070-reminders-a-card-type-hidden-until-reveal-dismissed-once-notified-once-d291d299)
+
+A reminder is a card type (`type = 'reminder'`) with a deadline. It stays hidden until its reveal
+time (`deadline − showBefore`), shows on the deck once revealed, and is closed by one of the
+people allowed to dismiss it.
+
+## Data model (D291)
+
+- **Payload** (the source, round-tripped by the editor):
+  `{ deadline, showBefore: { amount, unit: minutes | hours | days }, dismiss: { mode: me | writers | people, userIds }, timeZone }`.
+  Validated by `reminderPayloadSchema` in `@gobbit/shared/reminders`.
+- **Derived by the DB** (migration `0021_reminders`):
+  - a `BEFORE` trigger on `items` sets `items.reveal_at` (null for other types, CHECK-enforced);
+  - an `AFTER` trigger upserts `reminders(item_id, deck_id, deadline)`.
+- **Server-owned state** lives only in `reminders`: `outcome` (`pending | done | dismissed`),
+  `dismissed_by/at`, `resolution` and `notified_deadline`.
+- `item_search_text` indexes no payload text for reminders, and `payloadText()` (embeddings) skips
+  it too.
+
+## Visibility (D292)
+
+- `itemRevealedWhere(role)` (`access/visibility.ts`) sits next to `itemHasVisibleCategory()` on
+  every member read: lists, favorites, link flags, archived, both search arms, dedup candidates and
+  category counts.
+  - Members: `reveal_at is null or reveal_at <= now()`.
+  - Anonymous readers: `type <> 'reminder'`. Public API, public pages, sitemap, public search and
+    `shareMode()` never show a reminder.
+- `items.service.loadItem` 404s a hidden reminder for anyone but its creator and roles that see
+  private categories (owner, maintainer).
+- **Upcoming**: `GET /decks/{id}/items?status=upcoming` lists hidden reminders, soonest reveal
+  first (cursor on `reveal_at, id`).
+  - Owners and maintainers see all of them; everyone else only their own.
+  - Proposals appear only to publishers, or to the person who proposed them.
+
+## Who can dismiss (D293)
+
+- `reminderDismissers()` (`@gobbit/shared/reminders`) is the one rule used by dismiss,
+  `reminder.canDismiss` and (later) the sweep and the pending list.
+  - It starts from candidates by mode: `me` is the creator; `writers` is every member with
+    `item.update`; `people` is the picked users plus the creator.
+  - It keeps only live writers who can see one of the card's categories.
+  - If nobody is left, the deck's owners can dismiss.
+- Personal decks always store `me`.
+- People picked for `people` must be writers (422 otherwise).
+- Only the creator changes the rule (an owner can once the creator has left): 403
+  `/problems/reminder-dismissers`.
+- An editor may delete a reminder they created. Every other delete still needs `item.delete`.
+
+## Dismiss and lifecycle (D294)
+
+`POST /items/{id}/dismiss { done, resolution? }` runs in one transaction (`reminders.repo.dismiss`):
+
+- sets the outcome (`done` or `dismissed`), who dismissed it and when, and the trimmed resolution;
+- archives a published card;
+- writes the `completed` or `dismissed` item event.
+
+Errors:
+
+- 403 `/problems/not-a-dismisser` when the caller isn't an eligible dismisser;
+- 409 `/problems/invalid-transition` for a proposal, a non-reminder, or a reminder that is no longer
+  pending (two people dismissing at once: one wins, the other gets 409).
+
+Lifecycle moves (hooks passed to `items.repo` and run in the same transaction):
+
+- **Restore** reopens the reminder (`reopenReminder`).
+- **Restore, undelete and publishing a proposal** after the deadline set
+  `notified_deadline = deadline` (`markNotifiedIfPast`). The reminder is then overdue in the app
+  only and never sends a late notification.
+- **A deadline edit** must be in the future (an unchanged past deadline is kept as is).
+
+## Limits (D299)
+
+- The shared caps (`@gobbit/shared` `REMINDER_*`) are deadline ≤ 1825 days ahead, show-before
+  ≤ 365 days and resolution ≤ 600 characters.
+- The env variables `REMINDER_MAX_DEADLINE_DAYS`, `REMINDER_MAX_SHOW_BEFORE_DAYS` and
+  `REMINDER_RESOLUTION_MAX` can only lower them.
+
+## Decision events
+
+`reminders` logger (`services/reminders.events.ts`), `warn` on refusals:
+
+| Event | Outcomes / reasons |
+| --- | --- |
+| `reminder.dismiss` | accepted `done`/`dismissed`; refused `not_eligible`/`not_pending` |
+| `reminder.dismissers` | refused `not_creator`/`not_writer` |
+| `reminder.delete` | accepted `creator`; refused `not_creator` |
+
+Each event carries `requestId` (taken from `Actor.requestId`), the user, the deck and the item id.
+
+## Deviations
+
+- `Actor` gained an optional `requestId` (set by `getActor(c)`). Services pass it to their decision
+  events this way, instead of taking a separate parameter.
+- A reminder dismissed before it was revealed stays hidden from the deck. It shows only in Upcoming
+  and by id until its reveal time.
+- `payloadText()` returns `''` for reminders, so embeddings use the title and body only.

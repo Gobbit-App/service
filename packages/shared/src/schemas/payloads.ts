@@ -5,6 +5,7 @@ import { utf8Bytes } from '../utils/utf8-bytes';
 import { httpUrlSchema } from './common';
 import { validateCalcExpression } from './calc-expression';
 import { MEDIA_IMAGE_DIMENSION_MAX } from '../media/constants';
+import { reminderPayloadSchema } from '../reminders/schema';
 
 /** D160: pixel size of a recorded image; server-owned (copied from the asset). */
 export const imageDimensionSchema = z.number().int().min(1).max(MEDIA_IMAGE_DIMENSION_MAX);
@@ -97,6 +98,7 @@ export const payloadSchemas = {
   image: imagePayloadSchema,
   table: tablePayloadSchema,
   calc: calcPayloadSchema,
+  reminder: reminderPayloadSchema,
 };
 
 export function payloadWithinBudget(p: unknown): boolean {

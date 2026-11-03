@@ -15,6 +15,9 @@ import { createLinkChecksRepo } from '../repositories/link-checks.repo';
 import { createSitemapRepo } from '../repositories/sitemap.repo';
 import { createItemEventsRepo } from '../repositories/item-events.repo';
 import { createWaitlistRepo } from '../repositories/waitlist.repo';
+import { createRemindersRepo } from '../repositories/reminders.repo';
+import { createRemindersService } from './reminders.service';
+import { REMINDER_DECISION_LEVELS, type ReminderDecisions } from './reminders.events';
 import { createLogHash } from '../lib/log-hash';
 import { decisionLogger } from '../lib/decision-event';
 import { logger as rootLogger, type Logger } from '../lib/logger';
@@ -133,7 +136,26 @@ export function buildServices({
   };
   const usersService = createUsersService({ users, decks, ...registration });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
-  const toDtos = createItemDtoMapper({ items, favorites, linkChecks });
+  // 037 (D291–D299): reminder rules and the `reminder` DTO field on every item response.
+  const reminders = createRemindersService({
+    reminders: createRemindersRepo(db),
+    limits: {
+      maxDeadlineDays: env.REMINDER_MAX_DEADLINE_DAYS,
+      maxShowBeforeDays: env.REMINDER_MAX_SHOW_BEFORE_DAYS,
+      resolutionMax: env.REMINDER_RESOLUTION_MAX,
+    },
+    decisions: decisionLogger<ReminderDecisions>('reminders', {
+      parent: logger,
+      levels: REMINDER_DECISION_LEVELS,
+    }),
+    now,
+  });
+  const toDtos = createItemDtoMapper({
+    items,
+    favorites,
+    linkChecks,
+    reminderStates: reminders.states,
+  });
   const searchServices = buildSearchServices({
     db,
     env,
@@ -266,6 +288,7 @@ export function buildServices({
         snapshotQueue: resolveLinkSnapshotQueue(media),
         rateLimits,
       },
+      reminders,
       now,
       purgeDeck,
     }),
