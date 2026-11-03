@@ -1,4 +1,5 @@
 import { writeFileSync } from 'node:fs';
+import { GLYPHS } from './glyphs.mjs';
 
 export const C = {
   dark: '#195b5c',
@@ -56,9 +57,18 @@ function bite({ s, c, h, w, theta, accent }) {
   return { mask, crumbs };
 }
 
+/** Brand letter (Inter ExtraBold) scaled to `height` and centred on (cx, cy). */
+const glyph = (ch, cx, cy, height, fill) => {
+  const { bb, d } = GLYPHS[ch];
+  const k = height / (bb[3] - bb[1]);
+  const tx = cx - ((bb[0] + bb[2]) / 2) * k,
+    ty = cy - ((bb[1] + bb[3]) / 2) * k;
+  return `<path d="${d}" fill="${fill}" transform="translate(${f(tx)} ${f(ty)}) scale(${f(k * 1000) / 1000})"/>`;
+};
+
 /** Two short content lines, like the text on a Gobbit card. */
-const contentLines = ({ bx, top, bodyW, color }) => {
-  const x = bx + bodyW * 0.2,
+const contentLines = ({ bx, top, bodyW, color, indent = 0 }) => {
+  const x = bx + bodyW * (0.2 + indent),
     sw = bodyW * 0.07;
   return [0.72, 0.48]
     .map(
@@ -102,6 +112,10 @@ export function logo(o = {}) {
     chimney: withChimney = false,
     bite: withBite = false,
     windows: withWindows = false,
+    letter = null,
+    letterPlace = 'index',
+    letterScale = 1,
+    letterColor,
     pad = 30,
     bg = C.bg,
     left = C.dark,
@@ -148,7 +162,23 @@ export function logo(o = {}) {
   const dr = door
     ? `<path d="M${dx} ${f(dy + dh)} V${f(dy + dw / 2)} a${dw / 2} ${dw / 2} 0 0 1 ${dw} 0 V${f(dy + dh)} Z" fill="${mark}"/>`
     : '';
-  const ln = lines ? contentLines({ bx, top: bodyTop, bodyW, color: mark }) : '';
+  const lc = letterColor ?? mark;
+  const letterEl = !letter
+    ? ''
+    : letterPlace === 'center'
+      ? glyph(letter, 0, bodyTop + (door ? bodyH * 0.36 : bodyH / 2), bodyH * 0.5 * letterScale, lc)
+      : letterPlace === 'door'
+        ? glyph(letter, 0, bodyTop + bodyH * 0.7, bodyH * 0.5 * letterScale, lc)
+        : glyph(letter, bx + bodyW * 0.22, bodyTop + bodyW * 0.27, bodyW * 0.26 * letterScale, lc);
+  const ln = lines
+    ? contentLines({
+        bx,
+        top: bodyTop,
+        bodyW,
+        color: mark,
+        indent: letter && letterPlace === 'index' ? 0.2 : 0,
+      })
+    : '';
   const wn = withWindows ? windows({ bodyW, top: bodyTop, bodyH, accent }) : '';
 
   const halfRoof = Math.max(h * s + 2, bodyW / 2);
@@ -163,7 +193,7 @@ export function logo(o = {}) {
     ? ''
     : `<rect x="${f(vx)}" y="${f(vy)}" width="${f(size)}" height="${f(size)}" fill="${bg}"/>`;
   const defs = `<defs>${roofClip}${halfL}${halfR}${bt ? bt.mask : ''}</defs>`;
-  const parts = [bgEl, ch?.stack, ch?.bits, roof, bt?.crumbs, bodyEl, fr, ln, wn, dr];
+  const parts = [bgEl, ch?.stack, ch?.bits, roof, bt?.crumbs, bodyEl, fr, ln, wn, dr, letterEl];
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${f(vx)} ${f(vy)} ${f(size)} ${f(size)}" width="512" height="512">${defs}${parts.filter(Boolean).join('')}</svg>`;
 }
 

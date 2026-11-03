@@ -1,20 +1,24 @@
 # Gobbit logo (draft)
 
-"House of know-how": two leaning cards form the roof of a home built from cards. The upright card carries content lines like a Gobbit card, and bits of know-how rise from the chimney — knowledge kept at home and shared with your people.
+"House of know-how": two leaning cards form the roof of a home built from cards; the upright card carries the brand **g**, and bits of know-how rise from the chimney — knowledge kept at home and shared with your people.
 
-| File                | Use                                                         |
-| ------------------- | ----------------------------------------------------------- |
-| `logo.svg`          | Mark on white (teal/mint, yellow accent bits)               |
-| `logo-app-icon.svg` | Inverted mark on teal — base for the favicon and PWA icons  |
-| `preview.png`       | Side-by-side preview                                        |
-| `generate-logo.mjs` | Parametric source; writes `v-<name>.svg` to the current dir |
+| File                              | Use                                                        |
+| --------------------------------- | ---------------------------------------------------------- |
+| `logo.svg`                        | Main mark on white — lowercase g                           |
+| `logo-app-icon.svg`               | Inverted mark on teal — base for the favicon and PWA icons |
+| `logo-capital-g.svg`              | Alternative with a capital G (crisper at 32 px)            |
+| `logo-app-icon-capital-g.svg`     | Capital-G app icon                                         |
+| `preview.png`                     | g / g icon / G / G icon                                    |
+| `generate-logo.mjs`, `glyphs.mjs` | Parametric source; letters are Inter ExtraBold outlines    |
 
-Regenerate the mark (app icon: add the colour overrides used for `logo-app-icon.svg`):
+Regenerate the main mark (writes `v-logo.svg` to the current dir):
 
 ```sh
-node docs/brand/generate-logo.mjs '{"logo":{"chimney":true,"lines":true,"frame":false,"bitScale":1.4}}'
+node docs/brand/generate-logo.mjs '{"logo":{"theta":56,"h":200,"w":92,"bodyW":236,"bodyAspect":0.92,"tuckTo":36,"chimney":true,"bitScale":1.3,"frame":false,"door":false,"letter":"g","letterPlace":"center","letterScale":1.4}}'
 ```
 
-Other layers to try: `frame` (inset card border), `bite` (bite out of the roof card), `windows` (lit windows), `bitShape: "card"` (bits as tiny cards).
+App icon: add `"bg":"#1f6869","left":"#ffffff","right":"#d7f0db","body":"#d7f0db","mark":"#195b5c","stack":"#ffffff","pad":60`.
 
-At 16 px the content lines and bits blur — the 16 px favicon should use the plain house (`lines: false`, `chimney: false`). Not wired into `apps/web/public` yet.
+Other layers: `door`, `lines` (card content lines), `frame` (inset card border), `bite`, `windows`, `letterPlace: "index" | "door"`, `bitShape: "card"`.
+
+At 16 px the letter and bits blur — the 16 px favicon should drop the chimney. Not wired into `apps/web/public` yet.
