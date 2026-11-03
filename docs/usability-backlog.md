@@ -30,3 +30,7 @@ Logged first, then planned in `PLAN.md` § Usability pass. Each item names the f
 ### Branding
 
 - [x] Remove every mention of "pocketbook" → 025–027
+
+## 2026-11-03
+
+- [x] Palette: move to the green brand palette → chore/green-palette

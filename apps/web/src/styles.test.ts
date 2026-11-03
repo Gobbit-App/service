@@ -52,6 +52,22 @@ describe.each([
     );
   });
 
+  // D272: every text pair of the green palette meets WCAG AA for normal text.
+  it.each([
+    ['--color-text', '--color-bg'],
+    ['--color-text', '--color-surface'],
+    ['--color-text', '--color-accent-soft'],
+    ['--color-text', '--color-highlight'],
+    ['--color-muted', '--color-bg'],
+    ['--color-muted', '--color-surface'],
+    ['--color-muted', '--color-accent-soft'],
+    ['--color-accent', '--color-bg'],
+    ['--color-accent', '--color-surface'],
+    ['--color-banner-text', '--color-banner'],
+  ])('keeps %s on %s at 4.5:1 or more', (fg, bg) => {
+    expect(contrast(color(fg), color(bg))).toBeGreaterThanOrEqual(4.5);
+  });
+
   it('keeps icon-only controls (muted) at 3:1 or more', () => {
     expect(contrast(color('--color-muted'), color('--color-surface'))).toBeGreaterThanOrEqual(3);
     expect(contrast(color('--color-muted'), color('--color-bg'))).toBeGreaterThanOrEqual(3);
