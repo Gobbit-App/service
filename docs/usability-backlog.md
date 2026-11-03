@@ -38,3 +38,8 @@ Logged first, then planned in `PLAN.md` § Usability pass. Each item names the f
 - [x] Create a new deck from the app and invite family members → fix/deck-nav-and-new-deck (D269)
 - [x] Non-admins open a deck in Browse → fix/deck-nav-and-new-deck (D268)
 - [x] Back is inconsistent: inside a deck's sub-page it must go to the deck's main page; only the main page goes to the deck list → fix/deck-nav-and-new-deck (D267)
+- [x] Palette: move to the green brand palette → chore/green-palette
+
+### Card editor
+
+- [x] Table/calc: start new cards from a sample with a Clear button → fix/editor-sample-payloads

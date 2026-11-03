@@ -118,12 +118,23 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   });
   usePageHide(autosave.flush);
 
+  /**
+   * D271: switching the type of an untouched new card moves the baseline to the new type's
+   * start (its sample), so the sample is never unsaved work; a touched card stays changed.
+   */
+  const switchType = (type: ItemType) => {
+    const next = withType(draft, type);
+    if (next === draft) return;
+    if (!changed) rebaseline({ type: next.type, payload: next.payload });
+    setDraft(next);
+  };
+
   // The URL's `?type=` changed outside the picker (e.g. back button): follow it during render.
   const urlType = props.mode === 'create' ? props.type : null;
   const [seenUrlType, setSeenUrlType] = useState(urlType);
   if (urlType !== seenUrlType) {
     setSeenUrlType(urlType);
-    if (urlType && urlType !== draft.type) setDraft(withType(draft, urlType));
+    if (urlType) switchType(urlType);
   }
 
   const isProposal = props.mode === 'edit' && props.item.status === 'proposed';
@@ -143,7 +154,7 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   };
 
   const changeType = (type: CreatableType) => {
-    setDraft((d) => withType(d, type));
+    switchType(type);
     if (props.mode === 'create') props.onTypeChange?.(type);
   };
 

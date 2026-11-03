@@ -3,8 +3,8 @@ import { OG_COLORS, OG_TEMPLATE_FONT, type OgNode } from './og-template';
 /** Placeholder monogram until a real logo exists (plan § 10). */
 export const ICON_MONOGRAM = 'G';
 
-/** A warm accent gradient shared by every icon variant. */
-const ICON_GRADIENT = `linear-gradient(135deg, #d0703f 0%, ${OG_COLORS.accent} 100%)`;
+/** A deep-teal gradient (lifted teal to brand teal) shared by every icon variant. */
+const ICON_GRADIENT = `linear-gradient(135deg, #2a7a7b 0%, ${OG_COLORS.accent} 100%)`;
 
 export type IconVariant = 'any' | 'maskable';
 
@@ -25,7 +25,7 @@ export function iconTree(size: number, variant: IconVariant = 'any'): OgNode {
         justifyContent: 'center',
         backgroundImage: ICON_GRADIENT,
         borderRadius: maskable ? 0 : Math.round(size * 0.22),
-        color: OG_COLORS.background,
+        color: OG_COLORS.mint,
         fontFamily: OG_TEMPLATE_FONT,
         fontWeight: 700,
         fontSize: Math.round(size * (maskable ? 0.5 : 0.62)),

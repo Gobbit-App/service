@@ -7,15 +7,20 @@ import {
   calcValues,
   canAddField,
   canRemoveField,
+  clearCalc,
+  isBlankCalc,
   removeField,
   setField,
 } from './calc-ops';
+import { useClearWithUndo } from './use-clear-with-undo';
 import { payloadBytes } from '../validate';
 import { LimitMeter } from './LimitMeter';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
 import { Button } from '../../ui/buttons/Button';
 import { IconButton } from '../../ui/buttons/IconButton';
+
+export const CALC_CLEARED = 'Calculation cleared';
 
 /** The live result with every field's default; nothing to show until the inputs are complete. */
 function LiveResult({ payload }: Pick<FieldsProps<'calc'>, 'payload'>): ReactElement {
@@ -43,6 +48,7 @@ export function CalcFields({
 }: FieldsProps<'calc'>): ReactElement {
   const edit = (index: number, changes: Partial<CalcDraftField>) =>
     onChange(setField(payload, index, changes));
+  const clear = useClearWithUndo(payload, onChange, clearCalc, CALC_CLEARED);
 
   return (
     <div className="editor__fields">
@@ -89,13 +95,24 @@ export function CalcFields({
           </fieldset>
         );
       })}
-      <Button
-        icon="plus"
-        label="Add field"
-        variant="ghost"
-        disabled={disabled || !canAddField(payload)}
-        onClick={() => onChange(addField(payload))}
-      />
+      <div className="calc-fields__tools">
+        <Button
+          icon="plus"
+          label="Add field"
+          variant="ghost"
+          disabled={disabled || !canAddField(payload)}
+          onClick={() => onChange(addField(payload))}
+        />
+        {!isBlankCalc(payload) && (
+          <Button
+            icon="eraser"
+            label="Clear calculation"
+            variant="ghost"
+            disabled={disabled}
+            onClick={clear}
+          />
+        )}
+      </div>
       {errors['payload.fields'] && <p className="field__error">{errors['payload.fields']}</p>}
       <TextInput
         label="Expression"
