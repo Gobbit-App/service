@@ -54,12 +54,12 @@ own docs slice).
 
 ## Phase 5: US3 — notifications (P2)
 
-- [ ] T022 `createSafePush` in apps/api/src/fetch/safe-fetch.ts (POST, allow-listed hosts, no redirects); push sender with `web-push`; env VAPID_* + limits in config
-- [ ] T023 Repos: push-subscriptions, notification-deliveries; `/me/push-subscriptions` (+ test), `/me/notification-preferences`; `/config.push`
-- [ ] T024 Worker `reminder-sweep`: plan (one tx) + deliver (claim/send/backoff/gone/interrupted); reminder email template
-- [ ] T025 [P] [unit] safe-push host allow-list, payload builder, backoff
-- [ ] T026 [P] [int] sweep at most once across two ticks and a crash between claim and send; opted-out email skipped; 410 removes subscription; ineligible members skipped
-- [ ] T027 Web: Settings → Notifications (email switch, push enable/disable/test), service worker `push` + `notificationclick`
+- [x] T022 `createSafePush` in apps/api/src/fetch/safe-fetch.ts (POST, allow-listed hosts, no redirects); push sender with `web-push`; env VAPID_* + limits in config
+- [x] T023 Repos: push-subscriptions, notification-deliveries; `/me/push-subscriptions` (+ test), `/me/notification-preferences`; `/config.push`
+- [x] T024 Worker `reminder-sweep`: plan (one tx) + deliver (claim/send/backoff/gone/interrupted); reminder email template
+- [x] T025 [P] [unit] safe-push host allow-list, payload builder, backoff
+- [x] T026 [P] [int] sweep at most once across two ticks and a crash between claim and send; opted-out email skipped; 410 removes subscription; ineligible members skipped
+- [x] T027 Web: Settings → Notifications (email switch, push enable/disable/test), service worker `push` + `notificationclick`
 
 ## Phase 6: US4 — notification area (P2)
 

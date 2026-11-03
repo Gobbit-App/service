@@ -75,6 +75,10 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `REMINDER_MAX_DEADLINE_DAYS` | `1825` | Furthest reminder deadline from now, in days (may only lower the default) |
 | `REMINDER_MAX_SHOW_BEFORE_DAYS` | `365` | Longest reminder show-before period, in days (may only lower the default) |
 | `REMINDER_RESOLUTION_MAX` | `600` | Longest reminder resolution note, in characters (may only lower the default) |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | — | Web push for due reminders (D296); all three or none. Generate with `pnpm dlx web-push generate-vapid-keys`; the subject is `mailto:` or `https://`. Unset → email only |
+| `NOTIFY_MAX_ATTEMPTS` | `5` | Delivery attempts per reminder notification before it is marked failed |
+| `NOTIFY_RETRY_BASE_SECONDS` | `60` | Base of the exponential retry delay for a failed delivery |
+| `REMINDER_SWEEP_BATCH` | `200` | Due reminders planned and deliveries sent per `reminder-sweep` tick (every minute) |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
@@ -263,7 +267,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 
 **Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
 
-Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `STATS_HOST` (Umami dashboard hostname), `ANALYTICS_UPSTREAM`.
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (web push), `STATS_HOST` (Umami dashboard hostname), `ANALYTICS_UPSTREAM`.
 
 ### GitHub Actions
 
