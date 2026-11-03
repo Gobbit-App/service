@@ -21,6 +21,28 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 - Runtime config (D55): `GET /api/config` → `{ cloudinaryCloudName, commit }`, cached for the session in the persisted query cache. One web image works in every environment.
 - Styling: plain CSS with custom properties and `prefers-color-scheme` (`styles.css`); no UI kit. Initial JS is asserted ≤ 150 KB gzip in CI (`pnpm budget`, reads the Vite manifest).
 
+## Palette (D272)
+
+Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49535e`, light green `#b2e29b`, deep teal `#195b5c`. The same values drive the app tokens (`styles.css`), the public pages and landing (`apps/api/src/public/styles.ts`, shared by `landing-styles.ts`), the OG images and icons (`OG_COLORS`, re-rendered with `pnpm og:static`), `theme-color` and the manifest.
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| `--color-bg` | `#f3faf4` (mint tint) | `#121a1c` |
+| `--color-surface` | `#ffffff` | `#1a2629` |
+| `--color-text` | `#232b31` (dark slate) | `#e8f3ea` |
+| `--color-muted` | `#49535e` (slate) | `#a3b5b0` |
+| `--color-border` | `#cfe3d4` | `#2c3e41` |
+| `--color-accent` | `#195b5c` (teal) | `#b2e29b` (light green) |
+| `--color-accent-text` | `#ffffff` | `#121a1c` |
+| `--color-accent-soft` | `#d7f0db` (mint) | `#1f4243` |
+| `--color-highlight` | `#b2e29b` (search hit marks) | `#195b5c` |
+| `--color-danger` | `#a12b2b` | `#f08a8a` |
+| `--color-banner` / `-text` | `#195b5c` / `#ffffff` | `#d7f0db` / `#121a1c` |
+
+- Contrast (WCAG 2.x): every text pair is ≥ 4.5:1 in both themes — lowest are muted on accent-soft (light 6.48:1, dark 5.10:1) and danger on surface (dark 6.43:1); accent-text on accent is 7.80:1 (light) and 11.97:1 (dark). `styles.test.ts` asserts the pairs from the tokens. No brand colour needed adjusting.
+- Focus rings stay `--color-accent` (light green on a light background would be under 3:1). The public pages gained `--on-accent` (button text) and `--danger` (the landing form's errors, formerly a fixed red that failed in dark mode).
+- The icon is a lifted-teal → teal gradient (`#2a7a7b` → `#195b5c`) with a mint monogram.
+
 ## Offline model (D56)
 
 - The service worker (`src/sw.ts`, vite-plugin-pwa `injectManifest`, typechecked with `tsconfig.sw.json`) precaches the app shell and caches Cloudinary images `CacheFirst` (30 days, 600 entries: the blurred placeholders share it, D162). It never caches API responses, and `og/**` is not precached.

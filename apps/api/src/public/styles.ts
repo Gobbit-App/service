@@ -1,10 +1,11 @@
 /**
  * D177: the one inline stylesheet of public pages. System fonts, a narrow column and logical
- * properties only (`margin-inline`, `padding-inline`), so RTL pages need no extra rules.
+ * properties only (`margin-inline`, `padding-inline`), so RTL pages need no extra rules. Colours
+ * follow the web app's green brand palette (D272).
  */
 export const PUBLIC_PAGE_CSS = `
-:root{color-scheme:light dark;--fg:#1d1d1f;--muted:#6b6b70;--bg:#fbfbf8;--card:#fff;--line:#e3e3df;--accent:#2f6d4f}
-@media (prefers-color-scheme:dark){:root{--fg:#ececec;--muted:#a0a0a6;--bg:#161618;--card:#202023;--line:#333337;--accent:#7fc6a2}}
+:root{color-scheme:light dark;--fg:#232b31;--muted:#49535e;--bg:#f3faf4;--card:#fff;--line:#cfe3d4;--accent:#195b5c;--on-accent:#fff;--danger:#a12b2b}
+@media (prefers-color-scheme:dark){:root{--fg:#e8f3ea;--muted:#a3b5b0;--bg:#121a1c;--card:#1a2629;--line:#2c3e41;--accent:#b2e29b;--on-accent:#121a1c;--danger:#f08a8a}}
 *{box-sizing:border-box}
 body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Hebrew",sans-serif;color:var(--fg);background:var(--bg)}
 main{max-width:40rem;margin-inline:auto;padding:1.25rem 1rem 3rem}
@@ -34,7 +35,7 @@ dl.calc dd{margin:0}
 .pager{margin-block-start:1.25rem}
 form.search{display:flex;gap:.5rem;margin-block:.75rem}
 form.search input{flex:1;min-width:0;font:inherit;padding:.4rem .6rem;border:1px solid var(--line);border-radius:.5rem;background:var(--card);color:var(--fg)}
-form.search button{font:inherit;padding:.4rem .9rem;border:1px solid var(--accent);border-radius:.5rem;background:var(--accent);color:var(--bg)}
+form.search button{font:inherit;padding:.4rem .9rem;border:1px solid var(--accent);border-radius:.5rem;background:var(--accent);color:var(--on-accent)}
 footer{margin-block-start:2rem;font-size:.85rem;color:var(--muted)}
 `
   .trim()
