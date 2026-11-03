@@ -1,4 +1,4 @@
-import { BEFORE_SEND_HOOK, type Screen } from '@gobbit/shared/analytics';
+import type { Screen } from '@gobbit/shared/analytics';
 import type { Env } from '../env';
 import { decisionLogger } from '../lib/decision-event';
 import type { Logger } from '../lib/logger';
@@ -29,20 +29,22 @@ export type AnalyticsDecisions = {
     outcome: 'enabled' | 'disabled';
     /** Comma-separated `ANALYTICS_SURFACES` (decision fields are scalars). */
     surfaces?: string;
+    /** D265: analytics is on unless declined (035); set only when enabled. */
+    consent?: 'opt_out';
   };
 };
 
 /**
- * D232 (contract §2): Umami's tracker, deferred, same origin, Do Not Track honoured, and limited
- * to the public host so copies of the page elsewhere send nothing.
+ * D264 (035 contract §4): the only analytics tag on an API-rendered page. `page.js` reads the
+ * visitor's choice, defines the before-send hook and injects Umami's tracker unless they declined;
+ * without `page` (the landing) payloads pass unchanged, with it they are rewritten to the pattern
+ * and screen name (D257). Limited to the public host so copies elsewhere send nothing.
  */
 export function analyticsTag({ siteId, host, page }: AnalyticsHead): Html {
   if (!page) {
-    return h`<script defer src="${STATS_BASE_PATH}/script.js" data-website-id="${siteId}" data-host-url="${STATS_BASE_PATH}" data-domains="${host}" data-do-not-track="true"></script>`;
+    return h`<script defer src="${PAGE_SCRIPT_PATH}" data-website-id="${siteId}" data-domains="${host}"></script>`;
   }
-  // D257: page.js first (both deferred, so document order), then the tracker naming its hook.
-  return h`<script defer src="${PAGE_SCRIPT_PATH}" data-pattern="${page.pattern}" data-screen="${page.name}"></script>
-<script defer src="${STATS_BASE_PATH}/script.js" data-website-id="${siteId}" data-host-url="${STATS_BASE_PATH}" data-domains="${host}" data-do-not-track="true" data-exclude-search="true" data-exclude-hash="true" data-before-send="${BEFORE_SEND_HOOK}"></script>`;
+  return h`<script defer src="${PAGE_SCRIPT_PATH}" data-website-id="${siteId}" data-domains="${host}" data-pattern="${page.pattern}" data-screen="${page.name}"></script>`;
 }
 
 /** D257: the head for a public page or share preview, or undefined when analytics is off. */
@@ -60,7 +62,7 @@ export function analyticsHead(env: AnalyticsEnv): AnalyticsConfig | undefined {
   return { siteId: env.ANALYTICS_SITE_ID, host: new URL(env.APP_URL ?? env.API_URL).host };
 }
 
-/** D243 / D258: one `analytics.config` line per process start; host and surfaces, never the site id. */
+/** D243 / D258 / D265: one `analytics.config` line per start; host, surfaces, consent, never the site id. */
 export function recordAnalyticsConfig(
   env: AnalyticsEnv,
   ctx: { bootId: string },
@@ -71,6 +73,7 @@ export function recordAnalyticsConfig(
     outcome: head ? 'enabled' : 'disabled',
     host: head?.host,
     surfaces: head ? ANALYTICS_SURFACES.join(',') : undefined,
+    consent: head ? 'opt_out' : undefined,
     bootId: ctx.bootId,
   });
 }

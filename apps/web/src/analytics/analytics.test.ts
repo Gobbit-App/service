@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AppConfig, Me } from '@gobbit/shared';
+import type { AnalyticsConsentValue } from '@gobbit/shared/analytics';
 import { queryKeys } from '../api/query-keys';
 import { testQueryClient } from '../test/render';
 import { deckIdFromCache, startAnalytics, trackContent, type Place } from './analytics';
@@ -18,23 +19,35 @@ const appConfig = (analytics: AppConfig['analytics']): AppConfig => ({
   ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
 });
 
-const me = (id: string): Me =>
-  ({ user: { id, email: 'a@b.c', displayName: 'A' }, decks: [], isPlatformAdmin: false }) as Me;
+const me = (id: string, value: AnalyticsConsentValue = 'unanswered'): Me => ({
+  user: { id, email: 'a@b.c', displayName: 'A' },
+  decks: [],
+  isPlatformAdmin: false,
+  analyticsConsent:
+    value === 'unanswered'
+      ? { value, at: null, source: null }
+      : { value, at: '2026-11-01T10:00:00.000Z', source: 'prompt' },
+});
 
 type SetupOptions = {
   analytics?: AppConfig['analytics'];
   member?: string | null;
+  consent?: AnalyticsConsentValue;
+  device?: AnalyticsConsentValue;
   place?: Place;
 };
 
 function setup({
   analytics = ANALYTICS,
   member = MEMBER,
+  consent = 'unanswered',
+  device = 'unanswered',
   place = { routeId: '/d/$slug/', pathname: '/d/smith-family' },
 }: SetupOptions = {}) {
   const queryClient = testQueryClient();
   queryClient.setQueryData(queryKeys.config, appConfig(analytics));
-  if (member) queryClient.setQueryData(queryKeys.me, me(member));
+  if (member) queryClient.setQueryData(queryKeys.me, me(member, consent));
+  const deviceState = { value: device };
   const umami = { track: vi.fn(), identify: vi.fn() };
   let options: InstallOptions | undefined;
   const installTracker = vi.fn(async (o: InstallOptions) => {
@@ -49,6 +62,7 @@ function setup({
     load,
     whenIdle: (run) => run(),
     isOnline: () => true,
+    deviceConsent: () => deviceState.value,
     origin: 'https://gobbit.example',
     current: () => state.place,
     onNavigate: (cb) => {
@@ -60,7 +74,15 @@ function setup({
     state.place = next;
     navigate();
   };
-  return { queryClient, umami, load, started, go, context: () => options!.getContext() };
+  return {
+    queryClient,
+    umami,
+    load,
+    started,
+    go,
+    deviceState,
+    context: () => options!.getContext(),
+  };
 }
 
 /** Lets the chained load → install → page view promises settle. */
@@ -92,6 +114,7 @@ describe('startAnalytics (D252–D255)', () => {
       memberId: MEMBER,
       online: true,
       origin: 'https://gobbit.example',
+      consented: true,
     });
   });
 
@@ -142,6 +165,59 @@ describe('startAnalytics (D252–D255)', () => {
     });
     await settle();
     expect(() => trackContent('card-created', { channel: 'editor' })).not.toThrow();
+  });
+});
+
+describe('consent gating (D261, D262)', () => {
+  it('loads nothing for a member who declined', async () => {
+    const { load, started } = setup({ consent: 'declined' });
+    stop = await started;
+    await settle();
+    expect(load).not.toHaveBeenCalled();
+    expect(() => trackContent('card-created', { channel: 'editor' })).not.toThrow();
+  });
+
+  it('a device "No thanks" keeps an unanswered member silent (FR-010)', async () => {
+    const { load, started } = setup({ device: 'declined' });
+    stop = await started;
+    await settle();
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('the member’s own "allowed" wins over a device decline', async () => {
+    const { umami, started } = setup({ consent: 'allowed', device: 'declined' });
+    stop = await started;
+    await settle();
+    expect(umami.track).toHaveBeenCalledTimes(1);
+  });
+
+  it('turning to allowed loads the tracker and sends the current view without a reload', async () => {
+    const { queryClient, umami, load, started } = setup({ consent: 'declined' });
+    stop = await started;
+    await settle();
+    queryClient.setQueryData(queryKeys.me, me(MEMBER, 'allowed'));
+    await settle();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(umami.track).toHaveBeenCalledTimes(1);
+  });
+
+  it('turning to declined stops views, events and the hook at once', async () => {
+    const { queryClient, umami, started, go, context } = setup();
+    stop = await started;
+    await settle();
+    queryClient.setQueryData(queryKeys.me, me(MEMBER, 'declined'));
+    go({ routeId: '/i/$itemId', pathname: `/i/${DECK}` });
+    trackContent('card-created', { channel: 'editor' });
+    expect(umami.track).toHaveBeenCalledTimes(1); // only the first view
+    expect(context().consented).toBe(false);
+  });
+
+  it('a device decline after load cancels in the hook', async () => {
+    const { started, context, deviceState } = setup();
+    stop = await started;
+    await settle();
+    deviceState.value = 'declined';
+    expect(context().consented).toBe(false);
   });
 });
 

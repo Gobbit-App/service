@@ -6,9 +6,13 @@ import { setupApiTest } from './helpers';
 const APP_URL = 'http://app.test';
 const UNKNOWN_ITEM = '00000000-0000-4000-8000-0000000000ff';
 const SITE_ID = '2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90';
-const TAG = `<script defer src="/stats/script.js" data-website-id="${SITE_ID}" data-host-url="/stats" data-domains="app.test" data-do-not-track="true"></script>`;
+const TAG = `<script defer src="/analytics/page.js" data-website-id="${SITE_ID}" data-domains="app.test"></script>`;
 
-/** D232 (031), D257 (033): with analytics configured, the landing, public pages and share previews carry the tracker. */
+/**
+ * D232 (031), D257 (033), D264 (035): with analytics configured, the landing, public pages and
+ * share previews carry only the consent-aware `page.js` loader (it injects Umami's tracker unless
+ * the visitor declined); the landing and public pages also carry the hidden banner.
+ */
 describe('landing analytics tag (D232)', () => {
   const ctx = setupApiTest({
     env: { APP_URL, CORS_ORIGINS: APP_URL, ANALYTICS_SITE_ID: SITE_ID },
@@ -45,6 +49,8 @@ describe('landing analytics tag (D232)', () => {
       expect(html).toContain(TAG);
       expect(html.indexOf(TAG)).toBeLessThan(html.indexOf('</head>'));
       expect(html.match(/<script/g)).toHaveLength(1);
+      expect(html).toContain('data-consent-banner');
+      expect(html).not.toContain('do-not-track');
     },
   );
 
@@ -84,12 +90,11 @@ describe('landing analytics tag (D232)', () => {
     const html = await (await ctx.app.request(path())).text();
     const head = html.slice(0, html.indexOf('</head>'));
     expect(head).toContain(
-      `<script defer src="/analytics/page.js" data-pattern="${pattern}" data-screen="${screen}"></script>`,
+      `<script defer src="/analytics/page.js" data-website-id="${SITE_ID}" data-domains="app.test" data-pattern="${pattern}" data-screen="${screen}"></script>`,
     );
-    expect(head).toContain('data-before-send="__gobbitAnalyticsBeforeSend"');
-    expect(head).toContain('data-exclude-search="true"');
+    expect(head).not.toContain('/stats/script.js');
     const tags = head.match(/<script[^>]*>/g) ?? [];
-    expect(tags).toHaveLength(2);
+    expect(tags).toHaveLength(1);
     expect(tags.join(' ')).not.toMatch(
       new RegExp(`${deck.slug}|${category.slug}|${item.id}|${UNKNOWN_ITEM}`),
     );
@@ -98,7 +103,8 @@ describe('landing analytics tag (D232)', () => {
   it('error pages and SEO files never carry it', async () => {
     for (const path of ['/p/no-such-deck', '/sitemap.xml', '/robots.txt']) {
       const body = await (await ctx.app.request(path)).text();
-      expect(body, path).not.toContain('/stats/');
+      expect(body, path).not.toContain('/analytics/page.js');
+      expect(body, path).not.toContain('data-consent');
     }
   });
 });

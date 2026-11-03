@@ -1,4 +1,5 @@
 import { analyticsTag, type AnalyticsHead } from './analytics';
+import { CONSENT_CSS, consentBanner } from './consent-banner';
 import { h, raw, type Html } from './html';
 import { PUBLIC_PAGE_CSS } from './styles';
 
@@ -18,7 +19,7 @@ export type PageHead = {
   dir: 'ltr' | 'rtl';
   /** D179: shared decks and error pages are `noindex`. */
   robots: 'index' | 'noindex';
-  /** D232: Umami's tracker; only the landing page sets it, and only when configured (031). */
+  /** D232/D264: the consent-aware analytics loader and banner; only when configured. */
   analytics?: AnalyticsHead;
 };
 
@@ -34,8 +35,8 @@ export type LayoutOptions = {
 };
 
 /**
- * D177: the HTML shell. One inline stylesheet, no script (except D232's optional tracker on the
- * landing page), every value escaped by `h`.
+ * D177: the HTML shell. One inline stylesheet, no inline script (D264's first-party `page.js` and
+ * its hidden consent banner only when analytics is configured), every value escaped by `h`.
  * `main` is pre-rendered markup built with `h`.
  */
 export function layout(head: PageHead, main: Html, opts: LayoutOptions = {}): string {
@@ -63,12 +64,13 @@ ${
 <meta name="twitter:card" content="${head.image ? 'summary_large_image' : 'summary'}">
 ${head.robots === 'noindex' ? h`<meta name="robots" content="noindex">` : ''}
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<style>${raw(PUBLIC_PAGE_CSS)}${raw(opts.css ?? '')}</style>
+<style>${raw(PUBLIC_PAGE_CSS)}${raw(head.analytics ? CONSENT_CSS : '')}${raw(opts.css ?? '')}</style>
 ${head.analytics ? analyticsTag(head.analytics) : ''}
 </head>
 <body>
 <main>
 <header class="site"><a class="brand" href="/">${SITE_NAME}</a>${opts.headerLink ?? ''}</header>
+${head.analytics ? consentBanner() : ''}
 ${main}
 </main>
 </body>

@@ -11,6 +11,7 @@ import { PUBLIC_SCREENS } from '@gobbit/shared/analytics';
 import { excerpt, OG_DESCRIPTION_MAX } from '../share/excerpt';
 import { withPage, type AnalyticsConfig } from './analytics';
 import { h, type Html } from './html';
+import { consentOpenButton } from './consent-banner';
 import { layout, SITE_NAME, type PageHead } from './layout';
 import { openInAppPath, publicPath, publicUrl, type PageTarget } from './public-url';
 import { renderItem, type ImageUrlFor } from './render-item';
@@ -48,8 +49,9 @@ function publicViewNote(ctx: PageContext): Html | string {
     : '';
 }
 
-function openInApp(target: PageTarget): Html {
-  return h`<footer><a href="${openInAppPath(target)}">Open in ${SITE_NAME}</a></footer>`;
+/** The page footer; D264's "Analytics" button when analytics is on. */
+function openInApp(ctx: PageContext, target: PageTarget): Html {
+  return h`<footer><a href="${openInAppPath(target)}">Open in ${SITE_NAME}</a>${ctx.analytics ? h` ${consentOpenButton()}` : ''}</footer>`;
 }
 
 /** D182: a plain GET form, so search works without JavaScript. */
@@ -103,7 +105,7 @@ ${searchForm(deck)}
     )}</nav>
 ${cardList(deck, items)}
 ${pager(publicPath(target), nextCursor)}
-${openInApp(target)}`,
+${openInApp(ctx, target)}`,
   );
 }
 
@@ -136,7 +138,7 @@ export function categoryPage(
 ${searchForm(deck)}
 ${cardList(deck, items)}
 ${pager(publicPath(target), nextCursor)}
-${openInApp(target)}`,
+${openInApp(ctx, target)}`,
   );
 }
 
@@ -166,7 +168,7 @@ ${
       )}</nav>`
     : ''
 }
-${openInApp(target)}`,
+${openInApp(ctx, target)}`,
   );
 }
 
@@ -206,7 +208,7 @@ ${
 ${cardList(deck, items, 'No public cards match.')}`
     : ''
 }
-${openInApp(target)}`,
+${openInApp(ctx, target)}`,
   );
 }
 

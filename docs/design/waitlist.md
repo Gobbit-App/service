@@ -116,7 +116,9 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
 - **What**: self-hosted Umami (`umami` service, own `umami` database on the shared Postgres)
   counts landing visitors without cookies. Setup and checks: `infra/README.md` § Landing analytics.
 - **Tag**: `public/analytics.ts` renders
-  `<script defer src="/stats/script.js" data-website-id data-host-url="/stats" data-domains data-do-not-track="true">`.
+  `<script defer src="/analytics/page.js" data-website-id data-domains>`; `page.js` injects
+  `/stats/script.js` unless the visitor declined, and reveals the hidden consent banner and the
+  "Analytics" button in the privacy note (035, D264, ADR-068; Do Not Track is not consulted).
   `layout()` adds it only when the page head carries `analytics` (`analyticsHead(env)`, set only
   with `ANALYTICS_SITE_ID`), and only the landing renderer sets it, in every state. Public deck
   pages, error pages, the sitemap and the SPA's `index.html` never carry it (unit, integration and

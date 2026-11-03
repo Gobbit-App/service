@@ -17,7 +17,8 @@ const TRACKER_STUB = `
 (() => {
   const script = document.currentScript;
   const hook = window[script.dataset.beforeSend];
-  window.__analyticsSent = [];
+  // Kept across full loads (each page.goto starts a new window) for the whole tab.
+  window.__analyticsSent = JSON.parse(sessionStorage.getItem('__analyticsSent') || '[]');
   const base = () => ({
     website: script.dataset.websiteId,
     hostname: location.hostname,
@@ -29,7 +30,9 @@ const TRACKER_STUB = `
   });
   const send = (type, payload) => {
     const out = hook ? hook(type, payload) : payload;
-    if (out) window.__analyticsSent.push({ type, payload: out });
+    if (!out) return;
+    window.__analyticsSent.push({ type, payload: out });
+    sessionStorage.setItem('__analyticsSent', JSON.stringify(window.__analyticsSent));
   };
   window.umami = {
     track: (name, data) => send('event', name ? { ...base(), name, data } : base()),
@@ -75,6 +78,12 @@ test('in-app analytics sends route patterns, screen names and ids only @full', a
   await expect.poll(async () => (await sent(page)).length, { timeout: 15_000 }).toBeGreaterThan(0);
 
   await page.goto(webUrl(`/d/${webDeck.slug}/search?q=${SENTINEL}`));
+  // Each goto is a full load: let this page's view go out before leaving it.
+  await expect
+    .poll(async () => (await sent(page)).some((s) => s.payload.url === '/d/:deck/search'), {
+      timeout: 15_000,
+    })
+    .toBe(true);
   await page.goto(webUrl(`/d/${webDeck.slug}/new`));
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Body', { exact: true }).fill(`Body with ${SENTINEL}`);

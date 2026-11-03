@@ -53,7 +53,12 @@ function setup({
   respond.mockImplementation(async (request) => {
     if (request === 'GET /me') {
       const user = { id: 'u1', email: 'me@example.test', displayName: 'Me' };
-      return { user, decks: [], isPlatformAdmin };
+      return {
+        user,
+        decks: [],
+        isPlatformAdmin,
+        analyticsConsent: { value: 'unanswered', at: null, source: null },
+      };
     }
     if (request === 'GET /me/ingest-tokens') return { data: tokens };
     if (request === 'GET /decks') return { data: [family, club] };
@@ -72,14 +77,15 @@ describe('SettingsScreen', () => {
     requests.mockClear();
   });
 
-  it('shows the analytics privacy note only when analytics is on (FR-013)', async () => {
+  it('Privacy says nothing is measured when analytics is off, else shows the switch (FR-013)', async () => {
     const { unmount } = setup();
     await screen.findByRole('list', { name: 'Your tokens' });
-    expect(screen.queryByRole('heading', { name: 'Privacy' })).not.toBeInTheDocument();
+    expect(screen.getByText('This server doesn’t measure usage.')).toBeInTheDocument();
+    expect(screen.queryByRole('switch')).toBeNull();
     unmount();
 
     setup({ analytics: { siteId: 'site-1', host: 'gobbit.example' } });
-    expect(await screen.findByRole('heading', { name: 'Privacy' })).toBeInTheDocument();
+    expect(await screen.findByRole('switch', { name: 'Usage analytics' })).toBeChecked();
     expect(screen.getByText(/member id/)).toBeInTheDocument();
   });
 

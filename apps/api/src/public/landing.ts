@@ -1,6 +1,7 @@
 import { WAITLIST_NOTE_MAX } from '@gobbit/shared';
 import { LANDING_OG_IMAGE_PATH, OG_HEIGHT, OG_WIDTH } from '../share/og-template';
 import type { AnalyticsHead } from './analytics';
+import { consentOpenButton } from './consent-banner';
 import { h, type Html } from './html';
 import { LANDING_COPY_EN, type LandingCopy } from './landing-copy';
 import { heroHeading } from './landing-definition';
@@ -130,6 +131,6 @@ ${view.state === 'signed-in' ? '' : h`<p>${copy.hero.invite}</p>`}
 ${stateMessage(view, copy)}
 <ul class="uses">${uses}</ul>
 ${FORM_STATES.has(view.state) ? joinForm(view, copy) : ''}
-<footer><p>${copy.privacy}</p><p>${copy.footer}</p></footer>`;
+<footer><p>${copy.privacy}${view.analytics ? h` ${consentOpenButton()}` : ''}</p><p>${copy.footer}</p></footer>`;
   return layout(head(view, copy), main, { css: LANDING_CSS, headerLink: headerLink(view, copy) });
 }

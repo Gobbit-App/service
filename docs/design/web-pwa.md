@@ -92,11 +92,11 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 ## App analytics (033, D252–D258, ADR-066)
 
 - **Off by default**: `GET /config` carries `analytics: null` unless `ANALYTICS_SITE_ID` is set; then nothing is loaded and nothing is sent.
-- **Loading** (`analytics/analytics.ts`, in the main chunk): `startAnalytics` (from `main.tsx`) waits for the first resolved route and a member in the `me` cache, then on idle imports `analytics/tracker.ts` (own chunk), which installs `window.__gobbitAnalyticsBeforeSend` and appends `/stats/script.js` with `data-auto-track="false"`, `data-do-not-track="true"`, `data-domains`, `data-exclude-search`, `data-exclude-hash` and `data-before-send`.
+- **Loading** (`analytics/analytics.ts`, in the main chunk): `startAnalytics` (from `main.tsx`) waits for the first resolved route and a member in the `me` cache, then on idle imports `analytics/tracker.ts` (own chunk), which installs `window.__gobbitAnalyticsBeforeSend` and appends `/stats/script.js` with `data-auto-track="false"`, `data-domains`, `data-exclude-search`, `data-exclude-hash` and `data-before-send`.
 - **Screens** (`analytics/catalogue.ts`): `Record<RouteId, Screen | null>` over the router's generated ids. `null` = untracked (`/sign-in`, `/auth/error`, layouts); an unknown id sends `/other`. One page view per change of real pathname.
 - **Sanitiser**: the hook runs `sanitizePayload` (`@gobbit/shared/analytics`) with the current screen, member id and online state. Rules: [contract](../../specs/033-app-analytics/contracts/analytics.md).
 - **Identity**: the member id is read from the `me` cache at send time; a member change calls `identify` (new Umami session).
-- **Content events**: `trackContent(name, props)` from mutation success paths: create/update item, archive/restore/undelete/delete, review publish, bulk publish, notes import, share button (sheet or copied link), share target. A no-op before load, offline or with DNT; never throws into the caller.
+- **Content events**: `trackContent(name, props)` from mutation success paths: create/update item, archive/restore/undelete/delete, review publish, bulk publish, notes import, share button (sheet or copied link), share target. A no-op before load, offline or without consent (035); never throws into the caller.
 - **Privacy note**: Settings → Privacy and the landing page say what is measured.
 
 ## Deviations from the 033 plan
@@ -132,3 +132,20 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 - D280: `--bottom-bar-h` is always set, not only while a bar is mounted; pages without a bar (editor, Browse) show toasts slightly higher.
 - The old `AddCardLink`, `PasteLink`, `ImportLink`, `SharesLink`, `DeckSettingsLink` and `ActivityLink` components were deleted rather than restyled; their routes are unchanged.
 - The `@smoke` sign-out journey now leaves the editor before signing out from ⋯ (the editor has no bar); the leave guard on sign-out stays covered by `use-sign-out.test.tsx`. The long press runs in `@full` (`bottom-bar.spec.ts`); `@smoke` covers the short press → New card.
+
+## Analytics consent (035, D259–D266, ADR-068)
+
+- **Rule**: `analyticsAllowed(member, device)` (`@gobbit/shared/analytics`): an account answer wins; when the account hasn't answered, a declined device stops sending; anonymous pages use the device choice only. Do Not Track and GPC are not consulted. `umami.disabled` (operator, smoke) still wins.
+- **Member choice**: `GET /me` → `analyticsConsent { value: unanswered | allowed | declined, at, source }`; `PUT /me/analytics-consent` (`api/analytics-consent.ts`) writes the answer into the `me` cache. Server side: `analytics-consent.service` → `users.repo.setAnalyticsConsent` (row locked, audit row in the same transaction, same value = no write, `analytics.consent` event).
+- **Facade** (`analytics/analytics.ts`): nothing loads until `me` is known and the rule allows; the before-send hook gets `consented` and cancels every payload while it is false; a cache change to allowed loads the tracker and sends the current view, without a reload.
+- **Device choice** (`analytics/device-consent.ts`): `localStorage['gobbit.analytics.consent']` `{ value, at }`, read through the shared parser; storage errors = not answered. Only `page.js` writes it.
+- **Prompt** (`analytics/ConsentPrompt.tsx`, in `__root.tsx` above the outlet): in-flow labelled region "Help improve Gobbit?" with Allow / No thanks / close (close = this app start only). Shown only when configured, unanswered and on a route `prompt-routes.ts` allows (never sign-in, auth error, editor, new card or Browse). Never takes focus; a failed save keeps it with an alert; buttons disabled offline.
+- **Settings → Privacy** (`settings/PrivacySection.tsx`): "Usage analytics" switch with "Since {date}" or "Not answered yet (on)", disabled offline ("Changing this needs a connection"); unconfigured shows only "This server doesn’t measure usage." Copy for all surfaces lives in `@gobbit/shared/analytics` `privacy.ts`.
+- **Anonymous pages**: see [public](public.md#analytics-on-public-pages-033-d257) and [waitlist](waitlist.md#landing-analytics-031-d231d233-d243-adr-062).
+
+## Deviations from the 035 plan
+
+- e2e member flows stub `/me` and the consent PUT in the page (the smoke owner is shared by parallel specs); the real write is covered by `analytics-consent.int.test.ts`.
+- The visitor decline is checked on a `/welcome` reload; `/p` is covered by `page-script.test.ts`. DNT-on, two-device decline and no-cookie checks were added at convergence (`full/analytics-consent.spec.ts`).
+- Two latent 033 e2e bugs fixed: `app-analytics.spec.ts` keeps its record in `sessionStorage` across loads; `smoke/public.spec.ts` allows the `page.js` loader.
+- Down migration named `0020_analytics_consent.down.sql` (repo convention). Detail: `specs/035-analytics-consent/implementation-notes.md`.

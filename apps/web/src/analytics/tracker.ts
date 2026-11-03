@@ -25,7 +25,7 @@ export type InstallOptions = {
 
 /**
  * D254 (contract §2): defines the before-send hook, then appends Umami's tracker with manual page
- * views, no query or hash, Do Not Track honoured and only this host. Resolves to the tracker, or
+ * views, no query or hash and only this host (035: consent, not Do Not Track, decides; D261). Resolves to the tracker, or
  * null when it can't load (blocked, offline, Umami down) — analytics then stays off silently.
  */
 export function installTracker({
@@ -50,7 +50,6 @@ export function installTracker({
     websiteId: siteId,
     hostUrl: STATS_BASE_PATH,
     domains: host,
-    doNotTrack: 'true',
     autoTrack: 'false',
     excludeSearch: 'true',
     excludeHash: 'true',

@@ -62,6 +62,7 @@ describe('public pages (D177)', () => {
     for (const page of allPages()) {
       expect(page).not.toMatch(/<script/i);
       expect(page).not.toContain('/stats/'); // D257: the tracker only with ANALYTICS_SITE_ID
+      expect(page).not.toContain('data-consent'); // D264: no banner or button either
       expect(page).toMatch(/^<!doctype html>/);
     }
   });
@@ -192,7 +193,7 @@ describe('search (D182)', () => {
   });
 });
 
-describe('analytics (D257)', () => {
+describe('analytics (D257, D264)', () => {
   const on: PageContext = { ...ctx, analytics: { siteId: 'site-1', host: 'gobbit.example' } };
   const scripts = (html: string) => html.match(/<script[^>]*>/g) ?? [];
 
@@ -213,17 +214,30 @@ describe('analytics (D257)', () => {
     ];
     for (const [html, pattern, name] of pages) {
       const tags = scripts(html).join('\n');
-      expect(tags).toContain(
-        `src="/analytics/page.js" data-pattern="${pattern}" data-screen="${name}"`,
-      );
-      expect(tags).toContain('data-before-send="__gobbitAnalyticsBeforeSend"');
+      expect(scripts(html)).toEqual([
+        `<script defer src="/analytics/page.js" data-website-id="site-1" data-domains="gobbit.example" data-pattern="${pattern}" data-screen="${name}">`,
+      ]);
       expect(tags).not.toMatch(/our-street|Water|Emergency/);
     }
   });
 
-  it('error pages never carry the tracker', () => {
+  it('renders the hidden banner after the header and the Analytics button in the footer (D264)', () => {
+    const html = deckPage(on, { deck, items: [card()], nextCursor: null });
+    const header = html.indexOf('</header>');
+    const banner = html.indexOf('<section class="consent" data-consent-banner');
+    expect(banner).toBeGreaterThan(header);
+    expect(banner).toBeLessThan(html.indexOf('<h1>'));
+    expect(html).toMatch(/<section class="consent"[^>]* hidden>/);
+    expect(html).toContain('data-consent-choice="allowed">OK</button>');
+    expect(html).toContain('data-consent-choice="declined">No thanks</button>');
+    const footer = html.slice(html.lastIndexOf('<footer>'));
+    expect(footer).toContain('data-consent-open hidden>Analytics</button>');
+  });
+
+  it('error pages never carry the tracker or the banner', () => {
     for (const page of [notFoundPage(), rateLimitedPage(), badRequestPage()]) {
       expect(page).not.toMatch(/<script/i);
+      expect(page).not.toContain('data-consent');
     }
   });
 });

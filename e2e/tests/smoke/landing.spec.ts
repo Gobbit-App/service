@@ -10,12 +10,15 @@ const BEHIND_CADDY = !/:5173$/.test(webBaseURL);
 const meta = (html: string, property: string) =>
   new RegExp(`<meta property="${property}" content="([^"]*)">`).exec(html)?.[1];
 
-/** D232 (031): the one script a landing page may carry, when `ANALYTICS_SITE_ID` is set. */
+/**
+ * D232, D265 (031, 035): the one script a landing page may carry, when `ANALYTICS_SITE_ID` is set —
+ * the first-party consent loader, which injects `/stats/script.js` only when not declined.
+ */
 const TRACKER =
-  /^<script defer src="\/stats\/script\.js" data-website-id="[0-9a-f-]{36}" data-host-url="\/stats" data-domains="[^"]+" data-do-not-track="true">$/;
+  /^<script defer src="\/analytics\/page\.js" data-website-id="[0-9a-f-]{36}" data-domains="[^"]+">$/;
 const otherScripts = (html: string) =>
   (html.match(/<script\b[^>]*>/gi) ?? []).filter((tag) => !TRACKER.test(tag));
-const hasTracker = (html: string) => html.includes('src="/stats/script.js"');
+const hasTracker = (html: string) => html.includes('src="/analytics/page.js"');
 
 /**
  * D226, D229 (030). GET only: this runs after every deploy and must never write a waitlist row.
@@ -70,6 +73,7 @@ test('@smoke - the landing tracker is same-origin and allowed by the CSP, or abs
   const html = await res.text();
   if (!hasTracker(html)) {
     expect(html).not.toContain('/stats/');
+    expect(html).not.toContain('data-consent-banner');
     return;
   }
   test.skip(!BEHIND_CADDY, 'the /stats proxy lives in Caddy');

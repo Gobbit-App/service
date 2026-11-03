@@ -1,4 +1,5 @@
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
+import { ConsentPrompt } from '../analytics/ConsentPrompt';
 import { useOfflineBanner } from '../api/offline';
 import type { RouterContext } from '../app/router-context';
 import { ServiceWorkerUpdate } from '../app/ServiceWorkerUpdate';
@@ -16,6 +17,7 @@ function RootLayout() {
   return (
     <div className="app">
       <OfflineBanner visible={offline} />
+      <ConsentPrompt />
       <Outlet />
       <ToastHost />
       <ServiceWorkerUpdate />

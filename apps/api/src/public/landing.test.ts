@@ -40,8 +40,9 @@ describe('landingPage states (D226, D228)', () => {
     for (const use of LANDING_COPY_EN.uses) expect(html).toContain(use.title);
     expect(html).toContain('<form class="join" method="post" action="/welcome">');
     expect(html).toContain(LANDING_COPY_EN.privacy);
-    // FR-013: the analytics notice names the member id and the Do Not Track opt-out.
-    expect(LANDING_COPY_EN.privacy).toMatch(/member id.*Do Not Track/s);
+    // 035 FR-012: the notice names the member id and the banner / Analytics opt-out, not DNT.
+    expect(LANDING_COPY_EN.privacy).toMatch(/No thanks.*Analytics.*member id/s);
+    expect(LANDING_COPY_EN.privacy).not.toMatch(/do not track/i);
     expect(html).not.toContain('role="status"');
   });
 
@@ -134,21 +135,30 @@ describe('landingPage head (D229)', () => {
   });
 });
 
-describe('analytics tag (D232, 031)', () => {
+describe('analytics tag and consent banner (D232, D264)', () => {
   const analytics = { siteId: '2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90', host: 'app.example.test' };
 
-  it.each(ALL_STATES)('%s carries the tag in <head> when configured', (state) => {
+  it.each(ALL_STATES)('%s carries page.js in <head> when configured', (state) => {
     const html = page({ state, analytics });
-    const tag = html.indexOf('<script defer src="/stats/script.js"');
+    const tag = html.indexOf('<script defer src="/analytics/page.js"');
     expect(tag).toBeGreaterThan(-1);
     expect(tag).toBeLessThan(html.indexOf('</head>'));
     expect(html).toContain(`data-website-id="${analytics.siteId}"`);
     expect(html.match(/<script/g)).toHaveLength(1);
+    expect(html).not.toContain('/stats/script.js');
   });
 
-  it.each(ALL_STATES)('%s has no tag when unset', (state) => {
+  it.each(ALL_STATES)('%s renders the hidden banner and the Analytics button', (state) => {
+    const html = page({ state, analytics });
+    expect(html).toMatch(/<section class="consent" data-consent-banner[^>]* hidden>/);
+    const footer = html.slice(html.lastIndexOf('<footer>'));
+    expect(footer).toContain('data-consent-open hidden>Analytics</button>');
+  });
+
+  it.each(ALL_STATES)('%s has no tag, banner or button when unset', (state) => {
     const html = page({ state });
     expect(html).not.toMatch(/<script/i);
     expect(html).not.toContain('/stats/');
+    expect(html).not.toContain('data-consent');
   });
 });

@@ -10,6 +10,16 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-03 — Analytics consent (035)
+
+- **Action required (privacy)**: no new variables. Do Not Track is no longer honoured; analytics
+  is on unless declined. Members see a one-time "Help improve Gobbit?" prompt (changeable in
+  Settings → Privacy); visitors to the landing, public and share pages see a small banner. API
+  pages now load `/analytics/page.js`, which injects the tracker only when the browser hasn't
+  declined. Migration `0020_analytics_consent` adds three nullable `users` columns and the
+  `analytics_consent_events` audit table (runs on API start). `analytics.config` logs
+  `consent: "opt_out"`; counts by choice: `infra/README.md` § Landing analytics.
+
 ### 2026-11-01 — App analytics (033)
 
 - **Action required (privacy)**: no new variables, but with `ANALYTICS_SITE_ID` set this deploy
