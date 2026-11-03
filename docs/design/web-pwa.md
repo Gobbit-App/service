@@ -115,4 +115,20 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 
 - **D267 back targets**: every page inside a deck (settings, review, favorites, archived, a category, the log…) goes back to the deck's main page; only the main page goes to the deck list. Pages outside a deck (`/settings`, `/share`) go back to the deck opened last (`lib/last-deck`), else the deck list. All through `backTarget()` (`app/back-target.ts`, kinds `deck-page` and `top`).
 - **D268 Browse first for non-admins**: entry points (deck list links, the landing redirect) send roles without `deck.update` (editors, readers) to `/d/$slug/browse?c=all`; owners and maintainers land on the list. Only entry points use `deckEntryHref()` (`app/deck-entry.ts`), so closing Browse still returns to the list without bouncing.
-- **D269 New deck**: the deck list has a collapsed "New deck" form (`decks/NewDeckForm.tsx`); it always creates a `shared` deck (`POST /decks` defaults to `personal`) and opens its settings, where members are invited.
+- **D269 New deck**: the deck list's "New deck" form (`decks/NewDeckForm.tsx`, opened by the bottom bar's +, D279) always creates a `shared` deck (`POST /decks` defaults to `personal`) and opens its settings, where members are invited.
+
+## Bottom bar and one Settings page (036, D274–D280, ADR-067)
+
+- **Bar** (`app/BottomBar.tsx`): one fixed `<nav>` at the bottom of the deck pages, the deck list and `/settings`: ⋯ menu at the start, Browse and Review (`item.publish`, not on the personal deck) in the middle, the + at the end. It never hides on scroll; a spacer keeps the last content clear. Browse (full screen) and the new-card editor have none; the editor pages outside the deck layout (`/i/$id/edit`) have none either.
+- **+** (D275): the existing `MoreMenu` (D213) with an `onLongPress` from `ui/use-long-press.ts` (pointer events, 500 ms, 10 px slop, no library, ADR-065). A short press opens New card, Paste or share, Import (`item.publish`) and Shares (`createActions`, `app/create-actions.ts`); holding it opens the new card. Readers get no +. On the deck list the + is a plain "New deck" button (D279).
+- **⋯** (D276, `app/deck-menu-actions.ts`): Settings, Activity (`event.list`), Waitlist (platform admins) and Sign out, with the signed-in email as its description (`MenuAction.detail`, `aria-describedby`). Sign-out runs through `app/use-sign-out.ts` (keeps the 022 leave guard). The header keeps only back, title and page actions.
+- **Settings** (D278): one entry. Inside a deck, `/d/$slug/settings` renders `deck-admin/UnifiedSettings.tsx`: "This deck" (`DeckAdminScreen`), then "Your account" (`SettingsScreen`). `/settings` shows the account half only.
+- **Toasts** (D280): `--bottom-bar-h` on `:root`; `.toast` and `.update-prompt` sit above it.
+
+## Deviations from the 036 plan
+
+- Bar actions are icon-only with tooltips (`BrowseButton`, `ReviewPill`, `MoreMenu` triggers), so there is no label collapse below 360 px to test.
+- D279: the deck list's + opens the form through component state, not `?new=1`; the form's own collapsed "New deck" button is gone, so there is one "New deck" control.
+- D280: `--bottom-bar-h` is always set, not only while a bar is mounted; pages without a bar (editor, Browse) show toasts slightly higher.
+- The old `AddCardLink`, `PasteLink`, `ImportLink`, `SharesLink`, `DeckSettingsLink` and `ActivityLink` components were deleted rather than restyled; their routes are unchanged.
+- The `@smoke` sign-out journey now leaves the editor before signing out from ⋯ (the editor has no bar); the leave guard on sign-out stays covered by `use-sign-out.test.tsx`. The long press runs in `@full` (`bottom-bar.spec.ts`); `@smoke` covers the short press → New card.

@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { isNetworkError } from '../api/network-state';
 import { decksQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
+import { BottomBar } from '../app/BottomBar';
 import { ALL_CATEGORIES } from '../browse/browse-params';
 import { deckEntryHref, opensInBrowse } from '../app/deck-entry';
 import { NewDeckForm } from '../decks/NewDeckForm';
@@ -20,6 +22,7 @@ export const Route = createFileRoute('/')({
 function Home() {
   const { all } = Route.useSearch();
   const decks = useQuery(decksQuery());
+  const [creating, setCreating] = useState(false);
 
   if (decks.isPending) return <LoadingState label="Loading decks…" />;
   if (decks.isError && !decks.data) {
@@ -75,10 +78,13 @@ function Home() {
             ))}
           </ul>
         )}
-        <div className="new-deck__slot">
-          <NewDeckForm />
-        </div>
+        {creating && (
+          <div className="new-deck__slot">
+            <NewDeckForm onClose={() => setCreating(false)} />
+          </div>
+        )}
       </main>
+      <BottomBar onNewDeck={() => setCreating(true)} />
     </>
   );
 }

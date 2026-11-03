@@ -183,6 +183,7 @@ Specs (in order): [`025` deck wording](#025-027-renames) → [`022-editor-naviga
 - [x] **3. Card actions** — every card's actions sit inside it as icons; no text-only action buttons, glyph icons or browse arrows remain; delete is readable in both themes (024, merges after #56 and #57).
 - [x] **4. No "pocketbook"** — no user-visible "pocketbook" anywhere in the app or live docs (025); `@pb/*` packages and local `pb` database names are gone (026, 027; PRs #68, #69).
 - [ ] **5. Browse that feels native** — open Browse on a phone: the card fills the screen; swiping sideways flips cards smoothly; scrolling down shows details and source; a chip switches category; after the last card, "Continue to …" moves on (034 [`034-browse-redesign`](specs/034-browse-redesign/spec.md), D244–D251).
+- [x] **6. One bottom bar** — on a phone, the deck page's ⋯, Browse, Review and + sit in a bar that stays while scrolling; holding + opens a new card; Settings is one page (036 [`036-bottom-bar`](specs/036-bottom-bar/spec.md), D274–D280).
 
 ### 025–027 renames
 

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { NavigateContext } from './NavLink';
@@ -75,5 +75,39 @@ describe('MoreMenu (D213)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'More actions' }));
     await userEvent.click(screen.getByRole('button', { name: 'outside' }));
     expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('shows a detail line as the item description, not its name', async () => {
+    setup({ detail: 'me@example.com' });
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    const item = screen.getByRole('menuitem', { name: 'Archive' });
+    expect(item).toHaveAccessibleDescription('me@example.com');
+  });
+});
+
+describe('MoreMenu long press (D275)', () => {
+  it('runs onLongPress instead of opening the menu', () => {
+    vi.useFakeTimers();
+    try {
+      const onLongPress = vi.fn();
+      render(
+        <MoreMenu
+          label="Add"
+          actions={[{ key: 'new', label: 'New card', icon: 'plus', onSelect: vi.fn() }]}
+          onLongPress={onLongPress}
+        />,
+      );
+      const trigger = screen.getByRole('button', { name: 'Add' });
+      fireEvent.pointerDown(trigger, { button: 0, clientX: 5, clientY: 5 });
+      act(() => vi.advanceTimersByTime(500));
+      fireEvent.pointerUp(trigger);
+      fireEvent.click(trigger);
+      expect(onLongPress).toHaveBeenCalledOnce();
+      expect(screen.queryByRole('menu')).toBeNull();
+      fireEvent.click(trigger);
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

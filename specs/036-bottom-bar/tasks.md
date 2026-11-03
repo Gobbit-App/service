@@ -22,28 +22,28 @@ Stories map to spec user scenarios:
 
 ## Phase 1: Foundational (Blocking Prerequisites)
 
-- [ ] T001 [P] Long-press hook in apps/web/src/ui/use-long-press.ts (D275).
+- [x] T001 [P] Long-press hook in apps/web/src/ui/use-long-press.ts (D275).
   - Pointer events; 500 ms timer; cancel on move > 10 px, `pointercancel` or `pointerleave`; release before 500 ms is a normal click.
   - When it fires: calls `onLongPress`, `navigator.vibrate?.(10)`, and swallows the next click.
   - Prevents `contextmenu` while armed.
   - Returns props to spread on the trigger.
-- [ ] T002 [P] [unit] apps/web/src/ui/use-long-press.test.ts — fake timers:
+- [x] T002 [P] [unit] apps/web/src/ui/use-long-press.test.ts — fake timers:
   - fires at 500 ms and swallows the click;
   - early release clicks;
   - a 12 px move cancels;
   - `contextmenu` is prevented;
   - no `onLongPress` = inert.
-- [ ] T003 `MoreMenu` additions in apps/web/src/ui/MoreMenu.tsx (D275, D276):
+- [x] T003 `MoreMenu` additions in apps/web/src/ui/MoreMenu.tsx (D275, D276):
   - optional `onLongPress` (via T001), with the click toggle suppressed after a long press;
   - `MenuAction.detail?: string`, rendered as a muted second line;
   - optional `triggerClassName`.
-- [ ] T004 [unit] Extend apps/web/src/ui/MoreMenu.test.tsx:
+- [x] T004 [unit] Extend apps/web/src/ui/MoreMenu.test.tsx:
   - a long press calls `onLongPress` and does not open the menu;
   - `detail` renders;
   - the existing keyboard and outside-press cases stay.
-- [ ] T005 [P] Extract the sign-out flow from AppHeader into apps/web/src/app/use-sign-out.ts (D276).
+- [x] T005 [P] Extract the sign-out flow from AppHeader into apps/web/src/app/use-sign-out.ts (D276).
   - Returns `{ signOut, signingOut }`, with the same leave-first behaviour (`onArrival`, cancel on unmount).
-- [ ] T006 [P] [unit] apps/web/src/app/use-sign-out.test.tsx:
+- [x] T006 [P] [unit] apps/web/src/app/use-sign-out.test.tsx:
   - navigates to /sign-in before calling the context `signOut`;
   - a pending sign-out cancels on unmount.
 
@@ -53,39 +53,39 @@ Stories map to spec user scenarios:
 
 **Independent test**: as owner on `/d/<slug>`, scroll to the bottom; the bar stays visible. Tap + → New card opens the editor. Hold + → the editor opens.
 
-- [ ] T007 [P] [US1] Pure create items in apps/web/src/app/create-actions.ts: `createActions(deck)` returns `MenuAction[]`.
+- [x] T007 [P] [US1] Pure create items in apps/web/src/app/create-actions.ts: `createActions(deck)` returns `MenuAction[]`.
   - Items: New card, Paste or share, Import, Shares.
   - The `can()` rules, labels-to-targets and hrefs are copied from apps/web/src/items/AddCardLink.tsx, apps/web/src/share/PasteLink.tsx, apps/web/src/import/ImportLink.tsx and apps/web/src/shares/SharesLink.tsx.
   - Readers get `[]`.
-- [ ] T008 [P] [US1] [unit] apps/web/src/app/create-actions.test.ts:
+- [x] T008 [P] [US1] [unit] apps/web/src/app/create-actions.test.ts:
   - owner: all four, in order;
   - editor: per the old links' rules;
   - reader: none;
   - the personal deck's rules match the old links.
-- [ ] T009 [US1] `BottomBar` in apps/web/src/app/BottomBar.tsx (D274, D277, contract §1–§3).
+- [x] T009 [US1] `BottomBar` in apps/web/src/app/BottomBar.tsx (D274, D277, contract §1–§3).
   - Markup: `<nav>` (label "Deck actions" / "Actions") and a spacer element.
   - Contents: the ⋯ slot (T016 fills it), `BrowseButton` (`c = browseC ?? ALL_CATEGORIES`), and `MoreMenu` "Add" with icon `plus` and `onLongPress` → navigate `deckHref(slug, 'new')`, rendered only when `createActions` is non-empty.
-- [ ] T010 [US1] [unit] apps/web/src/app/BottomBar.test.tsx:
+- [x] T010 [US1] [unit] apps/web/src/app/BottomBar.test.tsx:
   - order ⋯, Browse, Add;
   - a reader has no Add;
   - Add opens New card first;
   - a long press navigates to `/d/<slug>/new` (NavigateContext spy).
-- [ ] T011 [US1] Styles in apps/web/src/styles.css (D274, D280):
+- [x] T011 [US1] Styles in apps/web/src/styles.css (D274, D280):
   - `.bottom-bar`: fixed, inset-inline 0, bottom 0, `padding-bottom: var(--safe-bottom)`, surface, top border, z-index above the content and below menus;
   - `.bottom-bar__spacer`: the same height;
   - the + trigger: `-webkit-touch-callout: none; user-select: none; touch-action: manipulation`;
   - `:root` `--bottom-bar-h`, with the `.toast` bottom offset by it;
   - labels collapse to icons below 360 px.
-- [ ] T012 [US1] Deck layout in apps/web/src/routes/d.$slug.tsx:
+- [x] T012 [US1] Deck layout in apps/web/src/routes/d.$slug.tsx:
   - render `<BottomBar deck browseC>` unless browsing or on `/new`;
   - remove `BrowseButton`, `ActivityLink` and `DeckSettingsLink` from the header actions;
   - remove the `.deck-actions` block and the four imports.
-- [ ] T013 [US1] Remove the now-unused `.deck-actions` styles in apps/web/src/styles.css. Delete apps/web/src/items/AddCardLink.tsx, apps/web/src/share/PasteLink.tsx, apps/web/src/import/ImportLink.tsx and apps/web/src/shares/SharesLink.tsx (and their tests) if nothing else imports them; otherwise keep them.
-- [ ] T014 [US1] [e2e:smoke] Update apps e2e/tests/smoke/editor.spec.ts and e2e/tests/smoke/share.spec.ts:
+- [x] T013 [US1] Remove the now-unused `.deck-actions` styles in apps/web/src/styles.css. Delete apps/web/src/items/AddCardLink.tsx, apps/web/src/share/PasteLink.tsx, apps/web/src/import/ImportLink.tsx and apps/web/src/shares/SharesLink.tsx (and their tests) if nothing else imports them; otherwise keep them.
+- [x] T014 [US1] [e2e:smoke] Update apps e2e/tests/smoke/editor.spec.ts and e2e/tests/smoke/share.spec.ts:
   - "Add card" → `getByRole('button', { name: 'Add' })` then menuitem "New card";
   - "Paste" → menuitem "Paste or share";
   - one smoke case presses and holds the + (`page.mouse.down`, wait 600 ms, `up`) and lands on `/new`.
-- [ ] T015 [US1] [e2e:full] e2e/tests/full/bottom-bar.spec.ts:
+- [x] T015 [US1] [e2e:full] e2e/tests/full/bottom-bar.spec.ts:
   - the bar is visible after `window.scrollTo(0, document.body.scrollHeight)` and does not overlap the last card (bounding boxes);
   - no bar in Browse or on `/new`;
   - the Add menu by keyboard (Enter opens, ArrowDown moves, Escape closes and refocuses);
@@ -97,25 +97,25 @@ Stories map to spec user scenarios:
 
 **Independent test**: ⋯ → Sign out (shows the email) signs out; ⋯ → Activity opens the log for the owner.
 
-- [ ] T016 [P] [US3] Pure ⋯ items in apps/web/src/app/deck-menu-actions.ts: `menuActions({ deck?, isPlatformAdmin, email, onSignOut })`.
+- [x] T016 [P] [US3] Pure ⋯ items in apps/web/src/app/deck-menu-actions.ts: `menuActions({ deck?, isPlatformAdmin, email, onSignOut })`.
   - Settings (deck → `deckHref(slug, 'settings')`, else `/settings`), icon `settings`;
   - Activity when `can(role, 'event.list')`, icon `history`;
   - Waitlist when admin, icon `list`;
   - Sign out (icon `sign-out`, `detail: email`).
-- [ ] T017 [P] [US3] [unit] apps/web/src/app/deck-menu-actions.test.ts:
+- [x] T017 [P] [US3] [unit] apps/web/src/app/deck-menu-actions.test.ts:
   - owner deck: four items in order;
   - editor: no Activity;
   - no deck: Settings goes to `/settings`;
   - the admin flag adds Waitlist;
   - the email is in the detail line.
-- [ ] T018 [US3] Wire the ⋯ `MoreMenu` (label "Menu", icon `more`) into apps/web/src/app/BottomBar.tsx with `useSignOut` and `meQuery`.
+- [x] T018 [US3] Wire the ⋯ `MoreMenu` (label "Menu", icon `more`) into apps/web/src/app/BottomBar.tsx with `useSignOut` and `meQuery`.
   - Extend apps/web/src/app/BottomBar.test.tsx: the menu items by role, and Sign out calls the hook.
-- [ ] T019 [US3] apps/web/src/app/AppHeader.tsx:
+- [x] T019 [US3] apps/web/src/app/AppHeader.tsx:
   - drop the Settings IconLink and Sign out (use-sign-out moves to the bar);
   - update apps/web/src/app/AppHeader.test.tsx (no Settings or Sign out; back and title unchanged).
-- [ ] T020 [US3] Delete apps/web/src/deck-admin/DeckSettingsLink.tsx. Remove `ActivityLink` if it is unused (grep), and update its tests.
-- [ ] T021 [US3] [e2e:smoke] Update the "Sign out" step of every smoke journey to ⋯ "Menu" → menuitem "Sign out" (grep e2e/tests/smoke for `Sign out`).
-- [ ] T022 [US3] [e2e:full] e2e/tests/full/bottom-bar.spec.ts:
+- [x] T020 [US3] Delete apps/web/src/deck-admin/DeckSettingsLink.tsx. Remove `ActivityLink` if it is unused (grep), and update its tests.
+- [x] T021 [US3] [e2e:smoke] Update the "Sign out" step of every smoke journey to ⋯ "Menu" → menuitem "Sign out" (grep e2e/tests/smoke for `Sign out`).
+- [x] T022 [US3] [e2e:full] e2e/tests/full/bottom-bar.spec.ts:
   - ⋯ → Activity reaches `/d/<slug>/log`;
   - the ⋯ menu by keyboard;
   - update the "Activity" locators in existing full specs (grep).
@@ -126,11 +126,11 @@ Stories map to spec user scenarios:
 
 **Independent test**: with one proposal, the bar shows "Review · 1" and it opens the queue.
 
-- [ ] T023 [US2] Render `ReviewPill` in apps/web/src/app/BottomBar.tsx between Browse and Add, when `can(role, 'item.publish') && !deck.isDefault`. Remove it from the d.$slug.tsx header actions.
-- [ ] T024 [US2] [unit] Extend apps/web/src/app/BottomBar.test.tsx:
+- [x] T023 [US2] Render `ReviewPill` in apps/web/src/app/BottomBar.tsx between Browse and Add, when `can(role, 'item.publish') && !deck.isDefault`. Remove it from the d.$slug.tsx header actions.
+- [x] T024 [US2] [unit] Extend apps/web/src/app/BottomBar.test.tsx:
   - owner: Review present;
   - editor and the personal deck: absent.
-- [ ] T025 [US2] [e2e:full] e2e/tests/full/bottom-bar.spec.ts: a proposed card → the bar shows "Review · 1" → click → `/review`. Update the existing `Review · 2` and `Review` locators (grep e2e) if they were scoped to the header.
+- [x] T025 [US2] [e2e:full] e2e/tests/full/bottom-bar.spec.ts: a proposed card → the bar shows "Review · 1" → click → `/review`. Update the existing `Review · 2` and `Review` locators (grep e2e) if they were scoped to the header.
 
 ## Phase 5: US4 — one Settings page (P2)
 
@@ -138,11 +138,11 @@ Stories map to spec user scenarios:
 
 **Independent test**: ⋯ → Settings on a deck shows both headings; Back returns to the deck.
 
-- [ ] T026 [US4] In apps/web/src/deck-admin/DeckAdminScreen.tsx, change the `<h2>` "Deck settings" to "This deck".
-- [ ] T027 [US4] Unified page in apps/web/src/routes/d.$slug.settings.tsx: `DeckAdminScreen`, then a `<section>` with `<h2>` "Your account" wrapping `SettingsScreen` (lazily, as today).
+- [x] T026 [US4] In apps/web/src/deck-admin/DeckAdminScreen.tsx, change the `<h2>` "Deck settings" to "This deck".
+- [x] T027 [US4] Unified page in apps/web/src/routes/d.$slug.settings.tsx: `DeckAdminScreen`, then a `<section>` with `<h2>` "Your account" wrapping `SettingsScreen` (lazily, as today).
   - Add `<BottomBar>` to apps/web/src/routes/settings.tsx (no deck).
-- [ ] T028 [US4] [unit] Update apps/web/src/deck-admin/DeckAdminScreen.test.tsx (heading). Add a render test for the unified route component (both headings, in order) next to it, e.g. apps/web/src/deck-admin/UnifiedSettings.test.tsx.
-- [ ] T029 [US4] [e2e:full] Update e2e/tests/full/deck-admin.spec.ts:
+- [x] T028 [US4] [unit] Update apps/web/src/deck-admin/DeckAdminScreen.test.tsx (heading). Add a render test for the unified route component (both headings, in order) next to it, e.g. apps/web/src/deck-admin/UnifiedSettings.test.tsx.
+- [x] T029 [US4] [e2e:full] Update e2e/tests/full/deck-admin.spec.ts:
   - the "Deck settings" link becomes ⋯ "Menu" → "Settings";
   - the heading becomes "This deck";
   - assert that "Your account" is visible.
@@ -153,24 +153,24 @@ Stories map to spec user scenarios:
 
 **Independent test**: on `/?all=true`, tap + → the Deck name field is focused.
 
-- [ ] T030 [US5] apps/web/src/routes/index.tsx:
+- [x] T030 [US5] apps/web/src/routes/index.tsx:
   - `validateSearch` accepts `new` (`true`/`'1'`);
   - render `<BottomBar>` (no deck) with the + as IconButton "New deck" that navigates to `/?all=true&new=1`;
   - pass `initialOpen` to `NewDeckForm`.
-- [ ] T031 [US5] apps/web/src/decks/NewDeckForm.tsx: `initialOpen` prop (open on mount and when it changes to true). Cancel calls an `onClose` that drops `new` from the URL.
+- [x] T031 [US5] apps/web/src/decks/NewDeckForm.tsx: `initialOpen` prop (open on mount and when it changes to true). Cancel calls an `onClose` that drops `new` from the URL.
   - Extend apps/web/src/decks/NewDeckForm.test.tsx: `initialOpen` renders the open form.
-- [ ] T032 [US5] [e2e:full] Update e2e/tests/full/new-deck.spec.ts. Its "New deck" locator becomes ambiguous (bar + form), so use the bar's button (`getByRole('navigation', { name: 'Actions' })`), and assert that the field is focused.
+- [x] T032 [US5] [e2e:full] Update e2e/tests/full/new-deck.spec.ts. Its "New deck" locator becomes ambiguous (bar + form), so use the bar's button (`getByRole('navigation', { name: 'Actions' })`), and assert that the field is focused.
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T033 Docs:
+- [x] T033 Docs:
   - "Bottom bar (036, D274–D280)" section and Deviations list in docs/design/web-pwa.md;
   - ADR-067 in docs/adr.md, plus one index row in docs/architecture.md;
   - tick the 2026-11-03 items in docs/usability-backlog.md (bottom menu, settings merge);
   - add a usability-pass line in PLAN.md linking specs/036-bottom-bar.
-- [ ] T034 Write specs/036-bottom-bar/implementation-notes.md (decisions and deviations made while implementing).
-- [ ] T035 Gates: `pnpm typecheck`, `pnpm lint`, `pnpm test:unit`, `pnpm build:web && pnpm budget` (≤ 150 KB) and Prettier.
-- [ ] T036 The quickstart's by-hand checks 1–8 (phone), recorded in implementation-notes.
+- [x] T034 Write specs/036-bottom-bar/implementation-notes.md (decisions and deviations made while implementing).
+- [x] T035 Gates: `pnpm typecheck`, `pnpm lint`, `pnpm test:unit`, `pnpm build:web && pnpm budget` (≤ 150 KB) and Prettier.
+- [x] T036 The quickstart's by-hand checks 1–8 (phone), recorded in implementation-notes.
 
 ## Dependencies
 

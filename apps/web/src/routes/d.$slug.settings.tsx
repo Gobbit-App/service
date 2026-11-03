@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { DeckAdminScreen } from '../deck-admin/DeckAdminScreen';
+import { UnifiedSettings } from '../deck-admin/UnifiedSettings';
 
-/** D184: deck settings (`/d/:slug/settings`); lazy via autoCodeSplitting, gated per section. */
+/** D184/D278: Settings inside a deck (`/d/:slug/settings`); lazy via autoCodeSplitting. */
 export const Route = createFileRoute('/d/$slug/settings')({
   component: DeckSettings,
 });
 
 function DeckSettings() {
   const { slug } = Route.useParams();
-  return <DeckAdminScreen deckSlug={slug} />;
+  return <UnifiedSettings deckSlug={slug} />;
 }

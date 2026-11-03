@@ -39,6 +39,8 @@ Logged first, then planned in `PLAN.md` § Usability pass. Each item names the f
 - [x] Non-admins open a deck in Browse → fix/deck-nav-and-new-deck (D268)
 - [x] Back is inconsistent: inside a deck's sub-page it must go to the deck's main page; only the main page goes to the deck list → fix/deck-nav-and-new-deck (D267)
 - [x] Palette: move to the green brand palette → chore/green-palette
+- [x] One fixed bottom bar that never hides: + on the right (short press = create options, long press = new card), Browse and Review always visible, the rest in a ⋯ menu → 036 (D274–D277)
+- [x] Deck and app settings are two confusing pages with similar icons; merge them → 036 (D278)
 
 ### Card editor
 

@@ -6,27 +6,14 @@ import { deckHref } from '../ui/chip-order';
 import { useNavigateHref } from '../ui/NavLink';
 
 /**
- * D269: "New deck" on the deck list. Collapsed to one button; the form asks only for a name.
- * A created deck opens on its settings, where its members are invited.
+ * D269: the deck list's new-deck form; it asks only for a name. The bottom bar's "New deck" opens
+ * it (D279), Cancel calls `onClose`. A created deck opens on its settings, where members are invited.
  */
-export function NewDeckForm(): ReactElement {
+export function NewDeckForm({ onClose }: { onClose: () => void }): ReactElement {
   const baseId = useId();
   const create = useCreateDeck();
   const navigate = useNavigateHref();
-  const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
-
-  if (!open) {
-    return (
-      <Button
-        icon="plus"
-        label="New deck"
-        variant="ghost"
-        className="new-deck__open"
-        onClick={() => setOpen(true)}
-      />
-    );
-  }
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -37,9 +24,8 @@ export function NewDeckForm(): ReactElement {
   };
 
   const handleCancel = () => {
-    setOpen(false);
-    setName('');
     create.reset();
+    onClose();
   };
 
   return (
