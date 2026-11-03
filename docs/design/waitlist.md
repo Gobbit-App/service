@@ -104,6 +104,10 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
   `utmSource`) and `landing.form` per POST (`accepted`, `invalid` with field names only, `refused`
   `per_ip | per_email` at `warn`). Honeypot and existing-user outcomes stay in 028's
   `waitlist.join` events. Queries: `infra/README.md` § Waitlist.
+- **Defined term**: the hero's "gobbit" is a `<dfn tabindex="0">` (`public/landing-definition.ts`)
+  whose dictionary panel (copy in `hero.definition`) opens on `:hover`/`:focus-within` — CSS only,
+  no script. The panel is `aria-hidden` and linked by `aria-describedby`, so the heading's name
+  stays the sentence; under 36 rem it spans the heading instead of pointing at the word.
 - **Preview image**: `og/landing.png` (1200×630) is rendered by `pnpm og:static`
   (`landingTree()` in `share/og-template.ts`) and committed.
 

@@ -62,6 +62,32 @@ test.describe('landing form @full', () => {
   });
 });
 
+/** The hero's defined term: a CSS-only dictionary panel (no script on the page). */
+test.describe('landing definition @full', () => {
+  test('the panel is hidden until hover or focus, and closes again', async ({ browser }) => {
+    await stranger(browser, async (page) => {
+      await page.goto(webUrl('/welcome'));
+      const heading = page.getByRole('heading', { level: 1 });
+      const term = heading.locator('dfn');
+      const panel = page.locator('#term-definition');
+      await expect(heading).toHaveAccessibleName('Every useful gobbit, in one deck');
+      await expect(panel).toBeHidden();
+      await expect(term).toHaveAccessibleDescription(/useful piece of know-how/);
+
+      await term.hover();
+      await expect(panel).toBeVisible();
+      await expect(panel).toContainText('gob·bit');
+      await page.mouse.move(0, 0);
+      await expect(panel).toBeHidden();
+
+      await term.focus();
+      await expect(panel).toBeVisible();
+      await term.blur();
+      await expect(panel).toBeHidden();
+    });
+  });
+});
+
 /** D227 (030, `@full`): signed-out visitors of the app home end on the landing page. */
 test.describe('landing navigation @full', () => {
   test('a stale session cookie on / ends on /welcome', async ({ browser }) => {
