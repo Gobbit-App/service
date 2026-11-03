@@ -1,5 +1,7 @@
 import Markdown, { type Components } from 'react-markdown';
 import type { ReactElement } from 'react';
+import { BODY_REMARK_PLUGINS } from './body-plugins';
+import './rich-text.css';
 
 const components: Components = {
   a: ({ node: _node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
@@ -24,7 +26,7 @@ export function TextCard({
 }): ReactElement {
   return (
     <div className="text-card">
-      <Markdown skipHtml={skipHtml} components={components}>
+      <Markdown skipHtml={skipHtml} remarkPlugins={BODY_REMARK_PLUGINS} components={components}>
         {body}
       </Markdown>
     </div>

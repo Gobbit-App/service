@@ -25,7 +25,8 @@
     "./events": "./src/events/index.ts",
     "./import": "./src/import/index.ts",
     "./analytics": "./src/analytics/index.ts",
-    "./rich-text": "./src/rich-text/index.ts"
+    "./rich-text": "./src/rich-text/index.ts",
+    "./rich-text/fixtures": "./src/rich-text/fixtures.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

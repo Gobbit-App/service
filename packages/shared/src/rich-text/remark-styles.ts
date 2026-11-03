@@ -110,7 +110,10 @@ export function remarkNormalizeStyles() {
   };
 }
 
-function hastFor(node: TextDirective): { hName: string; hProperties?: Record<string, unknown> } {
+/** `hName`/`hProperties` as remark-rehype reads them (typed by mdast-util-to-hast where installed). */
+type HastData = { hName: string; hProperties?: { className: string[] } };
+
+function hastFor(node: TextDirective): HastData {
   if (node.name === UNDERLINE) return { hName: 'u' };
   if (isTextSize(node.name))
     return { hName: 'span', hProperties: { className: [sizeClass(node.name)] } };
@@ -125,7 +128,9 @@ function hastFor(node: TextDirective): { hName: string; hProperties?: Record<str
 
 function mapChildren(parent: Parent): void {
   for (const child of parent.children) {
-    if (child.type === 'textDirective') child.data = { ...child.data, ...hastFor(child) };
+    if (child.type === 'textDirective') {
+      child.data = { ...child.data, ...hastFor(child) } as TextDirective['data'];
+    }
     if ('children' in child) mapChildren(child as Parent);
   }
 }

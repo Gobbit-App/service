@@ -28,6 +28,36 @@ describe('TextCard', () => {
     expect(paragraph).toHaveTextContent('שלום עולם');
   });
 
+  it('renders single newlines as line breaks (D283)', () => {
+    const { container } = render(<TextCard body={'Milk\nEggs\nBread'} />);
+    const paragraphs = container.querySelectorAll('p');
+    expect(paragraphs).toHaveLength(1);
+    expect(paragraphs[0]?.querySelectorAll('br')).toHaveLength(2);
+  });
+
+  it('keeps blank lines as separate paragraphs', () => {
+    const { container } = render(<TextCard body={'One\n\nTwo'} />);
+    expect(container.querySelectorAll('p')).toHaveLength(2);
+    expect(container.querySelector('br')).not.toBeInTheDocument();
+  });
+
+  it('renders underline, size and colour styles', () => {
+    const { container } = render(
+      <TextCard body=":u[under] :small[tiny] :large[big] :color[hot]{.red}" />,
+    );
+    expect(screen.getByText('under').tagName).toBe('U');
+    expect(screen.getByText('tiny')).toHaveClass('rt-small');
+    expect(screen.getByText('big')).toHaveClass('rt-large');
+    expect(screen.getByText('hot')).toHaveClass('rt-color', 'rt-color--red');
+    expect(container.textContent).not.toContain(':');
+  });
+
+  it('shows unknown directives as plain text', () => {
+    const { container } = render(<TextCard body="Re:Plan :huge[hot] :color[x]{.pink}" />);
+    expect(container.textContent).toBe('Re:Plan hot x');
+    expect(container.querySelector('span')).not.toBeInTheDocument();
+  });
+
   it('renders list items with dir auto', () => {
     render(<TextCard body="- item 1\n- item 2" />);
     const listItems = screen.getAllByRole('listitem');
