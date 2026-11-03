@@ -78,6 +78,23 @@ describe('IconLink and ButtonLink', () => {
     expect(navigate.mock.calls.map(([href]) => href)).toEqual(['/settings', '/d/x/new']);
   });
 
+  it('an external ButtonLink opens a new tab without in-app navigation', async () => {
+    const navigate = vi.fn();
+    render(
+      <NavigateContext.Provider value={navigate}>
+        <ButtonLink href="https://example.com" icon="external" label="Open link" external />
+      </NavigateContext.Provider>,
+    );
+    const link = screen.getByRole('link', { name: 'Open link' });
+    expect(link).toHaveAttribute('href', 'https://example.com');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(link).toHaveClass('button', 'button--icon');
+    link.addEventListener('click', (event) => event.preventDefault());
+    await userEvent.click(link);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('a document ButtonLink leaves navigation to the browser (D226)', () => {
     const navigate = vi.fn();
     render(

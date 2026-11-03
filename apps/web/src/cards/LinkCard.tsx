@@ -5,7 +5,7 @@ import { lockedHostOf } from '@gobbit/shared/links';
 import { CloudImage } from './CloudImage';
 import { LinkHealthBadge } from './LinkHealthBadge';
 import type { LinkPayload } from './payload-guards';
-import { Icon } from '../ui/icons/Icon';
+import { ButtonLink } from '../ui/buttons/ButtonLink';
 
 /** Which preview image is shown: the stored copy, the page's own image, or none (D163). */
 type ImageSource = 'stored' | 'remote' | 'none';
@@ -38,10 +38,11 @@ export function LinkCard({
   const hostLabel = isWebUrl ? (lockedHostOf(payload.url)?.label ?? null) : null;
 
   const preview = payload.preview;
+  const image = renderImage();
 
-  return (
-    <div className="link-card">
-      {source === 'stored' && cloudName && preview?.publicId && (
+  function renderImage(): ReactElement | null {
+    if (source === 'stored' && cloudName && preview?.publicId) {
+      return (
         <CloudImage
           className="link-card__image link-card__image--stored"
           cloudName={cloudName}
@@ -51,8 +52,10 @@ export function LinkCard({
           height={preview.height}
           onError={() => setSource(preview.image ? 'remote' : 'none')}
         />
-      )}
-      {source === 'remote' && preview?.image && (
+      );
+    }
+    if (source === 'remote' && preview?.image) {
+      return (
         <img
           className="link-card__image"
           src={preview.image}
@@ -61,7 +64,29 @@ export function LinkCard({
           decoding="async"
           onError={() => setSource('none')}
         />
-      )}
+      );
+    }
+    return null;
+  }
+
+  return (
+    <div className="link-card">
+      {image &&
+        (isWebUrl ? (
+          // The picture is a second tap target for the Open button (hidden from AT and Tab).
+          <a
+            className="link-card__image-link"
+            href={payload.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            {image}
+          </a>
+        ) : (
+          image
+        ))}
       {health && <LinkHealthBadge health={health} />}
       {preview?.title && (
         <p className="link-card__title" dir="auto">
@@ -80,15 +105,13 @@ export function LinkCard({
       )}
       {!preview?.title && <p className="link-card__url">{payload.url}</p>}
       {isWebUrl && (
-        <a
-          className="button button--icon link-card__open"
+        <ButtonLink
+          className="link-card__open"
           href={payload.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Icon name="external" />
-          <span className="button__label">Open</span>
-        </a>
+          icon="external"
+          label="Open link"
+          external
+        />
       )}
     </div>
   );

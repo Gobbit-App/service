@@ -66,6 +66,42 @@ describe('LinkCard', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
+  it('names the Open button "Open link" and shows its label (not an icon-only circle)', () => {
+    render(<LinkCard payload={{ url: 'https://open.spotify.com/playlist/1' }} />);
+
+    const link = screen.getByRole('link', { name: 'Open link' });
+    expect(link).toHaveClass('button', 'link-card__open');
+    expect(link.querySelector('.button__label')).toHaveTextContent('Open link');
+  });
+
+  it('makes the preview image a second, hidden-from-AT tap target', () => {
+    const { container } = render(
+      <LinkCard
+        payload={{ url: 'https://example.com', preview: { image: 'https://example.com/a.jpg' } }}
+      />,
+    );
+
+    const imageLink = container.querySelector('a.link-card__image-link')!;
+    expect(imageLink).toHaveAttribute('href', 'https://example.com');
+    expect(imageLink).toHaveAttribute('target', '_blank');
+    expect(imageLink).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(imageLink).toHaveAttribute('tabindex', '-1');
+    expect(imageLink).toHaveAttribute('aria-hidden', 'true');
+    expect(imageLink.querySelector('img')).not.toBeNull();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('does not wrap the preview image in a link for a non-web URL', () => {
+    const { container } = render(
+      <LinkCard
+        payload={{ url: 'ftp://example.com', preview: { image: 'https://example.com/a.jpg' } }}
+      />,
+    );
+
+    expect(container.querySelector('img')).not.toBeNull();
+    expect(container.querySelector('a')).toBeNull();
+  });
+
   it('renders with invalid url string', () => {
     const payload: LinkPayload = {
       url: 'not a valid url',
