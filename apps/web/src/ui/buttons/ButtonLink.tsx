@@ -5,7 +5,8 @@ import { classNames } from './button-props';
 
 /**
  * D211: an in-app link styled as a labelled button (icon + label, label hidden below 480 px).
- * `document` links leave the SPA with a normal page load (e.g. the API-rendered `/welcome`, D226).
+ * `document` links leave the SPA with a normal page load (e.g. the API-rendered `/welcome`, D226);
+ * `external` links open another site in a new tab (implies `document`).
  */
 export function ButtonLink({
   href,
@@ -14,6 +15,7 @@ export function ButtonLink({
   variant = 'primary',
   className,
   document = false,
+  external = false,
 }: {
   href: string;
   icon: IconName;
@@ -21,6 +23,7 @@ export function ButtonLink({
   variant?: 'primary' | 'ghost';
   className?: string;
   document?: boolean;
+  external?: boolean;
 }): ReactElement {
   const classes = classNames(
     'button button--icon',
@@ -33,6 +36,13 @@ export function ButtonLink({
       <span className="button__label">{label}</span>
     </>
   );
+  if (external) {
+    return (
+      <a href={href} className={classes} target="_blank" rel="noopener noreferrer">
+        {content}
+      </a>
+    );
+  }
   if (document) {
     return (
       <a href={href} className={classes} data-tip={label}>

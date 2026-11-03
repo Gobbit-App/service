@@ -751,8 +751,25 @@ h3 {
   font-weight: 600;
 }
 
+/* The card's main action: full width with its label on every screen size. */
 .link-card__open {
-  justify-self: start;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 6px;
+  font-size: 1.0625rem;
+}
+
+.link-card__open .button__label {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+.link-card__image-link {
+  display: block;
+  border-radius: calc(var(--radius) - 4px);
 }
 
 /* D163: the stored snapshot keeps the 16:9 crop of the remote preview. */
