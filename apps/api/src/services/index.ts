@@ -20,6 +20,11 @@ import { createRemindersService } from './reminders.service';
 import { REMINDER_DECISION_LEVELS, type ReminderDecisions } from './reminders.events';
 import { createLogHash } from '../lib/log-hash';
 import { decisionLogger } from '../lib/decision-event';
+import type { PushSender } from '../push/push-sender';
+import { resolvePushSender } from '../push/push-wiring';
+import { createPushSubscriptionsRepo } from '../repositories/push-subscriptions.repo';
+import { createPushSubscriptionsService } from './push-subscriptions.service';
+import { PUSH_SUBSCRIPTION_DECISION_LEVELS, type PushSubscriptionDecisions } from './notify.events';
 import { logger as rootLogger, type Logger } from '../lib/logger';
 import { WAITLIST_DECISION_LEVELS, type WaitlistDecisions } from './waitlist.events';
 import { AUTH_DECISION_LEVELS, type AuthDecisions } from './auth.events';
@@ -79,6 +84,8 @@ export interface ServiceDeps {
   media?: MediaWiring;
   /** Parent logger for decision events (D239); integration tests capture it. */
   logger?: Logger;
+  /** Push sender override (037); production builds it from the VAPID env, null = push off. */
+  push?: PushSender | null;
 }
 
 /** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
@@ -105,6 +112,7 @@ export function buildServices({
   ingest,
   media,
   logger = rootLogger,
+  push,
 }: ServiceDeps) {
   const users = createUsersRepo(db);
   const decks = createDecksRepo(db);
@@ -222,6 +230,17 @@ export function buildServices({
     rateLimits,
     logHash,
     waitlist,
+    // 037 (D297): push devices, test notice and the reminder-email switch.
+    pushSubscriptions: createPushSubscriptionsService({
+      subscriptions: createPushSubscriptionsRepo(db),
+      users,
+      push: resolvePushSender(env, push),
+      rateLimits,
+      decisions: decisionLogger<PushSubscriptionDecisions>('push', {
+        parent: logger,
+        levels: PUSH_SUBSCRIPTION_DECISION_LEVELS,
+      }),
+    }),
     ...buildAdminServices({ db, env, mailer, now, logger, registration }),
     auth: createAuthService({
       env,

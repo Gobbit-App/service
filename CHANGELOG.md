@@ -10,6 +10,17 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-03 — Reminder notifications (037)
+
+- **Action required (only to turn on web push)**: new optional `VAPID_PUBLIC_KEY`,
+  `VAPID_PRIVATE_KEY` (secret) and `VAPID_SUBJECT` (`mailto:` or `https://`). Set all three or none
+  (a partial set stops the API from starting); generate the pair with
+  `pnpm dlx web-push generate-vapid-keys`. Unset → no push: Settings shows only the email switch
+  and the push routes answer 404. Reminder emails go out through the existing `MAIL_PROVIDER`.
+- New optional tuning variables `NOTIFY_MAX_ATTEMPTS` (default `5`), `NOTIFY_RETRY_BASE_SECONDS`
+  (`60`) and `REMINDER_SWEEP_BATCH` (`200`). The worker runs a `reminder-sweep` every minute; it
+  uses the notification tables from migration `0021_reminders`, so nothing to migrate.
+
 ### 2026-11-03 — Reminder cards (037)
 
 - New optional variables `REMINDER_MAX_DEADLINE_DAYS` (default `1825`),

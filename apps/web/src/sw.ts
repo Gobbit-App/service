@@ -2,7 +2,8 @@
 /**
  * D98: the service worker (`injectManifest`). Ports the former `generateSW` rules 1:1
  * (precache, SPA navigation fallback + denylist, Cloudinary image cache, prompt-mode updates)
- * and adds the Android share target: `POST /share` → IndexedDB → 303 `/share?pending=<id>`.
+ * and adds the Android share target: `POST /share` → IndexedDB → 303 `/share?pending=<id>`,
+ * plus reminder pushes (037).
  */
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { ExpirationPlugin } from 'workbox-expiration';
@@ -13,6 +14,7 @@ import {
 } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
+import { openFromNotification, parsePushPayload, showReminder } from './push/sw-push';
 import { savePending } from './share/share-store';
 import { handleShareTarget, isShareTargetPost } from './share/share-target';
 
@@ -29,6 +31,25 @@ self.addEventListener('fetch', (event) => {
       save: (payload) => savePending(payload),
       newId: () => crypto.randomUUID(),
       now: () => Date.now(),
+    }),
+  );
+});
+
+// 037 (D296): reminder pushes and taps on them.
+self.addEventListener('push', (event) => {
+  const message = parsePushPayload(event.data ? () => event.data?.json() : undefined);
+  event.waitUntil(
+    showReminder(message, (title, options) => self.registration.showNotification(title, options)),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    openFromNotification(event.notification.data, {
+      origin: self.location.origin,
+      windows: () => self.clients.matchAll({ type: 'window', includeUncontrolled: true }),
+      open: (url) => self.clients.openWindow(url),
     }),
   );
 });

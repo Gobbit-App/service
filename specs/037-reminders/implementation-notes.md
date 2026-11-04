@@ -26,6 +26,25 @@ Decisions the plan didn't make, and deviations from it. At close-out, deviations
 - **Notification statuses**: `notification_deliveries.status` has no `skipped` value. Opted-out or
   ineligible recipients get no row at all (planned for PR3).
 
+## PR3: notifications (T022–T027)
+
+- **File layout**: `push/push-sender.ts` (`web-push` builds the encrypted request, `createSafePush`
+  sends it) instead of `push/{safe-push,web-push-request}.ts`; one `routes/notifications.ts` for
+  subscriptions, preferences and the test send.
+- **Ineligible scope**: `skipped:ineligible` is logged only for a picked person who lost write
+  access. Readers are never recipients, so no event is written for them.
+- **404 = gone**: a push service answering 404 removes the subscription just like 410.
+- **Due-time formatting**: built from explicit `Intl.DateTimeFormat` parts in the reminder's zone,
+  so the text doesn't depend on the ICU build.
+- **Sign-out drops push**: `signOut` calls `forgetPush` first (DELETE the server row, then
+  unsubscribe); a failure is logged and sign-out continues.
+- **iOS install hint**: on iPhone/iPad outside standalone mode Settings explains how to add the app
+  to the Home Screen instead of offering the button.
+- **Reading the subscription**: reads use `navigator.serviceWorker.getRegistration()`, because
+  `ready` never resolves when no worker is registered (dev, private windows).
+- **Crash test**: the int test backdates a `sending` row with the `set_updated_at` trigger turned
+  off inside one transaction, so the interrupted path is exercised without a real crash.
+
 ## PR2: web editor, card, dismiss, Upcoming (T017–T021)
 
 - **Upcoming link for every writer**: the contract links Upcoming for owners/maintainers only. The

@@ -24,6 +24,8 @@ export const appConfigSchema = z.object({
       host: z.string(),
     })
     .nullable(),
+  /** D296: the VAPID public key when Web Push is configured, else null (Settings hides push). */
+  push: z.object({ publicKey: z.string() }).nullable(),
 });
 
 export type AppConfig = z.infer<typeof appConfigSchema>;

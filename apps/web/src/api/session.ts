@@ -44,12 +44,14 @@ export type SignOutDeps = {
   removePersisted: () => Promise<void>;
   /** D145: removes every unsaved editor draft (FR-013). */
   clearDrafts: () => Promise<void>;
+  /** 037: drops this device's push subscription (needs the session, so it runs first). */
+  forgetPush?: () => Promise<void>;
   logout?: () => Promise<unknown>;
   log?: (message: string, err: unknown) => void;
 };
 
 /**
- * D66 / D145: end the session, then forget everything this user saw (cache, last deck, drafts). Local data is cleared even
+ * D66 / D145 / 037: drop this device's push subscription, end the session, then forget everything this user saw (cache, last deck, drafts). Local data is cleared even
  * when the logout call fails (offline), so a shared phone never keeps the previous user's cards.
  */
 export async function signOut({
@@ -58,7 +60,15 @@ export async function signOut({
   clearDrafts,
   logout = () => unwrap(api.POST('/auth/logout')),
   log = (message, err) => console.error(message, err),
+  forgetPush,
 }: SignOutDeps): Promise<void> {
+  if (forgetPush) {
+    try {
+      await forgetPush();
+    } catch (err) {
+      log('[session] could not turn off notifications on this device', err);
+    }
+  }
   try {
     await logout();
   } catch (err) {

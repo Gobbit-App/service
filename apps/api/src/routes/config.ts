@@ -3,6 +3,7 @@ import { appConfigSchema, type AppConfig } from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Env } from '../env';
 import { cloudNameFrom } from '../lib/cloudinary-url';
+import { vapidFrom } from '../push/push-sender';
 import { analyticsHead } from '../public/analytics';
 import {
   emailIngestDomain,
@@ -23,6 +24,9 @@ type ConfigEnv = Pick<
   | 'RESEND_API_KEY'
   | 'SHORTCUT_URL'
   | 'ANALYTICS_SITE_ID'
+  | 'VAPID_PUBLIC_KEY'
+  | 'VAPID_PRIVATE_KEY'
+  | 'VAPID_SUBJECT'
 > &
   // API_URL is always set at runtime (env.ts defaults it); optional so tests can pass a partial env.
   Partial<Pick<Env, 'API_URL' | 'APP_URL'>>;
@@ -51,6 +55,11 @@ export function buildAppConfig(env: ConfigEnv): AppConfig {
     analytics: env.API_URL
       ? (analyticsHead({ ...env, API_URL: env.API_URL, APP_URL: env.APP_URL }) ?? null)
       : null,
+    // D296: the browser needs the VAPID public key to subscribe; null = push off.
+    push: (() => {
+      const vapid = vapidFrom(env);
+      return vapid ? { publicKey: vapid.publicKey } : null;
+    })(),
   });
 }
 

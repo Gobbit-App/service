@@ -60,6 +60,11 @@ x-api-env: &api-env
   # D234/D236: platform admins (comma-separated emails) and the waitlist invite link lifetime.
   PLATFORM_ADMINS: ${PLATFORM_ADMINS:-}
   WAITLIST_INVITE_TTL_DAYS: ${WAITLIST_INVITE_TTL_DAYS:-7}
+  # 037 (D296): web push for due reminders; off unless all three are set. The private key is a
+  # Dokploy secret; generate the pair with `pnpm dlx web-push generate-vapid-keys`.
+  VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+  VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+  VAPID_SUBJECT: ${VAPID_SUBJECT:-}
 
 services:
   api:

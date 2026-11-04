@@ -4,13 +4,16 @@ import { type Mailer, type MailMessage } from './mailer';
 /** Resend API-like interface for sending emails. */
 export interface ResendLike {
   emails: {
-    send(p: {
-      from: string;
-      to: string;
-      subject: string;
-      text: string;
-      html: string;
-    }): Promise<{ error: { message: string } | null }>;
+    send(
+      p: {
+        from: string;
+        to: string;
+        subject: string;
+        text: string;
+        html: string;
+      },
+      options?: { idempotencyKey?: string },
+    ): Promise<{ error: { message: string } | null }>;
   };
 }
 
@@ -25,13 +28,16 @@ export class ResendMailer implements Mailer {
   }
 
   async send(msg: MailMessage): Promise<void> {
-    const { error } = await this.client.emails.send({
-      from: this.from,
-      to: msg.to,
-      subject: msg.subject,
-      text: msg.text,
-      html: msg.html,
-    });
+    const { error } = await this.client.emails.send(
+      {
+        from: this.from,
+        to: msg.to,
+        subject: msg.subject,
+        text: msg.text,
+        html: msg.html,
+      },
+      msg.idempotencyKey ? { idempotencyKey: msg.idempotencyKey } : undefined,
+    );
 
     if (error) {
       throw new Error(`Resend send failed: ${error.message}`);

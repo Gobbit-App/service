@@ -22,6 +22,7 @@ import {
   type SampleWorld,
   type TestDb,
 } from '@gobbit/db/test';
+import type { PushSender } from '../src/push/push-sender';
 
 export const TEST_API_URL = 'http://api.test';
 
@@ -76,6 +77,8 @@ export interface SetupApiTestOptions {
   waitlistLimiter?: AnonRateLimiter;
   /** D239: parent logger for decision events (e.g. `captureLogger().logger`). */
   logger?: Logger;
+  /** 037: push sender fake (default: from env, i.e. off). */
+  push?: PushSender | null;
 }
 
 export interface ApiTestContext {
@@ -140,6 +143,7 @@ export function setupApiTest(opts: SetupApiTestOptions = {}): ApiTestContext {
       anonSearchLimiter: opts.anonSearchLimiter,
       waitlistLimiter: opts.waitlistLimiter,
       logger: opts.logger,
+      push: opts.push,
     });
   });
 

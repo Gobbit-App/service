@@ -119,3 +119,15 @@ Each event carries `requestId` (taken from `Actor.requestId`), the user, the dec
 - Dismissing waits for the server (no optimistic update), and Upcoming's cache only replaces cards
   in place because it sorts by reveal time ascending.
 - The overdue tone uses `--color-danger` (there is no warning colour).
+- Push sending lives in `push/push-sender.ts` plus `createSafePush` in `fetch/safe-fetch.ts`,
+  instead of the planned `push/{safe-push,web-push-request}.ts`. The subscription, preference and
+  test routes share `routes/notifications.ts`.
+- `reminder.notify` logs `skipped:ineligible` only for a picked person who lost write access;
+  deck readers are never recipients, so they log nothing.
+- A push endpoint that answers 404 is treated like 410: the subscription is removed (`gone`).
+- The due time in emails and pushes is built from explicit `Intl` parts in the reminder's zone,
+  so it reads the same on every Node build.
+- Signing out turns off push on that device (server row first, then the browser subscription),
+  so a shared phone stops getting the previous member's reminders.
+- iPhone and iPad show an "Add to Home Screen" hint instead of the enable button until the app is
+  installed, because Safari only allows web push from an installed app.

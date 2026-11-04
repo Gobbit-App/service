@@ -80,13 +80,33 @@ describe('ResendMailer', () => {
     });
 
     await mailer.send(testMsg);
-    expect(sendFn).toHaveBeenCalledWith({
+    expect(sendFn).toHaveBeenCalledWith(
+      {
+        from: 'noreply@gobbit.dev',
+        to: testMsg.to,
+        subject: testMsg.subject,
+        text: testMsg.text,
+        html: testMsg.html,
+      },
+      undefined,
+    );
+  });
+
+  it('passes the idempotency key as a request option (D295)', async () => {
+    const sendFn = vi.fn().mockResolvedValue({ error: null });
+    const mailer = new ResendMailer({
+      apiKey: 'dummy',
       from: 'noreply@gobbit.dev',
-      to: testMsg.to,
-      subject: testMsg.subject,
-      text: testMsg.text,
-      html: testMsg.html,
+      client: { emails: { send: sendFn } },
     });
+
+    await mailer.send({ ...testMsg, idempotencyKey: 'reminder-1' });
+    expect(sendFn).toHaveBeenCalledWith(
+      expect.not.objectContaining({ idempotencyKey: 'reminder-1' }),
+      {
+        idempotencyKey: 'reminder-1',
+      },
+    );
   });
 
   it('throws when resend client returns an error', async () => {
