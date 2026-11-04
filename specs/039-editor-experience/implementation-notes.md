@@ -48,3 +48,23 @@ the deviations are copied into `docs/design/card-editor.md` → "Deviations".
   and keep their reason readable.
 - **E2E.** Specs that wanted a text card on a bare `/new` now use `?type=text`; the add-from-menu
   and link journeys (`@smoke`) pick from the chooser.
+
+## PR3 — canvas, preview and keyboard dock (US3, US5, US7)
+
+- **Sheet motion was already in PR1.** `ui/sheet/sheet.css` shipped the rise/fade and its
+  `prefers-reduced-motion` override with the sheet itself, so T032 is only the restore-draft card.
+- **The dock renders only while the keyboard is open.** `ComposerDock` mounts when
+  `useKeyboardInset` reports open (> 120 px). The CSS adds the coarse-pointer, < 768 px and
+  field-focus conditions. One "Save" exists in the DOM the rest of the time, so names stay unique.
+- **The counter span stays mounted.** `LimitMeter` always renders its `id`'d span (empty below
+  80 %), so a field's `aria-describedby` never points at a missing element.
+- **A server-refused save focuses once per response.** The effect remembers the `saveErrors` object
+  it already handled (`landedOn` ref) instead of bumping state from inside an effect (React
+  compiler lint). If the preview is open it closes it first and focuses on the next run.
+- **Leaving the preview refocuses what had focus,** which is the toggle itself when the toggle
+  closed it. A blocked Save from the preview closes it before focusing the first invalid field.
+- **Section titles are `h2`** under the bar's `h1` ("New card" / "Edit card").
+- **The form-level error banner sits above both columns**, so it stays visible while the preview
+  is open on a phone.
+- **E2E.** The smoke `showPreview` helper clicks the "Preview" toggle; `full/composer.spec.ts`
+  adds widths 320–1280 px, 44 px targets, the toggle and axe (light and dark).

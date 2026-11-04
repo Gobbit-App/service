@@ -124,3 +124,26 @@ Create and edit every card type (text, link, table, calc; image is read-only unt
 - **Pasted images become their alt text** (`plainPaste`); with no alt they disappear.
 - **Two "Undo" buttons** (toolbar and category toast): e2e scopes the toast's to its `status` region.
 - **E2E selection timing**: keyboard specs select with Ctrl/Cmd+A and give native caret moves a 150 ms beat, because ProseMirror reads native selections on `selectionchange`.
+
+## Composer (039, `specs/039-editor-experience`, D300–D313, ADR-071)
+
+- **Frame**: `/d/{slug}/new` and `/i/{id}/edit` render their own frame outside the deck chrome: a slim sticky top bar (`ComposerTopBar`: Close link to the back target, "New card" / "Edit card" over the deck name, the Preview toggle below 768 px, Save) inside the `<form>`. Save uses `disabledReason` and stays focusable; a blocked or refused Save shows every error and focuses the first `[aria-invalid="true"]` field (`composer/focus-first-invalid.ts`). Mod+Enter saves; Escape closes a sheet, then the preview, then the composer (D300, D308, D310).
+- **Type**: a bare `/new` opens the type chooser (`TypeTiles`, one radio group); `?type=` or a resumed new-card draft skips it. In the composer a type control opens the same tiles in a `Sheet` and confirms before a switch drops type content (D301–D303).
+- **Sheets**: `ui/sheet/Sheet.tsx` wraps `<dialog>` + `showModal()` — bottom sheet below 600 px, centred dialog above, motion removed under reduced motion; the leave guard, type picker and switch confirm use it (D304).
+- **Canvas**: type control → leading media (link, image) → headline title → borderless body → the type's section (Table, Calculator, Reminder; `composer/composer-sections.ts`) → "Details" (categories, source, entities). Counters show from 80 % (`fields/limit-meter.ts`). Restore draft is an inline card (D306, D307).
+- **Preview**: below 768 px the top bar's toggle (`use-preview-toggle.ts`) swaps the canvas for the preview and restores scroll and focus on return; from 768 px the preview is a sticky second column. `EditorTabs` is gone (D309).
+- **Keyboard dock**: `use-keyboard-inset.ts` writes `--kb-inset` and `data-keyboard="open"` from `visualViewport`; on a touch phone with a field focused, `ComposerDock` (compact Save) sits on the keyboard and the 038 toolbar moves into the same strip with CSS while the body has focus (D305).
+- **Tests**: unit tests next to each `composer/` helper and in `CardEditor.composer.test.tsx`; `@smoke` journeys use the chooser, Save and the Preview toggle; `@full` `full/composer.spec.ts` covers chrome, shortcuts, the type switch, widths 320–1280 px, 44 px targets and axe in both themes (D313).
+
+## Deviations from the 039 plan
+
+- **Blocked Save reports the attempt**: `Button` gained `onBlockedClick`, so an `aria-disabled` Save still reveals the errors; errors appear only after a change or a Save attempt.
+- **Escape layering**: the 038 colour panel and link row close on a capture-phase Escape and mark it handled; they stay inline panels, not sheets.
+- **The type control is its own `<button>`** (select-like disclosure, "Card type: {Label}"), not a `ui/buttons` action.
+- **Tiles focus in a microtask** after the sheet opens, so the sheet returns focus to the type control.
+- **`?type=image` without image storage shows the chooser** with Image unavailable, instead of a text card.
+- **Unavailable tiles are `aria-disabled`**, so they stay in the arrow-key order.
+- **The keyboard dock mounts only while the keyboard is open**, so one "Save" exists otherwise.
+- **The counter span stays mounted** (empty below 80 %), so `aria-describedby` never dangles.
+- **A refused save focuses once per response** (handled-response ref), closing the preview first.
+- **Sheet motion shipped with the sheet** (PR1); the restore-draft card is the only US7 restyle.

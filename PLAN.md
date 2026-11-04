@@ -185,6 +185,7 @@ Specs (in order): [`025` deck wording](#025-027-renames) → [`022-editor-naviga
 - [ ] **5. Browse that feels native** — open Browse on a phone: the card fills the screen; swiping sideways flips cards smoothly; scrolling down shows details and source; a chip switches category; after the last card, "Continue to …" moves on (034 [`034-browse-redesign`](specs/034-browse-redesign/spec.md), D244–D251).
 - [x] **6. One bottom bar** — on a phone, the deck page's ⋯, Browse, Review and + sit in a bar that stays while scrolling; holding + opens a new card; Settings is one page (036 [`036-bottom-bar`](specs/036-bottom-bar/spec.md), D274–D280).
 - [x] **7. Rich-text bodies** — a body typed over several lines shows those lines; a toolbar bolds, underlines, resizes and colours text and adds headings, lists, quotes and code; the card and its public page show the same styles (038 [`038-rich-text-body`](specs/038-rich-text-body/spec.md), D282–D290).
+- [x] **8. A real composer** — adding or editing a card opens a full-screen composer: pick a type first, a top bar with Close, Preview and Save, one calm canvas, Save on the keyboard on a phone and the preview beside the editor on a tablet (039 [`039-editor-experience`](specs/039-editor-experience/spec.md), D300–D313).
 
 ### 025–027 renames
 
