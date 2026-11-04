@@ -42,7 +42,7 @@ async function renderCreate(type: 'text' | 'link' = 'text', onTypeChange = vi.fn
   return { ...view, onTypeChange };
 }
 
-const saveButton = () => screen.getByRole('button', { name: 'Save card' });
+const saveButton = () => screen.getByRole('button', { name: 'Save' });
 const type = (label: string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 /** The body editor loads on demand; wait for it before typing. */
@@ -111,7 +111,7 @@ describe('CardEditor: create', () => {
     await renderCreate();
     type('Title', 'Long');
     await typeBody('😀'.repeat(601));
-    expect(saveButton()).toBeDisabled();
+    expect(saveButton()).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByText('Fix 1 field')).toBeInTheDocument();
     expect(screen.getByLabelText('Body')).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByText('601 / 600 characters')).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe('CardEditor: create', () => {
     await renderCreate();
     type('Title', 'No category');
     fireEvent.click(screen.getByRole('button', { name: 'General' }));
-    expect(saveButton()).toBeDisabled();
+    expect(saveButton()).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByText('Pick at least one category')).toBeInTheDocument();
   });
 
@@ -207,7 +207,7 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
     await renderImage('test-cloud', 'image');
     type('Title', 'Bread');
     expect(screen.getByLabelText('Take photo')).toBeInTheDocument();
-    expect(saveButton()).toBeDisabled();
+    expect(saveButton()).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByText('Fix 1 field')).toBeInTheDocument();
     expect(screen.getByText('Add a photo')).toBeInTheDocument();
     expect(screen.queryByText('Alt text is required')).not.toBeInTheDocument();

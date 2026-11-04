@@ -134,6 +134,19 @@ describe('FormatToolbar (D290, FR-008–FR-009)', () => {
     expect(focusEditor).toHaveBeenCalled();
   });
 
+  it('Escape closes the colour panel from anywhere and is marked handled (D310)', async () => {
+    const { focusEditor } = renderToolbar(await stateAt('Hello', 'Hello'));
+    fireEvent.click(button('Text colour'));
+    expect(screen.getByRole('group', { name: 'Text colour' })).toBeInTheDocument();
+    const seen = vi.fn((event: KeyboardEvent) => event.defaultPrevented);
+    document.addEventListener('keydown', seen);
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    document.removeEventListener('keydown', seen);
+    expect(seen).toHaveReturnedWith(true);
+    expect(screen.queryByRole('group', { name: 'Text colour' })).not.toBeInTheDocument();
+    expect(focusEditor).toHaveBeenCalled();
+  });
+
   it('offers Remove link inside a link', async () => {
     renderToolbar(await stateAt('[site](https://x.example)', 'site'));
     expect(button('Link')).toHaveAttribute('aria-pressed', 'true');

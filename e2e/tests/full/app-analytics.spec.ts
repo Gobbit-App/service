@@ -104,7 +104,7 @@ test('in-app analytics sends route patterns, screen names and ids only @full', a
   const created = page.waitForResponse(
     (res) => res.request().method() === 'POST' && /\/decks\/[^/]+\/items$/.test(res.url()),
   );
-  await page.getByRole('button', { name: 'Save card' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
   const item = (await (await created).json()) as { id: string; deckId: string };
 
   await expect

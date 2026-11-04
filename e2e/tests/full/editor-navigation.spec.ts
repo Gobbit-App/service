@@ -8,6 +8,10 @@ import { expect, SMOKE_CATEGORY, test, webUrl, type WebDeck } from '../../fixtur
  */
 
 const backLink = (page: Page) => page.getByRole('link', { name: 'Back' });
+/** D300: the composer has no app header; its top bar's Close is the way up. */
+const closeLink = (page: Page) => page.getByRole('link', { name: 'Close' });
+const upLink = (page: Page, from: string) =>
+  /\/(new|edit)(\?|$)/.test(from) ? closeLink(page) : backLink(page);
 const discardDialog = (page: Page) => page.getByRole('dialog', { name: 'Discard changes?' });
 const textCard = (deck: WebDeck) => deck.items.find((item) => item.type === 'text')!;
 
@@ -42,7 +46,7 @@ test('the header back goes one level up, and the deck list has none @full', asyn
   ];
   for (const [from, to] of cases) {
     await page.goto(webUrl(from));
-    await expect(backLink(page), from).toHaveAttribute('href', to);
+    await expect(upLink(page, from), from).toHaveAttribute('href', to);
   }
 
   // The last hop lands on the deck list: the top, so no back control.
@@ -82,7 +86,7 @@ test('asking writes the draft at once; Escape keeps editing; a reload offers it 
   await page.goto(webUrl(`/d/${webDeck.slug}/new`));
   await page.getByLabel('Title', { exact: true }).fill('Kept text');
   // No wait for the 500 ms autosave: the attempt to leave writes the draft (D204).
-  await backLink(page).click();
+  await closeLink(page).click();
   await expect(discardDialog(page)).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(discardDialog(page)).toHaveCount(0);
@@ -131,7 +135,7 @@ test('switching the type of a new card and saving never ask @full', async ({ pag
   await page.getByRole('radio', { name: 'Text' }).check();
   await expect(discardDialog(page)).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Save card' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   await expect(discardDialog(page)).toHaveCount(0);
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
@@ -175,12 +179,12 @@ test('the editor goes back to the page that opened it: Browse or the list (D320)
   const editLink = page.getByRole('link', { name: 'Edit', exact: true });
   await page.addInitScript(() => localStorage.setItem('gobbit:browse-hint:v2', 'dismissed'));
 
-  // Browse → Edit → header back: the same card in Browse, not its standalone page.
+  // Browse → Edit → Close: the same card in Browse, not its standalone page.
   await page.goto(webUrl(`/d/${webDeck.slug}/browse?c=all&i=${card.id}`));
   await expect(page.getByRole('heading', { name: card.title })).toBeVisible();
   await editLink.click();
   await expect(page.getByRole('heading', { name: 'Edit card' })).toBeVisible();
-  await backLink(page).click();
+  await closeLink(page).click();
   await expect(page).toHaveURL(browse);
   await expect(page.getByRole('heading', { name: card.title })).toBeVisible();
 
@@ -188,17 +192,17 @@ test('the editor goes back to the page that opened it: Browse or the list (D320)
   const title = `Browse edit ${webDeck.slug}`;
   await editLink.click();
   await page.getByLabel('Title', { exact: true }).fill(title);
-  await page.getByRole('button', { name: 'Save card' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
   await expect(page).toHaveURL(browse);
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 
-  // The deck list → Edit → Cancel: the list.
+  // The deck list → Edit → Close: the list.
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   await page
     .getByRole('article', { name: title })
     .getByRole('link', { name: 'Edit', exact: true })
     .click();
   await expect(page.getByRole('heading', { name: 'Edit card' })).toBeVisible();
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  await closeLink(page).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
 });

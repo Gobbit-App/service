@@ -28,7 +28,7 @@ const renderEdit = () =>
   );
 const typeTitle = (value: string) =>
   fireEvent.change(screen.getByLabelText('Title'), { target: { value } });
-const cancel = () => fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+const cancel = () => fireEvent.click(screen.getByRole('link', { name: 'Close' }));
 
 beforeEach(async () => {
   respond.mockReset();
@@ -98,7 +98,7 @@ describe('CardEditor: Cancel and the unsaved-changes guard (022)', () => {
     respond.mockResolvedValueOnce({ ...item, title: 'New' });
     const { location } = await renderEdit();
     typeTitle('New');
-    fireEvent.click(screen.getByRole('button', { name: 'Save card' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByText('Elsewhere');
     expect(location()).toBe('/i/i1');
   });

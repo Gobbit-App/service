@@ -33,7 +33,7 @@ const renderCreate = (type: ItemType) =>
       categories={categories}
     />,
   );
-const cancel = () => fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+const cancel = () => fireEvent.click(screen.getByRole('link', { name: 'Close' }));
 const waitPastAutosave = () =>
   act(() => new Promise((resolve) => setTimeout(resolve, AUTOSAVE_DELAY_MS + 100)));
 

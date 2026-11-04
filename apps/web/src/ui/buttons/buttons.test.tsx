@@ -56,6 +56,28 @@ describe('Button (D211)', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
+  it('while blocked, a click (even of a submit) does nothing but tell onBlockedClick', async () => {
+    const onClick = vi.fn();
+    const onBlockedClick = vi.fn();
+    const onSubmit = vi.fn((event: Event) => event.preventDefault());
+    render(
+      <form onSubmit={(event) => onSubmit(event.nativeEvent)}>
+        <Button
+          type="submit"
+          icon="check"
+          label="Save"
+          disabledReason="Fix 1 field"
+          onClick={onClick}
+          onBlockedClick={onBlockedClick}
+        />
+      </form>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(onBlockedClick).toHaveBeenCalledOnce();
+    expect(onClick).not.toHaveBeenCalled();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('uses the danger style', () => {
     render(<Button icon="trash" label="Revoke" variant="danger" />);
     expect(screen.getByRole('button')).toHaveClass('button--danger');

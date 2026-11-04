@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { categoriesQuery, deckQuery, itemQuery, meQuery } from '../api/queries';
-import { AppHeader } from '../app/AppHeader';
 import { backTarget } from '../app/back-target';
 import { canEditItem } from '../cards/can-edit-item';
 import { CardEditor } from '../editor/CardEditor';
@@ -69,21 +68,17 @@ function EditCard() {
     from,
     back: opener,
   });
+  // D300: the composer brings its own top bar (Close, heading, Save) and landmarks.
   return (
-    <>
-      <AppHeader title={deck.data.name} back={back} />
-      <main className="page">
-        <CardEditor
-          key={item.data.id}
-          mode="edit"
-          deck={deck.data}
-          item={item.data}
-          categories={categories.data}
-          from={from}
-          opener={opener}
-          backHref={back}
-        />
-      </main>
-    </>
+    <CardEditor
+      key={item.data.id}
+      mode="edit"
+      deck={deck.data}
+      item={item.data}
+      categories={categories.data}
+      from={from}
+      opener={opener}
+      backHref={back}
+    />
   );
 }

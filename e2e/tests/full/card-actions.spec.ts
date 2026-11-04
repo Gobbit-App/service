@@ -153,7 +153,7 @@ test('the editor stylesheet does not restyle the card bar @full', async ({ page,
   // the editor's lazy chunk loads editor.css; back in-app (no reload) it stays in the document
   await page.goto(webUrl(`/i/${card.id}/edit`));
   await expect(page.getByRole('textbox').first()).toBeVisible();
-  await page.getByRole('link', { name: 'Back' }).click();
+  await page.getByRole('link', { name: 'Close' }).click();
   await expect(page).toHaveURL(new RegExp(`/i/${card.id}$`));
   await expect(moreActions(page)).toBeVisible();
   expect(await barStyle(moreActions(page))).toEqual(before);

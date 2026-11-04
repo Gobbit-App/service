@@ -4,11 +4,6 @@
   gap: var(--gap);
 }
 
-.editor__heading {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
 .draft-restore {
   display: grid;
   gap: calc(var(--gap) / 2);
@@ -116,22 +111,6 @@
     position: sticky;
     top: var(--gutter);
   }
-}
-
-.editor__save {
-  display: grid;
-  gap: 8px;
-}
-
-.editor__save-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--gap);
-}
-
-.editor__save-reason {
-  color: var(--color-muted);
 }
 
 .editor__banner {

@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState, type ReactElement } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactElement } from 'react';
 import type { Command, EditorState } from '@milkdown/kit/prose/state';
 import { IconButton } from '../../ui/buttons/IconButton';
 import { ColorPicker } from './ColorPicker';
@@ -43,6 +43,24 @@ export function FormatToolbar({
     setPanel(null);
     focusEditor();
   };
+
+  /*
+   * D310: Escape closes an open panel first, wherever focus is. Capture phase on the document, so
+   * it runs before the panel's own handlers and the composer's page-level Escape (which skips a
+   * handled event).
+   */
+  const panelOpen = panel !== null;
+  useEffect(() => {
+    if (!panelOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      event.preventDefault();
+      setPanel(null);
+      focusEditor();
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, [panelOpen, focusEditor]);
   const runAndClose = (command: Command) => {
     setPanel(null);
     run(command);

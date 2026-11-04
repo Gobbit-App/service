@@ -9,7 +9,10 @@ import { ErrorState, LoadingState } from '../ui/StatusViews';
 
 type NewCardSearch = { type?: CreatableType };
 
-/** D135: the card editor in create mode, inside the deck layout (`/d/:slug/new?type=`). */
+/**
+ * D135 / D300: the card editor in create mode (`/d/:slug/new?type=`). The deck layout steps aside
+ * here, so the states before the composer bring their own page frame.
+ */
 export const Route = createFileRoute('/d/$slug/new')({
   validateSearch: (search: Record<string, unknown>): NewCardSearch =>
     isCreatableType(search['type']) ? { type: search['type'] } : {},
@@ -28,20 +31,24 @@ function NewCard() {
   if (!deck.data) return null;
   if (!can(deck.data.role, 'item.create')) {
     return (
-      <ErrorState
-        title="You can't add cards here"
-        message="Your role in this deck doesn't allow adding cards."
-      />
+      <main className="page">
+        <ErrorState
+          title="You can't add cards here"
+          message="Your role in this deck doesn't allow adding cards."
+        />
+      </main>
     );
   }
   if (categories.isPending) return <LoadingState label="Loading categories…" />;
   if (type === 'image' && config.isPending) return <LoadingState label="Loading…" />;
   if (categories.isError && !categories.data) {
     return (
-      <ErrorState
-        message="Couldn't load the categories for this deck."
-        onRetry={() => void categories.refetch()}
-      />
+      <main className="page">
+        <ErrorState
+          message="Couldn't load the categories for this deck."
+          onRetry={() => void categories.refetch()}
+        />
+      </main>
     );
   }
 

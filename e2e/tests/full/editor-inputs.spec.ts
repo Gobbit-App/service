@@ -109,7 +109,7 @@ test('the source URL field prefills https:// and normalises what is typed @full'
   await source.blur();
   await expect(source).toHaveValue('mailto:someone@example.org');
   await expect(page.getByText('Enter a valid web address')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Save card' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
 });
 
 test('a full address pasted over the prefill is not doubled @full', async ({ page, webDeck }) => {
@@ -140,8 +140,8 @@ test('a new table starts from a sample that is not unsaved work; Clear empties i
   await expect(page.getByLabel('Column 1 heading')).toHaveValue('Item');
   await expect(page.getByLabel('Row 1, Item')).toHaveValue('Milk');
 
-  // Untouched, the sample is the starting point (D270): Cancel leaves without asking.
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  // Untouched, the sample is the starting point (D270): Close leaves without asking.
+  await page.getByRole('link', { name: 'Close' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   await expect(page.getByRole('dialog', { name: 'Discard changes?' })).toHaveCount(0);
 
@@ -171,6 +171,6 @@ test('a new calc starts from a working sample; Clear empties it @full', async ({
   await expect(page.getByRole('button', { name: 'Clear calculation' })).toHaveCount(0);
 
   // A cleared calc is a change: leaving asks.
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  await page.getByRole('link', { name: 'Close' }).click();
   await expect(page.getByRole('dialog', { name: 'Discard changes?' })).toBeVisible();
 });
