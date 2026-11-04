@@ -39,6 +39,17 @@ describe('backTarget', () => {
     );
   });
 
+  it('sends the editor back to the page that opened it (D320)', () => {
+    const back = '/d/family/browse?c=all&i=it_1';
+    expect(backTarget({ kind: 'edit', itemId: 'it_1', deckSlug: 'family', back })).toBe(back);
+  });
+
+  it('review wins over the opener page', () => {
+    expect(
+      backTarget({ kind: 'edit', itemId: 'it_1', deckSlug: 'f', from: 'review', back: '/d/f' }),
+    ).toBe('/d/f/review');
+  });
+
   it('encodes slugs and ids', () => {
     expect(backTarget({ kind: 'card', deckSlug: 'a b' })).toBe('/d/a%20b');
     expect(backTarget({ kind: 'edit', itemId: 'a/b', deckSlug: 'x' })).toBe('/i/a%2Fb');

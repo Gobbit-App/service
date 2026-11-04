@@ -165,3 +165,40 @@ test('the review inline edit asks before dropping changes @full', async ({
   await expect(proposal.getByRole('button', { name: 'Publish' })).toBeVisible();
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
+
+test('the editor goes back to the page that opened it: Browse or the list (D320) @full', async ({
+  page,
+  webDeck,
+}) => {
+  const card = textCard(webDeck);
+  const browse = new RegExp(`/d/${webDeck.slug}/browse\\?.*i=${card.id}`);
+  const editLink = page.getByRole('link', { name: 'Edit', exact: true });
+  await page.addInitScript(() => localStorage.setItem('gobbit:browse-hint:v2', 'dismissed'));
+
+  // Browse → Edit → header back: the same card in Browse, not its standalone page.
+  await page.goto(webUrl(`/d/${webDeck.slug}/browse?c=all&i=${card.id}`));
+  await expect(page.getByRole('heading', { name: card.title })).toBeVisible();
+  await editLink.click();
+  await expect(page.getByRole('heading', { name: 'Edit card' })).toBeVisible();
+  await backLink(page).click();
+  await expect(page).toHaveURL(browse);
+  await expect(page.getByRole('heading', { name: card.title })).toBeVisible();
+
+  // Browse → Edit → Save: back in Browse on the edited card.
+  const title = `Browse edit ${webDeck.slug}`;
+  await editLink.click();
+  await page.getByLabel('Title', { exact: true }).fill(title);
+  await page.getByRole('button', { name: 'Save card' }).click();
+  await expect(page).toHaveURL(browse);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+
+  // The deck list → Edit → Cancel: the list.
+  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page
+    .getByRole('article', { name: title })
+    .getByRole('link', { name: 'Edit', exact: true })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Edit card' })).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+});

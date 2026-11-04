@@ -47,7 +47,15 @@ export type CardEditorProps = CommonProps &
         /** Keeps `?type=` in the URL in step with the picker (replace). */
         onTypeChange?: (type: CreatableType) => void;
       }
-    | { mode: 'edit'; deck: Deck; item: Item; categories: Category[]; from?: 'review' }
+    | {
+        mode: 'edit';
+        deck: Deck;
+        item: Item;
+        categories: Category[];
+        from?: 'review';
+        /** D320: the page that opened the editor; Save returns there. */
+        opener?: string;
+      }
   );
 
 function defaultCategoryId(categories: readonly Category[]): string | null {
@@ -63,7 +71,13 @@ function initialDraft(props: CardEditorProps): Draft {
 function saveTarget(props: CardEditorProps): SaveTarget {
   return props.mode === 'create'
     ? { mode: 'create', deck: props.deck }
-    : { mode: 'edit', deck: props.deck, item: props.item, from: props.from };
+    : {
+        mode: 'edit',
+        deck: props.deck,
+        item: props.item,
+        from: props.from,
+        opener: props.opener,
+      };
 }
 
 /** D136: the full card editor (create and edit) with a live preview through `Card`. */

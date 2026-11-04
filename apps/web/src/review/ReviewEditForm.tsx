@@ -123,7 +123,7 @@ export function ReviewEditForm({
         />
         <Button icon="close" label="Cancel" variant="ghost" onClick={cancel} />
         <ButtonLink
-          href={editHref(item.id, 'review')}
+          href={editHref(item.id, { from: 'review' })}
           icon="external"
           label="Edit fully"
           variant="ghost"

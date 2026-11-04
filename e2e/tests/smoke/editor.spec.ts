@@ -237,7 +237,9 @@ test('list cards link to the editor @smoke', async ({ page, webDeck }) => {
     .filter({ has: page.getByRole('heading', { name: card.title }) })
     .getByRole('link', { name: 'Edit', exact: true })
     .click();
-  await expect(page).toHaveURL(new RegExp(`/i/${card.id}/edit$`));
+  // D320: the editor remembers the list it was opened from.
+  const back = encodeURIComponent(`/d/${webDeck.slug}`);
+  await expect(page).toHaveURL(new RegExp(`/i/${card.id}/edit\\?back=${back}$`));
   await expect(page.getByLabel('Column 1 heading')).toHaveValue('Day');
 });
 

@@ -11,7 +11,7 @@ export type BackScreen =
   | { kind: 'deck-page'; deckSlug: string }
   | { kind: 'new-card'; deckSlug: string }
   | { kind: 'card'; deckSlug: string }
-  | { kind: 'edit'; itemId: string; deckSlug: string; from?: 'review' };
+  | { kind: 'edit'; itemId: string; deckSlug: string; from?: 'review'; back?: string };
 
 /**
  * D200 / FR-001–FR-003: the header back target, one level up the hierarchy and never history.
@@ -35,8 +35,8 @@ export function backTarget(screen: BackScreen): string | null {
     case 'card':
       return deckHref(screen.deckSlug);
     case 'edit':
-      return screen.from === 'review'
-        ? deckHref(screen.deckSlug, 'review')
-        : `/i/${encodeURIComponent(screen.itemId)}`;
+      // D320: the editor returns to the page that opened it (Browse, a list…), else its card.
+      if (screen.from === 'review') return deckHref(screen.deckSlug, 'review');
+      return screen.back ?? `/i/${encodeURIComponent(screen.itemId)}`;
   }
 }
