@@ -1,5 +1,4 @@
 import { writeFileSync } from 'node:fs';
-import { GLYPHS } from './glyphs.mjs';
 import { brandG } from './brand-g.mjs';
 
 export const C = {
@@ -58,15 +57,8 @@ function bite({ s, c, h, w, theta, accent }) {
   return { mask, crumbs };
 }
 
-/** Brand letter (Inter ExtraBold, or a custom `G:<variant>` from brand-g.mjs) scaled to `height` and centred on (cx, cy). */
-const glyph = (ch, cx, cy, height, fill, accent = C.accent) => {
-  if (ch.startsWith('G:')) return brandG(ch.slice(2), cx, cy, height, fill, accent);
-  const { bb, d } = GLYPHS[ch];
-  const k = height / (bb[3] - bb[1]);
-  const tx = cx - ((bb[0] + bb[2]) / 2) * k,
-    ty = cy - ((bb[1] + bb[3]) / 2) * k;
-  return `<path d="${d}" fill="${fill}" transform="translate(${f(tx)} ${f(ty)}) scale(${f(k * 1000) / 1000})"/>`;
-};
+/** The brand G (brand-g.mjs) `height` tall, centred on (cx, cy). */
+const glyph = (cx, cy, height, fill, accent) => brandG(cx, cy, height, fill, accent);
 
 /** Two short content lines, like the text on a Gobbit card. */
 const contentLines = ({ bx, top, bodyW, color, indent = 0 }) => {
@@ -98,25 +90,24 @@ const windows = ({ bodyW, top, bodyH, accent }) => {
  */
 export function logo(o = {}) {
   const {
-    theta = 50,
-    w = 96,
+    theta = 56,
+    w = 92,
     h = 200,
     r = 18,
     apexR = 18,
     ridge = 8,
-    bodyW = 200,
-    bodyAspect = 1.25,
-    tuckTo = 40,
+    bodyW = 236,
+    bodyAspect = 0.92,
+    tuckTo = 36,
     gap = 8,
-    frame = true,
-    door = true,
+    frame = false,
+    door = false,
     lines = false,
-    chimney: withChimney = false,
+    chimney: withChimney = true,
     bite: withBite = false,
     windows: withWindows = false,
-    letter = null,
-    letterPlace = 'index',
-    letterScale = 1,
+    letter = true,
+    letterScale = 1.2,
     letterColor,
     pad = 30,
     bg = C.bg,
@@ -127,7 +118,7 @@ export function logo(o = {}) {
     accent = C.accent,
     stack = C.dark,
     bitShape = 'square',
-    bitScale = 1,
+    bitScale = 1.3,
     bitColors,
     transparent = false,
   } = o;
@@ -165,27 +156,15 @@ export function logo(o = {}) {
     ? `<path d="M${dx} ${f(dy + dh)} V${f(dy + dw / 2)} a${dw / 2} ${dw / 2} 0 0 1 ${dw} 0 V${f(dy + dh)} Z" fill="${mark}"/>`
     : '';
   const lc = letterColor ?? mark;
-  const letterEl = !letter
-    ? ''
-    : letterPlace === 'center'
-      ? glyph(
-          letter,
-          0,
-          bodyTop + (door ? bodyH * 0.36 : bodyH / 2),
-          bodyH * 0.5 * letterScale,
-          lc,
-          accent,
-        )
-      : letterPlace === 'door'
-        ? glyph(letter, 0, bodyTop + bodyH * 0.7, bodyH * 0.5 * letterScale, lc)
-        : glyph(letter, bx + bodyW * 0.22, bodyTop + bodyW * 0.27, bodyW * 0.26 * letterScale, lc);
+  const letterEl = letter
+    ? glyph(0, bodyTop + (door ? bodyH * 0.36 : bodyH / 2), bodyH * 0.5 * letterScale, lc, accent)
+    : '';
   const ln = lines
     ? contentLines({
         bx,
         top: bodyTop,
         bodyW,
         color: mark,
-        indent: letter && letterPlace === 'index' ? 0.2 : 0,
       })
     : '';
   const wn = withWindows ? windows({ bodyW, top: bodyTop, bodyH, accent }) : '';
@@ -206,5 +185,24 @@ export function logo(o = {}) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${f(vx)} ${f(vy)} ${f(size)} ${f(size)}" width="512" height="512">${defs}${parts.filter(Boolean).join('')}</svg>`;
 }
 
-const variants = JSON.parse(process.argv[2] ?? '{}'); // e.g. {"logo":{...}} → v-logo.svg in cwd
-for (const [k, v] of Object.entries(variants)) writeFileSync(`v-${k}.svg`, logo(v));
+/** App-icon colours: inverted mark on teal. */
+export const APP_ICON = {
+  bg: '#1f6869',
+  left: '#ffffff',
+  right: C.mint,
+  body: C.mint,
+  mark: C.dark,
+  stack: '#ffffff',
+  pad: 60,
+};
+
+// No args: write logo.svg + logo-app-icon.svg to the cwd.
+// With args: '{"name":{...opts}}' → v-<name>.svg for experiments.
+const arg = process.argv[2];
+const variants = arg ? JSON.parse(arg) : null;
+if (variants) {
+  for (const [k, v] of Object.entries(variants)) writeFileSync(`v-${k}.svg`, logo(v));
+} else {
+  writeFileSync('logo.svg', logo());
+  writeFileSync('logo-app-icon.svg', logo(APP_ICON));
+}
