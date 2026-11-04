@@ -5,6 +5,7 @@ import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import { renderInRouter } from '../test/render-in-router';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
+vi.mock('../editor/rich/RichBodyEditor', () => import('../test/rich-editor-mock'));
 const { ReviewCard } = await import('./ReviewCard');
 
 const now = new Date('2026-01-01T12:00:00.000Z');
@@ -167,7 +168,7 @@ describe('ReviewCard', () => {
     const { onSaveEdit } = await renderCard(entry());
     onSaveEdit.mockRejectedValueOnce(new Error('boom'));
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    fireEvent.change(screen.getByLabelText('Body'), { target: { value: 'Changed' } });
+    fireEvent.change(await screen.findByLabelText('Body'), { target: { value: 'Changed' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();

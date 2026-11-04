@@ -751,8 +751,25 @@ h3 {
   font-weight: 600;
 }
 
+/* The card's main action: full width with its label on every screen size. */
 .link-card__open {
-  justify-self: start;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 6px;
+  font-size: 1.0625rem;
+}
+
+.link-card__open .button__label {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+.link-card__image-link {
+  display: block;
+  border-radius: calc(var(--radius) - 4px);
 }
 
 /* D163: the stored snapshot keeps the 16:9 crop of the remote preview. */
@@ -1116,6 +1133,24 @@ h3 {
   font-size: 0.875rem;
 }
 
+/* 038: the body field before the rich editor chunk loads, and its plain fallback. */
+.rich-editor__fallback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.rich-editor__loading {
+  min-height: 12rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
 [aria-invalid='true'] {
   border-color: var(--color-danger) !important;
 }
@@ -1349,6 +1384,14 @@ h3 {
 
 .settings-section {
   margin-bottom: calc(var(--gap) * 2);
+}
+
+/* 037: Settings → Notifications push controls */
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .settings-section > h2 {

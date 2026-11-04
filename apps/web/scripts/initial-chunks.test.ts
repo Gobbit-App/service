@@ -120,6 +120,11 @@ describe('lazyOnlyViolations', () => {
     expect(lazyOnlyViolations(chunks)).toEqual(['papaparse in index.js']);
   });
 
+  it('flags an initial chunk that bundles the rich body editor (038, FR-016)', () => {
+    const chunks = [{ file: 'index.js', code: 'n.classList.add("ProseMirror-hideselection")' }];
+    expect(lazyOnlyViolations(chunks)).toEqual(['milkdown in index.js']);
+  });
+
   it('passes clean chunks', () => {
     expect(lazyOnlyViolations([{ file: 'index.js', code: 'el.setPointerCapture(1)' }])).toEqual([]);
   });

@@ -1,4 +1,12 @@
-import { check, pgTable, text, uuid, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  pgTable,
+  text,
+  uuid,
+  uniqueIndex,
+  type AnyPgColumn,
+} from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { accounts } from './accounts';
 import {
@@ -29,6 +37,8 @@ export const users = pgTable(
     analyticsConsentAt: tstz(),
     /** D259: where the current choice was made. */
     analyticsConsentSource: analyticsConsentSourceEnum(),
+    /** FR-012 (D297): email when a reminder the user may dismiss is due. */
+    reminderEmails: boolean().notNull().default(true),
     ...timestamps,
   },
   (t) => [

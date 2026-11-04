@@ -20,6 +20,19 @@ describe('buildAppConfig', () => {
     });
   });
 
+  it('D296: exposes only the VAPID public key, and only when push is configured', () => {
+    const base = { CLOUDINARY_URL: undefined, GIT_SHA: undefined };
+    expect(buildAppConfig({ ...base, VAPID_PUBLIC_KEY: 'pub' }).push).toBeNull();
+    const config = buildAppConfig({
+      ...base,
+      VAPID_PUBLIC_KEY: 'pub',
+      VAPID_PRIVATE_KEY: 'very-private',
+      VAPID_SUBJECT: 'mailto:ops@example.test',
+    });
+    expect(config.push).toEqual({ publicKey: 'pub' });
+    expect(JSON.stringify(config)).not.toContain('very-private');
+  });
+
   it('exposes only the cloud name, commit and search flags', () => {
     const config = buildAppConfig({ CLOUDINARY_URL: FAKE_URL, GIT_SHA: 'abc' });
     expect(config).toEqual({
@@ -28,6 +41,7 @@ describe('buildAppConfig', () => {
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
+      push: null,
     });
     expect(JSON.stringify(config)).not.toContain('key123');
     expect(JSON.stringify(config)).not.toContain('not-a-real-secret');
@@ -40,6 +54,7 @@ describe('buildAppConfig', () => {
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
+      push: null,
     });
   });
 
@@ -126,6 +141,7 @@ describe('GET /config', () => {
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
+      push: null,
     });
     expect(body).not.toContain('not-a-real-secret');
   });

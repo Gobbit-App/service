@@ -27,7 +27,7 @@ describe('schema', () => {
       ORDER BY column_name
     `);
 
-    expect(result.rows).toHaveLength(20);
+    expect(result.rows).toHaveLength(21);
     expect(result.rows).toEqual([
       {
         column_name: 'body',
@@ -100,6 +100,12 @@ describe('schema', () => {
         data_type: 'jsonb',
         is_nullable: 'NO',
         datetime_precision: null,
+      },
+      {
+        column_name: 'reveal_at',
+        data_type: 'timestamp with time zone',
+        is_nullable: 'YES',
+        datetime_precision: 3,
       },
       {
         column_name: 'search_text',

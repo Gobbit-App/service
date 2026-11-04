@@ -12,5 +12,5 @@ export function getUser(c: Context<AppEnv>): CurrentUser {
 
 /** D130: the actor a route hands to a service; cookie and bearer sessions are both `session`. */
 export function getActor(c: Context<AppEnv>): Actor {
-  return { user: getUser(c), via: 'session' };
+  return { user: getUser(c), via: 'session', requestId: c.get('requestId') };
 }

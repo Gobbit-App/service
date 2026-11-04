@@ -19,6 +19,7 @@ describe('GET /config (D55)', () => {
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
+      push: null,
     });
 
     const raw = JSON.stringify(body);
@@ -39,6 +40,7 @@ describe('GET /config without Cloudinary', () => {
       search: { semantic: false, ask: false },
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
+      push: null,
     });
   });
 });

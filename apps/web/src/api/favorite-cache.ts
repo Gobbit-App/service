@@ -134,3 +134,15 @@ export function insertIntoPages(
   newPages[newPages.length - 1] = { ...last, data: [...last.data, item] };
   return { ...without, pages: newPages };
 }
+
+/** Swaps a listed `item` for its new version in place; the list is unchanged when it isn't listed. */
+export function replaceInPages(data: PagesData | undefined, item: Item): PagesData | undefined {
+  if (!data) return undefined;
+  let changed = false;
+  const pages = data.pages.map((page) => {
+    if (!page.data.some((other) => other.id === item.id)) return page;
+    changed = true;
+    return { ...page, data: page.data.map((other) => (other.id === item.id ? item : other)) };
+  });
+  return changed ? { ...data, pages } : data;
+}

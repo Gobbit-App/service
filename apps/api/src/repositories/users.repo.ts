@@ -70,6 +70,32 @@ export function createUsersRepo(db: DbExecutor) {
       return row ?? null;
     },
 
+    /** D297: whether the member gets reminder emails; null when the user is gone. */
+    async findReminderEmails(userId: string): Promise<boolean | null> {
+      const [row] = await db
+        .select({ reminderEmails: users.reminderEmails })
+        .from(users)
+        .where(and(eq(users.id, userId), isNull(users.deletedAt)))
+        .limit(1);
+      return row?.reminderEmails ?? null;
+    },
+
+    /** D297: stores the choice; returns the previous value (null when the user is gone). */
+    async setReminderEmails(userId: string, value: boolean): Promise<boolean | null> {
+      return db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ reminderEmails: users.reminderEmails })
+          .from(users)
+          .where(and(eq(users.id, userId), isNull(users.deletedAt)))
+          .for('update');
+        if (!current) return null;
+        if (current.reminderEmails !== value) {
+          await tx.update(users).set({ reminderEmails: value }).where(eq(users.id, userId));
+        }
+        return current.reminderEmails;
+      });
+    },
+
     /**
      * D259: locks the user row, and when the value differs updates the three columns and inserts
      * the `analytics_consent_events` row in the same transaction. Same value → no write.

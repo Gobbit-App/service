@@ -1,4 +1,4 @@
-import type { Category, Deck, Item, ShareSummary } from '@gobbit/shared';
+import type { Category, Deck, Item, ReminderState, ShareSummary } from '@gobbit/shared';
 
 const STAMP = '2026-01-01T00:00:00.000Z';
 
@@ -76,4 +76,36 @@ export function makeShare(overrides: Partial<ShareSummary> = {}): ShareSummary {
     reviewedAt: null,
     ...overrides,
   };
+}
+
+/** 037: a pending, revealed reminder card the viewer may dismiss. */
+export function makeReminder(
+  reminder: Partial<ReminderState> = {},
+  overrides: Partial<Item> = {},
+): Item {
+  return makeItem({
+    type: 'reminder',
+    title: 'Pay the plumber',
+    body: '',
+    payload: {
+      deadline: '2026-11-05T09:00:00.000Z',
+      showBefore: { amount: 24, unit: 'hours' },
+      dismiss: { mode: 'writers', userIds: [] },
+      timeZone: 'UTC',
+    },
+    reminder: {
+      deadline: '2026-11-05T09:00:00.000Z',
+      revealAt: '2026-11-04T09:00:00.000Z',
+      timeZone: 'UTC',
+      state: 'pending',
+      dismissedBy: null,
+      dismissedAt: null,
+      resolution: null,
+      hidden: false,
+      canDismiss: true,
+      canChangeDismissers: true,
+      ...reminder,
+    },
+    ...overrides,
+  });
 }

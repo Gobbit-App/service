@@ -17,6 +17,7 @@ const appConfig = (analytics: AppConfig['analytics']): AppConfig => ({
   commit: 'test',
   search: { semantic: false, ask: false },
   ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+  push: null,
 });
 
 const me = (id: string, value: AnalyticsConsentValue = 'allowed'): Me => ({

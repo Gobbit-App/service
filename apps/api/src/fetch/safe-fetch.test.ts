@@ -2,7 +2,7 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ARTICLE_PAGE } from '@gobbit/db/test/ingest-pages';
-import { createSafeFetch, createSafeImageFetch } from './safe-fetch';
+import { createSafeFetch, createSafeImageFetch, createSafePush } from './safe-fetch';
 import { isBlockedAddress } from './ip-guard';
 
 /** A local server stands in for the internet; loopback is allowed only for these tests. */
@@ -287,5 +287,38 @@ describe('createSafeImageFetch (D159)', () => {
   it('reports HTTP errors and timeouts', async () => {
     expect((await image()(`${base}/missing`)).error).toBe('http_404');
     expect((await image({ timeoutMs: 100 })(`${base}/slow`)).error).toBe('timeout');
+  });
+});
+
+describe('createSafePush (D296)', () => {
+  const req = (endpoint: string) => ({
+    method: 'POST',
+    endpoint,
+    headers: { TTL: '60' },
+    body: new Uint8Array([1, 2, 3]),
+  });
+
+  it('posts to an allowed host and reports the status without following redirects', async () => {
+    const push = createSafePush({
+      isBlocked: allowLoopback,
+      allowedPorts: null,
+      lookupAll,
+      isAllowedHost: () => true,
+    });
+    expect(await push(req(`${base}/missing`))).toMatchObject({ status: 404, error: null });
+    expect(await push(req(`${base}/hop1`))).toMatchObject({ status: 302, error: null });
+  });
+
+  it('refuses a host outside the allow-list before any connection', async () => {
+    const push = createSafePush({ allowedPorts: null, lookupAll, isAllowedHost: () => false });
+    expect(await push(req(`${base}/missing`))).toMatchObject({
+      status: null,
+      error: 'host_not_allowed',
+    });
+  });
+
+  it('keeps the IP guard on for allowed hosts', async () => {
+    const push = createSafePush({ allowedPorts: null, lookupAll, isAllowedHost: () => true });
+    expect(await push(req(`${base}/missing`))).toMatchObject({ status: null, error: 'blocked' });
   });
 });

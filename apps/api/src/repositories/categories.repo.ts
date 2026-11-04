@@ -2,7 +2,7 @@ import { eq, isNull, asc, and, inArray, sql } from 'drizzle-orm';
 import type { CategoryRow, DbExecutor } from '@gobbit/db';
 import { categories, itemCategories, items } from '@gobbit/db';
 import type { CategoryVisibility, MemberRole } from '@gobbit/shared';
-import { visibleCategoriesWhere } from '../access/visibility';
+import { itemRevealedWhere, visibleCategoriesWhere } from '../access/visibility';
 
 export function createCategoriesRepo(db: DbExecutor) {
   return {
@@ -89,7 +89,10 @@ export function createCategoriesRepo(db: DbExecutor) {
       return Number(result[0]?.max ?? -1);
     },
 
-    /** D174: published, live cards per category `role` can see (categories with none are absent). */
+    /**
+     * D174: published, live cards per category `role` can see (categories with none are absent);
+     * hidden reminders aren't counted (D292).
+     */
     async countPublished(deckId: string, role: MemberRole | null): Promise<Map<string, number>> {
       const rows = await db
         .select({ categoryId: categories.id, n: sql<number>`count(*)::int` })
@@ -103,6 +106,7 @@ export function createCategoriesRepo(db: DbExecutor) {
             visibleCategoriesWhere(role),
             eq(items.status, 'published'),
             isNull(items.deletedAt),
+            itemRevealedWhere(role),
           ),
         )
         .groupBy(categories.id);

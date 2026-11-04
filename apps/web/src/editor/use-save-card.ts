@@ -9,16 +9,17 @@ import { toCreateBody, toPatch, type Draft } from './draft';
 import { OFFLINE_SAVE, problemToErrors, type SaveErrors } from './problem-fields';
 
 export type SaveTarget =
-  { mode: 'create'; deck: Deck } | { mode: 'edit'; deck: Deck; item: Item; from?: 'review' };
+  | { mode: 'create'; deck: Deck }
+  | { mode: 'edit'; deck: Deck; item: Item; from?: 'review'; opener?: string };
 
-/** Where the editor goes after a successful save (R9). */
+/** Where the editor goes after a successful save (R9; D320: back to the page that opened it). */
 export function afterSaveHref(target: SaveTarget, saved: Item | null): string {
   if (target.mode === 'create') return deckHref(target.deck.slug);
   const status = (saved ?? target.item).status;
   if (target.from === 'review' && status === 'proposed') {
     return deckHref(target.deck.slug, 'review');
   }
-  return `/i/${target.item.id}`;
+  return target.opener ?? `/i/${target.item.id}`;
 }
 
 /**

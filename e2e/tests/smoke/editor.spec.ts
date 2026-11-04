@@ -45,6 +45,35 @@ test('a text card added from the editor shows in the list and survives a reload 
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
 
+/** 038 US2 (T018): toolbar bold and a Shift+Enter line break survive the save onto the card. */
+test('a body formatted in the editor shows bold and a line break on the card @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  const title = `Editor rich ${webDeck.slug}`;
+  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.getByLabel('Title', { exact: true }).fill(title);
+
+  const body = page.getByLabel('Body', { exact: true });
+  const bold = page.getByRole('button', { name: 'Bold' });
+  await body.click();
+  await page.keyboard.type('Call ');
+  await bold.click();
+  await page.keyboard.type('Sam');
+  await bold.click();
+  await page.keyboard.press('Shift+Enter');
+  await page.keyboard.type('after five');
+  await expect(body.locator('strong')).toHaveText('Sam');
+  await save(page).click();
+
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  const listed = page.getByRole('article').filter({ hasText: title });
+  await expect(listed.locator('strong')).toHaveText('Sam');
+  await expect(listed.locator('br')).toHaveCount(1);
+  await expect(listed).toContainText('after five');
+  await expect(listed).not.toContainText('**');
+});
+
 test('a link card added from the editor is listed with its url @smoke', async ({
   page,
   webDeck,
@@ -208,7 +237,9 @@ test('list cards link to the editor @smoke', async ({ page, webDeck }) => {
     .filter({ has: page.getByRole('heading', { name: card.title }) })
     .getByRole('link', { name: 'Edit', exact: true })
     .click();
-  await expect(page).toHaveURL(new RegExp(`/i/${card.id}/edit$`));
+  // D320: the editor remembers the list it was opened from.
+  const back = encodeURIComponent(`/d/${webDeck.slug}`);
+  await expect(page).toHaveURL(new RegExp(`/i/${card.id}/edit\\?back=${back}$`));
   await expect(page.getByLabel('Column 1 heading')).toHaveValue('Day');
 });
 
@@ -231,7 +262,8 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue('');
   await page.getByRole('button', { name: 'Restore' }).click();
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Half-written');
-  await expect(page.getByLabel('Body', { exact: true })).toHaveValue('Not saved yet');
+  // 038: the body is a rich editor (contenteditable), so it has text, not a value.
+  await expect(page.getByLabel('Body', { exact: true })).toHaveText('Not saved yet');
   await page.waitForTimeout(800);
 
   // The smoke session is shared by the suite: answer the logout call locally so the server
@@ -489,7 +521,8 @@ test('a category tap on an existing card saves without Save (D207) @smoke', asyn
   await chip.click();
   expect((await saved).status()).toBe(200);
   await expect(page.getByText('Categories saved')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
+  // 038: the body toolbar has its own Undo; this one is the toast's.
+  await expect(page.getByRole('status').getByRole('button', { name: 'Undo' })).toBeVisible();
 
   // Leaving without Save keeps the category: it is already on the server.
   await page.goto(webUrl(`/i/${card.id}`));

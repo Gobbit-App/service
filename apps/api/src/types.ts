@@ -23,6 +23,8 @@ export type { ActorVia };
 export interface Actor {
   user: CurrentUser;
   via: ActorVia;
+  /** The HTTP request behind the action; decision events correlate on it (ADR-060). */
+  requestId?: string;
 }
 
 export interface Authenticated {

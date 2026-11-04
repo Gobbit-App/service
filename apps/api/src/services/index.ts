@@ -15,8 +15,17 @@ import { createLinkChecksRepo } from '../repositories/link-checks.repo';
 import { createSitemapRepo } from '../repositories/sitemap.repo';
 import { createItemEventsRepo } from '../repositories/item-events.repo';
 import { createWaitlistRepo } from '../repositories/waitlist.repo';
+import { createRemindersRepo } from '../repositories/reminders.repo';
+import { createRemindersService } from './reminders.service';
+import { createPendingService } from './pending.service';
+import { REMINDER_DECISION_LEVELS, type ReminderDecisions } from './reminders.events';
 import { createLogHash } from '../lib/log-hash';
 import { decisionLogger } from '../lib/decision-event';
+import type { PushSender } from '../push/push-sender';
+import { resolvePushSender } from '../push/push-wiring';
+import { createPushSubscriptionsRepo } from '../repositories/push-subscriptions.repo';
+import { createPushSubscriptionsService } from './push-subscriptions.service';
+import { PUSH_SUBSCRIPTION_DECISION_LEVELS, type PushSubscriptionDecisions } from './notify.events';
 import { logger as rootLogger, type Logger } from '../lib/logger';
 import { WAITLIST_DECISION_LEVELS, type WaitlistDecisions } from './waitlist.events';
 import { AUTH_DECISION_LEVELS, type AuthDecisions } from './auth.events';
@@ -76,6 +85,8 @@ export interface ServiceDeps {
   media?: MediaWiring;
   /** Parent logger for decision events (D239); integration tests capture it. */
   logger?: Logger;
+  /** Push sender override (037); production builds it from the VAPID env, null = push off. */
+  push?: PushSender | null;
 }
 
 /** Repos and the users service bound to one transaction (Phase 3B magic-link callback). */
@@ -102,6 +113,7 @@ export function buildServices({
   ingest,
   media,
   logger = rootLogger,
+  push,
 }: ServiceDeps) {
   const users = createUsersRepo(db);
   const decks = createDecksRepo(db);
@@ -133,7 +145,27 @@ export function buildServices({
   };
   const usersService = createUsersService({ users, decks, ...registration });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
-  const toDtos = createItemDtoMapper({ items, favorites, linkChecks });
+  // 037 (D291–D299): reminder rules and the `reminder` DTO field on every item response.
+  const remindersRepo = createRemindersRepo(db);
+  const reminders = createRemindersService({
+    reminders: remindersRepo,
+    limits: {
+      maxDeadlineDays: env.REMINDER_MAX_DEADLINE_DAYS,
+      maxShowBeforeDays: env.REMINDER_MAX_SHOW_BEFORE_DAYS,
+      resolutionMax: env.REMINDER_RESOLUTION_MAX,
+    },
+    decisions: decisionLogger<ReminderDecisions>('reminders', {
+      parent: logger,
+      levels: REMINDER_DECISION_LEVELS,
+    }),
+    now,
+  });
+  const toDtos = createItemDtoMapper({
+    items,
+    favorites,
+    linkChecks,
+    reminderStates: reminders.states,
+  });
   const searchServices = buildSearchServices({
     db,
     env,
@@ -200,6 +232,19 @@ export function buildServices({
     rateLimits,
     logHash,
     waitlist,
+    // 037 (D298): what is waiting on the member (the bell and /notifications).
+    pending: createPendingService({ decks, reminders: remindersRepo, now }),
+    // 037 (D297): push devices, test notice and the reminder-email switch.
+    pushSubscriptions: createPushSubscriptionsService({
+      subscriptions: createPushSubscriptionsRepo(db),
+      users,
+      push: resolvePushSender(env, push),
+      rateLimits,
+      decisions: decisionLogger<PushSubscriptionDecisions>('push', {
+        parent: logger,
+        levels: PUSH_SUBSCRIPTION_DECISION_LEVELS,
+      }),
+    }),
     ...buildAdminServices({ db, env, mailer, now, logger, registration }),
     auth: createAuthService({
       env,
@@ -266,6 +311,7 @@ export function buildServices({
         snapshotQueue: resolveLinkSnapshotQueue(media),
         rateLimits,
       },
+      reminders,
       now,
       purgeDeck,
     }),

@@ -8,6 +8,9 @@ import type { FieldsProps } from './types';
 /** Table and calc load on demand; calc shares the mathjs chunk with `CalcCard` (R5). */
 const TableFields = lazy(async () => ({ default: (await import('./TableFields')).TableFields }));
 const CalcFields = lazy(async () => ({ default: (await import('./CalcFields')).CalcFields }));
+const ReminderFields = lazy(async () => ({
+  default: (await import('./ReminderFields')).ReminderFields,
+}));
 
 /**
  * D138: one payload editor per card type (`image` since 008, D133).
@@ -20,4 +23,5 @@ export const fieldsByType: Record<ItemType, ComponentType<FieldsProps<any>>> = {
   image: ImageFields,
   table: TableFields,
   calc: CalcFields,
+  reminder: ReminderFields,
 };

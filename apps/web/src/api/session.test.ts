@@ -89,6 +89,27 @@ describe('signOut', () => {
     expect(clearDrafts).toHaveBeenCalled();
   });
 
+  it('drops push before logging out (037), and a failure there does not stop sign-out', async () => {
+    const order: string[] = [];
+    const log = vi.fn();
+    await signOut({
+      queryClient: new QueryClient(),
+      removePersisted: vi.fn().mockResolvedValue(undefined),
+      clearDrafts: vi.fn().mockResolvedValue(undefined),
+      forgetPush: async () => {
+        order.push('push');
+        throw new Error('offline');
+      },
+      logout: async () => order.push('logout'),
+      log,
+    });
+    expect(order).toEqual(['push', 'logout']);
+    expect(log).toHaveBeenCalledWith(
+      '[session] could not turn off notifications on this device',
+      expect.any(Error),
+    );
+  });
+
   it('clears the drafts even when the persisted cache cannot be removed', async () => {
     const clearDrafts = vi.fn().mockResolvedValue(undefined);
     const log = vi.fn();

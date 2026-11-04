@@ -32,6 +32,14 @@ describe('buildAskPrompt', () => {
     expect(cardsEnd).toBeGreaterThan(user.indexOf('<card id="card-2">'));
   });
 
+  it('D288: gives the model card bodies without style directives', () => {
+    const cards = [
+      { id: 'c', title: 'T', body: ':large[Hot] :color[soup]{.red}\nnow', details: '' },
+    ];
+    const { user } = buildAskPrompt(baseInput({ cards }));
+    expect(user).toContain('<body>Hot soup\nnow</body>');
+  });
+
   it('places the question last as <question>', () => {
     const { user } = buildAskPrompt(baseInput());
     expect(user.endsWith('<question>What is the capital of France?</question>')).toBe(true);

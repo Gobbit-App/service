@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { payloadText } from './payload-text';
 
 describe('payloadText', () => {
+  it('D291: a reminder payload adds no text', () => {
+    const payload = {
+      deadline: '2026-11-04T09:00:00.000Z',
+      showBefore: { amount: 1, unit: 'days' },
+      dismiss: { mode: 'writers', userIds: [] },
+      timeZone: 'Europe/London',
+    };
+    expect(payloadText('reminder', payload)).toBe('');
+  });
+
   it('collects url and preview strings from a link payload in key order', () => {
     const payload = {
       url: 'https://example.com/a',

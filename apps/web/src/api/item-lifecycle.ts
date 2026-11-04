@@ -7,7 +7,7 @@ import {
 import type { Item } from '@gobbit/shared';
 import { trackContent } from '../analytics/analytics';
 import { api, unwrap } from './client';
-import { insertIntoPages, removeFromPages, type PagesData } from './favorite-cache';
+import { insertIntoPages, removeFromPages, replaceInPages, type PagesData } from './favorite-cache';
 import { queryKeys, SEARCH_KEY, type ItemFilter } from './query-keys';
 
 /** The four lifecycle transitions (D131, D132); the server owns the rules. */
@@ -65,6 +65,9 @@ export function belongsTo(filter: ItemFilter, item: Item): boolean | null {
     case 'links':
       // Ordered by when the flag was raised, which the card doesn't carry: refetch settles it.
       return !deleted && item.status === 'published' && item.linkHealth !== null ? null : false;
+    case 'upcoming':
+      // Any status while hidden; sorted by reveal time ascending, so the refetch places it.
+      return !deleted && item.reminder?.hidden === true ? null : false;
   }
 }
 
@@ -87,6 +90,8 @@ export function nextListData(
 ): PagesData | undefined {
   const shows = belongsTo(filter, next);
   if (shows === false) return removeFromPages(data, next.id);
+  // Upcoming sorts ascending (the insert helper ranks descending): replace in place only.
+  if (filter.kind === 'upcoming') return replaceInPages(data, next);
   if (shows === true || listedIn(data, next.id)) {
     return insertIntoPages(data, next, rankFor(filter));
   }
@@ -137,6 +142,8 @@ export function invalidateAfterLifecycle(
     qc.invalidateQueries({ queryKey: [SEARCH_KEY] }),
     qc.invalidateQueries({ queryKey: queryKeys.deckItemLists(deckSlug) }),
     qc.invalidateQueries({ queryKey: queryKeys.item(item.id) }),
+    // 037 (D298): archiving, restoring or dismissing a reminder changes what is waiting on you.
+    qc.invalidateQueries({ queryKey: queryKeys.pending }),
   ]);
 }
 

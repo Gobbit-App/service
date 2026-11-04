@@ -15,7 +15,18 @@ export function canEditItem(
   return can(role, 'item.publish') || (meId !== undefined && item.createdBy === meId);
 }
 
-/** D135: the editor route for a card; `from=review` returns to the queue after saving. */
-export function editHref(itemId: string, from?: 'review'): string {
-  return `/i/${itemId}/edit${from ? `?from=${from}` : ''}`;
+export interface EditOpener {
+  /** D135: opened from the review queue; returns there after saving a proposal. */
+  from?: 'review';
+  /** D320: the page the editor was opened from (a `safeReturnPath`); back, Cancel and Save go there. */
+  back?: string | null;
+}
+
+/** D135: the editor route for a card. */
+export function editHref(itemId: string, opener: EditOpener = {}): string {
+  const search = new URLSearchParams();
+  if (opener.from) search.set('from', opener.from);
+  if (opener.back) search.set('back', opener.back);
+  const query = search.toString();
+  return `/i/${itemId}/edit${query ? `?${query}` : ''}`;
 }

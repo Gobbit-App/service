@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
@@ -29,12 +30,18 @@ import { Route as DSlugReviewRouteImport } from './routes/d.$slug.review'
 import { Route as DSlugSearchRouteImport } from './routes/d.$slug.search'
 import { Route as DSlugSettingsRouteImport } from './routes/d.$slug.settings'
 import { Route as DSlugSharesRouteImport } from './routes/d.$slug.shares'
+import { Route as DSlugUpcomingRouteImport } from './routes/d.$slug.upcoming'
 import { Route as IItemIdEditRouteImport } from './routes/i.$itemId_.edit'
 import { Route as DSlugCCategoryRouteImport } from './routes/d.$slug.c.$category'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -132,6 +139,11 @@ const DSlugSharesRoute = DSlugSharesRouteImport.update({
   path: '/shares',
   getParentRoute: () => DSlugRoute,
 } as any)
+const DSlugUpcomingRoute = DSlugUpcomingRouteImport.update({
+  id: '/upcoming',
+  path: '/upcoming',
+  getParentRoute: () => DSlugRoute,
+} as any)
 const IItemIdEditRoute = IItemIdEditRouteImport.update({
   id: '/i/$itemId_/edit',
   path: '/i/$itemId/edit',
@@ -145,6 +157,7 @@ const DSlugCCategoryRoute = DSlugCCategoryRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/notifications': typeof NotificationsRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
@@ -163,12 +176,14 @@ export interface FileRoutesByFullPath {
   '/d/$slug/search': typeof DSlugSearchRoute
   '/d/$slug/settings': typeof DSlugSettingsRoute
   '/d/$slug/shares': typeof DSlugSharesRoute
+  '/d/$slug/upcoming': typeof DSlugUpcomingRoute
   '/i/$itemId/edit': typeof IItemIdEditRoute
   '/d/$slug/': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/notifications': typeof NotificationsRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
@@ -186,6 +201,7 @@ export interface FileRoutesByTo {
   '/d/$slug/search': typeof DSlugSearchRoute
   '/d/$slug/settings': typeof DSlugSettingsRoute
   '/d/$slug/shares': typeof DSlugSharesRoute
+  '/d/$slug/upcoming': typeof DSlugUpcomingRoute
   '/i/$itemId/edit': typeof IItemIdEditRoute
   '/d/$slug': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
@@ -193,6 +209,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/notifications': typeof NotificationsRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
@@ -211,6 +228,7 @@ export interface FileRoutesById {
   '/d/$slug/search': typeof DSlugSearchRoute
   '/d/$slug/settings': typeof DSlugSettingsRoute
   '/d/$slug/shares': typeof DSlugSharesRoute
+  '/d/$slug/upcoming': typeof DSlugUpcomingRoute
   '/i/$itemId_/edit': typeof IItemIdEditRoute
   '/d/$slug/': typeof DSlugIndexRoute
   '/d/$slug/c/$category': typeof DSlugCCategoryRoute
@@ -219,6 +237,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/notifications'
     | '/settings'
     | '/share'
     | '/sign-in'
@@ -237,12 +256,14 @@ export interface FileRouteTypes {
     | '/d/$slug/search'
     | '/d/$slug/settings'
     | '/d/$slug/shares'
+    | '/d/$slug/upcoming'
     | '/i/$itemId/edit'
     | '/d/$slug/'
     | '/d/$slug/c/$category'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/notifications'
     | '/settings'
     | '/share'
     | '/sign-in'
@@ -260,12 +281,14 @@ export interface FileRouteTypes {
     | '/d/$slug/search'
     | '/d/$slug/settings'
     | '/d/$slug/shares'
+    | '/d/$slug/upcoming'
     | '/i/$itemId/edit'
     | '/d/$slug'
     | '/d/$slug/c/$category'
   id:
     | '__root__'
     | '/'
+    | '/notifications'
     | '/settings'
     | '/share'
     | '/sign-in'
@@ -284,6 +307,7 @@ export interface FileRouteTypes {
     | '/d/$slug/search'
     | '/d/$slug/settings'
     | '/d/$slug/shares'
+    | '/d/$slug/upcoming'
     | '/i/$itemId_/edit'
     | '/d/$slug/'
     | '/d/$slug/c/$category'
@@ -291,6 +315,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NotificationsRoute: typeof NotificationsRoute
   SettingsRoute: typeof SettingsRoute
   ShareRoute: typeof ShareRoute
   SignInRoute: typeof SignInRoute
@@ -308,6 +333,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -443,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DSlugSharesRouteImport
       parentRoute: typeof DSlugRoute
     }
+    '/d/$slug/upcoming': {
+      id: '/d/$slug/upcoming'
+      path: '/upcoming'
+      fullPath: '/d/$slug/upcoming'
+      preLoaderRoute: typeof DSlugUpcomingRouteImport
+      parentRoute: typeof DSlugRoute
+    }
     '/i/$itemId_/edit': {
       id: '/i/$itemId_/edit'
       path: '/i/$itemId/edit'
@@ -472,6 +511,7 @@ interface DSlugRouteChildren {
   DSlugSearchRoute: typeof DSlugSearchRoute
   DSlugSettingsRoute: typeof DSlugSettingsRoute
   DSlugSharesRoute: typeof DSlugSharesRoute
+  DSlugUpcomingRoute: typeof DSlugUpcomingRoute
   DSlugIndexRoute: typeof DSlugIndexRoute
   DSlugCCategoryRoute: typeof DSlugCCategoryRoute
 }
@@ -488,6 +528,7 @@ const DSlugRouteChildren: DSlugRouteChildren = {
   DSlugSearchRoute: DSlugSearchRoute,
   DSlugSettingsRoute: DSlugSettingsRoute,
   DSlugSharesRoute: DSlugSharesRoute,
+  DSlugUpcomingRoute: DSlugUpcomingRoute,
   DSlugIndexRoute: DSlugIndexRoute,
   DSlugCCategoryRoute: DSlugCCategoryRoute,
 }
@@ -496,6 +537,7 @@ const DSlugRouteWithChildren = DSlugRoute._addFileChildren(DSlugRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NotificationsRoute: NotificationsRoute,
   SettingsRoute: SettingsRoute,
   ShareRoute: ShareRoute,
   SignInRoute: SignInRoute,

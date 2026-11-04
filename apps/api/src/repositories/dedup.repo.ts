@@ -22,6 +22,8 @@ export function createDedupRepo(db: Db) {
       inArray(items.status, ['published', 'proposed']),
       isNull(items.deletedAt),
       ne(items.id, excludeId),
+      // D292: a reminder is never a duplicate target (ingest never proposes reminders)
+      ne(items.type, 'reminder'),
     )!;
   }
 

@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { categories, decks, itemCategories, items, type DbExecutor } from '@gobbit/db';
-import { itemHasVisibleCategory } from '../access/visibility';
+import { itemHasVisibleCategory, itemRevealedWhere } from '../access/visibility';
 
 /** D179: anonymous readers have no role. */
 const ANONYMOUS = null;
@@ -10,6 +10,7 @@ const publishedPublicItem = and(
   eq(items.status, 'published'),
   isNull(items.deletedAt),
   itemHasVisibleCategory(ANONYMOUS),
+  itemRevealedWhere(ANONYMOUS),
 );
 
 /** D179: the rows behind `/sitemap.xml`. Communal public decks only; public content only. */

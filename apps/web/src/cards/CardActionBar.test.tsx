@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeItem } from '../test/fixtures';
+import { makeItem, makeReminder } from '../test/fixtures';
 import { renderWithClient } from '../test/render';
 import { currentToast, dismissToast } from '../ui/toast-store';
 
@@ -197,6 +197,41 @@ describe('CardActionBar (D213)', () => {
       renderWithClient(<CardActionBar item={flagged} deckSlug="family" role="editor" />);
       fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
       await waitFor(() => expect(currentToast()?.message).toBe('Try again later.'));
+    });
+  });
+
+  describe('reminders (037)', () => {
+    const reminder = makeReminder({}, { id: 'r1', title: 'Pay the plumber' });
+
+    it('gives a dismisser Dismiss, which opens the dialog', () => {
+      renderWithClient(<CardActionBar item={reminder} deckSlug="family" role="reader" />);
+      expect(barNames()).toEqual(['Add to favorites', 'Share', 'Dismiss']);
+      fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+      expect(screen.getByRole('dialog', { name: 'Dismiss “Pay the plumber”' })).toBeInTheDocument();
+    });
+
+    it('offers no Dismiss to non-dismissers, closed or hidden reminders', () => {
+      const cases = [
+        makeReminder({ canDismiss: false }),
+        makeReminder({ state: 'done' }, { status: 'archived' }),
+        makeReminder({}, { status: 'proposed' }),
+      ];
+      for (const item of cases) {
+        const { unmount } = renderWithClient(
+          <CardActionBar item={item} deckSlug="family" role="owner" />,
+        );
+        expect(screen.queryByRole('button', { name: 'Dismiss' })).not.toBeInTheDocument();
+        unmount();
+      }
+    });
+
+    it('explains and ignores Dismiss offline', () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      renderWithClient(<CardActionBar item={reminder} deckSlug="family" role="reader" />);
+      const dismiss = screen.getByRole('button', { name: 'Dismiss' });
+      expect(dismiss).toHaveAttribute('aria-disabled', 'true');
+      fireEvent.click(dismiss);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 });

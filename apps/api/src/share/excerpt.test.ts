@@ -1,89 +1,84 @@
 import { describe, it, expect } from 'vitest';
-import {
-  stripMarkdown,
-  truncateText,
-  excerpt,
-  OG_DESCRIPTION_MAX,
-  OG_IMAGE_EXCERPT_MAX,
-} from './excerpt';
+import { toPlainText } from '../rich-text/plain-text';
+import { truncateText, excerpt, OG_DESCRIPTION_MAX, OG_IMAGE_EXCERPT_MAX } from './excerpt';
 
 describe('excerpt', () => {
-  describe('stripMarkdown', () => {
+  describe('toPlainText', () => {
     it('should strip headings', () => {
-      expect(stripMarkdown('# Heading')).toBe('Heading');
-      expect(stripMarkdown('## Sub Heading')).toBe('Sub Heading');
-      expect(stripMarkdown('### Deep')).toBe('Deep');
+      expect(toPlainText('# Heading')).toBe('Heading');
+      expect(toPlainText('## Sub Heading')).toBe('Sub Heading');
+      expect(toPlainText('### Deep')).toBe('Deep');
     });
 
     it('should strip lists', () => {
-      expect(stripMarkdown('- Item')).toBe('Item');
-      expect(stripMarkdown('* Item')).toBe('Item');
-      expect(stripMarkdown('+ Item')).toBe('Item');
-      expect(stripMarkdown('1. Numbered')).toBe('Numbered');
+      expect(toPlainText('- Item')).toBe('Item');
+      expect(toPlainText('* Item')).toBe('Item');
+      expect(toPlainText('+ Item')).toBe('Item');
+      expect(toPlainText('1. Numbered')).toBe('Numbered');
     });
 
     it('should strip bold', () => {
-      expect(stripMarkdown('**bold**')).toBe('bold');
-      expect(stripMarkdown('__bold__')).toBe('bold');
+      expect(toPlainText('**bold**')).toBe('bold');
+      expect(toPlainText('__bold__')).toBe('bold');
     });
 
     it('should strip links and keep text', () => {
-      expect(stripMarkdown('[text](url)')).toBe('text');
-      expect(stripMarkdown('[click](https://example.com)')).toBe('click');
+      expect(toPlainText('[text](url)')).toBe('text');
+      expect(toPlainText('[click](https://example.com)')).toBe('click');
     });
 
     it('should keep snake_case_name intact', () => {
-      expect(stripMarkdown('snake_case_name')).toBe('snake_case_name');
-      expect(stripMarkdown('Use snake_case_name here')).toBe('Use snake_case_name here');
+      expect(toPlainText('snake_case_name')).toBe('snake_case_name');
+      expect(toPlainText('Use snake_case_name here')).toBe('Use snake_case_name here');
     });
 
     it('should strip images and keep alt', () => {
-      expect(stripMarkdown('![alt](url)')).toBe('alt');
-      expect(stripMarkdown('![alt text](image.jpg)')).toBe('alt text');
+      expect(toPlainText('![alt](url)')).toBe('alt');
+      expect(toPlainText('![alt text](image.jpg)')).toBe('alt text');
     });
 
     it('should collapse multi-line whitespace', () => {
-      expect(stripMarkdown('line1\nline2\nline3')).toBe('line1 line2 line3');
-      expect(stripMarkdown('word1  word2')).toBe('word1 word2');
-      expect(stripMarkdown('text\n\n\nmore')).toBe('text more');
+      expect(toPlainText('line1\nline2\nline3')).toBe('line1 line2 line3');
+      expect(toPlainText('word1  word2')).toBe('word1 word2');
+      expect(toPlainText('text\n\n\nmore')).toBe('text more');
     });
 
     it('should strip code fences and keep inner text', () => {
-      expect(stripMarkdown('```\ncode\n```')).toBe('code');
-      expect(stripMarkdown('```python\ncode\n```')).toBe('code');
+      expect(toPlainText('```\ncode\n```')).toBe('code');
+      expect(toPlainText('```python\ncode\n```')).toBe('code');
     });
 
     it('should strip inline code', () => {
-      expect(stripMarkdown('use `code` here')).toBe('use code here');
+      expect(toPlainText('use `code` here')).toBe('use code here');
     });
 
     it('should strip strikethrough', () => {
-      expect(stripMarkdown('~~strikethrough~~')).toBe('strikethrough');
+      expect(toPlainText('~~strikethrough~~')).toBe('strikethrough');
     });
 
     it('should strip autolinks', () => {
-      expect(stripMarkdown('<https://example.com>')).toBe('https://example.com');
+      expect(toPlainText('<https://example.com>')).toBe('https://example.com');
     });
 
     it('should strip HTML tags', () => {
-      expect(stripMarkdown('<b>bold</b>')).toBe('bold');
+      expect(toPlainText('<b>bold</b>')).toBe('bold');
     });
 
     it('should remove table pipes', () => {
-      expect(stripMarkdown('col1|col2')).toBe('col1 col2');
+      expect(toPlainText('col1|col2')).toBe('col1 col2');
     });
 
     it('should remove table separator rows', () => {
-      expect(stripMarkdown('|---|---|')).toBe('');
+      expect(toPlainText('|---|---|')).toBe('');
     });
 
     it('should strip blockquotes', () => {
-      expect(stripMarkdown('> Quote')).toBe('Quote');
+      expect(toPlainText('> Quote')).toBe('Quote');
     });
 
     it('should remove horizontal rules', () => {
-      expect(stripMarkdown('---')).toBe('');
-      expect(stripMarkdown('***')).toBe('');
+      expect(toPlainText('---')).toBe('');
+      expect(toPlainText('***')).toBe('');
     });
   });
 
@@ -123,13 +118,27 @@ describe('excerpt', () => {
   });
 
   describe('excerpt', () => {
-    it('should combine stripMarkdown and truncateText', () => {
+    it('should combine toPlainText and truncateText', () => {
       const md = '# Heading\n\n**Bold** text with [link](url)';
       const result = excerpt(md, 50);
       expect(result).not.toContain('#');
       expect(result).not.toContain('**');
       expect(result).not.toContain('[');
       expect(result).not.toContain(']');
+    });
+  });
+
+  describe('excerpt of styled bodies (SC-003)', () => {
+    it('carries no directive or break syntax', () => {
+      const md = ':large[:color[Hot]{.red}] soup\n:u[tonight] at :small[6pm]';
+      expect(excerpt(md, OG_DESCRIPTION_MAX)).toBe('Hot soup tonight at 6pm');
+    });
+
+    it('truncates on the plain words, not the stored Markdown', () => {
+      const md = `:color[${'word '.repeat(40)}]{.blue}`;
+      const result = excerpt(md, 20);
+      expect(result).not.toContain(':');
+      expect(Array.from(result).length).toBeLessThanOrEqual(20);
     });
   });
 

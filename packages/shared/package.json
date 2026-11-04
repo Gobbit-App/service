@@ -24,7 +24,11 @@
     "./links": "./src/links/index.ts",
     "./events": "./src/events/index.ts",
     "./import": "./src/import/index.ts",
-    "./analytics": "./src/analytics/index.ts"
+    "./analytics": "./src/analytics/index.ts",
+    "./rich-text": "./src/rich-text/index.ts",
+    "./rich-text/fixtures": "./src/rich-text/fixtures.ts",
+    "./reminders": "./src/reminders/index.ts",
+    "./reminder-constants": "./src/reminders/client.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -33,9 +37,17 @@
   "dependencies": {
     "mathjs": "^15.2.0",
     "papaparse": "^5.7.0",
+    "remark-breaks": "^4.0.0",
+    "remark-directive": "^4.0.0",
+    "unist-util-visit": "^5.2.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@types/papaparse": "^5.5.2"
+    "@types/mdast": "^4.0.4",
+    "@types/papaparse": "^5.5.2",
+    "mdast-util-directive": "^3.2.0",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "vfile": "^6.0.3"
   }
 }

@@ -16,6 +16,7 @@ import {
 } from '@gobbit/shared';
 import { LOCKED_CAPTION_MAX, type LockedHostMatch } from '@gobbit/shared/links';
 import { isGenericLockedTitle } from '../fetch/locked-host-preview';
+import { stripStyleDirectives } from '../rich-text/plain-text';
 import { proposeCardInputSchema } from './extract-prompt';
 
 /** Context the validator needs from the deck and the shared item. */
@@ -139,7 +140,8 @@ export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedP
   const input = parsed.data;
 
   const title = truncateAtSentence(input.title.trim(), CARD_TITLE_MAX);
-  const body = truncateAtSentence(input.body.trim(), CARD_BODY_MAX);
+  // D288: the agent never styles a card; directives it writes become their plain labels.
+  const body = truncateAtSentence(stripStyleDirectives(input.body.trim()), CARD_BODY_MAX);
 
   const allowed = new Set(ctx.categoryIds);
   const seen = new Set<string>();

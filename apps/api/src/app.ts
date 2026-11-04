@@ -20,6 +20,7 @@ import { registerHealthRoutes } from './routes/health';
 import { registerConfigRoutes } from './routes/config';
 import { registerAuthRoutes } from './routes/auth';
 import { registerMeRoutes } from './routes/me';
+import { registerNotificationRoutes } from './routes/notifications';
 import { registerDecksRoutes } from './routes/decks';
 import { registerMembersRoutes } from './routes/members';
 import { registerCategoriesRoutes } from './routes/categories';
@@ -27,6 +28,7 @@ import { registerItemsRoutes } from './routes/items';
 import { registerFavoritesRoutes } from './routes/favorites';
 import { registerShareRoutes } from './routes/share';
 import type { ShareWiring } from './share/wiring';
+import type { PushSender } from './push/push-sender';
 import type { SearchWiring } from './services/search-wiring';
 import { registerSearchRoutes } from './routes/search';
 import { registerMediaRoutes } from './routes/media';
@@ -77,6 +79,8 @@ export interface AppDeps {
   waitlistLimiter?: AnonRateLimiter;
   /** Parent logger for decision events (D239); integration tests capture it. */
   logger?: Logger;
+  /** 037: push sender override for tests; default comes from the VAPID env (null = off). */
+  push?: PushSender | null;
 }
 
 export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
@@ -164,6 +168,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerConfigRoutes(app, env);
   registerAuthRoutes(app, services, env);
   registerMeRoutes(app, services);
+  registerNotificationRoutes(app, services);
   registerDecksRoutes(app, services);
   registerMembersRoutes(app, services);
   registerCategoriesRoutes(app, services);

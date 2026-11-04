@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createItemsService } from './items.service';
+import { createRemindersService } from './reminders.service';
 import type { Actor, CurrentUser } from '../types';
 
 type ItemsRepo = any;
@@ -66,6 +67,8 @@ describe('createItemsService', () => {
   let memberships: any;
   let embedQueue: { enqueueIfStale: ReturnType<typeof vi.fn<(id: string) => Promise<void>>> };
   let links: any;
+  let remindersRepo: any;
+  let decisions: { record: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     decks = {
@@ -89,6 +92,7 @@ describe('createItemsService', () => {
       softDelete: vi.fn().mockResolvedValue(undefined),
       list: vi.fn().mockResolvedValue([]),
       listDeleted: vi.fn().mockResolvedValue([]),
+      listUpcoming: vi.fn().mockResolvedValue([]),
       isVisibleTo: vi.fn().mockResolvedValue(true),
       categoryIdsFor: vi.fn().mockResolvedValue(new Map([[PB_ID, [DEFAULT_CAT]]])),
     } as unknown as ItemsRepo;
@@ -111,6 +115,15 @@ describe('createItemsService', () => {
       rateLimits: { enforce: vi.fn().mockResolvedValue(undefined) },
     };
 
+    remindersRepo = {
+      states: vi.fn().mockResolvedValue(new Map()),
+      deckContext: vi.fn().mockResolvedValue({ personal: false, members: [] }),
+      deckMembers: vi.fn().mockResolvedValue([]),
+      categoryVisibilities: vi.fn().mockResolvedValue(new Map()),
+      dismiss: vi.fn(),
+    };
+    decisions = { record: vi.fn() };
+
     service = createItemsService({
       decks,
       categories,
@@ -120,6 +133,12 @@ describe('createItemsService', () => {
       embedQueue,
       imageReference: async (_deckId, _type, payload) => payload,
       links,
+      reminders: createRemindersService({
+        reminders: remindersRepo,
+        limits: { maxDeadlineDays: 1825, maxShowBeforeDays: 365, resolutionMax: 600 },
+        decisions: decisions as any,
+        now: () => NOW,
+      }),
       now: () => NOW,
     });
   });
@@ -323,9 +342,13 @@ describe('createItemsService', () => {
 
       const dto = await service.restore(ACTOR, itemId);
 
-      expect(items.update).toHaveBeenCalledWith(itemId, { status: 'published' }, undefined, [
-        expect.objectContaining({ kind: 'restored', via: 'session', actorUserId: USER.id }),
-      ]);
+      expect(items.update).toHaveBeenCalledWith(
+        itemId,
+        { status: 'published' },
+        undefined,
+        [expect.objectContaining({ kind: 'restored', via: 'session', actorUserId: USER.id })],
+        undefined,
+      );
       expect(dto.verifiedAt).toBe(verifiedAt.toISOString());
       expect(embedQueue.enqueueIfStale).toHaveBeenCalledWith(itemId);
     });
@@ -390,6 +413,7 @@ describe('createItemsService', () => {
         expect.objectContaining({ status: 'published', verifiedAt: NOW }),
         undefined,
         [expect.objectContaining({ kind: 'published', via: 'session', actorUserId: USER.id })],
+        undefined,
       );
     });
   });
@@ -412,9 +436,11 @@ describe('createItemsService', () => {
 
       const dto = await service.undelete(ACTOR, itemId);
 
-      expect(items.undelete).toHaveBeenCalledWith(itemId, [
-        expect.objectContaining({ kind: 'undeleted', via: 'session', actorUserId: USER.id }),
-      ]);
+      expect(items.undelete).toHaveBeenCalledWith(
+        itemId,
+        [expect.objectContaining({ kind: 'undeleted', via: 'session', actorUserId: USER.id })],
+        undefined,
+      );
       expect(embedQueue.enqueueIfStale).toHaveBeenCalledWith(itemId);
       expect(dto.deletedAt).toBeUndefined();
     });
@@ -574,6 +600,150 @@ describe('createItemsService', () => {
       });
       expect(links.previewFields).toHaveBeenCalledWith(PB_ID, { url: 'https://x.test/' }, null);
       expect(links.snapshotQueue.enqueueIfNeeded).toHaveBeenCalledWith(LINK);
+    });
+  });
+  describe('reminders (037)', () => {
+    const itemId = '550e8400-e29b-41d4-a716-446655440002';
+    const OTHER = '550e8400-e29b-41d4-a716-4466554400ff';
+    const PAYLOAD = {
+      deadline: new Date(NOW.getTime() + 3 * DAY_MS).toISOString(),
+      showBefore: { amount: 1, unit: 'days' },
+      dismiss: { mode: 'writers', userIds: [] },
+      timeZone: 'Europe/London',
+    };
+    const reminderRow = (overrides = {}) =>
+      createItemRow({
+        type: 'reminder',
+        payload: PAYLOAD,
+        revealAt: new Date(NOW.getTime() + 2 * DAY_MS),
+        ...overrides,
+      });
+
+    it('D292: a hidden reminder is a 404 for a reader who did not create it', async () => {
+      actAs('editor');
+      items.findById.mockResolvedValue(reminderRow({ createdBy: OTHER }));
+
+      await expect(service.get(ACTOR, itemId)).rejects.toMatchObject({ status: 404 });
+    });
+
+    it('D292: the creator and private-access roles open a hidden reminder', async () => {
+      items.findById.mockResolvedValue(reminderRow({ createdBy: OTHER }));
+      await expect(service.get(ACTOR, itemId)).resolves.toMatchObject({ id: itemId });
+
+      actAs('editor');
+      items.findById.mockResolvedValue(reminderRow({ createdBy: USER.id }));
+      await expect(service.get(ACTOR, itemId)).resolves.toMatchObject({ id: itemId });
+    });
+
+    it('D292: a revealed reminder opens for everyone who sees the card', async () => {
+      actAs('reader');
+      items.findById.mockResolvedValue(
+        reminderRow({ createdBy: OTHER, revealAt: new Date(NOW.getTime() - 1) }),
+      );
+
+      await expect(service.get(ACTOR, itemId)).resolves.toMatchObject({ id: itemId });
+    });
+
+    it('D292: Upcoming lists all hidden reminders for owners, only their own for others', async () => {
+      await service.list(ACTOR, 'fam', { status: 'upcoming', limit: 20 });
+      expect(items.listUpcoming).toHaveBeenLastCalledWith(
+        expect.objectContaining({ createdBy: undefined, proposalsOf: 'all', limit: 21 }),
+      );
+
+      actAs('editor');
+      await service.list(ACTOR, 'fam', { status: 'upcoming', limit: 20 });
+      expect(items.listUpcoming).toHaveBeenLastCalledWith(
+        expect.objectContaining({ createdBy: USER.id, proposalsOf: USER.id }),
+      );
+      expect(items.list).not.toHaveBeenCalled();
+    });
+
+    it('D291: create refuses a deadline in the past (422 payload.deadline)', async () => {
+      const input = {
+        type: 'reminder',
+        title: 'Renew',
+        body: '',
+        payload: { ...PAYLOAD, deadline: new Date(NOW.getTime() - 1000).toISOString() },
+      };
+
+      await expect(service.create(ACTOR, 'fam', input)).rejects.toMatchObject({ status: 422 });
+      expect(items.create).not.toHaveBeenCalled();
+    });
+
+    it('D293: personal decks always store mode "me"', async () => {
+      decks.findBySlug.mockResolvedValue({ ...PB_ROW, kind: 'personal' });
+      const input = { type: 'reminder', title: 'Renew', body: '', payload: PAYLOAD };
+
+      await service.create(ACTOR, 'fam', input);
+
+      expect(items.create).toHaveBeenCalledWith(
+        expect.objectContaining({ payload: { ...PAYLOAD, dismiss: { mode: 'me', userIds: [] } } }),
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+
+    it("D293: an editor deletes a reminder they created, not someone else's", async () => {
+      actAs('editor');
+      items.findById.mockResolvedValue(reminderRow({ revealAt: NOW }));
+      await service.remove(ACTOR, itemId);
+      expect(items.softDelete).toHaveBeenCalledTimes(1);
+
+      items.findById.mockResolvedValue(reminderRow({ revealAt: NOW, createdBy: OTHER }));
+      await expect(service.remove(ACTOR, itemId)).rejects.toMatchObject({ status: 403 });
+      expect(decisions.record).toHaveBeenLastCalledWith(
+        'reminder.delete',
+        expect.objectContaining({ outcome: 'refused', reason: 'not_creator' }),
+      );
+    });
+
+    it('editors still cannot delete other cards', async () => {
+      actAs('editor');
+
+      await expect(service.remove(ACTOR, itemId)).rejects.toMatchObject({ status: 403 });
+      expect(items.softDelete).not.toHaveBeenCalled();
+    });
+
+    it('D294: restore of a reminder reopens it in the same transaction', async () => {
+      items.findById.mockResolvedValue(reminderRow({ status: 'archived', revealAt: NOW }));
+
+      await service.restore(ACTOR, itemId);
+
+      expect(items.update).toHaveBeenCalledWith(
+        itemId,
+        { status: 'published' },
+        undefined,
+        expect.any(Array),
+        expect.any(Function),
+      );
+    });
+
+    it('D294: dismiss on a non-reminder is a 409', async () => {
+      await expect(service.dismiss(ACTOR, itemId, { done: true })).rejects.toMatchObject({
+        status: 409,
+      });
+    });
+
+    it('D294: an eligible member dismisses a pending reminder', async () => {
+      const row = reminderRow({ revealAt: NOW });
+      items.findById.mockResolvedValue(row);
+      remindersRepo.states.mockResolvedValue(
+        new Map([[itemId, { outcome: 'pending', deadline: new Date(PAYLOAD.deadline) }]]),
+      );
+      remindersRepo.deckContext.mockResolvedValue({
+        personal: false,
+        members: [{ userId: USER.id, role: 'owner' }],
+      });
+      remindersRepo.categoryVisibilities.mockResolvedValue(new Map([[itemId, ['members']]]));
+      remindersRepo.dismiss.mockResolvedValue({ ...row, status: 'archived' });
+
+      await service.dismiss(ACTOR, itemId, { done: true, resolution: ' renewed ' });
+
+      expect(remindersRepo.dismiss).toHaveBeenCalledWith(
+        itemId,
+        { outcome: 'done', by: USER.id, resolution: 'renewed' },
+        [expect.objectContaining({ kind: 'completed' })],
+      );
     });
   });
 });

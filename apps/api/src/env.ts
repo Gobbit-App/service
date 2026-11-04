@@ -8,6 +8,12 @@ import {
   WAITLIST_JOIN_PER_IP_PER_HOUR,
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR,
   WAITLIST_INVITE_TTL_DAYS_DEFAULT,
+  REMINDER_MAX_DEADLINE_DAYS,
+  REMINDER_MAX_SHOW_BEFORE_DAYS,
+  REMINDER_RESOLUTION_MAX,
+  NOTIFY_MAX_ATTEMPTS,
+  NOTIFY_RETRY_BASE_SECONDS,
+  REMINDER_SWEEP_BATCH,
 } from '@gobbit/shared';
 import { registrationModes } from '@gobbit/shared/auth';
 import { cloudNameFrom } from './lib/cloudinary-url';
@@ -24,6 +30,9 @@ const bool = (fallback: 'true' | 'false') =>
 export const DEV_LOG_HASH_KEY = 'gobbit-development-log-hash-key-not-secret';
 
 const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
+
+/** D299: an env value that may only lower a shared cap. */
+const cappedInt = (cap: number) => z.coerce.number().int().positive().max(cap).default(cap);
 
 /** `a, b,,c` → `['a', 'b', 'c']`. */
 const commaList = z
@@ -95,6 +104,27 @@ const baseSchema = z.object({
   PLATFORM_ADMINS: commaList.transform((list) => list.map((email) => email.toLowerCase())),
   /** 032: lifetime of the sign-in link in the "You're in" email. */
   WAITLIST_INVITE_TTL_DAYS: positiveInt(WAITLIST_INVITE_TTL_DAYS_DEFAULT),
+  /** D299: furthest reminder deadline from now, in days (may only lower the shared cap). */
+  REMINDER_MAX_DEADLINE_DAYS: cappedInt(REMINDER_MAX_DEADLINE_DAYS),
+  /** D299: longest reminder show-before period, in days (may only lower the shared cap). */
+  REMINDER_MAX_SHOW_BEFORE_DAYS: cappedInt(REMINDER_MAX_SHOW_BEFORE_DAYS),
+  /** D299: longest dismiss resolution, in characters (may only lower the shared cap). */
+  REMINDER_RESOLUTION_MAX: cappedInt(REMINDER_RESOLUTION_MAX),
+  /** D295: send attempts per reminder notification before it is marked failed. */
+  NOTIFY_MAX_ATTEMPTS: positiveInt(NOTIFY_MAX_ATTEMPTS),
+  /** D295: first retry delay in seconds; doubles with each attempt. */
+  NOTIFY_RETRY_BASE_SECONDS: positiveInt(NOTIFY_RETRY_BASE_SECONDS),
+  /** D295: due reminders claimed per sweep tick. */
+  REMINDER_SWEEP_BATCH: positiveInt(REMINDER_SWEEP_BATCH),
+  /** D296: Web Push (VAPID) keys; all three or none. Without them push is off. */
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  /** D296: never logged, never sent to the browser. */
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  /** D296: `mailto:` or `https:` contact the push services may use. */
+  VAPID_SUBJECT: z
+    .string()
+    .regex(/^(mailto:|https:\/\/)/, 'VAPID_SUBJECT must start with mailto: or https://')
+    .optional(),
 });
 
 export const envSchema = baseSchema
@@ -105,6 +135,14 @@ export const envSchema = baseSchema
     if (data.MAIL_PROVIDER === 'resend') {
       require('RESEND_API_KEY', 'RESEND_API_KEY is required when MAIL_PROVIDER=resend');
       require('MAIL_FROM', 'MAIL_FROM is required when MAIL_PROVIDER=resend');
+    }
+    const vapid = [data.VAPID_PUBLIC_KEY, data.VAPID_PRIVATE_KEY, data.VAPID_SUBJECT];
+    if (vapid.some(Boolean) && !vapid.every(Boolean)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['VAPID_PUBLIC_KEY'],
+        message: 'VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_SUBJECT must be set together',
+      });
     }
     if (data.CLOUDINARY_URL !== undefined && cloudNameFrom(data.CLOUDINARY_URL) === null) {
       // Never echo the value: it carries the API secret.

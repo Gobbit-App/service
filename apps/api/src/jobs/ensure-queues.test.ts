@@ -15,8 +15,8 @@ describe('ensureQueues', () => {
 
     await ensureQueues(boss as never);
 
-    expect(boss.getQueue).toHaveBeenCalledTimes(11);
-    expect(boss.createQueue).toHaveBeenCalledTimes(11);
+    expect(boss.getQueue).toHaveBeenCalledTimes(12);
+    expect(boss.createQueue).toHaveBeenCalledTimes(12);
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedItem, { policy: 'stately' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedSweep, { policy: 'singleton' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.pruneSearchQueries, {
@@ -29,6 +29,7 @@ describe('ensureQueues', () => {
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.linkSnapshot, { policy: 'stately' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.linkCheckSweep, { policy: 'singleton' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.pruneWaitlist, { policy: 'singleton' });
+    expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.reminderSweep, { policy: 'singleton' });
   });
 
   it('uses the expected queue names', async () => {
@@ -69,11 +70,12 @@ describe('ensureQueues', () => {
       [QUEUES.linkSnapshot]: { name: QUEUES.linkSnapshot },
       [QUEUES.linkCheckSweep]: { name: QUEUES.linkCheckSweep },
       [QUEUES.pruneWaitlist]: { name: QUEUES.pruneWaitlist },
+      [QUEUES.reminderSweep]: { name: QUEUES.reminderSweep },
     });
 
     await ensureQueues(boss as never);
 
-    expect(boss.getQueue).toHaveBeenCalledTimes(11);
+    expect(boss.getQueue).toHaveBeenCalledTimes(12);
     expect(boss.createQueue).not.toHaveBeenCalled();
   });
 
@@ -84,7 +86,7 @@ describe('ensureQueues', () => {
 
     await ensureQueues(boss as never);
 
-    expect(boss.createQueue).toHaveBeenCalledTimes(10);
+    expect(boss.createQueue).toHaveBeenCalledTimes(11);
     expect(boss.createQueue).not.toHaveBeenCalledWith(QUEUES.embedItem, expect.anything());
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedSweep, { policy: 'singleton' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.pruneSearchQueries, {

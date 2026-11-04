@@ -89,3 +89,21 @@ export function waitlistInviteEmail(p: { link: string; ttlDays: number }): Rende
     html: `<p>${escapeHtml(intro)}</p>\n<p>${escapeHtml(action)}</p>\n<p><a href="${escapeHtml(p.link)}">Open Gobbit</a></p>\n<p>${escapeHtml(rules)}</p>\n<p>Gobbit</p>`,
   };
 }
+
+/** D296/FR-011: a due reminder — title, deck, deadline and a link; never the card body. */
+export function reminderDueEmail(p: {
+  title: string;
+  deckName: string;
+  due: string;
+  link: string;
+  settingsLink: string;
+}): RenderedMail {
+  const line = `"${p.title}" in ${p.deckName} is due ${p.due}.`;
+  const footer =
+    'You get this because you can mark this reminder done. Turn reminder emails off in Settings.';
+  return {
+    subject: `Reminder: ${p.title}`,
+    text: `${line}\n\n${p.link}\n\n${footer}\n${p.settingsLink}`,
+    html: `<p>${escapeHtml(line)}</p>\n<p><a href="${escapeHtml(p.link)}">Open the reminder</a></p>\n<p><small>${escapeHtml(footer)} <a href="${escapeHtml(p.settingsLink)}">Settings</a></small></p>`,
+  };
+}

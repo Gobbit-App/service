@@ -12,6 +12,7 @@ const deck = (role: Deck['role'], isDefault = false) => ({ slug: 'family', role,
 
 function answer({ admin = false } = {}) {
   respond.mockImplementation((request) => {
+    if (request === 'GET /me/pending') return Promise.resolve({ items: [], upcoming: [] });
     if (request.startsWith('GET /me')) {
       return Promise.resolve({
         user: { id: 'u1', email: 'me@example.com' },
@@ -28,6 +29,14 @@ const names = () =>
   Array.from(bar().querySelectorAll('button, a')).map((el) => el.getAttribute('aria-label'));
 
 describe('BottomBar (D274–D279)', () => {
+  it('shows the bell on every bar page (037)', async () => {
+    await renderInRouter(<BottomBar />);
+    expect(await screen.findByRole('link', { name: 'Notifications' })).toHaveAttribute(
+      'href',
+      '/notifications',
+    );
+  });
+
   beforeEach(() => {
     respond.mockReset();
     answer();
@@ -37,22 +46,22 @@ describe('BottomBar (D274–D279)', () => {
     await renderInRouter(<BottomBar deck={deck('owner')} />);
     expect(screen.getByRole('navigation', { name: 'Deck actions' })).toBeInTheDocument();
     await screen.findByRole('link', { name: 'Review · 2' });
-    expect(names()).toEqual(['Menu', 'Browse', 'Review · 2', 'Add']);
+    expect(names()).toEqual(['Menu', 'Browse', 'Review · 2', 'Notifications', 'Add']);
   });
 
   it('gives editors Browse and Add but no Review', async () => {
     await renderInRouter(<BottomBar deck={deck('editor')} />);
-    expect(names()).toEqual(['Menu', 'Browse', 'Add']);
+    expect(names()).toEqual(['Menu', 'Browse', 'Notifications', 'Add']);
   });
 
   it('gives readers ⋯ and Browse only', async () => {
     await renderInRouter(<BottomBar deck={deck('reader')} />);
-    expect(names()).toEqual(['Menu', 'Browse']);
+    expect(names()).toEqual(['Menu', 'Browse', 'Notifications']);
   });
 
   it('has no Review on the personal deck', async () => {
     await renderInRouter(<BottomBar deck={deck('owner', true)} />);
-    expect(names()).toEqual(['Menu', 'Browse', 'Add']);
+    expect(names()).toEqual(['Menu', 'Browse', 'Notifications', 'Add']);
   });
 
   it('opens the create menu on a short press, New card first', async () => {
@@ -82,7 +91,7 @@ describe('BottomBar (D274–D279)', () => {
     const items = screen
       .getAllByRole('menuitem')
       .map((el) => el.getAttribute('aria-label') ?? el.textContent);
-    expect(items).toEqual(['Settings', 'Activity', 'Sign out']);
+    expect(items).toEqual(['Settings', 'Upcoming', 'Activity', 'Sign out']);
     expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveAccessibleDescription(
       'me@example.com',
     );
@@ -103,13 +112,13 @@ describe('BottomBar (D274–D279)', () => {
     const onNewDeck = vi.fn();
     await renderInRouter(<BottomBar onNewDeck={onNewDeck} />);
     expect(screen.getByRole('navigation', { name: 'Actions' })).toBeInTheDocument();
-    expect(names()).toEqual(['Menu', 'New deck']);
+    expect(names()).toEqual(['Menu', 'Notifications', 'New deck']);
     await userEvent.click(screen.getByRole('button', { name: 'New deck' }));
     expect(onNewDeck).toHaveBeenCalledOnce();
   });
 
   it('has no + on account settings', async () => {
     await renderInRouter(<BottomBar />);
-    expect(names()).toEqual(['Menu']);
+    expect(names()).toEqual(['Menu', 'Notifications']);
   });
 });

@@ -18,6 +18,8 @@ export const QUEUES = {
   linkCheckSweep: 'link-check-sweep',
   /** D220: weekly delete of expired pending and old removed waitlist entries. */
   pruneWaitlist: 'prune-waitlist',
+  /** D295: every minute, plan and send notifications for reminders past their deadline. */
+  reminderSweep: 'reminder-sweep',
 } as const;
 
 export interface EmbedItemJob {

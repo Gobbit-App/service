@@ -4,14 +4,17 @@ export type DeckKind = (typeof deckKinds)[number];
 export const categoryVisibilities = ['private', 'shared', 'public'] as const;
 export type CategoryVisibility = (typeof categoryVisibilities)[number];
 
-export const itemTypes = ['text', 'link', 'image', 'table', 'calc'] as const;
+export const itemTypes = ['text', 'link', 'image', 'table', 'calc', 'reminder'] as const;
 export type ItemType = (typeof itemTypes)[number];
 
 export const itemStatuses = ['proposed', 'published', 'archived'] as const;
 export type ItemStatus = (typeof itemStatuses)[number];
 
-/** D132: `status` values the item list accepts; `deleted` is list-only, not a DB status. */
-export const itemListStatuses = [...itemStatuses, 'deleted'] as const;
+/**
+ * D132: `status` values the item list accepts; `deleted` is list-only, not a DB status.
+ * D292: `upcoming` lists reminders that haven't reached their reveal time.
+ */
+export const itemListStatuses = [...itemStatuses, 'deleted', 'upcoming'] as const;
 export type ItemListStatus = (typeof itemListStatuses)[number];
 
 export const sourceKinds = [

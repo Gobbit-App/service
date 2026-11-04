@@ -23,6 +23,7 @@ const TYPE_LABELS: Record<Item['type'], string> = {
   image: 'Image',
   table: 'Table',
   calc: 'Calculator',
+  reminder: 'Reminder',
 };
 
 export function itemTypeLabel(type: Item['type']): string {

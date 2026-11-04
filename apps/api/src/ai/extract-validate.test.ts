@@ -62,6 +62,11 @@ describe('extract-validate (D100)', () => {
     expect(r.summary.newCategory).toBeNull();
   });
 
+  it('D288: unwraps style directives the agent writes, keeping the words', () => {
+    const r = okResult({ ...baseRaw, body: 'Call :color[before 9]{.red}, :u[Re:Plan] **now**.' });
+    expect(r.item.body).toBe('Call before 9, Re:Plan **now**.');
+  });
+
   it('truncates a long body at a sentence end within CARD_BODY_MAX', () => {
     const raw = { ...baseRaw, body: 'a. '.repeat(700) };
     const r = okResult(raw);

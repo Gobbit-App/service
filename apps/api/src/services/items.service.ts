@@ -21,6 +21,7 @@ import {
   type ItemEventKind,
   type ItemStatus,
   type LinkPayload,
+  type DismissReminder,
   can,
   compactEntities,
   payloadSchemaFor,
@@ -41,6 +42,8 @@ import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import { rateKeys } from '../lib/rate-window';
 import type { LinkChecksRepo } from '../repositories/link-checks.repo';
+import { markNotifiedIfPast, reopenReminder } from '../repositories/reminders.repo';
+import type { RemindersService } from './reminders.service';
 import type { ImageReferenceCheck } from './image-reference';
 import { createItemDtoMapper } from './item-dtos';
 import type { LinkChecksService } from './link-checks.service';
@@ -88,6 +91,8 @@ export function createItemsService(deps: {
   /** D160: image cards reference recorded assets of their deck; dimensions come from them. */
   imageReference: ImageReferenceCheck;
   links: ItemLinkDeps;
+  /** 037: reminder payload rules, dismiss and the `reminder` DTO field (D291–D294). */
+  reminders: RemindersService;
   /** D132: clock for publish/delete timestamps and the undo window (tests inject one). */
   now?: () => Date;
   undeleteDays?: number;
@@ -103,11 +108,17 @@ export function createItemsService(deps: {
     embedQueue,
     imageReference,
     links,
+    reminders,
     now = () => new Date(),
     undeleteDays = ITEM_UNDELETE_DAYS,
     purgeDeck = () => {},
   } = deps;
-  const toDtos = createItemDtoMapper({ items, favorites, linkChecks: links.checks });
+  const toDtos = createItemDtoMapper({
+    items,
+    favorites,
+    linkChecks: links.checks,
+    reminderStates: reminders.states,
+  });
   const ITEM_NOT_FOUND = 'Item not found';
 
   // Private helpers
@@ -142,7 +153,21 @@ export function createItemsService(deps: {
     const role = await authorize(user, deck, permission, memberships, ITEM_NOT_FOUND);
     if (!canSeeProposal(item, user, role)) throw notFound(ITEM_NOT_FOUND);
     if (!(await items.isVisibleTo(item.id, role))) throw notFound(ITEM_NOT_FOUND);
-    return { item, role };
+    if (!canSeeHidden(item, user, role)) throw notFound(ITEM_NOT_FOUND);
+    return { item, role, deck };
+  }
+
+  /** D292: before its reveal time a reminder opens only for its creator and private-access roles. */
+  function canSeeHidden(item: ItemRow, user: CurrentUser, role: MemberRole): boolean {
+    if (!item.revealAt || item.revealAt.getTime() <= now().getTime()) return true;
+    return item.createdBy === user.id || canSeePrivate(role);
+  }
+
+  /** D294: a reminder brought back after its deadline never sends a late email or push. */
+  function reminderHook(item: ItemRow, hook: typeof markNotifiedIfPast) {
+    return item.type === 'reminder'
+      ? (tx: Parameters<typeof hook>[0]) => hook(tx, item.id)
+      : undefined;
   }
 
   /** Category ids of the item that `role` can't see; kept when that role rewrites the list. */
@@ -264,6 +289,7 @@ export function createItemsService(deps: {
   const service = {
     async list(actor: Actor, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
       if (q.status === 'deleted') return service.listDeleted(actor, idOrSlug, q);
+      if (q.status === 'upcoming') return service.listUpcoming(actor, idOrSlug, q);
       if (q.flag === 'link') return service.listLinkFlagged(actor, idOrSlug, q);
 
       const { user } = actor;
@@ -316,6 +342,36 @@ export function createItemsService(deps: {
 
       const page = paginate(rows, q.limit, (last) => ({
         createdAt: last.deletedAt ?? last.createdAt,
+        id: last.id,
+      }));
+      return { data: await toDtos(user, page.rows, role), nextCursor: page.nextCursor };
+    },
+
+    /**
+     * D292: reminders not revealed yet, soonest reveal first. Owners and maintainers see all of
+     * them; everyone else only their own.
+     */
+    async listUpcoming(actor: Actor, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
+      const { user } = actor;
+      const deck = await resolveDeck(decks, idOrSlug, user);
+      const role = await authorize(user, deck, 'item.read', memberships);
+      const all = canSeePrivate(role);
+
+      // The shared cursor format carries the sort timestamp in `createdAt`.
+      const cursor = q.cursor ? decodeCursor(q.cursor) : undefined;
+      const rows = await items.listUpcoming({
+        role,
+        deckId: deck.id,
+        categoryId: await categoryIdForSlug(deck.id, q.category, role),
+        favoriteOf: q.favorite === 'true' ? user.id : undefined,
+        createdBy: all ? undefined : user.id,
+        proposalsOf: can(role, 'item.publish') ? 'all' : user.id,
+        after: cursor ? { revealAt: cursor.createdAt, id: cursor.id } : undefined,
+        limit: q.limit + 1,
+      });
+
+      const page = paginate(rows, q.limit, (last) => ({
+        createdAt: last.revealAt ?? last.createdAt,
         id: last.id,
       }));
       return { data: await toDtos(user, page.rows, role), nextCursor: page.nextCursor };
@@ -377,7 +433,10 @@ export function createItemsService(deps: {
       const status = input.status ?? 'published';
       const verifiedAt = status === 'published' ? now() : null;
       const sourceKind = input.type === 'link' || input.sourceUrl ? 'link' : 'manual';
-      const payload = await referencedPayload(deck.id, input.type, input.payload, null);
+      const payload =
+        input.type === 'reminder'
+          ? await reminders.checkPayload({ actor, role, deck }, input.payload)
+          : await referencedPayload(deck.id, input.type, input.payload, null);
 
       const createdItem = await items.create(
         {
@@ -409,7 +468,7 @@ export function createItemsService(deps: {
 
     async update(actor: Actor, itemId: string, patch: ItemPatch): Promise<Item> {
       const { user } = actor;
-      const { item, role } = await loadItem(user, itemId, 'item.update');
+      const { item, role, deck } = await loadItem(user, itemId, 'item.update');
 
       // D131: archived → published only through restore (keeps the first publish date)
       if (item.status === 'archived' && patch.status === 'published') {
@@ -439,10 +498,13 @@ export function createItemsService(deps: {
       if (patch.payload !== undefined) {
         payloadSchemaFor(item.type).parse(patch.payload);
       }
-      const payload =
-        patch.payload === undefined
-          ? undefined
-          : await referencedPayload(item.deckId, item.type, patch.payload, item.payload);
+      let payload: Record<string, unknown> | undefined;
+      if (patch.payload === undefined) payload = undefined;
+      else if (item.type === 'reminder') {
+        payload = await reminders.checkPayload({ actor, role, deck }, patch.payload, { item });
+      } else {
+        payload = await referencedPayload(item.deckId, item.type, patch.payload, item.payload);
+      }
 
       // Compute resulting status and categories before writing
       const resultingStatus = patch.status ?? item.status;
@@ -492,15 +554,22 @@ export function createItemsService(deps: {
         updatePatch,
         patch.categoryIds !== undefined ? resultingCategoryIds : undefined,
         patchEvents(actor, item.status, resultingStatus, changes),
+        item.status === 'proposed' && resultingStatus === 'published'
+          ? reminderHook(item, markNotifiedIfPast)
+          : undefined,
       );
       await afterWrite(updatedItem);
 
       return toDto(user, updatedItem, role);
     },
 
-    /** Soft delete (ADR-005); the status is kept so undelete returns the card as it was (D132). */
+    /**
+     * Soft delete (ADR-005); the status is kept so undelete returns the card as it was (D132).
+     * D293: editors may also delete reminders they created.
+     */
     async remove(actor: Actor, itemId: string): Promise<void> {
-      const { item } = await loadItem(actor.user, itemId, 'item.delete');
+      const { item, role } = await loadItem(actor.user, itemId, 'item.read');
+      reminders.assertCanDelete(actor, item, role);
       await items.softDelete(item.id, now(), [eventFrom(actor, 'deleted')]);
       purgeDeck(item.deckId);
     },
@@ -528,9 +597,14 @@ export function createItemsService(deps: {
 
       if (item.status === 'published') return toDto(user, item, role);
 
-      const restored = await items.update(item.id, { status: 'published' }, undefined, [
-        eventFrom(actor, 'restored'),
-      ]);
+      // D294: a restored reminder is pending again (and overdue in the app only when past due).
+      const restored = await items.update(
+        item.id,
+        { status: 'published' },
+        undefined,
+        [eventFrom(actor, 'restored')],
+        reminderHook(item, reopenReminder),
+      );
       await afterWrite(restored);
       return toDto(user, restored, role);
     },
@@ -556,9 +630,22 @@ export function createItemsService(deps: {
         );
       }
 
-      const restored = await items.undelete(item.id, [eventFrom(actor, 'undeleted')]);
+      const restored = await items.undelete(
+        item.id,
+        [eventFrom(actor, 'undeleted')],
+        reminderHook(item, markNotifiedIfPast),
+      );
       await afterWrite(restored);
       return toDto(user, restored, role);
+    },
+
+    /** D294: an eligible member closes a pending reminder (done or dismissed); it is archived. */
+    async dismiss(actor: Actor, itemId: string, input: DismissReminder): Promise<Item> {
+      const { user } = actor;
+      const { item, role } = await loadItem(user, itemId, 'item.read');
+      const dismissed = await reminders.dismiss(actor, item, input);
+      purgeDeck(dismissed.deckId);
+      return toDto(user, dismissed, role);
     },
 
     /**

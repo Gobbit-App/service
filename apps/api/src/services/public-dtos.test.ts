@@ -25,6 +25,7 @@ const row: ItemRow = {
   embeddingModel: 'm',
   embeddedHash: 'h',
   embeddedAt: at,
+  revealAt: null,
 };
 
 describe('toPublicItem (D174)', () => {

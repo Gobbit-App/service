@@ -8,6 +8,12 @@ import {
 import { normalizeUrlInput } from '../lib/url-input';
 import { jsonEqual, sameIds } from './equal';
 import { blankCalc, blankTable, sampleCalc, sampleTable } from './sample-payloads';
+import {
+  newReminderPayload,
+  reminderDraftFromPayload,
+  reminderToPayload,
+  type ReminderDraftPayload,
+} from './reminder-draft';
 
 /** Link payload while editing; unknown keys (e.g. `preview.image` from ingest) are kept. */
 export type LinkDraftPayload = {
@@ -39,6 +45,8 @@ export type DraftPayloadByType = {
   image: ImagePayload;
   table: TablePayload;
   calc: CalcDraftPayload;
+  /** 037 (D291): deadline as a local date-time while editing. */
+  reminder: ReminderDraftPayload;
 };
 
 export type DraftPayload = DraftPayloadByType[ItemType];
@@ -71,6 +79,8 @@ export function blankPayload(type: ItemType): DraftPayload {
       return blankTable();
     case 'calc':
       return blankCalc();
+    case 'reminder':
+      return newReminderPayload();
   }
 }
 
@@ -141,6 +151,8 @@ function payloadFromItem(item: Item): DraftPayload {
         resultLabel: calc.resultLabel,
       };
     }
+    case 'reminder':
+      return reminderDraftFromPayload(raw);
   }
 }
 
@@ -209,6 +221,8 @@ export function toPayload(draft: Pick<Draft, 'type' | 'payload'>): Record<string
       return calcPayload(draft.payload as CalcDraftPayload);
     case 'image':
       return imagePayload(draft.payload as ImagePayload);
+    case 'reminder':
+      return reminderToPayload(draft.payload as ReminderDraftPayload);
     case 'table':
       return draft.payload as Record<string, unknown>;
   }

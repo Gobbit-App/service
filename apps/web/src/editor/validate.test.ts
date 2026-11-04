@@ -279,3 +279,19 @@ describe('parity with the @gobbit/shared Zod item schema', () => {
     expect(client).toBe(server);
   });
 });
+
+describe('validateDraft: reminder (037)', () => {
+  it('a new reminder draft is valid and a valid create body', () => {
+    const d = { ...emptyDraft('reminder', CAT), title: 'Pay the plumber' };
+    expect(validateDraft(d)).toEqual({});
+    expect(itemCreateSchema.safeParse(toCreateBody(d)).success).toBe(true);
+  });
+
+  it('reports a missing deadline on its field', () => {
+    const d = { ...emptyDraft('reminder', CAT), title: 'Pay the plumber' };
+    const payload = { ...(d.payload as { deadline: string }), deadline: '' };
+    expect(Object.keys(validateDraft({ ...d, payload: payload as Draft['payload'] }))).toEqual([
+      'payload.deadline',
+    ]);
+  });
+});

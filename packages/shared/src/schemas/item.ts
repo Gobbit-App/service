@@ -8,6 +8,7 @@ import {
   calcPayloadSchema,
   payloadWithinBudget,
 } from './payloads';
+import { reminderPayloadSchema, reminderStateSchema } from '../reminders/schema';
 import { pageSchema, limitSchema } from './pagination';
 import { CARD_BODY_MAX, CARD_TITLE_MAX, PAYLOAD_MAX_BYTES } from '../limits';
 import { itemTypes, itemStatuses, itemListStatuses, linkFlagStatuses, sourceKinds } from '../enums';
@@ -86,6 +87,14 @@ const calcCreateSchema = z
   })
   .strict();
 
+const reminderCreateSchema = z
+  .object({
+    type: z.literal('reminder'),
+    payload: reminderPayloadSchema,
+    ...commonCreateFields,
+  })
+  .strict();
+
 export const itemCreateSchema = z
   .discriminatedUnion('type', [
     textCreateSchema,
@@ -93,6 +102,7 @@ export const itemCreateSchema = z
     imageCreateSchema,
     tableCreateSchema,
     calcCreateSchema,
+    reminderCreateSchema,
   ])
   .superRefine((v, ctx) => {
     if (!payloadWithinBudget(v.payload)) {
@@ -151,6 +161,8 @@ export const itemSchema = z.object({
   /** D132: when the card was deleted; present only in the `status=deleted` listing. */
   deletedAt: isoDateTimeSchema.optional(),
   linkHealth: linkHealthSchema.nullable(),
+  /** D291: present only on reminder cards. */
+  reminder: reminderStateSchema.optional(),
 });
 
 export type Item = z.infer<typeof itemSchema>;

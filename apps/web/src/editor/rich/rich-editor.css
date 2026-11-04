@@ -1,0 +1,145 @@
+/* 038 (D290, FR-015): the rich body editor. Looks like the textarea it replaces; the toolbar wraps
+   on narrow screens and stays under the app header while the body scrolls. */
+
+.rich-editor {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.rich-editor:focus-within {
+  border-color: var(--color-accent);
+}
+
+.rich-editor:has([aria-invalid='true']) {
+  border-color: var(--color-danger);
+}
+
+.rich-editor[data-disabled] {
+  opacity: 0.7;
+}
+
+.rich-editor__bar {
+  position: sticky;
+  top: calc(var(--safe-top) + 61px);
+  z-index: 5;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 8px 8px 0 0;
+  background: var(--color-surface);
+}
+
+.rich-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+}
+
+.rich-editor__group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.rich-editor__divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 8px 2px;
+  background: var(--color-border);
+}
+
+.rich-editor__toolbar .icon-button {
+  padding: 0;
+}
+
+.rich-editor .icon-button[aria-pressed='true'] {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+/* Colour swatches keep their palette colour over the button's muted text. */
+.rich-editor__panel .icon-button.rt-color {
+  color: var(--swatch);
+}
+.rich-editor__panel .rt-color--red {
+  --swatch: var(--rt-red);
+}
+.rich-editor__panel .rt-color--orange {
+  --swatch: var(--rt-orange);
+}
+.rich-editor__panel .rt-color--green {
+  --swatch: var(--rt-green);
+}
+.rich-editor__panel .rt-color--blue {
+  --swatch: var(--rt-blue);
+}
+.rich-editor__panel .rt-color--purple {
+  --swatch: var(--rt-purple);
+}
+.rich-editor__panel .rt-color--grey {
+  --swatch: var(--rt-grey);
+}
+
+.rich-editor__panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-top: 1px solid var(--color-border);
+}
+
+.rich-editor__link input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+}
+
+.rich-editor__content {
+  min-height: 9rem;
+  padding: 8px 12px;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  outline: none;
+}
+
+.rich-editor__content > :first-child {
+  margin-top: 0;
+}
+
+.rich-editor__content > :last-child {
+  margin-bottom: 0;
+}
+
+.rich-editor__content ul,
+.rich-editor__content ol {
+  padding-inline-start: 1.25em;
+}
+
+.rich-editor__content blockquote {
+  margin-inline: 0;
+  padding-inline-start: 12px;
+  border-inline-start: 3px solid var(--color-border);
+  color: var(--color-muted);
+}
+
+.rich-editor__content pre {
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--color-accent-soft);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.rich-editor__content code {
+  font-size: 0.9em;
+}

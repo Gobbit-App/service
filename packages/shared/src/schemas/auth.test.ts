@@ -36,6 +36,7 @@ describe('appConfigSchema', () => {
         search: OFF,
         ingest: INGEST_OFF,
         analytics: null,
+        push: null,
       }).commit,
     ).toBe('dev');
   });
@@ -47,6 +48,7 @@ describe('appConfigSchema', () => {
       search: OFF,
       ingest: INGEST_OFF,
       analytics: { siteId: 'site-1', host: 'gobbit.example', secret: 'nope' },
+      push: { publicKey: 'pub', privateKey: 'nope' },
       apiSecret: 'nope',
     });
     expect(parsed).toEqual({
@@ -55,6 +57,7 @@ describe('appConfigSchema', () => {
       search: OFF,
       ingest: INGEST_OFF,
       analytics: { siteId: 'site-1', host: 'gobbit.example' },
+      push: { publicKey: 'pub' },
     });
   });
 });

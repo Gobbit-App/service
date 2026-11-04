@@ -329,3 +329,72 @@ export function createSafeImageFetch(opts: SafeFetchOptions = {}): SafeImageFetc
     }
   };
 }
+
+/** What a guarded push POST produced (D296); never throws. */
+export interface SafePushResult {
+  /** The push service's status, or null when no answer came back. */
+  status: number | null;
+  ms: number;
+  /** `blocked`, `host_not_allowed`, `timeout`, `fetch_failed: …`; null when a status came back. */
+  error: string | null;
+}
+
+/** The request `web-push` builds (method, endpoint, headers, encrypted body). */
+export interface PushRequest {
+  method: string;
+  endpoint: string;
+  headers: Record<string, string>;
+  body: Uint8Array | null;
+}
+
+export type SafePush = (req: PushRequest) => Promise<SafePushResult>;
+
+/** D296: the push timeout; a push service that slow is retried later. */
+export const PUSH_TIMEOUT_MS = 10_000;
+
+const PUSH_PORTS: ReadonlySet<number> = new Set([443]);
+
+/**
+ * D296: the only way a Web Push message leaves the server. POST to an allow-listed push host over
+ * https:443, with the IP guard on every resolved address, no redirects and a short timeout.
+ */
+export function createSafePush(
+  opts: Pick<SafeFetchOptions, 'lookupAll' | 'isBlocked' | 'allowedPorts' | 'timeoutMs' | 'now'> & {
+    isAllowedHost: (url: URL) => boolean;
+  },
+): SafePush {
+  const isBlocked = opts.isBlocked ?? isBlockedAddress;
+  const ports = opts.allowedPorts === undefined ? PUSH_PORTS : opts.allowedPorts;
+  const timeoutMs = opts.timeoutMs ?? PUSH_TIMEOUT_MS;
+  const now = opts.now ?? Date.now;
+  const dispatcher = new Agent({
+    connect: { lookup: createGuardedLookup({ lookupAll: opts.lookupAll, isBlocked }) },
+  });
+
+  return async function safePush(req: PushRequest): Promise<SafePushResult> {
+    const started = now();
+    const signal = AbortSignal.timeout(timeoutMs);
+    const done = (status: number | null, error: string | null): SafePushResult => ({
+      status,
+      ms: Math.max(0, Math.round(now() - started)),
+      error,
+    });
+    try {
+      const url = new URL(req.endpoint);
+      if (!opts.isAllowedHost(url)) return done(null, 'host_not_allowed');
+      checkTarget(url, ports, isBlocked);
+      // undici's `request` never follows redirects: a 3xx is just a status here.
+      const res = await request(url, {
+        dispatcher,
+        method: 'POST',
+        signal,
+        headers: req.headers,
+        body: req.body ?? undefined,
+      });
+      discard(res.body);
+      return done(res.statusCode, null);
+    } catch (err) {
+      return done(null, classify(err, signal));
+    }
+  };
+}

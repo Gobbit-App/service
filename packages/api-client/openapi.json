@@ -222,6 +222,20 @@
                         "siteId",
                         "host"
                       ]
+                    },
+                    "push": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicKey": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "publicKey"
+                      ]
                     }
                   },
                   "required": [
@@ -229,7 +243,8 @@
                     "commit",
                     "search",
                     "ingest",
-                    "analytics"
+                    "analytics",
+                    "push"
                   ]
                 }
               }
@@ -1580,6 +1595,1717 @@
                     "value",
                     "at",
                     "source"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/pending": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reminders waiting on you (overdue first, then by deadline) and your not-yet-shown ones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "reminder"
+                            ]
+                          },
+                          "itemId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "deck": {
+                            "type": "object",
+                            "properties": {
+                              "slug": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "slug",
+                              "name"
+                            ]
+                          },
+                          "deadline": {
+                            "type": "string"
+                          },
+                          "revealAt": {
+                            "type": "string"
+                          },
+                          "overdue": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "itemId",
+                          "title",
+                          "deck",
+                          "deadline",
+                          "revealAt",
+                          "overdue"
+                        ]
+                      }
+                    },
+                    "upcoming": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "reminder"
+                            ]
+                          },
+                          "itemId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "deck": {
+                            "type": "object",
+                            "properties": {
+                              "slug": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "slug",
+                              "name"
+                            ]
+                          },
+                          "deadline": {
+                            "type": "string"
+                          },
+                          "revealAt": {
+                            "type": "string"
+                          },
+                          "overdue": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "itemId",
+                          "title",
+                          "deck",
+                          "deadline",
+                          "revealAt",
+                          "overdue"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "upcoming"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/push-subscriptions": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "endpoint": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "format": "uri"
+                  },
+                  "keys": {
+                    "type": "object",
+                    "properties": {
+                      "p256dh": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[A-Za-z0-9_-]+=*$"
+                      },
+                      "auth": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "pattern": "^[A-Za-z0-9_-]+=*$"
+                      }
+                    },
+                    "required": [
+                      "p256dh",
+                      "auth"
+                    ]
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  }
+                },
+                "required": [
+                  "endpoint",
+                  "keys"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "This device now gets reminder push notifications (re-adding refreshes it)"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "endpoint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  }
+                },
+                "required": [
+                  "endpoint"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Push is off for this device (or was already)"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/push-subscriptions/test": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "A test notification went to this many of your devices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "devices": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "devices"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notification-preferences": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whether you get an email when a reminder you can mark done is due",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reminderEmails": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "reminderEmails"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reminderEmails": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "reminderEmails"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Your notification choices after saving",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reminderEmails": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "reminderEmails"
                   ]
                 }
               }
@@ -6629,7 +8355,8 @@
                 "proposed",
                 "published",
                 "archived",
-                "deleted"
+                "deleted",
+                "upcoming"
               ],
               "default": "published"
             },
@@ -6645,7 +8372,8 @@
                 "link",
                 "image",
                 "table",
-                "calc"
+                "calc",
+                "reminder"
               ]
             },
             "required": false,
@@ -6723,7 +8451,8 @@
                               "link",
                               "image",
                               "table",
-                              "calc"
+                              "calc",
+                              "reminder"
                             ]
                           },
                           "status": {
@@ -6881,6 +8610,67 @@
                             "required": [
                               "status",
                               "checkedAt"
+                            ]
+                          },
+                          "reminder": {
+                            "type": "object",
+                            "properties": {
+                              "deadline": {
+                                "type": "string"
+                              },
+                              "revealAt": {
+                                "type": "string"
+                              },
+                              "timeZone": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "done",
+                                  "dismissed"
+                                ]
+                              },
+                              "dismissedBy": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "dismissedAt": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "resolution": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "hidden": {
+                                "type": "boolean"
+                              },
+                              "canDismiss": {
+                                "type": "boolean"
+                              },
+                              "canChangeDismissers": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "deadline",
+                              "revealAt",
+                              "timeZone",
+                              "state",
+                              "dismissedBy",
+                              "dismissedAt",
+                              "resolution",
+                              "hidden",
+                              "canDismiss",
+                              "canChangeDismissers"
                             ]
                           }
                         },
@@ -7990,6 +9780,189 @@
                       "title"
                     ],
                     "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "reminder"
+                        ]
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "deadline": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "showBefore": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "dismiss": {
+                            "type": "object",
+                            "properties": {
+                              "mode": {
+                                "type": "string",
+                                "enum": [
+                                  "me",
+                                  "writers",
+                                  "people"
+                                ]
+                              },
+                              "userIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "maxItems": 50,
+                                "default": []
+                              }
+                            },
+                            "required": [
+                              "mode"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "timeZone": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          }
+                        },
+                        "required": [
+                          "deadline",
+                          "showBefore",
+                          "dismiss",
+                          "timeZone"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "body": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Card body, max 600 characters (Unicode code points)"
+                      },
+                      "categoryIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      },
+                      "sourceUrl": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "proposed",
+                          "published",
+                          "archived"
+                        ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "payload",
+                      "title"
+                    ],
+                    "additionalProperties": false
                   }
                 ],
                 "description": "Item create body; payload max 8192 bytes (UTF-8)"
@@ -8020,7 +9993,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "status": {
@@ -8178,6 +10152,67 @@
                       "required": [
                         "status",
                         "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
                       ]
                     }
                   },
@@ -8728,7 +10763,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "status": {
@@ -8886,6 +10922,67 @@
                       "required": [
                         "status",
                         "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
                       ]
                     }
                   },
@@ -9313,7 +11410,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "status": {
@@ -9471,6 +11569,67 @@
                       "required": [
                         "status",
                         "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
                       ]
                     }
                   },
@@ -10287,7 +12446,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "status": {
@@ -10445,6 +12605,67 @@
                       "required": [
                         "status",
                         "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
                       ]
                     }
                   },
@@ -10837,7 +13058,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "status": {
@@ -10995,6 +13217,67 @@
                       "required": [
                         "status",
                         "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
                       ]
                     }
                   },
@@ -11340,7 +13623,7 @@
         }
       }
     },
-    "/items/{id}/undelete": {
+    "/items/{id}/dismiss": {
       "post": {
         "tags": [
           "items"
@@ -11364,9 +13647,31 @@
             "in": "path"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "done": {
+                    "type": "boolean"
+                  },
+                  "resolution": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "done"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Deleted card brought back with its previous status (idempotent); 410 undo-expired after ITEM_UNDELETE_DAYS (D132)",
+            "description": "Reminder closed as done or dismissed and archived; 403 not-a-dismisser, 409 invalid-transition when not pending (D294)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11387,7 +13692,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "status": {
@@ -11545,6 +13851,837 @@
                       "required": [
                         "status",
                         "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "deckId",
+                    "type",
+                    "status",
+                    "title",
+                    "body",
+                    "payload",
+                    "entities",
+                    "sourceUrl",
+                    "sourceKind",
+                    "verifiedAt",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "categoryIds",
+                    "isFavorite",
+                    "linkHealth"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items/{id}/undelete": {
+      "post": {
+        "tags": [
+          "items"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted card brought back with its previous status (idempotent); 410 undo-expired after ITEM_UNDELETE_DAYS (D132)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "deckId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "text",
+                        "link",
+                        "image",
+                        "table",
+                        "calc",
+                        "reminder"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "proposed",
+                        "published",
+                        "archived"
+                      ]
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "type": "string"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "entities": {
+                      "type": "object",
+                      "properties": {
+                        "phones": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "hours": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "prices": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "dates": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "people": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        },
+                        "urls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "maxItems": 10
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "sourceUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sourceKind": {
+                      "type": "string",
+                      "enum": [
+                        "manual",
+                        "link",
+                        "share",
+                        "email",
+                        "telegram",
+                        "import",
+                        "mcp"
+                      ]
+                    },
+                    "verifiedAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "createdBy": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "categoryIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "isFavorite": {
+                      "type": "boolean"
+                    },
+                    "deletedAt": {
+                      "type": "string"
+                    },
+                    "linkHealth": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "dead",
+                            "changed"
+                          ]
+                        },
+                        "checkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
                       ]
                     }
                   },
@@ -12016,7 +15153,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "status": {
@@ -12174,6 +15312,67 @@
                       "required": [
                         "status",
                         "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
                       ]
                     }
                   },
@@ -13319,7 +16518,8 @@
                                   "link",
                                   "image",
                                   "table",
-                                  "calc"
+                                  "calc",
+                                  "reminder"
                                 ]
                               },
                               "status": {
@@ -13477,6 +16677,67 @@
                                 "required": [
                                   "status",
                                   "checkedAt"
+                                ]
+                              },
+                              "reminder": {
+                                "type": "object",
+                                "properties": {
+                                  "deadline": {
+                                    "type": "string"
+                                  },
+                                  "revealAt": {
+                                    "type": "string"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "done",
+                                      "dismissed"
+                                    ]
+                                  },
+                                  "dismissedBy": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "dismissedAt": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "resolution": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "hidden": {
+                                    "type": "boolean"
+                                  },
+                                  "canDismiss": {
+                                    "type": "boolean"
+                                  },
+                                  "canChangeDismissers": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "deadline",
+                                  "revealAt",
+                                  "timeZone",
+                                  "state",
+                                  "dismissedBy",
+                                  "dismissedAt",
+                                  "resolution",
+                                  "hidden",
+                                  "canDismiss",
+                                  "canChangeDismissers"
                                 ]
                               }
                             },
@@ -18732,7 +21993,8 @@
                                   "link",
                                   "image",
                                   "table",
-                                  "calc"
+                                  "calc",
+                                  "reminder"
                                 ]
                               },
                               "status": {
@@ -18890,6 +22152,67 @@
                                 "required": [
                                   "status",
                                   "checkedAt"
+                                ]
+                              },
+                              "reminder": {
+                                "type": "object",
+                                "properties": {
+                                  "deadline": {
+                                    "type": "string"
+                                  },
+                                  "revealAt": {
+                                    "type": "string"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "done",
+                                      "dismissed"
+                                    ]
+                                  },
+                                  "dismissedBy": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "dismissedAt": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "resolution": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "hidden": {
+                                    "type": "boolean"
+                                  },
+                                  "canDismiss": {
+                                    "type": "boolean"
+                                  },
+                                  "canChangeDismissers": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "deadline",
+                                  "revealAt",
+                                  "timeZone",
+                                  "state",
+                                  "dismissedBy",
+                                  "dismissedAt",
+                                  "resolution",
+                                  "hidden",
+                                  "canDismiss",
+                                  "canChangeDismissers"
                                 ]
                               }
                             },
@@ -19068,7 +22391,8 @@
                                   "link",
                                   "image",
                                   "table",
-                                  "calc"
+                                  "calc",
+                                  "reminder"
                                 ]
                               },
                               "status": {
@@ -19226,6 +22550,67 @@
                                 "required": [
                                   "status",
                                   "checkedAt"
+                                ]
+                              },
+                              "reminder": {
+                                "type": "object",
+                                "properties": {
+                                  "deadline": {
+                                    "type": "string"
+                                  },
+                                  "revealAt": {
+                                    "type": "string"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "state": {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending",
+                                      "done",
+                                      "dismissed"
+                                    ]
+                                  },
+                                  "dismissedBy": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "dismissedAt": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "resolution": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "hidden": {
+                                    "type": "boolean"
+                                  },
+                                  "canDismiss": {
+                                    "type": "boolean"
+                                  },
+                                  "canChangeDismissers": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "deadline",
+                                  "revealAt",
+                                  "timeZone",
+                                  "state",
+                                  "dismissedBy",
+                                  "dismissedAt",
+                                  "resolution",
+                                  "hidden",
+                                  "canDismiss",
+                                  "canChangeDismissers"
                                 ]
                               }
                             },
@@ -19944,7 +23329,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "status": {
@@ -20102,6 +23488,67 @@
                       "required": [
                         "status",
                         "checkedAt"
+                      ]
+                    },
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "deadline": {
+                          "type": "string"
+                        },
+                        "revealAt": {
+                          "type": "string"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "done",
+                            "dismissed"
+                          ]
+                        },
+                        "dismissedBy": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "dismissedAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "resolution": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "hidden": {
+                          "type": "boolean"
+                        },
+                        "canDismiss": {
+                          "type": "boolean"
+                        },
+                        "canChangeDismissers": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "deadline",
+                        "revealAt",
+                        "timeZone",
+                        "state",
+                        "dismissedBy",
+                        "dismissedAt",
+                        "resolution",
+                        "hidden",
+                        "canDismiss",
+                        "canChangeDismissers"
                       ]
                     }
                   },
@@ -23527,7 +26974,9 @@
                               "deleted",
                               "undeleted",
                               "discarded",
-                              "merged"
+                              "merged",
+                              "completed",
+                              "dismissed"
                             ]
                           },
                           "via": {
@@ -24299,7 +27748,8 @@
                               "link",
                               "image",
                               "table",
-                              "calc"
+                              "calc",
+                              "reminder"
                             ]
                           },
                           "title": {
@@ -24735,7 +28185,8 @@
                         "link",
                         "image",
                         "table",
-                        "calc"
+                        "calc",
+                        "reminder"
                       ]
                     },
                     "title": {
@@ -25179,7 +28630,8 @@
                                   "link",
                                   "image",
                                   "table",
-                                  "calc"
+                                  "calc",
+                                  "reminder"
                                 ]
                               },
                               "title": {
