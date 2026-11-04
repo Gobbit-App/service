@@ -6,6 +6,7 @@ import {
   itemSchema,
   itemPatchSchema,
   problemSchema,
+  dismissReminderSchema,
 } from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
@@ -371,6 +372,39 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
     const actor = getActor(c);
     const { id } = c.req.valid('param');
     const item = await services.items.restore(actor, id);
+    return c.json(item, 200);
+  });
+
+  const dismissRoute = createRoute({
+    method: 'post',
+    path: '/items/{id}/dismiss',
+    tags: ['items'],
+    security: AUTH_SECURITY,
+    request: {
+      params: z.object({ id: z.string().min(1) }),
+      body: { content: { 'application/json': { schema: dismissReminderSchema } }, required: true },
+    },
+    responses: {
+      ...problems(
+        'bad-request',
+        'unauthorized',
+        'forbidden',
+        'not-found',
+        'conflict',
+        'unprocessable',
+      ),
+      200: {
+        content: { 'application/json': { schema: itemSchema } },
+        description:
+          'Reminder closed as done or dismissed and archived; 403 not-a-dismisser, 409 invalid-transition when not pending (D294)',
+      },
+    },
+  });
+
+  app.openapi(dismissRoute, async (c) => {
+    const actor = getActor(c);
+    const { id } = c.req.valid('param');
+    const item = await services.items.dismiss(actor, id, c.req.valid('json'));
     return c.json(item, 200);
   });
 

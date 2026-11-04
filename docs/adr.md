@@ -603,3 +603,15 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 - **Plain text**: excerpts, OG text, list summaries and language detection read the Markdown tree (`toPlainText`). Ask, the extract examples and agent output keep standard Markdown with the style directives cut out (`stripStyleDirectives`). Search keeps indexing the stored Markdown (D289).
 
 **Rationale**: Generic directives are the only published Markdown extension syntax that has maintained remark/micromark parsers for every surface, nests and takes attributes. They also degrade to readable text in plain Markdown viewers. Inline HTML would need a sanitiser everywhere and break the no-raw-HTML rule. Pandoc spans and markdown-it plugins would need a second parser. Milkdown is chosen over TipTap, Lexical/MDXEditor and Milkdown Crepe because its parser *is* remark, so the editor and the reader can't disagree. Details: [`docs/design/card-editor.md`](design/card-editor.md#rich-text-body-038-specs038-rich-text-body-d282d290-adr-069), [`docs/design/public.md`](design/public.md#rich-text-on-public-pages-038-d285-adr-069), `specs/038-rich-text-body/research.md`.
+
+## ADR-070: Reminders: a card type hidden until reveal, dismissed once, notified once (D291–D299)
+
+**Decision**: A reminder is an item type (`type = 'reminder'`) whose payload holds the deadline, a show-before period, who may dismiss it (`me` / `writers` / `people`) and the creator's time zone.
+
+- **Derived in the DB**: triggers derive `items.reveal_at` and a `reminders` row. Outcome, dismissal and `notified_deadline` are server-owned and live only in `reminders`.
+- **Hidden until reveal**: one predicate, `itemRevealedWhere()`, sits next to `itemHasVisibleCategory()` on every member read. Anonymous paths exclude the type entirely. A hidden reminder opens by id only for its creator and roles that see private categories; `status=upcoming` lists the hidden ones.
+- **Dismissing**: `POST /items/{id}/dismiss` records the outcome, archives the card and logs an activity event in one transaction. Eligibility comes from one pure function, `reminderDismissers()` in `@gobbit/shared/reminders`, that dismiss, the DTO, the deadline sweep and the pending list all share.
+- **Notified once**: restoring, undeleting or publishing after the deadline marks the deadline as notified, so the reminder is overdue in the app only and never sends a late notification.
+
+**Rationale**: Making it a card type reuses decks, categories, visibility, the editor, the activity log and the card lifecycle. Taking the reveal and the derived state from the payload in the DB means they can't drift from what the editor stores. One SQL predicate (with `now()`) repeats the D38 pattern, which is hard to miss on a new path. Details: [`docs/design/reminders.md`](design/reminders.md), `specs/037-reminders/research.md`.
+

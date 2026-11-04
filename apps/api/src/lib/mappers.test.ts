@@ -123,6 +123,7 @@ describe('mappers', () => {
         embeddingModel: null,
         embeddedHash: null,
         embeddedAt: null,
+        revealAt: null,
       };
 
       const dto = toItemDto(row, ['c1'], true);

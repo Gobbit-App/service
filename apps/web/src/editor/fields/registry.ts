@@ -20,4 +20,6 @@ export const fieldsByType: Record<ItemType, ComponentType<FieldsProps<any>>> = {
   image: ImageFields,
   table: TableFields,
   calc: CalcFields,
+  // 037: not creatable yet; editing keeps the stored payload until the reminder fields land.
+  reminder: TextFields,
 };

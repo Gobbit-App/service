@@ -1,5 +1,7 @@
 /** D69: every string leaf of a card payload, joined by a space; skips image `publicId` and calc `expression` (top-level keys). Mirrors SQL item_search_text(). */
 export function payloadText(type: string, payload: unknown): string {
+  // D291: a reminder's settings (deadline, unit, dismiss rule, zone) are not text.
+  if (type === 'reminder') return '';
   const skipped = new Set<string>();
   if (type === 'image') skipped.add('publicId');
   if (type === 'calc') skipped.add('expression');

@@ -5,6 +5,7 @@ import {
   type LinkHealth,
   type Deck,
   type MemberRole,
+  type ReminderState,
 } from '@gobbit/shared';
 import type { CategoryRow, ItemRow, DeckRow } from '@gobbit/db';
 
@@ -44,6 +45,7 @@ export function toItemDto(
   categoryIds: string[],
   isFavorite: boolean,
   linkHealth: LinkHealth | null = null,
+  reminder: ReminderState | null = null,
 ): Item {
   return {
     id: r.id,
@@ -65,5 +67,7 @@ export function toItemDto(
     linkHealth,
     // D132: only deleted rows (the deleted listing / undelete) carry deletedAt
     ...(r.deletedAt ? { deletedAt: r.deletedAt.toISOString() } : {}),
+    // D291: server-owned reminder state, only on reminder cards
+    ...(reminder ? { reminder } : {}),
   };
 }

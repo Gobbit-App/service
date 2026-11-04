@@ -36,3 +36,4 @@ export * from './waitlist/constants';
 export * from './auth';
 export * from './analytics/consent';
 export * from './schemas/analytics-consent';
+export * from './reminders';

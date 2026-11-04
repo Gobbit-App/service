@@ -11,6 +11,7 @@ export const TYPE_LABELS: Record<ItemType, string> = {
   image: 'Image',
   table: 'Table',
   calc: 'Calc',
+  reminder: 'Reminder',
 };
 
 /** Create only: a radio group of the creatable types (D135); image needs a cloud name (FR-015). */

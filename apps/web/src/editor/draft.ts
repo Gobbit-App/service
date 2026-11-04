@@ -1,4 +1,11 @@
-import type { Entities, Item, ItemCreateInput, ItemPatch, ItemType } from '@gobbit/shared';
+import type {
+  Entities,
+  Item,
+  ItemCreateInput,
+  ItemPatch,
+  ItemType,
+  ReminderPayload,
+} from '@gobbit/shared';
 import {
   asCalcPayload,
   asTablePayload,
@@ -39,6 +46,8 @@ export type DraftPayloadByType = {
   image: ImagePayload;
   table: TablePayload;
   calc: CalcDraftPayload;
+  /** 037: kept as stored until the reminder editor lands (D291). */
+  reminder: ReminderPayload | Record<string, never>;
 };
 
 export type DraftPayload = DraftPayloadByType[ItemType];
@@ -71,6 +80,8 @@ export function blankPayload(type: ItemType): DraftPayload {
       return blankTable();
     case 'calc':
       return blankCalc();
+    case 'reminder':
+      return {};
   }
 }
 
@@ -141,6 +152,8 @@ function payloadFromItem(item: Item): DraftPayload {
         resultLabel: calc.resultLabel,
       };
     }
+    case 'reminder':
+      return structuredClone(raw) as ReminderPayload;
   }
 }
 
@@ -210,6 +223,7 @@ export function toPayload(draft: Pick<Draft, 'type' | 'payload'>): Record<string
     case 'image':
       return imagePayload(draft.payload as ImagePayload);
     case 'table':
+    case 'reminder':
       return draft.payload as Record<string, unknown>;
   }
 }

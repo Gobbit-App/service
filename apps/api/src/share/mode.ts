@@ -1,7 +1,9 @@
-import type { CategoryVisibility, ItemStatus } from '@gobbit/shared';
+import type { CategoryVisibility, ItemStatus, ItemType } from '@gobbit/shared';
 
 /** Describes a shareable item's visibility context. */
 export type ShareSubject = {
+  /** D292: reminders are never public (omitted = an ordinary card). */
+  type?: ItemType;
   status: ItemStatus;
   deletedAt: Date | null;
   deckIsPublic: boolean;
@@ -18,6 +20,7 @@ export function shareMode(subject: ShareSubject | null): ShareMode {
   }
 
   const isPublic =
+    subject.type !== 'reminder' &&
     subject.status === 'published' &&
     subject.deletedAt === null &&
     subject.deckIsPublic &&
