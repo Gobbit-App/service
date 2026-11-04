@@ -21,7 +21,11 @@ function SignIn() {
 
   return (
     <main className="page page--narrow">
-      <h1 className="brand">Gobbit</h1>
+      <h1 className="brand">
+        {/* D321: decorative, so the heading's accessible name stays "Gobbit". */}
+        <img className="brand__logo" src="/icons/logo.svg" alt="" width="48" height="48" />
+        Gobbit
+      </h1>
       <p className="lead">Your family's deck of useful gobbits.</p>
       <SignInForm onSubmit={requestLink} />
       {/* D226: a plain anchor; /welcome is API-rendered, outside the SPA. */}

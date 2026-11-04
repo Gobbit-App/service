@@ -11,8 +11,9 @@ export const PUBLIC_PAGE_CSS = `
 *{box-sizing:border-box}
 body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Hebrew",sans-serif;color:var(--fg);background:var(--bg)}
 main{max-width:40rem;margin-inline:auto;padding:1.25rem 1rem 3rem}
-header.site{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-block-end:1.25rem}
-header.site a.brand{font-weight:700;color:var(--fg);text-decoration:none}
+header.site{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-block-end:1.25rem}
+header.site a.brand{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;color:var(--fg);text-decoration:none}
+header.site a.brand img{flex:none}
 a{color:var(--accent)}
 h1{font-size:1.6rem;line-height:1.25;margin:0 0 .5rem}
 h2{font-size:1.15rem;margin:0 0 .25rem}

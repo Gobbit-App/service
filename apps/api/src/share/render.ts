@@ -52,6 +52,12 @@ export type TreeRenderer = {
   png: (tree: OgNode, width: number, height: number) => Promise<Uint8Array>;
 };
 
+/** Rasterise SVG markup to a PNG `width` pixels wide (aspect kept). */
+export function svgToPng(markup: string, width: number): Uint8Array {
+  const png = new Resvg(markup, { fitTo: { mode: 'width', value: width } }).render().asPng();
+  return new Uint8Array(png);
+}
+
 /** Loads the fonts once and returns a renderer that reuses them. */
 export async function createTreeRenderer(): Promise<TreeRenderer> {
   const fonts = await loadFonts();
@@ -62,11 +68,7 @@ export async function createTreeRenderer(): Promise<TreeRenderer> {
 
   return {
     svg,
-    png: async (tree, width, height) => {
-      const markup = await svg(tree, width, height);
-      const png = new Resvg(markup, { fitTo: { mode: 'width', value: width } }).render().asPng();
-      return new Uint8Array(png);
-    },
+    png: async (tree, width, height) => svgToPng(await svg(tree, width, height), width),
   };
 }
 
