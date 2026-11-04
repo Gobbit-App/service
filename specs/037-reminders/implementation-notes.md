@@ -70,3 +70,24 @@ Decisions the plan didn't make, and deviations from it. At close-out, deviations
   the dismisser is no longer a member.
 - **E2E**: `e2e/tests/full/reminders.spec.ts` runs only the owner session, so "hidden for a
   reader" is covered by the API integration tests rather than the browser.
+
+## PR4: pending list, bell, /notifications (T028–T031)
+
+- **Separate `pending.service`**: `GET /me/pending` lives in its own service (decks repo + reminders
+  repo) instead of growing `reminders.service`; it applies `reminderDismissers` exactly like
+  dismiss and the notifier, and `canStillAct` (now exported) for Upcoming.
+- **Bounded scan**: the repo reads at most `PENDING_SCAN_MAX` (1000) pending reminders across the
+  member's decks, soonest deadline first, before filtering by who may act; each section is capped
+  at `PENDING_LIST_MAX` (100). Overdue ones lead because the scan is ordered by deadline.
+- **Upcoming on /notifications**: only the member's own hidden reminders, and only while they can
+  still act on them (a creator demoted to reader loses them), matching the deck Upcoming rule for
+  editors.
+- **No number on the bell**: the bell shows a light only (accent, `--color-danger` when overdue);
+  the counts are in its accessible name ("Notifications, 2 pending, 1 overdue").
+- **Freshness**: the pending query refetches on focus (a notification tap brings the app forward)
+  and every minute while open; every lifecycle change and dismiss invalidates it through
+  `invalidateAfterLifecycle`. A push also refreshes open windows: the service worker posts `gobbit:pending-changed` (`tellOpenWindows`) and the bell's `usePendingRefresh` invalidates the pending query (T034, converge F1).
+- **Offline**: the list comes from the persisted query cache with "Showing the last known list";
+  a first load with no cache shows the offline error with retry.
+- **E2E**: none — the API rules are covered by `pending.int.test.ts` and the UI by unit tests; the
+  bell needs a reminder that is already revealed, which the nightly reminder journey can add later.

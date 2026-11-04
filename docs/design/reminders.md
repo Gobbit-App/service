@@ -88,6 +88,18 @@ Lifecycle moves (hooks passed to `items.repo` and run in the same transaction):
 - **Upcoming**: `/d/$slug/upcoming` (`ItemFilter` `upcoming`), linked from the deck ⋯ menu for
   `item.update` roles.
 
+## Pending list and bell (PR4, D298)
+
+- **API**: `GET /me/pending` (`services/pending.service.ts`) answers `{ items, upcoming }` across
+  the member's decks. `items` are revealed, published, pending reminders the member may dismiss
+  (`reminderDismissers`), soonest deadline first so overdue ones lead. `upcoming` are their own
+  hidden reminders while they can still act on them, soonest reveal first. Each entry has a `kind`
+  (`reminder` today, FR-023), so other actionable things can join later.
+- **Web**: `notifications/NotificationsBell.tsx` sits in the bottom bar on every bar page, with a
+  light (accent, or `--color-danger` once one is overdue) and the counts in its accessible name.
+  `/notifications` (`NotificationsScreen.tsx`) shows "Waiting on you" and "Upcoming"; each entry
+  links to its card. Offline it shows the persisted last known list with a note.
+
 ## Limits (D299)
 
 - The shared caps (`@gobbit/shared` `REMINDER_*`) are deadline ≤ 1825 days ahead, show-before
@@ -131,3 +143,7 @@ Each event carries `requestId` (taken from `Actor.requestId`), the user, the dec
   so a shared phone stops getting the previous member's reminders.
 - iPhone and iPad show an "Add to Home Screen" hint instead of the enable button until the app is
   installed, because Safari only allows web push from an installed app.
+- `GET /me/pending` lives in its own `pending.service` and scans at most 1000 pending reminders
+  per call (`PENDING_SCAN_MAX`), 100 per section (`PENDING_LIST_MAX`).
+- The bell shows a light, not a number; the counts are in its accessible name. The pending list
+  refetches on focus and every minute; a push also refreshes it in open windows (the service worker posts `gobbit:pending-changed`, `usePendingRefresh` invalidates).

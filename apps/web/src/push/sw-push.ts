@@ -47,6 +47,20 @@ export function showReminder(message: PushMessage, show: ShowNotification): Prom
   });
 }
 
+/** Message the worker posts to open windows when a push arrives (FR-024); the app refetches. */
+export const PENDING_CHANGED = 'gobbit:pending-changed';
+
+type Postable = { postMessage: (message: unknown) => void };
+
+/** `push`: tells every open Gobbit window that the pending list changed. Never throws. */
+export async function tellOpenWindows(windows: () => Promise<readonly Postable[]>): Promise<void> {
+  try {
+    for (const client of await windows()) client.postMessage({ type: PENDING_CHANGED });
+  } catch {
+    // The notification still shows; the bell catches up on focus or its next refetch.
+  }
+}
+
 /** The bits of a service-worker `WindowClient` used here (that type lives in the webworker lib). */
 type WindowLike = {
   url: string;

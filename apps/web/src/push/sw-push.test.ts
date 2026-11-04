@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   openFromNotification,
   parsePushPayload,
+  PENDING_CHANGED,
   PUSH_ICON,
   safeAppPath,
   showReminder,
+  tellOpenWindows,
 } from './sw-push';
 
 const ORIGIN = 'https://gobbit.example';
@@ -82,5 +84,19 @@ describe('openFromNotification', () => {
       { origin: ORIGIN, windows: async () => [], open },
     );
     expect(open).toHaveBeenCalledWith(`${ORIGIN}/`);
+  });
+});
+
+describe('tellOpenWindows (037, FR-024)', () => {
+  it('tells every open window the pending list changed', async () => {
+    const a = { postMessage: vi.fn() };
+    const b = { postMessage: vi.fn() };
+    await tellOpenWindows(() => Promise.resolve([a, b]));
+    expect(a.postMessage).toHaveBeenCalledWith({ type: PENDING_CHANGED });
+    expect(b.postMessage).toHaveBeenCalledWith({ type: PENDING_CHANGED });
+  });
+
+  it('never throws, so the notification still shows', async () => {
+    await expect(tellOpenWindows(() => Promise.reject(new Error('gone')))).resolves.toBeUndefined();
   });
 });

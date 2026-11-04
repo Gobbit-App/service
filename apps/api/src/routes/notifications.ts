@@ -1,6 +1,7 @@
 import { createRoute, type OpenAPIHono } from '@hono/zod-openapi';
 import {
   notificationPreferencesSchema,
+  pendingListSchema,
   pushSubscriptionInputSchema,
   pushTestResultSchema,
   removePushSubscriptionSchema,
@@ -10,9 +11,30 @@ import type { Services } from '../services';
 import { getUser } from '../lib/current-user';
 import { AUTH_SECURITY, problems } from '../lib/openapi';
 
-/** 037 (D297): the caller's push devices, test notification and reminder-email switch. */
+/**
+ * 037 (D297, D298): what is waiting on the caller, their push devices, test notification and
+ * reminder-email switch.
+ */
 export function registerNotificationRoutes(app: OpenAPIHono<AppEnv>, services: Services): void {
   const json = <T>(schema: T) => ({ content: { 'application/json': { schema } }, required: true });
+
+  const pendingRoute = createRoute({
+    method: 'get',
+    path: '/me/pending',
+    tags: ['notifications'],
+    security: AUTH_SECURITY,
+    responses: {
+      200: {
+        content: { 'application/json': { schema: pendingListSchema } },
+        description:
+          'Reminders waiting on you (overdue first, then by deadline) and your not-yet-shown ones',
+      },
+      ...problems('unauthorized'),
+    },
+  });
+  app.openapi(pendingRoute, async (c) => {
+    return c.json(await services.pending.list(getUser(c)), 200);
+  });
 
   const addRoute = createRoute({
     method: 'post',

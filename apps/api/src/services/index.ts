@@ -17,6 +17,7 @@ import { createItemEventsRepo } from '../repositories/item-events.repo';
 import { createWaitlistRepo } from '../repositories/waitlist.repo';
 import { createRemindersRepo } from '../repositories/reminders.repo';
 import { createRemindersService } from './reminders.service';
+import { createPendingService } from './pending.service';
 import { REMINDER_DECISION_LEVELS, type ReminderDecisions } from './reminders.events';
 import { createLogHash } from '../lib/log-hash';
 import { decisionLogger } from '../lib/decision-event';
@@ -145,8 +146,9 @@ export function buildServices({
   const usersService = createUsersService({ users, decks, ...registration });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
   // 037 (D291–D299): reminder rules and the `reminder` DTO field on every item response.
+  const remindersRepo = createRemindersRepo(db);
   const reminders = createRemindersService({
-    reminders: createRemindersRepo(db),
+    reminders: remindersRepo,
     limits: {
       maxDeadlineDays: env.REMINDER_MAX_DEADLINE_DAYS,
       maxShowBeforeDays: env.REMINDER_MAX_SHOW_BEFORE_DAYS,
@@ -230,6 +232,8 @@ export function buildServices({
     rateLimits,
     logHash,
     waitlist,
+    // 037 (D298): what is waiting on the member (the bell and /notifications).
+    pending: createPendingService({ decks, reminders: remindersRepo, now }),
     // 037 (D297): push devices, test notice and the reminder-email switch.
     pushSubscriptions: createPushSubscriptionsService({
       subscriptions: createPushSubscriptionsRepo(db),

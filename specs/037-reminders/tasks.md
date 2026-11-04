@@ -63,12 +63,16 @@ own docs slice).
 
 ## Phase 6: US4 — notification area (P2)
 
-- [ ] T028 `GET /me/pending` (repo query + service using dismissers)
-- [ ] T029 [P] [int] pending: overdue first, only eligible, upcoming = own hidden
-- [ ] T030 Web: bell in BottomBar with light + aria-label, `/notifications` screen
-- [ ] T031 [P] [unit] Bell + NotificationsScreen tests
+- [x] T028 `GET /me/pending` (repo query + service using dismissers)
+- [x] T029 [P] [int] pending: overdue first, only eligible, upcoming = own hidden
+- [x] T030 Web: bell in BottomBar with light + aria-label, `/notifications` screen
+- [x] T031 [P] [unit] Bell + NotificationsScreen tests
 
 ## Phase 7: Close-out
 
-- [ ] T032 docs/design/reminders.md, ADR-070 + architecture.md row, README env, CHANGELOG (VAPID **Action required** only to enable push), implementation-notes.md
-- [ ] T033 `pnpm api:openapi`, typecheck, lint, unit, int; /speckit-converge
+- [x] T032 docs/design/reminders.md, ADR-070 + architecture.md row, README env, CHANGELOG (VAPID **Action required** only to enable push), implementation-notes.md
+- [x] T033 `pnpm api:openapi`, typecheck, lint, unit, int; /speckit-converge
+
+## Phase 8: Convergence
+
+- [x] T034 Refresh the bell and /notifications when a push arrives while the app is open (service worker messages open clients; the app invalidates the pending query) per FR-024 (partial)

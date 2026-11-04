@@ -5,6 +5,7 @@ import type { ReactElement } from 'react';
 import { meQuery } from '../api/queries';
 import { ALL_CATEGORIES } from '../browse/browse-params';
 import { BrowseButton } from '../items/BrowseButton';
+import { NotificationsBell } from '../notifications/NotificationsBell';
 import { ReviewPill } from '../review/ReviewPill';
 import { IconButton } from '../ui/buttons/IconButton';
 import { deckHref } from '../ui/chip-order';
@@ -17,7 +18,8 @@ import { useSignOut } from './use-sign-out';
 type BarDeck = Pick<Deck, 'slug' | 'role' | 'isDefault'>;
 
 /**
- * D274 / ADR-067: the fixed bottom bar of signed-in pages: ⋯ menu | Browse, Review | +.
+ * D274 / ADR-067: the fixed bottom bar of signed-in pages: ⋯ menu | Browse, Review, bell | +
+ * (the bell is on every bar page, 037 D298).
  * Deck pages pass `deck` (the + is the create menu, held = new card, D275); the deck list passes
  * `onNewDeck` (D279); `/settings` passes neither (no +). The spacer keeps the last content clear.
  */
@@ -53,6 +55,7 @@ export function BottomBar({
         <div className="bottom-bar__main">
           {deck && <BrowseButton deckSlug={deck.slug} c={browseC ?? ALL_CATEGORIES} />}
           {review && <ReviewPill deckSlug={deck.slug} />}
+          <NotificationsBell />
         </div>
         {deck && create.length > 0 && (
           <MoreMenu

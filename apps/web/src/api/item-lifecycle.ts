@@ -142,6 +142,8 @@ export function invalidateAfterLifecycle(
     qc.invalidateQueries({ queryKey: [SEARCH_KEY] }),
     qc.invalidateQueries({ queryKey: queryKeys.deckItemLists(deckSlug) }),
     qc.invalidateQueries({ queryKey: queryKeys.item(item.id) }),
+    // 037 (D298): archiving, restoring or dismissing a reminder changes what is waiting on you.
+    qc.invalidateQueries({ queryKey: queryKeys.pending }),
   ]);
 }
 

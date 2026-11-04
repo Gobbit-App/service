@@ -19,8 +19,8 @@ export interface DismissersInput {
   personalDeck: boolean;
 }
 
-/** A writer who can still see the card (D293). */
-function canStillAct(
+/** A writer who can still see the card (D293); also gates the Upcoming list of `/me/pending`. */
+export function canStillAct(
   member: DismisserMember,
   visibilities: readonly CategoryVisibility[],
 ): boolean {

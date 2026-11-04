@@ -741,6 +741,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reminders waiting on you (overdue first, then by deadline) and your not-yet-shown ones */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @enum {string} */
+                                kind: "reminder";
+                                /** Format: uuid */
+                                itemId: string;
+                                title: string;
+                                deck: {
+                                    slug: string;
+                                    name: string;
+                                };
+                                deadline: string;
+                                revealAt: string;
+                                overdue: boolean;
+                            }[];
+                            upcoming: {
+                                /** @enum {string} */
+                                kind: "reminder";
+                                /** Format: uuid */
+                                itemId: string;
+                                title: string;
+                                deck: {
+                                    slug: string;
+                                    name: string;
+                                };
+                                deadline: string;
+                                revealAt: string;
+                                overdue: boolean;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/push-subscriptions": {
         parameters: {
             query?: never;
