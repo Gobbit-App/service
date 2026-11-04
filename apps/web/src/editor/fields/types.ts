@@ -1,4 +1,4 @@
-import type { Deck, ItemType } from '@gobbit/shared';
+import type { Deck, Item, ItemType } from '@gobbit/shared';
 import type { DraftPayloadByType } from '../draft';
 import type { FieldErrors } from '../validate';
 
@@ -14,4 +14,6 @@ export type FieldsProps<T extends ItemType> = {
   disabled: boolean;
   /** Fills the card title when it is still empty (008's link Fetch preview). */
   setTitleIfEmpty?: (title: string) => void;
+  /** The saved card when editing (037: a reminder's `canChangeDismissers`). */
+  item?: Item;
 };

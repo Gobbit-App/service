@@ -46,11 +46,11 @@ own docs slice).
 
 ## Phase 4: Web (US1–US2 UI)
 
-- [ ] T017 Editor: `reminder` in CREATABLE_TYPES/TYPE_LABELS, `ReminderFields` (deadline, show before, who can dismiss), draft defaults, validate
-- [ ] T018 Card: `ReminderCard` status line (due/overdue/done/dismissed/shows on); Dismiss action in CardActionBar; `DismissDialog`
-- [ ] T019 Upcoming screen `/d/$slug/upcoming` + menu link (owners/maintainers)
-- [ ] T020 [P] [unit] ReminderFields, ReminderCard, DismissDialog, validate tests
-- [ ] T021 [P] [e2e:full] e2e/tests/full/reminders.spec.ts — create, hidden for reader, upcoming, dismiss with done
+- [x] T017 Editor: `reminder` in CREATABLE_TYPES/TYPE_LABELS, `ReminderFields` (deadline, show before, who can dismiss), draft defaults, validate
+- [x] T018 Card: `ReminderCard` status line (due/overdue/done/dismissed/shows on); Dismiss action in CardActionBar; `DismissDialog`
+- [x] T019 Upcoming screen `/d/$slug/upcoming` + menu link (owners/maintainers)
+- [x] T020 [P] [unit] ReminderFields, ReminderCard, DismissDialog, validate tests
+- [x] T021 [P] [e2e:full] e2e/tests/full/reminders.spec.ts — create, hidden for reader, upcoming, dismiss with done
 
 ## Phase 5: US3 — notifications (P2)
 

@@ -6,6 +6,7 @@ import { LinkCard } from './LinkCard';
 import { TableCard } from './TableCard';
 import { TextCard } from './TextCard';
 import { asCalcPayload, asImagePayload, asLinkPayload, asTablePayload } from './payload-guards';
+import { ReminderStatus } from '../reminders/ReminderStatus';
 
 /** D57: the calculator (and the expression evaluator) loads only when a calc card renders. */
 const CalcCard = lazy(async () => ({ default: (await import('./CalcCard')).CalcCard }));
@@ -67,6 +68,8 @@ function TypedBody({
         <Invalid />
       );
     }
+    case 'reminder':
+      return <ReminderStatus item={item} />;
     default:
       return <Invalid />;
   }

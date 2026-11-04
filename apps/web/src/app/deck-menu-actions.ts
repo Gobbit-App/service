@@ -14,8 +14,9 @@ export interface MenuActionsInput {
 }
 
 /**
- * D276: the bottom bar's ⋯ menu, in order: Settings (one page, D278), Activity (`event.list`,
- * D188), Waitlist (platform admins, 032) and Sign out with the signed-in email.
+ * D276: the bottom bar's ⋯ menu, in order: Settings (one page, D278), Upcoming reminders
+ * (`item.update`, 037), Activity (`event.list`, D188), Waitlist (platform admins, 032) and Sign
+ * out with the signed-in email.
  */
 export function menuActions({
   deck,
@@ -32,6 +33,14 @@ export function menuActions({
       href: deck ? deckHref(deck.slug, 'settings') : '/settings',
     },
   ];
+  if (deck && can(deck.role, 'item.update')) {
+    actions.push({
+      key: 'upcoming',
+      label: 'Upcoming',
+      icon: 'clock',
+      href: deckHref(deck.slug, 'upcoming'),
+    });
+  }
   if (deck && can(deck.role, 'event.list')) {
     actions.push({
       key: 'activity',

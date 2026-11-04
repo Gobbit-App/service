@@ -25,3 +25,29 @@ Decisions the plan didn't make, and deviations from it. At close-out, deviations
   - it stays out of `CREATABLE_TYPES` until PR2 adds the reminder editor.
 - **Notification statuses**: `notification_deliveries.status` has no `skipped` value. Opted-out or
   ineligible recipients get no row at all (planned for PR3).
+
+## PR2: web editor, card, dismiss, Upcoming (T017–T021)
+
+- **Upcoming link for every writer**: the contract links Upcoming for owners/maintainers only. The
+  ⋯ menu shows it to every `item.update` role instead, because editors see their own hidden
+  reminders there (the API already filters by role).
+- **Zod-free constants subpath**: the editor and dialog import caps and units from
+  `@gobbit/shared/reminder-constants` (`reminders/client.ts`), keeping zod out of the initial and
+  editor chunks.
+- **Deadline in the device zone**: the editor edits the deadline as `datetime-local` in the device
+  zone and sends its zone. An untouched deadline sends the stored instant and zone back unchanged
+  (`storedDeadline`), so editing the title of an overdue reminder doesn't trip the future-only
+  check or move it to another zone.
+- **Dismiss isn't optimistic**: the server arbitrates races (409), so the dialog waits for the
+  answer and shows why it was refused. Lists and the card update from the response, then refresh.
+- **Upcoming cache**: Upcoming sorts by reveal time ascending while `insertIntoPages` ranks newest
+  first, so Upcoming only replaces a listed card in place (`replaceInPages`) and lets the refetch
+  add or drop cards.
+- **Warning tone**: the overdue status line uses `--color-danger`; the app has no warning colour
+  variable.
+- **No analytics event for dismiss**: the four content events stay as they are; dismissal is
+  recorded by the item event (`completed`/`dismissed`).
+- **Dismisser names**: the status line names "you", the member's display name, or "someone" when
+  the dismisser is no longer a member.
+- **E2E**: `e2e/tests/full/reminders.spec.ts` runs only the owner session, so "hidden for a
+  reader" is covered by the API integration tests rather than the browser.

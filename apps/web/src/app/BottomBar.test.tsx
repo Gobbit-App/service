@@ -82,7 +82,7 @@ describe('BottomBar (D274–D279)', () => {
     const items = screen
       .getAllByRole('menuitem')
       .map((el) => el.getAttribute('aria-label') ?? el.textContent);
-    expect(items).toEqual(['Settings', 'Activity', 'Sign out']);
+    expect(items).toEqual(['Settings', 'Upcoming', 'Activity', 'Sign out']);
     expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveAccessibleDescription(
       'me@example.com',
     );

@@ -226,6 +226,7 @@ export function CardEditor(props: CardEditorProps): ReactElement {
                 errors={shown}
                 deck={deck}
                 disabled={saving}
+                item={props.mode === 'edit' ? props.item : undefined}
                 setTitleIfEmpty={(title: string) =>
                   setDraft((d) => (d.title.trim() === '' ? { ...d, title } : d))
                 }

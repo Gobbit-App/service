@@ -71,6 +71,23 @@ Lifecycle moves (hooks passed to `items.repo` and run in the same transaction):
   only and never sends a late notification.
 - **A deadline edit** must be in the future (an unchanged past deadline is kept as is).
 
+## Web (PR2)
+
+- **Editor**: `Reminder` follows `Text` in the type picker. `editor/fields/ReminderFields.tsx` has
+  a deadline (`datetime-local`, device zone), show before (amount + unit) and who can dismiss. The
+  choice is hidden on personal decks and read-only (with a note) when
+  `reminder.canChangeDismissers` is false. The draft model is `editor/reminder-draft.ts`; client
+  checks are a required future deadline (an unchanged stored one is kept), the show-before cap and
+  at least one picked person.
+- **Card**: `reminders/ReminderStatus.tsx` renders the status line from `reminder-status.ts`
+  ("Due in …", "Overdue by …", "Done by … · resolution", "Dismissed by …", "Shows on … · Due …").
+- **Dismiss**: a `Dismiss` action in `CardActionBar` when the reminder is published, pending and
+  `canDismiss`. It opens `reminders/DismissDialog.tsx` (native `<dialog>`, Done switch off, optional
+  resolution with a counter, Mark done / Dismiss without marking done, disabled offline) and posts
+  through `use-dismiss.ts`.
+- **Upcoming**: `/d/$slug/upcoming` (`ItemFilter` `upcoming`), linked from the deck ⋯ menu for
+  `item.update` roles.
+
 ## Limits (D299)
 
 - The shared caps (`@gobbit/shared` `REMINDER_*`) are deadline ≤ 1825 days ahead, show-before
@@ -97,3 +114,8 @@ Each event carries `requestId` (taken from `Actor.requestId`), the user, the dec
 - A reminder dismissed before it was revealed stays hidden from the deck. It shows only in Upcoming
   and by id until its reveal time.
 - `payloadText()` returns `''` for reminders, so embeddings use the title and body only.
+- The Upcoming link shows for every `item.update` role, not only owners and maintainers: editors see
+  their own hidden reminders there.
+- Dismissing waits for the server (no optimistic update), and Upcoming's cache only replaces cards
+  in place because it sorts by reveal time ascending.
+- The overdue tone uses `--color-danger` (there is no warning colour).

@@ -4,18 +4,26 @@ import { menuActions } from './deck-menu-actions';
 const base = { isPlatformAdmin: false, onSignOut: vi.fn() };
 
 describe('menuActions (D276)', () => {
-  it('gives deck owners Settings, Activity and Sign out, in order', () => {
+  it('gives deck owners Settings, Upcoming, Activity and Sign out, in order', () => {
     const actions = menuActions({ ...base, deck: { slug: 'family', role: 'owner' } });
-    expect(actions.map((a) => a.label)).toEqual(['Settings', 'Activity', 'Sign out']);
+    expect(actions.map((a) => a.label)).toEqual(['Settings', 'Upcoming', 'Activity', 'Sign out']);
     expect(actions[0]?.href).toBe('/d/family/settings');
-    expect(actions[1]?.href).toBe('/d/family/log');
+    expect(actions[1]?.href).toBe('/d/family/upcoming');
+    expect(actions[2]?.href).toBe('/d/family/log');
   });
 
-  it('hides Activity from editors and readers', () => {
-    for (const role of ['editor', 'reader'] as const) {
-      const labels = menuActions({ ...base, deck: { slug: 'family', role } }).map((a) => a.label);
-      expect(labels).toEqual(['Settings', 'Sign out']);
-    }
+  it('gives editors Upcoming (their own reminders) but not Activity', () => {
+    const labels = menuActions({ ...base, deck: { slug: 'family', role: 'editor' } }).map(
+      (a) => a.label,
+    );
+    expect(labels).toEqual(['Settings', 'Upcoming', 'Sign out']);
+  });
+
+  it('hides Upcoming and Activity from readers', () => {
+    const labels = menuActions({ ...base, deck: { slug: 'family', role: 'reader' } }).map(
+      (a) => a.label,
+    );
+    expect(labels).toEqual(['Settings', 'Sign out']);
   });
 
   it('opens account settings off a deck', () => {
