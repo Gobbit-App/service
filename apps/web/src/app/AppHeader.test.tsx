@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderInRouter } from '../test/render-in-router';
-import { AppHeader } from './AppHeader';
+import { AppHeader, HEADER_LOGO_SRC } from './AppHeader';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
 
@@ -15,10 +15,18 @@ describe('AppHeader', () => {
     expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', '/?all=true');
   });
 
-  it('has no back control on the deck list', async () => {
-    await setup(null);
+  it('shows the decorative logo instead of a back control on the deck list (D322)', async () => {
+    const { container } = await setup(null);
     expect(screen.queryByRole('link', { name: 'Back' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Family' })).toBeInTheDocument();
+    const logo = container.querySelector('img.app-header__logo');
+    expect(logo).toHaveAttribute('src', HEADER_LOGO_SRC);
+    expect(logo).toHaveAttribute('alt', '');
+  });
+
+  it('shows no logo when there is a level to go back to', async () => {
+    const { container } = await setup('/?all=true');
+    expect(container.querySelector('img.app-header__logo')).not.toBeInTheDocument();
   });
 
   it('has no Settings or Sign out (D276: they live in the ⋯ menu)', async () => {

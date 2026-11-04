@@ -50,13 +50,17 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 
 | File | Variant | Used by |
 | ---- | ------- | ------- |
-| `favicon.svg` | Rounded teal tile, no chimney (bits blur below ~64 px) | Favicon (SPA, public pages), public-page header |
+| `favicon.svg` | Rounded teal tile, no chimney (bits blur below ~64 px) | Favicon (SPA, public pages), public-page header, app header on the deck list (D322) |
 | `icons/logo.svg` | Rounded teal tile | Sign-in heading; embedded in the OG images |
 | `icons/icon-192.png`, `icon-512.png` | Rounded tile, transparent corners | Manifest `purpose: any`, push notification icon |
 | `icons/icon-maskable-512.png` | Full bleed, the mark's bounding box inside the 40 % safe-zone circle | Manifest `purpose: maskable` |
 | `icons/apple-touch-icon.png` | 180 px, opaque, full bleed (iOS fills transparency with black and rounds the corners itself) | `index.html` |
 
-- The tile is `#195b5c`, the manifest `theme_color`, so the splash screen, status bar and icon agree. The app header carries no logo: it is already full at 360 px (D198, D211).
+- The tile is `#195b5c`, the manifest `theme_color`, so the splash screen, status bar and icon agree. An installed app picks up icon and colour changes only when Chrome refreshes its WebAPK: it checks the manifest on launch at most once a day, and `chrome://webapks` → Update forces the refresh.
+- **App header lead (D322)**: the header's leading control starts on the page gutter, in line with the content below.
+  - On the deck list, which has no level above it, the lead is the 32 px logo tile, 12 px before the title.
+  - Elsewhere it is Back: a 32 px box around the chevron, pulled out so the chevron's tip sits on the gutter, about 12 px from the title. A `::before` keeps the 44 px hit area.
+  - The lead's spacing is set on the lead itself, not by the header gap, so it holds at ≤ 400 px, where the actions have no gap (D198, D211). It also frees 20 px there.
 - The OG images put the tile before the bold "Gobbit" wordmark (`brandLockup`, an SVG data URI; the chimney-less tile below 64 px). The footer change bumped `OG_TEMPLATE_VERSION` to 2, so public card previews re-render on their next request.
 
 ## Offline model (D56)
