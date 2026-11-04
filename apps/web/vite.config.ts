@@ -18,7 +18,7 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['favicon.svg', 'icons/*.png'],
+      includeAssets: ['favicon.svg', 'icons/*.png', 'icons/*.svg'],
       manifest: {
         id: '/',
         name: 'Gobbit',
@@ -31,9 +31,10 @@ export default defineConfig({
         orientation: 'portrait',
         theme_color: '#195b5c',
         background_color: '#f3faf4',
+        // D321: rendered from the brand mark by `pnpm og:static`; tile = theme_color.
         icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           {
             src: '/icons/icon-maskable-512.png',
             sizes: '512x512',

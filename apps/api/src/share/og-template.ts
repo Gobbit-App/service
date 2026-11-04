@@ -1,10 +1,16 @@
 import { textDirection } from '@gobbit/shared';
+import { HEADER_LOGO_OPTIONS, SMALL_LOGO_OPTIONS } from '../brand/app-icons';
+import { logo, type LogoOptions } from '../brand/logo';
 
 export type OgNode = {
   type: string;
   props: {
     style?: Record<string, string | number>;
     children?: OgChild | OgChild[];
+    /** `img` nodes only. */
+    src?: string;
+    width?: number;
+    height?: number;
   };
 };
 
@@ -44,6 +50,48 @@ function textNode(text: string, additionalStyle: Record<string, string | number>
         ...additionalStyle,
       },
       children: text,
+    },
+  };
+}
+
+/** D321: logo tiles embedded as SVG data URIs (no fetch at render time). */
+const logoSrc = (options: LogoOptions): string =>
+  `data:image/svg+xml;base64,${Buffer.from(logo(options)).toString('base64')}`;
+const LOGO_SRC = logoSrc(HEADER_LOGO_OPTIONS);
+const SMALL_LOGO_SRC = logoSrc(SMALL_LOGO_OPTIONS);
+/** Below this size the lockup uses the chimney-less tile. */
+const SMALL_LOGO_MAX = 64;
+
+/** D321: the logo tile followed by the bold "Gobbit" wordmark, always left to right. */
+function brandLockup(logoSize: number, fontSize?: number): OgNode {
+  return {
+    type: 'div',
+    props: {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        direction: 'ltr',
+        fontWeight: 700,
+        color: OG_COLORS.accent,
+        ...(fontSize ? { fontSize } : {}),
+      },
+      children: [
+        {
+          type: 'img',
+          props: {
+            src: logoSize < SMALL_LOGO_MAX ? SMALL_LOGO_SRC : LOGO_SRC,
+            width: logoSize,
+            height: logoSize,
+          },
+        },
+        {
+          type: 'div',
+          props: {
+            style: { display: 'flex', marginLeft: Math.round(logoSize * 0.3) },
+            children: 'Gobbit',
+          },
+        },
+      ],
     },
   };
 }
@@ -115,25 +163,11 @@ export function ogCardTree(input: OgCardInput): OgNode {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
+        alignItems: 'center',
         fontSize: 28,
         color: OG_COLORS.muted,
       },
-      children: [
-        textNode(input.deckName, {}),
-        {
-          type: 'div',
-          props: {
-            style: {
-              fontWeight: 700,
-              color: OG_COLORS.accent,
-              display: 'flex',
-              direction: 'ltr',
-              textAlign: 'left',
-            },
-            children: 'Gobbit',
-          },
-        },
-      ],
+      children: [textNode(input.deckName, {}), brandLockup(40)],
     },
   });
 
@@ -201,25 +235,11 @@ export function privateCardTree(): OgNode {
             style: {
               display: 'flex',
               justifyContent: 'space-between',
+              alignItems: 'center',
               fontSize: 28,
               color: OG_COLORS.muted,
             },
-            children: [
-              textNode('Private card', {}),
-              {
-                type: 'div',
-                props: {
-                  style: {
-                    fontWeight: 700,
-                    color: OG_COLORS.accent,
-                    display: 'flex',
-                    direction: 'ltr',
-                    textAlign: 'left',
-                  },
-                  children: 'Gobbit',
-                },
-              },
-            ],
+            children: [textNode('Private card', {}), brandLockup(40)],
           },
         },
       ],
@@ -323,7 +343,7 @@ export function landingTree(): OgNode {
           props: {
             style: { display: 'flex', flexDirection: 'column', width: 620 },
             children: [
-              textNode('Gobbit', { fontSize: 96, fontWeight: 700, color: OG_COLORS.accent }),
+              brandLockup(112, 96),
               textNode('A deck of useful cards for your family and community', {
                 fontSize: 44,
                 fontWeight: 700,

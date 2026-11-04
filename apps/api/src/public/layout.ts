@@ -25,6 +25,8 @@ export type PageHead = {
 
 /** Site name in og:site_name and the page header. */
 export const SITE_NAME = 'Gobbit';
+/** D321: the chimney-less logo tile, for small header sizes (the favicon file). */
+export const BRAND_ICON_PATH = '/favicon.svg';
 
 /** Page-specific additions to the shell (030's landing page). */
 export type LayoutOptions = {
@@ -63,13 +65,13 @@ ${
 <meta property="og:locale" content="${head.locale}">
 <meta name="twitter:card" content="${head.image ? 'summary_large_image' : 'summary'}">
 ${head.robots === 'noindex' ? h`<meta name="robots" content="noindex">` : ''}
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="${BRAND_ICON_PATH}" type="image/svg+xml">
 <style>${raw(PUBLIC_PAGE_CSS)}${raw(head.analytics ? CONSENT_CSS : '')}${raw(opts.css ?? '')}</style>
 ${head.analytics ? analyticsTag(head.analytics) : ''}
 </head>
 <body>
 <main>
-<header class="site"><a class="brand" href="/">${SITE_NAME}</a>${opts.headerLink ?? ''}</header>
+<header class="site"><a class="brand" href="/"><img src="${BRAND_ICON_PATH}" alt="" width="32" height="32">${SITE_NAME}</a>${opts.headerLink ?? ''}</header>
 ${head.analytics ? consentBanner() : ''}
 ${main}
 </main>

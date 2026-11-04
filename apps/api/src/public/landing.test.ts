@@ -164,3 +164,11 @@ describe('analytics tag and consent banner (D232, D264)', () => {
     expect(html).not.toContain('data-consent');
   });
 });
+
+describe('site header (D321)', () => {
+  it('shows the decorative logo tile before the wordmark', () => {
+    expect(page({ state: 'default' })).toContain(
+      '<a class="brand" href="/"><img src="/favicon.svg" alt="" width="32" height="32">Gobbit</a>',
+    );
+  });
+});

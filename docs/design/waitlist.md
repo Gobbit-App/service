@@ -109,7 +109,8 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
   no script. The panel is `aria-hidden` and linked by `aria-describedby`, so the heading's name
   stays the sentence; under 36 rem it spans the heading instead of pointing at the word.
 - **Preview image**: `og/landing.png` (1200×630) is rendered by `pnpm og:static`
-  (`landingTree()` in `share/og-template.ts`) and committed.
+  (`landingTree()` in `share/og-template.ts`, logo tile before the wordmark, D321) and committed.
+  The page header shows the chimney-less logo tile (`/favicon.svg`) before "Gobbit".
 
 ## Landing analytics (031, D231–D233, D243, ADR-062)
 

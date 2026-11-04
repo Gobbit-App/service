@@ -144,8 +144,18 @@ h3 {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: var(--color-accent);
   font-size: 2rem;
+}
+
+/* D321: the logo tile (`pnpm og:static`), sized to the wordmark. */
+.brand__logo {
+  width: 1.5em;
+  height: 1.5em;
+  flex: none;
 }
 
 .lead {

@@ -110,7 +110,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm build:web` | Build the Reader PWA to `apps/web/dist` |
 | `pnpm budget` | Check initial JS ≤ 150 KB gzip (after `build:web`) |
 | `pnpm api:openapi` | Regenerate `packages/api-client` (OpenAPI document + types) after changing API routes |
-| `pnpm og:static` | Re-render the private share image, PWA icons and favicon into `apps/web/public` (commit the result) |
+| `pnpm og:static` | Re-render the share/landing images, logo, PWA icons and favicon into `apps/web/public` and `docs/brand` (commit the result) |
 | `pnpm lint` | Run ESLint |
 | `pnpm format` | Format with Prettier |
 | `pnpm format:check` | Check formatting |

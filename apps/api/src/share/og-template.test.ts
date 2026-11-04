@@ -175,3 +175,33 @@ describe('landingTree (D229)', () => {
     expect(LANDING_OG_IMAGE_PATH).toBe('/og/landing.png');
   });
 });
+
+describe('brand lockup (D321)', () => {
+  const images = (node: OgChild | undefined): string[] => {
+    if (!node || typeof node === 'string') return [];
+    const own = node.type === 'img' && node.props.src ? [node.props.src] : [];
+    const children = node.props.children;
+    const list = Array.isArray(children) ? children : [children];
+    return [...own, ...list.flatMap((child) => images(child))];
+  };
+  const decode = (tree: OgChild): string =>
+    Buffer.from(images(tree)[0]?.split(',')[1] ?? '', 'base64').toString();
+  const accentBits = (svg: string): number => svg.split('fill="#f4b942"').length - 1;
+
+  it('puts the logo tile next to the wordmark on every template', () => {
+    const trees = [
+      ogCardTree({ title: 't', excerpt: '', categoryName: null, deckName: 'd' }),
+      privateCardTree(),
+      landingTree(),
+    ];
+    for (const tree of trees) {
+      expect(images(tree)[0]).toMatch(/^data:image\/svg\+xml;base64,/);
+      expect(decode(tree)).toContain('fill="#195b5c"');
+    }
+  });
+
+  it('uses the chimney-less tile in the small footer lockup only', () => {
+    expect(accentBits(decode(privateCardTree()))).toBe(1);
+    expect(accentBits(decode(landingTree()))).toBe(4);
+  });
+});

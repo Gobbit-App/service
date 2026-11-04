@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 
 /** Default OG content template version. */
-export const OG_TEMPLATE_VERSION = 1;
+export const OG_TEMPLATE_VERSION = 2;
 
 /** Content data for OG meta tags. */
 export type OgContent = {

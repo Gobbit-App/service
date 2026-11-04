@@ -42,7 +42,22 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 
 - Contrast (WCAG 2.x): every text pair is ≥ 4.5:1 in both themes — lowest are muted on accent-soft (light 6.48:1, dark 5.10:1) and danger on surface (dark 6.43:1); accent-text on accent is 7.80:1 (light) and 11.97:1 (dark). `styles.test.ts` asserts the pairs from the tokens. No brand colour needed adjusting.
 - Focus rings stay `--color-accent` (light green on a light background would be under 3:1). The public pages gained `--on-accent` (button text) and `--danger` (the landing form's errors, formerly a fixed red that failed in dark mode).
-- The icon is a lifted-teal → teal gradient (`#2a7a7b` → `#195b5c`) with a mint monogram.
+- Logo-only colours (D321): mid teal `#2a7a7b` (the main mark's body card) and bit yellow `#f4b942` (the chimney bits and the G's bar). They are never UI tokens.
+
+## Logo (D321)
+
+The "house of know-how" mark: two leaning roof cards on an upright card carrying the brand G (one rounded stroke traced around a card, with a yellow bit as its bar), and bits rising from a chimney. `apps/api/src/brand/` draws it as pure SVG (`logo.ts`, `brand-g.ts`; no fonts) and `BRAND_ASSETS` (`app-icons.ts`) lists every file `pnpm og:static` writes to `apps/web/public`. It also refreshes `docs/brand/logo.svg` and `logo-app-icon.svg`.
+
+| File | Variant | Used by |
+| ---- | ------- | ------- |
+| `favicon.svg` | Rounded teal tile, no chimney (bits blur below ~64 px) | Favicon (SPA, public pages), public-page header |
+| `icons/logo.svg` | Rounded teal tile | Sign-in heading; embedded in the OG images |
+| `icons/icon-192.png`, `icon-512.png` | Rounded tile, transparent corners | Manifest `purpose: any`, push notification icon |
+| `icons/icon-maskable-512.png` | Full bleed, the mark's bounding box inside the 40 % safe-zone circle | Manifest `purpose: maskable` |
+| `icons/apple-touch-icon.png` | 180 px, opaque, full bleed (iOS fills transparency with black and rounds the corners itself) | `index.html` |
+
+- The tile is `#195b5c`, the manifest `theme_color`, so the splash screen, status bar and icon agree. The app header carries no logo: it is already full at 360 px (D198, D211).
+- The OG images put the tile before the bold "Gobbit" wordmark (`brandLockup`, an SVG data URI; the chimney-less tile below 64 px). The footer change bumped `OG_TEMPLATE_VERSION` to 2, so public card previews re-render on their next request.
 
 ## Offline model (D56)
 
@@ -59,7 +74,7 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 - `GET /s/:itemId` always answers 200 with a small HTML page: Open Graph tags plus `<meta http-equiv="refresh">` to `/i/<itemId>`. `Cache-Control: public, max-age=300`, `X-Robots-Tag: noindex`.
 - **Public** = item published, not deleted, deck `is_public`, and at least one category with visibility `public`. Anything else, including a missing or malformed id, gets the same private page: "A card was shared with you" and `${APP_URL ?? API_URL}/og/private.png`.
 - Public image: the item's own Cloudinary image (`c_fill,w_1200,h_630,f_jpg`), otherwise a generated card. Generation is lazy on the first request whose content hash has no `og_images` row: Satori → SVG, resvg → PNG, uploaded as `og/<itemId>-<hash12>`. A failure falls back to the private image for that response and is logged.
-- `pnpm og:static` renders `apps/web/public/og/private.png`, the PWA icons and `favicon.svg` with the same renderer; the outputs are committed, so the web image build has no API dependencies.
+- `pnpm og:static` renders `apps/web/public/og/private.png`, `og/landing.png` and the logo files (D321) with the same renderer; the outputs are committed, so the web image build has no API dependencies.
 
 ## Deviations from the Phase 3 plan
 
@@ -70,7 +85,7 @@ Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49
 - **One private image** (`/og/private.png`) instead of one per deck kind: the deck kind of a private item is not disclosed either.
 - **Share origin** is `APP_URL`, falling back to `API_URL`.
 - **`X-Robots-Tag: noindex`** on share pages.
-- **Placeholder icon**: a "G" monogram rendered by `pnpm og:static` until there is a designed logo.
+- **Placeholder icon**: a "G" monogram rendered by `pnpm og:static` until there is a designed logo (replaced by the logo, D321).
 - **`NavigateContext`** (`ui/NavLink.tsx`) lets components navigate without importing the router, so they render in unit tests without one.
 - **Local Compose runs `NODE_ENV=development`** for the API, so it boots without `CLOUDINARY_URL` (production requires it).
 - **`WEB_BASE_URL`** for e2e defaults to `BASE_URL` without its `/api` suffix.
