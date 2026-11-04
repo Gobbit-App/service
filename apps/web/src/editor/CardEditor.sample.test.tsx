@@ -4,6 +4,7 @@ import type { ItemType } from '@gobbit/shared';
 import { requests, respond } from '../test/api-mock';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import type { memoryDraftsKv } from '../test/memory-drafts-kv';
+import { chooseCardType } from '../test/choose-card-type';
 import { renderInRouter } from '../test/render-in-router';
 import { currentToast } from '../ui/toast-store';
 import { emptyDraft } from './draft';
@@ -68,7 +69,7 @@ describe('CardEditor: new table and calc cards start from a sample (D270, D271)'
 
   it('switching an untouched card to table does not ask on leaving', async () => {
     const { location } = await renderCreate('text');
-    fireEvent.click(screen.getByRole('radio', { name: 'Table' }));
+    chooseCardType('Table');
     expect(await screen.findByLabelText('Column 1 heading')).toHaveValue('Item');
     await waitPastAutosave();
     expect(draftsKv.map.size).toBe(0);
@@ -78,7 +79,7 @@ describe('CardEditor: new table and calc cards start from a sample (D270, D271)'
   it('switching after typing a title still counts as a change', async () => {
     await renderCreate('text');
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Groceries' } });
-    fireEvent.click(screen.getByRole('radio', { name: 'Table' }));
+    chooseCardType('Table');
     await screen.findByLabelText('Column 1 heading');
     cancel();
     expect(await screen.findByRole('dialog', { name: 'Discard changes?' })).toBeInTheDocument();

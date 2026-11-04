@@ -1,7 +1,7 @@
 import { useId, type ReactElement, type ReactNode } from 'react';
 import { Button } from '../../ui/buttons/Button';
-import { IconLink } from '../../ui/buttons/IconLink';
 import { classNames } from '../../ui/buttons/button-props';
+import { ComposerHeader } from './ComposerHeader';
 
 export type ComposerTopBarProps = {
   heading: string;
@@ -37,36 +37,39 @@ export function ComposerTopBar({
   const reasonId = useId();
   const blocked = saving ? null : blockedReason;
   return (
-    <header className="composer-bar" data-busy={saving || undefined}>
-      <div className="composer-bar__row">
-        <IconLink href={closeHref} icon="close" label="Close" className="composer-bar__close" />
-        <div className="composer-bar__titles">
-          <h1 className="composer-bar__title">{heading}</h1>
-          <p className="composer-bar__deck" dir="auto">
-            {deckName}
-          </p>
-        </div>
-        {actions}
-        <Button
-          type="submit"
-          icon="check"
-          label="Save"
-          className="composer-bar__save"
-          disabledReason={blocked}
-          onBlockedClick={onBlockedSave}
-          aria-describedby={blocked ? reasonId : undefined}
-          aria-busy={saving || undefined}
-        />
-      </div>
-      {blocked && (
-        <p
-          id={reasonId}
-          className={classNames('composer-bar__reason', !showReason && 'visually-hidden')}
-        >
-          {blocked}
-        </p>
-      )}
-      {saving && <span className="composer-bar__progress" aria-hidden="true" />}
-    </header>
+    <ComposerHeader
+      heading={heading}
+      deckName={deckName}
+      closeHref={closeHref}
+      busy={saving}
+      actions={
+        <>
+          {actions}
+          <Button
+            type="submit"
+            icon="check"
+            label="Save"
+            className="composer-bar__save"
+            disabledReason={blocked}
+            onBlockedClick={onBlockedSave}
+            aria-describedby={blocked ? reasonId : undefined}
+            aria-busy={saving || undefined}
+          />
+        </>
+      }
+      below={
+        <>
+          {blocked && (
+            <p
+              id={reasonId}
+              className={classNames('composer-bar__reason', !showReason && 'visually-hidden')}
+            >
+              {blocked}
+            </p>
+          )}
+          {saving && <span className="composer-bar__progress" aria-hidden="true" />}
+        </>
+      }
+    />
   );
 }

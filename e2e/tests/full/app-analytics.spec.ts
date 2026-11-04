@@ -96,7 +96,7 @@ test('in-app analytics sends route patterns, screen names and ids only @full', a
       timeout: 15_000,
     })
     .toBe(true);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Body', { exact: true }).fill(`Body with ${SENTINEL}`);
   // Content events need the tracker (loaded once `/me` says Allow); don't save before it's in.
