@@ -12,6 +12,14 @@
 
 **Input**: User description: "The browse mode needs more improvements. First, the content should be more distinct than the metadata below it, especially when the content doesn't take most of the page. The item content should get much more focus than the rest. Clicking a category of an item while in Browse should take you to that category in Browse. In Browse there is no convenient way to move between categories, especially on a phone held in one hand, and the categories at the top look out of place. The new Browse swipe misses the original intent: switch back the swiping actions. Swipe down to move between items; swipe sideways to change categories. The card always takes up the whole page. Add a button to the bottom bar to open full view, and a long tap (on anything that isn't a button or link) also opens full view. Full view shows the item with its metadata, as Browse does now. Swiping to the sides changes categories. A quick banner from the top shows the category the user switched to and fades out within 2 seconds. Tapping the banner makes it solid and it offers a well-designed dropdown to switch to any other category in the deck. Tapping outside or swiping makes it fade out; it also has a close button."
 
+## Clarifications
+
+### Session 2026-11-05
+
+- Q: Which way do the swipes go? → A: Swipe up for the next card, down for the previous; swipe left for the next category, right for the previous (as in Assumptions).
+- Q: Long press opens full view, so how do readers act on text they would otherwise select (a phone number, an email)? → A: In Browse, long press is reserved for browsing, not text selection. Instead, like native apps, Browse recognises emails, phone numbers, web addresses and other numbers in a card's text, marks them, and gives each its own tap action: email opens the mail app, phone opens the dialer, a web address opens the link, any other number is copied to the clipboard (US7, FR-024–FR-028).
+- Q: Which card opens after a category switch? → A: The new category's first card; a card category tap from full view keeps the same card (as in Assumptions).
+
 ## Why
 
 Browse (034) made each card full-screen, but on a phone it still misses what it is for:
@@ -135,6 +143,26 @@ The first time the reworked Browse opens on a device, a short "How to browse" sh
 
 ---
 
+### User Story 7 - Tap a phone number, email or number to act on it (Priority: P2)
+
+A card lists the family's phone numbers. In Browse, each number is marked as tappable. Tapping one opens the phone's dialer with it filled in. An email address opens the mail app with a new message to it, and a web address opens the page. A number that isn't a phone number, such as a door code, a booking reference or an account number, is copied with one tap, and a short confirmation says "Copied". This replaces selecting and copying text, which long press no longer does in Browse.
+
+**Why this priority**: Long press now opens full view (US4), so without this, readers lose the usual way to get a number out of a card. It is also the most common thing a family does with a card of contacts or codes.
+
+**Independent Test**: In Browse, open a card whose body holds a phone number, an email, a web address and a six-digit code. Each is marked; tapping each does its action; the stored card is unchanged.
+
+**Acceptance Scenarios**:
+
+1. **Given** a card with "+30 697 349 6445" in its body, **When** the member taps it in Browse, **Then** the device's dialer opens with that number.
+2. **Given** a card with an email address, **When** the member taps it, **Then** the device's mail app opens a new message to that address.
+3. **Given** a card with a plain web address that isn't already a link, **When** the member taps it, **Then** the page opens the same way the card's own links do.
+4. **Given** a card with "Gate code 4821", **When** the member taps "4821", **Then** it is copied to the clipboard and a short "Copied" confirmation appears and goes away on its own.
+5. **Given** detected text, **Then** it looks clearly tappable but stays readable as part of the sentence, and a screen reader announces its action ("Call +30 697 349 6445", "Copy 4821").
+6. **Given** a press and hold on detected text, **Then** full view doesn't open (it behaves like a link, FR-015).
+7. **Given** a card whose author already made a phone number or address into a link, **Then** the author's link is kept as it is and not detected again.
+
+---
+
 ### Edge Cases
 
 - **Empty category**: the page shows the list's empty message. Sideways swipes, the banner and the category list still work. Vertical moves and the card's dock actions are disabled.
@@ -147,6 +175,10 @@ The first time the reworked Browse opens on a device, a short "How to browse" sh
 - **Rotation or resize**: the current card and category stay current; an open banner or full view stays open.
 - **RTL text**: card text keeps its own direction. "Next category" always means the next chip in chip-row order, and swiping left always means next, whatever the text direction.
 - **Reduced motion**: card and category changes jump without sliding. The banner appears and disappears without sliding or fading, but still disappears after 2 seconds.
+- **Detection limits**: text in code spans and code blocks, inside existing links, in the card's title, and numbers that are part of a date, time or a longer word (like "A4" or "2nd") is not detected. Short numbers (fewer than 3 digits) and years in running text (e.g. "since 2019") are not marked as copyable, so a card isn't covered in highlights.
+- **Phone or number?** Digit runs that look like a phone number (a leading `+`, or 7 or more digits with the usual spaces, dashes, dots or brackets) are phones; other numbers are copyable numbers. When unsure, Browse treats it as a number to copy, since copying is harmless and dialing is not.
+- **Clipboard unavailable** (blocked permission, insecure context): the tap shows a short message that the number couldn't be copied, never a silent failure.
+- **No dialer or mail app** (a desktop browser): the tap does what the system does for phone and mail links; Browse doesn't add its own fallback.
 - **Deep link with `pane`** (009 addresses): still opens, on the card, in the main view.
 
 ## Requirements *(mandatory)*
@@ -183,9 +215,17 @@ The first time the reworked Browse opens on a device, a short "How to browse" sh
 
 - **FR-015**: Full view MUST open from the dock's Full view action and from a press and hold of at least 500 ms on any part of the card that isn't a button, link or form control. Moving the finger beyond a small threshold before 500 ms MUST cancel the hold. A hold that opens full view MUST NOT also show the browser's context menu or start a text selection.
 - **FR-016**: Full view MUST show the card's content followed by its categories, details (grouped by kind, with the empty-details message), type and source (kind, link, added/edited/published times), i.e. everything Browse shows today. The content MUST keep the same distinct presentation as on the main view, and the metadata MUST be visibly secondary to it.
-- **FR-017**: Full view MUST scroll vertically. Swipes in full view MUST NOT change card or category. Text in full view MUST be selectable.
+- **FR-017**: Full view MUST scroll vertically. Swipes in full view MUST NOT change card or category. Because a long press has no browsing role there, text in full view MUST stay selectable as the fallback for copying any text detection doesn't cover.
 - **FR-018**: Closing full view (close control, Escape, or system back) MUST return to the same card in Browse without closing Browse. Opening full view MUST NOT add a history entry that survives closing it.
 - **FR-019**: Tapping a category on a card in full view MUST close full view and switch Browse to that category on the same card (FR-011 banner shown). It MUST NOT open the deck list.
+
+**Detected text**
+
+- **FR-024**: In Browse (main view and full view), the card's body text, and the text cells of table cards, MUST have email addresses, phone numbers, web addresses and other numbers recognised and marked as tappable. Detection MUST only change how the card is shown, never what is stored.
+- **FR-025**: Tapping detected text MUST: open the mail app with a new message for an email; open the dialer with the number for a phone; open a web address the same way the card's own links open; copy any other number to the clipboard and show a short "Copied" confirmation that disappears on its own.
+- **FR-026**: Detection MUST skip titles, code, existing links, numbers that belong to a date, time or word, numbers shorter than 3 digits and stand-alone years in running text. Ambiguous digit runs MUST be treated as numbers to copy, not phones.
+- **FR-027**: Detected text MUST look tappable while staying readable in its sentence, MUST be a real control that is keyboard-focusable, and MUST carry an accessible name naming its action ("Call …", "Email …", "Open …", "Copy …"). It counts as a link for the long-press rule (FR-015).
+- **FR-028**: A failed copy MUST tell the member it didn't work. Every detected-text action MUST work offline except opening a web address.
 
 **Keyboard, address and first run**
 
@@ -212,9 +252,11 @@ The first time the reworked Browse opens on a device, a short "How to browse" sh
 - **SC-002**: A member holding a phone in one hand can reach any category of a deck in at most two actions from Browse (tap the category name, pick a category), with every control involved in the lower two thirds of the screen except the category name.
 - **SC-003**: In a usability check, testers asked "which part of the screen is the card?" point to the content block first on a short card, in both the main view and full view.
 - **SC-004**: The category banner is gone within 2 seconds of a category change in 100 % of automated checks when not touched.
-- **SC-005**: Every Browse action (next/previous card, next/previous category, jump to a category, open and close full view, card category tap) works with taps only and with a keyboard only (end-to-end tests).
+- **SC-005**: Every Browse action (next/previous card, next/previous category, jump to a category, open and close full view, card category tap, detected-text actions) works with taps only and with a keyboard only (end-to-end tests).
 - **SC-006**: A member flips 10 cards, changes category twice by swiping and once from the list, and reads one card's source, without leaving Browse.
 - **SC-007**: The initial download stays within the 150 KB gzip budget, and swiping through 20 image cards on a mid-range phone shows no main-thread task over 50 ms.
+- **SC-008**: On a card listing four phone numbers and an email (as in the reported screenshot), a member can call any number or start an email in one tap from Browse, and copy a six-digit code in one tap with a visible confirmation.
+- **SC-009**: Across the search-eval fixture deck, no title, code, existing link, date or stand-alone year is marked as detected text, and every phone number written in a common format (international or local, with spaces, dashes, dots or brackets) is recognised.
 
 ## Assumptions
 
@@ -222,14 +264,17 @@ The first time the reworked Browse opens on a device, a short "How to browse" sh
 - **Category order and ends** reuse 009's rules: All first, chip-row order, no wrap-around.
 - **Switching category opens its first card** (009/034 behaviour), except a card category tap from full view, which keeps the same card because it belongs to that category.
 - **The chip rail is replaced** by the tappable category name plus the banner list. That gives swiping a visible tap and keyboard equivalent, which the constitution requires.
-- **Long press beats text selection on the main view.** The request asks for long press to open full view, so text selection moves to full view (FR-017). Links and buttons keep their own long-press behaviour.
+- **Long press is for browsing, not text selection** (confirmed 2026-11-05). On the main view it opens full view. Readers act on emails, phones, web addresses and numbers by tapping them (US7), and full view keeps text selection as the fallback for anything else (FR-017). Links, buttons and detected text keep their own long-press behaviour.
 - **Full view is an overlay on Browse**, not a separate page: closing it never leaves Browse, and it doesn't change the address in a way that survives closing.
 - **Card counts** in the banner and list come from data already loaded; when unknown, only the name shows.
+- **Detection stays in Browse**: the deck list, the editor preview and public pages keep showing text as they do today. Extending detection to them is a later feature.
 - **No analytics or accountability changes**: Browse makes no decisions about people or content; existing screen tracking continues to report Browse, and full view is reported as part of it unless the plan decides otherwise.
 - **Project constraints carry over**: Browse stays on native scrolling with no gesture library (ADR-065) and lazy-loaded, as in 034.
 - **The end page stays** as the way to continue after a category's last card.
 
 ## Out of Scope
+
+- Detecting street addresses, dates or times (opening maps or a calendar), and detected text outside Browse.
 
 - Pinch-zoom on images, an immersive mode that hides all chrome, and remembering a per-category position between visits.
 - Changing the deck list's own chip row or the card actions themselves.
