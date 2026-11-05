@@ -383,6 +383,10 @@ h3 {
 /* D212: tooltips from data-tip on hover (pointer devices), keyboard focus and long-press. */
 [data-tip] {
   position: relative;
+  /* D324: a long press shows the tooltip, not iOS's link callout or a text selection. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 [data-tip]::after {
@@ -413,6 +417,40 @@ h3 {
 [data-tip]:focus-visible::after,
 [data-tip][data-tip-open]::after {
   display: block;
+}
+
+/* D324: controls in the top bars (app header, browse top bar) show their tooltip below, kept
+   inside the screen at its edges: the leading control (Back, Close browse) pins to the start
+   edge, the header's last action to the end edge. */
+.app-header [data-tip]::after,
+.browse-top [data-tip]::after {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+
+.app-header__back::after,
+.browse-top__row > [data-tip]:first-child::after {
+  left: 0;
+  transform: none;
+}
+
+.app-header > [data-tip]:last-child::after,
+.app-header > :last-child > [data-tip]:last-child::after {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+[dir='rtl'] .app-header__back::after,
+[dir='rtl'] .browse-top__row > [data-tip]:first-child::after {
+  right: 0;
+  left: auto;
+}
+
+[dir='rtl'] .app-header > [data-tip]:last-child::after,
+[dir='rtl'] .app-header > :last-child > [data-tip]:last-child::after {
+  right: auto;
+  left: 0;
 }
 
 /* A visible label already says it: no tooltip on wide screens. */
