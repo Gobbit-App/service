@@ -10,10 +10,10 @@ export function LinkEditorFields(props: FieldsProps<'link'>): ReactElement {
     <LinkFields
       {...props}
       previewSlot={(ctx) => (
-        <>
+        <div className="link-tools">
           <FetchPreview {...ctx} deckId={props.deck.id} disabled={props.disabled} />
           <LinkPhoto {...ctx} deckId={props.deck.id} disabled={props.disabled} />
-        </>
+        </div>
       )}
     />
   );

@@ -109,6 +109,36 @@
   gap: 8px;
 }
 
+/*
+ * D323: the URL's actions (Fetch preview, Add/Replace/Remove photo) form one wrapping row right
+ * under the URL; their messages, thumbnail and progress follow the row at full width. The
+ * wrappers stay in the DOM (and their live regions) but don't box the buttons.
+ */
+.link-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.link-tools .fetch-preview,
+.link-tools .link-photo,
+.link-tools .image-fields__pick {
+  display: contents;
+}
+
+.link-tools .fetch-preview__status,
+.link-tools .link-photo > :not(.image-fields__pick) {
+  order: 1;
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* An empty status takes no room or row gap; it stays in the DOM as a live region. */
+.link-tools .fetch-preview__status:empty {
+  position: absolute;
+}
+
 .link-photo__thumb {
   display: block;
   max-width: 160px;

@@ -47,7 +47,9 @@ export function TextInput({
 
   return (
     <div className="field">
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id} className="field__label">
+        {label}
+      </label>
       {multiline ? (
         <textarea {...common} rows={rows} onChange={(e) => onChange(e.currentTarget.value)} />
       ) : type === 'url' ? (

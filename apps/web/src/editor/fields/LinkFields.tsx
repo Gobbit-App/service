@@ -35,20 +35,23 @@ export function LinkFields({
 
   return (
     <div className="editor__fields">
-      <TextInput
-        label="URL"
-        type="url"
-        value={payload.url}
-        onChange={(url) => onChange({ ...payload, url })}
-        error={errors['payload.url']}
-        disabled={disabled}
-      />
-      {previewSlot?.({
-        url: normalizeUrlInput(payload.url),
-        preview,
-        setPreview,
-        setTitleIfEmpty: setTitleIfEmpty ?? (() => undefined),
-      })}
+      {/* The URL and the actions that work on it sit together, apart from the next field. */}
+      <div className="field-group">
+        <TextInput
+          label="URL"
+          type="url"
+          value={payload.url}
+          onChange={(url) => onChange({ ...payload, url })}
+          error={errors['payload.url']}
+          disabled={disabled}
+        />
+        {previewSlot?.({
+          url: normalizeUrlInput(payload.url),
+          preview,
+          setPreview,
+          setTitleIfEmpty: setTitleIfEmpty ?? (() => undefined),
+        })}
+      </div>
       <TextInput
         label="Preview title"
         value={preview.title ?? ''}
