@@ -465,7 +465,8 @@ test('the image type is unavailable without image storage @smoke', async ({ page
   const image = page.getByRole('radio', { name: 'Image' });
   await expect(image).toHaveAttribute('aria-disabled', 'true');
   await expect(page.getByText("image storage isn't set up here")).toBeVisible();
-  await image.click();
+  // `force`: Playwright never clicks an aria-disabled element; the tile must still ignore one.
+  await image.click({ force: true });
   await expect(page).toHaveURL(/\?type=image$/);
   await expect(page.getByLabel('Title', { exact: true })).toHaveCount(0);
 });
