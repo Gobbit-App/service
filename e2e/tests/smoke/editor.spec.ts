@@ -26,6 +26,12 @@ test('a text card added from the editor shows in the list and survives a reload 
   await page.getByRole('menuitem', { name: 'New card' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new$`));
   await expect(page.getByRole('heading', { name: 'New card' })).toBeVisible();
+  // D301: the type chooser comes first, keyboard-ready on its first tile.
+  const text = page.getByRole('radio', { name: 'Text' });
+  await expect(text).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new\\?type=text$`));
+  await expect(page.getByRole('button', { name: 'Card type: Text' })).toBeVisible();
 
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Body', { exact: true }).fill('Written from the editor');
@@ -51,7 +57,7 @@ test('a body formatted in the editor shows bold and a line break on the card @sm
   webDeck,
 }) => {
   const title = `Editor rich ${webDeck.slug}`;
-  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   await page.getByLabel('Title', { exact: true }).fill(title);
 
   const body = page.getByLabel('Body', { exact: true });
@@ -81,8 +87,10 @@ test('a link card added from the editor is listed with its url @smoke', async ({
   const title = `Editor link ${webDeck.slug}`;
   await page.goto(webUrl(`/d/${webDeck.slug}/new`));
 
-  await page.getByRole('radio', { name: 'Link' }).check();
+  // D301: a bare /new asks what kind of card first; picking replaces the URL.
+  await page.getByRole('radio', { name: 'Link' }).click();
   await expect(page).toHaveURL(/\?type=link$/);
+  await expect(page.getByLabel('Title', { exact: true })).toBeFocused();
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('URL', { exact: true }).fill('https://example.com/recipes');
   await page.getByLabel('Preview title', { exact: true }).fill('Recipes');
@@ -96,7 +104,7 @@ test('a link card added from the editor is listed with its url @smoke', async ({
 });
 
 test('a 601-character body disables Save and says why @smoke', async ({ page, webDeck }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
 
   await page.getByLabel('Title', { exact: true }).fill('Too long');
   await page.getByLabel('Body', { exact: true }).fill('x'.repeat(601));
@@ -104,11 +112,11 @@ test('a 601-character body disables Save and says why @smoke', async ({ page, we
   await expect(save(page)).toBeDisabled();
   await expect(page.getByText('Fix 1 field')).toBeVisible();
   await expect(page.getByText('601 / 600 characters')).toBeVisible();
-  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new$`));
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new\\?type=text$`));
 });
 
 test('the category chips start on the deck default category @smoke', async ({ page, webDeck }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   const chips = page.getByRole('group', { name: 'Categories' }).getByRole('button');
   await expect(chips).not.toHaveCount(0);
   await expect(chips.and(page.locator('[aria-pressed="true"]'))).toHaveCount(1);
@@ -184,7 +192,9 @@ test('a card is edited from its page; the type is fixed @smoke', async ({ page, 
 
   await expect(page).toHaveURL(new RegExp(`/i/${card.id}/edit$`));
   await expect(page.getByRole('heading', { name: 'Edit card' })).toBeVisible();
-  await expect(page.getByRole('radio')).toHaveCount(0);
+  // D303: an existing card's type is shown, not offered.
+  await expect(page.getByRole('button', { name: /^Card type/ })).toHaveCount(0);
+  await expect(page.getByText('Text card')).toBeVisible();
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue(card.title);
 
   await page.getByLabel('Title', { exact: true }).fill(title);
@@ -248,7 +258,7 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   page,
   webDeck,
 }) => {
-  const newCard = webUrl(`/d/${webDeck.slug}/new`);
+  const newCard = webUrl(`/d/${webDeck.slug}/new?type=text`);
   const restoreOffer = page.getByText('Restore unsaved draft?');
   // 022: unsaved changes arm the browser's "leave site?" prompt; accept it on reload.
   page.on('dialog', (dialog) => void dialog.accept());
@@ -294,7 +304,7 @@ test('a category created inline is selected and the card is saved in it @smoke',
 }) => {
   const category = `School ${webDeck.slug}`;
   const title = `Editor category ${webDeck.slug}`;
-  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   await page.getByLabel('Title', { exact: true }).fill(title);
 
   await page.getByRole('button', { name: 'New category' }).click();
@@ -356,7 +366,7 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
 
-  await expect(page.getByRole('radio', { name: 'Image' })).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Card type: Image' })).toBeVisible();
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Choose photo').setInputFiles(photoFile);
   await expect(page.getByRole('button', { name: 'Replace photo' })).toBeVisible();
@@ -451,10 +461,14 @@ test('the image type is unavailable without image storage @smoke', async ({ page
   await routeCloudName(page, null);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
 
-  // `?type=image` opens a text card, and the picker says why image is off.
-  await expect(page.getByRole('radio', { name: 'Text' })).toBeChecked();
-  await expect(page.getByRole('radio', { name: 'Image' })).toBeDisabled();
+  // D302: `?type=image` opens the type chooser, where Image says why it is off (FR-015).
+  const image = page.getByRole('radio', { name: 'Image' });
+  await expect(image).toHaveAttribute('aria-disabled', 'true');
   await expect(page.getByText("image storage isn't set up here")).toBeVisible();
+  // `force`: Playwright never clicks an aria-disabled element; the tile must still ignore one.
+  await image.click({ force: true });
+  await expect(page).toHaveURL(/\?type=image$/);
+  await expect(page.getByLabel('Title', { exact: true })).toHaveCount(0);
 });
 
 test('Fetch preview fills a link card @smoke', async ({ page, webDeck }) => {

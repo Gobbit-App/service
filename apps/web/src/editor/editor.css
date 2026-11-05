@@ -32,29 +32,6 @@
   min-width: 0;
 }
 
-.editor__type {
-  margin: 0;
-}
-
-.editor__types {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--gap);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.editor__types-note {
-  flex-basis: 100%;
-  margin: 0;
-}
-
-.editor__types legend {
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-
 /* Tabs below 768px; both panels stay mounted, the inactive one is `hidden`. */
 .editor__tabs {
   display: flex;

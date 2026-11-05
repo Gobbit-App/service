@@ -83,14 +83,14 @@ test('asking writes the draft at once; Escape keeps editing; a reload offers it 
   webDeck,
 }) => {
   page.on('dialog', (dialog) => void dialog.accept());
-  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   await page.getByLabel('Title', { exact: true }).fill('Kept text');
   // No wait for the 500 ms autosave: the attempt to leave writes the draft (D204).
   await closeLink(page).click();
   await expect(discardDialog(page)).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(discardDialog(page)).toHaveCount(0);
-  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new$`));
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new\\?type=text$`));
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Kept text');
 
   await page.reload();
@@ -128,11 +128,15 @@ test('closing a changed editor triggers the browser prompt; unchanged does not @
 
 test('switching the type of a new card and saving never ask @full', async ({ page, webDeck }) => {
   const title = `No prompt ${webDeck.slug}`;
-  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   await page.getByLabel('Title', { exact: true }).fill(title);
-  await page.getByRole('radio', { name: 'Link' }).check();
+  // D303: nothing type-specific yet, so the type control switches without asking.
+  await page.getByRole('button', { name: 'Card type: Text' }).click();
+  await page.getByRole('radio', { name: 'Link' }).click();
   await expect(page).toHaveURL(/\?type=link$/);
-  await page.getByRole('radio', { name: 'Text' }).check();
+  await page.getByRole('button', { name: 'Card type: Link' }).click();
+  await page.getByRole('radio', { name: 'Text' }).click();
+  await expect(page).toHaveURL(/\?type=text$/);
   await expect(discardDialog(page)).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Save' }).click();

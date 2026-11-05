@@ -1,4 +1,4 @@
-import { useId, type ReactElement, type ReactNode } from 'react';
+import { useId, type ReactElement, type ReactNode, type Ref } from 'react';
 import { useUrlInput } from '../../ui/use-url-input';
 
 /**
@@ -16,6 +16,7 @@ export function TextInput({
   disabled = false,
   hint,
   rows = 4,
+  inputRef,
 }: {
   label: string;
   value: string;
@@ -27,6 +28,8 @@ export function TextInput({
   /** Shown under the input (e.g. a `LimitMeter`) and linked as a description. */
   hint?: ReactNode;
   rows?: number;
+  /** The single-line text input (e.g. to focus the title, D301). */
+  inputRef?: Ref<HTMLInputElement>;
 }): ReactElement {
   const id = useId();
   const errorId = `${id}-error`;
@@ -50,7 +53,12 @@ export function TextInput({
       ) : type === 'url' ? (
         <input {...common} type="url" inputMode="url" {...url} />
       ) : (
-        <input {...common} type="text" onChange={(e) => onChange(e.currentTarget.value)} />
+        <input
+          {...common}
+          ref={inputRef}
+          type="text"
+          onChange={(e) => onChange(e.currentTarget.value)}
+        />
       )}
       {hint && (
         <div id={hintId} className="field__hint">

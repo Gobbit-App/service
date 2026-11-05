@@ -7,6 +7,7 @@ import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import type { memoryDraftsKv } from '../test/memory-drafts-kv';
 import { emptyDraft, withType } from './draft';
 import { testQueryClient } from '../test/render';
+import { chooseCardType } from '../test/choose-card-type';
 import { renderInRouter } from '../test/render-in-router';
 import { configQuery } from '../api/queries';
 
@@ -82,11 +83,11 @@ describe('CardEditor: create', () => {
     });
   });
 
-  it('shows "New card" and a type picker that keeps the title when switching', async () => {
+  it('shows "New card" and a type control that keeps the title when switching', async () => {
     const { onTypeChange } = await renderCreate();
     expect(screen.getByRole('heading', { name: 'New card' })).toBeInTheDocument();
     type('Title', 'Recipe');
-    fireEvent.click(screen.getByRole('radio', { name: 'Link' }));
+    chooseCardType('Link');
     expect(onTypeChange).toHaveBeenCalledWith('link');
     expect(screen.getByLabelText('URL')).toBeInTheDocument();
     expect(screen.getByLabelText('Title')).toHaveValue('Recipe');
@@ -191,15 +192,17 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
 
   it('disables the image type with an explanation when image storage is off', async () => {
     await renderImage(null);
+    fireEvent.click(screen.getByRole('button', { name: 'Card type: Text' }));
     const image = screen.getByRole('radio', { name: 'Image' });
-    expect(image).toBeDisabled();
+    expect(image).toHaveAttribute('aria-disabled', 'true');
     expect(image).toHaveAccessibleDescription(/image storage isn't set up/);
-    expect(screen.getByRole('radio', { name: 'Calc' })).toBeEnabled();
+    expect(screen.getByRole('radio', { name: 'Calc' })).not.toHaveAttribute('aria-disabled');
   });
 
   it('offers the image type when a cloud name is configured', async () => {
     await renderImage('test-cloud');
-    expect(screen.getByRole('radio', { name: 'Image' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Card type: Text' }));
+    expect(screen.getByRole('radio', { name: 'Image' })).not.toHaveAttribute('aria-disabled');
     expect(screen.queryByText(/image storage isn't set up/)).not.toBeInTheDocument();
   });
 
@@ -240,8 +243,8 @@ describe('CardEditor: edit', () => {
   it('shows the type as a label, not a picker', async () => {
     await renderEdit();
     expect(screen.getByRole('heading', { name: 'Edit card' })).toBeInTheDocument();
-    expect(screen.queryByRole('radio')).toBeNull();
-    expect(screen.getByText('Link')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Card type/ })).toBeNull();
+    expect(screen.getByText('Link card')).toBeInTheDocument();
   });
 
   it('sends only the changed title and returns to the card', async () => {

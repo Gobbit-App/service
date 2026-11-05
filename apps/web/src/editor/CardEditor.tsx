@@ -1,6 +1,7 @@
 import {
   Suspense,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -9,6 +10,7 @@ import {
 } from 'react';
 import type { Category, Deck, Item, ItemType } from '@gobbit/shared';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
+import { useCloudName } from '../cards/use-cloud-name';
 import { useNavigateHref } from '../ui/NavLink';
 import {
   draftFromItem,
@@ -30,8 +32,9 @@ import { TitleField } from './fields/TitleField';
 import { ComposerErrorBanner } from './composer/ComposerErrorBanner';
 import { ComposerTopBar } from './composer/ComposerTopBar';
 import { saveBlockedReason, showSaveReason } from './composer/save-state';
+import { payloadHasContent } from './composer/payload-content';
+import { TypeControl, TypeLabel } from './composer/TypeControl';
 import { useComposerShortcuts } from './composer/use-composer-shortcuts';
-import { TYPE_LABELS, TypePicker } from './TypePicker';
 import { useCalcCheck } from './use-calc-check';
 import { withCategories, withSavedCategories } from './rebaseline';
 import { useDraftAutosave } from './use-draft-autosave';
@@ -56,8 +59,10 @@ export type CardEditorProps = CommonProps &
         deck: Deck;
         type: ItemType;
         categories: Category[];
-        /** Keeps `?type=` in the URL in step with the picker (replace). */
+        /** Keeps `?type=` in the URL in step with the type control (replace). */
         onTypeChange?: (type: CreatableType) => void;
+        /** D301: the type was just picked on the chooser, so writing starts in the title. */
+        focusTitle?: boolean;
       }
     | {
         mode: 'edit';
@@ -136,6 +141,14 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   const navigate = useNavigateHref();
   const changed = isChanged(draft);
   const formRef = useRef<HTMLFormElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const imagesOff = useCloudName() === null;
+  const focusTitle = props.mode === 'create' && props.focusTitle === true;
+  useEffect(() => {
+    if (focusTitle) titleRef.current?.focus();
+    // Mount only: the chooser hands over to the title once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // D308: a Save attempt reveals every problem, even on a card nobody has touched yet.
   const [attempted, setAttempted] = useState(false);
 
@@ -243,13 +256,18 @@ export function CardEditor(props: CardEditorProps): ReactElement {
           edit={
             <div className="editor__fields">
               {props.mode === 'create' ? (
-                <TypePicker value={draft.type} onChange={changeType} disabled={saving} />
+                <TypeControl
+                  value={draft.type}
+                  hasContent={payloadHasContent(draft)}
+                  imagesOff={imagesOff}
+                  disabled={saving}
+                  onChange={changeType}
+                />
               ) : (
-                <p className="editor__type">
-                  Type: <strong>{TYPE_LABELS[draft.type]}</strong>
-                </p>
+                <TypeLabel type={draft.type} />
               )}
               <TitleField
+                inputRef={titleRef}
                 value={draft.title}
                 onChange={(title) => update({ title })}
                 error={shown['title']}

@@ -10,7 +10,7 @@ const tool = (page: Page, name: string): Locator =>
   page.getByRole('toolbar', { name: 'Formatting' }).getByRole('button', { name, exact: true });
 
 async function openNewCard(page: Page, slug: string): Promise<Locator> {
-  await page.goto(webUrl(`/d/${slug}/new`));
+  await page.goto(webUrl(`/d/${slug}/new?type=text`));
   await page.getByLabel('Title', { exact: true }).fill(`Rich ${slug}`);
   const body = bodyOf(page);
   await body.click();

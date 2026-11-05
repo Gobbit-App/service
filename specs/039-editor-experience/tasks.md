@@ -40,17 +40,17 @@ All paths are under `apps/web/src/` unless they start with `e2e/`, `docs/` or `s
 
 ## Phase 3: US2 — Type choice (PR 2)
 
-- [ ] T016 [P] [US2] Icons `text`, `table`, `calc`, `chevron-down` in ui/icons/icon-paths.ts (+ test list)
-- [ ] T017 [P] [US2] `composer/type-tiles.ts`: `TYPE_LABELS`, `TYPE_HINTS`, `TYPE_ICONS`; remove `TypePicker.tsx` (move `IMAGES_UNAVAILABLE`)
-- [ ] T018 [US2] `composer/TypeTiles.tsx` (radiogroup, roving focus, arrows/Home/End, Enter/Space/click pick, unavailable reason)
-- [ ] T019 [P] [US2] [unit] `TypeTiles.test.tsx`: keys, names/hints, disabled image, checked state
-- [ ] T020 [US2] `composer/pick-start-type.ts` (D302) + [unit] test
-- [ ] T021 [US2] Route `/d/$slug/new`: optional `type`, chooser screen (`TypeChooser.tsx` inside the composer frame with Close) vs composer; pick → replace navigate; title autofocus on pick
-- [ ] T022 [US2] `composer/payload-content.ts` (`payloadHasContent`) + [unit] test
-- [ ] T023 [US2] `TypeControl.tsx` (button → Sheet with tiles) + `SwitchTypeConfirm.tsx`; edit shows read-only label with icon
-- [ ] T024 [P] [US2] [unit] `TypeControl.test.tsx`: switch freely when empty, confirm when content, keep cancels
-- [ ] T025 [US2] [e2e:smoke] smoke editor tests open /new and pick from the chooser (or use `?type=`); radio `.check()` → click
-- [ ] T026 [US2] [e2e:full] composer.spec: keyboard-only pick; switch confirm keep/switch; reminders/editor-navigation specs updated
+- [x] T016 [P] [US2] Icons `text`, `table`, `calc`, `chevron-down` in ui/icons/icon-paths.ts (+ test list)
+- [x] T017 [P] [US2] `composer/type-tiles.ts`: `TYPE_LABELS`, `TYPE_HINTS`, `TYPE_ICONS`; remove `TypePicker.tsx` (move `IMAGES_UNAVAILABLE`)
+- [x] T018 [US2] `composer/TypeTiles.tsx` (radiogroup, roving focus, arrows/Home/End, Enter/Space/click pick, unavailable reason)
+- [x] T019 [P] [US2] [unit] `TypeTiles.test.tsx`: keys, names/hints, disabled image, checked state
+- [x] T020 [US2] `composer/pick-start-type.ts` (D302) + [unit] test
+- [x] T021 [US2] Route `/d/$slug/new`: optional `type`, chooser screen (`TypeChooser.tsx` inside the composer frame with Close) vs composer; pick → replace navigate; title autofocus on pick
+- [x] T022 [US2] `composer/payload-content.ts` (`payloadHasContent`) + [unit] test
+- [x] T023 [US2] `TypeControl.tsx` (button → Sheet with tiles) + `SwitchTypeConfirm.tsx`; edit shows read-only label with icon
+- [x] T024 [P] [US2] [unit] `TypeControl.test.tsx`: switch freely when empty, confirm when content, keep cancels
+- [x] T025 [US2] [e2e:smoke] smoke editor tests open /new and pick from the chooser (or use `?type=`); radio `.check()` → click
+- [x] T026 [US2] [e2e:full] composer.spec: keyboard-only pick; switch confirm keep/switch; reminders/editor-navigation specs updated
 
 ## Phase 4: US3 + US5 + US7 — Canvas, preview, sheets (PR 3)
 
