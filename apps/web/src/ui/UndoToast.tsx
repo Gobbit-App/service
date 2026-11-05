@@ -59,6 +59,7 @@ export function ToastHost(): ReactElement | null {
       message={toast.message}
       actionLabel={toast.action?.label}
       onAction={toast.action?.onAction}
+      timeoutMs={toast.timeoutMs}
       onDismiss={() => dismissToast(toast.id)}
     />
   );

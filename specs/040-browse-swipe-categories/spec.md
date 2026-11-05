@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Decisions**: reserves D324–D339
+**Decisions**: reserves D325–D340 (D324 went to #106)
 
 **Supersedes**: [`034-browse-redesign`](../034-browse-redesign/spec.md) FR-002, FR-003, FR-004, FR-005, FR-008, FR-009 and its "no swiping between categories" exclusion. It keeps 034 FR-001 (entry, address, return, prefetch, offline), FR-006 (end page), FR-007 (dock), FR-010 (reduced motion) and FR-011 (state pages), with the changes listed below.
 

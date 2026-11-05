@@ -1,7 +1,7 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, Ref } from 'react';
+import { Button } from '../ui/buttons/Button';
 import { IconButton } from '../ui/buttons/IconButton';
 import type { CycleEntry } from './category-cycle';
-import { CategoryRail } from './CategoryRail';
 
 /** Where the reader is in the category: `total` is null while more pages exist. */
 export interface BrowsePosition {
@@ -28,28 +28,39 @@ export function progressFraction({ index, total, loaded }: BrowsePosition): numb
 }
 
 /**
- * D247/D249: the compact translucent bar: close, the category rail, the plain position counter
- * (`aria-hidden`; the stack announces "Card n of N") and a thin progress bar.
+ * D247/D331: the compact translucent bar: close, the category name (it opens the category
+ * list, the accessible way to pick one), the plain position counter (`aria-hidden`; the live
+ * region announces "Card n of N") and a thin progress bar.
  */
 export function TopBar({
-  cycle,
   current,
-  onCategory,
+  onOpenList,
   onClose,
   position,
+  listButton,
 }: {
-  cycle: readonly CycleEntry[];
-  current: string;
-  onCategory: (slug: string) => void;
+  current: CycleEntry;
+  onOpenList: () => void;
   onClose: () => void;
   /** Null on the state pages (loading, empty, offline). */
   position: BrowsePosition | null;
+  /** Focus goes back here when the category list closes. */
+  listButton?: Ref<HTMLButtonElement>;
 }): ReactElement {
   return (
     <header className="browse-top">
       <div className="browse-top__row">
         <IconButton icon="close" label="Close browse" onClick={onClose} />
-        <CategoryRail cycle={cycle} current={current} onSelect={onCategory} />
+        <Button
+          ref={listButton}
+          icon="chevron-down"
+          label={current.name}
+          aria-label={`Category: ${current.name}, choose another`}
+          variant="ghost"
+          className="browse-top__category"
+          dir="auto"
+          onClick={onOpenList}
+        />
         <span className="browse-top__counter" aria-hidden="true">
           {position ? counterLabel(position) : ''}
         </span>

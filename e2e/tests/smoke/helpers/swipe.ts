@@ -27,7 +27,7 @@ async function cdp(page: Page): Promise<CDPSession> {
 /**
  * T008: a one-finger touch drag through CDP `Input.dispatchTouchEvent` (Chromium only; the
  * web-smoke project emulates a Pixel 7, so `hasTouch` is on). The browser turns the touches
- * into native scrolling: sideways on the Browse track, vertically inside the current page.
+ * into native scrolling: vertically on a category's card track, sideways on the category track.
  */
 export async function swipe(page: Page, options: SwipeOptions): Promise<void> {
   const { x, y, dx, dy, durationMs = 200, steps = 8 } = options;
@@ -53,11 +53,28 @@ export function viewport(page: Page): { width: number; height: number } {
 }
 
 /**
- * 034 (D244): a sideways swipe across the middle of the screen: leftward = next card,
- * rightward = previous. The track is a native scroll-snap container, so this is a real
+ * 040 (D325): a vertical swipe across the middle of the screen: upward = next card, downward =
+ * previous. Each category's cards sit on a native vertical scroll-snap track, so this is a real
  * touch scroll, not a synthetic gesture.
  */
 export async function swipeCard(page: Page, step: 'next' | 'prev'): Promise<void> {
+  const { width, height } = viewport(page);
+  const distance = Math.round(height * 0.5);
+  await swipe(page, {
+    x: Math.round(width / 2),
+    y: Math.round(height * (step === 'next' ? 0.75 : 0.25)),
+    dx: 0,
+    dy: step === 'next' ? -distance : distance,
+    durationMs: 150,
+  });
+}
+
+/**
+ * 040 (D325): a sideways swipe across the middle of the screen, clear of the edge strips
+ * (D327): leftward = next category, rightward = previous. The categories sit on a native
+ * horizontal scroll-snap track, always left to right.
+ */
+export async function swipeCategory(page: Page, step: 'next' | 'prev'): Promise<void> {
   const { width, height } = viewport(page);
   const distance = Math.round(width * 0.6);
   await swipe(page, {
@@ -69,15 +86,15 @@ export async function swipeCard(page: Page, step: 'next' | 'prev'): Promise<void
   });
 }
 
-/** A vertical drag in the middle of the screen: `up` scrolls the current page down. */
-export async function swipeUp(page: Page): Promise<void> {
+/** A long upward drag from near the bottom: scrolls a sheet (full view) past its end. */
+export async function swipeUpLong(page: Page): Promise<void> {
   const { width, height } = viewport(page);
-  const distance = Math.round(height * 0.4);
   await swipe(page, {
     x: Math.round(width / 2),
-    y: Math.round(height * 0.7),
+    y: Math.round(height * 0.9),
     dx: 0,
-    dy: -distance,
-    durationMs: 200,
+    dy: -Math.round(height * 0.8),
+    durationMs: 250,
+    steps: 12,
   });
 }

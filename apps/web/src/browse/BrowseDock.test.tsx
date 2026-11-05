@@ -11,17 +11,26 @@ const { BrowseDock } = await import('./BrowseDock');
 const item = makeItem({ id: 'i1', title: 'Bus times' });
 
 describe('BrowseDock', () => {
-  it('offers the card moves and the reader actions (favorite, share)', () => {
+  it('offers the card moves, full view and the reader actions (favorite, share)', () => {
     respond.mockReturnValue(new Promise(() => undefined));
     const prev = vi.fn();
     const next = vi.fn();
+    const full = vi.fn();
     renderWithClient(
-      <BrowseDock item={item} deckSlug="family" onPrevCard={prev} onNextCard={next} />,
+      <BrowseDock
+        item={item}
+        deckSlug="family"
+        onPrevCard={prev}
+        onNextCard={next}
+        onOpenFull={full}
+      />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Previous card' }));
     fireEvent.click(screen.getByRole('button', { name: 'Next card' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Full view' }));
     expect(prev).toHaveBeenCalledOnce();
     expect(next).toHaveBeenCalledOnce();
+    expect(full).toHaveBeenCalledOnce();
     const bar = screen.getByRole('group', { name: 'Card actions' });
     expect(bar).toContainElement(screen.getByRole('button', { name: /favorite/i }));
     expect(bar).toContainElement(screen.getByRole('button', { name: /share/i }));
@@ -30,7 +39,13 @@ describe('BrowseDock', () => {
   it('keeps a move visible but inert at either end', () => {
     respond.mockReturnValue(new Promise(() => undefined));
     renderWithClient(
-      <BrowseDock item={item} deckSlug="family" onPrevCard={null} onNextCard={null} />,
+      <BrowseDock
+        item={item}
+        deckSlug="family"
+        onPrevCard={null}
+        onNextCard={null}
+        onOpenFull={vi.fn()}
+      />,
     );
     const prev = screen.getByRole('button', { name: 'Previous card' });
     expect(prev).toHaveAttribute('aria-disabled', 'true');
@@ -49,7 +64,13 @@ describe('BrowseDock', () => {
       makeDeck({ slug: 'family', role: 'editor' }),
     );
     renderWithClient(
-      <BrowseDock item={item} deckSlug="family" onPrevCard={null} onNextCard={null} />,
+      <BrowseDock
+        item={item}
+        deckSlug="family"
+        onPrevCard={null}
+        onNextCard={null}
+        onOpenFull={vi.fn()}
+      />,
       { queryClient },
     );
     const bar = screen.getByRole('group', { name: 'Card actions' });

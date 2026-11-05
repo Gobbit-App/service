@@ -1,29 +1,32 @@
-import { useEffect, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useEffect, type ReactElement, type ReactNode } from 'react';
 import type { Category } from '@gobbit/shared';
 import { isNetworkError } from '../api/network-state';
 import type { ItemFilter } from '../api/query-keys';
 import { emptyListCopy } from '../items/empty-copy';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { filterKey } from './browse-params';
-import { BrowseStack, type BrowseEndProps } from './BrowseStack';
-import type { BrowsePosition } from './TopBar';
+import { BrowseStack, type BrowseEndProps, type StackCurrent } from './BrowseStack';
 import { useBrowseItems } from './use-browse-items';
 
 export const OFFLINE_COPY = "You're offline and these cards aren't saved on this device yet.";
 
-/** Contract §4: one page with the list's copy; the top bar stays usable, no dock. */
+/** Contract §4: one page with the list's copy; the top bar and sideways moves stay, no dock. */
 function StatePage({
-  onPosition,
+  active,
+  onCurrent,
   children,
 }: {
-  onPosition: (position: BrowsePosition | null) => void;
+  active: boolean;
+  onCurrent: (current: StackCurrent | null) => void;
   children: ReactNode;
 }): ReactElement {
-  useEffect(() => onPosition(null), [onPosition]);
+  useEffect(() => {
+    if (active) onCurrent(null);
+  }, [active, onCurrent]);
   return (
     <div className="browse__track">
       <section className="browse-page browse-page--state">
-        <div className="browse-sheet">{children}</div>
+        <div className="browse-card browse-card--state">{children}</div>
       </section>
     </div>
   );
@@ -35,23 +38,35 @@ export function BrowseCards({
   filter,
   categories,
   targetId,
+  category,
   onSettle,
-  onPosition,
+  onCurrent,
+  onOpenFull,
   end,
+  active,
   keysEnabled,
 }: {
   deckSlug: string;
   filter: ItemFilter;
   categories: readonly Category[];
-  /** The address's `i`. */
+  /** The card to open on: the address's `i`, or a jump's target (D328). */
   targetId: string | undefined;
-  onSettle: (itemId: string) => void;
-  onPosition: (position: BrowsePosition | null) => void;
+  /** The cycle slug of this category (`all` or a category slug); settles report it. */
+  category: string;
+  onSettle: (category: string, itemId: string) => void;
+  onCurrent: (current: StackCurrent | null) => void;
+  onOpenFull: () => void;
   end: BrowseEndProps;
+  active: boolean;
   keysEnabled: boolean;
 }): ReactElement {
   const { query, items, seeking, notFound, total } = useBrowseItems(deckSlug, filter, targetId);
-  const state = (body: ReactNode) => <StatePage onPosition={onPosition}>{body}</StatePage>;
+  const settle = useCallback((itemId: string) => onSettle(category, itemId), [onSettle, category]);
+  const state = (body: ReactNode) => (
+    <StatePage active={active} onCurrent={onCurrent}>
+      {body}
+    </StatePage>
+  );
 
   if (query.isPending || seeking) return state(<LoadingState label="Loading cards…" />);
   if (query.isError && !query.data) {
@@ -83,9 +98,11 @@ export function BrowseCards({
       initialId={targetId && !notFound ? targetId : first.id}
       addressId={targetId}
       notFound={notFound}
-      onSettle={onSettle}
-      onPosition={onPosition}
+      onSettle={settle}
+      onCurrent={onCurrent}
+      onOpenFull={onOpenFull}
       end={end}
+      active={active}
       keysEnabled={keysEnabled}
     />
   );

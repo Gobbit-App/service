@@ -1,14 +1,15 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactElement } from 'react';
 import { Button } from '../ui/buttons/Button';
 
-/** The three tips of the first-run sheet (034). */
+/** D338: the four tips of the first-run sheet. */
 export const HINT_TIPS = [
-  'Swipe sideways to flip through cards',
-  'Scroll down for details and source',
-  'Tap a category at the top to switch',
+  'Swipe up and down for cards',
+  'Swipe sideways for categories',
+  'Tap the category name to jump to another',
+  'Hold a card or tap Full view for its details',
 ] as const;
 
-/** FR-010: a one-time bottom sheet with the three moves. Dismiss only. */
+/** FR-010/D338: a one-time bottom sheet with the moves. Dismiss only. */
 export function FirstRunHint({ onDismiss }: { onDismiss: () => void }): ReactElement {
   const titleId = useId();
   const button = useRef<HTMLButtonElement>(null);

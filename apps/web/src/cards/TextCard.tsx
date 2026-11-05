@@ -1,6 +1,7 @@
 import Markdown, { type Components } from 'react-markdown';
-import type { ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { BODY_REMARK_PLUGINS } from './body-plugins';
+import { useTextDetection } from './text-detection';
 import './rich-text.css';
 
 const components: Components = {
@@ -16,7 +17,10 @@ const components: Components = {
   blockquote: ({ node: _node, ...props }) => <blockquote {...props} dir="auto" />,
 };
 
-/** Renders markdown body content with security and text direction support. */
+/**
+ * Renders markdown body content with security and text direction support. Inside Browse a
+ * text-detection context (D340) adds its plugin after the body plugins and its components.
+ */
 export function TextCard({
   body,
   skipHtml = true,
@@ -24,9 +28,20 @@ export function TextCard({
   body: string;
   skipHtml?: boolean;
 }): ReactElement {
+  const detection = useTextDetection();
+  const [remarkPlugins, merged] = useMemo(
+    () =>
+      detection
+        ? [
+            [...BODY_REMARK_PLUGINS, ...detection.remarkPlugins],
+            { ...components, ...detection.components },
+          ]
+        : [BODY_REMARK_PLUGINS, components],
+    [detection],
+  );
   return (
     <div className="text-card">
-      <Markdown skipHtml={skipHtml} remarkPlugins={BODY_REMARK_PLUGINS} components={components}>
+      <Markdown skipHtml={skipHtml} remarkPlugins={remarkPlugins} components={merged}>
         {body}
       </Markdown>
     </div>

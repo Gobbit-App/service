@@ -4,6 +4,8 @@ import { useSyncExternalStore } from 'react';
 export type ToastSpec = {
   message: string;
   action?: { label: string; onAction: () => void };
+  /** How long it stays; the toast's own default when left out (040: "Copied" for 2 s). */
+  timeoutMs?: number;
 };
 
 export type ToastEntry = ToastSpec & { id: number };

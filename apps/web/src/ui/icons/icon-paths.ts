@@ -34,6 +34,8 @@ export const ICON_PATHS = {
   'arrow-left': 'M19 12H5M11 6L5 12L11 18',
   'arrow-right': 'M5 12H19M13 6L19 12L13 18',
   browse: 'M7 4H17 M5 7.5H19 M4 11H20V20H4Z',
+  // 040 (D336): Browse's Full view action.
+  expand: 'M4 9V4H9 M15 4H20V9 M20 15V20H15 M9 20H4V15',
   inbox: 'M3.5 13.5L6 5H18L20.5 13.5V19H3.5Z M3.5 13.5H8.5L9.5 16H14.5L15.5 13.5H20.5',
   'file-import': 'M14 3.5H6V20.5H18V7.5Z M14 3.5V7.5H18 M12 10.5V16.5M9.5 14L12 16.5L14.5 14',
   select:
