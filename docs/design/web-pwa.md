@@ -52,7 +52,7 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 | ---- | ------- | ------- |
 | `favicon.svg` | Rounded teal tile, no chimney (bits blur below ~64 px) | Favicon (SPA, public pages), public-page header, app header on the deck list (D322) |
 | `icons/logo.svg` | Rounded teal tile | Sign-in heading; embedded in the OG images |
-| `icons/icon-192.png`, `icon-512.png` | Rounded tile, transparent corners | Manifest `purpose: any`, push notification icon |
+| `icons/icon-192.png`, `icon-512.png` | Rounded tile, transparent corners | Manifest `purpose: any`, push notification icon; `icon-192.png` is also the SPA's PNG favicon, because Chrome on Android skips SVG favicons and otherwise draws a letter tile in its install sheet and shortcuts (D323) |
 | `icons/icon-maskable-512.png` | Full bleed, the mark's bounding box inside the 40 % safe-zone circle | Manifest `purpose: maskable` |
 | `icons/apple-touch-icon.png` | 180 px, opaque, full bleed (iOS fills transparency with black and rounds the corners itself) | `index.html` |
 
