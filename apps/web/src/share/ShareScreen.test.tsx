@@ -184,11 +184,14 @@ describe('ShareScreen', () => {
     fireEvent.change(await screen.findByLabelText('Text'), { target: { value: 'hi' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send to Gobbit' }));
     expect(await screen.findByText('Processing…')).toBeInTheDocument();
-    expect(requests).toHaveBeenCalledWith(
-      'GET /shares/{id}',
-      expect.objectContaining({
-        params: { path: { id: 'j1' } },
-      }),
+    // The status query starts in an effect after "Processing…" renders: wait for it.
+    await waitFor(() =>
+      expect(requests).toHaveBeenCalledWith(
+        'GET /shares/{id}',
+        expect.objectContaining({
+          params: { path: { id: 'j1' } },
+        }),
+      ),
     );
   });
 });
