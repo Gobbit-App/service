@@ -29,6 +29,8 @@ export function Card({
   preview = false,
   image,
   actions,
+  meta = true,
+  titleId = `card-title-${item.id}`,
 }: {
   item: Item;
   deckSlug: string;
@@ -47,11 +49,14 @@ export function Card({
    * no bar (Browse puts the actions in its dock, D249).
    */
   actions?: ReactNode;
+  /** D327: `false` hides the chips and age row (Browse shows content only). */
+  meta?: boolean;
+  /** The heading id; a second copy of a card on screen (the full view) needs its own. */
+  titleId?: string;
 }): ReactElement {
   const cloudName = useCloudName();
   const chips = useMemo(() => itemCategories(item, categories), [item, categories]);
   const age = cardAge(item, now);
-  const titleId = `card-title-${item.id}`;
 
   return (
     <article className="card" aria-labelledby={titleId}>
@@ -67,7 +72,7 @@ export function Card({
         </h2>
       </header>
       <CardBody item={item} cloudName={cloudName} image={image} />
-      {(chips.length > 0 || age) && (
+      {meta && (chips.length > 0 || age) && (
         <footer className="card__meta">
           {chips.length > 0 && (
             <ul className="card__chips" aria-label="Categories">

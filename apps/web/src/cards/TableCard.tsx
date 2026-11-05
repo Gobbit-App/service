@@ -1,9 +1,12 @@
 import type { ReactElement } from 'react';
 import type { TablePayload } from './payload-guards';
+import { useTextDetection } from './text-detection';
 
-/** Renders a scrollable table card. */
+/** Renders a scrollable table card; inside Browse its body cells mark detected text (D340). */
 export function TableCard({ payload }: { payload: TablePayload }): ReactElement {
   const { columns, rows } = payload;
+  const detection = useTextDetection();
+  const cellText = (cell: string) => (detection ? detection.renderText(cell) : cell);
 
   return (
     <div className="table-card" role="region" aria-label="Table" tabIndex={0}>
@@ -24,13 +27,13 @@ export function TableCard({ payload }: { payload: TablePayload }): ReactElement 
                 if (j === 0) {
                   return (
                     <th key={`c-${i}-${j}-${cell}`} scope="row" dir="auto">
-                      {cell}
+                      {cellText(cell)}
                     </th>
                   );
                 }
                 return (
                   <td key={`c-${i}-${j}-${cell}`} dir="auto">
-                    {cell}
+                    {cellText(cell)}
                   </td>
                 );
               })}

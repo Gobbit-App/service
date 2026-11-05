@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useCallback, useEffect } from 'react';
+import { browseLayerFromState, withLayer, type BrowseLayer } from '../browse/browse-layer';
 import { BrowseScreen } from '../browse/BrowseScreen';
 import {
   filterFromCategory,
@@ -25,6 +26,7 @@ function BrowseRoute() {
   const navigate = useNavigate();
   const navigateHref = useNavigateHref();
   const listC = useRouterState({ select: (s) => listCategoryFromState(s.location.state) });
+  const layer = useRouterState({ select: (s) => browseLayerFromState(s.location.state) });
 
   // FR-005: remember the list this Browse was opened from (its entry sits just below this one),
   // so the system back action after a category change can be sent on to the current category.
@@ -71,5 +73,28 @@ function BrowseRoute() {
     [listC, navigate, navigateHref, slug],
   );
 
-  return <BrowseScreen deckSlug={slug} search={search} onChange={onChange} onClose={onClose} />;
+  // D332: a layer (category list, full view) is its own entry, so system back closes it.
+  const onLayer = useCallback(
+    (next: BrowseLayer) =>
+      void navigate({
+        to: '/d/$slug/browse',
+        params: { slug },
+        search,
+        state: (prev) => withLayer(prev, next),
+      }),
+    [navigate, slug, search],
+  );
+  const onCloseLayer = useCallback(() => window.history.back(), []);
+
+  return (
+    <BrowseScreen
+      deckSlug={slug}
+      search={search}
+      onChange={onChange}
+      onClose={onClose}
+      layer={layer}
+      onLayer={onLayer}
+      onCloseLayer={onCloseLayer}
+    />
+  );
 }

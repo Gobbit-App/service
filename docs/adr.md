@@ -627,3 +627,17 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 - **Keyboard**: the on-screen keyboard is measured with `visualViewport` (`--kb-inset`), and a dock with Save and the 038 toolbar sits on it on touch phones.
 
 **Rationale**: Writing a card is a task you finish or abandon, so it gets the screen, as in mail and notes apps. The native dialog gives a focus trap, inert background, Escape and top-layer stacking without a library. `visualViewport` works on iOS and Android without changing the viewport meta for the whole app. No API or data change. Details: [`docs/design/card-editor.md`](design/card-editor.md#composer-039-specs039-editor-experience-d300d313-adr-071), `specs/039-editor-experience/research.md`.
+
+## ADR-072: Browse: vertical cards, sideways categories, layered full view (D325–D340)
+
+Amends ADR-065 (the axes and the chrome; native scroll-snap and no gesture library stay).
+
+**Decision**: Browse nests two native scroll-snap tracks. An outer x track holds one section per category (All first, then the chip-row order), and each section holds a y track of one card per screen.
+
+- **Tracks**: a tall card is one oversized snap area that scrolls inside and snaps at its edges. 24 px edge strips (`touch-action: pan-y`) keep OS back gestures from changing category. Only the current category ±1 mount, and each remembers its card.
+- **Ends**: there is no wrap-around. A pull past the first or last category, or an arrow key there, shows a short "No next/previous category" banner. A category change shows "<name> · N cards" for 2 s, also announced.
+- **Layers**: the category list (a `ui/sheet/Sheet` from the top bar's category button) and the full view (dock button, `f`, or a long press) are layers in history state, so system back closes them without leaving Browse. The full view holds the card's details and source; its categories jump there on the same card; swiping past its end closes it.
+- **Chrome and keys**: pages show content first. The dock has Previous card · the card's actions · Full view · Next card. Keys: ArrowUp/ArrowDown and PageUp/PageDown for cards, ArrowLeft/ArrowRight for categories, `f`, Escape.
+- **Detected text**: in Browse only, phones become `tel:` links, emails `mailto:` links and standalone numbers (not years) copy buttons, through a `linkify-it` + remark plugin kept in the lazy Browse chunk.
+
+**Rationale**: Readers scroll down feeds and swipe sideways between sections, so cards on y and categories on x match both platforms and free the sideways gesture for the thing readers switch least often. Keeping the details in a full view lets a page show the card itself. History-state layers make system back do what readers expect on Android. Native scroll-snap on both axes keeps momentum, accessibility and zero per-frame JS without a gesture library. Details: [`docs/design/browse-mode.md`](design/browse-mode.md#040-rework-d325d340-adr-072), `specs/040-browse-swipe-categories/research.md`.

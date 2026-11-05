@@ -1,7 +1,7 @@
 /*
- * Browse (D139–D144, redesigned in 034: D244–D251). Imported only by BrowseScreen, so it
- * stays in the Browse chunk. Cards page sideways on a native horizontal snap track; each page
- * scrolls vertically on its own. Only transform/opacity ever animate.
+ * Browse (D139–D144, 034: D244–D251, 040: D325–D338). Imported only by BrowseScreen, so it
+ * stays in the Browse chunk. Categories sit side by side on a native horizontal snap track;
+ * each holds a vertical snap track of cards. Only transform/opacity ever animate.
  */
 
 .browse {
@@ -21,7 +21,7 @@
   height: 100%;
 }
 
-/* ---------- Top bar (D247): close · category rail · counter, then progress ---------- */
+/* ---------- Top bar (D336): close · category · counter, then progress ---------- */
 
 .browse-top {
   position: absolute;
@@ -74,76 +74,40 @@
   transform-origin: right center;
 }
 
-/* The chip rail: scrolls on its own, edges fade out. */
-.browse-rail {
+/* D336: the current category's name as a button (opens the list); its words always show. */
+.browse-top__category {
+  justify-self: center;
+  max-width: 100%;
   min-width: 0;
-}
-
-.browse-rail__list {
-  display: flex;
-  gap: 6px;
-  margin: 0;
-  padding: 4px 12px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  list-style: none;
-  scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 12px,
-    #000 calc(100% - 12px),
-    transparent
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 12px,
-    #000 calc(100% - 12px),
-    transparent
-  );
-}
-
-.browse-rail__list::-webkit-scrollbar {
-  display: none;
-}
-
-.browse-rail__chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-text) 8%, transparent);
   color: var(--color-text);
-  font: inherit;
-  font-size: 0.9375rem;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background-color 150ms ease-out,
-    color 150ms ease-out;
-}
-
-.browse-rail__chip:hover {
-  background: color-mix(in srgb, var(--color-text) 14%, transparent);
-}
-
-.browse-rail__chip[aria-current='true'] {
-  background: var(--color-text);
-  color: var(--color-bg);
   font-weight: 600;
 }
 
-.browse-rail__chip:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+.browse-top__category .button__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* ---------- Track and pages (D244) ---------- */
+@media (max-width: 479.98px) {
+  .browse-top__category.button--icon .button__label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: hidden;
+    clip-path: none;
+  }
+}
 
-.browse__track {
+.browse-top__category.button--icon[data-tip]:not([aria-disabled='true'])::after {
+  display: none;
+}
+
+/* ---------- Tracks and pages (D325–D327) ---------- */
+
+/* Categories, side by side; always left to right, whatever the text direction (D325). */
+.browse__categories {
+  position: relative;
   display: flex;
   height: 100%;
   overflow: auto hidden;
@@ -152,31 +116,72 @@
   scrollbar-width: none;
 }
 
-.browse__track::-webkit-scrollbar {
-  display: none;
-}
-
-/* One page per screen width; it scrolls vertically and never chains to the track. */
-.browse-page {
+.browse-cat {
+  position: relative;
   flex: 0 0 100%;
   width: 100%;
   height: 100%;
-  padding: var(--browse-top) 0 var(--browse-bottom);
-  overflow: hidden auto;
-  overscroll-behavior-y: contain;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
 
-.browse-sheet {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 20px calc(var(--gutter) + 4px + var(--safe-right)) 0
-    calc(var(--gutter) + 4px + var(--safe-left));
+/* One category's cards, one per screen height. */
+.browse__track {
+  position: relative;
+  height: 100%;
+  overflow: hidden auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
 }
 
-/* The card, flat and large: the content is the page. */
-.browse-sheet .card {
+.browse__categories::-webkit-scrollbar,
+.browse__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* D326: a tall card grows its page, an oversized snap area the track scrolls through freely. */
+.browse-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  min-height: 100%;
+  padding: calc(var(--browse-top) + 12px) 0 calc(var(--browse-bottom) + 12px);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* D327: touches at the sides scroll cards but never pan the category track. */
+.browse-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 24px;
+  touch-action: pan-y;
+}
+
+.browse-edge--start {
+  left: 0;
+}
+
+.browse-edge--end {
+  right: 0;
+}
+
+/* D335: the card as a raised surface, larger type than the list. */
+.browse-card {
+  width: min(calc(100% - 2 * var(--gutter) - var(--safe-left) - var(--safe-right)), 640px);
+  margin: 0 auto;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 14%);
+}
+
+.browse-card .card,
+.browse-full__card .card {
   padding: 0;
   border-radius: 0;
   background: transparent;
@@ -184,7 +189,8 @@
   overflow: visible;
 }
 
-.browse-sheet .card__title {
+.browse-card .card__title,
+.browse-full__card .card__title {
   margin: 0 0 16px;
   font-size: clamp(1.375rem, 5.5vw, 1.75rem);
   line-height: 1.2;
@@ -195,34 +201,66 @@
  * Headings take focus only so a screen reader announces the new page (BrowseStack); they are
  * not controls, so no focus ring — a box round the title on every move would read as a bug.
  */
-.browse-sheet .card__title:focus,
+.browse-card .card__title:focus,
+.browse-full__card .card__title:focus,
 .browse-end__title:focus {
   outline: none;
 }
 
-.browse-sheet .card__body {
+.browse-card .card__body,
+.browse-full__card .card__body {
   font-size: 1.0625rem;
   line-height: 1.6;
 }
 
-.browse-sheet .cloud-image__img,
-.browse-sheet .cloud-image__placeholder,
-.browse-sheet .link-card__image {
+.browse-card .cloud-image__img,
+.browse-card .cloud-image__placeholder,
+.browse-card .link-card__image,
+.browse-full__card .cloud-image__img,
+.browse-full__card .cloud-image__placeholder,
+.browse-full__card .link-card__image {
   border-radius: 16px;
 }
 
-.browse-sheet .card__meta {
-  margin-top: 16px;
+/* D327: a wide table scrolls on its own and never chains into a category change. */
+.browse .table-card {
+  overscroll-behavior-x: contain;
 }
 
-/* State pages (loading, empty, offline): the copy in the middle of the screen. */
-.browse-page--state .browse-sheet {
-  display: grid;
-  align-content: center;
-  min-height: 100%;
+/* D340: detected emails, phones, web addresses and numbers read as text with a dotted line. */
+.browse .detected {
+  color: var(--color-accent);
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.2em;
+  overflow-wrap: anywhere;
 }
 
-/* ---------- Details and Source (D246) ---------- */
+/* The copy control is inline text that happens to be a button. */
+.browse .detected--number {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.browse .detected:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* State pages (loading, empty, offline): the copy in the middle, no raised surface. */
+.browse-card--state {
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+}
+
+/* ---------- Details and Source (D246), in full view smaller and muted (D335) ---------- */
 
 .browse-section {
   display: grid;
@@ -260,11 +298,34 @@
   margin: 0;
 }
 
+.browse-section__categories {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* D336: each category browses it; the name always shows. */
+.browse-section__category.button--icon {
+  min-height: 32px;
+  padding-inline: 8px 12px;
+}
+
+.browse-section__category.button--icon .button__label {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+.browse-section__category.button--icon[data-tip]:not([aria-disabled='true'])::after {
+  display: none;
+}
+
 /* ---------- End page (D248) ---------- */
 
 .browse-page--end {
-  display: grid;
-  place-items: center;
+  align-items: center;
 }
 
 .browse-end {
@@ -372,7 +433,7 @@
 
 /*
  * The app's offline banner is sticky over everything; in Browse it would cover the top bar
- * (close and the category chips). Here it becomes a pill under the bar that never takes taps.
+ * (close and the category name). Here it becomes a pill under the bar that never takes taps.
  */
 body:has(.browse) .offline-banner {
   position: fixed;
@@ -383,6 +444,164 @@ body:has(.browse) .offline-banner {
   white-space: nowrap;
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+/* ---------- Category banner (D330): name and count after a category change ---------- */
+
+.browse-banner {
+  position: absolute;
+  top: calc(var(--browse-top) + 16px);
+  left: 50%;
+  z-index: 3;
+  max-width: calc(100% - 2 * var(--gutter));
+  overflow: hidden;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--color-banner);
+  color: var(--color-banner-text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: browse-banner 1.6s ease-out both;
+}
+
+/* A shortcut for pointers only: the top-bar button is the accessible way to the list. */
+.browse-banner--category {
+  cursor: pointer;
+}
+
+.browse-banner--end {
+  pointer-events: none;
+}
+
+@keyframes browse-banner {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+
+  12%,
+  80% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ---------- Category list (D331): a sheet of rows with counts ---------- */
+
+.browse-list__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  margin-bottom: var(--space-2);
+}
+
+.browse-list__title {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.browse-list__rows {
+  display: grid;
+  max-height: calc(100dvh - var(--safe-top) - 180px);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  list-style: none;
+}
+
+.browse-list__row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  border-top: 1px solid var(--color-border);
+}
+
+.browse-list__row:first-child {
+  border-top: 0;
+}
+
+.browse-list__pick.button {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: var(--tap);
+}
+
+.browse-list__pick[aria-current='true'] {
+  font-weight: 700;
+}
+
+.browse-list__count {
+  flex: 0 0 auto;
+  padding-inline-end: 8px;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Full view (D334/D335): the whole card over Browse ---------- */
+
+.browse-full {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  background: rgb(0 0 0 / 35%);
+}
+
+/* Its own vertical snap scroller: the sheet, then a transparent tail that closes it. */
+.browse-full__scroller {
+  height: 100%;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+
+.browse-full__scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.browse-full__sheet {
+  min-height: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 8px) calc(var(--gutter) + 4px + var(--safe-right))
+    calc(var(--safe-bottom) + 32px) calc(var(--gutter) + 4px + var(--safe-left));
+  background: var(--color-surface);
+  color: var(--color-text);
+  scroll-snap-align: start;
+}
+
+.browse-full__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  padding-block: 4px;
+  background: var(--color-surface);
+}
+
+.browse-full__head > .icon-button {
+  color: var(--color-text);
+}
+
+.browse-full .browse-section {
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.browse-full__tail {
+  height: 100%;
+  scroll-snap-align: start;
 }
 
 /* ---------- First-run hint: a bottom sheet ---------- */
@@ -468,23 +687,23 @@ body:has(.browse) .offline-banner {
   }
 }
 
-@supports (animation-timeline: view(inline)) {
+@supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .browse-page {
+    .browse-card {
       animation: browse-depth linear both;
-      animation-timeline: view(inline);
+      animation-timeline: view();
     }
   }
 }
 
 /* Reduced motion: paging is instant (motion.ts) and nothing animates. */
 @media (prefers-reduced-motion: reduce) {
-  .browse-top__progress-fill,
-  .browse-rail__chip {
+  .browse-top__progress-fill {
     transition: none;
   }
 
-  .browse-hint__sheet {
+  .browse-hint__sheet,
+  .browse-banner {
     animation: none;
   }
 }

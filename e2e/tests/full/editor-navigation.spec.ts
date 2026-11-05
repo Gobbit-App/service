@@ -181,7 +181,7 @@ test('the editor goes back to the page that opened it: Browse or the list (D320)
   const card = textCard(webDeck);
   const browse = new RegExp(`/d/${webDeck.slug}/browse\\?.*i=${card.id}`);
   const editLink = page.getByRole('link', { name: 'Edit', exact: true });
-  await page.addInitScript(() => localStorage.setItem('gobbit:browse-hint:v2', 'dismissed'));
+  await page.addInitScript(() => localStorage.setItem('gobbit:browse-hint:v3', 'dismissed'));
 
   // Browse → Edit → Close: the same card in Browse, not its standalone page.
   await page.goto(webUrl(`/d/${webDeck.slug}/browse?c=all&i=${card.id}`));

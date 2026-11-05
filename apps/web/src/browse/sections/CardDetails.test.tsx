@@ -1,5 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { makeCategory, makeItem } from '../../test/fixtures';
 import { CardDetails, NO_DETAILS_COPY } from './CardDetails';
 
@@ -26,6 +26,16 @@ describe('CardDetails', () => {
     render(<CardDetails item={item} categories={[food, school]} />);
     expect(screen.getByText('School, Food')).toBeInTheDocument();
     expect(screen.getByText('Link')).toBeInTheDocument();
+  });
+
+  it('makes each category a "Browse <name>" button when it can browse it (D336)', () => {
+    const onCategory = vi.fn();
+    const item = makeItem({ categoryIds: ['c-school', 'c-food'] });
+    render(<CardDetails item={item} categories={[food, school]} onCategory={onCategory} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Browse Food' }));
+    expect(onCategory).toHaveBeenCalledWith('food');
+    expect(screen.getByRole('button', { name: 'Browse School' })).toBeInTheDocument();
+    expect(screen.queryByText('School, Food')).not.toBeInTheDocument();
   });
 
   it('explains when nothing was extracted', () => {

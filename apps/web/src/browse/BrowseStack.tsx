@@ -9,12 +9,10 @@ import {
 } from 'react';
 import type { Category, Item } from '@gobbit/shared';
 import { writeBrowseReturn } from './browse-return';
-import { BrowseDock } from './BrowseDock';
 import { BrowsePage } from './BrowsePage';
 import type { CycleEntry } from './category-cycle';
-import { END_PAGE_ID, END_TITLE_ID, EndPage, endTitle } from './EndPage';
-import { pagingBehavior, scrollToPage } from './motion';
-import { positionLabel, type BrowsePosition } from './TopBar';
+import { END_PAGE_ID, END_TITLE_ID, EndPage } from './EndPage';
+import { pageElement, pagingBehavior, scrollToPage, tallScrollStep } from './motion';
 import { useBrowseKeys } from './use-browse-keys';
 import { usePrefetchAhead } from './use-browse-items';
 import { useCurrentCard } from './use-current-card';
@@ -27,6 +25,21 @@ export interface BrowseEndProps {
   nextCategory: CycleEntry | null;
   onCategory: (slug: string) => void;
   onClose: () => void;
+}
+
+/** What the screen shows for the active stack: the top bar, the dock, the live region. */
+export interface StackCurrent {
+  /** The reader's card (on the end page, the last card, D248). */
+  item: Item;
+  index: number;
+  /** Null while more pages exist. */
+  total: number | null;
+  loaded: number;
+  atEnd: boolean;
+  /** Null when there is no previous card. */
+  prevCard: (() => void) | null;
+  /** Null when there is nothing after this card. */
+  nextCard: (() => void) | null;
 }
 
 export interface BrowseStackProps {
@@ -47,10 +60,13 @@ export interface BrowseStackProps {
   /** The deep-linked card wasn't found (the stack opens on the first card). */
   notFound: boolean;
   onSettle: (itemId: string) => void;
-  /** The top bar's counter and progress follow the current card. */
-  onPosition: (position: BrowsePosition | null) => void;
+  /** The active stack reports its card; null when it stops being active or unmounts. */
+  onCurrent: (current: StackCurrent | null) => void;
+  onOpenFull: () => void;
   end: BrowseEndProps;
-  /** Off while the first-run hint is open. */
+  /** D328: the category the reader is on. Neighbour stacks are mounted but inert. */
+  active: boolean;
+  /** Off while the hint or a layer is open. */
   keysEnabled: boolean;
 }
 
@@ -65,7 +81,7 @@ function focusHeading(container: HTMLElement | null, headingId: string): void {
   title.focus({ preventScroll: true });
 }
 
-/** D244: one category's cards on a horizontal snap track, tracked by id, ±1 mounted. */
+/** D325: one category's cards on a vertical snap track, tracked by id, ±1 mounted. */
 export function BrowseStack({
   deckSlug,
   filterKey,
@@ -79,8 +95,10 @@ export function BrowseStack({
   addressId,
   notFound,
   onSettle,
-  onPosition,
+  onCurrent,
+  onOpenFull,
   end,
+  active,
   keysEnabled,
 }: BrowseStackProps): ReactElement {
   const container = useRef<HTMLDivElement>(null);
@@ -102,7 +120,7 @@ export function BrowseStack({
   if (notice !== null && current && current.id !== notice) setNotice(null);
 
   usePrefetchAhead({
-    currentIndex: index,
+    currentIndex: active ? index : -1,
     loaded: items.length,
     hasNextPage,
     isFetchingNextPage,
@@ -119,7 +137,7 @@ export function BrowseStack({
   }, [currentId]);
 
   useEffect(() => {
-    // Rotation/resize changes the page width: snap back onto the page being read.
+    // Rotation/resize changes the page height: snap back onto the page being read.
     const onResize = () => {
       if (visibleRef.current) scrollToPage(container.current, visibleRef.current, 'instant');
     };
@@ -128,27 +146,22 @@ export function BrowseStack({
   }, []);
 
   useEffect(() => {
-    if (!settledId || settledId === END_PAGE_ID || settledId === addressId) return;
+    if (!active || !settledId || settledId === END_PAGE_ID || settledId === addressId) return;
     // Opened on the first card with no `i` (category change): the address stays clean.
     if (addressId === undefined && settledId === startId) return;
     onSettle(settledId);
-  }, [settledId, addressId, startId, onSettle]);
+  }, [active, settledId, addressId, startId, onSettle]);
 
   const currentItemId = current?.id;
   useEffect(() => {
-    if (!currentItemId) return;
+    if (!active || !currentItemId) return;
     writeBrowseReturn({ deckSlug, filterKey, itemId: currentItemId });
-  }, [deckSlug, filterKey, currentItemId]);
+  }, [active, deckSlug, filterKey, currentItemId]);
 
   useEffect(() => {
-    if (!currentItemId) return;
+    if (!active || !currentItemId) return;
     focusHeading(container.current, atEnd ? END_TITLE_ID : `card-title-${currentItemId}`);
-  }, [currentItemId, atEnd]);
-
-  useEffect(() => {
-    onPosition({ index, total, loaded: items.length });
-  }, [onPosition, index, total, items.length]);
-  useEffect(() => () => onPosition(null), [onPosition]);
+  }, [active, currentItemId, atEnd]);
 
   const goTo = useCallback(
     (id: string) => scrollToPage(container.current, id, pagingBehavior()),
@@ -158,11 +171,33 @@ export function BrowseStack({
   const nextId = atEnd ? undefined : (items[index + 1]?.id ?? (showEnd ? END_PAGE_ID : undefined));
   const prevCard = useMemo(() => (prevId ? () => goTo(prevId) : null), [goTo, prevId]);
   const nextCard = useMemo(() => (nextId ? () => goTo(nextId) : null), [goTo, nextId]);
-  const keys = useMemo(
-    () => ({ 'next-card': () => nextCard?.(), 'prev-card': () => prevCard?.() }),
-    [nextCard, prevCard],
-  );
-  useBrowseKeys(keys, keysEnabled);
+
+  useEffect(() => {
+    if (!active || !current) return;
+    onCurrent({ item: current, index, total, loaded: items.length, atEnd, prevCard, nextCard });
+  }, [active, current, index, total, items.length, atEnd, prevCard, nextCard, onCurrent]);
+  useEffect(() => {
+    if (!active) return;
+    return () => onCurrent(null);
+  }, [active, onCurrent]);
+
+  // D337: on a card taller than the screen a key scrolls through it before paging.
+  const keys = useMemo(() => {
+    const step = (direction: 1 | -1) => {
+      const root = container.current;
+      const page = !atEnd && currentItemId ? pageElement(root, currentItemId) : null;
+      if (root && page && typeof root.scrollBy === 'function') {
+        const delta = tallScrollStep(root, page, direction);
+        if (delta !== 0) {
+          root.scrollBy({ top: delta, behavior: pagingBehavior() });
+          return;
+        }
+      }
+      (direction === 1 ? nextCard : prevCard)?.();
+    };
+    return { 'next-card': () => step(1), 'prev-card': () => step(-1) };
+  }, [atEnd, currentItemId, nextCard, prevCard]);
+  useBrowseKeys(keys, active && keysEnabled);
 
   return (
     <>
@@ -173,28 +208,18 @@ export function BrowseStack({
             item={item}
             deckSlug={deckSlug}
             categories={categories}
-            current={!atEnd && i === index}
+            current={active && !atEnd && i === index}
             mounted={Math.abs(i - index) <= 1}
+            onOpenFull={onOpenFull}
           />
         ))}
-        {showEnd && <EndPage {...end} active={atEnd} />}
+        {showEnd && <EndPage {...end} active={active && atEnd} />}
       </div>
-      {current && !atEnd && (
-        <BrowseDock
-          item={current}
-          deckSlug={deckSlug}
-          onPrevCard={prevCard}
-          onNextCard={nextCard}
-        />
-      )}
-      {notice !== null && (
+      {active && notice !== null && (
         <p className="browse__notice" role="status">
           {NOT_FOUND_COPY}
         </p>
       )}
-      <p className="visually-hidden" aria-live="polite">
-        {atEnd ? endTitle(end.current) : current ? `Card ${positionLabel(index, total)}` : ''}
-      </p>
     </>
   );
 }

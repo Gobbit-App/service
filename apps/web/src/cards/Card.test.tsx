@@ -45,6 +45,17 @@ describe('Card', () => {
     expect(navigate).toHaveBeenCalledWith('/i/i1');
   });
 
+  it('hides the chips and age row when meta is off (D327)', () => {
+    unwrap.mockReturnValue(new Promise(() => undefined));
+    const item = makeItem({ title: 'Bus times', categoryIds: ['c-school'] });
+    renderWithClient(
+      <Card item={item} deckSlug="family" categories={[school]} now={now} meta={false} />,
+    );
+    expect(screen.getByRole('article', { name: 'Bus times' })).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Categories' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Added /)).not.toBeInTheDocument();
+  });
+
   it('renders a plain title when linkTitle is off', () => {
     unwrap.mockReturnValue(new Promise(() => undefined));
     renderWithClient(

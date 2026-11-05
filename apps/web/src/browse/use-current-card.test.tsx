@@ -5,7 +5,13 @@ import {
   FakeIntersectionObserver,
   installIntersectionObserver,
 } from '../test/intersection-observer';
-import { currentFromEntries, SETTLE_MS, useCurrentCard } from './use-current-card';
+import {
+  coverage,
+  currentFromEntries,
+  OBSERVER_THRESHOLDS,
+  SETTLE_MS,
+  useCurrentCard,
+} from './use-current-card';
 
 function Pages({ ids, initialId }: { ids: string[]; initialId: string | null }) {
   const container = useRef<HTMLDivElement>(null);
@@ -40,10 +46,11 @@ describe('useCurrentCard', () => {
     vi.unstubAllGlobals();
   });
 
-  it('observes every page at threshold 0.6 with the container as root', () => {
+  it('observes every page every 5 % with the container as root', () => {
     render(<Pages ids={['a', 'b', 'c']} initialId="a" />);
     const [observer] = FakeIntersectionObserver.instances;
-    expect(observer.options?.threshold).toBe(0.6);
+    expect(observer.options?.threshold).toBe(OBSERVER_THRESHOLDS);
+    expect(OBSERVER_THRESHOLDS).toHaveLength(21);
     expect(observer.options?.root).toBe(page('a').parentElement);
     expect(observer.observed.size).toBe(3);
   });
@@ -93,5 +100,88 @@ describe('currentFromEntries', () => {
     expect(
       currentFromEntries([{ target: el('a'), isIntersecting: false, intersectionRatio: 0 }]),
     ).toBeNull();
+  });
+});
+
+describe('coverage (D326)', () => {
+  const rect = (width: number, height: number) => ({ width, height }) as DOMRectReadOnly;
+
+  it('counts a tall page that fills the screen as current', () => {
+    const target = document.createElement('section');
+    target.setAttribute('data-item-id', 'tall');
+    const tall = {
+      target,
+      isIntersecting: true,
+      intersectionRatio: 0.33,
+      intersectionRect: rect(390, 844),
+      rootBounds: rect(390, 844),
+    };
+    expect(coverage(tall)).toBe(1);
+    expect(currentFromEntries([tall])).toBe('tall');
+  });
+
+  it('falls back to the ratio without root bounds', () => {
+    const target = document.createElement('section');
+    expect(coverage({ target, isIntersecting: true, intersectionRatio: 0.5 })).toBe(0.5);
+    expect(
+      coverage({
+        target,
+        isIntersecting: true,
+        intersectionRatio: 0.5,
+        intersectionRect: rect(10, 10),
+        rootBounds: rect(0, 0),
+      }),
+    ).toBe(0.5);
+  });
+
+  it('reads another attribute (the category track)', () => {
+    const target = document.createElement('section');
+    target.setAttribute('data-category', 'food');
+    expect(
+      currentFromEntries([{ target, isIntersecting: true, intersectionRatio: 1 }], 'data-category'),
+    ).toBe('food');
+  });
+});
+
+describe('useCurrentCard force and enabled', () => {
+  beforeEach(() => installIntersectionObserver());
+  afterEach(() => vi.unstubAllGlobals());
+
+  function Forced({ enabled = true }: { enabled?: boolean }) {
+    const container = useRef<HTMLDivElement>(null);
+    const { currentId, settledId, force } = useCurrentCard({
+      container,
+      initialId: 'a',
+      pagesKey: 'a b',
+      enabled,
+    });
+    return (
+      <>
+        <div ref={container}>
+          <section data-item-id="a" />
+          <section data-item-id="b">
+            <section data-item-id="nested" />
+          </section>
+        </div>
+        <button type="button" onClick={() => force('b')}>
+          force
+        </button>
+        <output data-testid="current">{currentId}</output>
+        <output data-testid="settled">{settledId}</output>
+      </>
+    );
+  }
+
+  it('moves current and settled together, and watches only direct children', () => {
+    render(<Forced />);
+    expect(FakeIntersectionObserver.instances[0].observed.size).toBe(2);
+    act(() => screen.getByRole('button', { name: 'force' }).click());
+    expect(text('current')).toBe('b');
+    expect(text('settled')).toBe('b');
+  });
+
+  it('does not observe while disabled', () => {
+    render(<Forced enabled={false} />);
+    expect(FakeIntersectionObserver.instances).toHaveLength(0);
   });
 });

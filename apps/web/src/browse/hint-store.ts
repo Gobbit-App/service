@@ -1,7 +1,7 @@
 import { defaultStore, type KeyValueStore } from '../lib/last-deck';
 
 /** Bump the version to show the hint again after a redesign (034: v2, D251). */
-export const BROWSE_HINT_KEY = 'gobbit:browse-hint:v2';
+export const BROWSE_HINT_KEY = 'gobbit:browse-hint:v3';
 const DISMISSED = 'dismissed';
 
 /** True unless the hint was dismissed on this device; unreadable storage shows it again. */

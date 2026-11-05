@@ -1,18 +1,25 @@
-/** Contract §3: what a key press does in Browse. */
-export type BrowseKeyAction = 'next-card' | 'prev-card' | 'close';
+/** Contract §2: what a key press does in Browse. */
+export type BrowseKeyAction =
+  'next-card' | 'prev-card' | 'next-category' | 'prev-category' | 'full-view' | 'close';
 
-/** D247: cards page sideways, so ←/→ move between cards; ↑/↓ stay native (they scroll the page). */
+/** D337: cards move vertically (↑/↓), categories sideways (←/→); `f` opens full view. */
 const KEY_ACTIONS: Record<string, BrowseKeyAction> = {
-  ArrowRight: 'next-card',
+  ArrowDown: 'next-card',
   PageDown: 'next-card',
-  ArrowLeft: 'prev-card',
+  ArrowUp: 'prev-card',
   PageUp: 'prev-card',
+  ArrowRight: 'next-category',
+  ArrowLeft: 'prev-category',
+  f: 'full-view',
   Escape: 'close',
 };
 
 /** Elements that own their keys: text entry and open menus. */
 const OWNS_KEYS =
   'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="menu"]';
+
+/** Content that scrolls sideways on its own keeps ←/→ (a focused wide table, FR-009). */
+const OWNS_SIDEWAYS_KEYS = '.table-card';
 
 /**
  * The action for a document keydown, or null when Browse must leave the key alone: modifier
@@ -32,6 +39,13 @@ export function browseKeyAction(
   const action = KEY_ACTIONS[event.key];
   if (!action) return null;
   const target = event.target instanceof Element ? event.target : null;
-  if (target && action !== 'close' && target.closest(OWNS_KEYS)) return null;
+  if (!target || action === 'close') return action;
+  if (target.closest(OWNS_KEYS)) return null;
+  if (
+    (action === 'next-category' || action === 'prev-category') &&
+    target.closest(OWNS_SIDEWAYS_KEYS)
+  ) {
+    return null;
+  }
   return action;
 }
