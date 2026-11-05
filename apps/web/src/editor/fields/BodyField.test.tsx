@@ -12,13 +12,21 @@ beforeEach(() => resetRichEditorCache());
 
 describe('BodyField (038, D290)', () => {
   it('counts the stored Markdown, styles included (FR-012)', async () => {
-    render(<BodyField value=":color[hi]{.red}" onChange={vi.fn()} loadEditor={loads()} />);
+    // D307 (039): the counter shows from 80 % of the limit; 480 + the 16-point styled run.
+    const value = `${'a'.repeat(464)}:color[hi]{.red}`;
+    render(<BodyField value={value} onChange={vi.fn()} loadEditor={loads()} />);
     const body = await screen.findByLabelText('Body');
-    expect(body).toHaveValue(':color[hi]{.red}');
-    expect(screen.getByText('16 / 600 characters')).toBeInTheDocument();
+    expect(body).toHaveValue(value);
+    expect(screen.getByText('480 / 600 characters')).toBeInTheDocument();
     expect(body.getAttribute('aria-describedby')).toContain(
-      screen.getByText('16 / 600 characters').closest('.field__hint')!.id,
+      screen.getByText('480 / 600 characters').closest('.field__hint')!.id,
     );
+  });
+
+  it('keeps the counter out of sight below 80 % (D307)', async () => {
+    render(<BodyField value=":color[hi]{.red}" onChange={vi.fn()} loadEditor={loads()} />);
+    await screen.findByLabelText('Body');
+    expect(screen.queryByText(/ \/ 600 characters/)).not.toBeInTheDocument();
   });
 
   it('links the error and marks the editor invalid', async () => {
@@ -54,7 +62,7 @@ describe('BodyField (038, D290)', () => {
     expect(plain).toHaveValue('Keep **me**');
     fireEvent.change(plain, { target: { value: 'Keep **me** too' } });
     expect(onChange).toHaveBeenCalledWith('Keep **me** too');
-    expect(screen.getByText('11 / 600 characters')).toBeInTheDocument();
+    expect(document.querySelector('.limit-meter')).toBeEmptyDOMElement();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     await screen.findByLabelText('Body');

@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
 
@@ -6,7 +7,8 @@ import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
  * no category nav, no bottom bar — with a top bar of Close, the heading and Save; Ctrl+Enter
  * saves and Escape leaves through the unsaved-changes guard. Save/Close themselves are `@smoke`.
  * Also the type chooser and type control (D301–D303): keyboard-only picking, switching with and
- * without content to lose, and resuming an unsaved draft's type.
+ * without content to lose, and resuming an unsaved draft's type. And the canvas (D305–D309): no
+ * sideways scroll from 320 px to 1280 px, 44 px targets, the Preview toggle, axe in both themes.
  */
 
 const textCard = (deck: WebDeck) => deck.items.find((item) => item.type === 'text')!;
@@ -160,3 +162,95 @@ test('a bare new-card link resumes an unsaved draft on its type (D302) @full', a
   await expect(page.getByText('Restore unsaved draft?')).toBeVisible();
   await expect(page.getByRole('radiogroup', { name: 'Card type' })).toHaveCount(0);
 });
+
+const WIDTHS = [320, 375, 768, 1280] as const;
+
+async function sidewaysOverflow(page: Page): Promise<number> {
+  return page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+}
+
+test('the canvas never scrolls sideways from 320 px to 1280 px (US3) @full', async ({
+  page,
+  webDeck,
+}) => {
+  for (const type of ['text', 'link', 'table'] as const) {
+    await page.goto(webUrl(`/d/${webDeck.slug}/new?type=${type}`));
+    await expect(page.getByLabel('Title')).toBeVisible();
+    for (const width of WIDTHS) {
+      await page.setViewportSize({ width, height: 800 });
+      expect(await sidewaysOverflow(page), `${type} at ${width}px`).toBeLessThanOrEqual(0);
+    }
+  }
+});
+
+test('the top bar and type control are at least 44 px (US3) @full', async ({ page, webDeck }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
+  const targets = [
+    page.getByRole('link', { name: 'Close' }),
+    page.getByRole('button', { name: 'Preview', exact: true }),
+    page.getByRole('button', { name: 'Save' }),
+    page.getByRole('button', { name: /^Card type: / }),
+  ];
+  for (const target of targets) {
+    const box = await target.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test('Preview swaps the canvas on a phone, gives focus back; side by side when wide (D309) @full', async ({
+  page,
+  webDeck,
+}) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
+  const title = page.getByLabel('Title');
+  const toggle = page.getByRole('button', { name: 'Preview', exact: true });
+  const preview = page.getByRole('region', { name: 'Preview', exact: true });
+  await title.fill('Seen in the preview');
+  await expect(preview).toBeHidden();
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(preview).toContainText('Seen in the preview');
+  await expect(title).toBeHidden();
+  await toggle.click();
+  await expect(title).toBeVisible();
+  await expect(toggle).toBeFocused();
+
+  // Escape leaves the preview first, not the composer; focus goes back to the toggle.
+  await toggle.click();
+  await page.keyboard.press('Escape');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(toggle).toBeFocused();
+  await expect(page).toHaveURL(/\/new\?type=text$/);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(toggle).toBeHidden();
+  await expect(title).toBeVisible();
+  await expect(preview).toBeVisible();
+});
+
+for (const colorScheme of ['light', 'dark'] as const) {
+  test(`the composer has names, labels and enough contrast (${colorScheme}) @full`, async ({
+    page,
+    webDeck,
+  }) => {
+    await page.emulateMedia({ colorScheme });
+    for (const path of ['/new?type=link', '/new']) {
+      await page.goto(webUrl(`/d/${webDeck.slug}${path}`));
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      const results = await new AxeBuilder({ page })
+        .withRules(['button-name', 'link-name', 'label', 'color-contrast', 'aria-allowed-attr'])
+        .analyze();
+      const violations = results.violations.map((v) => ({
+        id: v.id,
+        targets: v.nodes.map((node) => node.target.join(' ')),
+      }));
+      expect(violations, path).toEqual([]);
+    }
+  });
+}

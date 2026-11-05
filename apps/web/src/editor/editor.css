@@ -4,13 +4,16 @@
   gap: var(--gap);
 }
 
+/* D145 / 039 (US7): the restore offer is an inline card at the top of the writing column. */
 .draft-restore {
   display: grid;
-  gap: calc(var(--gap) / 2);
-  padding: var(--gap);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-inline-start: 4px solid var(--color-accent);
   border-radius: var(--radius);
-  background: var(--color-banner);
-  color: var(--color-banner-text);
+  background: var(--color-surface);
+  box-shadow: var(--elevation-1);
 }
 
 .draft-restore p {
@@ -21,73 +24,20 @@
   font-weight: 600;
 }
 
+.draft-restore__warning {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
 .draft-restore__actions {
   display: flex;
-  gap: var(--gap);
-}
-
-.editor__fields {
-  display: grid;
-  gap: var(--gap);
-  min-width: 0;
-}
-
-/* Tabs below 768px; both panels stay mounted, the inactive one is `hidden`. */
-.editor__tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.editor__tab {
-  min-height: var(--tap);
-  padding: 0 16px;
-  border: 0;
-  border-bottom: 3px solid transparent;
-  background: none;
-  color: var(--color-muted);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.editor__tab[aria-selected='true'] {
-  border-bottom-color: var(--color-accent);
-  color: var(--color-text);
-}
-
-.editor__panel {
-  min-width: 0;
-  padding-top: var(--gap);
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .editor__preview {
   display: grid;
   gap: 8px;
-}
-
-@media (min-width: 768px) {
-  .editor__layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: calc(var(--gutter) * 1.5);
-    align-items: start;
-  }
-
-  .editor__tabs {
-    display: none;
-  }
-
-  .editor__panel,
-  .editor__panel[hidden] {
-    display: block;
-    padding-top: 0;
-  }
-
-  .editor__panel--preview {
-    position: sticky;
-    top: var(--gutter);
-  }
 }
 
 .editor__banner {

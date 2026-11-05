@@ -54,16 +54,16 @@ All paths are under `apps/web/src/` unless they start with `e2e/`, `docs/` or `s
 
 ## Phase 4: US3 + US5 + US7 — Canvas, preview, sheets (PR 3)
 
-- [ ] T027 [US3] Order + sections in `CardEditor` (D306): leading media for link/image, headline title, borderless body, type section, Details
-- [ ] T028 [US3] `LimitMeter` from 80 % (D307) + tests updated
-- [ ] T029 [US3] `focus-first-invalid.ts` + blocked Save shows all errors and focuses; server-refused save focuses (D308) + [unit] tests
-- [ ] T030 [US3] `use-keyboard-inset.ts` + `ComposerDock.tsx` + dock CSS for the 038 toolbar (D305) + [unit] tests
-- [ ] T031 [US5] `use-preview-toggle.ts` + top-bar Preview toggle; remove `EditorTabs`; side-by-side sticky ≥ 768 px (D309) + [unit] tests
-- [ ] T032 [US7] `DraftRestoreBanner` as an inline card; Sheet motion and reduced motion
-- [ ] T033 [US3] [e2e:full] composer.spec: widths 320/375/768/1280 no sideways scroll, targets ≥ 44 px; preview toggle restores focus; axe light/dark
-- [ ] T034 [e2e:smoke] smoke `showPreview` helper uses the Preview toggle
+- [x] T027 [US3] Order + sections in `CardEditor` (D306): leading media for link/image, headline title, borderless body, type section, Details
+- [x] T028 [US3] `LimitMeter` from 80 % (D307) + tests updated
+- [x] T029 [US3] `focus-first-invalid.ts` + blocked Save shows all errors and focuses; server-refused save focuses (D308) + [unit] tests
+- [x] T030 [US3] `use-keyboard-inset.ts` + `ComposerDock.tsx` + dock CSS for the 038 toolbar (D305) + [unit] tests
+- [x] T031 [US5] `use-preview-toggle.ts` + top-bar Preview toggle; remove `EditorTabs`; side-by-side sticky ≥ 768 px (D309) + [unit] tests
+- [x] T032 [US7] `DraftRestoreBanner` as an inline card; Sheet motion and reduced motion
+- [x] T033 [US3] [e2e:full] composer.spec: widths 320/375/768/1280 no sideways scroll, targets ≥ 44 px; preview toggle restores focus; axe light/dark
+- [x] T034 [e2e:smoke] smoke `showPreview` helper uses the Preview toggle
 
 ## Phase 5: Close-out (PR 3)
 
-- [ ] T035 docs/design/card-editor.md 039 section + Deviations; docs/adr.md ADR-071; docs/architecture.md index row; PLAN.md usability item 8
-- [ ] T036 `pnpm typecheck && pnpm lint && pnpm test:unit && pnpm build:web && pnpm budget`
+- [x] T035 docs/design/card-editor.md 039 section + Deviations; docs/adr.md ADR-071; docs/architecture.md index row; PLAN.md usability item 8
+- [x] T036 `pnpm typecheck && pnpm lint && pnpm test:unit && pnpm build:web && pnpm budget`

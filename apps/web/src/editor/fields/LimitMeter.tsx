@@ -1,9 +1,15 @@
 import type { ReactElement } from 'react';
+import { classNames } from '../../ui/buttons/button-props';
+import { shouldShowCount } from './limit-meter';
 
 /** Above this share of the limit the meter is announced (contracts/editor-ui.md). */
 const ANNOUNCE_FROM = 0.9;
 
-/** "used / max" counter; polite live region only near the limit, so typing stays quiet. */
+/**
+ * "used / max" counter. D307 (039): shown from 80 % of the limit and always when over it, so a
+ * calm canvas carries no permanent numbers; a polite live region only near the limit.
+ * The element stays mounted (empty) so an `aria-describedby` pointing at it never dangles.
+ */
 export function LimitMeter({
   id,
   used,
@@ -17,12 +23,14 @@ export function LimitMeter({
 }): ReactElement {
   const near = used > max * ANNOUNCE_FROM;
   const over = used > max;
-  const className = ['limit-meter', near && 'limit-meter--near', over && 'limit-meter--over']
-    .filter(Boolean)
-    .join(' ');
+  const className = classNames(
+    'limit-meter',
+    near && 'limit-meter--near',
+    over && 'limit-meter--over',
+  );
   return (
     <span id={id} className={className} aria-live={near ? 'polite' : undefined}>
-      {used} / {max} {unit}
+      {shouldShowCount(used, max) ? `${used} / ${max} ${unit}` : null}
     </span>
   );
 }

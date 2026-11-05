@@ -19,8 +19,9 @@ function renderCalc(payload: DraftPayloadByType['calc']) {
 }
 
 describe('CalcFields', () => {
-  it('shows the live payload byte budget (FR-005)', () => {
-    const payload = newPayload('calc') as DraftPayloadByType['calc'];
+  it('shows the live payload byte budget from 80 % (FR-005, D307)', () => {
+    const start = newPayload('calc') as DraftPayloadByType['calc'];
+    const payload = { ...start, expression: 'a'.repeat(Math.ceil(PAYLOAD_MAX_BYTES * 0.85)) };
     renderCalc(payload);
     const used = payloadBytes({ type: 'calc', payload });
     expect(screen.getByText(`${used} / ${PAYLOAD_MAX_BYTES} bytes`)).toBeInTheDocument();

@@ -617,3 +617,13 @@ Unavailable actions use `aria-disabled` with a reason in the tooltip, never a si
 
 **Rationale**: Making it a card type reuses decks, categories, visibility, the editor, the activity log and the card lifecycle. Taking the reveal and the derived state from the payload in the DB means they can't drift from what the editor stores. One SQL predicate (with `now()`) repeats the D38 pattern, which is hard to miss on a new path. Details: [`docs/design/reminders.md`](design/reminders.md), `specs/037-reminders/research.md`.
 
+## ADR-071: The composer is its own frame; one sheet on the native dialog (D300–D313)
+
+**Decision**: Creating and editing a card happen in a composer frame outside the deck chrome (no deck search, chip rail or bottom bar): a sticky top bar with Close, the title, a Preview toggle on phones and Save, over one writing canvas. A bare `/new` starts with a type chooser; the composer has a type control that confirms before a switch drops content.
+
+- **Sheets**: every modal in the composer (leave guard, type picker, type-switch confirm) is `ui/sheet/Sheet`, a wrapper on `<dialog>` + `showModal()`: bottom sheet below 600 px, centred dialog above, one elevation, motion removed under `prefers-reduced-motion`.
+- **Save**: stays focusable with its reason (`aria-disabled`, ADR-059); a blocked or refused Save focuses the first invalid field.
+- **Preview**: a toggle below 768 px, a sticky second column from 768 px; the old editor tabs are gone.
+- **Keyboard**: the on-screen keyboard is measured with `visualViewport` (`--kb-inset`), and a dock with Save and the 038 toolbar sits on it on touch phones.
+
+**Rationale**: Writing a card is a task you finish or abandon, so it gets the screen, as in mail and notes apps. The native dialog gives a focus trap, inert background, Escape and top-layer stacking without a library. `visualViewport` works on iOS and Android without changing the viewport meta for the whole app. No API or data change. Details: [`docs/design/card-editor.md`](design/card-editor.md#composer-039-specs039-editor-experience-d300d313-adr-071), `specs/039-editor-experience/research.md`.

@@ -11,6 +11,7 @@ import {
 import type { Category, Deck, Item, ItemType } from '@gobbit/shared';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
 import { useCloudName } from '../cards/use-cloud-name';
+import { IconButton } from '../ui/buttons/IconButton';
 import { useNavigateHref } from '../ui/NavLink';
 import {
   draftFromItem,
@@ -23,18 +24,23 @@ import {
 import { DraftRestoreBanner } from './DraftRestoreBanner';
 import { editDraftKey, newDraftKey } from './drafts-store';
 import { EditorPreview } from './EditorPreview';
-import { EditorTabs } from './EditorTabs';
 import { BodyField } from './fields/BodyField';
 import { CategoryChips } from './fields/CategoryChips';
 import { fieldsByType } from './fields/registry';
 import { SourceUrlField } from './fields/SourceUrlField';
 import { TitleField } from './fields/TitleField';
+import { ComposerDock } from './composer/ComposerDock';
 import { ComposerErrorBanner } from './composer/ComposerErrorBanner';
+import { ComposerSection } from './composer/ComposerSection';
+import { SECTION_TITLES, sectionPlacement } from './composer/composer-sections';
+import { focusFirstInvalid } from './composer/focus-first-invalid';
 import { ComposerTopBar } from './composer/ComposerTopBar';
 import { saveBlockedReason, showSaveReason } from './composer/save-state';
 import { payloadHasContent } from './composer/payload-content';
 import { TypeControl, TypeLabel } from './composer/TypeControl';
 import { useComposerShortcuts } from './composer/use-composer-shortcuts';
+import { useKeyboardInset } from './composer/use-keyboard-inset';
+import { usePreviewToggle } from './composer/use-preview-toggle';
 import { useCalcCheck } from './use-calc-check';
 import { withCategories, withSavedCategories } from './rebaseline';
 import { useDraftAutosave } from './use-draft-autosave';
@@ -151,6 +157,13 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   }, []);
   // D308: a Save attempt reveals every problem, even on a card nobody has touched yet.
   const [attempted, setAttempted] = useState(false);
+  const preview = usePreviewToggle();
+  const keyboardOpen = useKeyboardInset(formRef);
+  // D308: bumped when a refused Save should land on the first invalid field, once it renders.
+  const [focusRequest, setFocusRequest] = useState(0);
+  useEffect(() => {
+    if (focusRequest > 0) focusFirstInvalid(formRef.current);
+  }, [focusRequest]);
 
   // D201/D204: guard every way out while there is unsaved work; write the draft on the way.
   const leaveDialog = useLeaveGuard({
@@ -190,6 +203,18 @@ export function CardEditor(props: CardEditorProps): ReactElement {
     ...saveErrors?.fields,
   };
 
+  // D308: a save the server refused lands on the first field it named, once, on the canvas.
+  const landedOn = useRef<typeof saveErrors>(null);
+  const { open: previewOpen, close: closePreview } = preview;
+  useEffect(() => {
+    if (!saveErrors || saveErrors === landedOn.current) return;
+    if (Object.keys(saveErrors.fields).length === 0) return;
+    // Leaving the preview re-runs this effect with the canvas shown.
+    if (previewOpen && closePreview()) return;
+    landedOn.current = saveErrors;
+    focusFirstInvalid(formRef.current);
+  }, [saveErrors, previewOpen, closePreview]);
+
   const update = (changes: Partial<Draft>) => {
     setDraft((d) => ({ ...d, ...changes }));
     clearErrors();
@@ -213,11 +238,18 @@ export function CardEditor(props: CardEditorProps): ReactElement {
 
   const blockedReason = saveBlockedReason(errorCount(clientErrors), calc.ready);
 
+  /** D308: a blocked Save shows every problem and lands on the first one (out of the preview). */
+  const revealErrors = () => {
+    setAttempted(true);
+    preview.close();
+    setFocusRequest((n) => n + 1);
+  };
+
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (saving) return;
     if (blockedReason) {
-      setAttempted(true);
+      revealErrors();
       return;
     }
     // D207: on an existing card the categories save on their own; Save never sends them.
@@ -226,9 +258,35 @@ export function CardEditor(props: CardEditorProps): ReactElement {
 
   const Fields = fieldsByType[draft.type];
   const entities = draft.entities;
+  const sectionTitle = SECTION_TITLES[draft.type];
+  const placement = sectionPlacement(draft.type);
+  const payloadError = shown['payload'] && <p className="field__error">{shown['payload']}</p>;
+  const typeSection = placement && sectionTitle && (
+    <ComposerSection title={sectionTitle} className={`composer-section--${placement}`}>
+      <Suspense fallback={<p className="muted">Loading…</p>}>
+        <Fields
+          payload={draft.payload}
+          onChange={(payload: Draft['payload']) => update({ payload })}
+          errors={shown}
+          deck={deck}
+          disabled={saving}
+          item={props.mode === 'edit' ? props.item : undefined}
+          setTitleIfEmpty={(title: string) =>
+            setDraft((d) => (d.title.trim() === '' ? { ...d, title } : d))
+          }
+        />
+      </Suspense>
+      {payloadError}
+    </ComposerSection>
+  );
 
-  // D310: Escape steps back through the same door as Close (the leave guard decides).
-  useComposerShortcuts({ formRef, onEscape: () => navigate(props.backHref) });
+  // D310: Escape leaves the preview first (D309), else steps back through the same door as Close.
+  useComposerShortcuts({
+    formRef,
+    onEscape: () => {
+      if (!preview.close()) navigate(props.backHref);
+    },
+  });
 
   return (
     <form ref={formRef} className="composer" onSubmit={onSubmit} noValidate>
@@ -239,33 +297,43 @@ export function CardEditor(props: CardEditorProps): ReactElement {
         saving={saving}
         blockedReason={blockedReason}
         showReason={showSaveReason(blockedReason, { changed, attempted })}
-        onBlockedSave={() => setAttempted(true)}
+        onBlockedSave={revealErrors}
+        actions={
+          <IconButton
+            icon="eye"
+            label="Preview"
+            className="composer-bar__preview"
+            pressed={preview.open}
+            onClick={preview.toggle}
+          />
+        }
       />
       <main className="composer__canvas card-editor editor">
         <ComposerErrorBanner
           message={saveErrors?.form ?? (calc.failed ? "Couldn't load the calculator check." : null)}
         />
-        {autosave.offer && (
-          <DraftRestoreBanner
-            stale={autosave.offer.stale}
-            onRestore={restoreDraft}
-            onDiscard={autosave.discard}
-          />
-        )}
-        <EditorTabs
-          edit={
-            <div className="editor__fields">
-              {props.mode === 'create' ? (
-                <TypeControl
-                  value={draft.type}
-                  hasContent={payloadHasContent(draft)}
-                  imagesOff={imagesOff}
-                  disabled={saving}
-                  onChange={changeType}
-                />
-              ) : (
-                <TypeLabel type={draft.type} />
-              )}
+        <div className="composer__layout" data-preview={preview.open ? 'open' : undefined}>
+          <div className="composer__write" hidden={preview.open}>
+            {autosave.offer && (
+              <DraftRestoreBanner
+                stale={autosave.offer.stale}
+                onRestore={restoreDraft}
+                onDiscard={autosave.discard}
+              />
+            )}
+            {props.mode === 'create' ? (
+              <TypeControl
+                value={draft.type}
+                hasContent={payloadHasContent(draft)}
+                imagesOff={imagesOff}
+                disabled={saving}
+                onChange={changeType}
+              />
+            ) : (
+              <TypeLabel type={draft.type} />
+            )}
+            {placement === 'leading' && typeSection}
+            <div className="composer__title">
               <TitleField
                 inputRef={titleRef}
                 value={draft.title}
@@ -273,26 +341,18 @@ export function CardEditor(props: CardEditorProps): ReactElement {
                 error={shown['title']}
                 disabled={saving}
               />
-              <Suspense fallback={<p className="muted">Loading…</p>}>
-                <Fields
-                  payload={draft.payload}
-                  onChange={(payload: Draft['payload']) => update({ payload })}
-                  errors={shown}
-                  deck={deck}
-                  disabled={saving}
-                  item={props.mode === 'edit' ? props.item : undefined}
-                  setTitleIfEmpty={(title: string) =>
-                    setDraft((d) => (d.title.trim() === '' ? { ...d, title } : d))
-                  }
-                />
-              </Suspense>
-              {shown['payload'] && <p className="field__error">{shown['payload']}</p>}
+            </div>
+            <div className="composer__body">
               <BodyField
                 value={draft.body}
                 onChange={(body) => update({ body })}
                 error={shown['body']}
                 disabled={saving}
               />
+            </div>
+            {placement === 'trailing' && typeSection}
+            {!placement && payloadError}
+            <ComposerSection title="Details" className="composer-section--details">
               {instant ? (
                 <CategoryChips
                   deck={deck}
@@ -325,9 +385,9 @@ export function CardEditor(props: CardEditorProps): ReactElement {
                   }
                 />
               )}
-            </div>
-          }
-          preview={
+            </ComposerSection>
+          </div>
+          <div className="composer__preview" hidden={!preview.open}>
             <EditorPreview
               draft={draft}
               base={props.mode === 'edit' ? props.item : null}
@@ -335,9 +395,12 @@ export function CardEditor(props: CardEditorProps): ReactElement {
               deckSlug={deck.slug}
               categories={categories}
             />
-          }
-        />
+          </div>
+        </div>
       </main>
+      {keyboardOpen && (
+        <ComposerDock saving={saving} blockedReason={blockedReason} onBlockedSave={revealErrors} />
+      )}
       {leaveDialog}
     </form>
   );
