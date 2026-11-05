@@ -33,4 +33,4 @@
 
 - Iteration 1 found one leak: "no gesture library" in FR-023. It was moved to Assumptions as a carried-over project constraint (ADR-065).
 - Pixel values (64 px top bar, 24 px edge zone, 500 ms hold) are user-facing layout and gesture thresholds carried over from 009/034/036, not implementation choices.
-- Clarified 2026-11-05: swipe directions and first-card-on-switch confirmed; long press stays reserved for browsing, and detected emails/phones/web addresses/numbers (US7, FR-024–FR-028) replace text selection on the main view.
+- Clarified 2026-11-05: swipe directions and first-card-on-switch confirmed; long press stays reserved for browsing, and detected emails/phones/web addresses/numbers (US7, FR-024–FR-028) replace text selection on the main view. Added: swipe up past the bottom of full view returns to Browse with a progressive reveal (FR-029).

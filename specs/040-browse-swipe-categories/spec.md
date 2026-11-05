@@ -18,6 +18,7 @@
 
 - Q: Which way do the swipes go? → A: Swipe up for the next card, down for the previous; swipe left for the next category, right for the previous (as in Assumptions).
 - Q: Long press opens full view, so how do readers act on text they would otherwise select (a phone number, an email)? → A: In Browse, long press is reserved for browsing, not text selection. Instead, like native apps, Browse recognises emails, phone numbers, web addresses and other numbers in a card's text, marks them, and gives each its own tap action: email opens the mail app, phone opens the dialer, a web address opens the link, any other number is copied to the clipboard (US7, FR-024–FR-028).
+- Q: Can a swipe leave full view? → A: Yes. In full view entered from Browse, swiping up scrolls to the bottom of the card when needed; continuing to swipe up past the bottom pulls the full card away and gradually reveals Browse behind it, and finishing the swipe returns to Browse on the same card (FR-029).
 - Q: Which card opens after a category switch? → A: The new category's first card; a card category tap from full view keeps the same card (as in Assumptions).
 
 ## Why
@@ -109,6 +110,9 @@ The member wants to know where a card came from or what details were found in it
 5. **Given** full view, **When** the member closes it (close control, system back or Escape), **Then** Browse shows the same card at the same position, and Browse itself stays open.
 6. **Given** full view, **When** the member scrolls, **Then** it scrolls vertically to read everything, and swipes don't change card or category.
 7. **Given** full view, **Then** the member can select and copy the card's text.
+8. **Given** full view on a card longer than the screen, **When** the member swipes up, **Then** it scrolls towards the bottom of the card as usual. Once the bottom is reached, continuing to swipe up moves the full card up with the finger and Browse (the same card, as it looks in the main view) gradually shows behind it, more of it the further the swipe goes.
+9. **Given** that pull past the bottom, **When** the member lets go past the threshold (or with a quick flick), **Then** full view closes and Browse shows the same card; it does not also move to the next card. **When** they let go before the threshold, **Then** full view springs back into place and nothing changes.
+10. **Given** full view on a card that fits the screen, **When** the member swipes up, **Then** the pull-to-return starts straight away, with no scrolling first.
 
 ---
 
@@ -174,6 +178,8 @@ A card lists the family's phone numbers. In Browse, each number is marked as tap
 - **Card changes underneath** (edited or archived by someone else): Browse keeps its place by card id, as today. If the card in full view is archived or deleted, full view closes and Browse shows the next card.
 - **Rotation or resize**: the current card and category stay current; an open banner or full view stays open.
 - **RTL text**: card text keeps its own direction. "Next category" always means the next chip in chip-row order, and swiping left always means next, whatever the text direction.
+- **Swipe-out with a short release**: letting go below the threshold always springs back; reversing direction mid-pull cancels it. A swipe-out that starts while the content is still scrolling (momentum) only begins once the bottom has been reached and the finger keeps moving.
+- **Reduced motion** (full view): the pull still reveals Browse behind the card but without the springy settle, and closing jumps rather than slides.
 - **Reduced motion**: card and category changes jump without sliding. The banner appears and disappears without sliding or fading, but still disappears after 2 seconds.
 - **Detection limits**: text in code spans and code blocks, inside existing links, in the card's title, and numbers that are part of a date, time or a longer word (like "A4" or "2nd") is not detected. Short numbers (fewer than 3 digits) and years in running text (e.g. "since 2019") are not marked as copyable, so a card isn't covered in highlights.
 - **Phone or number?** Digit runs that look like a phone number (a leading `+`, or 7 or more digits with the usual spaces, dashes, dots or brackets) are phones; other numbers are copyable numbers. When unsure, Browse treats it as a number to copy, since copying is harmless and dialing is not.
@@ -215,9 +221,10 @@ A card lists the family's phone numbers. In Browse, each number is marked as tap
 
 - **FR-015**: Full view MUST open from the dock's Full view action and from a press and hold of at least 500 ms on any part of the card that isn't a button, link or form control. Moving the finger beyond a small threshold before 500 ms MUST cancel the hold. A hold that opens full view MUST NOT also show the browser's context menu or start a text selection.
 - **FR-016**: Full view MUST show the card's content followed by its categories, details (grouped by kind, with the empty-details message), type and source (kind, link, added/edited/published times), i.e. everything Browse shows today. The content MUST keep the same distinct presentation as on the main view, and the metadata MUST be visibly secondary to it.
-- **FR-017**: Full view MUST scroll vertically. Swipes in full view MUST NOT change card or category. Because a long press has no browsing role there, text in full view MUST stay selectable as the fallback for copying any text detection doesn't cover.
-- **FR-018**: Closing full view (close control, Escape, or system back) MUST return to the same card in Browse without closing Browse. Opening full view MUST NOT add a history entry that survives closing it.
+- **FR-017**: Full view MUST scroll vertically. Swipes in full view MUST NOT change card or category; a continued upward swipe past the bottom closes full view (FR-029). Because a long press has no browsing role there, text in full view MUST stay selectable as the fallback for copying any text detection doesn't cover.
+- **FR-018**: Closing full view (close control, Escape, system back, or the swipe-out of FR-029) MUST return to the same card in Browse without closing Browse. Opening full view MUST NOT add a history entry that survives closing it.
 - **FR-019**: Tapping a category on a card in full view MUST close full view and switch Browse to that category on the same card (FR-011 banner shown). It MUST NOT open the deck list.
+- **FR-029**: In full view entered from Browse, an upward swipe MUST first scroll the card to its bottom. Continuing the upward swipe once at the bottom (or straight away when the card fits the screen) MUST pull the full view up with the finger and progressively reveal Browse on the same card behind it, in proportion to the distance pulled, so it is clear that letting go returns to Browse. Releasing past a threshold, or flicking, MUST close full view and land on the same card without moving to the next one; releasing earlier MUST spring back with nothing changed. The close control stays the tap and keyboard equivalent.
 
 **Detected text**
 
