@@ -11,8 +11,8 @@ import { expect, SMOKE_CATEGORY, test, webUrl } from '../../fixtures/web';
 /** Below 768px (Pixel 7) the preview is a tab: open it, then read the preview region. */
 /** D309 (039): on a phone the top bar's Preview toggle swaps the canvas for the preview. */
 async function showPreview(page: Page) {
-  await page.getByRole('button', { name: 'Preview' }).click();
-  return page.getByRole('region', { name: 'Preview' });
+  await page.getByRole('button', { name: 'Preview', exact: true }).click();
+  return page.getByRole('region', { name: 'Preview', exact: true });
 }
 const save = (page: Page) => page.getByRole('button', { name: 'Save' });
 

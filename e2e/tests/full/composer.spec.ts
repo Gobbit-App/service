@@ -190,7 +190,7 @@ test('the top bar and type control are at least 44 px (US3) @full', async ({ pag
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   const targets = [
     page.getByRole('link', { name: 'Close' }),
-    page.getByRole('button', { name: 'Preview' }),
+    page.getByRole('button', { name: 'Preview', exact: true }),
     page.getByRole('button', { name: 'Save' }),
     page.getByRole('button', { name: /^Card type: / }),
   ];
@@ -208,8 +208,8 @@ test('Preview swaps the canvas on a phone, gives focus back; side by side when w
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   const title = page.getByLabel('Title');
-  const toggle = page.getByRole('button', { name: 'Preview' });
-  const preview = page.getByRole('region', { name: 'Preview' });
+  const toggle = page.getByRole('button', { name: 'Preview', exact: true });
+  const preview = page.getByRole('region', { name: 'Preview', exact: true });
   await title.fill('Seen in the preview');
   await expect(preview).toBeHidden();
 
