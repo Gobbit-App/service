@@ -55,14 +55,16 @@ export function viewport(page: Page): { width: number; height: number } {
 /**
  * 040 (D325): a vertical swipe across the middle of the screen: upward = next card, downward =
  * previous. Each category's cards sit on a native vertical scroll-snap track, so this is a real
- * touch scroll, not a synthetic gesture.
+ * touch scroll, not a synthetic gesture. CDP touches end without a fling, so mandatory snapping
+ * lands on the nearest card: the drag must clear half a page after the touch slop, hence 0.65.
+ * It starts above the dock (next) or below the top bar (prev).
  */
 export async function swipeCard(page: Page, step: 'next' | 'prev'): Promise<void> {
   const { width, height } = viewport(page);
-  const distance = Math.round(height * 0.5);
+  const distance = Math.round(height * 0.65);
   await swipe(page, {
     x: Math.round(width / 2),
-    y: Math.round(height * (step === 'next' ? 0.75 : 0.25)),
+    y: Math.round(height * (step === 'next' ? 0.8 : 0.2)),
     dx: 0,
     dy: step === 'next' ? -distance : distance,
     durationMs: 150,

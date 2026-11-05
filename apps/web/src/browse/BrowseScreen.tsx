@@ -19,6 +19,7 @@ import { dismissHint, shouldShowHint } from './hint-store';
 import { positionLabel, TopBar } from './TopBar';
 import { useBrowseKeys } from './use-browse-keys';
 import { useCategoryTrack } from './use-category-track';
+import { cardTarget } from './card-target';
 import { useEndPull } from './use-end-pull';
 import './browse.css';
 
@@ -103,7 +104,13 @@ export function BrowseScreen({
     },
     [onChange, show, entryOf, queryClient, deckSlug],
   );
-  const { shown, visits, jumpTargets, jumpTo, step } = useCategoryTrack({
+  const {
+    shown,
+    visits,
+    pending: pendingCards,
+    jumpTo,
+    step,
+  } = useCategoryTrack({
     track,
     entries,
     c,
@@ -194,7 +201,7 @@ export function BrowseScreen({
                 deckSlug={deckSlug}
                 filter={filterFromCategory(entry.slug)}
                 categories={categories.data ?? []}
-                targetId={entry.slug === c ? search.i : jumpTargets[entry.slug]}
+                targetId={cardTarget(entry.slug, { c, i: search.i }, pendingCards)}
                 category={entry.slug}
                 onSettle={settle}
                 onCurrent={setCurrent}

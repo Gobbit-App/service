@@ -46,3 +46,11 @@ Decisions the plan didn't make, and deviations from it. At close-out these are c
 - **E2E was not run locally.** The specs (`smoke/browse.spec.ts`, `full/browse-rework.spec.ts`)
   typecheck and are left to CI, which runs them against the PR's stack with the seeded smoke
   session.
+- **A category being left reopens on its first card even before the address updates.** The
+  track remounts the stack it leaves (D328) in the same render in which the address still names
+  that category and its `i`, so the stack froze on the card the reader left. `cardTarget()`
+  (`browse/card-target.ts`) keeps a settle's or jump's targets until the address arrives. Found
+  by reproducing the CI failure against the built app; the smoke test now reads on in MAIN first.
+- **The e2e card swipe drags 65 % of the screen.** CDP touches end without a fling, so mandatory
+  snapping returns to the nearest card; a 50 % drag minus the touch slop stayed short of half a
+  page and snapped back. Real phones fling, so this is a test-helper fix, not an app change.

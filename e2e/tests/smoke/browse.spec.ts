@@ -116,10 +116,13 @@ test.describe('browse mode', () => {
 
   test('categories sideways, the banner and the list @smoke', async ({ page }) => {
     await skipHint(page);
-    const [first] = deck.cards;
+    const [first, second] = deck.cards;
     await page.goto(webUrl(`/d/${deck.slug}/c/${MAIN.slug}`));
     await page.getByRole('button', { name: 'Browse', exact: true }).click();
     await expectCurrent(page, first!);
+    // read on a little first, so coming back proves MAIN reset to its first card
+    await swipeCard(page, 'next');
+    await expectCurrent(page, second!);
 
     // a sideways swipe moves to the next category at its first card, with the banner (D330)
     await swipeCategory(page, 'next');
@@ -133,10 +136,10 @@ test.describe('browse mode', () => {
     await settle(page);
     await expectCategory(page, OTHER);
 
-    // back the other way keeps the card the reader was on in MAIN
+    // back the other way opens MAIN on its first card again (D328, FR-008): address `c` only
     await swipeCategory(page, 'prev');
     await expectCategory(page, MAIN);
-    await expectCurrent(page, first!);
+    await expect(cardHeading(page, first!.title)).toBeVisible();
 
     // the list: current one marked, a pick jumps there and closes it
     await categoryButton(page).click();

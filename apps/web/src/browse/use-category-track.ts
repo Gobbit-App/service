@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import type { PendingTargets } from './card-target';
 import { stepCategory, type CycleEntry } from './category-cycle';
 import { CATEGORY_ATTR } from './CategoryTrack';
 import { pagingBehavior, scrollToPage } from './motion';
@@ -9,8 +10,8 @@ export interface CategoryTrackState {
   shown: string;
   /** Bumped when the reader leaves or jumps into a category: its stack remounts fresh (D328). */
   visits: Readonly<Record<string, number>>;
-  /** The card a jump asked for in `slug`, until the reader swipes away from it. */
-  jumpTargets: Readonly<Record<string, string | undefined>>;
+  /** Cards a settle or jump asked for, until the address arrives (feed to `cardTarget`). */
+  pending: PendingTargets | null;
   /** D328: straight to `slug` (and its card `itemId`), with no sideways animation. */
   jumpTo: (slug: string, itemId?: string) => void;
   /** Animates to the neighbour; false when there is none (the caller shows the end banner). */
@@ -61,7 +62,11 @@ export function useCategoryTrack({
   const shown = known(currentId) ? currentId : c;
 
   const [visits, setVisits] = useState<Record<string, number>>({});
-  const [jumpTargets, setJumpTargets] = useState<Record<string, string | undefined>>({});
+  const [pending, setPending] = useState<PendingTargets | null>(null);
+  // The address arrived: it names the right category and card again.
+  if (pending && pending.to === c) setPending(null);
+  const pend = (to: string, cards: PendingTargets['cards']) =>
+    setPending((prev) => ({ to, cards: { ...prev?.cards, ...cards } }));
 
   const latest = useRef({ c, currentId, onArrive });
   useEffect(() => {
@@ -76,7 +81,8 @@ export function useCategoryTrack({
     const left = latest.current.c;
     if (!known(settledId) || settledId === left) return;
     setVisits((prev) => bump(prev, left));
-    setJumpTargets((prev) => ({ ...prev, [left]: undefined }));
+    // The left stack remounts before the address drops its `i`: open it on its first card.
+    pend(settledId, { [left]: undefined });
     latest.current.onArrive(settledId, undefined);
     // `known` reads `entries`, which only matter once the settle changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,7 +92,7 @@ export function useCategoryTrack({
     (slug: string, itemId?: string) => {
       const from = latest.current.c;
       if (slug === from) return;
-      setJumpTargets((prev) => ({ ...prev, [slug]: itemId }));
+      pend(slug, { [slug]: itemId, [from]: undefined });
       setVisits((prev) => bump(prev, slug, from));
       handled.current = slug;
       force(slug);
@@ -128,5 +134,5 @@ export function useCategoryTrack({
     [entries, track],
   );
 
-  return { shown, visits, jumpTargets, jumpTo, step };
+  return { shown, visits, pending, jumpTo, step };
 }
