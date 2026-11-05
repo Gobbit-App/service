@@ -1204,6 +1204,23 @@ h3 {
   font-size: 0.875rem;
 }
 
+/*
+ * D323 form rhythm: a label sits 4 px from its control (.field), a control's own actions 8 px
+ * from it (.field-group), and separate fields 24 px apart (.editor__fields), so what belongs
+ * together reads together.
+ */
+.editor__fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.field-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
 /* 038: the body field before the rich editor chunk loads, and its plain fallback. */
 .rich-editor__fallback {
   display: flex;

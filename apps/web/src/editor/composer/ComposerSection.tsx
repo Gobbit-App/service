@@ -19,7 +19,7 @@ export function ComposerSection({
       <h2 id={id} className="composer-section__title">
         {title}
       </h2>
-      {children}
+      <div className="composer-section__body">{children}</div>
     </section>
   );
 }

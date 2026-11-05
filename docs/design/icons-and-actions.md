@@ -12,7 +12,7 @@ Every action in the web app is an icon control from one hand-drawn set. A card's
 
 **Primitives (D211)** in `ui/buttons/`:
 - `IconButton` and `IconLink` are the 44 × 44 `.icon-button` chiclet: a 20 px icon, `aria-label` = label, and `data-tip` (tooltip text). `pressed` becomes `aria-pressed`, and `tone="danger"` is the destructive tone.
-- `Button` and `ButtonLink` are the `.button` pill with an icon and `.button__label`. Below 480 px the label is visually hidden and the tooltip takes over; the accessible name never changes.
+- `Button` and `ButtonLink` are the `.button` pill with an icon and `.button__label`. Below 480 px the label is visually hidden and the tooltip takes over; the accessible name never changes. Exceptions: Save in the composer bar, and every `Button` in the composer canvas, keep their labels (D323).
 - `disabledReason` (offline, busy) renders `aria-disabled` and keeps the control focusable. The tooltip then reads "label — reason". Plain `disabled` stays for form states that show their reason next to the control.
 - Selection controls keep their text, because the text is the choice: tabs, chips, the search mode toggle, recent searches, menu radio items and the card-type radios.
 
