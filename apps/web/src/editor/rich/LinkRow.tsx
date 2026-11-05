@@ -35,7 +35,7 @@ export function LinkRow({
     if (event.key === 'Enter') {
       event.preventDefault();
       apply();
-    } else if (event.key === 'Escape') {
+    } else if (event.key === 'Escape' && !event.defaultPrevented) {
       event.preventDefault();
       onClose();
     }

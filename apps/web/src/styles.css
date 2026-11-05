@@ -33,6 +33,36 @@
 
   /* D274: the fixed bottom bar's height (without the safe area). */
   --bottom-bar-h: calc(var(--tap) + 16px);
+
+  /* D311 (039): type scale, spacing, elevation, radii and motion for the composer and sheets. */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --elevation-1: 0 1px 2px rgb(0 0 0 / 6%);
+  --elevation-2: 0 2px 6px rgb(0 0 0 / 8%), 0 8px 24px rgb(0 0 0 / 6%);
+  --elevation-3: 0 8px 32px rgb(0 0 0 / 18%);
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --motion-fast: 120ms;
+  --motion-base: 220ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* D311: no movement under "reduce motion" (FR-019). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -50,6 +80,10 @@
     --color-banner: #d7f0db;
     --color-banner-text: #121a1c;
     --shadow: none;
+    /* Shadows read poorly on dark surfaces; a lighter rim carries the elevation instead. */
+    --elevation-1: none;
+    --elevation-2: 0 0 0 1px rgb(255 255 255 / 6%);
+    --elevation-3: 0 0 0 1px rgb(255 255 255 / 8%), 0 8px 32px rgb(0 0 0 / 50%);
   }
 }
 
@@ -2146,35 +2180,4 @@ h3 {
 
 .waitlist-row > .form-error {
   flex-basis: 100%;
-}
-
-/* 022: "Discard changes?" (native modal dialog, shared by the editor and the review queue) */
-.discard-dialog {
-  width: min(22rem, calc(100vw - 2 * var(--gap)));
-  padding: var(--gap);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.discard-dialog::backdrop {
-  background: rgb(0 0 0 / 0.45);
-}
-
-.discard-dialog__title {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-}
-
-.discard-dialog p {
-  margin: 0 0 var(--gap);
-  color: var(--color-muted);
-}
-
-.discard-dialog__buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
 }

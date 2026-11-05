@@ -13,7 +13,7 @@ async function showPreview(page: Page) {
   await page.getByRole('tab', { name: 'Preview' }).click();
   return page.getByRole('region', { name: 'Preview' });
 }
-const save = (page: Page) => page.getByRole('button', { name: 'Save card' });
+const save = (page: Page) => page.getByRole('button', { name: 'Save' });
 
 test('a text card added from the editor shows in the list and survives a reload @smoke', async ({
   page,
@@ -206,16 +206,17 @@ test('the editor goes back to its card; leaving with changes asks first (022) @s
   const discardDialog = page.getByRole('dialog', { name: 'Discard changes?' });
   await page.goto(webUrl(`/i/${card.id}/edit`));
 
-  // Unchanged: Cancel leaves at once, to the card.
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  // Unchanged: Close leaves at once, to the card.
+  const close = page.getByRole('link', { name: 'Close' });
+  await close.click();
   await expect(page).toHaveURL(cardUrl);
   await expect(discardDialog).toHaveCount(0);
 
-  // Changed: the header back asks; Keep editing stays with the text.
+  // Changed: Close asks; Keep editing stays with the text.
   await page.getByRole('link', { name: 'Edit', exact: true }).click();
   await expect(page).toHaveURL(editUrl);
   await page.getByLabel('Title', { exact: true }).fill(`Unsaved ${webDeck.slug}`);
-  await page.getByRole('link', { name: 'Back' }).click();
+  await close.click();
   await expect(discardDialog).toBeVisible();
   await discardDialog.getByRole('button', { name: 'Keep editing' }).click();
   await expect(discardDialog).toHaveCount(0);
@@ -223,7 +224,7 @@ test('the editor goes back to its card; leaving with changes asks first (022) @s
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue(`Unsaved ${webDeck.slug}`);
 
   // Discard leaves for the card, which is unchanged.
-  await page.getByRole('link', { name: 'Back' }).click();
+  await close.click();
   await discardDialog.getByRole('button', { name: 'Discard' }).click();
   await expect(page).toHaveURL(cardUrl);
   await expect(page.getByRole('heading', { name: card.title })).toBeVisible();

@@ -24,7 +24,10 @@ import { ErrorState, LoadingState } from '../ui/StatusViews';
 
 const ALL: ChipView = { kind: 'all' };
 
-/** Deck layout (D65): header, chip row, the selected list view and the bottom bar (D274). */
+/**
+ * Deck layout (D65): header, chip row, the selected list view and the bottom bar (D274). Browse and
+ * the new-card composer render without it (D139, D300).
+ */
 export const Route = createFileRoute('/d/$slug')({
   component: DeckLayout,
 });
@@ -76,8 +79,8 @@ function DeckLayout() {
     );
   }
 
-  // D139: Browse is full screen; the deck chrome steps aside.
-  if (browsing) return <Outlet />;
+  // D139 / D300: Browse and the card composer are full screen; the deck chrome steps aside.
+  if (browsing || adding) return <Outlet />;
 
   return (
     <>
@@ -99,8 +102,7 @@ function DeckLayout() {
       <main className="page">
         <Outlet />
       </main>
-      {/* D274: the editor keeps its own save bar, so the bottom bar steps aside there. */}
-      {!adding && <BottomBar deck={deck.data} browseC={browseC} />}
+      <BottomBar deck={deck.data} browseC={browseC} />
     </>
   );
 }

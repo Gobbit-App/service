@@ -151,7 +151,7 @@ test('Add photo on a locked-host link is saved; Remove photo takes it off @full'
   const created = page.waitForResponse(
     (r) => /\/api\/decks\/[^/]+\/items$/.test(r.url()) && r.request().method() === 'POST',
   );
-  await page.getByRole('button', { name: 'Save card' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
   const response = await created;
   expect(response.status()).toBe(201);
   const item = (await response.json()) as { id: string; payload: { preview?: Json } };
@@ -166,7 +166,7 @@ test('Add photo on a locked-host link is saved; Remove photo takes it off @full'
   await page.goto(webUrl(`/i/${item.id}/edit`));
   await page.getByRole('button', { name: 'Remove photo' }).click();
   await expect(page.getByLabel('Add photo')).toBeAttached();
-  await page.getByRole('button', { name: 'Save card' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
   await expect(page).toHaveURL(new RegExp(`/i/${item.id}$`));
   await expect(page.locator('.link-card img')).toHaveCount(0);
 });

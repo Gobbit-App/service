@@ -1,4 +1,12 @@
-import { Suspense, useCallback, useMemo, useState, type FormEvent, type ReactElement } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactElement,
+} from 'react';
 import type { Category, Deck, Item, ItemType } from '@gobbit/shared';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
 import { useNavigateHref } from '../ui/NavLink';
@@ -19,7 +27,10 @@ import { CategoryChips } from './fields/CategoryChips';
 import { fieldsByType } from './fields/registry';
 import { SourceUrlField } from './fields/SourceUrlField';
 import { TitleField } from './fields/TitleField';
-import { SaveBar, saveBlockedReason } from './SaveBar';
+import { ComposerErrorBanner } from './composer/ComposerErrorBanner';
+import { ComposerTopBar } from './composer/ComposerTopBar';
+import { saveBlockedReason, showSaveReason } from './composer/save-state';
+import { useComposerShortcuts } from './composer/use-composer-shortcuts';
 import { TYPE_LABELS, TypePicker } from './TypePicker';
 import { useCalcCheck } from './use-calc-check';
 import { withCategories, withSavedCategories } from './rebaseline';
@@ -31,9 +42,10 @@ import { useInstantCategories } from './use-instant-categories';
 import { useSaveCard, type SaveTarget } from './use-save-card';
 import { errorCount, validateDraft, type FieldErrors } from './validate';
 import './editor.css';
+import './composer/composer.css';
 
 type CommonProps = {
-  /** Where Cancel goes: the header back target of the editor (D200). */
+  /** Where Close (and Escape) go: the editor's back target (D200); the leave guard decides. */
   backHref: string;
 };
 
@@ -123,6 +135,9 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   } = useSaveCard(saveTarget(props), autosave.clear);
   const navigate = useNavigateHref();
   const changed = isChanged(draft);
+  const formRef = useRef<HTMLFormElement>(null);
+  // D308: a Save attempt reveals every problem, even on a card nobody has touched yet.
+  const [attempted, setAttempted] = useState(false);
 
   // D201/D204: guard every way out while there is unsaved work; write the draft on the way.
   const leaveDialog = useLeaveGuard({
@@ -156,9 +171,9 @@ export function CardEditor(props: CardEditorProps): ReactElement {
     () => validateDraft(draft, { calcExpression: calc.check, categoriesOptional: isProposal }),
     [draft, calc.check, isProposal],
   );
-  // Client errors show once the user has changed something; server errors always.
+  // Client errors show once the user has changed something or tried to save; server errors always.
   const shown: FieldErrors = {
-    ...(changed ? clientErrors : {}),
+    ...(changed || attempted ? clientErrors : {}),
     ...saveErrors?.fields,
   };
 
@@ -183,9 +198,15 @@ export function CardEditor(props: CardEditorProps): ReactElement {
     }
   };
 
+  const blockedReason = saveBlockedReason(errorCount(clientErrors), calc.ready);
+
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (errorCount(clientErrors) > 0 || !calc.ready) return;
+    if (saving) return;
+    if (blockedReason) {
+      setAttempted(true);
+      return;
+    }
     // D207: on an existing card the categories save on their own; Save never sends them.
     void save(props.mode === 'edit' ? withCategories(draft, props.item.categoryIds) : draft);
   };
@@ -193,102 +214,112 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   const Fields = fieldsByType[draft.type];
   const entities = draft.entities;
 
+  // D310: Escape steps back through the same door as Close (the leave guard decides).
+  useComposerShortcuts({ formRef, onEscape: () => navigate(props.backHref) });
+
   return (
-    <form className="card-editor editor" onSubmit={onSubmit} noValidate>
-      <h2 className="editor__heading">{props.mode === 'create' ? 'New card' : 'Edit card'}</h2>
-      {autosave.offer && (
-        <DraftRestoreBanner
-          stale={autosave.offer.stale}
-          onRestore={restoreDraft}
-          onDiscard={autosave.discard}
-        />
-      )}
-      <EditorTabs
-        edit={
-          <div className="editor__fields">
-            {props.mode === 'create' ? (
-              <TypePicker value={draft.type} onChange={changeType} disabled={saving} />
-            ) : (
-              <p className="editor__type">
-                Type: <strong>{TYPE_LABELS[draft.type]}</strong>
-              </p>
-            )}
-            <TitleField
-              value={draft.title}
-              onChange={(title) => update({ title })}
-              error={shown['title']}
-              disabled={saving}
-            />
-            <Suspense fallback={<p className="muted">Loading…</p>}>
-              <Fields
-                payload={draft.payload}
-                onChange={(payload: Draft['payload']) => update({ payload })}
-                errors={shown}
-                deck={deck}
-                disabled={saving}
-                item={props.mode === 'edit' ? props.item : undefined}
-                setTitleIfEmpty={(title: string) =>
-                  setDraft((d) => (d.title.trim() === '' ? { ...d, title } : d))
-                }
-              />
-            </Suspense>
-            {shown['payload'] && <p className="field__error">{shown['payload']}</p>}
-            <BodyField
-              value={draft.body}
-              onChange={(body) => update({ body })}
-              error={shown['body']}
-              disabled={saving}
-            />
-            {instant ? (
-              <CategoryChips
-                deck={deck}
-                categories={categories}
-                selected={instant.selection}
-                onChange={instant.change}
-                error={instant.refusal ?? undefined}
-              />
-            ) : (
-              <CategoryChips
-                deck={deck}
-                categories={categories}
-                selected={draft.categoryIds}
-                onChange={(categoryIds) => update({ categoryIds })}
-                error={shown['categoryIds']}
-                disabled={saving}
-              />
-            )}
-            <SourceUrlField
-              value={draft.sourceUrl}
-              onChange={(sourceUrl) => update({ sourceUrl })}
-              error={shown['sourceUrl']}
-              disabled={saving}
-            />
-            {entities && (
-              <EntityChips
-                entities={entities}
-                onRemove={(kind, index) =>
-                  update({ entities: removeEntity(entities, kind, index) })
-                }
-              />
-            )}
-          </div>
-        }
-        preview={
-          <EditorPreview
-            draft={draft}
-            base={props.mode === 'edit' ? props.item : null}
-            deckId={deck.id}
-            deckSlug={deck.slug}
-            categories={categories}
-          />
-        }
-      />
-      <SaveBar
-        blockedReason={saveBlockedReason(errorCount(clientErrors), calc.ready)}
+    <form ref={formRef} className="composer" onSubmit={onSubmit} noValidate>
+      <ComposerTopBar
+        heading={props.mode === 'create' ? 'New card' : 'Edit card'}
+        deckName={deck.name}
+        closeHref={props.backHref}
         saving={saving}
-        formError={saveErrors?.form ?? (calc.failed ? "Couldn't load the calculator check." : null)}
-        onCancel={() => navigate(props.backHref)}
+        blockedReason={blockedReason}
+        showReason={showSaveReason(blockedReason, { changed, attempted })}
+        onBlockedSave={() => setAttempted(true)}
       />
+      <main className="composer__canvas card-editor editor">
+        <ComposerErrorBanner
+          message={saveErrors?.form ?? (calc.failed ? "Couldn't load the calculator check." : null)}
+        />
+        {autosave.offer && (
+          <DraftRestoreBanner
+            stale={autosave.offer.stale}
+            onRestore={restoreDraft}
+            onDiscard={autosave.discard}
+          />
+        )}
+        <EditorTabs
+          edit={
+            <div className="editor__fields">
+              {props.mode === 'create' ? (
+                <TypePicker value={draft.type} onChange={changeType} disabled={saving} />
+              ) : (
+                <p className="editor__type">
+                  Type: <strong>{TYPE_LABELS[draft.type]}</strong>
+                </p>
+              )}
+              <TitleField
+                value={draft.title}
+                onChange={(title) => update({ title })}
+                error={shown['title']}
+                disabled={saving}
+              />
+              <Suspense fallback={<p className="muted">Loading…</p>}>
+                <Fields
+                  payload={draft.payload}
+                  onChange={(payload: Draft['payload']) => update({ payload })}
+                  errors={shown}
+                  deck={deck}
+                  disabled={saving}
+                  item={props.mode === 'edit' ? props.item : undefined}
+                  setTitleIfEmpty={(title: string) =>
+                    setDraft((d) => (d.title.trim() === '' ? { ...d, title } : d))
+                  }
+                />
+              </Suspense>
+              {shown['payload'] && <p className="field__error">{shown['payload']}</p>}
+              <BodyField
+                value={draft.body}
+                onChange={(body) => update({ body })}
+                error={shown['body']}
+                disabled={saving}
+              />
+              {instant ? (
+                <CategoryChips
+                  deck={deck}
+                  categories={categories}
+                  selected={instant.selection}
+                  onChange={instant.change}
+                  error={instant.refusal ?? undefined}
+                />
+              ) : (
+                <CategoryChips
+                  deck={deck}
+                  categories={categories}
+                  selected={draft.categoryIds}
+                  onChange={(categoryIds) => update({ categoryIds })}
+                  error={shown['categoryIds']}
+                  disabled={saving}
+                />
+              )}
+              <SourceUrlField
+                value={draft.sourceUrl}
+                onChange={(sourceUrl) => update({ sourceUrl })}
+                error={shown['sourceUrl']}
+                disabled={saving}
+              />
+              {entities && (
+                <EntityChips
+                  entities={entities}
+                  onRemove={(kind, index) =>
+                    update({ entities: removeEntity(entities, kind, index) })
+                  }
+                />
+              )}
+            </div>
+          }
+          preview={
+            <EditorPreview
+              draft={draft}
+              base={props.mode === 'edit' ? props.item : null}
+              deckId={deck.id}
+              deckSlug={deck.slug}
+              categories={categories}
+            />
+          }
+        />
+      </main>
       {leaveDialog}
     </form>
   );

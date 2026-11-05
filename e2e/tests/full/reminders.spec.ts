@@ -44,7 +44,7 @@ test('a reminder created in the editor shows its due line on the deck @full', as
   await expect(page.getByLabel('Deadline')).not.toHaveValue('');
   await page.getByLabel('Show before amount').fill('2');
   await page.getByLabel('Show before unit').selectOption('days');
-  await page.getByRole('button', { name: 'Save card' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
 
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   const card = page.getByRole('article').filter({ hasText: title });

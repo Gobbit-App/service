@@ -17,6 +17,8 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   label: string;
   variant?: ButtonVariant;
   disabledReason?: string | null;
+  /** Called instead of `onClick` while `disabledReason` is set (D308). */
+  onBlockedClick?: () => void;
   ref?: Ref<HTMLButtonElement>;
 }
 
@@ -26,6 +28,7 @@ export function Button({
   label,
   variant = 'primary',
   disabledReason,
+  onBlockedClick,
   className,
   onClick,
   type = 'button',
@@ -38,7 +41,7 @@ export function Button({
       className={classNames(VARIANT_CLASS[variant], 'button--icon', className)}
       aria-disabled={disabledReason ? true : undefined}
       data-tip={tipText(label, undefined, disabledReason)}
-      onClick={guardClick(disabledReason, onClick)}
+      onClick={guardClick(disabledReason, onClick, onBlockedClick)}
     >
       <Icon name={icon} />
       <span className="button__label">{label}</span>

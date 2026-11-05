@@ -120,7 +120,7 @@ test('a colour from the picker and large text show on the card', async ({ page, 
     .click();
   await tool(page, 'Large text').click();
   await expect(body.locator('.rt-color--red')).toContainText('Red alert');
-  await page.getByRole('button', { name: 'Save card' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
 
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   const listed = page.getByRole('article').filter({ hasText: title });
