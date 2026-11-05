@@ -168,25 +168,51 @@ h3 {
   margin-top: calc(var(--gutter) * 2);
 }
 
+/* D322: the leading control (logo or Back) starts on the page gutter, so it lines up with the
+   content below; its spacing to the title is set here, not by the gap between actions. */
 .app-header {
+  --header-gap: var(--gap);
+
   position: sticky;
   top: 0;
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: var(--gap);
+  gap: var(--header-gap);
   padding: calc(var(--safe-top) + 8px) var(--gutter) 8px;
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
 }
 
-.app-header__back {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--tap);
-  min-height: var(--tap);
-  text-decoration: none;
+.app-header__logo {
+  display: block;
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.app-header__logo + .app-header__title {
+  margin-inline-start: calc(var(--gap) - var(--header-gap));
+}
+
+/* The box hugs the 20 px chevron (6 px either side) and is pulled out so the chevron's tip,
+   6 px inside its icon box, sits on the gutter; ::before restores the 44 px hit area. */
+.app-header .app-header__back {
+  flex: none;
+  min-width: 0;
+  width: 32px;
+  padding: 0;
+  margin-inline-start: -12px;
+}
+
+.app-header .app-header__back::before {
+  position: absolute;
+  inset: 0 -6px;
+  content: '';
+}
+
+.app-header__back + .app-header__title {
+  margin-inline-start: calc(-1 * var(--header-gap));
 }
 
 .app-header__title {
@@ -203,12 +229,13 @@ h3 {
    D211: icon controls keep their 44 px hit areas edge to edge (no gap) so seven fit. */
 @media (max-width: 400px) {
   .app-header {
-    gap: 0;
-    padding-inline: 8px;
+    --header-gap: 0px;
+
+    padding-inline-end: 8px;
   }
 
   .app-header__title {
-    padding-inline: 4px;
+    padding-inline-end: 4px;
   }
 }
 
