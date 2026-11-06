@@ -26,10 +26,14 @@ export interface EmbedItemJob {
   itemId: string;
 }
 
-/** `attempt` counts requeues after losing the race with an edit (D163). */
+/**
+ * `attempt` counts requeues after losing the race with an edit (D163). `candidates` are the image
+ * URLs ingest already found (D349), so the job never repeats the share's fetch or lookup.
+ */
 export interface LinkSnapshotJob {
   itemId: string;
   attempt?: number;
+  candidates?: string[];
 }
 
 export interface IngestJobData {
@@ -41,7 +45,13 @@ export interface JobSender {
   send(
     name: string,
     data: object,
-    options?: { singletonKey?: string; retryLimit?: number; retryBackoff?: boolean },
+    options?: {
+      singletonKey?: string;
+      retryLimit?: number;
+      retryBackoff?: boolean;
+      /** Seconds from now before the job may run (D351 host spacing). */
+      startAfter?: number;
+    },
   ): Promise<string | null>;
 }
 

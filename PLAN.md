@@ -158,6 +158,8 @@ Already in place from Phase 6: the per-deck signed upload route (`POST /decks/{i
 - [ ] **2. Responsive delivery** — Lighthouse shows no "properly size images" warning on the list view.
 - [ ] **3. Link previews with a snapshot** — a link card whose target is taken offline still renders its preview and shows a "link may be dead" flag after the check runs.
 - [ ] **4. Instagram and other locked hosts** — an Instagram link card renders with caption text and the shared image when the share sheet provided one.
+
+Follow-up from shares that arrived without a picture or with a guessed title: [`041-share-visuals`](specs/041-share-visuals/spec.md): an honest `GobbitBot` identity, one preview builder (more image sources, YouTube/TikTok/Vimeo oEmbed), real locked-host previews used and walls discarded, honest titles, snapshot tries and a one-time image backfill. Decisions D343–D353; ADR-075.
 ## Phase 8 — Public communal deck
 
 Specs (in order): [`016-public-read-api`](specs/016-public-read-api/spec.md) (demo 1) → [`017-public-pages`](specs/017-public-pages/spec.md) (demos 2–3) ∥ [`018-public-search`](specs/018-public-search/spec.md) (demo 4) → [`019-deck-admin`](specs/019-deck-admin/spec.md) + [`020-item-events`](specs/020-item-events/spec.md) (demo 5) → [`021-bulk-import`](specs/021-bulk-import/spec.md) (demo 6). Decisions D174–D191; ADR-056 (public surface) and ADR-057 (item events).

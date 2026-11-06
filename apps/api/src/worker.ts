@@ -6,7 +6,6 @@ import {
   EMBED_SWEEP_CRON,
   INGEST_PRUNE_CRON,
   INGEST_SWEEP_CRON,
-  LINK_CHECK_READ_BYTES,
   MEDIA_SWEEP_CRON,
   SEARCH_QUERY_PRUNE_CRON,
   WAITLIST_PRUNE_CRON,
@@ -17,9 +16,10 @@ import { createEmbedQueue, noopEmbedQueue } from './jobs/embed-queue';
 import { createIngestHandler } from './jobs/ingest';
 import { createIngestQueue } from './jobs/ingest-queue';
 import { createIngestSweep } from './jobs/ingest-sweep';
-import { createSafeFetch, createSafeImageFetch } from './fetch/safe-fetch';
+import { createSafeFetch, createSafeImageFetch, createSafeJsonFetch } from './fetch/safe-fetch';
 import { extractPage } from './fetch/extract-page';
-import { fetchLinkPreview } from './fetch/link-preview';
+import { buildLinkPreview } from './fetch/build-preview';
+import { createLinkCheckFetch } from './services/media-wiring';
 import { createLinkSnapshotHandler } from './jobs/link-snapshot';
 import { createLinkSnapshotQueue, noopLinkSnapshotQueue } from './jobs/link-snapshot-queue';
 import { scheduleLinkCheckSweep } from './jobs/link-check-sweep';
@@ -120,6 +120,19 @@ async function main() {
     await pruneWaitlist(job?.id ?? 'unknown');
   });
 
+  // D346: one preview builder for ingest and the snapshot job.
+  const buildPreview = (url: string, previewLog?: Parameters<typeof buildLinkPreview>[2]) =>
+    buildLinkPreview(
+      {
+        safeFetch: createSafeFetch(),
+        fetchJson: createSafeJsonFetch({ timeoutMs: env.LINK_LOOKUP_TIMEOUT_MS }),
+        extract: extractPage,
+        articleMinPx: env.LINK_ARTICLE_IMAGE_MIN_PX,
+      },
+      url,
+      previewLog,
+    );
+
   const embedder = defaultEmbedder(env);
   const workerEmbedQueue = embedder
     ? createEmbedQueue({
@@ -135,7 +148,7 @@ async function main() {
     createLinkChecksService({
       linkChecks: createLinkChecksRepo(db),
       probe: createLinkProbe({
-        safeFetch: createSafeFetch({ accept: 'any', maxBytes: LINK_CHECK_READ_BYTES }),
+        safeFetch: createLinkCheckFetch(),
         extract: extractPage,
       }),
     }),
@@ -160,11 +173,7 @@ async function main() {
     // worked under the same condition.
     const linkSnapshot = createLinkSnapshotHandler({
       items: createItemsRepo(db),
-      fetchPreview: (url) =>
-        fetchLinkPreview(
-          { safeFetch: createSafeFetch(), extract: extractPage, log: log.info.bind(log) },
-          url,
-        ),
+      buildPreview,
       uploadFromUrl: createAssetUploader({
         assets: createAssetsRepo(db),
         store: mediaStore,
@@ -174,13 +183,14 @@ async function main() {
       sender: boss,
       embedQueue: workerEmbedQueue,
       log,
+      imageTries: env.LINK_IMAGE_TRIES,
     });
     await boss.work(
       QUEUES.linkSnapshot,
       { batchSize: 1, localConcurrency: env.WORKER_CONCURRENCY },
       async (jobs: Job<LinkSnapshotJob>[]) => {
         for (const job of jobs) {
-          const outcome = await linkSnapshot(job.data);
+          const outcome = await linkSnapshot(job.data, { jobId: job.id });
           log.info({ itemId: job.data.itemId, outcome }, 'link snapshot job');
         }
       },
@@ -206,11 +216,16 @@ async function main() {
       categories: createCategoriesRepo(db),
       items: createItemsRepo(db),
       roleOf,
-      normalize: (raw) =>
-        normalizeRaw(raw, {
-          safeFetch: createSafeFetch(),
-          imageUrl: ingestUploads ? (id) => ingestUploads.llmUrl(id) : (id) => id,
-        }),
+      normalize: (raw, ctx) =>
+        normalizeRaw(
+          raw,
+          {
+            buildPreview,
+            imageUrl: ingestUploads ? (id) => ingestUploads.llmUrl(id) : (id) => id,
+            log: childLogger('ingest'),
+          },
+          ctx,
+        ),
       extraction: { ...extract, llmCalls: createLlmCallsRepo(db) },
       embedQueue: workerEmbedQueue,
       linkSnapshotQueue: ingestLinkSnapshotQueue,

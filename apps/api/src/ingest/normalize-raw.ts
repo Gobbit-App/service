@@ -1,39 +1,47 @@
 import type { IngestRaw, NormalizedSource } from '@gobbit/shared';
-import { extractPage, type ExtractedPage } from '../fetch/extract-page';
+import { logPreviewBuilt, type PreviewBuild } from '../fetch/build-preview';
 import { buildNormalizedSource } from '../fetch/normalize-source';
-import type { SafeFetch } from '../fetch/safe-fetch';
+import type { Logger } from '../lib/logger';
 
 export interface NormalizeDeps {
-  safeFetch: SafeFetch;
+  /** D346: the one preview builder (fetch once, extract, candidates, lookups, locked rule). */
+  buildPreview: (url: string, log?: Pick<Logger, 'info' | 'warn'>) => Promise<PreviewBuild>;
   /** The derived JPEG URL the model sees for an uploaded image (D101). */
   imageUrl: (publicId: string) => string;
+  log?: Logger;
 }
 
-function parsePage(html: string | null, url: string): ExtractedPage | null {
-  if (!html) return null;
-  try {
-    return extractPage(html, url);
-  } catch {
-    // Unparseable markup falls back to OG/shared text like any other unreadable page.
-    return null;
-  }
+/** The job the source is normalized for, carried on the decision events (D352). */
+export interface NormalizeContext {
+  jobId: string;
+  deckId: string;
 }
 
-/** D102: fetch the shared URL (if any) and build the record the extractor sees. */
-export async function normalizeRaw(raw: IngestRaw, deps: NormalizeDeps): Promise<NormalizedSource> {
+/**
+ * D102, D346: fetch the shared URL (if any) through the preview builder and build the record the
+ * extractor sees. The builder's preview and image candidates ride along on the source, so a
+ * retried job reuses them and the snapshot job never repeats the lookup.
+ */
+export async function normalizeRaw(
+  raw: IngestRaw,
+  deps: NormalizeDeps,
+  ctx?: NormalizeContext,
+): Promise<NormalizedSource> {
   const imageUrls = raw.images.map((img) => deps.imageUrl(img.publicId));
   if (!raw.url) return buildNormalizedSource({ raw, imageUrls });
 
-  const res = await deps.safeFetch(raw.url);
-  return buildNormalizedSource({
+  const log = deps.log?.child({ caller: 'ingest', ...ctx });
+  const build = await deps.buildPreview(raw.url, log);
+  if (log) logPreviewBuilt(log, 'ingest', build.decision, {});
+
+  const source = buildNormalizedSource({
     raw,
     imageUrls,
-    fetch: {
-      status: res.status,
-      finalUrl: res.finalUrl,
-      ms: res.ms,
-      error: res.error,
-      page: parsePage(res.html, res.finalUrl ?? raw.url),
-    },
+    fetch: { ...build.fetch, page: build.page },
   });
+  return {
+    ...source,
+    ...(build.preview ? { linkPreview: build.preview } : {}),
+    imageCandidates: build.candidates,
+  };
 }

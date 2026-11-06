@@ -5,9 +5,13 @@ import { extractPage } from '../fetch/extract-page';
 import {
   createSafeFetch,
   createSafeImageFetch,
+  createSafeJsonFetch,
   type SafeFetch,
+  type SafeFetchOptions,
   type SafeImageFetch,
+  type SafeJsonFetch,
 } from '../fetch/safe-fetch';
+import type { Logger } from '../lib/logger';
 import { parseCloudinaryUrl } from '../lib/cloudinary-url';
 import { createCloudinaryMediaStore, type MediaStore } from '../media/media-store';
 import { noopLinkSnapshotQueue, type LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
@@ -20,7 +24,9 @@ import type { RateLimitService } from './rate-limit.service';
 export interface MediaWiring {
   /** Link preview fetcher; defaults to `createSafeFetch()` (ports 80/443, ip-guard). */
   safeFetch?: SafeFetch;
-  /** D164 link checks; defaults to `createSafeFetch({ accept: 'any' })`. */
+  /** D345 host lookups; defaults to `createSafeJsonFetch()`, `null` turns them off. */
+  fetchJson?: SafeJsonFetch | null;
+  /** D164 link checks; defaults to `createSafeFetch({ accept: 'any', identity: 'browser' })`. */
   linkCheckFetch?: SafeFetch;
   /** Image downloads for `uploadFromUrl`; defaults to `createSafeImageFetch()`. */
   imageFetch?: SafeImageFetch;
@@ -28,22 +34,34 @@ export interface MediaWiring {
   mediaStore?: MediaStore | null;
   /** D163: after-commit snapshot enqueue; the API server sends it when `CLOUDINARY_URL` is set. */
   linkSnapshotQueue?: LinkSnapshotQueue;
-  log?: (message: string) => void;
+  log?: Pick<Logger, 'info' | 'warn'>;
 }
 
 export function resolveLinkSnapshotQueue(wiring: MediaWiring | undefined): LinkSnapshotQueue {
   return wiring?.linkSnapshotQueue ?? noopLinkSnapshotQueue;
 }
 
-/** D164: link checks read any 2xx answer, and at most the first 256 KB of an HTML page. */
+/**
+ * D164: link checks read any 2xx answer, and at most the first 256 KB of an HTML page. D343:
+ * they keep a browser identity, so sites that refuse crawlers don't get their links flagged dead.
+ */
+export function createLinkCheckFetch(
+  guard: Pick<SafeFetchOptions, 'allowedPorts' | 'isBlocked'> = {},
+): SafeFetch {
+  return createSafeFetch({
+    ...guard,
+    accept: 'any',
+    maxBytes: LINK_CHECK_READ_BYTES,
+    identity: 'browser',
+  });
+}
+
 export function resolveLinkCheckFetch(wiring: MediaWiring | undefined): SafeFetch {
-  return (
-    wiring?.linkCheckFetch ?? createSafeFetch({ accept: 'any', maxBytes: LINK_CHECK_READ_BYTES })
-  );
+  return wiring?.linkCheckFetch ?? createLinkCheckFetch();
 }
 
 export function buildMediaServices(deps: {
-  env: Pick<Env, 'CLOUDINARY_URL'>;
+  env: Pick<Env, 'CLOUDINARY_URL' | 'LINK_ARTICLE_IMAGE_MIN_PX' | 'LINK_LOOKUP_TIMEOUT_MS'>;
   decks: DeckLookup;
   memberships: MembershipLookup;
   rateLimits: Pick<RateLimitService, 'enforce'>;
@@ -77,7 +95,12 @@ export function buildMediaServices(deps: {
       memberships,
       rateLimits,
       safeFetch: wiring.safeFetch ?? createSafeFetch(),
+      fetchJson:
+        wiring.fetchJson !== undefined
+          ? wiring.fetchJson
+          : createSafeJsonFetch({ timeoutMs: env.LINK_LOOKUP_TIMEOUT_MS }),
       extract: extractPage,
+      articleMinPx: env.LINK_ARTICLE_IMAGE_MIN_PX,
       log: wiring.log,
     }),
   };

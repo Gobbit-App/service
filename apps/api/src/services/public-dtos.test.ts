@@ -73,3 +73,20 @@ describe('toPublicItem (D174)', () => {
     expect(publicItemSchema.safeParse(dto).success).toBe(true);
   });
 });
+
+describe('toPublicItem link markers (D350)', () => {
+  it('strips imageLookup and imageRemoved from a link preview', () => {
+    const link: ItemRow = {
+      ...row,
+      type: 'link',
+      payload: {
+        url: 'https://x.test/',
+        preview: { title: 'T', imageLookup: 1, imageRemoved: true },
+      },
+    };
+    expect(toPublicItem(link, []).payload).toEqual({
+      url: 'https://x.test/',
+      preview: { title: 'T' },
+    });
+  });
+});

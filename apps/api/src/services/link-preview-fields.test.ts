@@ -101,7 +101,10 @@ describe('link preview server-owned fields (D163)', () => {
         { url: 'https://x.test/', preview: { title: 'T', publicId: null, width: 1200 } },
         stored(id),
       );
-      expect(out).toEqual({ url: 'https://x.test/', preview: { title: 'T' } });
+      expect(out).toEqual({
+        url: 'https://x.test/',
+        preview: { title: 'T', imageRemoved: true },
+      });
     }
   });
 
@@ -109,5 +112,60 @@ describe('link preview server-owned fields (D163)', () => {
     expect(await fields('d1', { url: 'https://x.test/' }, null)).toEqual({
       url: 'https://x.test/',
     });
+  });
+});
+
+describe('link preview image markers (D350)', () => {
+  const url = 'https://x.test/';
+
+  it('ignores client markers', async () => {
+    const out = await fields(
+      'd1',
+      { url, preview: { title: 'T', imageLookup: 9, imageRemoved: true } },
+      null,
+    );
+    expect(out.preview).toEqual({ title: 'T' });
+  });
+
+  it('carries the stored markers', async () => {
+    const out = await fields(
+      'd1',
+      { url, preview: { title: 'New' } },
+      { url, preview: { title: 'T', imageLookup: 1, imageRemoved: true } },
+    );
+    expect(out.preview).toEqual({ title: 'New', imageLookup: 1, imageRemoved: true });
+  });
+
+  it('Remove photo sets imageRemoved', async () => {
+    const out = await fields(
+      'd1',
+      { url, preview: { title: 'T', publicId: null } },
+      stored('snap'),
+    );
+    expect(out.preview).toEqual({ title: 'T', imageRemoved: true });
+  });
+
+  it('a new photo clears imageRemoved', async () => {
+    const out = await fields(
+      'd1',
+      { url, preview: { title: 'T', publicId: 'photo' } },
+      { url, preview: { title: 'T', imageRemoved: true, imageLookup: 1 } },
+    );
+    expect(out.preview).toEqual({
+      title: 'T',
+      publicId: 'photo',
+      width: 800,
+      height: 600,
+      imageLookup: 1,
+    });
+  });
+
+  it('a URL change drops both markers', async () => {
+    const out = await fields(
+      'd1',
+      { url: 'https://y.test/', preview: { title: 'T' } },
+      { url, preview: { title: 'T', imageLookup: 1, imageRemoved: true } },
+    );
+    expect(out.preview).toEqual({ title: 'T' });
   });
 });

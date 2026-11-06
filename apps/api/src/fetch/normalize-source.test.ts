@@ -9,6 +9,7 @@ function page(over: Partial<ExtractedPage> = {}): ExtractedPage {
     text: 'Page text',
     og: { title: null, description: null, image: null, siteName: null },
     lang: 'en',
+    images: [],
     ...over,
   };
 }

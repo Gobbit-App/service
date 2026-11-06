@@ -1,3 +1,4 @@
+import { LINK_ARTICLE_IMAGE_MIN_PX } from '@gobbit/shared';
 import { describe, expect, it } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { ingestJobs, itemEvents, items, memberships, type DeckRow, type UserRow } from '@gobbit/db';
@@ -8,6 +9,8 @@ import { createFakeExtractor } from '../src/ai/fake-extractor';
 import type { SafeFetch } from '../src/fetch/safe-fetch';
 import { autoPublish } from '../src/ingest/auto-publish';
 import { normalizeRaw } from '../src/ingest/normalize-raw';
+import { buildLinkPreview } from '../src/fetch/build-preview';
+import { extractPage } from '../src/fetch/extract-page';
 import { runDedup } from '../src/ingest/run-dedup';
 import { createSharerRole } from '../src/ingest/sharer-role';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
@@ -44,7 +47,7 @@ const fakeFetch: SafeFetch = async (url) => ({
 /** D192/D193: a publisher's share on an opted-in deck is published by the worker, as the sharer. */
 describe('ingest auto-publish (D193)', () => {
   const ctx = setupApiTest();
-  const silent = { warn: () => undefined, error: () => undefined };
+  const silent = { info: () => undefined, warn: () => undefined, error: () => undefined };
 
   function handler(opts: { script?: unknown[]; dedup?: IngestHandlerDeps['dedup'] | null } = {}) {
     const db = ctx.t.db;
@@ -75,7 +78,21 @@ describe('ingest auto-publish (D193)', () => {
       categories: createCategoriesRepo(db),
       items: createItemsRepo(db),
       roleOf,
-      normalize: (raw) => normalizeRaw(raw, { safeFetch: fakeFetch, imageUrl: (id) => id }),
+      normalize: (raw) =>
+        normalizeRaw(raw, {
+          buildPreview: (url, log) =>
+            buildLinkPreview(
+              {
+                safeFetch: fakeFetch,
+                fetchJson: null,
+                extract: extractPage,
+                articleMinPx: LINK_ARTICLE_IMAGE_MIN_PX,
+              },
+              url,
+              log,
+            ),
+          imageUrl: (id) => id,
+        }),
       extraction: {
         extractor: createFakeExtractor(opts.script ? { script: opts.script } : undefined),
         model: 'claude-haiku-5-5',

@@ -66,7 +66,9 @@ function sweepHarness(ctx: ApiTestContext, site: ReturnType<typeof fakeSite>) {
 
 describe('link check sweep batches (D164)', () => {
   const site = fakeSite();
-  const ctx = setupApiTest({ media: { linkCheckFetch: site.fetch, log: () => {} } });
+  const ctx = setupApiTest({
+    media: { linkCheckFetch: site.fetch, log: { info: () => {}, warn: () => {} } },
+  });
   const { state, sweeper } = sweepHarness(ctx, site);
   let deck: DeckRow;
 
@@ -113,7 +115,9 @@ describe('link check sweep batches (D164)', () => {
 
 describe('link check sweep results (D164)', () => {
   const site = fakeSite();
-  const ctx = setupApiTest({ media: { linkCheckFetch: site.fetch, log: () => {} } });
+  const ctx = setupApiTest({
+    media: { linkCheckFetch: site.fetch, log: { info: () => {}, warn: () => {} } },
+  });
   const { sweeper, advance } = sweepHarness(ctx, site);
   let deck: DeckRow;
 
@@ -207,7 +211,9 @@ describe('link check sweep results (D164)', () => {
 
 describe('link check routes (D165)', () => {
   const site = fakeSite();
-  const ctx = setupApiTest({ media: { linkCheckFetch: site.fetch, log: () => {} } });
+  const ctx = setupApiTest({
+    media: { linkCheckFetch: site.fetch, log: { info: () => {}, warn: () => {} } },
+  });
   let deck: DeckRow;
   let reader: UserRow;
   const repo = () => createLinkChecksRepo(ctx.t.db);

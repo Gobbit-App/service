@@ -25,7 +25,7 @@ function setup(
   job: IngestJobRow | null = jobRow(),
   normalize = vi.fn().mockResolvedValue({ url: SHARED_URL, text: 'my secret note' }),
 ) {
-  const logger = { error: vi.fn(), warn: vi.fn() };
+  const logger = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
   const jobs = {
     claim: vi.fn().mockResolvedValue(job),
     update: vi.fn(),

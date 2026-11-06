@@ -21,8 +21,20 @@ import type { AutoPublishInput } from '../ingest/auto-publish';
 import type { EmbedQueue } from './embed-queue';
 import type { LinkSnapshotQueue } from './link-snapshot-queue';
 import { toLinkPreview } from '../fetch/link-preview';
+import type { NormalizeContext } from '../ingest/normalize-raw';
+import { appliedPreview, logPreviewApplied } from '../ingest/applied-preview';
+import type { ValidateContext } from '../ai/extract-validate';
 import { classifyFailure, failureDetail, type IngestStage } from '../ingest/failure-code';
 import { childLogger, lineSink, type Logger } from '../lib/logger';
+
+/**
+ * D346: a source normalized by the preview builder carries its preview (or none, when a locked
+ * host's wall was discarded); one normalized before 041 still has only the page's OG tags.
+ */
+function previewOf(source: NormalizedSource) {
+  if (source.imageCandidates !== undefined) return source.linkPreview ?? null;
+  return source.og ? toLinkPreview({ title: source.pageTitle ?? null, og: source.og }) : null;
+}
 
 export type IngestOutcome = 'proposed' | 'failed' | 'skipped';
 
@@ -32,7 +44,7 @@ export interface IngestHandlerDeps {
   items: Pick<ItemsRepo, 'list' | 'create'>;
   /** D33: the sharer's current role on the deck (null → no longer a member). */
   roleOf: (deckId: string, userId: string) => Promise<MemberRole | null>;
-  normalize: (raw: IngestRaw) => Promise<NormalizedSource>;
+  normalize: (raw: IngestRaw, ctx: NormalizeContext) => Promise<NormalizedSource>;
   extraction: RunExtractionDeps;
   /** D103: the dedup verdict for the new proposal (bound `runDedup`); omitted → no verdict. */
   dedup?: (input: RunDedupInput) => Promise<DedupVerdict>;
@@ -47,7 +59,7 @@ export interface IngestHandlerDeps {
   /** Line sink handed to `proposeItem`. */
   log?: (message: string) => void;
   /** D195: structured, content-free failure lines; default `childLogger('ingest')`. */
-  logger?: Pick<Logger, 'error' | 'warn'>;
+  logger?: Pick<Logger, 'error' | 'warn' | 'info'>;
 }
 
 type FailingJob = Pick<IngestJobRow, 'id' | 'deckId' | 'channel' | 'attempts'>;
@@ -115,7 +127,8 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       if (!role) return await fail(job, 'sharer_not_member');
 
       stage = 'normalize';
-      const source = job.normalized ?? (await deps.normalize(job.raw));
+      const source =
+        job.normalized ?? (await deps.normalize(job.raw, { jobId: job.id, deckId: job.deckId }));
       if (!job.normalized) await jobs.update(job.id, { normalized: source });
       stage = undefined;
 
@@ -130,26 +143,25 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       ]);
 
       const sourceUrl = job.raw.url ?? source.url;
-      const linkPreview = source.og
-        ? toLinkPreview({ title: source.pageTitle ?? null, og: source.og })
-        : null;
+      const linkPreview = previewOf(source);
       const lockedHost = sourceUrl ? lockedHostOf(sourceUrl) : null;
       const imagePublicId = job.raw.images[0]?.publicId;
       const imageDimensions =
         lockedHost && imagePublicId ? await assetDimensions(imagePublicId) : null;
+      const validate: ValidateContext = {
+        ...(sourceUrl ? { sourceUrl } : {}),
+        ...(linkPreview ? { linkPreview } : {}),
+        ...(imagePublicId ? { imagePublicId } : {}),
+        ...(lockedHost ? { lockedHost, imageDimensions } : {}),
+        ...(job.raw.text ? { sharedText: job.raw.text } : {}),
+        categoryIds: deckCategories.map((c) => c.id),
+      };
       stage = 'extract';
       const outcome = await runExtraction(deps.extraction, {
         source,
         categories: deckCategories.map((c) => ({ id: c.id, name: c.name })),
         examples: recent.map((i) => ({ type: i.type, title: i.title, body: i.body })),
-        validate: {
-          ...(sourceUrl ? { sourceUrl } : {}),
-          ...(linkPreview ? { linkPreview } : {}),
-          ...(imagePublicId ? { imagePublicId } : {}),
-          ...(lockedHost ? { lockedHost, imageDimensions } : {}),
-          ...(job.raw.text ? { sharedText: job.raw.text } : {}),
-          categoryIds: deckCategories.map((c) => c.id),
-        },
+        validate,
         jobId: job.id,
         deckId: job.deckId,
         userId: job.userId,
@@ -174,9 +186,19 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
           job: jobRef,
           item: outcome.item,
           summary: outcome.summary,
+          ...(source.imageCandidates ? { imageCandidates: source.imageCandidates } : {}),
           signal: opts?.signal,
         },
       );
+      const applied = appliedPreview(outcome.item, validate);
+      if (applied) {
+        logPreviewApplied(
+          logger,
+          applied,
+          { jobId: job.id, itemId: proposed.item.id, deckId: job.deckId },
+          validate,
+        );
+      }
       // D193: the proposal exists; publishing it directly is best effort, review is the fallback.
       await deps.autoPublish?.({
         job: jobRef,

@@ -42,7 +42,7 @@ describe('linkPreview.service lookup', () => {
   let extract: Mock<Deps['extract']>;
   let rateLimits: { enforce: Mock<Deps['rateLimits']['enforce']> };
   let memberships: { findActive: Mock<Deps['memberships']['findActive']> };
-  let log: Mock<(message: string) => void>;
+  let log: { info: Mock; warn: Mock };
   const decks = {
     findById: vi.fn(async (id: string) => (id === deckId ? deck : null)),
     findBySlug: vi.fn(async () => null),
@@ -54,34 +54,63 @@ describe('linkPreview.service lookup', () => {
 
   beforeEach(() => {
     safeFetch = vi.fn<SafeFetch>(async () => ok('<html></html>'));
-    extract = vi.fn<Deps['extract']>(() => ({ title: 'Page', og: og({ description: 'Desc' }) }));
+    extract = vi.fn<Deps['extract']>(() => ({
+      title: 'Page',
+      text: '',
+      lang: null,
+      og: og({ description: 'Desc' }),
+      images: [],
+    }));
     rateLimits = { enforce: vi.fn<Deps['rateLimits']['enforce']>().mockResolvedValue(undefined) };
     memberships = {
       findActive: vi.fn<Deps['memberships']['findActive']>().mockResolvedValue(null),
     };
-    log = vi.fn<(message: string) => void>();
+    log = { info: vi.fn(), warn: vi.fn() };
   });
 
   it('fetches through safe-fetch and maps against the final URL', async () => {
     const preview = await build().lookup({ user, deckId, url: 'https://example.test/a' });
     expect(preview).toEqual({ title: 'Page', description: 'Desc' });
     expect(safeFetch).toHaveBeenCalledWith('https://example.test/a');
-    expect(extract).toHaveBeenCalledWith('<html></html>', 'https://example.test/final');
+    expect(extract).toHaveBeenCalledWith('<html></html>', 'https://example.test/final', {
+      articleMinPx: expect.any(Number),
+    });
+  });
+
+  it('logs link_preview.built for the editor with the request and deck ids (D352)', async () => {
+    await build().lookup({ user, deckId, url: 'https://example.test/a', requestId: 'req-1' });
+    expect(log.info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'link_preview.built',
+        caller: 'editor',
+        outcome: 'preview',
+        requestId: 'req-1',
+        deckId,
+        host: 'example.test',
+      }),
+      expect.any(String),
+    );
   });
 
   it.each(['blocked', 'timeout', 'not_html', 'too_many_redirects', 'http_404', 'fetch_failed: x'])(
-    'answers null for %s and only logs the reason',
+    'answers null for %s and only logs the outcome',
     async (error) => {
       safeFetch.mockResolvedValue(failed(error));
       expect(await build().lookup({ user, deckId, url: 'https://example.test/a' })).toBeNull();
-      expect(log).toHaveBeenCalledWith(expect.stringContaining(error));
+      expect(log.info).toHaveBeenCalledWith(
+        expect.objectContaining({ outcome: 'none', reason: 'fetch_failed' }),
+        expect.any(String),
+      );
     },
   );
 
   it('answers null if the fetcher throws anyway', async () => {
     safeFetch.mockRejectedValue(new Error('boom'));
     expect(await build().lookup({ user, deckId, url: 'https://example.test/a' })).toBeNull();
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('boom'));
+    expect(log.info).toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: 'none', reason: 'fetch_failed' }),
+      expect.any(String),
+    );
   });
 
   it('serves repeat lookups (including null) from the cache but still counts them', async () => {

@@ -4,6 +4,8 @@ import {
   FETCH_MAX_BYTES,
   FETCH_MAX_REDIRECTS,
   FETCH_TIMEOUT_MS,
+  LINK_LOOKUP_MAX_BYTES,
+  LINK_LOOKUP_TIMEOUT_MS,
   MEDIA_IMAGE_MAX_BYTES,
   MEDIA_IMAGE_MIMES,
 } from '@gobbit/shared';
@@ -14,6 +16,7 @@ import {
   type LookupAll,
 } from './ip-guard';
 import { sniffImage, type SniffedImage } from './image-sniff';
+import { userAgentFor, type FetchIdentity } from './user-agents';
 
 /** What a guarded fetch produced; never throws (D102). */
 export interface SafeFetchResult {
@@ -42,6 +45,8 @@ export interface SafeFetchOptions {
    * non-HTML 2xx is a success with `html: null` and its body is not read.
    */
   accept?: 'html' | 'any';
+  /** D343: `crawler` (default) for previews, lookups and images; `browser` for link checks. */
+  identity?: FetchIdentity;
 }
 
 /** What a guarded image download produced (D159); never throws. */
@@ -64,8 +69,6 @@ const HTML_TYPES = ['text/html', 'application/xhtml+xml'];
 const HTML_ACCEPT = 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.1';
 const ACCEPT_LANGUAGE = 'en,he;q=0.8,*;q=0.5';
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
-const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36 Gobbit/1.0';
 
 const SNIFFED_MIME: Record<SniffedImage, string> = {
   jpeg: 'image/jpeg',
@@ -210,6 +213,7 @@ function createGuardedClient(opts: SafeFetchOptions): GuardedClient {
   const timeoutMs = opts.timeoutMs ?? FETCH_TIMEOUT_MS;
   const maxRedirects = opts.maxRedirects ?? FETCH_MAX_REDIRECTS;
   const now = opts.now ?? Date.now;
+  const userAgent = userAgentFor(opts.identity);
   const dispatcher = new Agent({
     connect: { lookup: createGuardedLookup({ lookupAll: opts.lookupAll, isBlocked }) },
   });
@@ -228,7 +232,7 @@ function createGuardedClient(opts: SafeFetchOptions): GuardedClient {
           dispatcher,
           method: 'GET',
           signal: ctx.signal,
-          headers: { 'user-agent': USER_AGENT, accept, 'accept-language': ACCEPT_LANGUAGE },
+          headers: { 'user-agent': userAgent, accept, 'accept-language': ACCEPT_LANGUAGE },
         });
         ctx.status = res.statusCode;
 
@@ -324,6 +328,65 @@ export function createSafeImageFetch(opts: SafeFetchOptions = {}): SafeImageFetc
       const sniffed = sniffImage(bytes);
       if (!sniffed) return done(null, 'not_image');
       return done({ bytes, contentType: SNIFFED_MIME[sniffed] }, null);
+    } catch (err) {
+      return done(null, classify(err, ctx.signal));
+    }
+  };
+}
+
+/** What a guarded JSON lookup produced (D345); never throws. */
+export interface SafeJsonFetchResult {
+  status: number | null;
+  ms: number;
+  /** The parsed body, or null when unusable. */
+  json: unknown;
+  /** The HTML-mode errors (except `not_html`) plus `not_json` and `invalid_json`. */
+  error: string | null;
+}
+
+export type SafeJsonFetch = (url: string) => Promise<SafeJsonFetchResult>;
+
+const JSON_ACCEPT = 'application/json;q=1,text/javascript;q=0.5';
+
+function isJsonType(contentType: string): boolean {
+  const type = contentType.split(';')[0]?.trim().toLowerCase() ?? '';
+  return type === 'application/json' || type.endsWith('+json') || type === 'text/javascript';
+}
+
+/**
+ * D345: host lookups (oEmbed). Same guard as page fetches; a JSON answer read up to `maxBytes`
+ * (default `LINK_LOOKUP_MAX_BYTES`) within `timeoutMs` (default `LINK_LOOKUP_TIMEOUT_MS`).
+ */
+export function createSafeJsonFetch(opts: SafeFetchOptions = {}): SafeJsonFetch {
+  const client = createGuardedClient({
+    ...opts,
+    timeoutMs: opts.timeoutMs ?? LINK_LOOKUP_TIMEOUT_MS,
+  });
+  const maxBytes = opts.maxBytes ?? LINK_LOOKUP_MAX_BYTES;
+
+  return async function safeJsonFetch(url: string): Promise<SafeJsonFetchResult> {
+    const { started, ctx } = client.start();
+    const done = (json: unknown, error: string | null): SafeJsonFetchResult => ({
+      status: ctx.status,
+      ms: client.elapsed(started),
+      json,
+      error,
+    });
+
+    try {
+      const res = await client.get(url, JSON_ACCEPT, ctx);
+      if ('error' in res) return done(null, res.error);
+      const contentType = headerOf(res, 'content-type');
+      if (!isJsonType(contentType)) {
+        discard(res.body);
+        return done(null, 'not_json');
+      }
+      const bytes = await readWhole(res.body, maxBytes);
+      try {
+        return done(JSON.parse(decode(bytes, charsetOf(contentType))) as unknown, null);
+      } catch {
+        return done(null, 'invalid_json');
+      }
     } catch (err) {
       return done(null, classify(err, ctx.signal));
     }

@@ -1,3 +1,4 @@
+import { LINK_ARTICLE_IMAGE_MIN_PX } from '@gobbit/shared';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { INGEST_JOB_RETRIES } from '@gobbit/shared';
 import { eq } from 'drizzle-orm';
@@ -8,6 +9,8 @@ import { createFakeExtractor } from '../src/ai/fake-extractor';
 import type { Extractor } from '../src/ai/extractor';
 import type { SafeFetch } from '../src/fetch/safe-fetch';
 import { normalizeRaw } from '../src/ingest/normalize-raw';
+import { buildLinkPreview } from '../src/fetch/build-preview';
+import { extractPage } from '../src/fetch/extract-page';
 import { createSharerRole } from '../src/ingest/sharer-role';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
 import { createIngestHandler, type IngestHandlerDeps } from '../src/jobs/ingest';
@@ -25,6 +28,7 @@ import { createItemsRepo } from '../src/repositories/items.repo';
 import { createLlmCallsRepo } from '../src/repositories/llm-calls.repo';
 import { createMembershipsRepo } from '../src/repositories/memberships.repo';
 import { createUsersRepo } from '../src/repositories/users.repo';
+import { captureLogger, expectDecision } from './capture-logger';
 import { json, setupApiTest } from './helpers';
 
 class RecordingQueue implements IngestQueue {
@@ -50,9 +54,26 @@ class RecordingEmbedQueue implements EmbedQueue {
 }
 
 /** Serves fixture pages by URL instead of the network. */
+const POST_IMAGE = 'https://scontent.cdninstagram.example/post.jpg';
+const lockedPage = (title: string, image: string) => `<!doctype html><html><head>
+  <title>${title}</title>
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="12 likes, 3 comments">
+  <meta property="og:image" content="${image}">
+</head><body></body></html>`;
+
 const pages: Record<string, string> = {
   'https://dan.example/': ARTICLE_PAGE,
   'https://pharmacy.example/': INJECTION_PAGE,
+  // D347: a locked host that answered with the real post, and one that answered its login wall.
+  'https://www.instagram.com/p/real/': lockedPage(
+    'Dan the Plumber on Instagram: "Sink fixed"',
+    POST_IMAGE,
+  ),
+  'https://www.instagram.com/p/wall/': lockedPage(
+    'Log in • Instagram',
+    'https://static.cdninstagram.example/logo.png',
+  ),
 };
 const fakeFetch: SafeFetch = async (url) => ({
   status: pages[url] ? 200 : 404,
@@ -91,7 +112,21 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
         decks: createDecksRepo(db),
         memberships: createMembershipsRepo(db),
       }),
-      normalize: (raw) => normalizeRaw(raw, { safeFetch: fakeFetch, imageUrl: (id) => id }),
+      normalize: (raw) =>
+        normalizeRaw(raw, {
+          buildPreview: (url, log) =>
+            buildLinkPreview(
+              {
+                safeFetch: fakeFetch,
+                fetchJson: null,
+                extract: extractPage,
+                articleMinPx: LINK_ARTICLE_IMAGE_MIN_PX,
+              },
+              url,
+              log,
+            ),
+          imageUrl: (id) => id,
+        }),
       extraction: {
         extractor,
         model: 'claude-haiku-5-5',
@@ -184,7 +219,8 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
     expect(sender.sent).toEqual([
       {
         name: QUEUES.linkSnapshot,
-        data: { itemId: item.id },
+        // D349: the page's image candidates ride along, so the job never fetches the page again.
+        data: { itemId: item.id, candidates: ['https://cdn.example.com/dan.jpg'] },
         options: expect.objectContaining({ singletonKey: item.id }),
       },
     ]);
@@ -245,6 +281,100 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
       });
       // The shared image is already stored: nothing to copy.
       expect(sender.sent).toEqual([]);
+    });
+
+    /** A handler whose builder and `link_preview.*` lines go to a captured logger (D352). */
+    function loggedHandler(sender: RecordingSender) {
+      const capture = captureLogger();
+      const { run } = handler(
+        undefined,
+        undefined,
+        createLinkSnapshotQueue({ sender, log: () => {} }),
+        {
+          normalize: (raw, normalizeCtx) =>
+            normalizeRaw(
+              raw,
+              {
+                buildPreview: (url, log) =>
+                  buildLinkPreview(
+                    {
+                      safeFetch: fakeFetch,
+                      fetchJson: null,
+                      extract: extractPage,
+                      articleMinPx: LINK_ARTICLE_IMAGE_MIN_PX,
+                    },
+                    url,
+                    log,
+                  ),
+                imageUrl: (id) => id,
+                log: capture.logger,
+              },
+              normalizeCtx,
+            ),
+          logger: capture.logger,
+        },
+      );
+      return { run, capture };
+    }
+
+    it('keeps a real post preview from the page and hands its image to the snapshot (D347)', async () => {
+      const url = 'https://www.instagram.com/p/real/';
+      const jobId = await lockedJob({ url, text: 'Dan again' });
+      const sender = new RecordingSender();
+      const { run, capture } = loggedHandler(sender);
+
+      expect(await run(jobId)).toBe('proposed');
+      const item = await resultItem(jobId);
+      expect(item.payload).toMatchObject({
+        url,
+        preview: { title: item.title, image: POST_IMAGE },
+      });
+      expect(sender.sent).toEqual([
+        {
+          name: QUEUES.linkSnapshot,
+          data: { itemId: item.id, candidates: [POST_IMAGE] },
+          options: expect.objectContaining({ singletonKey: item.id }),
+        },
+      ]);
+
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'link_preview.built', { outcome: 'preview' }),
+      ).toMatchObject({ caller: 'ingest', jobId, lockedHost: 'Instagram', imageSource: 'og' });
+      expect(
+        expectDecision(capture.lines, 'link_preview.applied', { outcome: 'applied' }),
+      ).toMatchObject({ jobId, itemId: item.id, lockedHost: 'Instagram', image: 'page' });
+      expect(JSON.stringify(capture.lines)).not.toContain('Sink fixed');
+    });
+
+    it('discards a login wall whole and keeps only the caption (D347)', async () => {
+      const url = 'https://www.instagram.com/p/wall/';
+      const jobId = await lockedJob({ url, text: 'Best hummus in town' });
+      const sender = new RecordingSender();
+      const { run, capture } = loggedHandler(sender);
+
+      expect(await run(jobId)).toBe('proposed');
+      const item = await resultItem(jobId);
+      expect(item.payload).toEqual({
+        url,
+        preview: { title: item.title, description: 'Best hummus in town' },
+      });
+      // D350: text but no image, never looked at: the job looks once (and meets the same rule),
+      // with no candidates, since the wall's logo was discarded.
+      expect(sender.sent).toEqual([
+        expect.objectContaining({ name: QUEUES.linkSnapshot, data: { itemId: item.id } }),
+      ]);
+
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'link_preview.built', {
+          outcome: 'discarded',
+          reason: 'login_wall',
+        }),
+      ).toMatchObject({ caller: 'ingest', jobId, lockedHost: 'Instagram' });
+      expect(
+        expectDecision(capture.lines, 'link_preview.applied', { outcome: 'applied' }),
+      ).toMatchObject({ image: 'none', description: 'caption', lockedHost: 'Instagram' });
     });
 
     it('keeps only the caption for a text-only share', async () => {

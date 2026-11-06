@@ -1,0 +1,117 @@
+{
+  "note": "D353: hand-written pages in the shapes real sites use (no copied content). expected = the preview image (null: none); ogOnly = the pre-041 OG-only rule already found it.",
+  "pages": [
+    {
+      "file": "og.html",
+      "url": "https://bread.example/og",
+      "expected": "https://cdn.bread.example/og.jpg",
+      "source": "og",
+      "ogOnly": true
+    },
+    {
+      "file": "og-multiple.html",
+      "url": "https://bread.example/og-multiple",
+      "expected": "https://cdn.bread.example/first.jpg",
+      "source": "og",
+      "ogOnly": true
+    },
+    {
+      "file": "og-secure.html",
+      "url": "https://bread.example/og-secure",
+      "expected": "https://cdn.bread.example/secure.jpg",
+      "source": "og_secure",
+      "ogOnly": false
+    },
+    {
+      "file": "twitter.html",
+      "url": "https://bread.example/twitter",
+      "expected": "https://cdn.bread.example/twitter.jpg",
+      "source": "twitter",
+      "ogOnly": false
+    },
+    {
+      "file": "jsonld-string.html",
+      "url": "https://bread.example/jsonld-string",
+      "expected": "https://cdn.bread.example/ld-string.jpg",
+      "source": "structured_data",
+      "ogOnly": false
+    },
+    {
+      "file": "jsonld-object.html",
+      "url": "https://bread.example/jsonld-object",
+      "expected": "https://cdn.bread.example/ld-object.jpg",
+      "source": "structured_data",
+      "ogOnly": false
+    },
+    {
+      "file": "jsonld-array.html",
+      "url": "https://bread.example/jsonld-array",
+      "expected": "https://cdn.bread.example/ld-1x1.jpg",
+      "source": "structured_data",
+      "ogOnly": false
+    },
+    {
+      "file": "jsonld-graph.html",
+      "url": "https://bread.example/jsonld-graph",
+      "expected": "https://cdn.bread.example/ld-graph.jpg",
+      "source": "structured_data",
+      "ogOnly": false
+    },
+    {
+      "file": "image-src.html",
+      "url": "https://bread.example/image-src",
+      "expected": "https://cdn.bread.example/image-src.jpg",
+      "source": "image_src",
+      "ogOnly": false
+    },
+    {
+      "file": "video-poster.html",
+      "url": "https://bread.example/video-poster",
+      "expected": "https://cdn.bread.example/poster.jpg",
+      "source": "video_poster",
+      "ogOnly": false
+    },
+    {
+      "file": "article-size.html",
+      "url": "https://bread.example/article-size",
+      "expected": "https://bread.example/photos/crumb.jpg",
+      "source": "article",
+      "ogOnly": false
+    },
+    {
+      "file": "article-srcset.html",
+      "url": "https://bread.example/article-srcset",
+      "expected": "https://bread.example/photos/loaf-1600.jpg",
+      "source": "article",
+      "ogOnly": false
+    },
+    {
+      "file": "icon-only.html",
+      "url": "https://bread.example/icon-only",
+      "expected": null,
+      "source": null,
+      "ogOnly": false
+    },
+    {
+      "file": "pixel-only.html",
+      "url": "https://bread.example/pixel-only",
+      "expected": null,
+      "source": null,
+      "ogOnly": false
+    },
+    {
+      "file": "relative-and-data.html",
+      "url": "https://bread.example/relative-and-data",
+      "expected": "https://bread.example/images/hero.jpg",
+      "source": "twitter",
+      "ogOnly": false
+    },
+    {
+      "file": "no-image.html",
+      "url": "https://bread.example/no-image",
+      "expected": null,
+      "source": null,
+      "ogOnly": false
+    }
+  ]
+}

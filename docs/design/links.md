@@ -99,11 +99,87 @@ server fetches with a login wall, so their cards use what the member shared inst
   `publicId: null` and drops `image`, which removes the stored copy (null is never stored).
 - **Card** (D168): `LinkCard` shows the host label ("Instagram") in place of the domain line.
 - **Snapshot job** (D168): one try with no requeue; a generic preview is discarded; a set
-  `publicId` is never replaced.
+  `publicId` is never replaced. 041 revises the preview rules (see below).
 - **Checks** (D168): the sweep writes `unchecked` rows for locked hosts without a request
   (flags cleared, next check in 30 ± 3 days; the summary adds `unchecked`). `POST
   /items/{id}/link-check` answers 422 ("Links to Instagram can't be checked automatically") before
   the rate limit.
+
+## Share visuals (041, D343–D353, ADR-075)
+
+Previews are fetched as an honest crawler and built by one builder for every caller.
+
+- **Identity** (D343): page fetches, oEmbed lookups and image downloads send `GobbitBot/1.0`
+  (`fetch/user-agents.ts`, explained in [`docs/crawler.md`](../crawler.md)). Link checks pass
+  `identity: 'browser'` (`createLinkCheckFetch`), so sites that refuse crawlers aren't flagged dead.
+- **Builder** (D346, `fetch/build-preview.ts`): `buildLinkPreview(deps, url)` fetches once, extracts,
+  collects candidates, runs at most one lookup, applies the locked-host rule and returns
+  `{ page, fetch, preview, candidates, decision }`. Ingest (`normalizeRaw`), the editor's "Fetch
+  preview" (`link-preview.service`) and the snapshot job use it; each logs `link_preview.built`
+  with its `caller`.
+- **Candidates** (D344, `fetch/page-images.ts`): OG (every tag, in order), secure OG, Twitter,
+  JSON-LD (`image`/`thumbnailUrl`, top level or `@graph`, ≤ 100 KB), `image_src`, video poster,
+  then one article image: the widest with a stated width ≥ `LINK_ARTICLE_IMAGE_MIN_PX` (300; via
+  `width` or `srcset` `w`), stated height ≥ half that, not named like an icon/logo/avatar/pixel.
+  Absolute http(s) only, deduped, at most 5. The article HTML comes from the same Readability parse.
+- **Lookups** (D345, `fetch/lookup-hosts.ts`): YouTube, TikTok and Vimeo key-free oEmbed through
+  `createSafeJsonFetch` (64 KB, `LINK_LOOKUP_TIMEOUT_MS` 2500). Only when the page gave no image or
+  no title or failed; the thumbnail is appended as `host_lookup`, the title fills a missing one.
+  Instagram and Facebook oEmbed need a token and are not on the list.
+- **Locked hosts** (D347, revises D167/D168): `lockedPreviewVerdict` → `real`, `generic`,
+  `login_wall` or `unavailable` (`LOCKED_UNAVAILABLE_TITLES`). Anything but `real` discards the
+  whole preview (image too). A real preview is used like any host's and the snapshot job copies its
+  image. In `validateProposal`, the caption beats the page description; with no real title and no
+  caption the card is `<Label> link` with "Shared from <Label>; its content couldn't be read." (D348).
+- **Snapshot tries** (D349): candidates come from the job data (ingest sends them) or one build.
+  Up to `LINK_IMAGE_TRIES` (3) are tried, the current `preview.image` first. `http_error`,
+  `not_image`, `too_large`, `blocked`, `timeout` and `too_small` (stored copy < 200 px wide or
+  < 100 px high, left for `media-sweep`) move on; `upload_failed`/`unavailable` stop and keep the
+  remote image. All failed → `preview.image` removed. Logs `link_snapshot.image`.
+- **Markers** (D350): `preview.imageLookup` (rules version, `LINK_IMAGE_RULES_VERSION` = 1) is
+  stamped after every look; `preview.imageRemoved` is set by "Remove photo" and cleared by a new
+  photo or URL. Both are server-owned like `publicId`, and absent from the editor lookup DTO and
+  `toPublicItem`. `needsLinkSnapshot` enqueues a card with text and no image only while unstamped.
+- **Events** (D352): `link_preview.built`, `link_preview.lookup`, `link_preview.applied`,
+  `link_snapshot.image`, `link_snapshot.backfill`; host names and closed-set values only, never
+  URLs, titles or captions. The per-host `discarded` rate of `built` shows a host walling the crawler.
+- **Corpus** (D353): 16 hand-written pages in `fetch/__fixtures__/preview-pages/` and
+  `page-images.corpus.test.ts` pin SC-002 (≥ 90% found) and SC-003 (no OG-only page changes).
+
+### Runbook: image backfill (D351)
+
+Once after deploying 041, with the worker running and `CLOUDINARY_URL` set:
+
+```sh
+pnpm links:image-backfill --dry-run          # count only (needs DATABASE_URL)
+pnpm links:image-backfill [--host-spacing 60] # enqueue link-snapshot per card
+```
+
+It picks live link cards with a title or description, no image or `publicId`, not stamped and not
+`imageRemoved`. Cards with a member payload edit in `item_events` are skipped (counted as
+`member edits`). Each host's jobs are `startAfter` spaced by `--host-spacing` seconds. Rerunning is
+safe: jobs are per-card singletons and stamped cards no longer qualify.
+
+## Deviations from the 041 plan
+
+- **`login_wall`** is decided by a word test (`LOGIN_WORDS`: log in, sign in, sign up, join) after
+  the site name is removed; a failed page fetch on a locked host is `fetch_failed`, not a discard.
+- **The editor cache** holds the answered preview only, not the whole build (the route answers
+  `{ preview }` and nothing else reads the rest).
+- **Auto-published shares** enqueue the snapshot without candidates (the job builds once).
+- **`link_preview.applied`** compares the stored description with the page's to tell `page` from
+  `caption`.
+- **The snapshot handler** takes the job id as a `ctx` argument for its events.
+- **The backfill logic** lives in `jobs/link-image-backfill.ts` (`runImageBackfill`); the script
+  only wires it. The query returns a `memberEdited` flag rather than excluding those rows, so the
+  summary can count them.
+- **A card with `imageRemoved`** makes the job return `skipped` after logging `member_choice`.
+- **The link-check identity test** lives in `link-preview.int.test.ts` with the other identity
+  tests; `createLinkCheckFetch` takes an optional guard so the test can reach the loopback server.
+- **The oEmbed int test** rewrites youtube.com URLs to the fixture server through injected
+  `safeFetch`/`fetchJson` wrappers; the endpoints stay hard-coded.
+- **A locked-host wall card** is still enqueued for a snapshot (no candidates): it has text and no
+  image and no stamp (D350), so the job looks once and stamps it.
 
 ## Deviations from the 014 plan
 

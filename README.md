@@ -87,6 +87,9 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `MAIL_PROVIDER` | `console` | `console` (links logged) or `resend` |
 | `RESEND_API_KEY` / `MAIL_FROM` | — | Required when `MAIL_PROVIDER=resend` |
 | `ALLOW_CONSOLE_MAIL` | `false` | Must be `true` to use the console mailer in production |
+| `LINK_IMAGE_TRIES` | `3` | Preview image candidates the `link-snapshot` job tries per card before dropping the image (D349) |
+| `LINK_ARTICLE_IMAGE_MIN_PX` | `300` | Smallest stated width of an in-article image used as a link preview (D344) |
+| `LINK_LOOKUP_TIMEOUT_MS` | `2500` | Timeout of a YouTube/TikTok/Vimeo oEmbed lookup for a link preview (D345) |
 | `MAGIC_LINK_TTL_MINUTES` | `15` | Sign-in link lifetime |
 | `INVITE_TTL_DAYS` | `7` | Invite link lifetime |
 | `SESSION_TTL_DAYS` | `90` | Sliding session lifetime |
@@ -126,6 +129,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm media:reconcile` | List Cloudinary images tagged `editor`/`ingest` that have no `assets` row (dry run; `-- --delete` removes them). Needs `CLOUDINARY_URL` and `DATABASE_URL` |
 | `pnpm job:run <queue>` | Enqueue one job on a named pg-boss queue (e.g. `media-sweep`, `link-check-sweep`) for the running worker |
 | `pnpm links:snapshot-backfill` | Enqueue `link-snapshot` for existing link cards whose preview image isn't stored yet (run once after deploying 014; needs `DATABASE_URL`, the worker needs `CLOUDINARY_URL`) |
+| `pnpm links:image-backfill [--dry-run] [--host-spacing 60]` | Enqueue `link-snapshot` for existing link cards with text but no picture, spaced per host (run once after deploying 041; needs `DATABASE_URL` and, unless `--dry-run`, `CLOUDINARY_URL`) |
 | `pnpm search:load` | Create/fill a `search-demo` deck with the fixture cards through the API (`--deck`, `--base-url`/`BASE_URL`, `--token`/`SMOKE_SESSION_TOKEN`) |
 | `pnpm import:notes <file> --deck <slug>` | Import a notes file (`.txt` lines, `.md`, `.csv`) as proposed cards through the API (`--format`, `--label`, `--dry-run`); needs `GOBBIT_API_URL` and `GOBBIT_TOKEN` (an owner or maintainer session) unless `--dry-run` |
 | `pnpm search:query "<q>"` | Print search hits (why, score) for a deck, same options |
@@ -267,7 +271,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 
 **Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
 
-Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (web push), `ANALYTICS_UPSTREAM` (defaults to the shared Umami's container, D341), `HEALTHCHECK_API_URL`/`HEALTHCHECK_WORKER_URL` (alerts, D342).
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (web push), `ANALYTICS_UPSTREAM` (defaults to the shared Umami's container, D341), `HEALTHCHECK_API_URL`/`HEALTHCHECK_WORKER_URL` (alerts, D342), `LINK_IMAGE_TRIES`/`LINK_ARTICLE_IMAGE_MIN_PX`/`LINK_LOOKUP_TIMEOUT_MS` (link previews, 041).
 
 ### GitHub Actions
 

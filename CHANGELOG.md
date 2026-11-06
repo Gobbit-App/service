@@ -10,6 +10,17 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-06 — Share visuals: GobbitBot, richer preview images (041, D343–D353, ADR-075)
+
+- Preview fetches now identify as `GobbitBot/1.0` ([`docs/crawler.md`](docs/crawler.md)); link
+  checks keep the browser-like identity.
+- New optional `LINK_IMAGE_TRIES` (default 3), `LINK_ARTICLE_IMAGE_MIN_PX` (300) and
+  `LINK_LOOKUP_TIMEOUT_MS` (2500). Unset → defaults; nothing to set.
+- **After deploying (once)**: `pnpm links:image-backfill` (try `--dry-run` first) enqueues the
+  snapshot job for existing link cards with text but no picture. Needs `DATABASE_URL`, plus
+  `CLOUDINARY_URL` unless `--dry-run`, and a running worker. Runbook:
+  `docs/design/links.md` → *Runbook: image backfill*.
+
 ### 2026-11-06 — Dead man's switches for the API and the worker (D342, ADR-074)
 
 - **Action required (to get alerts)**: new optional `HEALTHCHECK_API_URL` and

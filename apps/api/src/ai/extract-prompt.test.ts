@@ -55,6 +55,12 @@ describe('buildExtractPrompt', () => {
     expect(system).toContain('propose_card');
   });
 
+  it('asks for honest titles (D348)', () => {
+    const { system } = buildExtractPrompt(baseInput());
+    expect(system).toContain('base the card title on it');
+    expect(system).toContain('do not guess what the content is');
+  });
+
   it('includes the correction block only when a correction is set', () => {
     const without = buildExtractPrompt(baseInput());
     expect(without.user).not.toContain('<correction>');

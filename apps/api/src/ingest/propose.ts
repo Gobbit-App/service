@@ -35,6 +35,8 @@ export interface ProposeInput {
   summary: ExtractionSummary;
   /** A direct proposal that names the card it updates: no similarity search (`explicit`). */
   targetItemId?: string | null;
+  /** D349: the shared page's image candidates, handed to the snapshot job. */
+  imageCandidates?: string[];
   signal?: AbortSignal;
 }
 
@@ -106,7 +108,9 @@ export async function proposeItem(deps: ProposeDeps, input: ProposeInput): Promi
     finishedAt: deps.now(),
   });
   await deps.embedQueue.enqueueIfStale(created.id);
-  await deps.linkSnapshotQueue?.enqueueIfNeeded(created);
+  await deps.linkSnapshotQueue?.enqueueIfNeeded(created, {
+    candidates: input.imageCandidates,
+  });
   return { item: created, dedup };
 }
 

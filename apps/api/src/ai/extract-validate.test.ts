@@ -3,6 +3,8 @@ import { CARD_BODY_MAX, codePointLength } from '@gobbit/shared';
 import { LOCKED_CAPTION_MAX, lockedHostOf } from '@gobbit/shared/links';
 import {
   correctionMessage,
+  honestLockedText,
+  needsHonestLockedText,
   shouldEscalate,
   truncateAtSentence,
   validateProposal,
@@ -231,14 +233,53 @@ describe('extract-validate for locked hosts (D167)', () => {
     });
   });
 
-  it('keeps a real OG title, description and image', () => {
-    const og = {
-      title: 'Dan on Instagram: "Sink"',
-      description: 'Sink done',
-      image: 'https://cdn.test/p.jpg',
-    };
+  const og = {
+    title: 'Dan on Instagram: "Sink"',
+    description: 'Sink done',
+    image: 'https://cdn.test/p.jpg',
+  };
+
+  it('keeps a real OG title and image, with the caption before the page description (D347)', () => {
     const r = okResult(baseRaw, { ...lockedCtx, linkPreview: og });
+    expect(r.item.payload).toEqual({
+      url: sourceUrl,
+      preview: { ...og, description: 'Dan fixed our sink in an hour' },
+    });
+  });
+
+  it('uses the page description when the share has no caption', () => {
+    const r = okResult(baseRaw, { ...lockedCtx, sharedText: sourceUrl, linkPreview: og });
     expect(r.item.payload).toEqual({ url: sourceUrl, preview: og });
+    expect(r.item.title).toBe('Plumber');
+  });
+
+  describe('honest text (D348)', () => {
+    const bare = { ...lockedCtx, sharedText: `  ${sourceUrl} ` };
+
+    it('writes the title and body itself when nothing could be read', () => {
+      const r = okResult({ ...baseRaw, title: 'Instagram Reel by User' }, bare);
+      expect(r.item.title).toBe('Instagram link');
+      expect(r.item.body).toBe("Shared from Instagram; its content couldn't be read.");
+      expect(r.item.payload).toEqual({ url: sourceUrl, preview: { title: 'Instagram link' } });
+      expect(needsHonestLockedText(bare)).toBe(true);
+    });
+
+    it('treats a generic page title as nothing read', () => {
+      const ctx = { ...bare, linkPreview: { title: 'Log in • Instagram' } };
+      expect(okResult(baseRaw, ctx).item.title).toBe('Instagram link');
+    });
+
+    it('keeps the model text when there is a caption or a real title', () => {
+      expect(okResult(baseRaw, lockedCtx).item.title).toBe('Plumber');
+      expect(okResult(baseRaw, { ...bare, linkPreview: og }).item.title).toBe('Plumber');
+      expect(needsHonestLockedText(lockedCtx)).toBe(false);
+    });
+
+    it('never applies to other hosts', () => {
+      const ctx = { ...defaultCtx, sourceUrl: 'https://e.com/x', lockedHost: null };
+      expect(needsHonestLockedText(ctx)).toBe(false);
+      expect(honestLockedText('TikTok').title).toBe('TikTok link');
+    });
   });
 
   it('uses the shared image as the stored copy with its dimensions', () => {

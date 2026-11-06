@@ -18,6 +18,7 @@ import {
   ingestJobs,
   itemCategories,
   itemColumns,
+  itemEvents,
   items,
   linkChecks,
   type DbExecutor,
@@ -309,6 +310,45 @@ export function createItemsRepo(db: DbExecutor) {
             isNull(items.deletedAt),
             sql`${items.payload} #>> '{preview,image}' is not null`,
             sql`${items.payload} #>> '{preview,publicId}' is null`,
+            afterId ? sql`${items.id} > ${afterId}` : undefined,
+          ),
+        )
+        .orderBy(items.id)
+        .limit(limit);
+    },
+
+    /**
+     * D351 one-time pass: live link cards with text but no image, not yet looked at under
+     * `rulesVersion` and without a member's "Remove photo", by id (keyset after `afterId`).
+     * `memberEdited` flags cards whose payload a member ever edited: before 041 a removal left no
+     * marker, so the pass skips those.
+     */
+    async linkImageBackfillCandidates(
+      afterId: string | null,
+      limit: number,
+      rulesVersion: number,
+    ): Promise<{ id: string; url: string; memberEdited: boolean }[]> {
+      return db
+        .select({
+          id: items.id,
+          url: sql<string>`${items.payload} ->> 'url'`,
+          memberEdited: sql<boolean>`exists (
+            select 1 from ${itemEvents} e
+            where e.item_id = ${items}.id and e.kind = 'updated'
+              and e.actor_user_id is not null and 'payload' = any(e.changes)
+          )`,
+        })
+        .from(items)
+        .where(
+          and(
+            eq(items.type, 'link'),
+            inArray(items.status, ['proposed', 'published']),
+            isNull(items.deletedAt),
+            sql`coalesce(${items.payload} #>> '{preview,title}', ${items.payload} #>> '{preview,description}') is not null`,
+            sql`${items.payload} #>> '{preview,image}' is null`,
+            sql`${items.payload} #>> '{preview,publicId}' is null`,
+            sql`coalesce((${items.payload} #>> '{preview,imageLookup}')::int, 0) < ${rulesVersion}`,
+            sql`${items.payload} #>> '{preview,imageRemoved}' is null`,
             afterId ? sql`${items.id} > ${afterId}` : undefined,
           ),
         )

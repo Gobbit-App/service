@@ -2,12 +2,20 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ARTICLE_PAGE } from '@gobbit/db/test/ingest-pages';
-import { createSafeFetch, createSafeImageFetch, createSafePush } from './safe-fetch';
+import {
+  createSafeFetch,
+  createSafeImageFetch,
+  createSafeJsonFetch,
+  createSafePush,
+} from './safe-fetch';
+import { BROWSER_USER_AGENT, CRAWLER_USER_AGENT } from './user-agents';
 import { isBlockedAddress } from './ip-guard';
 
 /** A local server stands in for the internet; loopback is allowed only for these tests. */
 let server: Server;
 let base: string;
+/** The User-Agent of the last request the local server saw. */
+let lastUserAgent: string | undefined;
 
 const routes: Record<string, (res: import('node:http').ServerResponse) => void> = {
   '/article': (res) => {
@@ -80,6 +88,36 @@ const routes: Record<string, (res: import('node:http').ServerResponse) => void> 
     res.writeHead(200, { 'content-type': 'image/png', 'content-length': '5000' });
     res.end(Buffer.concat([PNG, Buffer.alloc(5000 - PNG.byteLength)]));
   },
+  '/oembed': (res) => {
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ title: 'Clip', thumbnail_url: 'https://i.test/t.jpg' }));
+  },
+  '/oembed-js': (res) => {
+    res.writeHead(200, { 'content-type': 'text/javascript' });
+    res.end('{"title":"Clip"}');
+  },
+  '/oembed-redirect': (res) => {
+    res.writeHead(302, { location: '/oembed' });
+    res.end();
+  },
+  '/oembed-to-metadata': (res) => {
+    res.writeHead(302, { location: 'http://169.254.169.254/latest/meta-data/' });
+    res.end();
+  },
+  '/oembed-broken': (res) => {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end('{"title":');
+  },
+  '/oembed-big': (res) => {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ title: 'x'.repeat(5000) }));
+  },
+  '/oembed-slow': (res) => {
+    setTimeout(() => {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end('{}');
+    }, 500);
+  },
   '/big-image-chunked': (res) => {
     res.writeHead(200, { 'content-type': 'image/png', 'transfer-encoding': 'chunked' });
     res.write(PNG);
@@ -96,6 +134,7 @@ const PNG = Buffer.concat([
 
 beforeAll(async () => {
   server = createServer((req, res) => {
+    lastUserAgent = req.headers['user-agent'];
     const handler = routes[req.url ?? ''];
     if (handler) handler(res);
     else {
@@ -320,5 +359,57 @@ describe('createSafePush (D296)', () => {
   it('keeps the IP guard on for allowed hosts', async () => {
     const push = createSafePush({ allowedPorts: null, lookupAll, isAllowedHost: () => true });
     expect(await push(req(`${base}/missing`))).toMatchObject({ status: null, error: 'blocked' });
+  });
+});
+
+describe('fetch identity (D343)', () => {
+  it('sends the crawler User-Agent by default, for pages, images and lookups', async () => {
+    await local()(`${base}/article`);
+    expect(lastUserAgent).toBe(CRAWLER_USER_AGENT);
+    await createSafeImageFetch({ isBlocked: allowLoopback, allowedPorts: null, lookupAll })(
+      `${base}/photo.png`,
+    );
+    expect(lastUserAgent).toBe(CRAWLER_USER_AGENT);
+    await jsonLocal()(`${base}/oembed`);
+    expect(lastUserAgent).toBe(CRAWLER_USER_AGENT);
+    expect(CRAWLER_USER_AGENT).toMatch(/GobbitBot\/1\.0; \+https:\/\/.*crawler\.md/);
+  });
+
+  it('sends the browser User-Agent for the browser identity (link checks)', async () => {
+    await local({ accept: 'any', identity: 'browser' })(`${base}/article`);
+    expect(lastUserAgent).toBe(BROWSER_USER_AGENT);
+  });
+});
+
+const jsonLocal = (extra: Parameters<typeof createSafeJsonFetch>[0] = {}) =>
+  createSafeJsonFetch({ isBlocked: allowLoopback, allowedPorts: null, lookupAll, ...extra });
+
+describe('createSafeJsonFetch (D345)', () => {
+  it('reads a JSON answer, following redirects', async () => {
+    expect(await jsonLocal()(`${base}/oembed-redirect`)).toMatchObject({
+      status: 200,
+      error: null,
+      json: { title: 'Clip', thumbnail_url: 'https://i.test/t.jpg' },
+    });
+    expect((await jsonLocal()(`${base}/oembed-js`)).json).toEqual({ title: 'Clip' });
+  });
+
+  it('refuses non-JSON, invalid JSON and answers over the cap', async () => {
+    expect(await jsonLocal()(`${base}/article`)).toMatchObject({ json: null, error: 'not_json' });
+    expect(await jsonLocal()(`${base}/oembed-broken`)).toMatchObject({
+      json: null,
+      error: 'invalid_json',
+    });
+    expect(await jsonLocal({ maxBytes: 1000 })(`${base}/oembed-big`)).toMatchObject({
+      json: null,
+      error: 'too_large',
+    });
+  });
+
+  it('keeps the guard, the HTTP errors and the timeout', async () => {
+    expect((await jsonLocal()(`${base}/oembed-to-metadata`)).error).toBe('blocked');
+    expect((await createSafeJsonFetch()(`${base}/oembed`)).error).toBe('blocked');
+    expect((await jsonLocal()(`${base}/missing`)).error).toBe('http_404');
+    expect((await jsonLocal({ timeoutMs: 100 })(`${base}/oembed-slow`)).error).toBe('timeout');
   });
 });

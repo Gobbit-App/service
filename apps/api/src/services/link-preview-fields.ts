@@ -15,6 +15,24 @@ export type LinkPreviewFields = (
   stored: LinkPayload | null,
 ) => Promise<LinkPayload>;
 
+/**
+ * D350: the server's image markers. Client values are never read; the stored ones are carried,
+ * except that a URL change drops them both, "Remove photo" (`publicId: null`) sets
+ * `imageRemoved` and a new photo clears it.
+ */
+function markers(
+  incoming: LinkPayload,
+  stored: LinkPayload | null,
+  photo: 'removed' | 'added' | 'kept',
+): Pick<Preview, 'imageLookup' | 'imageRemoved'> {
+  const storedPreview = stored && stored.url === incoming.url ? stored.preview : undefined;
+  const removed = photo === 'removed' || (photo === 'kept' && storedPreview?.imageRemoved);
+  return {
+    ...(storedPreview?.imageLookup ? { imageLookup: storedPreview.imageLookup } : {}),
+    ...(removed ? { imageRemoved: true as const } : {}),
+  };
+}
+
 function dimensions(source: { width: number | null; height: number | null } | Preview) {
   return {
     ...(source.width ? { width: source.width } : {}),
@@ -30,6 +48,7 @@ function dimensions(source: { width: number | null; height: number | null } | Pr
  *   A photo a member added is kept.
  * - `publicId: null` removes the photo (015).
  * - Client dimensions are never trusted.
+ * - `imageLookup`/`imageRemoved` are server-owned too (D350, see `markers`).
  */
 export function createLinkPreviewFields(assets: Pick<AssetsRepo, 'byPublicId'>): LinkPreviewFields {
   async function assetOf(publicId: string): Promise<AssetRow | null> {
@@ -37,11 +56,21 @@ export function createLinkPreviewFields(assets: Pick<AssetsRepo, 'byPublicId'>):
   }
 
   return async (deckId, incoming, stored) => {
-    const { publicId: clientId, width: _w, height: _h, ...preview } = incoming.preview ?? {};
+    const {
+      publicId: clientId,
+      width: _w,
+      height: _h,
+      imageLookup: _lookup,
+      imageRemoved: _removed,
+      ...preview
+    } = incoming.preview ?? {};
     const storedPreview = stored?.preview;
     const storedId = storedPreview?.publicId;
+    const photo =
+      clientId === null ? 'removed' : clientId && clientId !== storedId ? 'added' : 'kept';
+    const marks = markers(incoming, stored, photo);
     const withPreview = (fields: Partial<Preview>): LinkPayload => {
-      const next = { ...preview, ...fields };
+      const next = { ...preview, ...fields, ...marks };
       return Object.keys(next).length > 0 || incoming.preview
         ? { ...incoming, preview: next }
         : { url: incoming.url };
