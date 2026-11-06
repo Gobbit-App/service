@@ -578,7 +578,7 @@ Error handling via custom `HttpError` class and Postgres constraint mapping.
 
 ## License
 
-Licensed under the [Mozilla Public License 2.0](./LICENSE). You may use, modify and distribute this code, including in commercial and closed-source products; modifications to MPL-licensed files must be shared under the same license, and existing notices must be kept.
+Licensed under the [Mozilla Public License 2.0](./LICENSE). Third-party notices for the packages bundled into the web app are generated at build time and served at `/licenses.txt` (linked from ⋯ → About). You may use, modify and distribute this code, including in commercial and closed-source products; modifications to MPL-licensed files must be shared under the same license, and existing notices must be kept.
 
 ---
 

@@ -9,19 +9,22 @@ export interface MenuActionsInput {
   isPlatformAdmin: boolean;
   /** Signed-in email, shown under "Sign out"; unknown while `/me` loads. */
   email?: string;
+  /** D354: opens the About sheet. */
+  onAbout: () => void;
   onSignOut: () => void;
   signingOut?: boolean;
 }
 
 /**
  * D276: the bottom bar's ⋯ menu, in order: Settings (one page, D278), Upcoming reminders
- * (`item.update`, 037), Activity (`event.list`, D188), Waitlist (platform admins, 032) and Sign
- * out with the signed-in email.
+ * (`item.update`, 037), Activity (`event.list`, D188), Waitlist (platform admins, 032), About
+ * (D354) and Sign out with the signed-in email.
  */
 export function menuActions({
   deck,
   isPlatformAdmin,
   email,
+  onAbout,
   onSignOut,
   signingOut = false,
 }: MenuActionsInput): MenuAction[] {
@@ -52,6 +55,7 @@ export function menuActions({
   if (isPlatformAdmin) {
     actions.push({ key: 'waitlist', label: 'Waitlist', icon: 'list', href: '/admin/waitlist' });
   }
+  actions.push({ key: 'about', label: 'About', icon: 'info', onSelect: onAbout });
   actions.push({
     key: 'sign-out',
     label: 'Sign out',

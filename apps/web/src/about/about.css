@@ -1,0 +1,71 @@
+/* D354: About Gobbit, inside the shared sheet (D304; the modal dialog scrolls when tall). */
+
+.about__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.about__logo {
+  flex: none;
+  border-radius: var(--radius-sm);
+}
+
+.about__title {
+  margin: 0;
+}
+
+.about__tagline {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.about__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.about__facts dt {
+  color: var(--color-muted);
+}
+
+.about__facts dd {
+  margin: 0;
+}
+
+.about__section {
+  margin-bottom: var(--space-4);
+}
+
+.about__section h3 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-md);
+}
+
+.about__credits {
+  margin: 0 0 var(--space-2);
+  padding-inline-start: var(--space-4);
+}
+
+.about__credits li + li {
+  margin-top: var(--space-1);
+}
+
+.about__text {
+  margin: 0 0 var(--space-2);
+}
+
+.about__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.about__fine {
+  margin: 0 0 var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}

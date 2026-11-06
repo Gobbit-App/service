@@ -44,7 +44,8 @@ export function Sheet({
     // jsdom has no showModal; browsers all do (the PWA's targets).
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
-    initialFocus?.current?.focus();
+    // A tall sheet opens at its top even when the focused action sits at the bottom (D354).
+    initialFocus?.current?.focus({ preventScroll: true });
     return () => {
       if (typeof dialog.close === 'function' && dialog.open) dialog.close();
       if (previous?.isConnected) previous.focus();
