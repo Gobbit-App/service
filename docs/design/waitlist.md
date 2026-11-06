@@ -141,8 +141,9 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
 
 - Caddy uses three `handle` blocks (two proxied paths, then `/stats/*` 404) instead of one
   `@stats` matcher, so the one-day `Cache-Control` applies only to the script.
-- `ANALYTICS_UPSTREAM` defaults to `gobbit-umami:3000` in Compose (a network alias), since `web`
-  is also on `dokploy-network`, where another project's `umami` could answer.
+- `ANALYTICS_UPSTREAM` defaulted to `gobbit-umami:3000` in Compose (a network alias), since `web`
+  is also on `dokploy-network`, where another project's `umami` could answer. Since D341 it
+  points at the shared Umami's container; the `gobbit-umami` alias lives only in the local overlay.
 - Umami v3 images are PostgreSQL-only and drop the `postgresql-` tag prefix: pinned
   `ghcr.io/umami-software/umami:3.4.1`.
 - `STATS_HOST` defaults to `gobbit-stats.niranhome.win`, a first-level subdomain so Cloudflare's
