@@ -10,6 +10,18 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-06 — The repo drives the deployed Compose (D341, ADR-073)
+
+- **Action required (once, before merging)**: switch the Dokploy Compose service from *Raw* to
+  *Git*: repository `https://github.com/Gobbit-App/service.git`, branch `main`, Compose path
+  `./infra/docker-compose.yml`, Autodeploy on. From then on every deploy runs the committed file;
+  never edit the Compose in Dokploy.
+- Removed from the Compose: the `umami` service and its `UMAMI_DATABASE_URL`, `UMAMI_APP_SECRET`
+  and `STATS_HOST` variables. Production already uses the shared Umami in its own Dokploy project;
+  `ANALYTICS_UPSTREAM` now defaults to its container (`services-umami-4viuzs-umami-1:3000`).
+  Locally, `--profile analytics` still runs a `umami` service from `docker-compose.local.yml`.
+- `api`, `worker` and `web` logs rotate (json-file, 50 MB × 10).
+
 ### 2026-11-03 — Reminder notifications (037)
 
 - **Action required (only to turn on web push)**: new optional `VAPID_PUBLIC_KEY`,

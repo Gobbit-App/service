@@ -263,11 +263,10 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 - `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden
 - `RESEND_WEBHOOK_SECRET` – only for email-in, together with `INGEST_EMAIL_DOMAIN` (a plain value; see *Sharing into Gobbit*)
 - `LOG_HASH_KEY` – ≥ 32 random characters (`openssl rand -hex 32`); the API refuses to start in production without it. Keys the `emailHash`/`ipHash` fields of decision events
-- `UMAMI_DATABASE_URL`, `UMAMI_APP_SECRET` – the `umami` service (landing analytics): its own `umami` database on the shared Postgres and a random secret (`openssl rand -hex 32`); setup in `infra/README.md` § Landing analytics
 
 **Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
 
-Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (web push), `STATS_HOST` (Umami dashboard hostname), `ANALYTICS_UPSTREAM`.
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (web push), `ANALYTICS_UPSTREAM` (defaults to the shared Umami's container, D341).
 
 ### GitHub Actions
 

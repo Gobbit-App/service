@@ -1,5 +1,16 @@
 name: deck
 
+# D341, ADR-073: this file IS the deployed Compose. Dokploy's Compose service is a git source
+# (this repo, `main`, `infra/docker-compose.yml`) and clones it on every deploy, so there is no
+# second copy to drift. Only secrets (and rare overrides) live in the Dokploy environment.
+
+# Container logs rotate (json-file) so a chatty or crash-looping service can't fill the disk.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 50m
+    max-file: '10'
+
 # The API and the worker share one environment: same image, same parseEnv() (production
 # requires API_URL, CLOUDINARY_URL and mail settings), and P5 jobs need the AI and Cloudinary keys.
 x-api-env: &api-env
@@ -73,6 +84,7 @@ services:
     image: ghcr.io/gobbit-app/service/api:${API_IMAGE_TAG:-latest}
     pull_policy: always
     environment: *api-env
+    logging: *logging
     # Internal only: the web service is the one public entry point (D51). Kept off
     # dokploy-network on purpose: another project's `api` there would shadow Caddy's api:3000.
     restart: unless-stopped
@@ -89,6 +101,7 @@ services:
     environment:
       <<: *api-env
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+    logging: *logging
     # The worker serves no HTTP; it touches /tmp/worker-heartbeat every 30 s after a DB ping.
     healthcheck:
       test:
@@ -106,10 +119,12 @@ services:
     pull_policy: always
     depends_on:
       - api
+    logging: *logging
     environment:
-      # D232: Caddy proxies /stats/script.js and /stats/api/send here. A project-unique alias,
-      # because web is also on dokploy-network, where another project's `umami` could answer.
-      ANALYTICS_UPSTREAM: ${ANALYTICS_UPSTREAM:-gobbit-umami:3000}
+      # D232: Caddy proxies /stats/script.js and /stats/api/send here. D341: the Umami shared by
+      # several projects runs in its own Dokploy project; web reaches its container by name on
+      # dokploy-network. docker-compose.local.yml points this at the local `umami` service.
+      ANALYTICS_UPSTREAM: ${ANALYTICS_UPSTREAM:-services-umami-4viuzs-umami-1:3000}
     # Traefik (and the cloudflared service that feeds it) live on Dokploy's shared network.
     networks:
       - default
@@ -121,40 +136,6 @@ services:
       - traefik.http.routers.gobbit.rule=Host(`${PUBLIC_HOST:-gobbit.niranhome.win}`)
       - traefik.http.routers.gobbit.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
       - traefik.http.services.gobbit.loadbalancer.server.port=80
-    restart: unless-stopped
-
-  umami:
-    # D231: self-hosted landing analytics (031). v3 images are PostgreSQL-only; pinned, upgrade
-    # deliberately and re-run specs/031-landing-analytics/quickstart.md. Its own `umami` database
-    # on the shared Postgres; it migrates it on start. Secrets live in Dokploy only.
-    image: ghcr.io/umami-software/umami:3.4.1
-    environment:
-      DATABASE_URL: ${UMAMI_DATABASE_URL:-}
-      APP_SECRET: ${UMAMI_APP_SECRET:-}
-      CLIENT_IP_HEADER: cf-connecting-ip
-      DISABLE_TELEMETRY: 1
-      DISABLE_UPDATES: 1
-    # The dashboard has its own hostname behind Umami's login; the app origin serves only the
-    # tracker and the collect endpoint (Caddy). No published port.
-    networks:
-      default:
-        aliases:
-          - gobbit-umami
-      dokploy-network: {}
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=dokploy-network
-      - traefik.http.routers.gobbit-stats.rule=Host(`${STATS_HOST:-gobbit-stats.niranhome.win}`)
-      - traefik.http.routers.gobbit-stats.entrypoints=${TRAEFIK_ENTRYPOINT:-web}
-      - traefik.http.services.gobbit-stats.loadbalancer.server.port=3000
-    healthcheck:
-      test:
-        - CMD
-        - node
-        - -e
-        - "fetch('http://localhost:3000/api/heartbeat').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
-      interval: 30s
-      start_period: 60s
     restart: unless-stopped
 
 networks:

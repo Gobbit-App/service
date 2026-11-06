@@ -61,11 +61,22 @@ services:
     pull_policy: build
     ports:
       - 127.0.0.1:${WEB_PORT:-8080}:80
+    environment:
+      # Deployed, web reaches the shared Umami of another Dokploy project (D341); locally, the
+      # `umami` service below (alias `gobbit-umami`).
+      ANALYTICS_UPSTREAM: ${ANALYTICS_UPSTREAM:-gobbit-umami:3000}
 
   umami:
     # D231: only with `pnpm compose:up -- --profile analytics`; create the `umami` role and
     # database first (specs/031-landing-analytics/quickstart.md §2). Local defaults, not secrets.
+    # Local only: production uses the shared Umami outside this project (D341). Pinned; upgrade
+    # together with the shared instance.
+    image: ghcr.io/umami-software/umami:3.4.1
     profiles: [analytics]
+    networks:
+      default:
+        aliases:
+          - gobbit-umami
     depends_on:
       db:
         condition: service_healthy
@@ -73,6 +84,8 @@ services:
       DATABASE_URL: ${UMAMI_DATABASE_URL:-postgres://umami:umami@db:5432/umami}
       APP_SECRET: ${UMAMI_APP_SECRET:-local-umami-secret}
       CLIENT_IP_HEADER: ''
+      DISABLE_TELEMETRY: 1
+      DISABLE_UPDATES: 1
     ports:
       - 127.0.0.1:${UMAMI_PORT:-3001}:3000
 

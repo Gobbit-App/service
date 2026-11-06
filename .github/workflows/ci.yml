@@ -280,8 +280,9 @@ jobs:
 
           # Dokploy titles a deployment from body.head_commit.message (and shows head_commit.id)
           # when the request carries `X-GitHub-Event: push`; without it every deploy gets
-          # a generic title. The Compose service is a raw source, so `ref` is not checked
-          # against a branch and the payload never changes what deploys (Compose pulls :latest).
+          # a generic title. The Compose service is a git source (ADR-073): Dokploy checks `ref`
+          # against its branch (`main`), clones it and runs infra/docker-compose.yml, which pulls
+          # :latest. A `ref` other than refs/heads/main is refused.
           payload=$(jq -n \
             --arg ref "$GITHUB_REF" \
             --arg id "$short_sha" \

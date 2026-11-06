@@ -36,7 +36,7 @@ api / worker ─▶ Cloudinary (images), OpenRouter / OpenAI / Anthropic (option
 One origin everywhere (no CORS in practice): Caddy owns routing, headers and CSP; only `web` faces
 Traefik. CI runs `@smoke` against a Compose stack built from the commit (every PR), builds
 `ghcr.io/gobbit-app/service/{api,web}` with `GIT_SHA`, a `deploy` job calls the Dokploy webhook,
-and smoke waits for `/health` and `/version.json` to report the commit.
+which deploys `infra/docker-compose.yml` from `main` (ADR-073), and smoke waits for `/health` and `/version.json` to report the commit.
 → [design/deployment.md](design/deployment.md), [`infra/README.md`](../infra/README.md)
 (ADR-033, 034, 038, 039).
 
@@ -193,3 +193,4 @@ Full text in [adr.md](adr.md). Decisions in specs continue the `D` series; durab
 | [070](adr.md#adr-070-reminders-a-card-type-hidden-until-reveal-dismissed-once-notified-once-d291d299) | Reminders: a card type hidden until `deadline − showBefore`, one reveal predicate on member reads, one dismissers rule, dismiss archives in one transaction, notified once |
 | [071](adr.md#adr-071-the-composer-is-its-own-frame-one-sheet-on-the-native-dialog-d300d313) | The composer is its own frame (top bar, type chooser, one canvas); modals are one `Sheet` on `<dialog>`; Preview toggle on phones; keyboard dock from `visualViewport` |
 | [072](adr.md#adr-072-browse-vertical-cards-sideways-categories-layered-full-view-d325d340) | Browse: cards on y, categories on x (nested scroll-snap, edge strips, no wrap), category list and full view as history-state layers, detected text in Browse only (amends 065) |
+| [073](adr.md#adr-073-the-repo-drives-the-deployed-compose-d341) | Dokploy deploys `infra/docker-compose.yml` from `main` (git source), never a pasted copy; shared Umami stays outside the project |
