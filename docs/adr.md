@@ -659,3 +659,17 @@ Covers part of Phase 11 item 2 (process liveness). Alerting on decision-event th
 - **Fetch**: plain `fetch`, not `safe-fetch`. The URL is operator configuration, not something a member shared (ADR-048 guards the latter).
 
 **Rationale**: The worker crash-looped for hours (D341) and nothing told anyone. Docker healthchecks restart containers but can't report a dead host, and an in-process alert can't report its own death. Only an outside monitor that expects pings and notices silence covers all of these. Healthchecks.io is free at this size, needs no agent or open port, and is open source, so it can be self-hosted later. Uptime checks of `/health` from outside would cover the API but not the worker, which serves no HTTP.
+
+## ADR-075: Honest crawler identity and one preview builder (D343–D353)
+
+Revises D167/D168 (015's locked-host rules).
+
+**Decision**: Page fetches for previews and shares, oEmbed lookups and preview image downloads identify as `GobbitBot/1.0`, with a public page at `docs/crawler.md`. Link checks keep the browser-like identity, so sites that refuse crawlers don't get their links flagged dead. The identity is a `SafeFetchOptions.identity` option on the one guarded client (ADR-048).
+
+- **One builder**: ingest, the `link-snapshot` job and the editor's "Fetch preview" use `buildLinkPreview`. It fetches once, collects up to five image candidates in a fixed order (OG, secure OG, Twitter, JSON-LD, `image_src`, video poster, one article image with a stated size), and asks a key-free oEmbed endpoint (YouTube, TikTok, Vimeo) only when the page left a gap. A failed lookup only means less preview.
+- **Locked hosts**: a generic preview is discarded whole, title, description and image together. Generic means the title only names the site, is a login wall, or is a known "unavailable" page. A real one is used like any host's. The member's caption wins over the page description. With no real title and no caption, the code titles the card `<Site> link` and says its content couldn't be read; the model is not trusted to fill that gap.
+- **Snapshots**: the job tries up to `LINK_IMAGE_TRIES` candidates. Image-level failures move to the next one, and storage failures stop the job. When every candidate fails, the remote image is dropped.
+- **Markers**: server-owned `imageLookup` (rules version) and `imageRemoved` on `LinkPayload.preview` (jsonb, no migration) make "look once per card" and "never re-add a removed photo" checkable.
+- **Backfill**: a one-time `pnpm links:image-backfill` spaces the jobs per host.
+
+**Rationale**: Locked hosts answer a self-identified previewer with real Open Graph tags and a browser-like client with an empty shell. Impersonating another company's crawler would be dishonest and against the hosts' rules. Today three callers build previews three ways; one builder gives one set of rules and one decision event (`link_preview.built`). Its per-host discard rate shows when a host starts walling the crawler. Details: [`docs/design/links.md`](design/links.md#share-visuals-041-d343d353-adr-075), `specs/041-share-visuals/research.md`.

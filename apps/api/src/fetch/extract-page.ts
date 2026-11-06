@@ -1,6 +1,7 @@
 import { parseHTML } from 'linkedom';
 import { Readability } from '@mozilla/readability';
-import { PAGE_TEXT_MAX, type OpenGraph } from '@gobbit/shared';
+import { LINK_ARTICLE_IMAGE_MIN_PX, PAGE_TEXT_MAX, type OpenGraph } from '@gobbit/shared';
+import { collectImageCandidates, type ImageCandidate } from './page-images';
 
 /** Structured data extracted from a fetched HTML page. */
 export interface ExtractedPage {
@@ -8,6 +9,13 @@ export interface ExtractedPage {
   text: string;
   og: OpenGraph;
   lang: string | null;
+  /** D344: ordered preview image candidates; `og.image` stays for callers that read it. */
+  images: ImageCandidate[];
+}
+
+export interface ExtractOptions {
+  /** D344: smallest stated width of an in-article image. */
+  articleMinPx?: number;
 }
 
 type ParsedDocument = ReturnType<typeof parseHTML>['document'];
@@ -34,13 +42,15 @@ function resolveHttpUrl(value: string | null, base: string): string | null {
   }
 }
 
-function readableText(html: string): string {
+/** Readability's text and article HTML, from one parse (the text and D344's article images). */
+function readable(html: string): { text: string; articleHtml: string | null } {
   try {
     // Readability mutates the DOM, so it gets its own parse.
     const doc = parseHTML(html).document as unknown as Document;
-    return new Readability(doc).parse()?.textContent ?? '';
+    const article = new Readability(doc).parse();
+    return { text: article?.textContent ?? '', articleHtml: article?.content ?? null };
   } catch {
-    return '';
+    return { text: '', articleHtml: null };
   }
 }
 
@@ -62,7 +72,11 @@ export function collapseWhitespace(text: string): string {
  * Extracts Open Graph metadata, title, language and readable text from HTML.
  * Never throws; returns empty values on failure.
  */
-export function extractPage(html: string, pageUrl: string): ExtractedPage {
+export function extractPage(
+  html: string,
+  pageUrl: string,
+  opts: ExtractOptions = {},
+): ExtractedPage {
   try {
     const { document } = parseHTML(html);
 
@@ -78,15 +92,21 @@ export function extractPage(html: string, pageUrl: string): ExtractedPage {
 
     const lang = nonEmpty(document.documentElement?.getAttribute('lang'));
 
-    const text = collapseWhitespace(readableText(html)).slice(0, PAGE_TEXT_MAX);
+    const article = readable(html);
+    const text = collapseWhitespace(article.text).slice(0, PAGE_TEXT_MAX);
+    const images = collectImageCandidates(document as unknown as Document, pageUrl, {
+      articleHtml: article.articleHtml,
+      articleMinPx: opts.articleMinPx ?? LINK_ARTICLE_IMAGE_MIN_PX,
+    });
 
-    return { title, text, og, lang };
+    return { title, text, og, lang, images };
   } catch {
     return {
       title: null,
       text: '',
       og: { title: null, description: null, image: null, siteName: null },
       lang: null,
+      images: [],
     };
   }
 }

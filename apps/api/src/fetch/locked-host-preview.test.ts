@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { lockedHostOf } from '@gobbit/shared/links';
-import { isGenericLockedPreview, isGenericLockedTitle } from './locked-host-preview';
+import {
+  isGenericLockedPreview,
+  isGenericLockedTitle,
+  lockedPreviewVerdict,
+} from './locked-host-preview';
 
 const instagram = lockedHostOf('https://www.instagram.com/p/abc/')!;
 const facebook = lockedHostOf('https://www.facebook.com/x')!;
@@ -28,19 +32,47 @@ describe('isGenericLockedTitle (D167)', () => {
   );
 });
 
-describe('isGenericLockedPreview (D168)', () => {
+describe('lockedPreviewVerdict (D347)', () => {
+  it.each([
+    [undefined, 'generic'],
+    ['Instagram', 'generic'],
+    ['instagram.com', 'generic'],
+    ['Log in • Instagram', 'login_wall'],
+    ['Instagram - Sign up', 'login_wall'],
+    ['Page not found • Instagram', 'unavailable'],
+    ["Sorry, this page isn't available. | Instagram", 'unavailable'],
+    ['Instagram — Post isn’t available', 'unavailable'],
+    ['Dan the Plumber on Instagram: "Fixed it"', 'real'],
+  ] as const)('%j is %s', (title, verdict) => {
+    expect(lockedPreviewVerdict(title, instagram)).toBe(verdict);
+  });
+
+  it('applies the same rules to Facebook', () => {
+    expect(lockedPreviewVerdict('Facebook - log in or sign up', facebook)).toBe('login_wall');
+    expect(lockedPreviewVerdict('Content unavailable | Facebook', facebook)).toBe('unavailable');
+    expect(lockedPreviewVerdict('Grandma’s soup recipe | Facebook', facebook)).toBe('real');
+  });
+});
+
+describe('isGenericLockedPreview (D347, revises D168)', () => {
   it('is generic when missing or only naming the site', () => {
     expect(isGenericLockedPreview(null, instagram)).toBe(true);
     expect(isGenericLockedPreview({ title: 'Instagram' }, instagram)).toBe(true);
   });
 
-  it('is not generic with a description or an image', () => {
+  it('discards a generic title whole, its description and image included', () => {
     expect(isGenericLockedPreview({ title: 'Instagram', description: 'Fixed it' }, instagram)).toBe(
-      false,
+      true,
     );
     expect(
-      isGenericLockedPreview({ title: 'Instagram', image: 'https://x.test/og.jpg' }, instagram),
-    ).toBe(false);
+      isGenericLockedPreview(
+        { title: 'Log in • Instagram', image: 'https://x.test/logo.png' },
+        instagram,
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps a preview with a real title', () => {
     expect(isGenericLockedPreview({ title: 'Dan the Plumber' }, instagram)).toBe(false);
   });
 });

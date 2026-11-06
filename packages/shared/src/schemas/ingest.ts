@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { httpUrlSchema, isoDateTimeSchema, uuidSchema } from './common';
 import { itemSchema } from './item';
+import { linkPreviewSchema } from './media';
+import { LINK_IMAGE_CANDIDATES_MAX } from '../links/constants';
 import {
   autoPublishOutcomes,
   ingestFailureCodes,
@@ -72,6 +74,10 @@ export const normalizedSourceSchema = z.object({
   lang: z.string().nullable().optional(),
   /** Derived JPEG URLs the model sees (D101). */
   images: z.array(z.string()),
+  /** D346: the builder's preview (after the locked-host rule); absent on pre-041 jobs. */
+  linkPreview: linkPreviewSchema.optional(),
+  /** D344: ordered preview image URLs, passed to the snapshot job. */
+  imageCandidates: z.array(z.string()).max(LINK_IMAGE_CANDIDATES_MAX).optional(),
   fetch: z.object({
     status: z.number().int().nullable(),
     finalUrl: z.string().nullable(),

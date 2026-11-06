@@ -3120,6 +3120,9 @@ export interface paths {
                                 publicId?: string | null;
                                 width?: number;
                                 height?: number;
+                                imageLookup?: number;
+                                /** @enum {boolean} */
+                                imageRemoved?: true;
                             };
                         };
                         title: string;
@@ -6505,6 +6508,13 @@ export interface paths {
                                 };
                                 lang?: string | null;
                                 images: string[];
+                                linkPreview?: {
+                                    title?: string;
+                                    description?: string;
+                                    /** Format: uri */
+                                    image?: string;
+                                };
+                                imageCandidates?: string[];
                                 fetch: {
                                     status: number | null;
                                     finalUrl: string | null;

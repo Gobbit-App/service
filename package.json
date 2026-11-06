@@ -22,6 +22,7 @@
     "search:query": "pnpm --filter @gobbit/api search:query",
     "media:reconcile": "pnpm --filter @gobbit/api media:reconcile --",
     "job:run": "pnpm --filter @gobbit/api job:run --",
+    "links:image-backfill": "pnpm --filter @gobbit/api links:image-backfill",
     "links:snapshot-backfill": "pnpm --filter @gobbit/api links:snapshot-backfill",
     "import:notes": "tsx --env-file-if-exists=.env apps/api/scripts/import-notes.ts",
     "test:coverage": "vitest run --coverage --project unit --project web --project integration",

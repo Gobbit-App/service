@@ -47,4 +47,18 @@ describe('toLinkPreview (D134)', () => {
   it('drops siteName and returns null when there is nothing to show', () => {
     expect(toLinkPreview({ title: '  ', og: og({ siteName: 'Site' }) })).toBeNull();
   });
+
+  it('uses the given image candidate instead of og:image (D346)', () => {
+    expect(
+      toLinkPreview(
+        { title: 'T', og: og({ image: 'https://x.test/og.png' }) },
+        'https://x.test/c.jpg',
+      ),
+    ).toEqual({ title: 'T', image: 'https://x.test/c.jpg' });
+    expect(toLinkPreview({ title: 'T', og: og({ image: 'https://x.test/og.png' }) }, null)).toEqual(
+      {
+        title: 'T',
+      },
+    );
+  });
 });

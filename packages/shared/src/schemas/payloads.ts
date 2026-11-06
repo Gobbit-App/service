@@ -27,6 +27,10 @@ export const linkPayloadSchema = z
         publicId: z.string().min(1).nullable().optional(),
         width: imageDimensionSchema.optional(),
         height: imageDimensionSchema.optional(),
+        /** D350: image-rules version the snapshot job last looked under (server-owned). */
+        imageLookup: z.number().int().min(1).optional(),
+        /** D350: the member removed the photo; nothing adds one back (server-owned). */
+        imageRemoved: z.literal(true).optional(),
       })
       .strict()
       .optional(),

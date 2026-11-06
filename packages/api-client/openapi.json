@@ -9221,6 +9221,16 @@
                                 "type": "integer",
                                 "minimum": 1,
                                 "maximum": 20000
+                              },
+                              "imageLookup": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "imageRemoved": {
+                                "type": "boolean",
+                                "enum": [
+                                  true
+                                ]
                               }
                             },
                             "additionalProperties": false
@@ -20687,6 +20697,31 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "linkPreview": {
+                          "type": "object",
+                          "properties": {
+                            "title": {
+                              "type": "string",
+                              "maxLength": 200
+                            },
+                            "description": {
+                              "type": "string",
+                              "maxLength": 500
+                            },
+                            "image": {
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "imageCandidates": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 5
                         },
                         "fetch": {
                           "type": "object",

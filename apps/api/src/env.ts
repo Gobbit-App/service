@@ -14,6 +14,9 @@ import {
   NOTIFY_MAX_ATTEMPTS,
   NOTIFY_RETRY_BASE_SECONDS,
   REMINDER_SWEEP_BATCH,
+  LINK_IMAGE_TRIES,
+  LINK_ARTICLE_IMAGE_MIN_PX,
+  LINK_LOOKUP_TIMEOUT_MS,
 } from '@gobbit/shared';
 import { registrationModes } from '@gobbit/shared/auth';
 import { cloudNameFrom } from './lib/cloudinary-url';
@@ -122,6 +125,12 @@ const baseSchema = z.object({
   NOTIFY_RETRY_BASE_SECONDS: positiveInt(NOTIFY_RETRY_BASE_SECONDS),
   /** D295: due reminders claimed per sweep tick. */
   REMINDER_SWEEP_BATCH: positiveInt(REMINDER_SWEEP_BATCH),
+  /** D349: preview image candidates the snapshot job tries per card. */
+  LINK_IMAGE_TRIES: positiveInt(LINK_IMAGE_TRIES),
+  /** D344: smallest stated width (px) of an in-article image used as a preview. */
+  LINK_ARTICLE_IMAGE_MIN_PX: positiveInt(LINK_ARTICLE_IMAGE_MIN_PX),
+  /** D345: host lookup (oEmbed) timeout in ms. */
+  LINK_LOOKUP_TIMEOUT_MS: positiveInt(LINK_LOOKUP_TIMEOUT_MS),
   /** D296: Web Push (VAPID) keys; all three or none. Without them push is off. */
   VAPID_PUBLIC_KEY: z.string().optional(),
   /** D296: never logged, never sent to the browser. */

@@ -49,11 +49,11 @@ export type LinkPreviewRequest = z.infer<typeof linkPreviewRequestSchema>;
 
 /**
  * The link payload's `preview` object, with the lookup's length caps and without the stored
- * copy's fields (server-owned, D163).
+ * copy's fields and markers (server-owned, D163, D350).
  */
 export const linkPreviewSchema = linkPayloadSchema.shape.preview
   .unwrap()
-  .omit({ publicId: true, width: true, height: true })
+  .omit({ publicId: true, width: true, height: true, imageLookup: true, imageRemoved: true })
   .extend({
     title: z.string().max(LINK_PREVIEW_TITLE_MAX).optional(),
     description: z.string().max(LINK_PREVIEW_DESCRIPTION_MAX).optional(),

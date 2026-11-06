@@ -3,11 +3,16 @@ import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { assets, items, type DeckRow, type ItemRow } from '@gobbit/db';
-import { LINK_SNAPSHOT_REQUEUE_MAX, type LinkPayload } from '@gobbit/shared';
+import {
+  LINK_ARTICLE_IMAGE_MIN_PX,
+  LINK_IMAGE_RULES_VERSION,
+  LINK_SNAPSHOT_REQUEUE_MAX,
+  type LinkPayload,
+} from '@gobbit/shared';
 import { createDeck, createItem } from '@gobbit/db/test';
 import { extractPage } from '../src/fetch/extract-page';
 import { isBlockedAddress } from '../src/fetch/ip-guard';
-import { fetchLinkPreview } from '../src/fetch/link-preview';
+import { buildLinkPreview } from '../src/fetch/build-preview';
 import { createSafeFetch, createSafeImageFetch } from '../src/fetch/safe-fetch';
 import { createLinkSnapshotHandler } from '../src/jobs/link-snapshot';
 import { QUEUES, type JobSender } from '../src/jobs/queues';
@@ -95,10 +100,16 @@ describe('link-snapshot job against a local site (D163)', () => {
     });
     return createLinkSnapshotHandler({
       items: opts.items ?? createItemsRepo(ctx.t.db),
-      fetchPreview: (url) =>
-        fetchLinkPreview(
-          { safeFetch: createSafeFetch(loopback), extract: extractPage, log: () => {} },
+      buildPreview: (url, previewLog) =>
+        buildLinkPreview(
+          {
+            safeFetch: createSafeFetch(loopback),
+            fetchJson: null,
+            extract: extractPage,
+            articleMinPx: LINK_ARTICLE_IMAGE_MIN_PX,
+          },
           url,
+          previewLog,
         ),
       uploadFromUrl: opts.store === false ? null : (input) => uploader.uploadFromUrl(input),
       sender,
@@ -108,6 +119,9 @@ describe('link-snapshot job against a local site (D163)', () => {
         },
       },
       log,
+      imageTries: 3,
+      // The fixture PNG is stored as 800x600 by the memory store.
+      minStoredPx: 200,
     });
   }
 
@@ -143,19 +157,95 @@ describe('link-snapshot job against a local site (D163)', () => {
     expect(await handler()({ itemId: card.id })).toBe('skipped');
   });
 
-  it('keeps the remote image when the image URL answers HTML', async () => {
+  it('drops an image URL that answers HTML when the page offers no other (D349)', async () => {
     const before = (await deckAssets()).length;
     const card = await linkCard({
       url: site.url('/elsewhere'),
       preview: { title: 'Odd page', image: site.url('/fake-image') },
     });
 
-    expect(await handler()({ itemId: card.id })).toBe('unchanged');
+    expect(await handler()({ itemId: card.id })).toBe('written');
 
     const preview = ((await reload(card)).payload as LinkPayload).preview!;
-    expect(preview).toEqual({ title: 'Odd page', image: site.url('/fake-image') });
+    expect(preview).toEqual({ title: 'Odd page', imageLookup: LINK_IMAGE_RULES_VERSION });
     expect(await deckAssets()).toHaveLength(before);
     expect(store.images.size).toBe(0);
+    // Stamped: the card is not looked at again.
+    expect(await handler()({ itemId: card.id })).toBe('skipped');
+  });
+
+  it("falls back to the page's image when the card's image fails (D349)", async () => {
+    const card = await linkCard({
+      url: site.url('/article'),
+      preview: { title: 'Bread', image: site.url('/fake-image') },
+    });
+
+    expect(await handler()({ itemId: card.id })).toBe('written');
+
+    const preview = ((await reload(card)).payload as LinkPayload).preview!;
+    expect(preview).toMatchObject({
+      title: 'Bread',
+      image: site.url('/og.png'),
+      imageLookup: LINK_IMAGE_RULES_VERSION,
+    });
+    expect(store.images.has(preview.publicId!)).toBe(true);
+  });
+
+  it('uses the candidates handed over by ingest without fetching the page', async () => {
+    const card = await linkCard({
+      url: site.url('/nowhere'),
+      preview: { title: 'Shared', image: site.url('/fake-image') },
+    });
+
+    const outcome = await handler()({ itemId: card.id, candidates: [site.url('/og.png')] });
+
+    expect(outcome).toBe('written');
+    const preview = ((await reload(card)).payload as LinkPayload).preview!;
+    expect(preview.image).toBe(site.url('/og.png'));
+    expect(preview.publicId).toBeTruthy();
+  });
+
+  it('never brings back a photo the member removed (D350)', async () => {
+    const card = await linkCard({
+      url: site.url('/article'),
+      preview: { title: 'Bread', imageRemoved: true },
+    });
+
+    expect(await handler()({ itemId: card.id })).toBe('skipped');
+    expect(((await reload(card)).payload as LinkPayload).preview).toEqual({
+      title: 'Bread',
+      imageRemoved: true,
+    });
+  });
+
+  it('Remove photo via PATCH stores imageRemoved and the job adds nothing (D350)', async () => {
+    const card = await linkCard({ url: site.url('/article') });
+    expect(await handler()({ itemId: card.id })).toBe('written');
+    const before = await reload(card);
+    expect((before.payload as LinkPayload).preview?.publicId).toBeTruthy();
+
+    const res = await ctx.app.request(`/items/${card.id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify({
+        payload: {
+          url: site.url('/article'),
+          preview: { title: 'Sourdough guide', publicId: null },
+        },
+      }),
+    });
+    expect(res.status).toBe(200);
+
+    const removed = ((await reload(card)).payload as LinkPayload).preview!;
+    // The earlier copy's lookup stamp is carried with the URL unchanged.
+    expect(removed).toEqual({
+      title: 'Sourdough guide',
+      imageRemoved: true,
+      imageLookup: LINK_IMAGE_RULES_VERSION,
+    });
+    // The page still offers og.png; the job must not bring it back.
+    expect(await handler()({ itemId: card.id })).toBe('skipped');
+    expect(((await reload(card)).payload as LinkPayload).preview).toEqual(removed);
   });
 
   it('fills the preview without copying when there is no image storage', async () => {

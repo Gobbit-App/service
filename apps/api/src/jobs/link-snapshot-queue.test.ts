@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { LINK_IMAGE_CANDIDATES_MAX } from '@gobbit/shared';
 import {
   createLinkSnapshotQueue,
   noopLinkSnapshotQueue,
@@ -53,8 +54,14 @@ describe('linkSnapshotQueue.enqueueIfNeeded (D163)', () => {
       }),
     ],
     [
-      'a preview without an image',
-      candidate({ payload: { url: 'https://x.test/', preview: { title: 'T' } } }),
+      'a text-only preview already looked at (D350)',
+      candidate({ payload: { url: 'https://x.test/', preview: { title: 'T', imageLookup: 1 } } }),
+    ],
+    [
+      'a preview whose photo a member removed (D350)',
+      candidate({
+        payload: { url: 'https://x.test/', preview: { title: 'T', imageRemoved: true } },
+      }),
     ],
     ['not a link', candidate({ type: 'image', payload: { publicId: 'p', alt: 'a' } })],
     ['archived', candidate({ status: 'archived' })],
@@ -63,6 +70,24 @@ describe('linkSnapshotQueue.enqueueIfNeeded (D163)', () => {
     const h = harness();
     await h.queue.enqueueIfNeeded(row);
     expect(h.sender.send).not.toHaveBeenCalled();
+  });
+
+  it('enqueues a text-only preview not yet looked at under the current rules (D350)', async () => {
+    const h = harness();
+    await h.queue.enqueueIfNeeded(
+      candidate({ payload: { url: 'https://x.test/', preview: { description: 'D' } } }),
+    );
+    expect(h.sender.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands the ingest image candidates to the job, capped (D349)', async () => {
+    const h = harness();
+    const urls = Array.from({ length: 9 }, (_, i) => `https://x.test/${i}.jpg`);
+    await h.queue.enqueueIfNeeded(candidate(), { candidates: urls });
+    await h.queue.enqueueIfNeeded(candidate(), { candidates: [] });
+    const [, first] = h.sender.send.mock.calls[0] as unknown as [string, { candidates: string[] }];
+    expect(first.candidates).toEqual(urls.slice(0, LINK_IMAGE_CANDIDATES_MAX));
+    expect((h.sender.send.mock.calls[1] as unknown as unknown[])[1]).toEqual({ itemId: 'i1' });
   });
 
   it('logs and does not throw when the send fails', async () => {

@@ -105,10 +105,31 @@ function captionOf(text: string | undefined, url: string): string | undefined {
   return caption ? truncateAtSentence(caption, LOCKED_CAPTION_MAX) : undefined;
 }
 
+/** D348: what a locked-host card says when nothing about its content could be read. */
+export function honestLockedText(label: string): { title: string; body: string } {
+  return { title: `${label} link`, body: `Shared from ${label}; its content couldn't be read.` };
+}
+
+/** The page's preview title when it names the content, not the site or a wall (D347). */
+function realLockedTitle(ctx: ValidateContext & { lockedHost: LockedHostMatch }): string | null {
+  const title = ctx.linkPreview?.title;
+  return title && !isGenericLockedTitle(title, ctx.lockedHost) ? title : null;
+}
+
 /**
- * D167: a locked host's page tells the server nothing, so the preview is what the member shared:
- * the OG title unless it only names the site (else the card title), the OG description or the
- * caption, and the first shared image as the stored copy (no remote `image` to snapshot then).
+ * D348: a locked-host share with neither a real page title nor a caption: the code, not the
+ * model, writes the card's title and body, so it never guesses what the post is.
+ */
+export function needsHonestLockedText(ctx: ValidateContext): boolean {
+  const lockedHost = ctx.sourceUrl ? (ctx.lockedHost ?? null) : null;
+  if (!lockedHost || !ctx.sourceUrl) return false;
+  return !realLockedTitle({ ...ctx, lockedHost }) && !captionOf(ctx.sharedText, ctx.sourceUrl);
+}
+
+/**
+ * D167/D347: the locked host's preview: the page title when it is real (else the card title), the
+ * member's caption before the page description, and the first shared image as the stored copy
+ * (else the page image). The builder already discarded a wall or unavailable page whole.
  */
 function lockedPreview(
   url: string,
@@ -116,12 +137,13 @@ function lockedPreview(
   ctx: ValidateContext & { lockedHost: LockedHostMatch },
 ): NonNullable<LinkPayload['preview']> {
   const og = ctx.linkPreview;
-  const genericOg = isGenericLockedTitle(og?.title, ctx.lockedHost);
-  const previewTitle = !genericOg && og?.title ? og.title : title;
-  const description = (!genericOg && og?.description) || captionOf(ctx.sharedText, url);
+  const realTitle = realLockedTitle(ctx);
+  const caption = captionOf(ctx.sharedText, url);
+  const description = caption || (realTitle ? og?.description : undefined);
+  const previewTitle = realTitle ?? title;
   const image = ctx.imagePublicId
     ? { publicId: ctx.imagePublicId, ...(ctx.imageDimensions ?? {}) }
-    : !genericOg && og?.image
+    : realTitle && og?.image
       ? { image: og.image }
       : {};
   return {
@@ -139,9 +161,13 @@ export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedP
   }
   const input = parsed.data;
 
-  const title = truncateAtSentence(input.title.trim(), CARD_TITLE_MAX);
+  // D348: a locked share nothing could be read from gets the code's honest title and body.
+  const honest =
+    ctx.lockedHost && needsHonestLockedText(ctx) ? honestLockedText(ctx.lockedHost.label) : null;
+  const title = honest?.title ?? truncateAtSentence(input.title.trim(), CARD_TITLE_MAX);
   // D288: the agent never styles a card; directives it writes become their plain labels.
-  const body = truncateAtSentence(stripStyleDirectives(input.body.trim()), CARD_BODY_MAX);
+  const body =
+    honest?.body ?? truncateAtSentence(stripStyleDirectives(input.body.trim()), CARD_BODY_MAX);
 
   const allowed = new Set(ctx.categoryIds);
   const seen = new Set<string>();

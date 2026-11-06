@@ -116,6 +116,17 @@ describe('payloads', () => {
       }
     });
 
+    it('D350: accepts the server-owned image markers and rejects bad values', () => {
+      const schema = payloadSchemaFor('link');
+      const preview = { title: 'T', imageLookup: 1, imageRemoved: true };
+      expect(schema.safeParse({ url: 'https://example.com', preview }).success).toBe(true);
+      for (const bad of [{ imageLookup: 0 }, { imageLookup: 1.5 }, { imageRemoved: false }]) {
+        expect(
+          schema.safeParse({ url: 'https://example.com', preview: { ...preview, ...bad } }).success,
+        ).toBe(false);
+      }
+    });
+
     it('rejects unknown key (strict)', () => {
       const schema = payloadSchemaFor('link');
 

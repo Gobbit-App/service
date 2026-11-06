@@ -1,7 +1,16 @@
 import type { CategoryRow, ItemRow } from '@gobbit/db';
-import type { PublicItem } from '@gobbit/shared';
+import type { LinkPayload, PublicItem } from '@gobbit/shared';
 
 export type PublicCategorySource = Pick<CategoryRow, 'slug' | 'name' | 'visibility'>;
+
+/** D350: the image markers are bookkeeping for the snapshot job, never shown to strangers. */
+function publicPayload(row: ItemRow): ItemRow['payload'] {
+  if (row.type !== 'link') return row.payload;
+  const payload = row.payload as LinkPayload;
+  if (!payload.preview) return payload;
+  const { imageLookup: _lookup, imageRemoved: _removed, ...preview } = payload.preview;
+  return { ...payload, preview };
+}
 
 /**
  * D174: the public card is an allow-list, built field by field so a new `ItemRow` column never
@@ -13,7 +22,7 @@ export function toPublicItem(row: ItemRow, categories: PublicCategorySource[]): 
     type: row.type,
     title: row.title,
     body: row.body,
-    payload: row.payload,
+    payload: publicPayload(row),
     entities: row.entities,
     sourceUrl: row.sourceUrl ?? null,
     verifiedAt: row.verifiedAt?.toISOString() ?? null,

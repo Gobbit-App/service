@@ -136,7 +136,12 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, services: Services
     const user = getUser(c);
     const { id } = c.req.valid('param');
     const { url } = c.req.valid('json');
-    const preview = await services.linkPreview.lookup({ user, deckId: id, url });
+    const preview = await services.linkPreview.lookup({
+      user,
+      deckId: id,
+      url,
+      requestId: c.get('requestId'),
+    });
     c.header('Cache-Control', 'no-store');
     return c.json({ preview }, 200);
   });

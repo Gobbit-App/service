@@ -4,8 +4,16 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { DeckRow, UserRow } from '@gobbit/db';
 import { LINK_PREVIEW_RATE_PER_HOUR } from '@gobbit/shared';
 import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
-import { createSafeFetch } from '../src/fetch/safe-fetch';
+import {
+  createSafeFetch,
+  createSafeImageFetch,
+  createSafeJsonFetch,
+  type SafeFetch,
+  type SafeJsonFetch,
+} from '../src/fetch/safe-fetch';
 import { isBlockedAddress } from '../src/fetch/ip-guard';
+import { BROWSER_USER_AGENT, CRAWLER_USER_AGENT } from '../src/fetch/user-agents';
+import { createLinkCheckFetch } from '../src/services/media-wiring';
 import { json, setupApiTest, type ApiTestContext } from './helpers';
 
 const PAGE = `<!doctype html><html><head>
@@ -16,18 +24,57 @@ const PAGE = `<!doctype html><html><head>
   <meta property="og:site_name" content="Bakery">
 </head><body><p>Hello</p></body></html>`;
 
-/** Local fixture site; counts hits so tests can prove a blocked URL was never fetched. */
+const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64',
+);
+const THUMB = 'https://i.ytimg.com/vi/loaf/hqdefault.jpg';
+
+/** Stand-in for a lookup host: `/yt/watch` pages and the `/yt/oembed` endpoint (D345). */
+function videoHost(path: URL, res: import('node:http').ServerResponse): void {
+  if (path.pathname === '/yt/watch') {
+    // `?v=ok`: a bare page (no title, no image), so only the lookup can fill it.
+    const head = path.searchParams.get('v') === 'ok' ? '' : '<title>Page title</title>';
+    res.writeHead(200, { 'content-type': 'text/html' }).end(`<html><head>${head}</head></html>`);
+    return;
+  }
+  const target = path.searchParams.get('url') ?? '';
+  if (target.includes('v=fail')) {
+    res.writeHead(500).end();
+    return;
+  }
+  res
+    .writeHead(200, { 'content-type': 'application/json' })
+    .end(JSON.stringify({ title: 'Loaf video', thumbnail_url: THUMB, author_name: 'ignored' }));
+}
+
+/**
+ * Local fixture site; counts hits so tests can prove a blocked URL was never fetched, and records
+ * the User-Agent of every request by path (D343).
+ */
 function fixtureServer() {
   let hits = 0;
+  const agents = new Map<string, string | undefined>();
   const server: Server = createServer((req, res) => {
     hits++;
-    if (req.url === '/plain') {
+    const path = new URL(req.url ?? '/', 'http://fixture');
+    agents.set(path.pathname, req.headers['user-agent']);
+    if (path.pathname.startsWith('/yt/')) {
+      videoHost(path, res);
+      return;
+    }
+    if (path.pathname === '/plain') {
       res.writeHead(200, { 'content-type': 'text/plain' }).end('not html');
+      return;
+    }
+    if (path.pathname === '/og.png') {
+      res.writeHead(200, { 'content-type': 'image/png' }).end(PNG);
       return;
     }
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(PAGE);
   });
   return {
+    agents,
     start: () => new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve)),
     stop: () => new Promise<void>((resolve) => server.close(() => resolve())),
     url: (path: string) => `http://127.0.0.1:${(server.address() as AddressInfo).port}${path}`,
@@ -48,16 +95,16 @@ const lookup = (ctx: ApiTestContext, deck: string, url: unknown, headers = ctx.a
     body: JSON.stringify({ url }),
   });
 
+// Test wiring: allow the loopback fixture server (any port); everything else stays guarded.
+const loopback = {
+  allowedPorts: null,
+  isBlocked: (ip: string) => ip !== '127.0.0.1' && isBlockedAddress(ip),
+};
+const quiet = { info: () => {}, warn: () => {} };
+
 describe('POST /decks/{id}/link-preview (D134)', () => {
-  // Test wiring: allow the loopback fixture server (any port); everything else stays guarded.
   const ctx = setupApiTest({
-    media: {
-      safeFetch: createSafeFetch({
-        allowedPorts: null,
-        isBlocked: (ip) => ip !== '127.0.0.1' && isBlockedAddress(ip),
-      }),
-      log: () => {},
-    },
+    media: { safeFetch: createSafeFetch(loopback), fetchJson: null, log: quiet },
   });
   let deck: DeckRow;
 
@@ -124,7 +171,7 @@ describe('POST /decks/{id}/link-preview (D134)', () => {
 });
 
 describe('link preview with the default (production) fetcher', () => {
-  const ctx = setupApiTest({ media: { log: () => {} } });
+  const ctx = setupApiTest({ media: { log: { info: () => {}, warn: () => {} } } });
   let deck: DeckRow;
 
   beforeAll(async () => {
@@ -137,5 +184,80 @@ describe('link preview with the default (production) fetcher', () => {
     expect(res.status).toBe(200);
     expect(await json(res)).toEqual({ preview: null });
     expect(site.hits).toBe(before);
+  });
+});
+
+describe('outbound identity (D343)', () => {
+  const ctx = setupApiTest({
+    media: { safeFetch: createSafeFetch(loopback), fetchJson: null, log: quiet },
+  });
+  let deck: DeckRow;
+
+  beforeAll(async () => {
+    deck = await createDeck(ctx.t.db, ctx.world.owner);
+  });
+
+  it('page fetches for the editor preview say GobbitBot', async () => {
+    expect((await lookup(ctx, deck.id, site.url('/ua-page'))).status).toBe(200);
+    expect(site.agents.get('/ua-page')).toBe(CRAWLER_USER_AGENT);
+    expect(CRAWLER_USER_AGENT).toContain('GobbitBot/1.0');
+  });
+
+  it('image downloads and host lookups say GobbitBot', async () => {
+    const image = await createSafeImageFetch(loopback)(site.url('/og.png'));
+    expect(image.error).toBeNull();
+    expect(site.agents.get('/og.png')).toBe(CRAWLER_USER_AGENT);
+
+    const answer = await createSafeJsonFetch(loopback)(site.url('/yt/oembed?url=x'));
+    expect(answer.json).toMatchObject({ title: 'Loaf video' });
+    expect(site.agents.get('/yt/oembed')).toBe(CRAWLER_USER_AGENT);
+  });
+
+  it('link checks keep the browser identity', async () => {
+    const result = await createLinkCheckFetch(loopback)(site.url('/ua-check'));
+    expect(result.status).toBe(200);
+    expect(site.agents.get('/ua-check')).toBe(BROWSER_USER_AGENT);
+    expect(BROWSER_USER_AGENT).not.toContain('GobbitBot');
+  });
+});
+
+/** Sends a youtube.com URL (page or oEmbed endpoint) to the fixture server's `/yt/` paths. */
+function toFixture(url: string): string {
+  const u = new URL(url);
+  if (!/(^|\.)youtube\.com$/.test(u.hostname)) return url;
+  return site.url(`/yt${u.pathname}${u.search}`);
+}
+
+describe('editor preview for a lookup host (D345)', () => {
+  const pageFetch = createSafeFetch(loopback);
+  const jsonFetch = createSafeJsonFetch(loopback);
+  const lookups: string[] = [];
+  const safeFetch: SafeFetch = (url) => pageFetch(toFixture(url));
+  const fetchJson: SafeJsonFetch = (url) => {
+    lookups.push(url);
+    return jsonFetch(toFixture(url));
+  };
+  const ctx = setupApiTest({ media: { safeFetch, fetchJson, log: quiet } });
+  let deck: DeckRow;
+
+  beforeAll(async () => {
+    deck = await createDeck(ctx.t.db, ctx.world.owner);
+  });
+
+  it('fills a bare page from the oEmbed title and thumbnail', async () => {
+    const url = 'https://www.youtube.com/watch?v=ok';
+    const res = await lookup(ctx, deck.id, url);
+
+    expect(await json(res)).toEqual({ preview: { title: 'Loaf video', image: THUMB } });
+    expect(lookups).toEqual([
+      `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`,
+    ]);
+  });
+
+  it('still answers the page preview when the lookup fails', async () => {
+    const res = await lookup(ctx, deck.id, 'https://www.youtube.com/watch?v=fail');
+
+    expect(await json(res)).toEqual({ preview: { title: 'Page title' } });
+    expect(lookups).toHaveLength(2);
   });
 });
