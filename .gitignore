@@ -28,6 +28,7 @@ e2e/test-results
 # Manifests
 manifest.json
 run_manifest.json
+!apps/api/src/fetch/__fixtures__/**/manifest.json
 
 # Private working notes (kept locally, not published)
 plans/
