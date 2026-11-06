@@ -141,6 +141,24 @@ WHERE e.kind = 'created' AND e.created_at > now() - interval '7 days'
   AND u.analytics_consent = 'allowed';
 ```
 
+## Monitoring (D342, ADR-074)
+
+Docker's healthchecks restart a stuck container but tell nobody, and they die with the host. So each process also reports to a dead man's switch outside the host ([Healthchecks.io](https://healthchecks.io)). It rings when the pings stop: process, container, host, network or Dokploy down. A `/fail` ping, sent when the process is up but can't reach its database, rings it at once.
+
+| Variable | Process | Pinged |
+| --- | --- | --- |
+| `HEALTHCHECK_API_URL` | `api` | every 60 s after `select 1` |
+| `HEALTHCHECK_WORKER_URL` | `worker` | after each 30 s heartbeat (`select 1` + heartbeat file), at most once a minute |
+
+Unset → no pings (local, CI, e2e). Each process logs `monitor.config` (`enabled`/`disabled`) at start, and `monitor.ping` `failed`/`recovered` when the monitor becomes unreachable or reachable again. A failed ping never affects the request or job path.
+
+Setup (once):
+
+1. In Healthchecks.io, create a project `gobbit` with two checks, `gobbit-api` and `gobbit-worker`: schedule *Simple*, period **1 minute**, grace **3 minutes**. A dead process alarms within about 4 minutes.
+2. Under *Integrations*, add a channel that reaches you fast. Email is on by default; add a phone push channel too (the Healthchecks mobile-friendly options: Pushover, ntfy, Telegram or Signal). Enable it for both checks. "Up" (recovery) notifications are on by default; keep them.
+3. Copy each check's ping URL (`https://hc-ping.com/<uuid>`) into the Dokploy environment as `HEALTHCHECK_API_URL` and `HEALTHCHECK_WORKER_URL`. The URL is the credential: anyone with it can ping, so treat it as a secret. Redeploy.
+4. Both checks turn green within a minute. Then test the alarm: `docker stop apps-gobbit-jpcgbr-worker-1` → an alert within ~5 minutes; `docker start` it → a recovery notice. Repeat for the API once.
+
 ## Backups (Phase 0 step 7)
 
 Nightly logical dump of the `gobbit` database to the S3-compatible store on the NAS, using the same Dokploy S3 destination the other services already back up to. The database lives on the shared Dokploy-managed Postgres (D67), so this uses Dokploy's built-in database backups.

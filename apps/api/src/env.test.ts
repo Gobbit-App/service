@@ -22,6 +22,23 @@ describe('env', () => {
     expect(env.SESSION_TTL_DAYS).toBe(90);
   });
 
+  describe.each(['HEALTHCHECK_WORKER_URL', 'HEALTHCHECK_API_URL'] as const)('%s (D342)', (key) => {
+    it('is unset by default', () => {
+      expect(parseEnv({ DATABASE_URL: validUrl })[key]).toBeUndefined();
+    });
+
+    it('accepts an https URL', () => {
+      const url = 'https://hc-ping.com/00000000-0000-0000-0000-000000000000';
+      expect(parseEnv({ DATABASE_URL: validUrl, [key]: url })[key]).toBe(url);
+    });
+
+    it('rejects a non-https URL', () => {
+      expect(() => parseEnv({ DATABASE_URL: validUrl, [key]: 'http://hc-ping.com/x' })).toThrow(
+        new RegExp(key),
+      );
+    });
+  });
+
   it('computes API_URL based on PORT', () => {
     const env = parseEnv({ DATABASE_URL: validUrl, PORT: '8080' });
     expect(env.API_URL).toBe('http://localhost:8080');

@@ -31,6 +31,9 @@ export const DEV_LOG_HASH_KEY = 'gobbit-development-log-hash-key-not-secret';
 
 const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
 
+/** An https:// URL; the message names the variable so a bad deploy says which one. */
+const httpsUrl = (name: string) => z.url().regex(/^https:\/\//, `${name} must be an https:// URL`);
+
 /** D299: an env value that may only lower a shared cap. */
 const cappedInt = (cap: number) => z.coerce.number().int().positive().max(cap).default(cap);
 
@@ -78,6 +81,9 @@ const baseSchema = z.object({
   ASK_MODEL: z.string().optional(),
   /** D72: concurrent embed-item jobs per worker process. */
   WORKER_CONCURRENCY: positiveInt(2),
+  /** D342: dead man's switches (Healthchecks.io ping URLs), one per process. Unset → no pings. */
+  HEALTHCHECK_WORKER_URL: httpsUrl('HEALTHCHECK_WORKER_URL').optional(),
+  HEALTHCHECK_API_URL: httpsUrl('HEALTHCHECK_API_URL').optional(),
   /** D105: provider-specific extraction model; unset → the provider's Haiku default. */
   EXTRACT_MODEL: z.string().optional(),
   /** D105: the one retry when confidence is low; unset → the provider's Sonnet default. */
