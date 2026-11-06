@@ -10,6 +10,13 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-06 — Dead man's switches for the API and the worker (D342, ADR-074)
+
+- **Action required (to get alerts)**: new optional `HEALTHCHECK_API_URL` and
+  `HEALTHCHECK_WORKER_URL` (secrets, `https://` only; an `http://` value stops the process from
+  starting). Create the two Healthchecks.io checks and set the ping URLs in the Dokploy
+  environment (`infra/README.md` → *Monitoring*). Unset → no pings, no alerts.
+
 ### 2026-11-06 — The repo drives the deployed Compose (D341, ADR-073)
 
 - **Action required (once, before merging)**: switch the Dokploy Compose service from *Raw* to

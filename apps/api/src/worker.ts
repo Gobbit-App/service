@@ -63,6 +63,7 @@ import { createLlmCallsRepo } from './repositories/llm-calls.repo';
 import { createSearchQueriesRepo } from './repositories/search-queries.repo';
 import { defaultEmbedder, defaultExtractor } from './ai/providers';
 import { childLogger, logDbIdleError } from './lib/logger';
+import { deadManPingFor, reportHeartbeat } from './monitoring/heartbeat';
 
 const log = childLogger('worker');
 
@@ -307,14 +308,17 @@ async function main() {
     log.warn('OPENROUTER_API_KEY / OPENAI_API_KEY not set; embedding disabled');
   }
 
-  const heartbeat = async () => {
-    try {
-      await pool.query('select 1');
-      await writeFile(HEARTBEAT_FILE, new Date().toISOString());
-    } catch (err) {
-      log.error({ err }, 'heartbeat failed');
-    }
-  };
+  // D342: the file feeds Docker's healthcheck; the ping feeds the alarm outside the host.
+  const deadManPing = deadManPingFor(env.HEALTHCHECK_WORKER_URL, log);
+  const heartbeat = () =>
+    reportHeartbeat(
+      async () => {
+        await pool.query('select 1');
+        await writeFile(HEARTBEAT_FILE, new Date().toISOString());
+      },
+      deadManPing,
+      log,
+    );
   await heartbeat();
   const timer = setInterval(() => void heartbeat(), HEARTBEAT_MS);
 

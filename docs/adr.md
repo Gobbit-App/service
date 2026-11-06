@@ -647,3 +647,15 @@ Amends ADR-065 (the axes and the chrome; native scroll-snap and no gesture libra
 **Decision**: Dokploy's Compose service is a *Git* source: this public repo, branch `main`, Compose path `./infra/docker-compose.yml`, Autodeploy on. Every deploy (the CI `deploy` job's webhook, `ref: refs/heads/main`) clones `main` and runs the committed file; nothing about the service list, entrypoints, healthchecks or defaults lives in Dokploy. The Dokploy environment holds only secrets and rare overrides (D52). Umami, shared by several projects, stays in its own Dokploy project; the Gobbit Compose only points `ANALYTICS_UPSTREAM` at it, and the local overlay runs its own. Container logs rotate through an `x-logging` anchor.
 
 **Rationale**: With a pasted `raw` copy, the file CI tests and the file production runs were two files. The `@pb/*` → `@gobbit/*` rename updated the repo, not the copy, and the worker crash-looped in production for hours while every check stayed green. A git source makes drift impossible instead of something to remember, and keeps changes reviewed in PRs. The repo is public and the file holds no secrets, so Dokploy clones it without credentials.
+
+## ADR-074: Dead man's switches for the API and the worker (D342)
+
+Covers part of Phase 11 item 2 (process liveness). Alerting on decision-event thresholds is still open there.
+
+**Decision**: The API and the worker each ping their own Healthchecks.io check (`HEALTHCHECK_API_URL`, `HEALTHCHECK_WORKER_URL`; https only, optional). Each heartbeat runs a database check and then pings the base URL; a failed check pings `<url>/fail` with a short reason. Success pings are throttled to one a minute. The checks run with period 1 min and grace 3 min and notify by push and email, recovery included.
+
+- **Placement**: `monitoring/dead-man-ping.ts` sends the pings and `monitoring/heartbeat.ts` runs a check and reports it. Both processes use them; the worker keeps writing its heartbeat file for Docker's healthcheck.
+- **Never in the way**: pings time out after 10 s, never throw, and log `monitor.ping` only when reachability changes.
+- **Fetch**: plain `fetch`, not `safe-fetch`. The URL is operator configuration, not something a member shared (ADR-048 guards the latter).
+
+**Rationale**: The worker crash-looped for hours (D341) and nothing told anyone. Docker healthchecks restart containers but can't report a dead host, and an in-process alert can't report its own death. Only an outside monitor that expects pings and notices silence covers all of these. Healthchecks.io is free at this size, needs no agent or open port, and is open source, so it can be self-hosted later. Uptime checks of `/health` from outside would cover the API but not the worker, which serves no HTTP.

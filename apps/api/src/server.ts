@@ -21,8 +21,11 @@ import { checkCloudinaryCredentials } from './media/cloudinary-check';
 import { recordRegistrationMode } from './services/registration-mode';
 import { recordAnalyticsConfig } from './public/analytics';
 import { recordAdminConfig } from './access/platform-admin';
+import { deadManPingFor, reportHeartbeat } from './monitoring/heartbeat';
 
 const log = childLogger('api');
+/** D342: how often the API proves it is alive (and reaches its database) to the dead man's switch. */
+const HEARTBEAT_MS = 60_000;
 
 interface Queues {
   embedQueue: EmbedQueue;
@@ -109,7 +112,21 @@ async function main() {
   if (env.CLOUDINARY_URL) void checkCloudinaryCredentials(env.CLOUDINARY_URL);
   else log.warn('CLOUDINARY_URL not set; image uploads and OG images are disabled');
 
+  // D342: silence (process, container, host or network down) or a /fail ping rings the alarm.
+  const deadManPing = deadManPingFor(env.HEALTHCHECK_API_URL, log);
+  const heartbeat = () =>
+    reportHeartbeat(
+      async () => {
+        await pool.query('select 1');
+      },
+      deadManPing,
+      log,
+    );
+  void heartbeat();
+  const heartbeatTimer = setInterval(() => void heartbeat(), HEARTBEAT_MS);
+
   const handleShutdown = () => {
+    clearInterval(heartbeatTimer);
     server.close();
     const stopBoss = boss ? boss.stop({ graceful: false }) : Promise.resolve();
     stopBoss

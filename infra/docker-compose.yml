@@ -83,7 +83,11 @@ services:
     # docker-compose.local.yml builds it from source instead.
     image: ghcr.io/gobbit-app/service/api:${API_IMAGE_TAG:-latest}
     pull_policy: always
-    environment: *api-env
+    environment:
+      <<: *api-env
+      # D342, ADR-074: Healthchecks.io ping URL (Dokploy secret), pinged every minute after a DB
+      # check; silence or a /fail ping rings the alarm (infra/README.md § Monitoring). Unset → off.
+      HEALTHCHECK_API_URL: ${HEALTHCHECK_API_URL:-}
     logging: *logging
     # Internal only: the web service is the one public entry point (D51). Kept off
     # dokploy-network on purpose: another project's `api` there would shadow Caddy's api:3000.
@@ -101,6 +105,8 @@ services:
     environment:
       <<: *api-env
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+      # D342, ADR-074: the worker's own check (Dokploy secret), pinged after each heartbeat.
+      HEALTHCHECK_WORKER_URL: ${HEALTHCHECK_WORKER_URL:-}
     logging: *logging
     # The worker serves no HTTP; it touches /tmp/worker-heartbeat every 30 s after a DB ping.
     healthcheck:
