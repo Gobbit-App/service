@@ -1,5 +1,7 @@
+import { fileURLToPath } from 'node:url';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
+import license from 'rollup-plugin-license';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -8,6 +10,8 @@ const API_TARGET = process.env.API_PROXY_TARGET ?? 'http://localhost:3000';
 export default defineConfig({
   define: {
     __APP_COMMIT__: JSON.stringify(process.env.GIT_SHA ?? 'dev'),
+    // D354: shown in About as the release date; the image is built right before it is deployed.
+    __APP_BUILT_AT__: JSON.stringify(new Date().toISOString()),
   },
   plugins: [
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
@@ -59,6 +63,13 @@ export default defineConfig({
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         globIgnores: ['og/**'],
+      },
+    }),
+    // D354: the notices of every bundled package (MIT/ISC/BSD ask for them), linked from About.
+    license({
+      thirdParty: {
+        includePrivate: false,
+        output: { file: fileURLToPath(new URL('dist/licenses.txt', import.meta.url)) },
       },
     }),
   ],

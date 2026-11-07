@@ -141,7 +141,7 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 
 - **Bar** (`app/BottomBar.tsx`): one fixed `<nav>` at the bottom of the deck pages, the deck list and `/settings`: ⋯ menu at the start, Browse and Review (`item.publish`, not on the personal deck) in the middle, the + at the end. It never hides on scroll; a spacer keeps the last content clear. Browse (full screen) and the new-card editor have none; the editor pages outside the deck layout (`/i/$id/edit`) have none either.
 - **+** (D275): the existing `MoreMenu` (D213) with an `onLongPress` from `ui/use-long-press.ts` (pointer events, 500 ms, 10 px slop, no library, ADR-065). A short press opens New card, Paste or share, Import (`item.publish`) and Shares (`createActions`, `app/create-actions.ts`); holding it opens the new card. Readers get no +. On the deck list the + is a plain "New deck" button (D279).
-- **⋯** (D276, `app/deck-menu-actions.ts`): Settings, Activity (`event.list`), Waitlist (platform admins) and Sign out, with the signed-in email as its description (`MenuAction.detail`, `aria-describedby`). Sign-out runs through `app/use-sign-out.ts` (keeps the 022 leave guard). The header keeps only back, title and page actions.
+- **⋯** (D276, `app/deck-menu-actions.ts`): Settings, Activity (`event.list`), Waitlist (platform admins), About (D354) and Sign out, with the signed-in email as its description (`MenuAction.detail`, `aria-describedby`). Sign-out runs through `app/use-sign-out.ts` (keeps the 022 leave guard). The header keeps only back, title and page actions.
 - **Settings** (D278): one entry. Inside a deck, `/d/$slug/settings` renders `deck-admin/UnifiedSettings.tsx`: "This deck" (`DeckAdminScreen`), then "Your account" (`SettingsScreen`). `/settings` shows the account half only.
 - **Toasts** (D280): `--bottom-bar-h` on `:root`; `.toast` and `.update-prompt` sit above it.
 
@@ -152,6 +152,14 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 - D280: `--bottom-bar-h` is always set, not only while a bar is mounted; pages without a bar (editor, Browse) show toasts slightly higher.
 - The old `AddCardLink`, `PasteLink`, `ImportLink`, `SharesLink`, `DeckSettingsLink` and `ActivityLink` components were deleted rather than restyled; their routes are unchanged.
 - The `@smoke` sign-out journey now leaves the editor before signing out from ⋯ (the editor has no bar); the leave guard on sign-out stays covered by `use-sign-out.test.tsx`. The long press runs in `@full` (`bottom-bar.spec.ts`); `@smoke` covers the short press → New card.
+
+## About (D354)
+
+- **Sheet** (`about/AboutSheet.tsx`, opened from ⋯ → About): logo and tagline; the version (short `__APP_COMMIT__` linked to its GitHub commit, "Development build" locally); **Released**, the build time `__APP_BUILT_AT__` (a Vite define; CI builds the image right before it deploys, so it stands in for the deploy time); a **Server** row only when `/config.commit` differs from the app (a deploy the open app hasn't loaded yet); the outside services this server uses; MPL-2.0, source, open-source notices, issues and security policy links; the copyright line.
+- **Credits** (`about/about-info.ts` `serviceCredits`): read from `/config`, so a deployment never names a provider it doesn't use: Cloudinary (cloud name set), AI language models (semantic search, Ask or ingest on; `/config` doesn't say which provider, so none is named), YouTube/TikTok/Vimeo (always, 041 video lookups), the browser push service (push on), Umami (analytics on). Hidden until `/config` loads; the build facts still show offline.
+- **Notices**: `rollup-plugin-license` writes `dist/licenses.txt` (every bundled third-party package, its license and notice text) at build time; Caddy serves it as a static file, and the service worker's navigation denylist keeps it from being answered with the app shell.
+- Opening a tall sheet no longer scrolls it to its focused action: `Sheet` focuses `initialFocus` with `preventScroll`.
+- E2E tier: full (`full/about.spec.ts`), a secondary path.
 
 ## Analytics consent (035, D259–D266, ADR-068)
 

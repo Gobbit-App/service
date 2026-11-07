@@ -91,10 +91,20 @@ describe('BottomBar (D274–D279)', () => {
     const items = screen
       .getAllByRole('menuitem')
       .map((el) => el.getAttribute('aria-label') ?? el.textContent);
-    expect(items).toEqual(['Settings', 'Upcoming', 'Activity', 'Sign out']);
+    expect(items).toEqual(['Settings', 'Upcoming', 'Activity', 'About', 'Sign out']);
     expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveAccessibleDescription(
       'me@example.com',
     );
+  });
+
+  it('opens About from the ⋯ menu and closes it again (D354)', async () => {
+    await renderInRouter(<BottomBar deck={deck('reader')} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'About' }));
+    const about = screen.getByRole('dialog', { name: 'Gobbit' });
+    expect(about).toHaveTextContent('Version');
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Gobbit' })).toBeNull();
   });
 
   it('signs out from the ⋯ menu', async () => {
