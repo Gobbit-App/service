@@ -1623,6 +1623,16 @@ h3 {
   margin: 0 0 8px;
 }
 
+/* A proposal opened on its own page: the review decision sits above the card. */
+.proposal-review {
+  margin-bottom: var(--gap);
+}
+
+.proposal-review__title {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
 .review-card__new-category {
   display: inline-flex;
   align-items: center;
