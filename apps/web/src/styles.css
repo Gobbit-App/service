@@ -98,6 +98,16 @@ html {
   text-size-adjust: 100%;
 }
 
+/* While a modal is open (a native modal <dialog> or an aria-modal layer) the page behind stays put. */
+html:has(dialog:modal, [aria-modal='true']) {
+  overflow: hidden;
+}
+
+/* Scrolling inside a dialog never chains to the page behind it. */
+dialog {
+  overscroll-behavior: contain;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);

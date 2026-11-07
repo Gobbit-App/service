@@ -97,3 +97,10 @@ describe('shared control styles (D211, D214)', () => {
     expect(leaking).toEqual([]);
   });
 });
+
+describe('modal scroll lock', () => {
+  it('locks the root scroller while a modal dialog or aria-modal layer is open', () => {
+    const lock = /html:has\(dialog:modal, \[aria-modal='true'\]\)\s*\{\s*overflow: hidden;/;
+    expect(styles).toMatch(lock);
+  });
+});
