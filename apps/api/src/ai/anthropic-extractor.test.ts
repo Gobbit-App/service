@@ -112,6 +112,37 @@ describe('createAnthropicExtractor (D105)', () => {
     );
   });
 
+  it.each([
+    ['max_tokens', 'truncated'],
+    ['refusal', 'refused'],
+    ['end_turn', 'no_call'],
+  ] as const)('reads stop_reason %s without a call as %s (D354)', async (stop, kind) => {
+    const { client } = makeClient(async () => ({
+      content: [{ type: 'text', text: 'thinking' }],
+      stop_reason: stop,
+      usage: { input_tokens: 12, output_tokens: 4096 },
+    }));
+    const extractor = createAnthropicExtractor({ apiKey: 'k', client });
+
+    await expect(extractor.extract(input, { model: 'claude-haiku-5-5' })).rejects.toMatchObject({
+      kind,
+      stopReason: stop,
+      usage: { inputTokens: 12, outputTokens: 4096 },
+    });
+  });
+
+  it('treats a tool_use cut off by max_tokens as truncated (D354)', async () => {
+    const { client } = makeClient(async () => ({
+      ...toolReply,
+      stop_reason: 'max_tokens',
+    }));
+    const extractor = createAnthropicExtractor({ apiKey: 'k', client });
+
+    await expect(extractor.extract(input, { model: 'claude-haiku-5-5' })).rejects.toMatchObject({
+      kind: 'truncated',
+    });
+  });
+
   it('propagates client errors unchanged', async () => {
     const { client } = makeClient(async () => {
       throw new Error('boom');

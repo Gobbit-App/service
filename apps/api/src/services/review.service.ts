@@ -228,6 +228,7 @@ export function createReviewService(deps: {
                 newCategory: job.extraction?.newCategory ?? null,
                 sourcePreview: sourcePreview(job),
                 autoPublish: job.autoPublish ?? null,
+                extractionFallback: job.extraction?.fallback ?? null,
               }
             : null,
           target: (targetId && targetDtos.get(targetId)) || null,

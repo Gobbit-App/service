@@ -154,3 +154,124 @@ describe('ingest handler failure logging (D195)', () => {
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain('private.example');
   });
 });
+
+describe('ingest handler preview fallback (D355)', () => {
+  const previewSource = {
+    url: SHARED_URL,
+    text: 'my secret note',
+    images: [],
+    imageCandidates: [],
+    linkPreview: { title: 'Secret page', description: 'About it' },
+    fetch: { status: 200, finalUrl: SHARED_URL, ms: 1, fallback: 'none' },
+  };
+
+  function setupWithPreview(job = jobRow()) {
+    const ctx = setup(job, vi.fn().mockResolvedValue(previewSource));
+    const created = { id: 'item-1', title: 'Secret page', sourceUrl: SHARED_URL };
+    const items = {
+      list: vi.fn().mockResolvedValue([]),
+      create: vi.fn().mockResolvedValue(created),
+    };
+    const autoPublish = vi.fn();
+    const handler = createIngestHandler({
+      jobs: ctx.jobs,
+      categories: {
+        listByDeck: vi.fn().mockResolvedValue([]),
+        findDefault: vi.fn().mockResolvedValue({ id: 'c-default' }),
+      },
+      items,
+      roleOf: vi.fn().mockResolvedValue('editor'),
+      normalize: vi.fn().mockResolvedValue(previewSource),
+      extraction: { model: 'primary' } as never,
+      embedQueue: { enqueueIfStale: vi.fn() } as never,
+      autoPublish,
+      now: () => new Date('2026-10-25T10:00:00.000Z'),
+      log: vi.fn(),
+      logger: ctx.logger,
+    });
+    return { ...ctx, handler, items, autoPublish };
+  }
+
+  beforeEach(() => {
+    runExtraction.mockReset();
+  });
+
+  it('proposes the preview card for review when the answer was unusable', async () => {
+    runExtraction.mockResolvedValue({
+      ok: false,
+      error: 'invalid_output: propose_card call cut off by the output budget (stop: length)',
+    });
+    const { handler, jobs, items, autoPublish, logger } = setupWithPreview();
+
+    await expect(handler('job-1')).resolves.toBe('proposed');
+
+    expect(items.create).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'link', status: 'proposed', title: 'Secret page' }),
+      ['c-default'],
+      expect.anything(),
+    );
+    expect(jobs.update).toHaveBeenCalledWith(
+      'job-1',
+      expect.objectContaining({
+        status: 'proposed',
+        extraction: expect.objectContaining({ model: 'primary', fallback: 'preview' }),
+      }),
+    );
+    expect(jobs.setStatus).not.toHaveBeenCalled();
+    expect(autoPublish).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        event: 'ingest.preview_fallback',
+        outcome: 'proposed',
+        reason: 'unreadable_answer',
+        jobId: 'job-1',
+        deckId: 'deck-1',
+        itemId: 'item-1',
+        detail: 'propose_card call cut off by the output budget (stop: length)',
+      },
+      expect.any(String),
+    );
+    expect(JSON.stringify(logger.warn.mock.calls)).not.toContain('private.example');
+  });
+
+  it('proposes the preview card when the provider fails on the last attempt', async () => {
+    failProvider();
+    const { handler, jobs, logger } = setupWithPreview(
+      jobRow({ attempts: INGEST_JOB_RETRIES + 1 }),
+    );
+
+    await expect(handler('job-1')).resolves.toBe('proposed');
+
+    expect(jobs.setStatus).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'ingest.preview_fallback',
+        reason: 'assistant_unavailable',
+      }),
+      expect.any(String),
+    );
+  });
+
+  it('still retries a provider failure before the last attempt', async () => {
+    failProvider();
+    const { handler, items } = setupWithPreview(jobRow({ attempts: 1 }));
+
+    await expect(handler('job-1')).rejects.toThrow('provider 502');
+    expect(items.create).not.toHaveBeenCalled();
+  });
+
+  it('fails the job as before when the fallback itself fails', async () => {
+    failProvider();
+    const { handler, jobs, items } = setupWithPreview(jobRow({ attempts: INGEST_JOB_RETRIES + 1 }));
+    items.create.mockRejectedValue(new Error('db down'));
+
+    await expect(handler('job-1')).resolves.toBe('failed');
+    expect(jobs.setStatus).toHaveBeenCalledWith(
+      'job-1',
+      'failed',
+      expect.stringContaining('error: provider 502'),
+      expect.any(Date),
+      'assistant_unavailable',
+    );
+  });
+});

@@ -396,7 +396,8 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
    * content-free error line.
    */
   it('a provider that fails every attempt fails the share visibly, logged without content', async () => {
-    const sharedUrl = 'https://dan.example/';
+    // A page that answers 404: no preview to fall back on (D355), so the share fails.
+    const sharedUrl = 'https://gone.example/';
     const jobId = await share({ url: sharedUrl, text: 'our plumber' });
     const failing: Extractor = {
       provider: 'fake',
@@ -481,6 +482,34 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
     expect(job.status).toBe('failed');
     expect(job.error).toMatch(/^invalid_output: /);
     expect(job.resultItemId).toBeNull();
+  });
+
+  it('proposes the page preview for review when the answer is unusable (D355)', async () => {
+    const post = 'https://www.instagram.com/p/real/';
+    const jobId = await share({ url: post });
+    const { run, extractor } = handler([{ title: 1 }, { body: null }]);
+
+    expect(await run(jobId)).toBe('proposed');
+    expect(extractor.calls).toHaveLength(2);
+    const job = await jobRow(jobId);
+    expect(job.extraction).toMatchObject({ fallback: 'preview', confidence: 0, type: 'link' });
+    expect(job.failureCode).toBeNull();
+    const [item] = await ctx.t.db.select().from(items).where(eq(items.id, job.resultItemId!));
+    expect(item).toMatchObject({
+      status: 'proposed',
+      type: 'link',
+      title: expect.stringContaining('Dan the Plumber on Instagram'),
+      sourceUrl: post,
+    });
+
+    const res = await ctx.app.request(`/decks/${ctx.world.decks.family.id}/review`, {
+      headers: ctx.as(),
+    });
+    expect(res.status).toBe(200);
+    const entry = ((await json(res)).data as { item: { id: string }; job: unknown }[]).find(
+      (e) => e.item.id === item!.id,
+    );
+    expect(entry?.job).toMatchObject({ extractionFallback: 'preview' });
   });
 
   it('escalates a low-confidence proposal and records both calls', async () => {

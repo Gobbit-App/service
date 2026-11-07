@@ -15,6 +15,7 @@ import { ReviewEditForm } from './ReviewEditForm';
 import { reviewDiff } from './review-diff';
 import { reviewMode, suggestedCategory } from './review-mode';
 import { heldLine } from './held-line';
+import { fallbackLine } from './fallback-line';
 import { sourceLine } from './source-line';
 
 const BANNERS = {
@@ -63,6 +64,7 @@ export function ReviewCard({
   const titleId = `review-title-${item.id}`;
   const source = sourceLine(job, now);
   const held = heldLine(job);
+  const fallback = fallbackLine(job);
   const withCategory = suggestion && createCategory ? { createCategory: true } : {};
 
   const saveEdit = async (patch: ItemPatch) => {
@@ -88,6 +90,7 @@ export function ReviewCard({
       )}
       {source && <p className="review-card__source">{source}</p>}
       {held && <p className="review-card__held">{held}</p>}
+      {fallback && <p className="review-card__held">{fallback}</p>}
       {job?.sourcePreview && (
         <p className="review-card__preview" dir="auto">
           {job.sourcePreview}

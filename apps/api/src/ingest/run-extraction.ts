@@ -38,11 +38,15 @@ export type ExtractionOutcome =
 
 type Accepted = Extract<ValidatedProposal, { ok: true }>;
 
+/** A proposal or why not; `retryable: false` → a corrective retry can't help (D354). */
+type Attempt = ValidatedProposal | { ok: false; error: string; retryable: false };
+
 /**
  * D105/D110: one primary call, validated; an invalid proposal gets exactly one corrective retry
  * (still invalid → failed). A valid but low-confidence proposal is escalated once to the stronger
- * model; an invalid escalation keeps the primary proposal. Provider/network errors propagate so
- * pg-boss retries the job.
+ * model; an invalid escalation keeps the primary proposal. An answer cut off by the output budget or
+ * refused skips the corrective retry: the same call would end the same way (D354).
+ * Provider/network errors propagate so pg-boss retries the job.
  */
 export async function runExtraction(
   deps: RunExtractionDeps,
@@ -54,7 +58,7 @@ export async function runExtraction(
     model: string,
     purpose: 'extract' | 'extract_escalated',
     correction?: string,
-  ): Promise<ValidatedProposal> {
+  ): Promise<Attempt> {
     let raw: unknown;
     try {
       const call = await recordLlmCall(
@@ -81,7 +85,11 @@ export async function runExtraction(
       raw = call.raw;
     } catch (err) {
       // A response without the tool call is a bad output, not an outage: treat as invalid.
-      if (err instanceof ExtractResponseError) return { ok: false, error: err.message };
+      if (err instanceof ExtractResponseError) {
+        return err.retryable
+          ? { ok: false, error: err.message }
+          : { ok: false, error: err.message, retryable: false };
+      }
       throw err;
     }
     return validateProposal(raw, input.validate);
@@ -94,10 +102,10 @@ export async function runExtraction(
   });
 
   let primary = await attempt(deps.model, 'extract');
-  if (!primary.ok) {
+  if (!primary.ok && !('retryable' in primary)) {
     primary = await attempt(deps.model, 'extract', correctionMessage(primary.error));
-    if (!primary.ok) return { ok: false, error: `invalid_output: ${primary.error}` };
   }
+  if (!primary.ok) return { ok: false, error: `invalid_output: ${primary.error}` };
 
   if (shouldEscalate(primary.summary.confidence) && deps.escalationModel !== deps.model) {
     const escalated = await attempt(deps.escalationModel, 'extract_escalated');

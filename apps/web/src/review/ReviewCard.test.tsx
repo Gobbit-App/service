@@ -36,6 +36,7 @@ function entry(
       newCategory: null,
       sourcePreview: 'https://dentist.example/',
       autoPublish: null,
+      extractionFallback: null,
       ...job,
     },
   };
@@ -74,6 +75,11 @@ describe('ReviewCard', () => {
   it("says why a publisher's share was not published directly (D193)", async () => {
     await renderCard(entry({}, { autoPublish: 'held_duplicate' }));
     expect(screen.getByText('Not published directly: it may be a duplicate')).toBeInTheDocument();
+  });
+
+  it('says the assistant could not read a preview-filled proposal (D355)', async () => {
+    await renderCard(entry({}, { extractionFallback: 'preview' }));
+    expect(screen.getByText(/The assistant couldn't read this share/)).toBeInTheDocument();
   });
 
   it('shows no held line for an ordinary proposal', async () => {
