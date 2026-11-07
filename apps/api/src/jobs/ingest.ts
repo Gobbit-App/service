@@ -2,9 +2,11 @@ import {
   EXTRACT_STYLE_EXAMPLES,
   type AutoPublishOutcome,
   type DedupVerdict,
+  type ExtractionSummary,
   INGEST_JOB_RETRIES,
   type IngestFailureCode,
   type IngestRaw,
+  type ItemCreate,
   type MemberRole,
   type NormalizedSource,
 } from '@gobbit/shared';
@@ -25,6 +27,7 @@ import type { NormalizeContext } from '../ingest/normalize-raw';
 import { appliedPreview, logPreviewApplied } from '../ingest/applied-preview';
 import type { ValidateContext } from '../ai/extract-validate';
 import { classifyFailure, failureDetail, type IngestStage } from '../ingest/failure-code';
+import { logPreviewFallback, previewFallback } from '../ingest/preview-fallback';
 import { childLogger, lineSink, type Logger } from '../lib/logger';
 
 /**
@@ -63,6 +66,13 @@ export interface IngestHandlerDeps {
 }
 
 type FailingJob = Pick<IngestJobRow, 'id' | 'deckId' | 'channel' | 'attempts'>;
+type JobRef = { id: string; deckId: string; userId: string; channel: IngestJobRow['channel'] };
+
+/** What the extract stage worked from, kept for the preview fallback (D355). */
+interface ExtractContext {
+  source: NormalizedSource;
+  validate: ValidateContext;
+}
 
 /** pg-boss runs a job at most 1 + INGEST_JOB_RETRIES times; the last failure is final. */
 export function isLastAttempt(attempts: number): boolean {
@@ -72,8 +82,9 @@ export function isLastAttempt(attempts: number): boolean {
 /**
  * D93: one ingest job through the pipeline: claim → normalize (D102) → extract (D105/D110) →
  * insert a `proposed` card by the sharer (D109) → embed the draft and dedup (D103) → enqueue its
- * embedding (a no-op once the draft vector is stored). Invalid model output
- * fails the job; provider errors rethrow so pg-boss retries, until the last attempt fails it.
+ * embedding (a no-op once the draft vector is stored). Invalid model output fails the job;
+ * provider errors rethrow so pg-boss retries, until the last attempt fails it. D355: either
+ * failure with page preview details proposes a card from the preview instead, for review only.
  */
 export function createIngestHandler(deps: IngestHandlerDeps) {
   const { jobs, categories, items, embedQueue } = deps;
@@ -106,6 +117,68 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
     return 'failed';
   }
 
+  async function propose(
+    jobRef: JobRef,
+    ctx: ExtractContext,
+    item: ItemCreate,
+    summary: ExtractionSummary,
+    signal: AbortSignal | undefined,
+  ) {
+    const proposed = await proposeItem(
+      {
+        categories,
+        items,
+        jobs,
+        dedup: deps.dedup,
+        embedQueue,
+        linkSnapshotQueue: deps.linkSnapshotQueue,
+        now,
+        log,
+      },
+      {
+        job: jobRef,
+        item,
+        summary,
+        ...(ctx.source.imageCandidates ? { imageCandidates: ctx.source.imageCandidates } : {}),
+        signal,
+      },
+    );
+    const applied = appliedPreview(item, ctx.validate);
+    if (applied) {
+      logPreviewApplied(
+        logger,
+        applied,
+        { jobId: jobRef.id, itemId: proposed.item.id, deckId: jobRef.deckId },
+        ctx.validate,
+      );
+    }
+    return proposed;
+  }
+
+  /**
+   * D355: extraction failed; a card from the page preview goes to review (never auto-published),
+   * so the share isn't lost. Null when the preview has nothing to build it from.
+   */
+  async function proposeFromPreview(
+    jobRef: JobRef,
+    ctx: ExtractContext,
+    reason: IngestFailureCode,
+    detail: string | undefined,
+    signal: AbortSignal | undefined,
+  ): Promise<IngestOutcome | null> {
+    const fallback = previewFallback(ctx.validate, ctx.source.lang ?? 'und');
+    if (!fallback) return null;
+    const summary = { model: deps.extraction.model, ...fallback.summary };
+    const proposed = await propose(jobRef, ctx, fallback.item, summary, signal);
+    logPreviewFallback(
+      logger,
+      { jobId: jobRef.id, deckId: jobRef.deckId, itemId: proposed.item.id },
+      reason,
+      detail,
+    );
+    return 'proposed';
+  }
+
   async function assetDimensions(publicId: string) {
     const asset = await deps.assets?.byPublicId(publicId);
     return asset?.width && asset.height ? { width: asset.width, height: asset.height } : null;
@@ -122,6 +195,13 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
 
     /** Where a thrown error came from, for the sharer's reason (D194). */
     let stage: IngestStage | undefined;
+    let extractCtx: ExtractContext | undefined;
+    const jobRef: JobRef = {
+      id: job.id,
+      deckId: job.deckId,
+      userId: job.userId,
+      channel: job.channel,
+    };
     try {
       const role = await deps.roleOf(job.deckId, job.userId);
       if (!role) return await fail(job, 'sharer_not_member');
@@ -156,6 +236,7 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         ...(job.raw.text ? { sharedText: job.raw.text } : {}),
         categoryIds: deckCategories.map((c) => c.id),
       };
+      extractCtx = { source, validate };
       stage = 'extract';
       const outcome = await runExtraction(deps.extraction, {
         source,
@@ -168,37 +249,24 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         signal: opts?.signal,
       });
       stage = undefined;
-      if (!outcome.ok) return await fail(job, outcome.error);
-
-      const jobRef = { id: job.id, deckId: job.deckId, userId: job.userId, channel: job.channel };
-      const proposed = await proposeItem(
-        {
-          categories,
-          items,
-          jobs,
-          dedup: deps.dedup,
-          embedQueue,
-          linkSnapshotQueue: deps.linkSnapshotQueue,
-          now,
-          log,
-        },
-        {
-          job: jobRef,
-          item: outcome.item,
-          summary: outcome.summary,
-          ...(source.imageCandidates ? { imageCandidates: source.imageCandidates } : {}),
-          signal: opts?.signal,
-        },
-      );
-      const applied = appliedPreview(outcome.item, validate);
-      if (applied) {
-        logPreviewApplied(
-          logger,
-          applied,
-          { jobId: job.id, itemId: proposed.item.id, deckId: job.deckId },
-          validate,
+      if (!outcome.ok) {
+        const fallback = await proposeFromPreview(
+          jobRef,
+          extractCtx,
+          classifyFailure(outcome.error),
+          failureDetail(outcome.error),
+          opts?.signal,
         );
+        return fallback ?? (await fail(job, outcome.error));
       }
+
+      const proposed = await propose(
+        jobRef,
+        extractCtx,
+        outcome.item,
+        outcome.summary,
+        opts?.signal,
+      );
       // D193: the proposal exists; publishing it directly is best effort, review is the fallback.
       await deps.autoPublish?.({
         job: jobRef,
@@ -211,7 +279,17 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       const failureCode = classifyFailure(err, stage);
       if (isLastAttempt(job.attempts)) {
         const message = err instanceof Error ? err.message : String(err);
-        return fail(job, `error: ${message}`, failureCode);
+        const fallback =
+          stage === 'extract' && extractCtx
+            ? await proposeFromPreview(
+                jobRef,
+                extractCtx,
+                failureCode,
+                undefined,
+                opts?.signal,
+              ).catch(() => null)
+            : null;
+        return fallback ?? fail(job, `error: ${message}`, failureCode);
       }
       logger.warn(
         { jobId: job.id, attempts: job.attempts, failureCode },

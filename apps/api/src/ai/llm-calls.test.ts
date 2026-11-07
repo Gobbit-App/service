@@ -8,6 +8,7 @@ import {
   recordLlmCall,
 } from './llm-calls';
 import { OPENROUTER_DEFAULT_ASK_MODEL } from './providers';
+import { ExtractResponseError } from './extractor';
 
 const ctx: LlmCallContext = {
   purpose: 'ask',
@@ -109,6 +110,33 @@ describe('recordLlmCall', () => {
     });
     expect(row.error).toHaveLength(500);
     expect(row.error).toBe('x'.repeat(500));
+  });
+
+  it('records the tokens a failed extraction answer still used (D354)', async () => {
+    const sink = memorySink();
+    const original = new ExtractResponseError('truncated', {
+      stopReason: 'max_tokens',
+      usage: { inputTokens: 1_000_000, outputTokens: 1_000_000 },
+    });
+
+    await expect(
+      recordLlmCall(
+        sink,
+        ctx,
+        async () => {
+          throw original;
+        },
+        { now: clock(0, 5), log: vi.fn() },
+      ),
+    ).rejects.toBe(original);
+
+    expect(sink.insert.mock.calls[0]![0]).toMatchObject({
+      status: 'error',
+      inputTokens: 1_000_000,
+      outputTokens: 1_000_000,
+      costUsd: formatCostUsd(llmCostUsd(ctx.model, 1_000_000, 1_000_000)),
+      error: 'propose_card call cut off by the output budget (stop: max_tokens)',
+    });
   });
 
   it('logs a failing insert on success without masking the result', async () => {

@@ -6533,6 +6533,8 @@ export interface paths {
                                 language: string;
                                 categoryIds: string[];
                                 newCategory: string | null;
+                                /** @enum {string} */
+                                fallback?: "preview";
                             } | null;
                             dedup: {
                                 /** @enum {string} */
@@ -7015,6 +7017,8 @@ export interface paths {
                                     sourcePreview: string | null;
                                     /** @enum {string|null} */
                                     autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                                    /** @enum {string|null} */
+                                    extractionFallback: "preview" | null;
                                 } | null;
                                 target: {
                                     /** Format: uuid */

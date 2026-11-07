@@ -5,6 +5,7 @@ import { linkPreviewSchema } from './media';
 import { LINK_IMAGE_CANDIDATES_MAX } from '../links/constants';
 import {
   autoPublishOutcomes,
+  extractionFallbacks,
   ingestFailureCodes,
   dedupActions,
   dedupVias,
@@ -97,6 +98,8 @@ export const extractionSummarySchema = z.object({
   language: z.string(),
   categoryIds: z.array(z.string()),
   newCategory: z.string().nullable(),
+  /** D355: the model's answer was unusable; the card was built from the page preview. */
+  fallback: z.enum(extractionFallbacks).optional(),
 });
 export type ExtractionSummary = z.infer<typeof extractionSummarySchema>;
 
@@ -154,6 +157,8 @@ export const reviewEntrySchema = z.object({
       sourcePreview: z.string().nullable(),
       /** D193: why a publisher's share was not published directly (FR-011). */
       autoPublish: z.enum(autoPublishOutcomes).nullable(),
+      /** D355: `preview` → the assistant couldn't read the share; filled from the page preview. */
+      extractionFallback: z.enum(extractionFallbacks).nullable(),
     })
     .nullable(),
   /** The card a `possible_duplicate` / `update` verdict points at, when still visible. */

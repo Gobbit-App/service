@@ -1,6 +1,7 @@
 import type { NewLlmCallRow } from '@gobbit/db';
 import type { LlmPurpose } from '@gobbit/shared';
 import { lineSink } from '../lib/logger';
+import { ExtractResponseError } from './extractor';
 
 /**
  * USD per 1M tokens, keyed by the id the provider is called with (OpenRouter ids carry a
@@ -67,7 +68,9 @@ async function insertRow(
 /**
  * Runs `fn`, measures latency with `now()` (default Date.now), then inserts ONE row:
  * success → status 'ok', tokens from the result, costUsd = formatCostUsd(llmCostUsd(...)), error null.
- * failure → status 'error', tokens 0, cost '0.000000', error = message truncated to 500 chars; then rethrows the ORIGINAL error.
+ * failure → status 'error', error = message truncated to 500 chars, tokens 0 and cost '0.000000' unless the
+ * error is an `ExtractResponseError` carrying the usage the failed answer still spent (D354); then
+ * rethrows the ORIGINAL error.
  * A failing sink.insert is caught and reported via `log` (default: an error JSON log line) and never masks the result or the original error.
  */
 export async function recordLlmCall<T extends LlmUsage>(
@@ -86,13 +89,16 @@ export async function recordLlmCall<T extends LlmUsage>(
   } catch (err) {
     const latencyMs = now() - started;
     const message = err instanceof Error ? err.message : String(err);
+    const usage = err instanceof ExtractResponseError ? err.usage : null;
+    const inputTokens = usage?.inputTokens ?? 0;
+    const outputTokens = usage?.outputTokens ?? 0;
     await insertRow(
       sink,
       {
         ...ctx,
-        inputTokens: 0,
-        outputTokens: 0,
-        costUsd: formatCostUsd(0),
+        inputTokens,
+        outputTokens,
+        costUsd: formatCostUsd(llmCostUsd(ctx.model, inputTokens, outputTokens)),
         latencyMs,
         status: 'error',
         error: message.slice(0, ERROR_MESSAGE_MAX),
