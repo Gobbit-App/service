@@ -12,6 +12,7 @@ import { categoriesQuery, deckQuery } from '../api/queries';
 import { AppHeader } from '../app/AppHeader';
 import { backTarget } from '../app/back-target';
 import { BottomBar } from '../app/BottomBar';
+import { isSearchPath, showsListTools } from '../app/list-tools';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { writeLastDeck } from '../lib/last-deck';
 import { categoryFromFilter, isBrowsePath } from '../browse/browse-params';
@@ -26,7 +27,8 @@ const ALL: ChipView = { kind: 'all' };
 
 /**
  * Deck layout (D65): header, chip row, the selected list view and the bottom bar (D274). Browse and
- * the new-card composer render without it (D139, D300).
+ * the new-card composer render without it (D139, D300); the search box and chips show only on the
+ * card lists, not on pages like Your shares or Review (`showsListTools`).
  */
 export const Route = createFileRoute('/d/$slug')({
   component: DeckLayout,
@@ -40,7 +42,8 @@ function DeckLayout() {
   const navigate = useNavigateHref();
   const deckSlug = deck.data?.slug;
   const adding = pathname.endsWith('/new');
-  const searching = pathname.endsWith('/search');
+  const searching = isSearchPath(pathname);
+  const listTools = showsListTools(pathname);
   const browsing = isBrowsePath(pathname);
   const view = viewFromPath(pathname)?.view ?? null;
   // D277: Browse opens on the list's category, or All from any other deck page.
@@ -90,15 +93,19 @@ function DeckLayout() {
           view?.kind === 'all' ? { kind: 'deck' } : { kind: 'deck-page', deckSlug: slug },
         )}
       />
-      <SearchBox initialQuery={searching ? q : ''} onSearch={onSearch} />
-      <ChipRow
-        deckSlug={slug}
-        categories={categories.data ?? []}
-        active={view ?? ALL}
-        showArchived={can(deck.data.role, 'item.archive')}
-        showLinks={can(deck.data.role, 'item.update')}
-        onNavigate={navigate}
-      />
+      {listTools && (
+        <>
+          <SearchBox initialQuery={searching ? q : ''} onSearch={onSearch} />
+          <ChipRow
+            deckSlug={slug}
+            categories={categories.data ?? []}
+            active={view ?? ALL}
+            showArchived={can(deck.data.role, 'item.archive')}
+            showLinks={can(deck.data.role, 'item.update')}
+            onNavigate={navigate}
+          />
+        </>
+      )}
       <main className="page">
         <Outlet />
       </main>

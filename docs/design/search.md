@@ -61,7 +61,7 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
 
 ## Web (D79)
 
-- `SearchBox` sits under the deck header on every deck route. It debounces by 250 ms and navigates to `/d/$slug/search?q=&mode=`, replacing the history entry when already on the search route.
+- `SearchBox` (with the category `ChipRow`) sits under the deck header on the card lists only — the chip views and the search route (`app/list-tools.ts`); Your shares, Review, Log, Settings, Import and Upcoming render without them. It debounces by 250 ms and navigates to `/d/$slug/search?q=&mode=`, replacing the history entry when already on the search route.
 - `routes/d.$slug.search.tsx` validates `q` and `mode` (`search/search-params.ts`). It shows one of:
   - `SearchResults`: tags for `why`, highlighted matches, and recent searches when `q` is empty.
   - The lazy `AskView` chunk, when Ask is enabled and selected.
