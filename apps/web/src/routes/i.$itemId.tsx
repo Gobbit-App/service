@@ -6,6 +6,7 @@ import { backTarget } from '../app/back-target';
 import { Card } from '../cards/Card';
 import { CardActionBar } from '../cards/CardActionBar';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
+import { canReviewOnCard, ProposalReview } from '../review/ProposalReview';
 import { deckHref } from '../ui/chip-order';
 import { NavLink, useNavigateHref } from '../ui/NavLink';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
@@ -43,6 +44,9 @@ function ItemPage() {
     <>
       <AppHeader title={deck.data?.name ?? 'Card'} back={backTarget({ kind: 'card', deckSlug })} />
       <main className="page">
+        {deck.data && canReviewOnCard(item.data, deck.data.role) && (
+          <ProposalReview item={item.data} deck={deck.data} />
+        )}
         <Card
           item={item.data}
           deckSlug={deckSlug}
