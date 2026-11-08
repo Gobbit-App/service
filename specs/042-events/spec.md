@@ -6,9 +6,9 @@
 
 **Status**: Draft
 
-**Input**: User description: "Add a new item type, Event: a mix of a link card, a text note and a reminder. Its content is a text note plus a start (date and time, or an all-day date), an optional end, an optional location and an optional link with the full link preview. Unlike a Reminder it is never hidden and never dismissed: it is visible like any card, in lists, search, Browse and public decks. Its card shows how close it is (upcoming, today, now, ended). It notifies deck members as it approaches, at up to three 'notify before' times (default 1 day before), by email and push. The audience is everyone who can read it by default, or specific people, only me, or nobody; any member can mute one event. In the notification area events appear under 'Coming up' but don't light the bell. Members can add an event to their own calendar."
+**Input**: User description: "Add a new item type, Event: a mix of a link card, a text note and a reminder. Its content is a text note plus a start (date and time, or an all-day date), an optional end, an optional location and an optional link with the full link preview. Unlike a Reminder it is never hidden and never dismissed: it is visible like any card, in lists, search, Browse and public decks. Its card shows how close it is (upcoming, today, now, ended). It notifies deck members as it approaches, at up to three 'notify before' times (default 1 day before), by push notification. The audience is everyone who can read it by default, or specific people, only me, or nobody; any member can mute one event. In the notification area events appear under 'Coming up' but don't light the bell. Members can add an event to their own calendar."
 
-Builds on reminders and the notification area ([`037-reminders`](../037-reminders/spec.md)), whose email, push, per-device settings and notification area it reuses; link previews and link checks ([`014-link-snapshots`](../014-link-snapshots/spec.md)); rich-text bodies ([`038-rich-text-body`](../038-rich-text-body/spec.md)); the card editor ([`007-card-editor`](../007-card-editor/spec.md)); public pages ([`017-public-pages`](../017-public-pages/spec.md)); and the activity log ([`020-item-events`](../020-item-events/spec.md)).
+Builds on reminders and the notification area ([`037-reminders`](../037-reminders/spec.md)), whose push, per-device settings and notification area it reuses (not its email); link previews and link checks ([`014-link-snapshots`](../014-link-snapshots/spec.md)); rich-text bodies ([`038-rich-text-body`](../038-rich-text-body/spec.md)); the card editor ([`007-card-editor`](../007-card-editor/spec.md)); public pages ([`017-public-pages`](../017-public-pages/spec.md)); and the activity log ([`020-item-events`](../020-item-events/spec.md)).
 
 ## Clarifications
 
@@ -18,6 +18,10 @@ Builds on reminders and the notification area ([`037-reminders`](../037-reminder
 - Q: Do events light the bell in the bottom bar? → A: No. The light stays for things that need the member to act. Events are listed in a "Coming up" section of the notification area instead.
 - Q: Are events shown on public decks? → A: Yes. An event is content like any card. Its date, location and link are public on a public deck; who is notified and who muted it never are.
 - Q: Can an event start in the past? → A: Yes, to record something that happened. It schedules no notifications.
+
+### Session 2026-11-09
+
+- Q: Are event notices also sent by email? → A: No, not in this feature. Events notify by push and the notification area only; email for events is out of scope.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -60,16 +64,16 @@ Each event card shows where it stands right now: "in 3 days", "tomorrow", "today
 
 ### User Story 3 - Get notified as an event approaches (Priority: P1)
 
-When creating the event, the creator picks when to notify: up to three "notify before" times (default: 1 day before; "at the start" is also allowed) and who gets notified (default: everyone who can read it). At each of those times, everyone in the audience gets one email and one push notification on each device where they turned push on, linking to the event. Nobody has to dismiss anything.
+When creating the event, the creator picks when to notify: up to three "notify before" times (default: 1 day before; "at the start" is also allowed) and who gets notified (default: everyone who can read it). At each of those times, everyone in the audience gets one push notification on each device where they turned push on, linking to the event. There is no email for events. Nobody has to dismiss anything.
 
 **Why this priority**: notifications are what makes this a reminder rather than a note; "the play is tomorrow" is the message families miss.
 
-**Independent Test**: create an event starting in 2 hours with "notify 1 hour before" and the default audience. Within 2 minutes of the 1-hour mark, every member who can read it, readers included, gets one email and one push (where enabled); nobody gets a second one, and nothing needs dismissing.
+**Independent Test**: create an event starting in 2 hours with "notify 1 hour before" and the default audience. Within 2 minutes of the 1-hour mark, every member who can read it, readers included, gets one push on each device where push is on; nobody gets a second one, no email is sent, and nothing needs dismissing.
 
 **Acceptance Scenarios**:
 
 1. **Given** the event editor, **When** the creator opens the notification settings, **Then** they can set zero to three "notify before" times, each an amount plus a unit (minutes, hours or days, 0 = at the start), defaulting to one time of 1 day, and an audience: everyone who can read it (default), specific people, only me, or nobody.
-2. **Given** a published event reaches one of its notify times, **When** that moment passes, **Then** each audience member who can still read it gets one email (unless they turned event emails off) and one push per enabled device, each with the title, deck, start time and location, linking to the event.
+2. **Given** a published event reaches one of its notify times, **When** that moment passes, **Then** each audience member who can still read it gets one push per enabled device (and no email), each with the title, deck, start time and location, linking to the event.
 3. **Given** the same event, **When** its other notify times pass, **Then** each sends its own notice once; none repeats.
 4. **Given** the creator edits the title, body, location, link or end, **When** they save, **Then** no notice is sent again.
 5. **Given** the creator moves the start, **When** they save, **Then** the notify times are recalculated from the new start and each one still ahead is sent at its new moment, even if a notice went out for the old start.
@@ -90,7 +94,7 @@ The creator chooses the audience: everyone who can read the event (default), spe
 
 1. **Given** "specific people", **When** the creator picks members, **Then** any deck member can be picked, readers included, and only the picked members plus the creator are notified.
 2. **Given** "only me", **When** a notify time passes, **Then** only the creator is notified; **given** "nobody", nobody is.
-3. **Given** a member in the audience mutes the event, **When** its next notify time passes, **Then** they get no email or push for it, and everyone else is still notified.
+3. **Given** a member in the audience mutes the event, **When** its next notify time passes, **Then** they get no push for it, and everyone else is still notified.
 4. **Given** a muted event, **When** the member unmutes it, **Then** its remaining notify times notify them again; notices skipped while muted aren't sent late.
 5. **Given** a member other than the creator edits the event, **When** they open the audience choice, **Then** it is read-only for them; only the creator (and the deck's owners once the creator is no longer a member) can change it.
 6. **Given** the personal deck, **When** an event is created there, **Then** the audience is fixed to "only me".
@@ -102,7 +106,7 @@ The creator chooses the audience: everyone who can read the event (default), spe
 
 The notification area gets a "Coming up" section listing events the member is notified about, from the event's first notify time until it ends, soonest first. Events never turn on the bell's alert light: the light still means "something needs you".
 
-**Why this priority**: email and push are sent once and can be missed; the area is the place to look again. Events work without it via email, push and the deck.
+**Why this priority**: push is sent once and can be missed, and members without push enabled get nothing else; the area is the place to look again. Events work without it via push and the deck.
 
 **Independent Test**: with one event inside its notify window and no reminders pending, open the notification area: the event is listed under "Coming up" and the bell's light is off. After the event ends, it is gone from the list.
 
@@ -148,8 +152,10 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 - **Duplicates**: two events with the same link and the same start date are flagged as possible duplicates; the same link on different dates (a weekly class) is not.
 - **Proposed events published late**: only notify times still ahead are sent.
 - **Restored or undeleted events**: only notify times still ahead are sent; ones that passed while archived or deleted are not.
-- **Many events notifying together**: each is a separate email and push, no digest.
-- **Email fails or push device is gone**: retried and cleaned up exactly as for reminders; a failure on one channel doesn't stop the others.
+- **Many events notifying together**: each is a separate push, no digest.
+- **Push fails or a device is gone**: retried and cleaned up exactly as for reminders; a failure on one device doesn't stop the others.
+- **Member without push**: they get no notice for events; the event still shows in the deck and under "Coming up" in their notification area.
+- **Push not configured on the server**: events send nothing; the deck and "Coming up" still work.
 - **Offline creation**: the draft is kept locally like other card drafts; notices are scheduled only once it's saved.
 
 ## Requirements *(mandatory)*
@@ -178,12 +184,12 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 
 - **FR-010**: An event MUST have zero to three **notify before** times, each an amount and unit (minutes, hours or days; 0 = at the start; at most 365 days), defaulting to one time of 1 day. For all-day events the unit is days only and notices go out at 09:00 in the event's time zone.
 - **FR-011**: An event MUST have an **audience**: everyone who can read it (default), specific deck members (any role, readers included), only the creator, or nobody. On the personal deck it is fixed to only the creator. People who can't currently read the event's deck and category are never notified, whatever the audience says.
-- **FR-012**: At each notify time of a published event, the system MUST notify every audience member who hasn't muted it, once by email (unless they turned event emails off) and once by push on each device they registered, each linking straight to the event.
-- **FR-013**: Event emails and push MUST carry only the title, deck name, start (in the event's time zone), location and link to the card: no body text.
+- **FR-012**: At each notify time of a published event, the system MUST notify every audience member who hasn't muted it, once by push on each device they registered, linking straight to the event.
+- **FR-013**: Event push notifications MUST carry only the title, deck name, start (in the event's time zone), location and link to the card: no body text.
 - **FR-014**: A notice MUST be sent at most once per person, channel (each push device counts as one), event and notify moment, including after retries, restarts or downtime. Moving the start produces new notify moments; editing anything else never re-sends.
 - **FR-015**: A notice whose moment had already passed when the event was saved, published, restored or undeleted MUST NOT be sent. A notice missed because of downtime MUST be sent late only if the event hasn't started yet; otherwise it is skipped.
 - **FR-016**: Proposed, archived and deleted events MUST send nothing.
-- **FR-017**: Members MUST be able to turn event emails off for their account in Settings, separately from reminder emails (default on). Push uses the existing per-device setting.
+- **FR-017**: Event notices MUST NOT be sent by email in this feature. Push follows the existing per-device setting; a member with no push device gets no event notice (the deck and the notification area still show the event).
 - **FR-018**: Any member in an event's audience MUST be able to mute and unmute notices for that event for themselves only. Mutes are private to the member.
 - **FR-019**: Only the creator MUST be able to change an event's audience and notify times, except that the deck's owners may change them once the creator is no longer a member.
 
@@ -199,7 +205,7 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 **Records and limits**
 
 - **FR-023**: Creating, editing (field names only, including audience and notify times), archiving, restoring and deleting an event MUST appear in the deck's activity log like other card changes.
-- **FR-024**: Every notification decision (planned, skipped because the person muted, opted out, has no channel, is not eligible, or the event already started; sent, retried, failed, device removed), every mute and unmute, and every refused audience change MUST leave a named record identifying people by id only, per the project's accountability rules.
+- **FR-024**: Every notification decision (planned, skipped because the person muted, has no push device, is not eligible, or the event already started; sent, retried, failed, device removed), every mute and unmute, and every refused audience change MUST leave a named record identifying people by id only, per the project's accountability rules.
 - **FR-025**: Limits that shape the experience (most notify times, longest notify-before, furthest start, location length, the all-day notice hour) MUST be operator-tunable with documented defaults.
 
 ### Key Entities
@@ -208,7 +214,6 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 - **Event notice**: one scheduled moment for one event, derived from its start and one notify-before time; records whether it has been planned, so it's sent at most once.
 - **Event mute**: one member's choice not to be notified about one event.
 - **Notification delivery** (from 037): one attempt to notify one person through one channel; now for either a reminder deadline or an event notice.
-- **Notification preferences** (from 037): per member, now with event emails as well as reminder emails.
 - **Pending item** (from 037): what the notification area lists; gains a "coming up" event kind that doesn't light the bell.
 
 ## Success Criteria *(mandatory)*
@@ -216,8 +221,8 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 ### Measurable Outcomes
 
 - **SC-001**: A member can create an event with a date, location, link and default notifications in under 1 minute.
-- **SC-002**: 99% of event notices reach the email provider and push service within 2 minutes of their notify moment, under normal operation.
-- **SC-003**: Each audience member receives exactly one email and one push per enabled device per notify moment across 100 runs that include a worker restart at that moment; muted and opted-out members receive none.
+- **SC-002**: 99% of event notices reach the push service within 2 minutes of their notify moment, under normal operation.
+- **SC-003**: Each audience member receives exactly one push per enabled device per notify moment across 100 runs that include a worker restart at that moment; muted members receive none, and no event email is ever sent.
 - **SC-004**: No anonymous visitor or share preview can learn an event's audience, picked people or mutes, verified by tests on every public path.
 - **SC-005**: An event's status line is correct for viewers in at least three time zones at each phase (upcoming, today, now, ended), including across a daylight saving change.
 - **SC-006**: An exported event imports into the three most common calendar apps with the correct date, time, location and link on the first try.
@@ -231,14 +236,15 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 - **Default length**: an event without an end lasts one hour (timed) or its start date (all-day) for its status and calendar export.
 - **All-day notice hour**: 09:00 in the event's time zone, operator-tunable.
 - **Missed notices**: notices whose moment passed before the event existed, was published or was restored are skipped, not sent at save time; downtime notices are sent late only before the start.
-- **Mutes are per event**: there is no per-deck or global "mute all events" beyond turning event emails off and push off per device.
-- **Event emails** are a separate account setting from reminder emails, on by default.
+- **Mutes are per event**: there is no per-deck or global "mute all events" beyond turning push off per device.
+- **Push only**: events notify by push and the notification area; there is no event email and no new account setting.
 - **Calendar export** is a file download; there is no subscription feed or sync.
 - **Ingestion and import** don't create events in this feature; events are made in the editor.
 - **Deadline precision** is to the minute, as for reminders.
 
 ## Out of Scope
 
+- Email notices for events (push and the notification area only for now).
 - Recurring events.
 - RSVPs or "going" lists.
 - Calendar sync or subscription feeds.
