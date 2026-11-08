@@ -32,6 +32,6 @@
 ## Notes
 
 - Clarifications resolved 2026-11-08 (spec "Clarifications"): only communal decks exclude checklists; checkers (readers allowed) are separate from editors; creator-controlled "archive when everything is checked" toggle, default off; no assignment notifications.
-- Clarification added 2026-11-09: the creator gets one email and push when their checklist auto-archives (not when they made the last check themselves); re-validated, all items still pass.
+- Clarification added 2026-11-09: the creator gets one push when their checklist auto-archives (not when they made the last check themselves); no email, which waits for a system-wide email notification design. Re-validated, all items still pass.
 - Design choices from the request (server-owned check state, the shared dismisser/checker rule, D/ADR numbering, E2E tier full, PR split) are kept out of the spec text; `/speckit-plan` records them.
 - No extension hooks registered (`.specify/extensions.yml` absent).
