@@ -12,6 +12,8 @@ import {
   type ItemRow,
 } from '@gobbit/db';
 import type { NotificationChannel } from '@gobbit/shared';
+import type { NotificationKind } from '@gobbit/shared/event-constants';
+import { eventDeliveryFacts, eventPlanningRepo } from './event-notify.repo';
 import { createRemindersRepo } from './reminders.repo';
 
 /** A due reminder claimed by one sweep tick. */
@@ -29,6 +31,9 @@ export interface Recipient {
 
 export interface DeliveryInsert {
   itemId: string;
+  /** D361: `event` rows carry their notice; `deadline` is then its `fire_at`. */
+  kind?: NotificationKind;
+  noticeId?: string | null;
   deadline: Date;
   userId: string;
   channel: NotificationChannel;
@@ -40,6 +45,8 @@ export interface DeliveryInsert {
 export interface ClaimedDelivery {
   id: string;
   itemId: string;
+  kind: NotificationKind;
+  noticeId: string | null;
   deadline: Date;
   userId: string;
   channel: NotificationChannel;
@@ -64,6 +71,7 @@ export const SENDING_STALE_MINUTES = 10;
 function planningRepo(tx: DbExecutor) {
   const reminderReads = createRemindersRepo(tx);
   return {
+    ...eventPlanningRepo(tx),
     deckContext: reminderReads.deckContext,
     categoryVisibilities: reminderReads.categoryVisibilities,
 
@@ -137,7 +145,12 @@ function planningRepo(tx: DbExecutor) {
 export type PlanningRepo = ReturnType<typeof planningRepo>;
 
 export function createNotificationsRepo(db: Db) {
+  const reads = createRemindersRepo(db);
   return {
+    /** D361: an event's audience is re-checked before each send (current members and access). */
+    deckContext: reads.deckContext,
+    categoryVisibilities: reads.categoryVisibilities,
+
     /** D295: claim, plan and record in one transaction (all or nothing). */
     async planInTransaction<T>(fn: (repo: PlanningRepo) => Promise<T>): Promise<T> {
       return await db.transaction((tx) => fn(planningRepo(tx)));
@@ -145,7 +158,7 @@ export function createNotificationsRepo(db: Db) {
 
     /** D295: sends cut off mid-flight are never retried (at most once). */
     async markInterrupted(): Promise<
-      Array<Pick<ClaimedDelivery, 'id' | 'itemId' | 'userId' | 'channel'>>
+      Array<Pick<ClaimedDelivery, 'id' | 'itemId' | 'kind' | 'noticeId' | 'userId' | 'channel'>>
     > {
       const rows = await db
         .update(notificationDeliveries)
@@ -159,6 +172,8 @@ export function createNotificationsRepo(db: Db) {
         .returning({
           id: notificationDeliveries.id,
           itemId: notificationDeliveries.itemId,
+          kind: notificationDeliveries.kind,
+          noticeId: notificationDeliveries.noticeId,
           userId: notificationDeliveries.userId,
           channel: notificationDeliveries.channel,
         });
@@ -197,6 +212,8 @@ export function createNotificationsRepo(db: Db) {
         .returning({
           id: notificationDeliveries.id,
           itemId: notificationDeliveries.itemId,
+          kind: notificationDeliveries.kind,
+          noticeId: notificationDeliveries.noticeId,
           deadline: notificationDeliveries.deadline,
           userId: notificationDeliveries.userId,
           channel: notificationDeliveries.channel,
@@ -204,6 +221,16 @@ export function createNotificationsRepo(db: Db) {
           attempts: notificationDeliveries.attempts,
         });
       return row ?? null;
+    },
+
+    /** D361: an event delivery's facts (see `eventDeliveryFacts`); reminders use `context`. */
+    async eventFacts(d: ClaimedDelivery) {
+      if (d.kind !== 'event' || d.noticeId === null) return null;
+      return await eventDeliveryFacts(db, {
+        itemId: d.itemId,
+        noticeId: d.noticeId,
+        userId: d.userId,
+      });
     },
 
     /** The message content, and whether the reminder still waits on this deadline. */

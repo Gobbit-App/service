@@ -6,6 +6,7 @@ import { useOnline } from '../api/offline';
 import { pendingQuery } from '../api/pending';
 import { NavLink } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
+import { ComingUp } from './ComingUp';
 import { pendingEntryMeta } from './pending-entry';
 import './notifications.css';
 
@@ -59,7 +60,7 @@ function Section({
 
 /**
  * 037 (D298, FR-021–FR-023): what is waiting on you across your decks, then your reminders that
- * aren't showing yet. Offline it shows the last known list (persisted query cache) with a note.
+ * aren't showing yet, with the events coming up between them (042, D366). Offline it shows the last known list (persisted query cache) with a note.
  */
 export function NotificationsScreen(): ReactElement {
   const pending = useQuery(pendingQuery());
@@ -80,6 +81,8 @@ export function NotificationsScreen(): ReactElement {
   }
 
   const { items, upcoming } = pending.data;
+  // A list persisted before 042 has no `comingUp`.
+  const comingUp = pending.data.comingUp ?? [];
   const stale = !online || (pending.isError && isNetworkError(pending.error));
   return (
     <>
@@ -93,6 +96,7 @@ export function NotificationsScreen(): ReactElement {
       ) : (
         <EmptyState title="Nothing waiting on you" />
       )}
+      <ComingUp entries={comingUp} />
       {upcoming.length > 0 && <Section title="Upcoming" entries={upcoming} section="upcoming" />}
     </>
   );

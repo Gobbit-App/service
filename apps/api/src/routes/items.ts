@@ -478,4 +478,50 @@ export function registerItemsRoutes(app: OpenAPIHono<AppEnv>, services: Services
     await services.items.dismissLinkFlag(actor, id);
     return c.body(null, 204);
   });
+
+  const muteParams = z.object({ id: z.string().min(1) });
+  const muteResponses = {
+    ...problems('unauthorized', 'not-found', 'conflict'),
+  };
+
+  const muteRoute = createRoute({
+    method: 'put',
+    path: '/items/{id}/mute',
+    tags: ['items'],
+    security: AUTH_SECURITY,
+    request: { params: muteParams },
+    responses: {
+      ...muteResponses,
+      204: {
+        description:
+          'Event muted for you (idempotent, D364). 409 `/problems/not-an-event` or `/problems/event-not-in-audience`',
+      },
+    },
+  });
+
+  app.openapi(muteRoute, async (c) => {
+    const { id } = c.req.valid('param');
+    await services.items.setMute(getActor(c), id, true);
+    return c.body(null, 204);
+  });
+
+  const unmuteRoute = createRoute({
+    method: 'delete',
+    path: '/items/{id}/mute',
+    tags: ['items'],
+    security: AUTH_SECURITY,
+    request: { params: muteParams },
+    responses: {
+      ...muteResponses,
+      204: {
+        description: 'Event unmuted for you (idempotent, D364). 409 `/problems/not-an-event`',
+      },
+    },
+  });
+
+  app.openapi(unmuteRoute, async (c) => {
+    const { id } = c.req.valid('param');
+    await services.items.setMute(getActor(c), id, false);
+    return c.body(null, 204);
+  });
 }

@@ -20,6 +20,7 @@ import {
   downloadEventIcs,
 } from '../event-cards/add-to-calendar';
 import { showToast } from '../ui/toast-store';
+import { useEventMuteToggle } from '../event-cards/use-event-mute-toggle';
 
 export const OFFLINE_REASON = 'needs a connection';
 
@@ -71,6 +72,7 @@ export function CardActionBar({
   const linkActions = linkCheckActions(item, role);
   const offline = online ? null : OFFLINE_REASON;
   const [dismissing, setDismissing] = useState(false);
+  const mute = useEventMuteToggle(item, deckSlug);
 
   if (item.deletedAt !== undefined) {
     return (
@@ -92,6 +94,15 @@ export function CardActionBar({
   const barAction = lifecycleActions.find((action) => action === 'restore');
   const checkInBar = !barAction && linkActions.includes('check');
   const menu: MenuAction[] = [];
+  if (mute) {
+    menu.push({
+      key: 'mute',
+      label: mute.label,
+      icon: mute.icon,
+      disabledReason: offline,
+      onSelect: mute.toggle,
+    });
+  }
   if (can(role, 'event.list')) {
     menu.push({
       key: 'history',

@@ -1,5 +1,5 @@
 import type { ItemRow } from '@gobbit/db';
-import { can, codePointLength, type MemberRole } from '@gobbit/shared';
+import { can, codePointLength, type CategoryVisibility, type MemberRole } from '@gobbit/shared';
 import {
   EVENT_UNIT_MS,
   canEditEventNotify,
@@ -30,6 +30,10 @@ const DAY_MS = 86_400_000;
 
 /** D363: someone other than the creator (or an owner once the creator left) changed `notify`. */
 export const EVENT_NOTIFY_LOCKED_PROBLEM = '/problems/event-notify-locked';
+/** D364: mute applies only to event cards. */
+export const NOT_AN_EVENT_PROBLEM = '/problems/not-an-event';
+/** D364: only people the event notifies can mute it. */
+export const EVENT_NOT_IN_AUDIENCE_PROBLEM = '/problems/event-not-in-audience';
 /** D363: `notify.audience.userIds` names someone who isn't a live member of the deck. */
 export const EVENT_AUDIENCE_UNKNOWN_MEMBER_PROBLEM = '/problems/event-audience-unknown-member';
 /** D12/042: a card's type never changes (in particular to or from `event`). */
@@ -102,7 +106,7 @@ export function sameNotify(a: EventNotify, b: EventNotify): boolean {
  * and visibility stay in items.service, which calls in here.
  */
 export function createEventCardsService(deps: {
-  events: Pick<EventCardsRepo, 'spans' | 'currentNotices' | 'mutedBy'>;
+  events: Pick<EventCardsRepo, 'spans' | 'currentNotices' | 'mutedBy' | 'setMute'>;
   members: Pick<RemindersRepo, 'deckMembers' | 'deckContext' | 'categoryVisibilities'>;
   limits: EventLimits;
   decisions: DecisionLogger<EventCardDecisions>;
@@ -137,6 +141,21 @@ export function createEventCardsService(deps: {
       userId: ctx.actor.user.id,
       deckId: ctx.deck.id,
       itemId,
+    });
+  }
+
+  type DeckContext = Awaited<ReturnType<RemindersRepo['deckContext']>>;
+
+  /** D362: whom the event notifies right now. */
+  function audienceFor(row: ItemRow, ctx: DeckContext, visibilities: CategoryVisibility[]) {
+    const payload = storedEventPayload(row);
+    return eventAudience({
+      mode: payload.notify.audience.mode,
+      userIds: payload.notify.audience.userIds,
+      createdBy: row.createdBy,
+      members: ctx.members,
+      categoryVisibilities: visibilities,
+      personalDeck: ctx.personal,
     });
   }
 
@@ -272,6 +291,41 @@ export function createEventCardsService(deps: {
     /** D359: see `createEventNoticeHook`. */
     noticeHook: createEventNoticeHook({ allDayNoticeHour: limits.allDayNoticeHour, now }),
 
+    /**
+     * D364: mutes or unmutes `item` for the actor (idempotent). The caller has loaded it with read
+     * access. Muting needs the actor in the audience; unmuting always succeeds for a reader.
+     */
+    async mute(actor: Actor, item: ItemRow, muted: boolean): Promise<void> {
+      const record = (
+        outcome: EventCardDecisions['event.mute']['outcome'],
+        reason?: EventCardDecisions['event.mute']['reason'],
+      ) =>
+        decisions.record('event.mute', {
+          outcome,
+          ...(reason ? { reason } : {}),
+          requestId: requestIdOf(actor),
+          userId: actor.user.id,
+          deckId: item.deckId,
+          itemId: item.id,
+        });
+      if (item.type !== 'event') {
+        record('refused', 'not_an_event');
+        throw conflict('Only events can be muted', NOT_AN_EVENT_PROBLEM);
+      }
+      if (muted) {
+        const [ctx, visibilities] = await Promise.all([
+          members.deckContext(item.deckId),
+          members.categoryVisibilities([item.id]),
+        ]);
+        if (!audienceFor(item, ctx, visibilities.get(item.id) ?? []).includes(actor.user.id)) {
+          record('refused', 'not_in_audience');
+          throw conflict('This event does not notify you', EVENT_NOT_IN_AUDIENCE_PROBLEM);
+        }
+      }
+      await events.setMute(item.id, actor.user.id, muted);
+      record(muted ? 'muted' : 'unmuted');
+    },
+
     /** 042: the `event` DTO field for each event row, as `user` sees it. */
     async states(
       user: CurrentUser,
@@ -289,7 +343,7 @@ export function createEventCardsService(deps: {
         events.mutedBy(user.id, ids),
         members.categoryVisibilities(ids),
       ]);
-      const contexts = new Map<string, Awaited<ReturnType<RemindersRepo['deckContext']>>>();
+      const contexts = new Map<string, DeckContext>();
       for (const deckId of new Set(eventRows.map((r) => r.deckId))) {
         contexts.set(deckId, await members.deckContext(deckId));
       }
@@ -298,15 +352,7 @@ export function createEventCardsService(deps: {
         const span = spans.get(row.id);
         const ctx = contexts.get(row.deckId);
         if (!span || !ctx) continue;
-        const payload = storedEventPayload(row);
-        const audience = eventAudience({
-          mode: payload.notify.audience.mode,
-          userIds: payload.notify.audience.userIds,
-          createdBy: row.createdBy,
-          members: ctx.members,
-          categoryVisibilities: visibilities.get(row.id) ?? [],
-          personalDeck: ctx.personal,
-        });
+        const audience = audienceFor(row, ctx, visibilities.get(row.id) ?? []);
         result.set(row.id, {
           startsAt: span.startsAt.toISOString(),
           endsAt: span.endsAt.toISOString(),

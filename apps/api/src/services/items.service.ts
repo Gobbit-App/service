@@ -735,6 +735,12 @@ export function createItemsService(deps: {
       return toDto(user, item, role);
     },
 
+    /** D364: mute (or unmute) an event's notifications for the caller; 404 when unreadable. */
+    async setMute(actor: Actor, itemId: string, muted: boolean): Promise<void> {
+      const { item } = await loadItem(actor.user, itemId, 'item.read');
+      await eventCards.mute(actor, item, muted);
+    },
+
     /** D165: hide the active flag for everyone until the status changes; 404 without one. */
     async dismissLinkFlag(actor: Actor, itemId: string): Promise<void> {
       const { item } = await loadLink(actor.user, itemId);

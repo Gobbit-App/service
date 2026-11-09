@@ -12,7 +12,8 @@ const deck = (role: Deck['role'], isDefault = false) => ({ slug: 'family', role,
 
 function answer({ admin = false } = {}) {
   respond.mockImplementation((request) => {
-    if (request === 'GET /me/pending') return Promise.resolve({ items: [], upcoming: [] });
+    if (request === 'GET /me/pending')
+      return Promise.resolve({ items: [], upcoming: [], comingUp: [] });
     if (request.startsWith('GET /me')) {
       return Promise.resolve({
         user: { id: 'u1', email: 'me@example.com' },

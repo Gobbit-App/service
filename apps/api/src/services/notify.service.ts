@@ -1,6 +1,6 @@
 import { reminderDismissers, type DismisserMember } from '@gobbit/shared/reminders';
 import type { CategoryVisibility } from '@gobbit/shared';
-import type { DecisionLogger } from '../lib/decision-event';
+import type { DecisionFields, DecisionLogger } from '../lib/decision-event';
 import type { Mailer } from '../mail/mailer';
 import type { PushSender } from '../push/push-sender';
 import type {
@@ -11,20 +11,22 @@ import type {
   PlanningRepo,
 } from '../repositories/notifications.repo';
 import type { PushSubscriptionsRepo } from '../repositories/push-subscriptions.repo';
+import { planDueEvents } from './notify.event-plan';
 import type { NotifyDecisions } from './notify.events';
-import {
-  reminderEmail,
-  reminderPushMessage,
-  retryDelayMs,
-  type ReminderNotice,
-} from './notify.message';
+import { retryDelayMs } from './notify.message';
+import { eventOutgoing, reminderOutgoing, type Outgoing } from './notify.outgoing';
 import { storedPayload } from './reminders.service';
 
 export interface NotifyLimits {
   batch: number;
   maxAttempts: number;
   retryBaseSeconds: number;
+  /** D360: how late an event notice may still go out (`EVENT_NOTICE_GRACE_MINUTES`). */
+  graceMinutes: number;
 }
+
+type DeliveryFields = DecisionFields<NotifyDecisions, 'reminder.notify'>;
+type DeliveryOutcome = Pick<DeliveryFields, 'outcome' | 'reason'> & { attempts?: number };
 
 /** Deliveries sent at the same time within one tick (push services answer in ~100 ms). */
 const SEND_CONCURRENCY = 5;
@@ -149,19 +151,33 @@ export function createNotifyService(deps: {
     return { reminders: result.reminders, deliveries: result.deliveries };
   }
 
-  async function send(
-    d: ClaimedDelivery,
-    notice: ReminderNotice,
-    email: string,
-  ): Promise<DeliveryEnd> {
+  /** D360: event notices, in one transaction; records are written after it commits. */
+  async function planEvents(jobId: string): Promise<{ notices: number; eventDeliveries: number }> {
+    const result = await notifications.planInTransaction(async (repo) => {
+      const planned = await planDueEvents(repo, {
+        batch: limits.batch,
+        graceMinutes: limits.graceMinutes,
+        pushOn: push !== null,
+      });
+      const deliveries = await repo.insertDeliveries(planned.rows);
+      return { notices: planned.notices, deliveries, records: planned.records };
+    });
+    for (const r of result.records) decisions.record('event.notice', { ...r, jobId });
+    return { notices: result.notices, eventDeliveries: result.deliveries };
+  }
+
+  /** D361: delivery outcomes are logged under their kind's event name. */
+  function recordDelivery(kind: ClaimedDelivery['kind'], fields: DeliveryFields): void {
+    if (kind === 'event') decisions.record('event.notice', fields);
+    else decisions.record('reminder.notify', fields);
+  }
+
+  async function send(d: ClaimedDelivery, out: Outgoing): Promise<DeliveryEnd> {
     if (d.channel === 'email') {
+      if (!out.email) return { status: 'failed', code: 'no_email' };
       try {
         // D295: Resend drops a second send with the same key if a retry overlaps a slow success.
-        await mailer.send({
-          ...reminderEmail(notice, deps.appUrl),
-          to: email,
-          idempotencyKey: `reminder-${d.id}`,
-        });
+        await mailer.send({ ...out.email, to: out.to, idempotencyKey: `reminder-${d.id}` });
         return { status: 'sent' };
       } catch {
         return { status: 'retry', code: 'mail_error' };
@@ -170,7 +186,7 @@ export function createNotifyService(deps: {
     if (!push) return { status: 'failed', code: 'push_disabled' };
     const device = await pushSubscriptions.findById(d.target);
     if (!device) return { status: 'gone', code: 'device_missing' };
-    const outcome = await push.send(device, reminderPushMessage(notice));
+    const outcome = await push.send(device, out.push);
     if (outcome.kind === 'sent') {
       await pushSubscriptions.touch(device.id);
       return { status: 'sent' };
@@ -188,47 +204,34 @@ export function createNotifyService(deps: {
       itemId: d.itemId,
       userId: d.userId,
       channel: d.channel,
+      ...(d.noticeId ? { noticeId: d.noticeId } : {}),
     };
-    const ctx = await notifications.context(d);
-    if (!ctx?.stillDue) {
+    const record = (fields: DeliveryOutcome) => recordDelivery(d.kind, { ...subject, ...fields });
+    const out =
+      d.kind === 'event'
+        ? await eventOutgoing(notifications, d)
+        : await reminderOutgoing(notifications, d, deps.appUrl);
+    if (!out) {
       await notifications.finish(d.id, { status: 'failed', error: 'stale' });
-      decisions.record('reminder.notify', { ...subject, outcome: 'dropped', reason: 'stale' });
+      record({ outcome: 'dropped', reason: 'stale' });
       return;
     }
-    const timeZone = typeof ctx.payload.timeZone === 'string' ? ctx.payload.timeZone : 'UTC';
-    const notice = {
-      itemId: d.itemId,
-      title: ctx.title,
-      deckName: ctx.deckName,
-      deadline: d.deadline,
-      timeZone,
-    };
-    const end = await send(d, notice, ctx.email);
+    const end = await send(d, out);
 
     if (end.status === 'sent') {
       await notifications.finish(d.id, { status: 'sent', error: null });
-      decisions.record('reminder.notify', { ...subject, outcome: 'sent', attempts: d.attempts });
+      record({ outcome: 'sent', attempts: d.attempts });
     } else if (end.status === 'retry' && d.attempts < limits.maxAttempts) {
       const retryAt = new Date(now().getTime() + retryDelayMs(d.attempts, limits.retryBaseSeconds));
       await notifications.finish(d.id, { status: 'pending', error: end.code, retryAt });
-      decisions.record('reminder.notify', {
-        ...subject,
-        outcome: 'retried',
-        reason: end.code,
-        attempts: d.attempts,
-      });
+      record({ outcome: 'retried', reason: end.code, attempts: d.attempts });
     } else if (end.status === 'gone') {
       await notifications.finish(d.id, { status: 'gone', error: end.code });
-      decisions.record('reminder.notify', { ...subject, outcome: 'gone', reason: end.code });
+      record({ outcome: 'gone', reason: end.code });
     } else {
       const reason = end.status === 'retry' ? 'max_attempts' : end.code;
       await notifications.finish(d.id, { status: 'failed', error: end.code });
-      decisions.record('reminder.notify', {
-        ...subject,
-        outcome: 'failed',
-        reason,
-        attempts: d.attempts,
-      });
+      record({ outcome: 'failed', reason, attempts: d.attempts });
     }
   }
 
@@ -236,12 +239,13 @@ export function createNotifyService(deps: {
   async function deliver(jobId: string): Promise<{ attempted: number; interrupted: number }> {
     const cut = await notifications.markInterrupted();
     for (const d of cut) {
-      decisions.record('reminder.notify', {
+      recordDelivery(d.kind, {
         jobId,
         deliveryId: d.id,
         itemId: d.itemId,
         userId: d.userId,
         channel: d.channel,
+        ...(d.noticeId ? { noticeId: d.noticeId } : {}),
         outcome: 'interrupted',
       });
     }
@@ -259,12 +263,14 @@ export function createNotifyService(deps: {
 
   return {
     plan,
+    planEvents,
     deliver,
-    /** One sweep tick: plan what became due, then send what is due. */
+    /** One sweep tick (D360): plan reminders, then event notices, then send what is due. */
     async tick(jobId: string) {
       const planned = await plan(jobId);
+      const events = await planEvents(jobId);
       const delivered = await deliver(jobId);
-      return { ...planned, ...delivered };
+      return { ...planned, ...events, ...delivered };
     },
   };
 }

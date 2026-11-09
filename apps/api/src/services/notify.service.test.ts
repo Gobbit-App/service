@@ -17,6 +17,8 @@ function delivery(over: Partial<ClaimedDelivery> = {}): ClaimedDelivery {
     channel: 'email',
     target: 'email',
     attempts: 1,
+    kind: 'reminder',
+    noticeId: null,
     ...over,
   };
 }
@@ -27,7 +29,10 @@ function setup(opts: {
   mailFails?: boolean;
   pushOutcome?: PushOutcome;
   device?: boolean;
-  interrupted?: Array<Pick<ClaimedDelivery, 'id' | 'itemId' | 'userId' | 'channel'>>;
+  interrupted?: Array<
+    Pick<ClaimedDelivery, 'id' | 'itemId' | 'userId' | 'channel' | 'kind' | 'noticeId'>
+  >;
+  event?: Partial<{ live: boolean; muted: boolean; audience: 'everyone' | 'nobody' }>;
 }) {
   const notifications = {
     markInterrupted: vi.fn().mockResolvedValue(opts.interrupted ?? []),
@@ -40,6 +45,30 @@ function setup(opts: {
       email: 'member@example.test',
       stillDue: opts.stillDue ?? true,
     }),
+    eventFacts: vi.fn().mockResolvedValue({
+      title: 'Choir',
+      deckId: 'deck-1',
+      deckName: 'Family',
+      createdBy: 'u0',
+      payload: {
+        location: 'Town hall',
+        notify: { before: [], audience: { mode: opts.event?.audience ?? 'everyone', userIds: [] } },
+      },
+      email: 'member@example.test',
+      startsAt: new Date('2026-11-03T12:00:00Z'),
+      allDay: false,
+      timeZone: 'UTC',
+      live: opts.event?.live ?? true,
+      muted: opts.event?.muted ?? false,
+    }),
+    deckContext: vi.fn().mockResolvedValue({
+      personal: false,
+      members: [
+        { userId: 'u0', role: 'owner' },
+        { userId: 'u1', role: 'reader' },
+      ],
+    }),
+    categoryVisibilities: vi.fn().mockResolvedValue(new Map([['item-1', ['shared']]])),
     finish: vi.fn().mockResolvedValue(undefined),
   };
   const pushSubscriptions = {
@@ -71,7 +100,7 @@ function setup(opts: {
     pushSubscriptions,
     mailer,
     push,
-    limits: { batch: 10, maxAttempts: 3, retryBaseSeconds: 60 },
+    limits: { batch: 10, maxAttempts: 3, retryBaseSeconds: 60, graceMinutes: 30 },
     appUrl: 'https://app.example.test',
     decisions,
     now: () => NOW,
@@ -172,7 +201,16 @@ describe('notify deliver (D295)', () => {
   it('records sends cut off mid-flight as interrupted and never resends them', async () => {
     const t = setup({
       claimed: delivery(),
-      interrupted: [{ id: 'd0', itemId: 'item-1', userId: 'u1', channel: 'email' }],
+      interrupted: [
+        {
+          id: 'd0',
+          itemId: 'item-1',
+          userId: 'u1',
+          channel: 'email',
+          kind: 'reminder',
+          noticeId: null,
+        },
+      ],
     });
     const result = await t.service.deliver('job-1');
     expect(result).toEqual({ attempted: 1, interrupted: 1 });
@@ -182,11 +220,73 @@ describe('notify deliver (D295)', () => {
     );
   });
 
+  it('records an interrupted event send under event.notice', async () => {
+    const t = setup({
+      claimed: delivery(),
+      interrupted: [
+        {
+          id: 'd0',
+          itemId: 'item-1',
+          userId: 'u1',
+          channel: 'push',
+          kind: 'event',
+          noticeId: 'n1',
+        },
+      ],
+    });
+    await t.service.deliver('job-1');
+    expect(t.decisions.record).toHaveBeenCalledWith(
+      'event.notice',
+      expect.objectContaining({ deliveryId: 'd0', noticeId: 'n1', outcome: 'interrupted' }),
+    );
+  });
+
   it('skips a delivery another tick already claimed', async () => {
     const t = setup({ claimed: delivery() });
     t.notifications.claim.mockResolvedValueOnce(null);
     await t.service.deliver('job-1');
     expect(t.mailer.send).not.toHaveBeenCalled();
     expect(t.decisions.record).not.toHaveBeenCalled();
+  });
+});
+
+describe('notify deliver, event notices (D361)', () => {
+  const eventPush = () =>
+    delivery({ channel: 'push', target: 'sub-1', kind: 'event', noticeId: 'n1' });
+
+  it('pushes the event message and records event.notice', async () => {
+    const t = setup({ claimed: eventPush() });
+    await t.service.deliver('job-1');
+    expect(t.push.send).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sub-1' }),
+      expect.objectContaining({ title: 'Choir', url: '/i/item-1', tag: 'event:item-1:n1' }),
+    );
+    expect(t.notifications.context).not.toHaveBeenCalled();
+    expect(t.decisions.record).toHaveBeenCalledWith(
+      'event.notice',
+      expect.objectContaining({ outcome: 'sent', noticeId: 'n1', deliveryId: 'd1' }),
+    );
+  });
+
+  it.each([
+    ['no longer live (moved, archived, unpublished)', { live: false }],
+    ['muted since planning', { muted: true }],
+    ['no longer in the audience', { audience: 'nobody' as const }],
+  ])('drops a notice %s without sending', async (_, event) => {
+    const t = setup({ claimed: eventPush(), event });
+    await t.service.deliver('job-1');
+    expect(t.push.send).not.toHaveBeenCalled();
+    expect(t.notifications.finish).toHaveBeenCalledWith('d1', { status: 'failed', error: 'stale' });
+    expect(t.decisions.record).toHaveBeenCalledWith(
+      'event.notice',
+      expect.objectContaining({ outcome: 'dropped', reason: 'stale' }),
+    );
+  });
+
+  it('never emails an event notice', async () => {
+    const t = setup({ claimed: delivery({ kind: 'event', noticeId: 'n1' }) });
+    await t.service.deliver('job-1');
+    expect(t.mailer.send).not.toHaveBeenCalled();
+    expect(outcomes(t.decisions)).toEqual(['failed:no_email']);
   });
 });

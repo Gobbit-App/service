@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { DeckRow, ItemRow } from '@gobbit/db';
 import { PENDING_LIST_MAX, type DismisserMember } from '@gobbit/shared/reminders';
 import type { MemberRole } from '@gobbit/shared';
+import type { ComingUpRow } from '../repositories/event-cards.repo';
 import type { PendingReminderRow } from '../repositories/reminders.repo';
 import { createPendingService, PENDING_SCAN_MAX } from './pending.service';
 import type { CurrentUser } from '../types';
@@ -43,9 +44,47 @@ function reminder(
   return { item, deadline };
 }
 
+function event(
+  o: { startsIn?: number; mode?: 'everyone' | 'me' | 'nobody'; location?: string } = {},
+): ComingUpRow {
+  seq += 1;
+  const startsAt = new Date(NOW.getTime() + (o.startsIn ?? 2) * HOUR_MS);
+  const item = {
+    id: `00000000-0000-4000-8000-${String(seq).padStart(12, '0')}`,
+    deckId: DECK,
+    type: 'event',
+    title: `E${seq}`,
+    createdBy: OWNER,
+    payload: {
+      allDay: false,
+      start: startsAt.toISOString(),
+      timeZone: 'UTC',
+      ...(o.location ? { location: o.location } : {}),
+      notify: {
+        before: [{ amount: 1, unit: 'days' }],
+        audience: { mode: o.mode ?? 'everyone', userIds: [] },
+      },
+    },
+  } as unknown as ItemRow;
+  return {
+    item,
+    span: {
+      startsAt,
+      endsAt: new Date(startsAt.getTime() + HOUR_MS),
+      allDay: false,
+      timeZone: 'UTC',
+    },
+  };
+}
+
 function service(
   rows: PendingReminderRow[],
-  o: { role?: MemberRole; members?: DismisserMember[] } = {},
+  o: {
+    role?: MemberRole;
+    members?: DismisserMember[];
+    events?: ComingUpRow[];
+    muted?: string[];
+  } = {},
 ) {
   const role = o.role ?? 'editor';
   const members = o.members ?? [
@@ -59,6 +98,10 @@ function service(
       pendingIn,
       deckContext: async () => ({ personal: false, members }),
       categoryVisibilities: async (ids) => new Map(ids.map((id) => [id, ['shared' as const]])),
+    },
+    events: {
+      comingUpIn: async () => o.events ?? [],
+      mutedBy: async () => new Set(o.muted ?? []),
     },
     now: () => NOW,
   });
@@ -105,11 +148,50 @@ describe('createPendingService (037, D298)', () => {
 
   it('answers empty without loading deck context when nothing is pending', async () => {
     const { svc } = service([]);
-    expect(await svc.list(USER)).toEqual({ items: [], upcoming: [] });
+    expect(await svc.list(USER)).toEqual({ items: [], upcoming: [], comingUp: [] });
   });
 
   it('caps each section', async () => {
     const rows = Array.from({ length: PENDING_LIST_MAX + 5 }, () => reminder());
     expect((await service(rows).svc.list(USER)).items).toHaveLength(PENDING_LIST_MAX);
+  });
+});
+
+describe('Coming up (042, D366)', () => {
+  it('lists events notifying the member, in the order the query returns (soonest start)', async () => {
+    const first = event({ startsIn: 1, location: 'Town hall' });
+    const second = event({ startsIn: 5 });
+    const list = await service([], { events: [first, second] }).svc.list(USER);
+    expect(list.items).toEqual([]);
+    expect(list.comingUp.map((e) => e.title)).toEqual([first.item.title, second.item.title]);
+    expect(list.comingUp[0]).toEqual({
+      kind: 'event',
+      itemId: first.item.id,
+      title: first.item.title,
+      deck: { slug: 'home', name: 'Home' },
+      startsAt: first.span.startsAt.toISOString(),
+      endsAt: first.span.endsAt.toISOString(),
+      allDay: false,
+      timeZone: 'UTC',
+      location: 'Town hall',
+    });
+    expect(list.comingUp[1]!.location).toBeNull();
+  });
+
+  it('leaves out events the member muted or is not notified about', async () => {
+    const muted = event();
+    const onlyCreator = event({ mode: 'me' });
+    const nobody = event({ mode: 'nobody' });
+    const kept = event();
+    const list = await service([], {
+      events: [muted, onlyCreator, nobody, kept],
+      muted: [muted.item.id],
+    }).svc.list(USER);
+    expect(list.comingUp.map((e) => e.itemId)).toEqual([kept.item.id]);
+  });
+
+  it('caps the section', async () => {
+    const events = Array.from({ length: PENDING_LIST_MAX + 3 }, () => event());
+    expect((await service([], { events }).svc.list(USER)).comingUp).toHaveLength(PENDING_LIST_MAX);
   });
 });

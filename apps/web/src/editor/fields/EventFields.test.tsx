@@ -142,6 +142,37 @@ describe('EventFields (042)', () => {
     expect(within(people).queryByLabelText('Pam')).not.toBeInTheDocument();
   });
 
+  it('counts all-day notify times in days only, with no unit picker', () => {
+    setup(
+      {},
+      {
+        ...base,
+        allDay: true,
+        start: '2026-12-03',
+        notify: { ...base.notify, before: [{ amount: '2', unit: 'days' }] },
+      },
+    );
+    expect(screen.queryByLabelText('Notify time 1 unit')).not.toBeInTheDocument();
+    expect(screen.getByText('days before')).toBeInTheDocument();
+  });
+
+  it('says which notify times are already past and won’t be sent', () => {
+    const soon = new Date(Date.now() + 30 * 60_000);
+    const local = new Date(soon.getTime() - soon.getTimezoneOffset() * 60_000)
+      .toISOString()
+      .slice(0, 16);
+    setup(
+      {},
+      {
+        ...base,
+        start: local,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        notify: { ...base.notify, before: [{ amount: '1', unit: 'days' }] },
+      },
+    );
+    expect(screen.getByText(/Already past, won.t be sent: /)).toHaveAttribute('role', 'status');
+  });
+
   it('offers no audience choice on a personal deck', () => {
     setup({ deck: makeDeck({ kind: 'personal' }) });
     expect(screen.queryByText('Who is notified')).not.toBeInTheDocument();
