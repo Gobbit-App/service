@@ -4,6 +4,7 @@ import {
   LINK_IMAGE_RULES_VERSION,
   type LinkPayload,
 } from '@gobbit/shared';
+import { isLinkBearing } from '@gobbit/shared/links';
 import { lineSink } from '../lib/logger';
 import { LINK_SNAPSHOT_SEND_OPTIONS, QUEUES, type JobSender, type LinkSnapshotJob } from './queues';
 
@@ -20,14 +21,16 @@ export const noopLinkSnapshotQueue: LinkSnapshotQueue = {
 };
 
 /**
- * D163/D350: a live link card needs the job when its preview is still empty (the job fills it
+ * D163/D350: a live link card (or an event with a link, 042) needs the job when its preview is still empty (the job fills it
  * first), when its preview image has no stored copy yet, or when it has text but no image and was
  * not yet looked at under the current image rules. A member's "Remove photo" is final.
  */
 export function needsLinkSnapshot(row: Omit<SnapshotCandidate, 'id'>): boolean {
-  if (row.type !== 'link' || row.deletedAt) return false;
+  if (!isLinkBearing(row.type) || row.deletedAt) return false;
   if (row.status !== 'proposed' && row.status !== 'published') return false;
-  const preview = (row.payload as LinkPayload).preview;
+  const payload = row.payload as Partial<LinkPayload>;
+  if (typeof payload.url !== 'string') return false;
+  const preview = payload.preview;
   if (!preview?.title && !preview?.description && !preview?.image) return true;
   if (preview.publicId) return false;
   if (preview.image) return true;

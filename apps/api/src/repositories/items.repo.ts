@@ -25,6 +25,7 @@ import {
   type DbTx,
   type ItemRow,
 } from '@gobbit/db';
+import { LINK_BEARING_TYPES } from '@gobbit/shared/links';
 import type {
   CursorData,
   Entities,
@@ -58,6 +59,15 @@ interface ItemListFilters {
 
 /** Writes another module adds to an items transaction. */
 export type InTx = (tx: DbTx) => Promise<void>;
+
+/** Runs each defined hook in order inside the same transaction; undefined when there are none. */
+export function composeInTx(...hooks: (InTx | undefined)[]): InTx | undefined {
+  const defined = hooks.filter((h): h is InTx => h !== undefined);
+  if (defined.length === 0) return undefined;
+  return async (tx) => {
+    for (const hook of defined) await hook(tx);
+  };
+}
 
 export function createItemsRepo(db: DbExecutor) {
   function filterConditions(q: ItemListFilters): SQL[] {
@@ -133,6 +143,8 @@ export function createItemsRepo(db: DbExecutor) {
       categoryIds: string[],
       /** D187: logged in the same transaction. */
       events: readonly ItemEventInput[] = [],
+      /** Extra work in the same transaction (e.g. D359 event notices). */
+      inTx?: (tx: DbTx, item: ItemRow) => Promise<void>,
     ): Promise<ItemRow> {
       return await db.transaction(async (tx) => {
         const [item] = await tx.insert(items).values(v).returning(itemColumns);
@@ -148,6 +160,7 @@ export function createItemsRepo(db: DbExecutor) {
         }
 
         await insertItemEvents(tx, item, events);
+        if (inTx) await inTx(tx, item);
         return item;
       });
     },
@@ -254,7 +267,7 @@ export function createItemsRepo(db: DbExecutor) {
     ): Promise<(ItemRow & { flaggedAt: Date })[]> {
       const conditions = [
         ...filterConditions(q),
-        eq(items.type, 'link'),
+        inArray(items.type, [...LINK_BEARING_TYPES]),
         eq(items.status, 'published'),
         isNull(items.deletedAt),
         inArray(linkChecks.status, ['dead', 'changed']),
@@ -305,9 +318,10 @@ export function createItemsRepo(db: DbExecutor) {
         .from(items)
         .where(
           and(
-            eq(items.type, 'link'),
+            inArray(items.type, [...LINK_BEARING_TYPES]),
             inArray(items.status, ['proposed', 'published']),
             isNull(items.deletedAt),
+            sql`${items.payload} ->> 'url' is not null`,
             sql`${items.payload} #>> '{preview,image}' is not null`,
             sql`${items.payload} #>> '{preview,publicId}' is null`,
             afterId ? sql`${items.id} > ${afterId}` : undefined,

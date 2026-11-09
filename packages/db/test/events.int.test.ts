@@ -59,7 +59,7 @@ describe('event cards (D358)', () => {
     const payload = {
       ...p,
       notify: { before: [], audience: { mode: 'everyone', userIds: [] } },
-    } as Parameters<typeof eventSpan>[0] & object;
+    } as unknown as Parameters<typeof eventSpan>[0];
     const deckId = await mkDeck();
     const id = await insertEvent(deckId, payload);
     const row = await span(id);

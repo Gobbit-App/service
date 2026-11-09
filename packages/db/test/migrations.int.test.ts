@@ -140,3 +140,35 @@ describe('migrations: reversibility', () => {
     expect(parseInt(countRes2.rows[0].count as string, 10)).toBe(journal.entries.length);
   });
 });
+
+describe('migrations: 0022_events down (042, T008)', () => {
+  const ctx = withTestDb({ template: false });
+
+  it('refuses to roll back while an event card exists, then rolls back once it is gone', async () => {
+    await runMigrations(ctx.pool);
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0022_events');
+    const account = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
+    const deck = await ctx.pool.query(
+      `INSERT INTO decks (kind, slug, name, owner_account_id, is_public)
+       VALUES ('shared', 'ev-down', 'D', $1, false) RETURNING id`,
+      [account.rows[0].id],
+    );
+    const payload = {
+      allDay: true,
+      start: '2030-06-01',
+      timeZone: 'UTC',
+      notify: { before: [], audience: { mode: 'everyone', userIds: [] } },
+    };
+    await ctx.pool.query(
+      `INSERT INTO items (deck_id, type, status, title, payload)
+       VALUES ($1, 'event', 'proposed', 'Fair', $2::jsonb)`,
+      [deck.rows[0].id, JSON.stringify(payload)],
+    );
+
+    await expect(rollbackLatest(ctx.pool)).rejects.toThrow(/still has event cards/);
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0022_events');
+
+    await ctx.pool.query(`DELETE FROM items WHERE type::text = 'event'`);
+    expect(await rollbackLatest(ctx.pool)).toBe('0022_events');
+  });
+});

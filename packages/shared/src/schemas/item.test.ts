@@ -136,11 +136,9 @@ describe('itemCreateSchema', () => {
 });
 
 describe('itemPatchSchema', () => {
-  it("{type:'link'} rejected (strict, D12)", () => {
-    const result = itemPatchSchema.safeParse({
-      type: 'link',
-    });
-    expect(result.success).toBe(false);
+  it("042: {type:'link'} parses so the service answers 409 type-change-not-supported", () => {
+    expect(itemPatchSchema.safeParse({ type: 'link' }).success).toBe(true);
+    expect(itemPatchSchema.safeParse({ type: 'nope' }).success).toBe(false);
   });
 
   it('{} rejected', () => {

@@ -1,10 +1,19 @@
 import type { CategoryRow, ItemRow } from '@gobbit/db';
 import type { LinkPayload, PublicItem } from '@gobbit/shared';
+import { eventPublicPayload } from '@gobbit/shared/event-constants';
 
 export type PublicCategorySource = Pick<CategoryRow, 'slug' | 'name' | 'visibility'>;
 
-/** D350: the image markers are bookkeeping for the snapshot job, never shown to strangers. */
+/**
+ * D350: the image markers are bookkeeping for the snapshot job, never shown to strangers.
+ * D365: an event's `notify` (times and audience) never leaves the deck.
+ */
 function publicPayload(row: ItemRow): ItemRow['payload'] {
+  if (row.type === 'event') {
+    return eventPublicPayload(
+      row.payload as unknown as Parameters<typeof eventPublicPayload>[0],
+    ) as unknown as ItemRow['payload'];
+  }
   if (row.type !== 'link') return row.payload;
   const payload = row.payload as LinkPayload;
   if (!payload.preview) return payload;

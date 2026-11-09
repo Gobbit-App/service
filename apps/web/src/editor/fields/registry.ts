@@ -24,4 +24,6 @@ export const fieldsByType: Record<ItemType, ComponentType<FieldsProps<any>>> = {
   table: TableFields,
   calc: CalcFields,
   reminder: ReminderFields,
+  // 042: no event fields yet; the stored payload is kept as is.
+  event: TextFields,
 };

@@ -8373,7 +8373,8 @@
                 "image",
                 "table",
                 "calc",
-                "reminder"
+                "reminder",
+                "event"
               ]
             },
             "required": false,
@@ -8452,7 +8453,8 @@
                               "image",
                               "table",
                               "calc",
-                              "reminder"
+                              "reminder",
+                              "event"
                             ]
                           },
                           "status": {
@@ -8671,6 +8673,78 @@
                               "hidden",
                               "canDismiss",
                               "canChangeDismissers"
+                            ]
+                          },
+                          "event": {
+                            "type": "object",
+                            "properties": {
+                              "startsAt": {
+                                "type": "string"
+                              },
+                              "endsAt": {
+                                "type": "string"
+                              },
+                              "allDay": {
+                                "type": "boolean"
+                              },
+                              "timeZone": {
+                                "type": "string"
+                              },
+                              "notices": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "amount": {
+                                      "type": "integer"
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "minutes",
+                                        "hours",
+                                        "days"
+                                      ]
+                                    },
+                                    "fireAt": {
+                                      "type": "string"
+                                    },
+                                    "state": {
+                                      "type": "string",
+                                      "enum": [
+                                        "pending",
+                                        "planned",
+                                        "skipped"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "unit",
+                                    "fireAt",
+                                    "state"
+                                  ]
+                                }
+                              },
+                              "muted": {
+                                "type": "boolean"
+                              },
+                              "inAudience": {
+                                "type": "boolean"
+                              },
+                              "canEditNotify": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "startsAt",
+                              "endsAt",
+                              "allDay",
+                              "timeZone",
+                              "notices",
+                              "muted",
+                              "inAudience",
+                              "canEditNotify"
                             ]
                           }
                         },
@@ -9973,6 +10047,275 @@
                       "title"
                     ],
                     "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "event"
+                        ]
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "allDay": {
+                            "type": "boolean"
+                          },
+                          "start": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                          },
+                          "end": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                          },
+                          "timeZone": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          },
+                          "location": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "preview": {
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "image": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "publicId": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 1
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "imageLookup": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "imageRemoved": {
+                                "type": "boolean",
+                                "enum": [
+                                  true
+                                ]
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "notify": {
+                            "type": "object",
+                            "properties": {
+                              "before": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "amount": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "minutes",
+                                        "hours",
+                                        "days"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "unit"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "maxItems": 3
+                              },
+                              "audience": {
+                                "type": "object",
+                                "properties": {
+                                  "mode": {
+                                    "type": "string",
+                                    "enum": [
+                                      "everyone",
+                                      "people",
+                                      "me",
+                                      "nobody"
+                                    ]
+                                  },
+                                  "userIds": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "maxItems": 50,
+                                    "default": []
+                                  }
+                                },
+                                "required": [
+                                  "mode"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "default": {
+                              "before": [
+                                {
+                                  "amount": 1,
+                                  "unit": "days"
+                                }
+                              ],
+                              "audience": {
+                                "mode": "everyone",
+                                "userIds": []
+                              }
+                            },
+                            "required": [
+                              "before",
+                              "audience"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "allDay",
+                          "start",
+                          "timeZone"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "body": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Card body, max 600 characters (Unicode code points)"
+                      },
+                      "categoryIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      },
+                      "sourceUrl": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "proposed",
+                          "published",
+                          "archived"
+                        ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "payload",
+                      "title"
+                    ],
+                    "additionalProperties": false
                   }
                 ],
                 "description": "Item create body; payload max 8192 bytes (UTF-8)"
@@ -10004,7 +10347,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -10223,6 +10567,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -10774,7 +11190,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -10993,6 +11410,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -11288,6 +11777,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "text",
+                      "link",
+                      "image",
+                      "table",
+                      "calc",
+                      "reminder",
+                      "event"
+                    ]
+                  },
                   "title": {
                     "type": "string",
                     "minLength": 1
@@ -11421,7 +11922,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -11640,6 +12142,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -12457,7 +13031,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -12676,6 +13251,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -13069,7 +13716,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -13288,6 +13936,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -13703,7 +14423,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -13922,6 +14643,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -14473,7 +15266,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -14692,6 +15486,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -15164,7 +16030,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -15383,6 +16250,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -16529,7 +17468,8 @@
                                   "image",
                                   "table",
                                   "calc",
-                                  "reminder"
+                                  "reminder",
+                                  "event"
                                 ]
                               },
                               "status": {
@@ -16748,6 +17688,78 @@
                                   "hidden",
                                   "canDismiss",
                                   "canChangeDismissers"
+                                ]
+                              },
+                              "event": {
+                                "type": "object",
+                                "properties": {
+                                  "startsAt": {
+                                    "type": "string"
+                                  },
+                                  "endsAt": {
+                                    "type": "string"
+                                  },
+                                  "allDay": {
+                                    "type": "boolean"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "notices": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "integer"
+                                        },
+                                        "unit": {
+                                          "type": "string",
+                                          "enum": [
+                                            "minutes",
+                                            "hours",
+                                            "days"
+                                          ]
+                                        },
+                                        "fireAt": {
+                                          "type": "string"
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "enum": [
+                                            "pending",
+                                            "planned",
+                                            "skipped"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "unit",
+                                        "fireAt",
+                                        "state"
+                                      ]
+                                    }
+                                  },
+                                  "muted": {
+                                    "type": "boolean"
+                                  },
+                                  "inAudience": {
+                                    "type": "boolean"
+                                  },
+                                  "canEditNotify": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "startsAt",
+                                  "endsAt",
+                                  "allDay",
+                                  "timeZone",
+                                  "notices",
+                                  "muted",
+                                  "inAudience",
+                                  "canEditNotify"
                                 ]
                               }
                             },
@@ -22035,7 +23047,8 @@
                                   "image",
                                   "table",
                                   "calc",
-                                  "reminder"
+                                  "reminder",
+                                  "event"
                                 ]
                               },
                               "status": {
@@ -22254,6 +23267,78 @@
                                   "hidden",
                                   "canDismiss",
                                   "canChangeDismissers"
+                                ]
+                              },
+                              "event": {
+                                "type": "object",
+                                "properties": {
+                                  "startsAt": {
+                                    "type": "string"
+                                  },
+                                  "endsAt": {
+                                    "type": "string"
+                                  },
+                                  "allDay": {
+                                    "type": "boolean"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "notices": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "integer"
+                                        },
+                                        "unit": {
+                                          "type": "string",
+                                          "enum": [
+                                            "minutes",
+                                            "hours",
+                                            "days"
+                                          ]
+                                        },
+                                        "fireAt": {
+                                          "type": "string"
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "enum": [
+                                            "pending",
+                                            "planned",
+                                            "skipped"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "unit",
+                                        "fireAt",
+                                        "state"
+                                      ]
+                                    }
+                                  },
+                                  "muted": {
+                                    "type": "boolean"
+                                  },
+                                  "inAudience": {
+                                    "type": "boolean"
+                                  },
+                                  "canEditNotify": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "startsAt",
+                                  "endsAt",
+                                  "allDay",
+                                  "timeZone",
+                                  "notices",
+                                  "muted",
+                                  "inAudience",
+                                  "canEditNotify"
                                 ]
                               }
                             },
@@ -22444,7 +23529,8 @@
                                   "image",
                                   "table",
                                   "calc",
-                                  "reminder"
+                                  "reminder",
+                                  "event"
                                 ]
                               },
                               "status": {
@@ -22663,6 +23749,78 @@
                                   "hidden",
                                   "canDismiss",
                                   "canChangeDismissers"
+                                ]
+                              },
+                              "event": {
+                                "type": "object",
+                                "properties": {
+                                  "startsAt": {
+                                    "type": "string"
+                                  },
+                                  "endsAt": {
+                                    "type": "string"
+                                  },
+                                  "allDay": {
+                                    "type": "boolean"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "notices": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "integer"
+                                        },
+                                        "unit": {
+                                          "type": "string",
+                                          "enum": [
+                                            "minutes",
+                                            "hours",
+                                            "days"
+                                          ]
+                                        },
+                                        "fireAt": {
+                                          "type": "string"
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "enum": [
+                                            "pending",
+                                            "planned",
+                                            "skipped"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "unit",
+                                        "fireAt",
+                                        "state"
+                                      ]
+                                    }
+                                  },
+                                  "muted": {
+                                    "type": "boolean"
+                                  },
+                                  "inAudience": {
+                                    "type": "boolean"
+                                  },
+                                  "canEditNotify": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "startsAt",
+                                  "endsAt",
+                                  "allDay",
+                                  "timeZone",
+                                  "notices",
+                                  "muted",
+                                  "inAudience",
+                                  "canEditNotify"
                                 ]
                               }
                             },
@@ -23382,7 +24540,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -23601,6 +24760,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -27801,7 +29032,8 @@
                               "image",
                               "table",
                               "calc",
-                              "reminder"
+                              "reminder",
+                              "event"
                             ]
                           },
                           "title": {
@@ -28238,7 +29470,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "title": {
@@ -28683,7 +29916,8 @@
                                   "image",
                                   "table",
                                   "calc",
-                                  "reminder"
+                                  "reminder",
+                                  "event"
                                 ]
                               },
                               "title": {

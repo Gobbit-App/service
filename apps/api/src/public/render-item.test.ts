@@ -139,4 +139,39 @@ describe('renderItem (D177)', () => {
     expect(out).toContain('still here');
     expect(out).not.toContain('<table');
   });
+
+  it('event: absolute when in its zone, location and link; no notify settings', () => {
+    const out = render(
+      item({
+        type: 'event',
+        title: 'Fair',
+        payload: {
+          allDay: false,
+          start: '2030-06-01T18:00:00+03:00',
+          timeZone: 'Asia/Jerusalem',
+          location: 'Town <Hall>',
+          url: 'https://example.com/fair',
+          preview: { title: 'Summer fair' },
+        },
+      }),
+    );
+    expect(out).toContain('class="event-when"');
+    expect(out).toContain('18:00');
+    expect(out).toContain('(Asia/Jerusalem)');
+    expect(out).toContain('Town &lt;Hall&gt;');
+    expect(out).toContain(`rel="${USER_LINK_REL}"`);
+    expect(out).toContain('Summer fair');
+  });
+
+  it('event without a link or location renders the when only', () => {
+    const out = render(
+      item({
+        type: 'event',
+        payload: { allDay: true, start: '2030-06-01', timeZone: 'UTC' },
+      }),
+    );
+    expect(out).toContain('class="event-when"');
+    expect(out).not.toContain('<a ');
+    expect(out).not.toContain('event-location');
+  });
 });

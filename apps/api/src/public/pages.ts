@@ -13,6 +13,7 @@ import { excerpt, OG_DESCRIPTION_MAX } from '../share/excerpt';
 import { withPage, type AnalyticsConfig } from './analytics';
 import { h, type Html } from './html';
 import { consentOpenButton } from './consent-banner';
+import { eventSummary } from './event-summary';
 import { layout, SITE_NAME, type PageHead } from './layout';
 import { openInAppPath, publicPath, publicUrl, type PageTarget } from './public-url';
 import { renderItem, type ImageUrlFor } from './render-item';
@@ -66,7 +67,7 @@ function searchForm(deck: DeckRef, q = ''): Html {
 function cardList(deck: DeckRef, items: PublicItem[], empty = 'No cards yet.'): Html {
   if (items.length === 0) return h`<p class="muted">${empty}</p>`;
   return h`<ul class="cards">${items.map((item) => {
-    const summary = excerpt(item.body, LIST_EXCERPT_MAX);
+    const summary = eventSummary(item) ?? excerpt(item.body, LIST_EXCERPT_MAX);
     return h`<li><a class="title" href="${publicPath({ kind: 'item', slug: deck.slug, itemId: item.id })}">${item.title}</a>
 ${summary ? h`<div class="muted">${summary}</div>` : ''}</li>`;
   })}</ul>`;
@@ -149,7 +150,7 @@ export function itemPage(ctx: PageContext, { deck, item, ogImage }: ItemPageMode
   const target: PageTarget = { kind: 'item', slug: deck.slug, itemId: item.id };
   const head: PageHead = {
     title: item.title,
-    description: excerpt(item.body, OG_DESCRIPTION_MAX) || item.title,
+    description: eventSummary(item) ?? (excerpt(item.body, OG_DESCRIPTION_MAX) || item.title),
     canonical: publicUrl(ctx.origin, target),
     image: ogImage,
     ogType: 'article',

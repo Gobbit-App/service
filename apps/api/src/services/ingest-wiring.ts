@@ -27,6 +27,7 @@ import { createCategoriesRepo } from '../repositories/categories.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
 import type { UsersRepo } from '../repositories/users.repo';
 import type { AssetsRepo } from '../repositories/assets.repo';
+import type { EventNoticeHook } from './event-cards.service';
 import type { ImageReferenceCheck } from './image-reference';
 
 /** Overrides for tests; production builds everything from env (D93). */
@@ -61,6 +62,7 @@ export function buildIngestServices(deps: {
   embedder: Embedder | null;
   assets: Pick<AssetsRepo, 'upsert'>;
   imageReference: ImageReferenceCheck;
+  noticeHook?: EventNoticeHook;
   now: () => Date;
   /** D180: published proposals change public pages. */
   purgeDeck?: (deckId: string) => void;
@@ -138,6 +140,7 @@ export function buildIngestServices(deps: {
       embedQueue: deps.embedQueue,
       linkSnapshotQueue: deps.linkSnapshotQueue,
       imageReference: deps.imageReference,
+      noticeHook: deps.noticeHook,
       now,
       purgeDeck: deps.purgeDeck,
     }),

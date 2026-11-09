@@ -2902,7 +2902,7 @@ export interface paths {
                 query?: {
                     category?: string;
                     status?: "proposed" | "published" | "archived" | "deleted" | "upcoming";
-                    type?: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                    type?: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                     favorite?: "true";
                     flag?: "link";
                     cursor?: string;
@@ -2929,7 +2929,7 @@ export interface paths {
                                 /** Format: uuid */
                                 deckId: string;
                                 /** @enum {string} */
-                                type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                                type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                                 /** @enum {string} */
                                 status: "proposed" | "published" | "archived";
                                 title: string;
@@ -2973,6 +2973,23 @@ export interface paths {
                                     hidden: boolean;
                                     canDismiss: boolean;
                                     canChangeDismissers: boolean;
+                                };
+                                event?: {
+                                    startsAt: string;
+                                    endsAt: string;
+                                    allDay: boolean;
+                                    timeZone: string;
+                                    notices: {
+                                        amount: number;
+                                        /** @enum {string} */
+                                        unit: "minutes" | "hours" | "days";
+                                        fireAt: string;
+                                        /** @enum {string} */
+                                        state: "pending" | "planned" | "skipped";
+                                    }[];
+                                    muted: boolean;
+                                    inAudience: boolean;
+                                    canEditNotify: boolean;
                                 };
                             }[];
                             nextCursor: string | null;
@@ -3273,6 +3290,77 @@ export interface paths {
                             people?: string[];
                             urls?: string[];
                         };
+                    } | {
+                        /** @enum {string} */
+                        type: "event";
+                        payload: {
+                            allDay: boolean;
+                            start: string;
+                            end?: string;
+                            timeZone: string;
+                            location?: string;
+                            /** Format: uri */
+                            url?: string;
+                            preview?: {
+                                title?: string;
+                                description?: string;
+                                /** Format: uri */
+                                image?: string;
+                                publicId?: string | null;
+                                width?: number;
+                                height?: number;
+                                imageLookup?: number;
+                                /** @enum {boolean} */
+                                imageRemoved?: true;
+                            };
+                            /**
+                             * @default {
+                             *       "before": [
+                             *         {
+                             *           "amount": 1,
+                             *           "unit": "days"
+                             *         }
+                             *       ],
+                             *       "audience": {
+                             *         "mode": "everyone",
+                             *         "userIds": []
+                             *       }
+                             *     }
+                             */
+                            notify?: {
+                                before: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                }[];
+                                audience: {
+                                    /** @enum {string} */
+                                    mode: "everyone" | "people" | "me" | "nobody";
+                                    /** @default [] */
+                                    userIds?: string[];
+                                };
+                            };
+                        };
+                        title: string;
+                        /**
+                         * @description Card body, max 600 characters (Unicode code points)
+                         * @default
+                         */
+                        body?: string;
+                        categoryIds?: string[];
+                        /** Format: uri */
+                        sourceUrl?: string;
+                        /** @enum {string} */
+                        status?: "proposed" | "published" | "archived";
+                        entities?: {
+                            phones?: string[];
+                            addresses?: string[];
+                            hours?: string[];
+                            prices?: string[];
+                            dates?: string[];
+                            people?: string[];
+                            urls?: string[];
+                        };
                     };
                 };
             };
@@ -3289,7 +3377,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -3333,6 +3421,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -3507,7 +3612,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -3551,6 +3656,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -3725,6 +3847,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @enum {string} */
+                        type?: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                         title?: string;
                         /** @description Card body, max 600 characters (Unicode code points) */
                         body?: string;
@@ -3761,7 +3885,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -3805,6 +3929,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -3977,7 +4118,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4021,6 +4162,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -4153,7 +4311,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4197,6 +4355,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -4336,7 +4511,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4380,6 +4555,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -4556,7 +4748,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4600,6 +4792,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -4754,7 +4963,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4798,6 +5007,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -5199,7 +5425,7 @@ export interface paths {
                                     /** Format: uuid */
                                     deckId: string;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                                     /** @enum {string} */
                                     status: "proposed" | "published" | "archived";
                                     title: string;
@@ -5243,6 +5469,23 @@ export interface paths {
                                         hidden: boolean;
                                         canDismiss: boolean;
                                         canChangeDismissers: boolean;
+                                    };
+                                    event?: {
+                                        startsAt: string;
+                                        endsAt: string;
+                                        allDay: boolean;
+                                        timeZone: string;
+                                        notices: {
+                                            amount: number;
+                                            /** @enum {string} */
+                                            unit: "minutes" | "hours" | "days";
+                                            fireAt: string;
+                                            /** @enum {string} */
+                                            state: "pending" | "planned" | "skipped";
+                                        }[];
+                                        muted: boolean;
+                                        inAudience: boolean;
+                                        canEditNotify: boolean;
                                     };
                                 };
                                 /** @enum {string} */
@@ -6946,7 +7189,7 @@ export interface paths {
                                     /** Format: uuid */
                                     deckId: string;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                                     /** @enum {string} */
                                     status: "proposed" | "published" | "archived";
                                     title: string;
@@ -6990,6 +7233,23 @@ export interface paths {
                                         hidden: boolean;
                                         canDismiss: boolean;
                                         canChangeDismissers: boolean;
+                                    };
+                                    event?: {
+                                        startsAt: string;
+                                        endsAt: string;
+                                        allDay: boolean;
+                                        timeZone: string;
+                                        notices: {
+                                            amount: number;
+                                            /** @enum {string} */
+                                            unit: "minutes" | "hours" | "days";
+                                            fireAt: string;
+                                            /** @enum {string} */
+                                            state: "pending" | "planned" | "skipped";
+                                        }[];
+                                        muted: boolean;
+                                        inAudience: boolean;
+                                        canEditNotify: boolean;
                                     };
                                 };
                                 job: {
@@ -7026,7 +7286,7 @@ export interface paths {
                                     /** Format: uuid */
                                     deckId: string;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                                     /** @enum {string} */
                                     status: "proposed" | "published" | "archived";
                                     title: string;
@@ -7070,6 +7330,23 @@ export interface paths {
                                         hidden: boolean;
                                         canDismiss: boolean;
                                         canChangeDismissers: boolean;
+                                    };
+                                    event?: {
+                                        startsAt: string;
+                                        endsAt: string;
+                                        allDay: boolean;
+                                        timeZone: string;
+                                        notices: {
+                                            amount: number;
+                                            /** @enum {string} */
+                                            unit: "minutes" | "hours" | "days";
+                                            fireAt: string;
+                                            /** @enum {string} */
+                                            state: "pending" | "planned" | "skipped";
+                                        }[];
+                                        muted: boolean;
+                                        inAudience: boolean;
+                                        canEditNotify: boolean;
                                     };
                                 } | null;
                             }[];
@@ -7323,7 +7600,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -7367,6 +7644,23 @@ export interface paths {
                                 hidden: boolean;
                                 canDismiss: boolean;
                                 canChangeDismissers: boolean;
+                            };
+                            event?: {
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                notices: {
+                                    amount: number;
+                                    /** @enum {string} */
+                                    unit: "minutes" | "hours" | "days";
+                                    fireAt: string;
+                                    /** @enum {string} */
+                                    state: "pending" | "planned" | "skipped";
+                                }[];
+                                muted: boolean;
+                                inAudience: boolean;
+                                canEditNotify: boolean;
                             };
                         };
                     };
@@ -8709,7 +9003,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                                type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                                 title: string;
                                 body: string;
                                 payload: {
@@ -8843,7 +9137,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                             title: string;
                             body: string;
                             payload: {
@@ -8982,7 +9276,7 @@ export interface paths {
                                     /** Format: uuid */
                                     id: string;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder";
+                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                                     title: string;
                                     body: string;
                                     payload: {

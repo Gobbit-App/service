@@ -15,6 +15,7 @@ import {
   type ShareMeta,
 } from './share-page';
 import { lineSink } from '../lib/logger';
+import { eventSummary } from '../public/event-summary';
 import { publicUrl } from '../public/public-url';
 import { analyticsTag, withPage, type AnalyticsConfig } from '../public/analytics';
 import { PUBLIC_SCREENS } from '@gobbit/shared/analytics';
@@ -153,7 +154,7 @@ export function createShareService(deps: ShareServiceDeps) {
     }
     const content: OgContent = {
       title: item.title,
-      excerpt: excerpt(item.body, OG_IMAGE_EXCERPT_MAX),
+      excerpt: eventSummary(item) ?? excerpt(item.body, OG_IMAGE_EXCERPT_MAX),
       categoryName: publicCategoryName(record),
       deckName: deck.name,
       imagePublicId,
@@ -174,7 +175,8 @@ export function createShareService(deps: ShareServiceDeps) {
     return {
       ...frame(item.id),
       title: item.title,
-      description: excerpt(item.body, OG_DESCRIPTION_MAX) || item.title,
+      // 042: an event's preview reads "date · location"; the audience never appears.
+      description: eventSummary(item) ?? (excerpt(item.body, OG_DESCRIPTION_MAX) || item.title),
       imageUrl,
       imageWidth: OG_WIDTH,
       imageHeight: OG_HEIGHT,

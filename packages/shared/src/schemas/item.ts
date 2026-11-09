@@ -130,6 +130,8 @@ export type ItemCreateInput = z.input<typeof itemCreateSchema>;
 
 export const itemPatchSchema = z
   .object({
+    /** D12: the type never changes; a different one is refused with 409 type-change-not-supported. */
+    type: z.enum(itemTypes).optional(),
     title: itemTitleSchema.optional(),
     body: itemBodySchema.optional(),
     payload: z.record(z.string(), z.unknown()).optional(),
