@@ -28,9 +28,37 @@ export const terminalIngestJobStatuses: readonly IngestJobStatus[] = [
 export const ingestChannels = ['pwa', 'shortcut', 'email', 'paste', 'mcp', 'import'] as const;
 export type IngestChannel = (typeof ingestChannels)[number];
 
-/** D100: the agent proposes only these card types. */
-export const ingestCardTypes = ['text', 'link', 'image'] as const;
+/** D100: the agent proposes only these card types; D370 adds events. */
+export const ingestCardTypes = ['text', 'link', 'image', 'event'] as const;
 export type IngestCardType = (typeof ingestCardTypes)[number];
+
+/**
+ * Direct proposals (MCP, bulk import) stay text, link or image: they never reach the event rules
+ * (start range, personal-deck audience) the extraction applies (D377).
+ */
+export const directCardTypes = [
+  'text',
+  'link',
+  'image',
+] as const satisfies readonly IngestCardType[];
+export type DirectCardType = (typeof directCardTypes)[number];
+
+/** D375/D378: where a proposed event's date came from and which zone read it. */
+export const eventDateSources = ['structured', 'model'] as const;
+export type EventDateSource = (typeof eventDateSources)[number];
+export const eventZoneSources = ['request', 'fallback'] as const;
+export type EventZoneSource = (typeof eventZoneSources)[number];
+
+/** D378: why a share recognised as an event became a link or text card instead. */
+export const eventExtractFallbackReasons = [
+  'no_start',
+  'start_out_of_range',
+  'end_before_start',
+  'several_events',
+  'invalid_zone',
+  'invalid_event',
+] as const;
+export type EventExtractFallbackReason = (typeof eventExtractFallbackReasons)[number];
 
 export const dedupActions = ['new', 'possible_duplicate', 'update'] as const;
 export type DedupAction = (typeof dedupActions)[number];
@@ -139,6 +167,8 @@ export const autoPublishOutcomes = [
   'held_duplicate',
   'held_duplicate_check_failed',
   'held_publish_failed',
+  /** D375: an event whose date or zone wasn't confirmed by structured data and the sharer. */
+  'held_event_unverified',
 ] as const;
 export type AutoPublishOutcome = (typeof autoPublishOutcomes)[number];
 

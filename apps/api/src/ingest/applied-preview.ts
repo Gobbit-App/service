@@ -1,4 +1,5 @@
 import type { ItemCreate, LinkPayload } from '@gobbit/shared';
+import { isLinkBearing } from '@gobbit/shared/links';
 import { needsHonestLockedText, type ValidateContext } from '../ai/extract-validate';
 import {
   PREVIEW_EVENTS,
@@ -17,10 +18,10 @@ export interface AppliedPreview {
 /**
  * D352: what the validated link card's preview was built from: the member's shared image or the
  * page's, the caption or the page description, and whether the code wrote an honest title (D348).
- * Null for cards that are not links.
+ * Null for cards that carry no link (D372: link and event cards share the preview shape).
  */
 export function appliedPreview(item: ItemCreate, ctx: ValidateContext): AppliedPreview | null {
-  if (item.type !== 'link') return null;
+  if (!isLinkBearing(item.type)) return null;
   const preview = (item.payload as LinkPayload).preview;
   const image: AppliedImage =
     ctx.imagePublicId && preview?.publicId === ctx.imagePublicId

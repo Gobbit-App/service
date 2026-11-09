@@ -28,9 +28,24 @@ describe('shareSummarySchema (D196)', () => {
       failureCode: null,
       canRetry: false,
       autoPublish: 'published',
-      item: { id: '33333333-3333-4333-8333-333333333333', title: 'Dentist', deleted: false },
+      item: {
+        id: '33333333-3333-4333-8333-333333333333',
+        title: 'Dentist',
+        deleted: false,
+        type: 'text',
+        event: null,
+      },
     };
     expect(shareSummarySchema.safeParse(published).success).toBe(true);
+    const event = {
+      ...published,
+      item: {
+        ...published.item,
+        type: 'event',
+        event: { startsAt: '2026-12-03T18:00:00.000Z', allDay: false, timeZone: 'Europe/London' },
+      },
+    };
+    expect(shareSummarySchema.safeParse(event).success).toBe(true);
   });
 
   it('rejects the stored error text (strict)', () => {

@@ -1,4 +1,5 @@
 import { INGEST_IMAGE_MIMES, INGEST_MAX_IMAGES } from '@gobbit/shared/ingest-constants';
+import { deviceTimeZone } from '../lib/device-time-zone';
 
 /** D98: how long a shared payload waits in IndexedDB for the confirm screen. */
 export const SHARE_TTL_MS = 60 * 60 * 1000;
@@ -79,11 +80,15 @@ export type IngestDraft = {
   channel: 'pwa' | 'paste';
 };
 
-/** The multipart body for `POST /ingest`; empty fields are left out. */
-export function buildIngestForm(draft: IngestDraft): FormData {
+/**
+ * The multipart body for `POST /ingest`; empty fields are left out. D374: the device's zone reads
+ * the times of a shared event that carry no offset.
+ */
+export function buildIngestForm(draft: IngestDraft, timeZone = deviceTimeZone()): FormData {
   const form = new FormData();
   form.set('deckId', draft.deckId);
   form.set('channel', draft.channel);
+  form.set('timeZone', timeZone);
   for (const name of ['title', 'text', 'url'] as const) {
     const value = draft[name].trim();
     if (value) form.set(name, value);

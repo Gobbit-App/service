@@ -39,7 +39,7 @@ describe('ShareSent (D108, D198)', () => {
     answer({
       state: 'published',
       autoPublish: 'published',
-      item: { id: ITEM_ID, title: 'Gate code', deleted: false },
+      item: { id: ITEM_ID, title: 'Gate code', deleted: false, type: 'text', event: null },
     });
     const { navigate } = renderSent();
     fireEvent.click(await screen.findByRole('link', { name: 'Open card' }));
@@ -51,7 +51,7 @@ describe('ShareSent (D108, D198)', () => {
     answer({
       state: 'in_review',
       autoPublish: 'held_duplicate',
-      item: { id: ITEM_ID, title: 'Gate code', deleted: false },
+      item: { id: ITEM_ID, title: 'Gate code', deleted: false, type: 'text', event: null },
     });
     renderSent();
     expect(await screen.findByText('Waiting for review — possible duplicate')).toBeInTheDocument();

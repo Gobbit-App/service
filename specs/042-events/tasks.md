@@ -112,11 +112,11 @@ Browse and search with date, location and preview; public JSON shows content but
 
 **Independent Test**: event in 2 h with "1 hour before": every reader with push gets exactly one push.
 
-- [ ] T050 [P] [US3] [int] apps/api/test/events-notify.int.test.ts: plan → deliver at most once per user × device × notice across reruns; grace skip `started`; proposed/archived/deleted send nothing (`stale`); moved start notifies again; no email; no device → `no_channel`; no VAPID → `push_off`; audience ∩ read access
-- [ ] T051 [P] [US3] [unit] apps/api/src/services/notify.message.test.ts: event push = title, `<deck> · <start in event zone>[ · <location>]`, tag `event:<itemId>:<noticeId>`, url `/i/<itemId>`, no body
-- [ ] T052 [US3] apps/api/src/repositories/notifications.repo.ts: claims/deliveries carry `kind`/`notice_id`; events.repo.ts: claim due pending notices (`FOR UPDATE SKIP LOCKED`, batch `REMINDER_SWEEP_BATCH`)
-- [ ] T053 [US3] apps/api/src/services/notify.service.ts: `planEvents` (grace → `skipped/started`; stale lifecycle → skip; fan out to `eventAudience` − mutes − ineligible into push deliveries) and per-kind context/`stillDue` in deliver; apps/api/src/jobs/reminder-sweep.ts tick order reminders → events → deliver
-- [ ] T054 [US3] apps/api/src/services/notify.message.ts event message; notify.events.ts `event.notice` decision events
+- [x] T050 [P] [US3] [int] apps/api/test/events-notify.int.test.ts: plan → deliver at most once per user × device × notice across reruns; grace skip `started`; proposed/archived/deleted send nothing (`stale`); moved start notifies again; no email; no device → `no_channel`; no VAPID → `push_off`; audience ∩ read access
+- [x] T051 [P] [US3] [unit] apps/api/src/services/notify.message.test.ts: event push = title, `<deck> · <start in event zone>[ · <location>]`, tag `event:<itemId>:<noticeId>`, url `/i/<itemId>`, no body
+- [x] T052 [US3] apps/api/src/repositories/notifications.repo.ts: claims/deliveries carry `kind`/`notice_id`; events.repo.ts: claim due pending notices (`FOR UPDATE SKIP LOCKED`, batch `REMINDER_SWEEP_BATCH`)
+- [x] T053 [US3] apps/api/src/services/notify.service.ts: `planEvents` (grace → `skipped/started`; stale lifecycle → skip; fan out to `eventAudience` − mutes − ineligible into push deliveries) and per-kind context/`stillDue` in deliver; apps/api/src/jobs/reminder-sweep.ts tick order reminders → events → deliver
+- [x] T054 [US3] apps/api/src/services/notify.message.ts event message; notify.events.ts `event.notice` decision events
 
 **Checkpoint**: US3 complete.
 
@@ -158,29 +158,29 @@ Browse and search with date, location and preview; public JSON shows content but
 
 ## Phase 8: User Story 7 - Share an event page (P2) — PR4
 
-- [ ] T090 [P] [US7] [unit] apps/api/src/fetch/structured-event.test.ts against HTML fixtures in fetch/__fixtures__ (event pages → one event, articles → none, several events → count > 1)
-- [ ] T091 [P] [US7] [unit] packages/shared/src/events-cards/parse.test.ts `parseEventStart`; apps/api/src/ai/extract-validate.test.ts event overrides/fallbacks; apps/api/src/ingest/dedup-verdict.test.ts `eventDedupVerdict`; auto-publish.test.ts `held_event_unverified`
-- [ ] T092 [P] [US7] [int] apps/api/test/ingest-events.int.test.ts (fake extractor): event page → Event proposal, article → link, zone fallback + hold, auto-publish only when verified, dedup by link + date
-- [ ] T093 [US7] packages/shared: `ingestCardTypes` + `event`, `POST /ingest` `timeZone`, `autoPublishOutcomes` + `held_event_unverified`, `ShareSummary.item.type`/`event`
-- [ ] T094 [US7] apps/api/src/fetch/structured-event.ts + extract-page.ts/page-images.ts shared JSON-LD walk → `normalized.structuredEvent(Count)`
-- [ ] T095 [US7] apps/api/src/ai/extract-prompt.ts / extract-validate.ts / fake-extractor.ts: event type, `<event_data>`, structured overrides, fallbacks; ingest/normalize-raw.ts + run-extraction.ts zone resolution, `extraction.event`
-- [ ] T096 [US7] apps/api/src/ingest/auto-publish.ts hold; run-dedup.ts + dedup.repo.ts event-only candidates; jobs/ingest.ts `ingest.event_extract`
-- [ ] T097 [US7] Web: share target + paste box send `timeZone`; share result "Proposed as an event: …" + held note; review queue renders event proposals via EventCard; docs/shortcut/README.md Time zone field
-- [ ] T098 [US7] [e2e:full] events.spec.ts: event proposal (API fixture) in review queue → edit notify → publish
+- [x] T090 [P] [US7] [unit] apps/api/src/fetch/structured-event.test.ts against HTML fixtures in fetch/__fixtures__ (event pages → one event, articles → none, several events → count > 1)
+- [x] T091 [P] [US7] [unit] packages/shared/src/events-cards/parse.test.ts `parseEventStart`; apps/api/src/ai/extract-validate.test.ts event overrides/fallbacks; apps/api/src/ingest/dedup-verdict.test.ts `eventDedupVerdict`; auto-publish.test.ts `held_event_unverified`
+- [x] T092 [P] [US7] [int] apps/api/test/ingest-events.int.test.ts (fake extractor): event page → Event proposal, article → link, zone fallback + hold, auto-publish only when verified, dedup by link + date
+- [x] T093 [US7] packages/shared: `ingestCardTypes` + `event`, `POST /ingest` `timeZone`, `autoPublishOutcomes` + `held_event_unverified`, `ShareSummary.item.type`/`event`
+- [x] T094 [US7] apps/api/src/fetch/structured-event.ts + extract-page.ts/page-images.ts shared JSON-LD walk → `normalized.structuredEvent(Count)`
+- [x] T095 [US7] apps/api/src/ai/extract-prompt.ts / extract-validate.ts / fake-extractor.ts: event type, `<event_data>`, structured overrides, fallbacks; ingest/normalize-raw.ts + run-extraction.ts zone resolution, `extraction.event`
+- [x] T096 [US7] apps/api/src/ingest/auto-publish.ts hold; run-dedup.ts + dedup.repo.ts event-only candidates; jobs/ingest.ts `ingest.event_extract`
+- [x] T097 [US7] Web: share target + paste box send `timeZone`; share result "Proposed as an event: …" + held note; review queue renders event proposals via EventCard; docs/shortcut/README.md Time zone field
+- [x] T098 [US7] [e2e:full] events.spec.ts: event proposal (API fixture) in review queue → edit notify → publish
 
 ---
 
 ## Phase 9: Close-out
 
-- [ ] T100 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` (+ `pnpm budget`)
+- [x] T100 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` (+ `pnpm budget`)
 - [ ] T101 e2e: `@smoke` passes in CI; `@full` events spec passes with `pnpm test:e2e --grep @full`
-- [ ] T102 [P] docs/design/events.md (new): detail, runbook for `EVENT_*`, "Deviations" from implementation-notes.md
-- [ ] T103 [P] docs/adr.md ADR-076; docs/architecture.md one line + index row (< 250 lines)
-- [ ] T104 [P] README.md env table + infra Compose `x-api-env`; CHANGELOG.md entry (not Action required)
-- [ ] T105 [P] CLAUDE.md: event type / ingestion convention line if changed
-- [ ] T106 PLAN.md: link 042-events
-- [ ] T107 quickstart.md validation
-- [ ] T108 `/speckit-converge` until Converged
+- [x] T102 [P] docs/design/events.md (new): detail, runbook for `EVENT_*`, "Deviations" from implementation-notes.md
+- [x] T103 [P] docs/adr.md ADR-076; docs/architecture.md one line + index row (< 250 lines)
+- [x] T104 [P] README.md env table + infra Compose `x-api-env`; CHANGELOG.md entry (not Action required)
+- [x] T105 [P] CLAUDE.md: event type / ingestion convention line if changed
+- [x] T106 PLAN.md: link 042-events
+- [x] T107 quickstart.md validation
+- [x] T108 `/speckit-converge` until Converged
 
 ---
 

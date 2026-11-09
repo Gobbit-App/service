@@ -6735,6 +6735,7 @@ export interface paths {
                         title?: string;
                         /** @enum {string} */
                         channel?: "pwa" | "paste";
+                        timeZone?: string;
                     };
                     "multipart/form-data": components["schemas"]["IngestMultipart"];
                 };
@@ -6940,6 +6941,7 @@ export interface paths {
                                     bytes: number;
                                     mime: string;
                                 }[];
+                                timeZone?: string;
                             } | null;
                             normalized: {
                                 text: string;
@@ -6959,6 +6961,14 @@ export interface paths {
                                     /** Format: uri */
                                     image?: string;
                                 };
+                                structuredEvent?: {
+                                    name: string | null;
+                                    startDate: string;
+                                    endDate: string | null;
+                                    location: string | null;
+                                    url: string | null;
+                                };
+                                structuredEventCount?: number;
                                 imageCandidates?: string[];
                                 fetch: {
                                     status: number | null;
@@ -6973,13 +6983,19 @@ export interface paths {
                                 model: string;
                                 escalated: boolean;
                                 /** @enum {string} */
-                                type: "text" | "link" | "image";
+                                type: "text" | "link" | "image" | "event";
                                 confidence: number;
                                 language: string;
                                 categoryIds: string[];
                                 newCategory: string | null;
                                 /** @enum {string} */
                                 fallback?: "preview";
+                                event?: {
+                                    /** @enum {string} */
+                                    dateSource: "structured" | "model";
+                                    /** @enum {string} */
+                                    zoneSource: "request" | "fallback";
+                                };
                             } | null;
                             dedup: {
                                 /** @enum {string} */
@@ -6996,7 +7012,7 @@ export interface paths {
                             /** @enum {string|null} */
                             failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
                             /** @enum {string|null} */
-                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | "held_event_unverified" | null;
                             attempts: number;
                             retryCount: number;
                             costUsd: number;
@@ -7478,7 +7494,7 @@ export interface paths {
                                     newCategory: string | null;
                                     sourcePreview: string | null;
                                     /** @enum {string|null} */
-                                    autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                                    autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | "held_event_unverified" | null;
                                     /** @enum {string|null} */
                                     extractionFallback: "preview" | null;
                                 } | null;
@@ -8313,12 +8329,19 @@ export interface paths {
                                 failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
                                 canRetry: boolean;
                                 /** @enum {string|null} */
-                                autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                                autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | "held_event_unverified" | null;
                                 item: {
                                     /** Format: uuid */
                                     id: string;
                                     title: string;
                                     deleted: boolean;
+                                    /** @enum {string} */
+                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                    event: {
+                                        startsAt: string;
+                                        allDay: boolean;
+                                        timeZone: string;
+                                    } | null;
                                 } | null;
                                 reviewedBy: {
                                     displayName: string;
@@ -8447,12 +8470,19 @@ export interface paths {
                             failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
                             canRetry: boolean;
                             /** @enum {string|null} */
-                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | "held_event_unverified" | null;
                             item: {
                                 /** Format: uuid */
                                 id: string;
                                 title: string;
                                 deleted: boolean;
+                                /** @enum {string} */
+                                type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                event: {
+                                    startsAt: string;
+                                    allDay: boolean;
+                                    timeZone: string;
+                                } | null;
                             } | null;
                             reviewedBy: {
                                 displayName: string;
@@ -8560,12 +8590,19 @@ export interface paths {
                             failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
                             canRetry: boolean;
                             /** @enum {string|null} */
-                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | null;
+                            autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | "held_event_unverified" | null;
                             item: {
                                 /** Format: uuid */
                                 id: string;
                                 title: string;
                                 deleted: boolean;
+                                /** @enum {string} */
+                                type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                event: {
+                                    startsAt: string;
+                                    allDay: boolean;
+                                    timeZone: string;
+                                } | null;
                             } | null;
                             reviewedBy: {
                                 displayName: string;
@@ -10077,6 +10114,7 @@ export interface components {
             url?: string;
             title?: string;
             channel?: string;
+            timeZone?: string;
             files?: string | string[];
         };
     };

@@ -5,7 +5,8 @@ import { relativeTime } from '../lib/relative-time';
 import { deckHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { failureCopy, pasteAgainCopy } from './failure-copy';
-import { heldReason, shareTitle, stateLabel } from './share-state';
+import { deviceTimeZone } from '../lib/device-time-zone';
+import { heldReason, shareEventLine, shareTitle, stateLabel } from './share-state';
 import { useRetryShare } from './shares-queries';
 import { Button } from '../ui/buttons/Button';
 import { ButtonLink } from '../ui/buttons/ButtonLink';
@@ -96,6 +97,7 @@ export function ShareDetail({
   online,
   now,
   canRestore = false,
+  viewerTimeZone = deviceTimeZone(),
 }: {
   share: ShareSummary;
   deckSlug: string;
@@ -103,10 +105,16 @@ export function ShareDetail({
   now: Date;
   /** The viewer may undelete cards (`item.delete`). */
   canRestore?: boolean;
+  /** Tests pin the zone. */
+  viewerTimeZone?: string;
 }): ReactElement | null {
+  const eventLine = shareEventLine(share, viewerTimeZone, now);
   const card = (label: string) =>
     share.item ? (
-      <CardLink item={share.item} label={label} deckSlug={deckSlug} canRestore={canRestore} />
+      <>
+        {eventLine && <p className="share-row__hint">{eventLine}</p>}
+        <CardLink item={share.item} label={label} deckSlug={deckSlug} canRestore={canRestore} />
+      </>
     ) : null;
   switch (share.state) {
     case 'processing':

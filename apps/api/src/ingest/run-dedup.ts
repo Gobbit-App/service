@@ -1,9 +1,9 @@
-import type { DedupVerdict } from '@gobbit/shared';
+import type { DedupVerdict, ItemType } from '@gobbit/shared';
 import type { Embedder } from '../ai/embedder';
 import { recordLlmCall, type LlmCallSink } from '../ai/llm-calls';
 import type { DedupRepo } from '../repositories/dedup.repo';
 import type { EmbeddingsRepo } from '../repositories/embeddings.repo';
-import { dedupVerdict, normalizeSourceUrl } from './dedup-verdict';
+import { dedupVerdict, eventDedupVerdict, normalizeSourceUrl } from './dedup-verdict';
 import { lineSink } from '../lib/logger';
 
 export interface RunDedupDeps {
@@ -20,6 +20,10 @@ export interface RunDedupInput {
   deckId: string;
   title: string;
   sourceUrl: string | null;
+  /** D376: an event is compared with same-day events only; omitted → not an event. */
+  type?: ItemType;
+  /** The event's own link (`payload.url`). */
+  url?: string | null;
   jobId: string;
   userId: string;
   signal?: AbortSignal;
@@ -40,6 +44,14 @@ function hostOf(url: string): string | null {
  */
 export async function runDedup(deps: RunDedupDeps, input: RunDedupInput): Promise<DedupVerdict> {
   const log = deps.log ?? lineSink('ingest', 'warn');
+
+  if (input.type === 'event') {
+    const candidates = await deps.dedup.eventCandidates(input.deckId, input.itemId);
+    return eventDedupVerdict(
+      { title: input.title, url: input.url ?? null, sourceUrl: input.sourceUrl },
+      candidates,
+    );
+  }
 
   async function sourceUrlMatch(): Promise<string | null> {
     const host = input.sourceUrl ? hostOf(input.sourceUrl) : null;

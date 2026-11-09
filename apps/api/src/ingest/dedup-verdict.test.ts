@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { dedupVerdict, normalizeSourceUrl, type DedupSignals } from './dedup-verdict';
+import {
+  dedupVerdict,
+  eventDedupVerdict,
+  normalizeSourceUrl,
+  type DedupSignals,
+} from './dedup-verdict';
 
 const base: DedupSignals = {
   sourceUrlMatch: null,
@@ -127,5 +132,63 @@ describe('normalizeSourceUrl (Phase 5)', () => {
 
   it('invalid URL is returned trimmed', () => {
     expect(normalizeSourceUrl('not a url ')).toBe('not a url');
+  });
+});
+
+describe('eventDedupVerdict (D376)', () => {
+  const proposal = {
+    title: 'Winter Fair!',
+    url: 'https://fair.example/events/winter?utm_source=x',
+    sourceUrl: 'https://news.example/fair',
+  };
+  const other = { id: 'o', title: 'Choir concert', url: null, sourceUrl: null };
+
+  it('is new with no same-day events', () => {
+    expect(eventDedupVerdict(proposal, [])).toEqual({
+      action: 'new',
+      itemId: null,
+      similarity: null,
+      via: 'none',
+    });
+  });
+
+  it("matches the event link against a candidate's source URL, never as an update", () => {
+    const candidates = [
+      other,
+      {
+        id: 'e1',
+        title: 'Something else',
+        url: null,
+        sourceUrl: 'https://fair.example/events/winter',
+      },
+    ];
+    expect(eventDedupVerdict(proposal, candidates)).toEqual({
+      action: 'possible_duplicate',
+      itemId: 'e1',
+      similarity: null,
+      via: 'source_url',
+    });
+  });
+
+  it('matches the same title across case, spacing and punctuation', () => {
+    const candidates = [other, { id: 'e2', title: '  winter   fair ', url: null, sourceUrl: null }];
+    expect(eventDedupVerdict({ ...proposal, url: null, sourceUrl: null }, candidates)).toEqual({
+      action: 'possible_duplicate',
+      itemId: 'e2',
+      similarity: null,
+      via: 'title',
+    });
+  });
+
+  it('prefers a link match over a title match', () => {
+    const candidates = [
+      { id: 't', title: 'Winter fair', url: null, sourceUrl: null },
+      { id: 'u', title: 'Other', url: 'https://news.example/fair', sourceUrl: null },
+    ];
+    expect(eventDedupVerdict(proposal, candidates).itemId).toBe('u');
+  });
+
+  it('is new when nothing on that day shares its link or title', () => {
+    expect(eventDedupVerdict(proposal, [other]).action).toBe('new');
   });
 });

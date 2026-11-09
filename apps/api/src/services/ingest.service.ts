@@ -6,7 +6,7 @@ import {
   INGEST_IMAGE_MAX_BYTES,
   INGEST_IMAGE_MIMES,
   INGEST_MAX_IMAGES,
-  ingestCardTypes,
+  directCardTypes,
   itemCreateSchema,
   NAME_MAX,
   RESERVED_DECK_SLUG,
@@ -114,8 +114,8 @@ const ITEM_NOT_FOUND = 'Item not found';
 /** Card limits and the D100 card types for a direct draft; returns the parsed card. */
 export function parseDirectDraft(draft: DirectDraft): ItemCreate {
   const { newCategory: _newCategory, ...card } = draft;
-  if (!(ingestCardTypes as readonly string[]).includes(card.type)) {
-    throw badRequest(`Proposals can only be ${ingestCardTypes.join(', ')} cards`);
+  if (!(directCardTypes as readonly string[]).includes(card.type)) {
+    throw badRequest(`Proposals can only be ${directCardTypes.join(', ')} cards`);
   }
   const parsed = itemCreateSchema.safeParse(card);
   if (!parsed.success) {
@@ -238,6 +238,7 @@ export function createIngestService(deps: {
       if (s.text?.trim()) raw.text = s.text;
       if (s.url) raw.url = s.url;
       if (s.title?.trim()) raw.title = s.title.trim();
+      if (s.timeZone) raw.timeZone = s.timeZone;
 
       await jobs.create({
         id,
@@ -296,7 +297,7 @@ export function createIngestService(deps: {
             summary: {
               model: DIRECT_PROPOSAL_MODEL,
               escalated: false,
-              type: card.type as (typeof ingestCardTypes)[number],
+              type: card.type as (typeof directCardTypes)[number],
               confidence: 1,
               language: 'und',
               categoryIds,

@@ -1,4 +1,5 @@
 import type { ExtractionSummary, ItemCreate, NormalizedSource } from '@gobbit/shared';
+import type { EventDecision } from '../ai/extract-event';
 import {
   correctionMessage,
   shouldEscalate,
@@ -34,7 +35,8 @@ export interface RunExtractionInput {
 }
 
 export type ExtractionOutcome =
-  { ok: true; item: ItemCreate; summary: ExtractionSummary } | { ok: false; error: string };
+  | { ok: true; item: ItemCreate; summary: ExtractionSummary; eventDecision?: EventDecision }
+  | { ok: false; error: string };
 
 type Accepted = Extract<ValidatedProposal, { ok: true }>;
 
@@ -99,6 +101,7 @@ export async function runExtraction(
     ok: true,
     item: p.item,
     summary: { model, escalated, ...p.summary },
+    ...(p.eventDecision ? { eventDecision: p.eventDecision } : {}),
   });
 
   let primary = await attempt(deps.model, 'extract');

@@ -164,5 +164,14 @@ describe('buildIngestForm (D98)', () => {
     expect(form.has('title')).toBe(false);
     expect(form.has('url')).toBe(false);
     expect((form.getAll('files')[0] as File).name).toBe('a.jpg');
+    expect(form.get('timeZone')).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  });
+
+  it("sends the given zone for a shared event's times (D374)", () => {
+    const form = buildIngestForm(
+      { deckId: 'd1', channel: 'paste', title: '', text: 'Fair on 3 Dec', url: '', files: [] },
+      'Europe/Paris',
+    );
+    expect(form.get('timeZone')).toBe('Europe/Paris');
   });
 });

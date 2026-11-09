@@ -18,7 +18,7 @@ pnpm test:unit     # payload schema, eventSpan, eventNoticeMoments (DST, all-day
                    # canEditEventNotify, eventPhase/formatEventWhen, toIcs, editor fields, card status line
 pnpm test:int -- events notify pending public link   # trigger sync, notices, sweep at-most-once,
                    # grace, mutes, notify lock, Coming up, public/search allow-list, link plumbing, down file
-pnpm test:e2e -- --grep @smoke items                 # create event → see it in the deck
+pnpm test:e2e -- --grep @smoke editor                # create event → see it in the deck (smoke/editor.spec.ts)
 pnpm test:e2e -- --grep @full events                 # notifications, Coming up, mute, ICS, roles, review an event proposal
 pnpm test:int -- ingest-events                       # share → Event proposal, fallback, zone, auto-publish hold, dedup (fake extractor)
 ```

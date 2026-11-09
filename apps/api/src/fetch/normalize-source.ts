@@ -53,7 +53,16 @@ export function buildNormalizedSource(input: {
     ms: fetch.ms,
     error: fetch.error ?? null,
   };
-  const pageFields = page ? { pageTitle: page.title, og: page.og, lang: page.lang } : {};
+  const pageFields = page
+    ? {
+        pageTitle: page.title,
+        og: page.og,
+        lang: page.lang,
+        // D370: the page's one schema.org Event, or how many it has.
+        ...(page.structuredEvent ? { structuredEvent: page.structuredEvent } : {}),
+        ...(page.structuredEventCount ? { structuredEventCount: page.structuredEventCount } : {}),
+      }
+    : {};
 
   if (page && page.text.trim().length > 0) {
     return {

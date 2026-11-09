@@ -46,6 +46,19 @@ describe('appliedPreview (D352)', () => {
     });
   });
 
+  it('reports an event card preview like a link card (D372)', () => {
+    const event = {
+      type: 'event',
+      title: 'Fair',
+      body: '',
+      payload: { allDay: true, start: '2026-12-03', timeZone: 'UTC', url, preview: {} },
+    } as unknown as ItemCreate;
+    expect(appliedPreview(event, { ...ctx, imagePublicId: undefined })).toMatchObject({
+      image: 'none',
+      description: 'none',
+    });
+  });
+
   it('is null for cards that are not links', () => {
     expect(appliedPreview({ type: 'text' } as ItemCreate, ctx)).toBeNull();
   });

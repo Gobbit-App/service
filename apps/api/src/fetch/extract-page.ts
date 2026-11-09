@@ -2,9 +2,10 @@ import { parseHTML } from 'linkedom';
 import { Readability } from '@mozilla/readability';
 import { LINK_ARTICLE_IMAGE_MIN_PX, PAGE_TEXT_MAX, type OpenGraph } from '@gobbit/shared';
 import { collectImageCandidates, type ImageCandidate } from './page-images';
+import { jsonLdNodes, structuredEvents, type PageEvents } from './structured-event';
 
-/** Structured data extracted from a fetched HTML page. */
-export interface ExtractedPage {
+/** Structured data extracted from a fetched HTML page (D370: plus its one schema.org Event). */
+export interface ExtractedPage extends PageEvents {
   title: string | null;
   text: string;
   og: OpenGraph;
@@ -94,12 +95,19 @@ export function extractPage(
 
     const article = readable(html);
     const text = collapseWhitespace(article.text).slice(0, PAGE_TEXT_MAX);
+    const jsonLd = jsonLdNodes(document as unknown as Document);
     const images = collectImageCandidates(document as unknown as Document, pageUrl, {
       articleHtml: article.articleHtml,
       articleMinPx: opts.articleMinPx ?? LINK_ARTICLE_IMAGE_MIN_PX,
+      jsonLd,
     });
+    const events = structuredEvents(jsonLd);
+    if (events.structuredEvent) {
+      const url = resolveHttpUrl(events.structuredEvent.url, pageUrl);
+      events.structuredEvent = { ...events.structuredEvent, url };
+    }
 
-    return { title, text, og, lang, images };
+    return { title, text, og, lang, images, ...events };
   } catch {
     return {
       title: null,

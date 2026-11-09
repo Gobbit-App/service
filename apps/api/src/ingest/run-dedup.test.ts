@@ -7,6 +7,7 @@ function fakeRepo(overrides: Partial<DedupRepo> = {}): DedupRepo {
     sourceUrlCandidates: vi.fn(async () => []),
     nearest: vi.fn(async () => null),
     titleMatch: vi.fn(async () => null),
+    eventCandidates: vi.fn(async () => []),
     ...overrides,
   };
 }
@@ -65,5 +66,28 @@ describe('runDedup', () => {
     });
     expect(await run(repo)).toMatchObject({ action: 'possible_duplicate', itemId: 'dan' });
     expect(repo.nearest).not.toHaveBeenCalled();
+  });
+
+  it('compares an event with same-day events only, by link then title (D376)', async () => {
+    const repo = fakeRepo({
+      eventCandidates: vi.fn(async () => [
+        { id: 'e1', title: 'Winter fair', url: 'https://fair.example/winter', sourceUrl: null },
+      ]),
+    });
+    const verdict = await run(repo, {
+      type: 'event',
+      title: 'Winter fair',
+      url: 'https://fair.example/winter',
+      sourceUrl: 'https://fair.example/winter',
+    });
+    expect(repo.eventCandidates).toHaveBeenCalledWith('deck', 'draft');
+    expect(repo.sourceUrlCandidates).not.toHaveBeenCalled();
+    expect(repo.titleMatch).not.toHaveBeenCalled();
+    expect(verdict).toEqual({
+      action: 'possible_duplicate',
+      itemId: 'e1',
+      similarity: null,
+      via: 'source_url',
+    });
   });
 });

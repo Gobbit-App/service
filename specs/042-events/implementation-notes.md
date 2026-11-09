@@ -58,9 +58,9 @@ and ingestion (PR4).
   uses `coalesce` for absent keys.
 - **Ingestion merges and review publish sync notices but don't enforce the notify lock.** The
   agent never changes `notify`. PR4 revisits this when extraction proposes events.
-- **Two paths stay link-only:**
-  - `linkImageBackfillCandidates`: the 041 one-time pass predates events.
-  - `ingest/applied-preview.ts`: until PR4.
+- **`linkImageBackfillCandidates` stays link-only:** the 041 one-time pass predates events.
+  `ingest/applied-preview.ts` was link-only in PR1. PR4 widened it with `isLinkBearing`, so
+  event shares log the applied preview too.
 - **The web part of PR1 is interim.** `event` has a label, a tile and a pass-through draft so
   the app type-checks, but it is not in `CREATABLE_TYPES`. PR2 adds the editor and the card.
 - **T022's `media-sweep` case is not an integration test.** The `assets.unreferenced` SQL
@@ -80,3 +80,28 @@ and ingestion (PR4).
 - **T074 is narrower than listed.** `@full` covers Add to calendar, Coming up and mute/unmute.
   Notify settings, the lock, zone note, all-day and the personal deck are covered by the editor
   unit tests and the API int tests. A browser run would add only rendering already asserted there.
+
+- **Ingestion (PR4):**
+  - **Migration `0023_events_ingest`** widens the `ingest_jobs.auto_publish` CHECK with
+    `held_event_unverified`. The plan had no migration for US7, but the CHECK lists every outcome.
+    Its down file narrows it back (and fails while a row holds the new value).
+  - **An extra fallback reason, `invalid_event`.** It covers an event that passes the start, end and
+    zone checks but still fails the shared event payload schema (for example a structured `url`
+    that is not a URL). The event then becomes a link card, or a text card when there is no URL.
+  - **`directCardTypes` (text, link, image).** MCP and bulk import proposals keep this list, so a
+    direct proposal can never skip the event rules that extraction applies.
+  - **No MCP `timeZone`.** The repo has no MCP ingest tool yet (Phase 13), so only `POST /ingest`
+    (share target, paste box, Shortcut) accepts the zone.
+  - **`resolveEventZone` lives in `ingest/event-extract.ts`**, next to `logEventExtract`, not in
+    `normalize-raw.ts`. The raw payload stays a plain input, and the zone choice and its decision
+    log are kept together.
+  - **`eventDedupVerdict` returns the verdict itself** instead of feeding `dedupVerdict`. Events
+    have no vector arm, so the threshold logic does not apply. `run-dedup` picks the event path
+    before any embedding.
+  - **The share result shows "Proposed as an event" for published shares too.** On a published
+    share it reads "Published as an event: …", because auto-publish can publish a verified event.
+  - **The Shortcut sends its zone from a Format Date action with the custom format `VV`.** iOS
+    Shortcuts has no time-zone variable, and `VV` is the IANA id.
+  - **T098 edits the notify time through "Edit fully".** The inline review form edits only the
+    title, body and categories, so the full editor is where an event's times and notify are
+    changed before publishing.

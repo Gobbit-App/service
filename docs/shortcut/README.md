@@ -22,12 +22,16 @@ the user answers when adding it.
    | 3 | **Get URLs from Input** | input: Shortcut Input |
    | 4 | **Get Images from Input** | input: Shortcut Input |
    | 5 | **Get Text from Input** | input: Shortcut Input |
-   | 6 | **Get Contents of URL** | URL `Server/api/ingest`; Method **POST**; Headers `Authorization` = `Bearer Token`; Request Body **Form** with fields `url` (Text: URLs), `text` (Text: Text), `files` (File: Images) |
-   | 7 | **Get Dictionary Value** | `id` from Contents of URL |
-   | 8 | **If** Dictionary Value **has any value** | **Show Notification** "Sent to Gobbit — it will show up for review." / **Otherwise**: **Get Dictionary Value** `detail` → **Show Alert** with it |
+   | 6 | **Format Date** | Current Date; Date Format **Custom** `VV` (the phone's time zone, such as `Europe/London`) — rename the variable `Zone` |
+   | 7 | **Get Contents of URL** | URL `Server/api/ingest`; Method **POST**; Headers `Authorization` = `Bearer Token`; Request Body **Form** with fields `url` (Text: URLs), `text` (Text: Text), `files` (File: Images), `timeZone` (Text: Zone) |
+   | 8 | **Get Dictionary Value** | `id` from Contents of URL |
+   | 9 | **If** Dictionary Value **has any value** | **Show Notification** "Sent to Gobbit — it will show up for review." / **Otherwise**: **Get Dictionary Value** `detail` → **Show Alert** with it |
 
    Notes on the contract (see `POST /ingest` in `/api/openapi.json`):
    - Empty form fields are ignored, so it's fine that most shares only fill one of them.
+   - `timeZone` (an IANA zone) reads the times of a shared event (D374). Without it, or with
+     a value that isn't a real zone, the server's `INGEST_DEFAULT_TIME_ZONE` is used and the
+     event waits for review ("check the date and time") instead of being published directly.
    - At most 3 images, each ≤ 8 MB (JPEG/PNG/WebP/HEIC/HEIF); the body may be up to 25 MB.
    - Do **not** send `channel` or `deckId`: token shares are always `shortcut`, and a bound
      token always ingests into its deck.
