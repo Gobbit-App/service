@@ -58,9 +58,9 @@ and ingestion (PR4).
   uses `coalesce` for absent keys.
 - **Ingestion merges and review publish sync notices but don't enforce the notify lock.** The
   agent never changes `notify`. PR4 revisits this when extraction proposes events.
-- **Two paths stay link-only:**
-  - `linkImageBackfillCandidates`: the 041 one-time pass predates events.
-  - `ingest/applied-preview.ts`: until PR4.
+- **`linkImageBackfillCandidates` stays link-only:** the 041 one-time pass predates events.
+  `ingest/applied-preview.ts` was link-only in PR1. PR4 widened it with `isLinkBearing`, so
+  event shares log the applied preview too.
 - **The web part of PR1 is interim.** `event` has a label, a tile and a pass-through draft so
   the app type-checks, but it is not in `CREATABLE_TYPES`. PR2 adds the editor and the card.
 - **T022's `media-sweep` case is not an integration test.** The `assets.unreferenced` SQL
