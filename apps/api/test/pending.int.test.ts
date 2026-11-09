@@ -126,7 +126,7 @@ describe('GET /me/pending (037)', () => {
   });
 
   it('gives a reader nothing to act on', async () => {
-    expect(await pendingFor(emails.reader)).toEqual({ items: [], upcoming: [] });
+    expect(await pendingFor(emails.reader)).toEqual({ items: [], upcoming: [], comingUp: [] });
   });
 
   it('stays within the member’s own decks', async () => {

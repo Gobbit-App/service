@@ -1968,11 +1968,77 @@
                           "overdue"
                         ]
                       }
+                    },
+                    "comingUp": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "event"
+                            ]
+                          },
+                          "itemId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "deck": {
+                            "type": "object",
+                            "properties": {
+                              "slug": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "slug",
+                              "name"
+                            ]
+                          },
+                          "startsAt": {
+                            "type": "string"
+                          },
+                          "endsAt": {
+                            "type": "string"
+                          },
+                          "allDay": {
+                            "type": "boolean"
+                          },
+                          "timeZone": {
+                            "type": "string"
+                          },
+                          "location": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "itemId",
+                          "title",
+                          "deck",
+                          "startsAt",
+                          "endsAt",
+                          "allDay",
+                          "timeZone",
+                          "location"
+                        ]
+                      }
                     }
                   },
                   "required": [
                     "items",
-                    "upcoming"
+                    "upcoming",
+                    "comingUp"
                   ]
                 }
               }

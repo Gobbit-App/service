@@ -255,7 +255,12 @@ export function buildServices({
     logHash,
     waitlist,
     // 037 (D298): what is waiting on the member (the bell and /notifications).
-    pending: createPendingService({ decks, reminders: remindersRepo, now }),
+    pending: createPendingService({
+      decks,
+      reminders: remindersRepo,
+      events: createEventCardsRepo(db),
+      now,
+    }),
     // 037 (D297): push devices, test notice and the reminder-email switch.
     pushSubscriptions: createPushSubscriptionsService({
       subscriptions: createPushSubscriptionsRepo(db),

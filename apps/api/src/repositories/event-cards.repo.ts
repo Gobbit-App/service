@@ -1,11 +1,14 @@
-import { and, asc, eq, inArray, lte, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, isNull, lte, sql } from 'drizzle-orm';
 import {
   eventCards,
   eventMutes,
   eventNotices,
+  itemColumns,
+  items,
   type DbExecutor,
   type DbTx,
   type EventCardRow,
+  type ItemRow,
 } from '@gobbit/db';
 import type {
   EventNoticeMoment,
@@ -88,6 +91,12 @@ export async function syncNotices(
     );
 }
 
+/** D366: a live event whose first notice has fired and which hasn't ended. */
+export interface ComingUpRow {
+  item: ItemRow;
+  span: Pick<EventCardRow, 'startsAt' | 'endsAt' | 'allDay' | 'timeZone'>;
+}
+
 /** 042: reads behind the `event` DTO field (span, current notices, the caller's mute). */
 export function createEventCardsRepo(db: DbExecutor) {
   return {
@@ -144,6 +153,40 @@ export function createEventCardsRepo(db: DbExecutor) {
           ),
         );
       return new Set(rows.map((r) => r.itemId));
+    },
+
+    /**
+     * D366: published events in `deckIds` with a notice of their current start due by now that
+     * haven't ended, soonest start first. Audience, mute and visibility are filtered by the caller.
+     */
+    async comingUpIn(deckIds: readonly string[], limit: number): Promise<ComingUpRow[]> {
+      if (deckIds.length === 0) return [];
+      const rows = await db
+        .select({
+          item: itemColumns,
+          startsAt: eventCards.startsAt,
+          endsAt: eventCards.endsAt,
+          allDay: eventCards.allDay,
+          timeZone: eventCards.timeZone,
+        })
+        .from(items)
+        .innerJoin(eventCards, eq(eventCards.itemId, items.id))
+        .where(
+          and(
+            inArray(items.deckId, [...deckIds]),
+            eq(items.type, 'event'),
+            eq(items.status, 'published'),
+            isNull(items.deletedAt),
+            gt(eventCards.endsAt, sql`now()`),
+            sql`exists (select 1 from ${eventNotices}
+                          where ${eventNotices.itemId} = ${items.id}
+                            and ${eventNotices.startsAt} = ${eventCards.startsAt}
+                            and ${eventNotices.fireAt} <= now())`,
+          ),
+        )
+        .orderBy(asc(eventCards.startsAt), asc(items.id))
+        .limit(limit);
+      return rows.map(({ item, ...span }) => ({ item, span }));
     },
 
     /** D364: one row per member and event; unmute keeps the row with `muted = false`. */

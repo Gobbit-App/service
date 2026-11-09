@@ -792,6 +792,22 @@ export interface paths {
                                 revealAt: string;
                                 overdue: boolean;
                             }[];
+                            comingUp: {
+                                /** @enum {string} */
+                                kind: "event";
+                                /** Format: uuid */
+                                itemId: string;
+                                title: string;
+                                deck: {
+                                    slug: string;
+                                    name: string;
+                                };
+                                startsAt: string;
+                                endsAt: string;
+                                allDay: boolean;
+                                timeZone: string;
+                                location: string | null;
+                            }[];
                         };
                     };
                 };

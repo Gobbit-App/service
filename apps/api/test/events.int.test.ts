@@ -277,8 +277,12 @@ describe('event cards (042)', () => {
       expect((await mute(item.id, 'DELETE')).status).toBe(204);
       expect((await view(item.id)).muted).toBe(false);
       await capture.flush();
-      expectDecision(capture.lines, 'event.mute', { outcome: 'muted', itemId: item.id });
-      expectDecision(capture.lines, 'event.mute', { outcome: 'unmuted', itemId: item.id });
+      expect(expectDecision(capture.lines, 'event.mute', { outcome: 'muted' }).itemId).toBe(
+        item.id,
+      );
+      expect(expectDecision(capture.lines, 'event.mute', { outcome: 'unmuted' }).itemId).toBe(
+        item.id,
+      );
     });
 
     it('409 not-an-event for other card types', async () => {
@@ -315,6 +319,56 @@ describe('event cards (042)', () => {
       const item = await created(timed());
       expect((await mute(item.id, 'PUT', outsider.email)).status).toBe(404);
       expect((await mute(item.id, 'DELETE', outsider.email)).status).toBe(404);
+    });
+  });
+
+  describe('Coming up (D366)', () => {
+    /** The event's notices fired a minute ago; the start stays ahead. */
+    const fireNow = (itemId: string) =>
+      ctx.t.pool.query(
+        `UPDATE event_notices SET fire_at = date_trunc('milliseconds', now() - interval '1 minute')
+          WHERE item_id = $1`,
+        [itemId],
+      );
+    const comingUp = async (email?: string) => {
+      const res = await send('GET', '/me/pending', undefined, email);
+      expect(res.status).toBe(200);
+      const body = await json(res);
+      return (body.comingUp as { itemId: string; title: string }[]).filter((e) =>
+        [due.id, later.id, muted.id, onlyCreator.id, archived.id, ended.id].includes(e.itemId),
+      );
+    };
+    let due: { id: string };
+    let later: { id: string };
+    let muted: { id: string };
+    let onlyCreator: { id: string };
+    let archived: { id: string };
+    let ended: { id: string };
+
+    it('lists events notifying the caller from the first notice until the end', async () => {
+      due = await created(timed({ location: 'Park' }), { title: 'Due fair' });
+      later = await created(timed(), { title: 'Later fair' });
+      muted = await created(timed(), { title: 'Muted fair' });
+      onlyCreator = await created(
+        timed({ notify: { ...NOTIFY_DEFAULT, audience: { mode: 'me', userIds: [] } } }),
+        { title: 'Own fair' },
+      );
+      archived = await created(timed(), { title: 'Archived fair' });
+      ended = await created(timed({ start: inDays(-2), end: inDays(-1) }), { title: 'Past fair' });
+      for (const e of [due, muted, onlyCreator, archived, ended]) await fireNow(e.id);
+      expect((await send('PUT', `/items/${muted.id}/mute`)).status).toBe(204);
+      expect((await send('POST', `/items/${archived.id}/archive`)).status).toBe(200);
+
+      const mine = await comingUp();
+      expect(mine.map((e) => e.itemId)).toEqual([due.id]);
+      expect(mine[0]).toMatchObject({ kind: 'event', title: 'Due fair', location: 'Park' });
+
+      // The creator is in "me" and hasn't muted anything.
+      expect((await comingUp(creator.email)).map((e) => e.itemId).sort()).toEqual(
+        [due.id, muted.id, onlyCreator.id].sort(),
+      );
+      // Someone outside the deck sees none of it.
+      expect(await comingUp(outsider.email)).toEqual([]);
     });
   });
 
