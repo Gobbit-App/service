@@ -1,5 +1,6 @@
 import { isApiError } from '../api/api-error';
 import { problemMessages } from '../api/problem-messages';
+import { NOTIFY_LOCKED } from './event-draft';
 import { CATEGORY_REQUIRED, type FieldErrors } from './validate';
 
 /** Where a failed save's messages go: next to fields, or once above the Save button. */
@@ -49,7 +50,15 @@ export function problemToErrors(err: unknown): SaveErrors {
   if (type === '/problems/item-needs-category') {
     return { fields: { categoryIds: CATEGORY_REQUIRED }, form: null };
   }
-  if (type === '/problems/validation' || type === '/problems/bad-request') {
+  // 042: only the creator may change an event's notifications (D363).
+  if (type === '/problems/event-notify-locked') {
+    return { fields: { 'payload.notify': NOTIFY_LOCKED }, form: null };
+  }
+  if (
+    type === '/problems/validation' ||
+    type === '/problems/bad-request' ||
+    type === '/problems/event-audience-unknown-member'
+  ) {
     const { fields, unmapped } = mapFieldErrors(err.problem?.errors);
     if (fields['payload.publicId'] === UNKNOWN_IMAGE) fields['payload.publicId'] = PHOTO_EXPIRED;
     if (Object.keys(fields).length > 0) {

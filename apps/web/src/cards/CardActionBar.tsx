@@ -13,6 +13,13 @@ import { MoreMenu, type MenuAction } from '../ui/MoreMenu';
 import { CardBar, ReaderActions } from './CardBar';
 import { EditLink } from './EditLink';
 import { DismissDialog } from '../reminders/DismissDialog';
+import {
+  ADD_TO_CALENDAR_FAILED,
+  ADD_TO_CALENDAR_LABEL,
+  canAddToCalendar,
+  downloadEventIcs,
+} from '../event-cards/add-to-calendar';
+import { showToast } from '../ui/toast-store';
 
 export const OFFLINE_REASON = 'needs a connection';
 
@@ -125,6 +132,15 @@ export function CardActionBar({
           label={DISMISS_LABEL}
           disabledReason={offline}
           onClick={() => setDismissing(true)}
+        />
+      )}
+      {canAddToCalendar(item) && (
+        <IconButton
+          icon="calendar-plus"
+          label={ADD_TO_CALENDAR_LABEL}
+          onClick={() =>
+            void downloadEventIcs(item).catch(() => showToast({ message: ADD_TO_CALENDAR_FAILED }))
+          }
         />
       )}
       {dismissing && (

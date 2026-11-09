@@ -6,6 +6,7 @@ import {
   type ShowBeforeUnit,
 } from '@gobbit/shared/reminder-constants';
 import type { FieldErrors } from './validate';
+import { deviceTimeZone } from '../lib/device-time-zone';
 
 /**
  * 037 (D291): a reminder payload while editing. The deadline is a `datetime-local` value in the
@@ -26,10 +27,7 @@ export const PEOPLE_REQUIRED = 'Pick at least one person';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/** The device's IANA time zone (falls back to UTC where the runtime can't tell). */
-export function deviceTimeZone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-}
+export { deviceTimeZone };
 
 /** An instant as a `datetime-local` value in the device's zone (minute precision). */
 export function isoToLocalInput(iso: string): string {

@@ -22,7 +22,7 @@ export const TYPE_HINTS: Record<ItemType, string> = {
   image: 'A photo with a caption',
   table: 'Rows and columns, like a price list',
   calc: 'A small calculator with your own fields',
-  event: 'Something happening at a date and time',
+  event: 'A date, a place, and a heads-up',
 };
 
 export const TYPE_ICONS: Record<ItemType, IconName> = {
@@ -32,5 +32,5 @@ export const TYPE_ICONS: Record<ItemType, IconName> = {
   image: 'photo',
   table: 'table',
   calc: 'calc',
-  event: 'clock',
+  event: 'calendar',
 };

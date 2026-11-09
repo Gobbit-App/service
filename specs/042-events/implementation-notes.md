@@ -23,6 +23,22 @@ and ingestion (PR4).
   Pages, cards and share previews use it, and an unreadable payload yields `null`, not an
   error.
 
+- **Web (PR2):**
+  - A new event starts tomorrow at 18:00 in the device zone. It has no end and gets the default
+    notify times.
+  - Switching to all day keeps the start date and turns notify times into days: rounded, at least
+    1, with duplicates merged. Switching back starts at 18:00 on that date with no end.
+  - Unchanged times are sent back exactly as stored, zone included, so opening and saving an
+    event made in another zone doesn't move it.
+  - The event link reuses `LinkEditorFields` through a `{ url, preview }` adapter.
+    `previewToPayload` moved to `editor/link-preview-payload.ts` so link and event drafts share it.
+  - `deviceTimeZone` moved to `lib/device-time-zone.ts`. The status line uses the accent tone and
+    turns muted once the event has ended.
+  - The card's styles live in `event-cards/`, because `events/` is the activity log.
+  - "Add to calendar" sits in the card bar for every role, on any live event card. It is a local
+    action, so it stays on offline. Its file links to the card's share URL (`/s/{id}`), and a
+    timed event's description adds "Time zone: <IANA>" (D368).
+
 ## Deviations from the plan
 
 - **Notices are synced while an event is proposed.** T027 said "none while
@@ -49,3 +65,6 @@ and ingestion (PR4).
   the app type-checks, but it is not in `CREATABLE_TYPES`. PR2 adds the editor and the card.
 - **T022's `media-sweep` case is not an integration test.** The `assets.unreferenced` SQL
   includes `type IN ('link','event')`, and the existing media-sweep int test covers that query.
+- **T024's smoke test is in `smoke/editor.spec.ts`, not `smoke/items.spec.ts`.** `items.spec.ts`
+  only calls the API, while this journey goes through the editor. The ICS download (with the app
+  offline) is the first `@full` test in `full/events.spec.ts`.

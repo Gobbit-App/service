@@ -234,4 +234,48 @@ describe('CardActionBar (D213)', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
+
+  describe('Add to calendar (042)', () => {
+    const event = makeItem({
+      id: 'e1',
+      type: 'event',
+      title: 'School fair',
+      payload: { allDay: false, start: '2026-12-03T16:00:00.000Z', timeZone: 'UTC' },
+    });
+
+    it('is in the bar for any role, offline too, and saves <title>.ics', async () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      const createObjectURL = vi.fn(() => 'blob:ics');
+      Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      renderWithClient(<CardActionBar item={event} deckSlug="family" role="reader" />);
+      expect(barNames()).toEqual(['Add to favorites', 'Share', 'Add to calendar']);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
+      await waitFor(() => expect(click).toHaveBeenCalled());
+      const anchor = click.mock.instances[0] as unknown as HTMLAnchorElement;
+      expect(anchor.download).toBe('School fair.ics');
+      const blob = (createObjectURL.mock.calls[0] as unknown as [Blob])[0];
+      expect(blob.type).toBe('text/calendar;charset=utf-8');
+      expect(await blob.text()).toContain('DTSTART:20261203T160000Z');
+    });
+
+    it('says so when the payload is not a readable event', async () => {
+      renderWithClient(
+        <CardActionBar item={{ ...event, payload: {} }} deckSlug="family" role="owner" />,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
+      await waitFor(() => expect(currentToast()?.message).toBe("Couldn't make the calendar file"));
+    });
+
+    it('is not offered on other cards or deleted events', () => {
+      for (const item of [published, { ...event, deletedAt: '2026-01-02T00:00:00.000Z' }]) {
+        const { unmount } = renderWithClient(
+          <CardActionBar item={item} deckSlug="family" role="owner" />,
+        );
+        expect(screen.queryByRole('button', { name: 'Add to calendar' })).not.toBeInTheDocument();
+        unmount();
+      }
+    });
+  });
 });

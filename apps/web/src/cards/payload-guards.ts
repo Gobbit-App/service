@@ -162,3 +162,37 @@ export function asCalcPayload(p: unknown): CalcPayload | null {
 
   return { fields, expression: p.expression, resultLabel: p.resultLabel };
 }
+
+/** 042: the reader's view of an event payload (notify settings are not shown on the card). */
+export type EventCardPayload = {
+  allDay: boolean;
+  start: string;
+  end?: string;
+  timeZone: string;
+  location?: string;
+  /** The optional link, read with the link card's rules. */
+  link?: LinkPayload;
+};
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Narrows unknown payload into an EventCardPayload or null (a timed start is an instant, an
+ * all-day one a `YYYY-MM-DD` date).
+ */
+export function asEventPayload(p: unknown): EventCardPayload | null {
+  if (!isRecord(p)) return null;
+  const { allDay, timeZone, start, end } = p;
+  if (typeof allDay !== 'boolean' || typeof timeZone !== 'string') return null;
+  const validTime = (v: unknown): v is string =>
+    typeof v === 'string' && (allDay ? ISO_DATE_RE.test(v) : !Number.isNaN(Date.parse(v)));
+  if (!validTime(start)) return null;
+  if (end !== undefined && !validTime(end)) return null;
+
+  const result: EventCardPayload = { allDay, start, timeZone };
+  if (typeof end === 'string') result.end = end;
+  if (typeof p.location === 'string' && p.location.trim() !== '') result.location = p.location;
+  const link = typeof p.url === 'string' ? asLinkPayload({ url: p.url, preview: p.preview }) : null;
+  if (link) result.link = link;
+  return result;
+}
