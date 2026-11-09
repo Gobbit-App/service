@@ -29,6 +29,49 @@ export function formatDue(deadline: Date, timeZone: string): string {
   }
 }
 
+/** What an event notice says (D360, FR-012): push only, never the card's body or notes. */
+export interface EventNotice {
+  itemId: string;
+  noticeId: string;
+  title: string;
+  deckName: string;
+  startsAt: Date;
+  allDay: boolean;
+  timeZone: string;
+  location?: string | undefined;
+}
+
+/** The event's start in its own zone: the date alone for all-day events ("Thu, Dec 3, 2026"). */
+export function formatEventStart(startsAt: Date, allDay: boolean, timeZone: string): string {
+  if (!allDay) return formatDue(startsAt, timeZone);
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(startsAt);
+  } catch {
+    return startsAt.toISOString().slice(0, 10);
+  }
+}
+
+/**
+ * D360: `<deck> · <start>[ · <location>]`. The tag names the notice, so each moment shows as its
+ * own notification and a resend of the same one replaces it.
+ */
+export function eventPushMessage(n: EventNotice): PushMessage {
+  const parts = [n.deckName, formatEventStart(n.startsAt, n.allDay, n.timeZone)];
+  if (n.location) parts.push(n.location);
+  return {
+    title: n.title,
+    body: parts.join(' · '),
+    url: `/i/${n.itemId}`,
+    tag: `event:${n.itemId}:${n.noticeId}`,
+  };
+}
+
 /** D296: the push payload; `tag` lets a newer notice for the same card replace the old one. */
 export function reminderPushMessage(n: ReminderNotice): PushMessage {
   return {
