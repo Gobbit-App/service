@@ -503,6 +503,10 @@ h3 {
   color: var(--color-text);
   box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
   list-style: none;
+  /* Long lists (the deck and category switchers, D381) scroll inside the menu. */
+  max-height: min(70vh, 28rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .menu__item {
@@ -530,6 +534,18 @@ h3 {
 .menu__item[aria-disabled='true'] {
   opacity: 0.5;
   cursor: default;
+}
+
+.menu__item[aria-checked='true'] {
+  font-weight: 600;
+}
+
+/* D381: a choice's check mark slot, kept for every option so the labels line up. */
+.menu__check {
+  display: inline-flex;
+  flex: none;
+  width: 1.25rem;
+  color: var(--color-accent);
 }
 
 .menu__item--danger {
@@ -626,29 +642,6 @@ h3 {
 }
 
 /* ---------- Chips ---------- */
-
-.chip-row {
-  position: sticky;
-  top: calc(var(--safe-top) + 61px);
-  z-index: 9;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.chip-row__list {
-  display: flex;
-  gap: 8px;
-  margin: 0;
-  padding: 8px var(--gutter);
-  list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
-}
-
-.chip-row__list::-webkit-scrollbar {
-  display: none;
-}
 
 .chip {
   display: inline-flex;
@@ -1766,7 +1759,7 @@ h3 {
 /* ---------- Search (D79) ---------- */
 
 .search-box {
-  padding: 8px var(--gutter) 0;
+  margin: 0;
 }
 
 .search-box__input {

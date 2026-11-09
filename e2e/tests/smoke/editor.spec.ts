@@ -7,6 +7,7 @@ import {
   routeImageDelivery,
 } from '../../fixtures/cloudinary';
 import { expect, SMOKE_CATEGORY, test, webUrl } from '../../fixtures/web';
+import { switchView } from './helpers/deck-header';
 
 /** Below 768px (Pixel 7) the preview is a tab: open it, then read the preview region. */
 /** D309 (039): on a phone the top bar's Preview toggle swaps the canvas for the preview. */
@@ -325,11 +326,8 @@ test('a category created inline is selected and the card is saved in it @smoke',
 
   await save(page).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
-  // Cards in the list show their category chips too; open it from the deck's category nav.
-  await page
-    .getByRole('navigation', { name: 'Categories' })
-    .getByRole('link', { name: category })
-    .click();
+  // Cards in the list show their category chips too; open it from the header's view switcher.
+  await switchView(page, category);
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
 
