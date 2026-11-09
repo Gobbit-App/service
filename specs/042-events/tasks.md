@@ -172,7 +172,7 @@ Browse and search with date, location and preview; public JSON shows content but
 
 ## Phase 9: Close-out
 
-- [ ] T100 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` (+ `pnpm budget`)
+- [x] T100 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` (+ `pnpm budget`)
 - [ ] T101 e2e: `@smoke` passes in CI; `@full` events spec passes with `pnpm test:e2e --grep @full`
 - [x] T102 [P] docs/design/events.md (new): detail, runbook for `EVENT_*`, "Deviations" from implementation-notes.md
 - [x] T103 [P] docs/adr.md ADR-076; docs/architecture.md one line + index row (< 250 lines)
