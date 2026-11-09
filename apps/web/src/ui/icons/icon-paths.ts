@@ -6,6 +6,8 @@
 export const ICON_PATHS = {
   back: 'M15 5L8 12L15 19',
   forward: 'M9 5L16 12L9 19',
+  // 043 (D380): the deck header's switcher caret.
+  'caret-down': 'M7 10L12 15L17 10',
   close: 'M6 6L18 18M18 6L6 18',
   edit: 'M4 20H8L19 9A2.83 2.83 0 0 0 15 5L4 16Z M13.5 6.5L17.5 10.5',
   star: 'M12 3.5L14.6 8.8L20.5 9.7L16.25 13.8L17.25 19.6L12 16.9L6.75 19.6L7.75 13.8L3.5 9.7L9.4 8.8Z',

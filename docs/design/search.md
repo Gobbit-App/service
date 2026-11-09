@@ -61,7 +61,7 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
 
 ## Web (D79)
 
-- `SearchBox` (with the category `ChipRow`) sits under the deck header on the card lists only — the chip views and the search route (`app/list-tools.ts`); Your shares, Review, Log, Settings, Import and Upcoming render without them. It debounces by 250 ms and navigates to `/d/$slug/search?q=&mode=`, replacing the history entry when already on the search route.
+- Search is a header button on the card lists only — the views and the search route (`app/list-tools.ts`); Your shares, Review, Log, Settings, Import and Upcoming render without it. It (or `/`) opens `deck-header/SearchSheet` with the box and the deck's recent searches; Enter navigates to `/d/$slug/search?q=&mode=`, replacing the history entry when already on the search route (043, D382; the 250 ms as-you-type `SearchBox` is gone).
 - `routes/d.$slug.search.tsx` validates `q` and `mode` (`search/search-params.ts`). It shows one of:
   - `SearchResults`: tags for `why`, highlighted matches, and recent searches when `q` is empty.
   - The lazy `AskView` chunk, when Ask is enabled and selected.
@@ -100,7 +100,6 @@ route (Zod: q 1..200, limit ≤ 20) → searchService.search
 - **No embedding cache yet**: `search-embeddings.json` stays `{}` until someone with an embedding key runs `pnpm test:search:update`.
   - Until then the hybrid eval is skipped.
   - Only the text arm is asserted. Its recall is 1.0 on 26 pairs.
-- **The search box isn't sticky**, which keeps the sticky chip-row offsets unchanged.
 - **The e2e web search tests live in `web.spec.ts`**, because the `web-smoke` project matches only `web|share` specs. The API checks are in `search.spec.ts`.
 - **`pnpm test` and `test:coverage` pin their projects** (unit, web, integration). The search project runs only through `test:search`.
 - **Fixture cards go into the default category.**

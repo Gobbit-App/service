@@ -14,7 +14,7 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 | `editor/` | Phase 6 card editor (`CardEditor`, preview, tabs, type picker, save bar), the draft model (`draft.ts`), zod-free validation (`validate.ts`), drafts store and autosave, and `fields/` (the per-type registry and shared fields) |
 | `items/` | The item list for a deck/category/favorites/archived view and its empty-state copy; the role-gated `AddCardLink` (the Phase 3B editor moved to `editor/` in Phase 6); Phase 6 `CardActions` (archive/restore/delete/undelete) and `DeletedSection` (Recently deleted) |
 | `deck-admin/` | Phase 8 deck settings at `/d/$slug/settings` (D184): `DeckSection` (name, public switch with `PublicSwitchDialog`, public address), `CategoriesSection` (rename, visibility), `MembersSection` + `InviteForm` (invite, role, remove), mutations in `deck-admin-queries.ts`, refusal copy in `admin-errors.ts`; `DeckSettingsLink` in the deck header for `deck.update` roles |
-| `search/` | Phase 4: `SearchBox`, `SearchResults`, `ModeToggle`, the lazy `AskView`, URL params, recent searches and the debounce hook |
+| `search/` | Phase 4: `SearchResults`, `ModeToggle`, the lazy `AskView`, URL params and recent searches |
 | `ui/`, `lib/`, `app/` | Shared components (chips, status views, `NavLink`, the app-wide Undo toast), `deckHref(slug, path)` (D143), copy tables, header and the service-worker update prompt |
 
 - Session (D66): the app calls `GET /api/me` on boot; any 401 sends the user to `/sign-in?next=<path>`. The magic-link request carries `next`; the API callback redirects to `APP_URL + next` only for same-origin paths (`//host` and absolute URLs are dropped). Sign-out navigates to `/sign-in` first, then calls `POST /api/auth/logout`, clears the persisted cache and the local editor drafts, so no route re-fetches with a dead cookie.
@@ -152,6 +152,14 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 - D280: `--bottom-bar-h` is always set, not only while a bar is mounted; pages without a bar (editor, Browse) show toasts slightly higher.
 - The old `AddCardLink`, `PasteLink`, `ImportLink`, `SharesLink`, `DeckSettingsLink` and `ActivityLink` components were deleted rather than restyled; their routes are unchanged.
 - The `@smoke` sign-out journey now leaves the editor before signing out from ⋯ (the editor has no bar); the leave guard on sign-out stays covered by `use-sign-out.test.tsx`. The long press runs in `@full` (`bottom-bar.spec.ts`); `@smoke` covers the short press → New card.
+
+## Deck header (043, D380–D382)
+
+- **Header** (`deck-header/DeckHeader.tsx`, rendered by `routes/d.$slug.tsx`): one row: Back, a breadcrumb `nav` (deck name as the `h1`, linking to the deck; on the card lists a `/` and the current view), then Search on the card lists. Names truncate; it stays one row at 360 px.
+- **Switchers** (D381): carets open `MoreMenu`s aligned to their start edge. Deck: the member's decks (`decksQuery`, current checked) and "All decks". View: `ui/deck-views.ts` (All, Favorites, categories, then Archived `item.archive` and Links to check `item.update`), current checked, none on search. Checked items are `menuitemradio`.
+- **Search** (D382): a sheet (`SearchSheet`) with the box (prefilled on results) and recent searches; `/` opens it outside text fields and dialogs.
+- Replaces `ChipRow`, `SearchBox` and `useDebounced`. Deviations and limits (iOS keyboard over the sheet): `specs/043-deck-header/implementation-notes.md`.
+- E2E tier: smoke (`web.spec.ts`, `editor.spec.ts` via `smoke/helpers/deck-header.ts`); edge cases in `full/deck-chrome.spec.ts`.
 
 ## About (D354)
 

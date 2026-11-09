@@ -183,7 +183,7 @@ safe: jobs are per-card singletons and stamped cards no longer qualify.
 
 ## Deviations from the 014 plan
 
-- **No deck menu exists**, so "Links to check" is a chip in `ChipRow` beside Archived.
+- **No deck menu exists**, so "Links to check" is a chip in `ChipRow` beside Archived (since 043 an item in the header's view menu, D381).
 - **The flagged listing** lives in `items.repo.listLinkFlagged`, which reuses the list's visibility
   and DTO code, not in `link-checks.repo.flaggedPage`.
 - **Check again and Dismiss** are `items.service.checkLink` / `dismissLinkFlag` (role, visibility and

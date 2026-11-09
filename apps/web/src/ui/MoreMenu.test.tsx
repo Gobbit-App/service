@@ -85,6 +85,43 @@ describe('MoreMenu (D213)', () => {
   });
 });
 
+describe('MoreMenu choices (D381)', () => {
+  const choices: MenuAction[] = [
+    { key: 'a', label: 'Family', href: '/d/family', checked: true },
+    { key: 'b', label: 'Niran', href: '/d/me', checked: false },
+    { key: 'all', label: 'All decks', icon: 'list', href: '/?all=true' },
+  ];
+
+  it('renders checked items as menuitemradio with a check mark slot', async () => {
+    render(<MoreMenu label="Switch deck" actions={choices} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Switch deck' }));
+    const current = screen.getByRole('menuitemradio', { name: 'Family' });
+    expect(current).toHaveAttribute('aria-checked', 'true');
+    expect(current.querySelector('.menu__check svg')).not.toBeNull();
+    const other = screen.getByRole('menuitemradio', { name: 'Niran' });
+    expect(other).toHaveAttribute('aria-checked', 'false');
+    expect(other.querySelector('.menu__check svg')).toBeNull();
+    expect(screen.getByRole('menuitem', { name: 'All decks' })).toBeInTheDocument();
+  });
+
+  it('moves focus across radio and plain items alike', async () => {
+    render(<MoreMenu label="Switch deck" actions={choices} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Switch deck' }));
+    expect(screen.getByRole('menuitemradio', { name: 'Family' })).toHaveFocus();
+    await userEvent.keyboard('{End}');
+    expect(screen.getByRole('menuitem', { name: 'All decks' })).toHaveFocus();
+  });
+
+  it('aligns to the trigger start with align="start"', async () => {
+    render(<MoreMenu label="Switch deck" actions={choices} align="start" />);
+    const trigger = screen.getByRole('button', { name: 'Switch deck' });
+    trigger.getBoundingClientRect = () =>
+      ({ left: 40, right: 84, top: 0, bottom: 44, width: 44, height: 44 }) as DOMRect;
+    await userEvent.click(trigger);
+    expect(screen.getByRole('menu').style.left).toBe('40px');
+  });
+});
+
 describe('MoreMenu long press (D275)', () => {
   it('runs onLongPress instead of opening the menu', () => {
     vi.useFakeTimers();

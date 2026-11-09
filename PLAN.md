@@ -191,6 +191,8 @@ Specs (in order): [`025` deck wording](#025-027-renames) → [`022-editor-naviga
 
 New card type: [`042-events`](specs/042-events/spec.md): event cards with a date or time, location and link, notify-before pushes to a chosen audience, Coming up, mute, Add to calendar, and shares recognised as events (structured data first). Decisions D356–D378; ADR-076.
 
+Deck chrome: [`043-deck-header`](specs/043-deck-header/spec.md): one breadcrumb header row (deck › view) with switcher menus and Search in a bottom sheet with recent searches, replacing the search box and chip row. Decisions D380–D382.
+
 ### 025–027 renames
 
 Mechanical renames with no new behaviour, so they skip spec-kit (constitution, Development Workflow). One branch and PR each:
