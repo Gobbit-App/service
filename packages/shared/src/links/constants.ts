@@ -41,3 +41,12 @@ export const LINK_LOOKUP_TIMEOUT_MS = 2500;
 export const LINK_LOOKUP_MAX_BYTES = 65_536;
 /** D351: seconds between two backfill jobs for the same host. */
 export const LINK_IMAGE_BACKFILL_HOST_SPACING_S = 60;
+
+/** D372: card types that carry a `url` + `preview` (link snapshot, link checks, preview assets). */
+export const LINK_BEARING_TYPES = ['link', 'event'] as const;
+export type LinkBearingType = (typeof LINK_BEARING_TYPES)[number];
+
+/** D372: whether a card type carries a link (an event only when its payload has a `url`). */
+export function isLinkBearing(type: string): type is LinkBearingType {
+  return (LINK_BEARING_TYPES as readonly string[]).includes(type);
+}

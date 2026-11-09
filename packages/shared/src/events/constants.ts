@@ -34,6 +34,11 @@ export const itemEventFields = [
   'verifiedAt',
   'type',
   'status',
+  /** D369: an event's sub-fields (the payload change is named by its part). */
+  'when',
+  'location',
+  'link',
+  'notify',
 ] as const;
 export type ItemEventField = (typeof itemEventFields)[number];
 

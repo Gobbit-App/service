@@ -4,7 +4,7 @@ export type DeckKind = (typeof deckKinds)[number];
 export const categoryVisibilities = ['private', 'shared', 'public'] as const;
 export type CategoryVisibility = (typeof categoryVisibilities)[number];
 
-export const itemTypes = ['text', 'link', 'image', 'table', 'calc', 'reminder'] as const;
+export const itemTypes = ['text', 'link', 'image', 'table', 'calc', 'reminder', 'event'] as const;
 export type ItemType = (typeof itemTypes)[number];
 
 export const itemStatuses = ['proposed', 'published', 'archived'] as const;
