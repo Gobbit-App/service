@@ -19,7 +19,8 @@ pnpm test:unit     # payload schema, eventSpan, eventNoticeMoments (DST, all-day
 pnpm test:int -- events notify pending public link   # trigger sync, notices, sweep at-most-once,
                    # grace, mutes, notify lock, Coming up, public/search allow-list, link plumbing, down file
 pnpm test:e2e -- --grep @smoke items                 # create event → see it in the deck
-pnpm test:e2e -- --grep @full events                 # notifications, Coming up, mute, ICS, roles
+pnpm test:e2e -- --grep @full events                 # notifications, Coming up, mute, ICS, roles, review an event proposal
+pnpm test:int -- ingest-events                       # share → Event proposal, fallback, zone, auto-publish hold, dedup (fake extractor)
 ```
 
 ## Manual
@@ -46,8 +47,19 @@ pnpm test:e2e -- --grep @full events                 # notifications, Coming up,
    the location and link. There is no audience and no relative status, and the
    `/public/<slug>` JSON has no `notify`.
 10. **Personal deck**: on `/d/me`, the audience choice is hidden and only you are notified.
+11. **Share an event page** (needs an AI key): share a public page for a concert or class that carries
+    schema.org `Event` data. The share result reads "Proposed as an event: …" with the page's date, and
+    the proposal shows the location and link preview. Publish it, and its notices are scheduled.
+12. **Share an article**: share a news article. The proposal is a link card, as before.
+13. **Duplicate**: share the same event page again. The new proposal is flagged as a possible duplicate
+    of the first. A page for the same series on a different date isn't flagged.
+14. **No zone**: send `POST /ingest` with an event URL and no `timeZone`. The proposal uses
+    `INGEST_DEFAULT_TIME_ZONE` and waits in review with "Check the date and time".
 
 ## Watching it
 
 Log query `event = "event.notice"` grouped by `outcome`/`reason`. A rising share of `skipped/started` means
 the sweep is lagging, and `failed` above 5 % per hour raises the existing push alert.
+
+For ingestion, query `event = "ingest.event_extract"` grouped by `outcome`/`reason`, and the share of
+`zoneSource = fallback`. A high fallback share means a sender isn't passing `timeZone`.

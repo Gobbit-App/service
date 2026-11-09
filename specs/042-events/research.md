@@ -1,6 +1,6 @@
 # Research: Events (042)
 
-Decisions continue the project-wide `D` series. This feature reserves **D356–D375** (recorded in
+Decisions continue the project-wide `D` series. This feature reserves **D356–D379** (recorded in
 `specs/README.md` so `042-checklists`, planned in parallel, starts after it). Each entry: decision,
 rationale, alternatives considered.
 
@@ -203,6 +203,9 @@ as a single role; the audience needs it evaluated per member.
   section read-only, so this is a backstop.
 - **Validation**: `people` ids must be live members of the deck (`422 event-audience-unknown-member`).
 - **Personal deck**: forced to `me` on create and update, with no error.
+- **Proposals** (FR-028): the lock applies from the first publish. While an event is `proposed`, anyone
+  allowed to edit the proposal (publishers, D96) may change `notify`. The creator stays the sharer, so
+  after publishing the sharer, not the reviewer, owns the settings.
 
 **Rationale**: the rule lives in a service (constitution I); the UI only reflects `event.canEditNotify` in
 the item DTO.
@@ -337,17 +340,59 @@ more offline.
 
 **Alternatives**: keeping `payload`. It's less useful in the log, and FR-023 asks for more.
 
-## D370 — Events are not ingest-dedup candidates
+## D370 — Ingestion proposes events (structured data first, model second)
 
-**Decision**: `dedup.repo` excludes `event` from candidates, as it already does for `reminder`. A
-shared link card with the same URL as an event is not a duplicate of it. The spec's event-vs-event rule
-(same link and same start date) has no producer in this feature, because ingestion and import don't create
-events. The rule is noted for the follow-up that lets ingestion propose events (see plan, "Settle before
-starting").
+**Decision** (FR-026, FR-027):
 
-**Rationale**: a recurring class page linked by a weekly event must not block sharing the page itself.
+- **Structured data**: `fetch/page-images.ts` already reads JSON-LD (for images). Its script walk moves into
+  the new pure module `fetch/structured-event.ts`, which `extractPage` also calls. That call returns the
+  first schema.org node whose `@type` is `Event` or ends in `Event` (`MusicEvent`, `TheaterEvent`, …) as
+  `normalized.structuredEvent { name, startDate, endDate?, location?, url? }`.
+  - `location` is `location.name` plus `address.streetAddress`/`addressLocality` when present, clipped to
+    the location limit.
+  - When a page has several event nodes, `structuredEvent` isn't set, because one share proposes one card.
+    The page records `structuredEventCount` instead.
+  - Fixtures under `fetch/__fixtures__` cover an object, an array, `@graph`, a date-only start, a start
+    without an offset, several events, and an article.
+- **Extraction**:
+  - `ingestCardTypes` gains `event`.
+  - The `propose_card` tool gains `event { start, end?, allDay, location? }` and a type description:
+    "event when the source describes one dated event, such as a show, class, match or meeting, with its date".
+  - `structuredEvent` goes to the model as `<event_data>` inside `<source>`, escaped like every other source value.
+  - The prompt says to use the `event_data` dates when they are present, never to invent a date, and to
+    use `link` or `text` when the source has no date or several events.
+- **Validation** (`ai/extract-validate.ts`):
+  - When `structuredEvent` is present, its dates and location **override** the model's. The model then
+    supplies only the title, body and categories.
+  - The start is parsed by `parseEventStart(value, timeZone)`, a pure function in
+    `@gobbit/shared/events-cards/parse.ts`:
+    - a date-only start → all day;
+    - a start with an offset → an instant;
+    - a local date-time without an offset → read in the resolved zone (D374).
+  - The payload is then checked against `eventPayloadSchema` and the server limits (FR-002).
+  - On failure, the proposal falls back to `link` (when a source URL exists) or `text`, with no correction
+    round trip. The fallback is a decision event (D378).
+  - The link fields are built exactly as for a link card (`url`, and `preview` from the clipped OG preview),
+    so the snapshot job and the link checks run unchanged (D372).
+- **Defaults**: `notify = { before: [{ amount: 1, unit: 'days' }], audience: { mode: 'everyone' } }`, or
+  `me` on the personal deck (D362).
+- **Notices**: a proposal schedules nothing (FR-016). Publishing, whether from the review queue or by
+  auto-publish, runs `eventHook` like any other publish, so moments already past are skipped (`past_at_publish`).
+- **Fake extractor**: `ai/fake-extractor.ts` proposes an event when the source has `structuredEvent`, so
+  integration and e2e tests never call a model.
 
-**Alternatives**: a new duplicate check in the editor. That's new UI the spec doesn't describe.
+**Rationale**:
+
+- Event pages usually publish schema.org `Event` data, because search engines reward it.
+- Reading that data is deterministic and handles time zones correctly. The model only fills the gaps.
+- Overriding the model with structured data stops a misread date from reaching a push.
+
+**Alternatives**:
+
+- Model-only dates: a misread "3/12" (March or December) would notify on the wrong day.
+- A separate "is this an event?" call: twice the cost for a decision the existing call already makes.
+- One event per node on a schedule page: one share would become several cards and review items, which the
+  spec puts out of scope.
 
 ## D371 — Limits and env
 
@@ -369,6 +414,7 @@ rejects, so it gets a new `intInRange(0, 23, default)` helper in `env.ts`:
 |---------|---------|---------|
 | `EVENT_ALLDAY_NOTICE_HOUR` | 9 | all-day notice hour, 0–23 |
 | `EVENT_NOTICE_GRACE_MINUTES` | 5 | late-send grace after the start (D360) |
+| `INGEST_DEFAULT_TIME_ZONE` | `UTC` | the zone for shared events whose share carries none (D374); checked with `isTimeZone` at boot |
 
 The 037 settings `REMINDER_SWEEP_BATCH`, `NOTIFY_MAX_ATTEMPTS` and `NOTIFY_RETRY_BASE_SECONDS` apply to
 event deliveries unchanged.
@@ -397,12 +443,114 @@ The partial index `items_link_preview_public_id_idx` is recreated with `type IN 
 
 **Decision**:
 
-- **Numbers**: both features are numbered 042 and both add a card type and a migration. Events reserve D356–D375 and
-  ADR-076. The migration takes the next free number when it is generated (`0022_events`, or `0023_events`
-  if checklists merges first). Drizzle snapshots are regenerated on rebase, never hand-merged.
+- **Order** (decided 2026-11-09): **events ship first**, so the migration is `0022_events`. Checklists
+  rebase onto it: they take `0023`, add their own `notification_kind` value and pending section, and
+  put their `item_search_text` branch on top of the events branch. Events reserve D356–D379 and ADR-076.
+  Drizzle snapshots are regenerated on rebase, never merged by hand.
+- **Ingestion**: every new card type, checklists included, must also be proposed by ingestion when a
+  share describes one, with its own duplicate rule (D370, D376; `CLAUDE.md` Ingestion).
 - **Shared extension points**: `notification_deliveries.kind` (D361) and the `pendingListSchema`
   sections (D366). Checklists add their own `kind` value and their own section.
 - **Search**: whichever merges second rebases its `item_search_text` `CASE` branch on top of the other's.
 
 **Rationale**: both specs extend the same delivery key, pending list and search function. Agreeing on the
 shape now keeps the second PR a rebase, not a redesign.
+
+## D374 — Time zone of a shared event
+
+**Decision** (FR-027):
+
+- **Request field**: `POST /ingest` gains an optional `timeZone` (IANA, checked with `isTimeZone`). It is
+  stored in `ingest_jobs.raw`, which is jsonb, so no column is added.
+- **Senders**:
+  - the PWA share target and the paste box send `Intl.DateTimeFormat().resolvedOptions().timeZone`;
+  - the MCP ingest tool accepts a zone;
+  - `docs/shortcut/README.md` gives the iPhone Shortcut an optional "Time zone" field;
+  - email-in sends none.
+- **Resolution**: the request's `timeZone`; otherwise `INGEST_DEFAULT_TIME_ZONE` (default `UTC`), recorded
+  as `extraction.event.zoneSource = 'fallback'` (`'request'` otherwise).
+- **Use**: the resolved zone becomes the event's `timeZone`. It is used to read local date-times without an
+  offset and to place all-day midnights. An instant with an offset keeps that instant in any zone.
+
+**Rationale**: the person sharing is usually where the event is. A fixed offset taken from the page
+(`+02:00`) is wrong across a DST change and doesn't name a place. An IANA zone from the device does both.
+
+**Alternatives**:
+
+- A stored zone per user: no such column exists, and it adds account state for one fallback.
+- A zone guessed from the location text: unreliable, and it needs a geocoder.
+
+## D375 — Auto-publish of shared events
+
+**Decision** (FR-029): `ingest/auto-publish.ts` (D193) adds one check after the existing ones.
+
+- An `event` proposal auto-publishes only when the start came from structured data and the zone from the
+  request: `extraction.event.dateSource = 'structured'` and `zoneSource = 'request'`.
+- Otherwise it is held with the new outcome `held_event_unverified`. The outcome is added to
+  `autoPublishOutcomes` and stored in `ingest_jobs.auto_publish`, which is the audit row.
+- The review queue shows the reason as "Check the date and time".
+
+**Rationale**: a published event with a wrong date pushes the wrong time to the whole deck, so a model's
+reading of free text or a guessed zone gets a person's look. Structured data with the device's zone is as
+reliable as the editor.
+
+**Alternatives**:
+
+- Never auto-publish events: this slows down a publisher's own well-formed shares for no gain.
+- Always auto-publish events: the risk above.
+
+## D376 — Duplicate rule for shared events
+
+**Decision** (FR-030), in `ingest/run-dedup.ts` and `repositories/dedup.repo.ts`:
+
+- **Non-event proposals**: candidates still exclude `event` (and `reminder`). A link card with the same URL
+  as an event is never its duplicate.
+- **Event proposals**: candidates are only live and proposed events in the same deck.
+  - **Match**: the normalized `payload.url` (or `source_url`) is the same, and so is the **start date in the
+    event's zone** (the date part of `event_cards.starts_at AT TIME ZONE time_zone`). The result is
+    `possible_duplicate` via `source_url`.
+  - **Title fallback**: without a URL match, the same normalized title and the same start date also give
+    `possible_duplicate`, via `title`.
+  - **No vector arm**: events skip it. Two weeks of a weekly class are semantically the same but aren't duplicates.
+- **Code**: the verdict comes from `eventDedupVerdict`, a new pure, unit-tested function that feeds the
+  unchanged `dedupVerdict`.
+
+**Rationale**: the spec's rule is "same link + same date". The date identifies an occurrence of an event,
+which makes semantic similarity the wrong signal.
+
+**Alternatives**:
+
+- The URL alone: it would flag every week of a recurring class.
+- Vector similarity plus the date: it adds cost without catching a case the URL/title + date rule misses.
+
+## D377 — Review queue and share result for event proposals
+
+**Decision**:
+
+- **Review queue**: an event proposal renders as an event card (status line, location, link). Reviewing
+  opens the card editor with the Event fields, loaded lazily, including Notifications, which stay editable
+  while the card is a proposal (D363).
+- **Share result**: the share result (`/share` status) names the type, for example "Proposed as an event:
+  Thu 3 Dec, 18:00".
+- **Bulk publish** (D190): events publish like other proposals, and duplicates are still skipped.
+- **Bulk import** of notes files (D189) never creates events. Its format has no date syntax, and the spec
+  puts this out of scope.
+
+**Rationale**: these surfaces already exist. Reusing the event card and editor means review shows exactly
+what will be published.
+
+## D378 — Decision events for event ingestion
+
+**Decision**: a new decision event, `ingest.event_extract`, is logged from `jobs/ingest.ts` whenever the
+model or structured data suggest an event:
+
+- `outcome = event_proposed`, with `dateSource: structured|model` and `zoneSource: request|fallback`;
+- `outcome = event_fallback`, with reason `no_start`, `start_out_of_range`, `end_before_start`,
+  `several_events` or `invalid_zone`.
+
+Existing records already cover the rest: holds are in `ingest_jobs.auto_publish` and its log line
+(`held_event_unverified`), and dedup verdicts are in `ingest_jobs.dedup`. Only ids are logged: jobId,
+deckId, userId, itemId.
+
+**Rationale**: constitution VIII. A share that silently became a link instead of an event is a decision
+about the member's content.

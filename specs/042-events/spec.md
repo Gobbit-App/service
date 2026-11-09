@@ -22,6 +22,8 @@ Builds on reminders and the notification area ([`037-reminders`](../037-reminder
 ### Session 2026-11-09
 
 - Q: Are event notices also sent by email? → A: No, not in this feature. Events notify by push and the notification area only; email for events is out of scope.
+- Q: Does sharing a link to an event page create an event? → A: Yes. When ingestion recognises a shared page (or shared text) as an event, it proposes an Event card, with the start, end, location and link, instead of a link card. This is part of this feature, and every new card type gets the same: ingestion proposes it when it recognises one.
+- Q: Events or checklists first? → A: Events ship first; checklists build on them.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -136,6 +138,26 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 
 ---
 
+### User Story 7 - Share an event page and get an event card (Priority: P2)
+
+A member sees the school's page for the spring concert and shares it to the deck from their phone (Android share, the iPhone Shortcut or the paste box). Gobbit recognises the page as an event and proposes an Event card with the concert's title, start, end, location and the page as its link, in the sharer's time zone. A publisher reviews it in the review queue as usual and publishes it, and from then on it notifies like any event.
+
+**Why this priority**: most family events arrive as a link someone was sent. Retyping the date into the editor is the step people skip, so an event that arrives by sharing is the one that actually gets a reminder.
+
+**Independent Test**: share a page that describes an event with a stated date. The proposal in the review queue is an Event with that date, location and link. Share a plain article: it's still proposed as a link card.
+
+**Acceptance Scenarios**:
+
+1. **Given** a shared page that describes one event with a date (in the page's event data or in its text), **When** ingestion runs, **Then** the proposal is an Event with that title, start, end (if stated), location (if stated) and the page as its link with a preview.
+2. **Given** a shared page or text that mentions no date, or more than one event, **When** ingestion runs, **Then** the proposal is a link (or text) card as today, not an Event.
+3. **Given** a date-only event on the page, **When** it's proposed, **Then** it's an all-day event. **Given** a time with no zone, **When** it's proposed, **Then** the time is read in the sharer's time zone.
+4. **Given** an event proposal, **When** it's waiting for review, **Then** nobody is notified. **When** a publisher publishes it, **Then** its default notify time (1 day before, everyone who can read it) applies to moments still ahead.
+5. **Given** a publisher shares an event whose date and time zone were read from the page's event data and the sharer's device, **When** the share would auto-publish today, **Then** it auto-publishes as an Event. **Given** the date came only from the model's reading of the text, or the time zone isn't known, **Then** it stays in review.
+6. **Given** an event in the deck with a link, **When** someone shares the same link for the same date, **Then** the proposal is flagged as a possible duplicate. **When** they share it for a different date (a weekly class), **Then** it's not.
+7. **Given** a reviewer opens an event proposal, **When** they edit it, **Then** they can correct the date, time zone, location and notification settings before publishing.
+
+---
+
 ### Edge Cases
 
 - **Notify time before "now" at creation**: e.g. created 3 hours before the start with the 1-day default. That notice is skipped; any "at the start" or shorter notice still goes out. The editor says which notify times will be skipped.
@@ -149,7 +171,10 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 - **Category made admins-only after creation**: the audience narrows to people who can still see the category; no one else is notified.
 - **Creator leaves the deck**: the event stays and keeps notifying; the deck's owners can change its audience.
 - **Public decks**: the event's title, body, date, location and link appear on public pages, public search and the public read API like other card content; the audience, the picked people and mutes never do. Anonymous visitors get no notifications.
-- **Duplicates**: two events with the same link and the same start date are flagged as possible duplicates; the same link on different dates (a weekly class) is not.
+- **Duplicates**: a shared event with the same link and the same start date as an existing event is flagged as a possible duplicate; the same link on a different date (a weekly class) is not, and a shared link card is never a duplicate of an event.
+- **Shared page with a past date**: proposed as an Event that has already ended; publishing it schedules nothing.
+- **Shared page with an unreadable or out-of-range date** (more than 5 years ahead, end before start): proposed as a link card, not an Event.
+- **Shared without a time zone** (email-in, or a Shortcut that doesn't send one): the operator's default time zone is used and the proposal stays in review so a person checks it.
 - **Proposed events published late**: only notify times still ahead are sent.
 - **Restored or undeleted events**: only notify times still ahead are sent; ones that passed while archived or deleted are not.
 - **Many events notifying together**: each is a separate push, no digest.
@@ -202,10 +227,18 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 
 - **FR-022**: Members who can read an event MUST be able to download it as a standard calendar file (title, start, end or default length, time zone, location, link to the card and the event's own link), importable by common calendar apps, including offline for a card already loaded.
 
+**Ingestion**
+
+- **FR-026**: Ingestion MUST propose an Event when the shared page or text describes exactly one event with a readable start. It MUST use the page's structured event data when present, and otherwise the extraction's reading of the content. It MUST NOT invent a date that isn't in the source. A share with no readable date stays a link or text card.
+- **FR-027**: A proposed event MUST take its time zone from the sharer's device when the share carries one, else from an operator default. It MUST read date-only starts as all-day events. It MUST pass the same rules as an editor-made event (FR-001, FR-002), and fall back to a link card when it doesn't.
+- **FR-028**: A proposed event MUST get the default notify settings (1 day before, everyone who can read it; only the creator on a personal deck), send nothing while proposed (FR-016), and be editable in review like any proposal, including its notification settings.
+- **FR-029**: A shared event MUST auto-publish only under the existing auto-publish rules, and only when its start came from the page's structured event data and its time zone from the sharer's device. Otherwise it MUST stay in review, with the reason recorded.
+- **FR-030**: Duplicate detection for a shared event MUST compare only with events: the same link and the same start date is a possible duplicate. Shares of other types MUST never be flagged as duplicates of an event.
+
 **Records and limits**
 
 - **FR-023**: Creating, editing (field names only, including audience and notify times), archiving, restoring and deleting an event MUST appear in the deck's activity log like other card changes.
-- **FR-024**: Every notification decision (planned, skipped because the person muted, has no push device, is not eligible, or the event already started; sent, retried, failed, device removed), every mute and unmute, and every refused audience change MUST leave a named record identifying people by id only, per the project's accountability rules.
+- **FR-024**: Every notification decision (planned, skipped because the person muted, has no push device, is not eligible, or the event already started; sent, retried, failed, device removed), every mute and unmute, every refused audience change, and every ingestion decision about an event (proposed as an event, fell back to another type, held in review and why) MUST leave a named record identifying people by id only, per the project's accountability rules.
 - **FR-025**: Limits that shape the experience (most notify times, longest notify-before, furthest start, location length, the all-day notice hour) MUST be operator-tunable with documented defaults.
 
 ### Key Entities
@@ -227,6 +260,7 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 - **SC-005**: An event's status line is correct for viewers in at least three time zones at each phase (upcoming, today, now, ended), including across a daylight saving change.
 - **SC-006**: An exported event imports into the three most common calendar apps with the correct date, time, location and link on the first try.
 - **SC-007**: With only events in "Coming up", the bell's alert light is off in 100% of checks.
+- **SC-008**: Shared pages that carry structured event data are proposed as Events with the page's date: every event-page fixture in the committed ingestion test set is proposed as an Event with the right date, and no article fixture is.
 
 ## Assumptions
 
@@ -239,7 +273,8 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 - **Mutes are per event**: there is no per-deck or global "mute all events" beyond turning push off per device.
 - **Push only**: events notify by push and the notification area; there is no event email and no new account setting.
 - **Calendar export** is a file download; there is no subscription feed or sync.
-- **Ingestion and import** don't create events in this feature; events are made in the editor.
+- **Ingestion** proposes events from shared pages and text (User Story 7). **Bulk import** (notes files) doesn't create events in this feature: its format has no date syntax.
+- **New card types include ingestion**: every new card type is proposed by ingestion when a share is recognised as one.
 - **Deadline precision** is to the minute, as for reminders.
 
 ## Out of Scope
@@ -251,5 +286,6 @@ From an event card, a member taps "Add to calendar" and gets a calendar file wit
 - "Event moved" or "event cancelled" notices.
 - Automatically archiving ended events.
 - Converting another card to or from an Event.
-- Ingestion or import proposing events (a natural follow-up: pages that describe an event could be proposed as event cards).
+- Bulk import (notes files) creating events.
+- One share proposing several events (a season's schedule page): it stays a single link card.
 - "Add to calendar" on the no-JavaScript public pages.

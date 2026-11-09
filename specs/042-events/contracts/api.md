@@ -43,6 +43,23 @@ can't see. After the route changes, run `pnpm api:openapi`.
   - 409 `/problems/event-not-in-audience` (only for `PUT`; `DELETE` always succeeds for a reader).
   - 404 when the caller can't read the item.
 
+## Ingest
+
+- **`POST /ingest`** (session or `ing_` token) gains an optional `timeZone` (IANA). An unknown zone → 400.
+  Without one, the worker uses `INGEST_DEFAULT_TIME_ZONE` (D374).
+- **Proposals**: a share that describes one dated event becomes an `Item` with `type: 'event'` and
+  `status: 'proposed'`, carrying `url`/`preview` and the default `notify` (D370). Otherwise the share is
+  proposed as before.
+- **Review**: the proposal is edited through `PATCH /items/{id}` while proposed, `notify` included (the
+  lock starts at publish, D363), and published as usual. Bulk publish treats events like other proposals
+  and still skips duplicates.
+- **Share status** (`GET /shares/{id}`, `GET /decks/{id}/shares`, D196): `ShareSummary.item` gains
+  `type` and `event: { startsAt, allDay, timeZone } | null` so the share result can name the event's
+  date. Both stay `.strict()`. `autoPublish = held_event_unverified` → "Check the date and time" (D375).
+  The review entry's `job.autoPublish` carries the same value.
+- **Dedup**: an event proposal's `dedup` matches only events with the same link (or title) and the same
+  start date (D376).
+
 ## Me
 
 - **`GET /me/pending`** → `{ items: PendingItem[]; upcoming: PendingItem[]; comingUp: ComingUpEntry[] }`

@@ -1,6 +1,6 @@
 # Data model: Events (042)
 
-Migration `0022_events` (renumbered if `042-checklists` merges first, D373) plus a hand-written
+Migration `0022_events` (events ship before `042-checklists`, which rebases onto `0023`, D373) plus a hand-written
 `down/0022_events.down.sql`. Compare the new enum value as text inside the migration
 (`type::text = 'event'`): a value added by `ALTER TYPE … ADD VALUE` can't be used in the same
 transaction.
@@ -146,6 +146,21 @@ covers it (constitution III).
   canEditNotify: boolean }                               // D363
 ```
 
+## Ingestion (no DB change; jsonb and shared unions only)
+
+| Where | Change |
+|-------|--------|
+| `ingestCardTypes` (`@gobbit/shared/ingest`) | + `event` (the extraction tool may propose it) |
+| `POST /ingest` body (`schemas/ingest.ts`) | + `timeZone?: string` (IANA, `isTimeZone`), stored in `ingest_jobs.raw.timeZone` (D374) |
+| `ingest_jobs.normalized` | + `structuredEvent?: { name, startDate, endDate?, location?, url? }`, `structuredEventCount?: number` (D370) |
+| `ingest_jobs.extraction` | + `event?: { dateSource: 'structured' \| 'model', zoneSource: 'request' \| 'fallback' }` (D374, D375) |
+| `autoPublishOutcomes` (`ingest_jobs.auto_publish`) | + `held_event_unverified` (D375) |
+| `ShareSummary.item` (`schemas/share.ts`, D196) | + `type`, + `event: { startsAt, allDay, timeZone } \| null` (D377) |
+| `ingest_jobs.dedup` | unchanged shape; for events, candidates are events with the same link/title and the same start date (D376) |
+
+An event proposal is an ordinary `items` row with `status = 'proposed'`. `event_cards` is synced as
+for any event, and `event_notices` aren't written until it's published (FR-016).
+
 ## Shared pure functions (unit-tested, no I/O)
 
 | Function | Module | Used by |
@@ -156,3 +171,5 @@ covers it (constitution III).
 | `canEditEventNotify(input)` | `events-cards/audience.ts` | service (D363), DTO |
 | `eventPhase(span, now)`, `formatEventWhen(span, viewerTz)` | `event-time` (zod-free subpath) | web card, notification area, public pages (absolute form only), push text |
 | `toIcs(event, opts)` | `ics` (zod-free subpath) | web "Add to calendar" |
+| `parseEventStart(value, timeZone)` → `{ allDay, start } \| null` | `events-cards/parse.ts` | ingest validation (D370) |
+| `eventDedupVerdict(candidate, proposal)` | `apps/api/src/ingest/dedup-verdict.ts` | ingest dedup (D376) |

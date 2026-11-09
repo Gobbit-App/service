@@ -59,6 +59,16 @@ All actions render through `ui/buttons` with icons from `ui/icons` (new icons: `
 - Offline: the same "Showing the last known list" note as today.
 - Empty state: when all three sections are empty, the existing "Nothing waiting on you" message shows.
 
+## Sharing and review
+
+- **Share target, paste box**: send `timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone` with
+  `POST /ingest`. The iPhone Shortcut docs add an optional "Time zone" field (D374).
+- **Share result**: when the proposal is an event, it reads "Proposed as an event: Thu 3 Dec, 18:00".
+  When it was held, it adds "Check the date and time before publishing" (D375, D377).
+- **Review queue**: event proposals render through `EventCard` (status line, location, link). Opening
+  one shows the card editor with the Event fields, and Notifications are editable while the card is
+  proposed. A possible duplicate shows the existing "Possible duplicate" note linking the matching event.
+
 ## Public pages (no JS)
 
 - The date and time are shown in the event's zone with the zone named, plus the location and the
