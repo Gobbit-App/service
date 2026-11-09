@@ -35,6 +35,9 @@
           "channel": {
             "type": "string"
           },
+          "timeZone": {
+            "type": "string"
+          },
           "files": {
             "anyOf": [
               {
@@ -21606,6 +21609,11 @@
                       "pwa",
                       "paste"
                     ]
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
                   }
                 }
               }
@@ -22239,6 +22247,9 @@
                               "mime"
                             ]
                           }
+                        },
+                        "timeZone": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -22328,6 +22339,49 @@
                           },
                           "additionalProperties": false
                         },
+                        "structuredEvent": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "startDate": {
+                              "type": "string"
+                            },
+                            "endDate": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "location": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "url": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "startDate",
+                            "endDate",
+                            "location",
+                            "url"
+                          ]
+                        },
+                        "structuredEventCount": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
                         "imageCandidates": {
                           "type": "array",
                           "items": {
@@ -22401,7 +22455,8 @@
                           "enum": [
                             "text",
                             "link",
-                            "image"
+                            "image",
+                            "event"
                           ]
                         },
                         "confidence": {
@@ -22428,6 +22483,29 @@
                           "type": "string",
                           "enum": [
                             "preview"
+                          ]
+                        },
+                        "event": {
+                          "type": "object",
+                          "properties": {
+                            "dateSource": {
+                              "type": "string",
+                              "enum": [
+                                "structured",
+                                "model"
+                              ]
+                            },
+                            "zoneSource": {
+                              "type": "string",
+                              "enum": [
+                                "request",
+                                "fallback"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "dateSource",
+                            "zoneSource"
                           ]
                         }
                       },
@@ -22527,6 +22605,7 @@
                         "held_duplicate",
                         "held_duplicate_check_failed",
                         "held_publish_failed",
+                        "held_event_unverified",
                         null
                       ]
                     },
@@ -24080,6 +24159,7 @@
                                   "held_duplicate",
                                   "held_duplicate_check_failed",
                                   "held_publish_failed",
+                                  "held_event_unverified",
                                   null
                                 ]
                               },
@@ -26821,6 +26901,7 @@
                               "held_duplicate",
                               "held_duplicate_check_failed",
                               "held_publish_failed",
+                              "held_event_unverified",
                               null
                             ]
                           },
@@ -26839,12 +26920,49 @@
                               },
                               "deleted": {
                                 "type": "boolean"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "link",
+                                  "image",
+                                  "table",
+                                  "calc",
+                                  "reminder",
+                                  "event"
+                                ]
+                              },
+                              "event": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "startsAt": {
+                                    "type": "string"
+                                  },
+                                  "allDay": {
+                                    "type": "boolean"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "startsAt",
+                                  "allDay",
+                                  "timeZone"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": [
                               "id",
                               "title",
-                              "deleted"
+                              "deleted",
+                              "type",
+                              "event"
                             ],
                             "additionalProperties": false
                           },
@@ -27255,6 +27373,7 @@
                         "held_duplicate",
                         "held_duplicate_check_failed",
                         "held_publish_failed",
+                        "held_event_unverified",
                         null
                       ]
                     },
@@ -27273,12 +27392,49 @@
                         },
                         "deleted": {
                           "type": "boolean"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "link",
+                            "image",
+                            "table",
+                            "calc",
+                            "reminder",
+                            "event"
+                          ]
+                        },
+                        "event": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "startsAt": {
+                              "type": "string"
+                            },
+                            "allDay": {
+                              "type": "boolean"
+                            },
+                            "timeZone": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "startsAt",
+                            "allDay",
+                            "timeZone"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "title",
-                        "deleted"
+                        "deleted",
+                        "type",
+                        "event"
                       ],
                       "additionalProperties": false
                     },
@@ -27604,6 +27760,7 @@
                         "held_duplicate",
                         "held_duplicate_check_failed",
                         "held_publish_failed",
+                        "held_event_unverified",
                         null
                       ]
                     },
@@ -27622,12 +27779,49 @@
                         },
                         "deleted": {
                           "type": "boolean"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "link",
+                            "image",
+                            "table",
+                            "calc",
+                            "reminder",
+                            "event"
+                          ]
+                        },
+                        "event": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "startsAt": {
+                              "type": "string"
+                            },
+                            "allDay": {
+                              "type": "boolean"
+                            },
+                            "timeZone": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "startsAt",
+                            "allDay",
+                            "timeZone"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "title",
-                        "deleted"
+                        "deleted",
+                        "type",
+                        "event"
                       ],
                       "additionalProperties": false
                     },

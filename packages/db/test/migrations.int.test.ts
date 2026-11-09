@@ -146,6 +146,8 @@ describe('migrations: 0022_events down (042, T008)', () => {
 
   it('refuses to roll back while an event card exists, then rolls back once it is gone', async () => {
     await runMigrations(ctx.pool);
+    // 0023 (events ingestion, T093) only widens a CHECK; its down file narrows it back.
+    expect(await rollbackLatest(ctx.pool)).toBe('0023_events_ingest');
     expect(await getLatestMigrationTag(ctx.pool)).toBe('0022_events');
     const account = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
     const deck = await ctx.pool.query(

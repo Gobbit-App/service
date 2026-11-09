@@ -8,3 +8,4 @@ export * from './span';
 export * from './moments';
 export * from './audience';
 export * from './public-payload';
+export * from './parse';
