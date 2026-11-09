@@ -112,11 +112,11 @@ Browse and search with date, location and preview; public JSON shows content but
 
 **Independent Test**: event in 2 h with "1 hour before": every reader with push gets exactly one push.
 
-- [ ] T050 [P] [US3] [int] apps/api/test/events-notify.int.test.ts: plan → deliver at most once per user × device × notice across reruns; grace skip `started`; proposed/archived/deleted send nothing (`stale`); moved start notifies again; no email; no device → `no_channel`; no VAPID → `push_off`; audience ∩ read access
-- [ ] T051 [P] [US3] [unit] apps/api/src/services/notify.message.test.ts: event push = title, `<deck> · <start in event zone>[ · <location>]`, tag `event:<itemId>:<noticeId>`, url `/i/<itemId>`, no body
-- [ ] T052 [US3] apps/api/src/repositories/notifications.repo.ts: claims/deliveries carry `kind`/`notice_id`; events.repo.ts: claim due pending notices (`FOR UPDATE SKIP LOCKED`, batch `REMINDER_SWEEP_BATCH`)
-- [ ] T053 [US3] apps/api/src/services/notify.service.ts: `planEvents` (grace → `skipped/started`; stale lifecycle → skip; fan out to `eventAudience` − mutes − ineligible into push deliveries) and per-kind context/`stillDue` in deliver; apps/api/src/jobs/reminder-sweep.ts tick order reminders → events → deliver
-- [ ] T054 [US3] apps/api/src/services/notify.message.ts event message; notify.events.ts `event.notice` decision events
+- [x] T050 [P] [US3] [int] apps/api/test/events-notify.int.test.ts: plan → deliver at most once per user × device × notice across reruns; grace skip `started`; proposed/archived/deleted send nothing (`stale`); moved start notifies again; no email; no device → `no_channel`; no VAPID → `push_off`; audience ∩ read access
+- [x] T051 [P] [US3] [unit] apps/api/src/services/notify.message.test.ts: event push = title, `<deck> · <start in event zone>[ · <location>]`, tag `event:<itemId>:<noticeId>`, url `/i/<itemId>`, no body
+- [x] T052 [US3] apps/api/src/repositories/notifications.repo.ts: claims/deliveries carry `kind`/`notice_id`; events.repo.ts: claim due pending notices (`FOR UPDATE SKIP LOCKED`, batch `REMINDER_SWEEP_BATCH`)
+- [x] T053 [US3] apps/api/src/services/notify.service.ts: `planEvents` (grace → `skipped/started`; stale lifecycle → skip; fan out to `eventAudience` − mutes − ineligible into push deliveries) and per-kind context/`stillDue` in deliver; apps/api/src/jobs/reminder-sweep.ts tick order reminders → events → deliver
+- [x] T054 [US3] apps/api/src/services/notify.message.ts event message; notify.events.ts `event.notice` decision events
 
 **Checkpoint**: US3 complete.
 
@@ -180,7 +180,7 @@ Browse and search with date, location and preview; public JSON shows content but
 - [x] T105 [P] CLAUDE.md: event type / ingestion convention line if changed
 - [x] T106 PLAN.md: link 042-events
 - [x] T107 quickstart.md validation
-- [ ] T108 `/speckit-converge` until Converged
+- [x] T108 `/speckit-converge` until Converged
 
 ---
 
