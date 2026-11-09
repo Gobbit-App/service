@@ -75,6 +75,50 @@ export function dedupVerdict(s: DedupSignals): DedupVerdict {
   };
 }
 
+/** D376: what an event proposal is compared by. */
+export interface EventDedupProposal {
+  title: string;
+  url: string | null;
+  sourceUrl: string | null;
+}
+
+/** Titles compare equal across case, spacing and surrounding punctuation. */
+function normalizeTitle(title: string): string {
+  return title
+    .normalize('NFKC')
+    .toLocaleLowerCase()
+    .replace(/[\p{P}\p{S}]+/gu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
+}
+
+function eventUrls(e: { url: string | null; sourceUrl: string | null }): Set<string> {
+  return new Set([e.url, e.sourceUrl].flatMap((u) => (u ? [normalizeSourceUrl(u)] : [])));
+}
+
+/**
+ * D376: an event proposal against the deck's events on the same start date (`candidates`, published
+ * first). The same link (`payload.url` or `source_url`) is a possible duplicate via `source_url`; else
+ * the same normalized title is one via `title`. Never `update` and no vector arm: the date tells two
+ * occurrences of a recurring event apart.
+ */
+export function eventDedupVerdict(
+  proposal: EventDedupProposal,
+  candidates: readonly (EventDedupProposal & { id: string })[],
+): DedupVerdict {
+  const urls = eventUrls(proposal);
+  const byUrl = candidates.find((c) => [...eventUrls(c)].some((u) => urls.has(u)));
+  if (byUrl) {
+    return { action: 'possible_duplicate', itemId: byUrl.id, similarity: null, via: 'source_url' };
+  }
+  const title = normalizeTitle(proposal.title);
+  const byTitle = title ? candidates.find((c) => normalizeTitle(c.title) === title) : undefined;
+  if (byTitle) {
+    return { action: 'possible_duplicate', itemId: byTitle.id, similarity: null, via: 'title' };
+  }
+  return { action: 'new', itemId: null, similarity: null, via: 'none' };
+}
+
 /**
  * Normalize a source URL so equivalent links compare equal.
  * Drops hash, default ports (handled by URL), tracking params, trailing slash; sorts params.

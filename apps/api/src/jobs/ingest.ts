@@ -26,6 +26,8 @@ import { toLinkPreview } from '../fetch/link-preview';
 import type { NormalizeContext } from '../ingest/normalize-raw';
 import { appliedPreview, logPreviewApplied } from '../ingest/applied-preview';
 import type { ValidateContext } from '../ai/extract-validate';
+import type { EventContext } from '../ai/extract-event';
+import { logEventExtract, resolveEventZone } from '../ingest/event-extract';
 import { classifyFailure, failureDetail, type IngestStage } from '../ingest/failure-code';
 import { logPreviewFallback, previewFallback } from '../ingest/preview-fallback';
 import { childLogger, lineSink, type Logger } from '../lib/logger';
@@ -56,6 +58,8 @@ export interface IngestHandlerDeps {
   linkSnapshotQueue?: LinkSnapshotQueue;
   /** D193: bound `autoPublish`, run after the proposal exists; omitted → always review. Never throws. */
   autoPublish?: (input: AutoPublishInput) => Promise<AutoPublishOutcome | null>;
+  /** D370/D374: event rules; omitted → shares are never proposed as events. */
+  events?: IngestEventDeps;
   /** D167: dimensions of the shared image for a locked-host preview; omitted → none. */
   assets?: Pick<AssetsRepo, 'byPublicId'>;
   now?: () => Date;
@@ -63,6 +67,16 @@ export interface IngestHandlerDeps {
   log?: (message: string) => void;
   /** D195: structured, content-free failure lines; default `childLogger('ingest')`. */
   logger?: Pick<Logger, 'error' | 'warn' | 'info'>;
+}
+
+/** What the handler needs to propose events (D370, D371, D374). */
+export interface IngestEventDeps {
+  /** `INGEST_DEFAULT_TIME_ZONE`: the zone of a share that carries none. */
+  defaultTimeZone: string;
+  startMaxDays: number;
+  locationMax: number;
+  /** Personal decks always notify `me` (D362). */
+  isPersonalDeck: (deckId: string) => Promise<boolean>;
 }
 
 type FailingJob = Pick<IngestJobRow, 'id' | 'deckId' | 'channel' | 'attempts'>;
@@ -179,6 +193,23 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
     return 'proposed';
   }
 
+  async function eventContext(
+    events: IngestEventDeps,
+    deckId: string,
+    raw: IngestRaw,
+    source: NormalizedSource,
+  ): Promise<EventContext> {
+    return {
+      ...(source.structuredEvent ? { structured: source.structuredEvent } : {}),
+      severalEvents: (source.structuredEventCount ?? 0) > 1,
+      ...resolveEventZone(raw, events.defaultTimeZone),
+      personalDeck: await events.isPersonalDeck(deckId),
+      startMaxDays: events.startMaxDays,
+      locationMax: events.locationMax,
+      now: now(),
+    };
+  }
+
   async function assetDimensions(publicId: string) {
     const asset = await deps.assets?.byPublicId(publicId);
     return asset?.width && asset.height ? { width: asset.width, height: asset.height } : null;
@@ -235,6 +266,9 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         ...(lockedHost ? { lockedHost, imageDimensions } : {}),
         ...(job.raw.text ? { sharedText: job.raw.text } : {}),
         categoryIds: deckCategories.map((c) => c.id),
+        ...(deps.events
+          ? { event: await eventContext(deps.events, job.deckId, job.raw, source) }
+          : {}),
       };
       extractCtx = { source, validate };
       stage = 'extract';
@@ -267,12 +301,20 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         outcome.summary,
         opts?.signal,
       );
+      if (outcome.eventDecision) {
+        logEventExtract(
+          logger,
+          { jobId: job.id, deckId: job.deckId, userId: job.userId, itemId: proposed.item.id },
+          outcome.eventDecision,
+        );
+      }
       // D193: the proposal exists; publishing it directly is best effort, review is the fallback.
       await deps.autoPublish?.({
         job: jobRef,
         proposal: proposed.item,
         categoryIds: outcome.summary.categoryIds,
         verdict: proposed.dedup,
+        ...(outcome.summary.event ? { event: outcome.summary.event } : {}),
       });
       return 'proposed';
     } catch (err) {

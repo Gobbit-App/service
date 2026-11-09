@@ -66,6 +66,27 @@ describe('createFakeExtractor (fake-extractor)', () => {
     expect(imageCall.raw).toMatchObject({ type: 'image' });
   });
 
+  it("proposes an event from the page's structured event (D370)", async () => {
+    const extractor = createFakeExtractor();
+    const call = await extractor.extract(
+      makeInput({
+        url: 'https://fair.example/',
+        structuredEvent: {
+          name: 'Winter fair',
+          startDate: '2026-12-21',
+          endDate: null,
+          location: 'Town hall',
+          url: null,
+        },
+      }),
+      { model: 'm' },
+    );
+    expect(call.raw).toMatchObject({
+      type: 'event',
+      event: { start: '2026-12-21', end: null, allDay: true, location: 'Town hall' },
+    });
+  });
+
   it('prefers og.title over the first text line for the title', async () => {
     const extractor = createFakeExtractor();
     const call = await extractor.extract(

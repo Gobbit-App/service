@@ -14,6 +14,7 @@ import {
 } from 'drizzle-orm';
 import {
   categories,
+  eventCards,
   favorites,
   ingestJobs,
   itemCategories,
@@ -59,6 +60,11 @@ interface ItemListFilters {
 
 /** Writes another module adds to an items transaction. */
 export type InTx = (tx: DbTx) => Promise<void>;
+
+/** A card as a share summary names it (`findRefsByIds`). */
+export type ItemRef = Pick<ItemRow, 'id' | 'title' | 'deletedAt' | 'type'> & {
+  event: { startsAt: Date; allDay: boolean; timeZone: string } | null;
+};
 
 /** Runs each defined hook in order inside the same transaction; undefined when there are none. */
 export function composeInTx(...hooks: (InTx | undefined)[]): InTx | undefined {
@@ -377,12 +383,29 @@ export function createItemsRepo(db: DbExecutor) {
     },
 
     /** D196: id, title and deletion of several cards at once, soft-deleted ones included. */
-    async findRefsByIds(ids: string[]): Promise<Pick<ItemRow, 'id' | 'title' | 'deletedAt'>[]> {
+    /** Share summaries (D196): title and state, plus the start of an event card (D377). */
+    async findRefsByIds(ids: string[]): Promise<ItemRef[]> {
       if (ids.length === 0) return [];
-      return await db
-        .select({ id: items.id, title: items.title, deletedAt: items.deletedAt })
+      const rows = await db
+        .select({
+          id: items.id,
+          title: items.title,
+          deletedAt: items.deletedAt,
+          type: items.type,
+          startsAt: eventCards.startsAt,
+          allDay: eventCards.allDay,
+          timeZone: eventCards.timeZone,
+        })
         .from(items)
+        .leftJoin(eventCards, eq(eventCards.itemId, items.id))
         .where(inArray(items.id, ids));
+      return rows.map(({ startsAt, allDay, timeZone, ...ref }) => ({
+        ...ref,
+        event:
+          startsAt !== null && allDay !== null && timeZone !== null
+            ? { startsAt, allDay, timeZone }
+            : null,
+      }));
     },
 
     /**

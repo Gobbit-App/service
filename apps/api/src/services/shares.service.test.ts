@@ -33,7 +33,13 @@ function job(overrides: Partial<IngestJobRow> = {}): IngestJobRow & { channel: S
   } as IngestJobRow & { channel: ShareChannel };
 }
 
-const card: ShareItemRef = { id: 'item-1', title: 'Dentist', deletedAt: null };
+const card: ShareItemRef = {
+  id: 'item-1',
+  title: 'Dentist',
+  deletedAt: null,
+  type: 'link',
+  event: null,
+};
 
 describe('toShareSummary (D196)', () => {
   it.each([
@@ -93,6 +99,22 @@ describe('toShareSummary (D196)', () => {
       id: 'item-1',
       title: 'Dentist',
       deleted: true,
+      type: 'link',
+      event: null,
+    });
+  });
+
+  it('says when an event card starts (D377)', () => {
+    const startsAt = new Date('2026-12-03T18:00:00.000Z');
+    const event = {
+      ...card,
+      type: 'event' as const,
+      event: { startsAt, allDay: false, timeZone: 'UTC' },
+    };
+    expect(toShareSummary(job({ status: 'proposed' }), event, null).item?.event).toEqual({
+      startsAt: startsAt.toISOString(),
+      allDay: false,
+      timeZone: 'UTC',
     });
   });
 

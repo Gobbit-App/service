@@ -1,6 +1,7 @@
 import { parseHTML } from 'linkedom';
 import { LINK_IMAGE_CANDIDATES_MAX, LINK_PREVIEW_IMAGE_URL_MAX } from '@gobbit/shared';
 import type { ImageSource } from './preview-events';
+import { jsonLdNodes, type JsonLdNode } from './structured-event';
 
 export interface ImageCandidate {
   url: string;
@@ -12,10 +13,9 @@ export interface CollectImageOptions {
   articleHtml?: string | null;
   /** Smallest stated width of an in-article image (`LINK_ARTICLE_IMAGE_MIN_PX`). */
   articleMinPx: number;
+  /** The page's JSON-LD nodes when the caller already read them (`jsonLdNodes`). */
+  jsonLd?: JsonLdNode[];
 }
-
-/** A JSON-LD script larger than this is skipped unread. */
-const STRUCTURED_DATA_MAX_CHARS = 100_000;
 
 /** Names that mark an image as decoration rather than content. */
 const DECORATION = /icon|logo|avatar|emoji|sprite|spacer|pixel|badge|gravatar|tracking/i;
@@ -50,30 +50,11 @@ function structuredImages(value: unknown): string[] {
   return [];
 }
 
-function structuredNodes(data: unknown): Record<string, unknown>[] {
-  if (Array.isArray(data)) return data.flatMap(structuredNodes);
-  if (!data || typeof data !== 'object') return [];
-  const node = data as Record<string, unknown>;
-  const graph = Array.isArray(node['@graph']) ? structuredNodes(node['@graph']) : [];
-  return [node, ...graph];
-}
-
-function structuredData(doc: ParentNode): string[] {
-  const urls: string[] = [];
-  for (const script of Array.from(doc.querySelectorAll('script[type="application/ld+json"]'))) {
-    const text = script.textContent ?? '';
-    if (text.length > STRUCTURED_DATA_MAX_CHARS) continue;
-    let data: unknown;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      continue;
-    }
-    for (const node of structuredNodes(data)) {
-      urls.push(...structuredImages(node.image), ...structuredImages(node.thumbnailUrl));
-    }
-  }
-  return urls;
+function structuredData(nodes: JsonLdNode[]): string[] {
+  return nodes.flatMap((node) => [
+    ...structuredImages(node.image),
+    ...structuredImages(node.thumbnailUrl),
+  ]);
 }
 
 function plainInt(value: string | null): number | null {
@@ -181,7 +162,7 @@ export function collectImageCandidates(
       ),
       'twitter',
     );
-    add(structuredData(doc), 'structured_data');
+    add(structuredData(opts.jsonLd ?? jsonLdNodes(doc)), 'structured_data');
     add(attrs(doc, 'link[rel="image_src"]', 'href'), 'image_src');
     add(attrs(doc, 'video[poster]', 'poster'), 'video_poster');
     if (opts.articleHtml) {

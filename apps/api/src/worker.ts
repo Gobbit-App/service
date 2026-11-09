@@ -231,6 +231,13 @@ async function main() {
       embedQueue: workerEmbedQueue,
       linkSnapshotQueue: ingestLinkSnapshotQueue,
       assets: createAssetsRepo(db),
+      // D370/D374: shares recognised as events become event proposals.
+      events: {
+        defaultTimeZone: env.INGEST_DEFAULT_TIME_ZONE,
+        startMaxDays: env.EVENT_START_MAX_DAYS,
+        locationMax: env.EVENT_LOCATION_MAX,
+        isPersonalDeck: async (deckId) => (await decks.findById(deckId))?.kind === 'personal',
+      },
       // D193: publishers' shares on opted-in decks skip review, through review's own routine.
       autoPublish: (input) =>
         autoPublish(

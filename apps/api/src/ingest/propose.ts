@@ -94,6 +94,7 @@ export async function proposeItem(deps: ProposeDeps, input: ProposeInput): Promi
         deckId: job.deckId,
         title: created.title,
         sourceUrl: created.sourceUrl,
+        ...(created.type === 'event' ? { type: created.type, url: urlOf(created.payload) } : {}),
         jobId: job.id,
         userId: job.userId,
         signal: input.signal,
@@ -124,4 +125,10 @@ async function verdictFor(deps: ProposeDeps, input: RunDedupInput): Promise<Dedu
     );
     return null;
   }
+}
+
+/** An event's own link, when its payload has one. */
+function urlOf(payload: unknown): string | null {
+  const url = (payload as { url?: unknown } | null)?.url;
+  return typeof url === 'string' ? url : null;
 }
