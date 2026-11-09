@@ -64,6 +64,7 @@ describe('createEventCardsService', () => {
     spans: ReturnType<typeof vi.fn>;
     currentNotices: ReturnType<typeof vi.fn>;
     mutedBy: ReturnType<typeof vi.fn>;
+    setMute: ReturnType<typeof vi.fn>;
   };
   let decisions: { record: ReturnType<typeof vi.fn> };
   let service: ReturnType<typeof createEventCardsService>;
@@ -82,6 +83,7 @@ describe('createEventCardsService', () => {
       spans: vi.fn(async () => new Map()),
       currentNotices: vi.fn(async () => new Map()),
       mutedBy: vi.fn(async () => new Set()),
+      setMute: vi.fn(async () => undefined),
     };
     decisions = { record: vi.fn() };
     service = createEventCardsService({
@@ -286,6 +288,55 @@ describe('createEventCardsService', () => {
       muted: true,
       inAudience: true,
       canEditNotify: false,
+    });
+  });
+
+  describe('mute (D364)', () => {
+    const recorded = () =>
+      decisions.record.mock.calls
+        .filter(([name]) => name === 'event.mute')
+        .map(([, f]) => [f.outcome, f.reason].filter(Boolean).join(':'));
+
+    it('mutes for an audience member and records it', async () => {
+      await service.mute(actor(OTHER), row(), true);
+      expect(events.setMute).toHaveBeenCalledWith('i1', OTHER, true);
+      expect(recorded()).toEqual(['muted']);
+    });
+
+    it('refuses a card that is not an event', async () => {
+      await expect(service.mute(actor(OTHER), row({ type: 'text' }), true)).rejects.toMatchObject({
+        status: 409,
+        type: '/problems/not-an-event',
+      });
+      expect(events.setMute).not.toHaveBeenCalled();
+      expect(recorded()).toEqual(['refused:not_an_event']);
+    });
+
+    it('refuses to mute for someone the event does not notify', async () => {
+      const onlyMe = row({
+        payload: {
+          ...PAYLOAD,
+          notify: { ...PAYLOAD.notify, audience: { mode: 'me', userIds: [] } },
+        },
+      });
+      await expect(service.mute(actor(OTHER), onlyMe, true)).rejects.toMatchObject({
+        status: 409,
+        type: '/problems/event-not-in-audience',
+      });
+      expect(recorded()).toEqual(['refused:not_in_audience']);
+    });
+
+    it('always lets a reader unmute, in the audience or not', async () => {
+      const nobody = row({
+        payload: {
+          ...PAYLOAD,
+          notify: { ...PAYLOAD.notify, audience: { mode: 'nobody', userIds: [] } },
+        },
+      });
+      await service.mute(actor(OTHER), nobody, false);
+      expect(events.setMute).toHaveBeenCalledWith('i1', OTHER, false);
+      expect(members.deckContext).not.toHaveBeenCalled();
+      expect(recorded()).toEqual(['unmuted']);
     });
   });
 });

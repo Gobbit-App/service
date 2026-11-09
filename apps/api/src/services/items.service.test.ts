@@ -145,6 +145,7 @@ describe('createItemsService', () => {
           spans: vi.fn().mockResolvedValue(new Map()),
           currentNotices: vi.fn().mockResolvedValue(new Map()),
           mutedBy: vi.fn().mockResolvedValue(new Set()),
+          setMute: vi.fn().mockResolvedValue(undefined),
         },
         members: remindersRepo,
         limits: {

@@ -145,6 +145,17 @@ export function createEventCardsRepo(db: DbExecutor) {
         );
       return new Set(rows.map((r) => r.itemId));
     },
+
+    /** D364: one row per member and event; unmute keeps the row with `muted = false`. */
+    async setMute(itemId: string, userId: string, muted: boolean): Promise<void> {
+      await db
+        .insert(eventMutes)
+        .values({ itemId, userId, muted })
+        .onConflictDoUpdate({
+          target: [eventMutes.itemId, eventMutes.userId],
+          set: { muted, updatedAt: sql`now()` },
+        });
+    },
   };
 }
 

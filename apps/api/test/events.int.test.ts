@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { DeckRow, UserRow } from '@gobbit/db';
 import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
 import { eventSpan } from '@gobbit/shared/event-constants';
+import { captureLogger, expectDecision } from './capture-logger';
 import { json, setupApiTest } from './helpers';
 
 const DAY_MS = 86_400_000;
@@ -23,7 +24,8 @@ function timed(over: Record<string, unknown> = {}) {
 
 /** 042 US1 (T020): event cards through the member API. */
 describe('event cards (042)', () => {
-  const ctx = setupApiTest({ env: { EVENT_LOCATION_MAX: '50' } });
+  const capture = captureLogger();
+  const ctx = setupApiTest({ env: { EVENT_LOCATION_MAX: '50' }, logger: capture.logger });
   let creator: UserRow;
   let outsider: UserRow;
   let deck: DeckRow;
@@ -36,6 +38,7 @@ describe('event cards (042)', () => {
   });
 
   beforeEach(async () => {
+    capture.lines.length = 0;
     deck = await createDeck(ctx.t.db, ctx.world.owner);
     await addMember(ctx.t.db, deck, creator, 'editor');
   });
@@ -229,6 +232,21 @@ describe('event cards (042)', () => {
       ]);
     });
 
+    it('D363: an owner may change notify settings once the creator left the deck', async () => {
+      const item = await created(timed());
+      const left = await send('DELETE', `/decks/${deck.id}/members/${creator.id}`);
+      expect(left.status).toBe(204);
+      expect((await json(await send('GET', `/items/${item.id}`))).event.canEditNotify).toBe(true);
+
+      const notify = { ...NOTIFY_DEFAULT, before: [{ amount: 3, unit: 'hours' }] };
+      const res = await send('PATCH', `/items/${item.id}`, {
+        payload: { ...item.payload, notify },
+      });
+      expect(res.status).toBe(200);
+      await capture.flush();
+      expectDecision(capture.lines, 'event.notify_settings', { outcome: 'changed' });
+    });
+
     it('the activity log names event sub-fields, never payload', async () => {
       const item = await created(timed());
       await send('PATCH', `/items/${item.id}`, { payload: { ...item.payload, location: 'Park' } });
@@ -238,6 +256,65 @@ describe('event cards (042)', () => {
         (l: { kind: string; itemId: string }) => l.kind === 'updated' && l.itemId === item.id,
       );
       expect(updated.changes).toEqual(['location']);
+    });
+  });
+
+  describe('mute (D364)', () => {
+    const mute = (id: string, method: 'PUT' | 'DELETE', email?: string) =>
+      send(method, `/items/${id}/mute`, undefined, email);
+    const view = async (id: string, email?: string) =>
+      (await json(await send('GET', `/items/${id}`, undefined, email))).event;
+
+    it('mutes and unmutes for the caller only, idempotently', async () => {
+      const item = await created(timed());
+      expect((await mute(item.id, 'PUT')).status).toBe(204);
+      expect((await mute(item.id, 'PUT')).status).toBe(204);
+      expect((await view(item.id)).muted).toBe(true);
+      // Private to the person who muted.
+      expect((await view(item.id, creator.email)).muted).toBe(false);
+
+      expect((await mute(item.id, 'DELETE')).status).toBe(204);
+      expect((await mute(item.id, 'DELETE')).status).toBe(204);
+      expect((await view(item.id)).muted).toBe(false);
+      await capture.flush();
+      expectDecision(capture.lines, 'event.mute', { outcome: 'muted', itemId: item.id });
+      expectDecision(capture.lines, 'event.mute', { outcome: 'unmuted', itemId: item.id });
+    });
+
+    it('409 not-an-event for other card types', async () => {
+      const res = await send('POST', `/decks/${deck.id}/items`, {
+        type: 'text',
+        title: 'Note',
+        body: 'Hello',
+      });
+      expect(res.status).toBe(201);
+      const note = await json(res);
+      const refused = await mute(note.id, 'PUT');
+      expect(refused.status).toBe(409);
+      expect((await json(refused)).type).toBe('/problems/not-an-event');
+      await capture.flush();
+      expectDecision(capture.lines, 'event.mute', { outcome: 'refused', reason: 'not_an_event' });
+    });
+
+    it('409 event-not-in-audience on PUT; DELETE still succeeds', async () => {
+      const item = await created(
+        timed({ notify: { ...NOTIFY_DEFAULT, audience: { mode: 'me', userIds: [] } } }),
+      );
+      const refused = await mute(item.id, 'PUT');
+      expect(refused.status).toBe(409);
+      expect((await json(refused)).type).toBe('/problems/event-not-in-audience');
+      expect((await mute(item.id, 'DELETE')).status).toBe(204);
+      await capture.flush();
+      expectDecision(capture.lines, 'event.mute', {
+        outcome: 'refused',
+        reason: 'not_in_audience',
+      });
+    });
+
+    it('404 for someone who cannot read the card', async () => {
+      const item = await created(timed());
+      expect((await mute(item.id, 'PUT', outsider.email)).status).toBe(404);
+      expect((await mute(item.id, 'DELETE', outsider.email)).status).toBe(404);
     });
   });
 
