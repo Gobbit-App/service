@@ -10,6 +10,17 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-09 — Event cards: shares become events (042, D370, D374–D378, ADR-076)
+
+- Migration `0023_events_ingest` widens the `ingest_jobs.auto_publish` CHECK with
+  `held_event_unverified`. Its down migration fails while a row holds that value.
+- `POST /ingest` accepts an optional IANA `timeZone`. The share target and paste box send it;
+  the iPhone Shortcut sends it once it gains the Format Date `VV` step
+  (`docs/shortcut/README.md`). Without it, `INGEST_DEFAULT_TIME_ZONE` (from the backend entry below,
+  default `UTC`) applies. No new variables; nothing to set.
+- The `EVENT_*` and `INGEST_DEFAULT_TIME_ZONE` variables are now in the Compose `x-api-env`
+  block, so the deployed stack passes them through when set.
+
 ### 2026-11-09 — Event cards: backend (042, D355–D376)
 
 - Migration `0022_events` adds the `event` card type, `event_cards`, `event_notices`,

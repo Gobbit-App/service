@@ -174,12 +174,12 @@ Browse and search with date, location and preview; public JSON shows content but
 
 - [ ] T100 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` (+ `pnpm budget`)
 - [ ] T101 e2e: `@smoke` passes in CI; `@full` events spec passes with `pnpm test:e2e --grep @full`
-- [ ] T102 [P] docs/design/events.md (new): detail, runbook for `EVENT_*`, "Deviations" from implementation-notes.md
-- [ ] T103 [P] docs/adr.md ADR-076; docs/architecture.md one line + index row (< 250 lines)
-- [ ] T104 [P] README.md env table + infra Compose `x-api-env`; CHANGELOG.md entry (not Action required)
-- [ ] T105 [P] CLAUDE.md: event type / ingestion convention line if changed
-- [ ] T106 PLAN.md: link 042-events
-- [ ] T107 quickstart.md validation
+- [x] T102 [P] docs/design/events.md (new): detail, runbook for `EVENT_*`, "Deviations" from implementation-notes.md
+- [x] T103 [P] docs/adr.md ADR-076; docs/architecture.md one line + index row (< 250 lines)
+- [x] T104 [P] README.md env table + infra Compose `x-api-env`; CHANGELOG.md entry (not Action required)
+- [x] T105 [P] CLAUDE.md: event type / ingestion convention line if changed
+- [x] T106 PLAN.md: link 042-events
+- [x] T107 quickstart.md validation
 - [ ] T108 `/speckit-converge` until Converged
 
 ---

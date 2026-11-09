@@ -79,7 +79,14 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | — | Web push for due reminders (D296); all three or none. Generate with `pnpm dlx web-push generate-vapid-keys`; the subject is `mailto:` or `https://`. Unset → email only |
 | `NOTIFY_MAX_ATTEMPTS` | `5` | Delivery attempts per reminder notification before it is marked failed |
 | `NOTIFY_RETRY_BASE_SECONDS` | `60` | Base of the exponential retry delay for a failed delivery |
-| `REMINDER_SWEEP_BATCH` | `200` | Due reminders planned and deliveries sent per `reminder-sweep` tick (every minute) |
+| `REMINDER_SWEEP_BATCH` | `200` | Due reminders and event notices planned, and deliveries sent, per `reminder-sweep` tick (every minute) |
+| `EVENT_NOTIFY_TIMES_MAX` | `3` | Most notify-before times per event (may only lower the default) |
+| `EVENT_NOTIFY_BEFORE_MAX_DAYS` | `365` | Longest notify-before period, in days (may only lower the default) |
+| `EVENT_START_MAX_DAYS` | `1826` | Furthest event start from now, in days (may only lower the default) |
+| `EVENT_LOCATION_MAX` | `200` | Longest event location, in characters (may only lower the default) |
+| `EVENT_ALLDAY_NOTICE_HOUR` | `9` | Hour (0–23, in the event's zone) at which all-day event notices are sent |
+| `EVENT_NOTICE_GRACE_MINUTES` | `5` | How late after an event's start a notice may still be sent (after downtime) |
+| `INGEST_DEFAULT_TIME_ZONE` | `UTC` | IANA zone for shared events whose share carries no `timeZone`; an unknown zone stops boot |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |

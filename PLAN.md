@@ -189,6 +189,8 @@ Specs (in order): [`025` deck wording](#025-027-renames) → [`022-editor-naviga
 - [x] **7. Rich-text bodies** — a body typed over several lines shows those lines; a toolbar bolds, underlines, resizes and colours text and adds headings, lists, quotes and code; the card and its public page show the same styles (038 [`038-rich-text-body`](specs/038-rich-text-body/spec.md), D282–D290).
 - [x] **8. A real composer** — adding or editing a card opens a full-screen composer: pick a type first, a top bar with Close, Preview and Save, one calm canvas, Save on the keyboard on a phone and the preview beside the editor on a tablet (039 [`039-editor-experience`](specs/039-editor-experience/spec.md), D300–D313).
 
+New card type: [`042-events`](specs/042-events/spec.md): event cards with a date or time, location and link, notify-before pushes to a chosen audience, Coming up, mute, Add to calendar, and shares recognised as events (structured data first). Decisions D356–D378; ADR-076.
+
 ### 025–027 renames
 
 Mechanical renames with no new behaviour, so they skip spec-kit (constitution, Development Workflow). One branch and PR each:
