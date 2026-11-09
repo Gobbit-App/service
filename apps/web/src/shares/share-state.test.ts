@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { autoPublishOutcomes, ingestFailureCodes } from '@gobbit/shared/ingest-constants';
 import { makeShare } from '../test/fixtures';
 import { failureCopy, pasteAgainCopy, UNKNOWN_FAILURE } from './failure-copy';
-import { anyProcessing, autoPublishCopy, heldReason, shareTitle, stateLabel } from './share-state';
+import {
+  anyProcessing,
+  autoPublishCopy,
+  heldReason,
+  shareEventLine,
+  shareTitle,
+  stateLabel,
+} from './share-state';
 
 describe('failureCopy (D194)', () => {
   it.each(ingestFailureCodes.filter((c) => c !== 'unknown'))(
@@ -50,7 +57,13 @@ describe('share state copy (D196)', () => {
   });
 
   it('titles a share by card, page title, host, photos, then text', () => {
-    const item = { id: makeShare().id, title: 'Card', deleted: false };
+    const item = {
+      id: makeShare().id,
+      title: 'Card',
+      deleted: false,
+      type: 'text' as const,
+      event: null,
+    };
     const preview = { title: 'Page', host: 'a.example', photoCount: 0 };
     expect(shareTitle(makeShare({ item, preview }))).toBe('Card');
     expect(shareTitle(makeShare({ preview }))).toBe('Page');
@@ -70,5 +83,66 @@ describe('share state copy (D196)', () => {
     expect(anyProcessing(undefined)).toBe(false);
     expect(anyProcessing([{ state: 'published' }])).toBe(false);
     expect(anyProcessing([{ state: 'published' }, { state: 'processing' }])).toBe(true);
+  });
+});
+
+describe('shareEventLine (D377)', () => {
+  const NOW = new Date('2026-11-09T10:00:00Z');
+  const eventItem = (event: { startsAt: string; allDay: boolean; timeZone: string }) => ({
+    id: makeShare().id,
+    title: 'Winter fair',
+    deleted: false,
+    type: 'event' as const,
+    event,
+  });
+
+  it('names a timed event proposal in the viewer zone', () => {
+    const share = makeShare({
+      state: 'in_review',
+      item: eventItem({
+        startsAt: '2026-12-03T17:00:00Z',
+        allDay: false,
+        timeZone: 'Europe/Paris',
+      }),
+    });
+    expect(shareEventLine(share, 'Europe/Paris', NOW)).toBe(
+      'Proposed as an event: Thu 3 Dec, 18:00',
+    );
+  });
+
+  it('gives an all-day event its date and a published one its verb', () => {
+    const share = makeShare({
+      state: 'published',
+      item: eventItem({ startsAt: '2026-12-02T23:00:00Z', allDay: true, timeZone: 'Europe/Paris' }),
+    });
+    expect(shareEventLine(share, 'America/New_York', NOW)).toBe('Published as an event: Thu 3 Dec');
+  });
+
+  it('says nothing for other cards, deleted cards or a share not added', () => {
+    const event = { startsAt: '2026-12-03T17:00:00Z', allDay: false, timeZone: 'UTC' };
+    const card = {
+      id: makeShare().id,
+      title: 'x',
+      deleted: false,
+      type: 'text' as const,
+      event: null,
+    };
+    expect(shareEventLine(makeShare({ state: 'in_review', item: card }), 'UTC', NOW)).toBeNull();
+    expect(
+      shareEventLine(
+        makeShare({ state: 'in_review', item: { ...eventItem(event), deleted: true } }),
+        'UTC',
+        NOW,
+      ),
+    ).toBeNull();
+    expect(
+      shareEventLine(makeShare({ state: 'not_added', item: eventItem(event) }), 'UTC', NOW),
+    ).toBeNull();
+  });
+
+  it('asks to check the date and time when an event share is held', () => {
+    expect(autoPublishCopy('held_event_unverified')).toBe(
+      'check the date and time before publishing',
+    );
   });
 });

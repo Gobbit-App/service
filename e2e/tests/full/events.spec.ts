@@ -102,3 +102,58 @@ test('an event in its notify window is on Coming up until muted @full', async ({
   await page.goto(webUrl('/notifications'));
   await expect(entry(comingUp)).toBeVisible();
 });
+
+/** 042 (T098, D377): an event proposal (the ingest pipeline's shape) is edited fully and published. */
+test('an event proposal is edited fully from review, keeps its notify time and publishes @full', async ({
+  page,
+  api,
+  webDeck,
+}) => {
+  const cats = await api.get(`decks/${webDeck.id}/categories`);
+  expect(cats.status(), 'list categories').toBe(200);
+  const { data } = (await cats.json()) as { data: { id: string; isDefault: boolean }[] };
+  const title = `Proposed event ${webDeck.slug}`;
+  const start = new Date(Math.ceil((Date.now() + 5 * DAY) / 60_000) * 60_000);
+  const res = await api.post(`decks/${webDeck.slug}/items`, {
+    data: {
+      type: 'event',
+      title,
+      status: 'proposed',
+      categoryIds: data.filter((c) => c.isDefault).map((c) => c.id),
+      payload: {
+        allDay: false,
+        start: start.toISOString(),
+        timeZone: 'UTC',
+        location: 'Town hall',
+        notify: {
+          before: [{ amount: 1, unit: 'days' }],
+          audience: { mode: 'everyone', userIds: [] },
+        },
+      },
+    },
+  });
+  expect(res.status(), 'create proposal').toBe(201);
+  const { id } = (await res.json()) as { id: string };
+
+  await page.goto(webUrl(`/d/${webDeck.slug}/review`));
+  const card = page.getByRole('article', { name: title });
+  await expect(card).toContainText('Town hall');
+  await card.getByRole('link', { name: 'Edit fully' }).click();
+  await expect(page).toHaveURL(new RegExp(`/i/${id}/edit\\?from=review$`));
+
+  await page.getByText('Notifications', { exact: true }).click();
+  await page.getByLabel('Notify time 1 amount').fill('2');
+  await page.getByLabel('Notify time 1 unit').selectOption('hours');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/review$`));
+
+  await page.getByRole('article', { name: title }).getByRole('button', { name: 'Publish' }).click();
+  await expect(page.getByRole('article', { name: title })).toHaveCount(0);
+
+  const item = await api.get(`items/${id}`);
+  expect(item.status(), 'read item').toBe(200);
+  expect(await item.json()).toMatchObject({
+    status: 'published',
+    payload: { notify: { before: [{ amount: 2, unit: 'hours' }] } },
+  });
+});

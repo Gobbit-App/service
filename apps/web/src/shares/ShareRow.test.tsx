@@ -39,7 +39,7 @@ describe('ShareRow (D198)', () => {
       makeShare({
         state: 'published',
         autoPublish: 'published',
-        item: { id: ITEM_ID, title: 'Gate code', deleted: false },
+        item: { id: ITEM_ID, title: 'Gate code', deleted: false, type: 'text', event: null },
       }),
     );
     expect(screen.getByText('Gate code')).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe('ShareRow (D198)', () => {
       makeShare({
         state: 'in_review',
         autoPublish: 'held_needs_category',
-        item: { id: ITEM_ID, title: 'Gate code', deleted: false },
+        item: { id: ITEM_ID, title: 'Gate code', deleted: false, type: 'text', event: null },
       }),
     );
     expect(screen.getByText('Waiting for review — needs a category')).toBeInTheDocument();
@@ -60,11 +60,31 @@ describe('ShareRow (D198)', () => {
     expect(navigate).toHaveBeenCalledWith(`/i/${ITEM_ID}`);
   });
 
+  it('says a share became an event and why it waits (D377)', () => {
+    renderRow(
+      makeShare({
+        state: 'in_review',
+        autoPublish: 'held_event_unverified',
+        item: {
+          id: ITEM_ID,
+          title: 'Winter fair',
+          deleted: false,
+          type: 'event',
+          event: { startsAt: '2026-12-03T00:00:00Z', allDay: true, timeZone: 'UTC' },
+        },
+      }),
+    );
+    expect(screen.getByText(/^Proposed as an event: Thu 3 Dec/)).toBeInTheDocument();
+    expect(
+      screen.getByText('Waiting for review — check the date and time before publishing'),
+    ).toBeInTheDocument();
+  });
+
   it('says the card was deleted instead of linking to it', () => {
     renderRow(
       makeShare({
         state: 'published',
-        item: { id: ITEM_ID, title: 'Gate code', deleted: true },
+        item: { id: ITEM_ID, title: 'Gate code', deleted: true, type: 'text', event: null },
       }),
     );
     expect(screen.getByText('Card deleted')).toBeInTheDocument();
@@ -75,7 +95,7 @@ describe('ShareRow (D198)', () => {
     const { navigate } = renderRow(
       makeShare({
         state: 'published',
-        item: { id: ITEM_ID, title: 'Gate code', deleted: true },
+        item: { id: ITEM_ID, title: 'Gate code', deleted: true, type: 'text', event: null },
       }),
       true,
       true,
