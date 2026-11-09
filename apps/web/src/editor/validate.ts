@@ -18,6 +18,7 @@ import {
 import type { ImagePayload, TablePayload } from '../cards/payload-guards';
 import { normalizeUrlInput } from '../lib/url-input';
 import { checkReminder, type ReminderDraftPayload } from './reminder-draft';
+import { checkEvent, type EventDraftPayload } from './event-draft';
 
 /** Errors keyed by dotted path, the same syntax as `problem.errors[].path` (e.g. `payload.rows.3.1`). */
 export type FieldErrors = Partial<Record<string, string>>;
@@ -32,7 +33,7 @@ export type ValidateOptions = {
   calcExpression?: CalcExpressionCheck;
   /** A proposal may have no category yet; publishing assigns one (D6 applies to published). */
   categoriesOptional?: boolean;
-  /** The clock for the reminder deadline check (tests). */
+  /** The clock for the reminder deadline and event start checks (tests). */
   now?: Date;
 };
 
@@ -79,6 +80,12 @@ function checkLink(payload: LinkDraftPayload, errors: FieldErrors): void {
   if (image !== undefined && image !== '' && !isHttpUrl(image)) {
     errors['payload.preview.image'] = 'Preview image must be an http(s) address';
   }
+}
+
+/** 042: an event's link is optional; when set it follows the link rules. */
+function checkEventLink(payload: EventDraftPayload, errors: FieldErrors): void {
+  const url = normalizeUrlInput(payload.url);
+  if (url !== '' && !isHttpUrl(url)) errors['payload.url'] = URL_INVALID;
 }
 
 export const PHOTO_REQUIRED = 'Add a photo';
@@ -171,6 +178,10 @@ export function validateDraft(draft: Draft, options: ValidateOptions = {}): Fiel
       break;
     case 'reminder':
       checkReminder(draft.payload as ReminderDraftPayload, errors, options.now);
+      break;
+    case 'event':
+      checkEvent(draft.payload as EventDraftPayload, errors, options.now);
+      checkEventLink(draft.payload as EventDraftPayload, errors);
       break;
     case 'text':
       break;

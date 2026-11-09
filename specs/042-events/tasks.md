@@ -66,7 +66,7 @@ Browse and search with date, location and preview; public JSON shows content but
 - [x] T021 [P] [US1] [int] apps/api/test/events-public.int.test.ts: public read API, public pages and public search include content, never `notify`/`event`; member search by location and link title; share preview description = date · location
 - [x] T022 [P] [US1] [int] apps/api/test/events-link.int.test.ts: link-check/link-flag accept events with a `url` (409 `not-a-link` without), `?flag=link` lists flagged events, snapshot runs, `media-sweep` keeps an event-referenced preview asset
 - [x] T023 [P] [US1] [unit] apps/api/src/events/diff-fields.test.ts (event sub-fields); apps/api/src/services/public-dtos.test.ts (event allow-list)
-- [ ] T024 [P] [US1] [e2e:smoke] e2e/tests/smoke/items.spec.ts: create an event → it shows in the deck with its status line
+- [x] T024 [P] [US1] [e2e:smoke] e2e/tests/smoke/items.spec.ts: create an event → it shows in the deck with its status line
 
 ### Implementation (API, PR1)
 
@@ -82,11 +82,11 @@ Browse and search with date, location and preview; public JSON shows content but
 
 ### Implementation (web, PR2)
 
-- [ ] T034 [P] [US1] Icons `calendar`, `calendar-plus`, `map-pin`, `bell-off` in apps/web/src/ui/icons
-- [ ] T035 [US1] Editor: `event` in apps/web/src/editor/creatable-types.ts (after Reminder, hint "A date, a place, and a heads-up"), draft defaults in draft.ts, client checks in validate.ts, lazy entry in fields/registry.ts
-- [ ] T036 [US1] apps/web/src/editor/fields/EventFields.tsx (lazy): text, When (all-day switch, datetime-local/date in device zone, zone note), Where (location counter 200), Link via an adapter over `LinkEditorFields`; 422/409 problems mapped to fields
-- [ ] T037 [US1] apps/web/src/cards/EventCard.tsx + CardBody.tsx branch: status line, location with `map-pin`, link preview block (LinkCard parts) + `LinkHealthBadge`; apps/web/src/browse/source-kind.ts event
-- [ ] T038 [P] [US1] [unit] apps/web/src/editor/fields/EventFields.test.tsx + validate tests
+- [x] T034 [P] [US1] Icons `calendar`, `calendar-plus`, `map-pin`, `bell-off` in apps/web/src/ui/icons
+- [x] T035 [US1] Editor: `event` in apps/web/src/editor/creatable-types.ts (after Reminder, hint "A date, a place, and a heads-up"), draft defaults in draft.ts, client checks in validate.ts, lazy entry in fields/registry.ts
+- [x] T036 [US1] apps/web/src/editor/fields/EventFields.tsx (lazy): text, When (all-day switch, datetime-local/date in device zone, zone note), Where (location counter 200), Link via an adapter over `LinkEditorFields`; 422/409 problems mapped to fields
+- [x] T037 [US1] apps/web/src/cards/EventCard.tsx + CardBody.tsx branch: status line, location with `map-pin`, link preview block (LinkCard parts) + `LinkHealthBadge`; apps/web/src/browse/source-kind.ts event
+- [x] T038 [P] [US1] [unit] apps/web/src/editor/fields/EventFields.test.tsx + validate tests
 
 **Checkpoint**: US1 complete — events can be made and read everywhere.
 
@@ -98,9 +98,9 @@ Browse and search with date, location and preview; public JSON shows content but
 
 **Independent Test**: one event viewed at 3 days before / morning of / during / day after, in two zones.
 
-- [ ] T040 [P] [US2] [unit] apps/web/src/cards/EventCard.test.tsx: each phase, zone note, all-day ranges (fake clock)
-- [ ] T041 [US2] apps/web/src/lib/use-minute-clock.ts: one shared minute clock (single timer, subscribers)
-- [ ] T042 [US2] Wire `useMinuteClock` + `eventPhase`/`formatEventWhen` into EventCard (accent tone for now, muted for ended)
+- [x] T040 [P] [US2] [unit] apps/web/src/cards/EventCard.test.tsx: each phase, zone note, all-day ranges (fake clock)
+- [x] T041 [US2] apps/web/src/lib/use-minute-clock.ts: one shared minute clock (single timer, subscribers)
+- [x] T042 [US2] Wire `useMinuteClock` + `eventPhase`/`formatEventWhen` into EventCard (accent tone for now, muted for ended)
 
 **Checkpoint**: US2 complete.
 
@@ -150,9 +150,9 @@ Browse and search with date, location and preview; public JSON shows content but
 
 ## Phase 7: User Story 6 - Add to my calendar (P3) — PR2
 
-- [ ] T080 [P] [US6] [unit] packages/shared/src/ics/*.test.ts: UTC timed, DATE all-day (exclusive end), escaping, 75-octet folding, CRLF
-- [ ] T081 [US6] `toIcs(event, opts)` in packages/shared/src/ics/ (zod-free subpath `@gobbit/shared/ics`)
-- [ ] T082 [US6] "Add to calendar" (`calendar-plus`) in CardActionBar, lazy-loading ics, downloads `<title>.ics`, works offline
+- [x] T080 [P] [US6] [unit] packages/shared/src/ics/*.test.ts: UTC timed, DATE all-day (exclusive end), escaping, 75-octet folding, CRLF
+- [x] T081 [US6] `toIcs(event, opts)` in packages/shared/src/ics/ (zod-free subpath `@gobbit/shared/ics`)
+- [x] T082 [US6] "Add to calendar" (`calendar-plus`) in CardActionBar, lazy-loading ics, downloads `<title>.ics`, works offline
 
 ---
 

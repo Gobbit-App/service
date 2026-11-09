@@ -14,19 +14,18 @@ import {
   reminderToPayload,
   type ReminderDraftPayload,
 } from './reminder-draft';
+import {
+  eventDraftFromPayload,
+  eventToPayload,
+  newEventPayload,
+  type EventDraftPayload,
+} from './event-draft';
+import { previewToPayload, type DraftLinkPreview } from './link-preview-payload';
 
 /** Link payload while editing; unknown keys (e.g. `preview.image` from ingest) are kept. */
 export type LinkDraftPayload = {
   url: string;
-  preview?: {
-    title?: string;
-    description?: string;
-    image?: string;
-    /** 015 "Add photo": a recorded asset of the deck; `null` asks the server to remove it. */
-    publicId?: string | null;
-    width?: number;
-    height?: number;
-  };
+  preview?: DraftLinkPreview;
   [key: string]: unknown;
 };
 
@@ -47,8 +46,8 @@ export type DraftPayloadByType = {
   calc: CalcDraftPayload;
   /** 037 (D291): deadline as a local date-time while editing. */
   reminder: ReminderDraftPayload;
-  /** 042: kept as stored until the event editor lands (the composer doesn't offer events yet). */
-  event: Record<string, unknown>;
+  /** 042 (D356): times as local inputs while editing, link and notify settings. */
+  event: EventDraftPayload;
 };
 
 export type DraftPayload = DraftPayloadByType[ItemType];
@@ -84,7 +83,7 @@ export function blankPayload(type: ItemType): DraftPayload {
     case 'reminder':
       return newReminderPayload();
     case 'event':
-      return {};
+      return newEventPayload();
   }
 }
 
@@ -158,7 +157,7 @@ function payloadFromItem(item: Item): DraftPayload {
     case 'reminder':
       return reminderDraftFromPayload(raw);
     case 'event':
-      return structuredClone(raw);
+      return eventDraftFromPayload(raw);
   }
 }
 
@@ -183,13 +182,8 @@ export function parseCalcDefault(text: string): number | undefined {
 function linkPayload(p: LinkDraftPayload): Record<string, unknown> {
   const { preview, ...rest } = p;
   const out: Record<string, unknown> = { ...rest, url: normalizeUrlInput(p.url) };
-  const cleaned: Record<string, string | null> = {};
-  for (const [key, value] of Object.entries(preview ?? {})) {
-    if (typeof value === 'string' && value.trim() !== '') cleaned[key] = value;
-  }
-  // Dimensions are server-owned; an explicit `publicId: null` removes the photo (015).
-  if (preview?.publicId === null) cleaned['publicId'] = null;
-  if (Object.keys(cleaned).length > 0) out['preview'] = cleaned;
+  const cleaned = previewToPayload(preview);
+  if (cleaned) out['preview'] = cleaned;
   return out;
 }
 
@@ -229,8 +223,9 @@ export function toPayload(draft: Pick<Draft, 'type' | 'payload'>): Record<string
       return imagePayload(draft.payload as ImagePayload);
     case 'reminder':
       return reminderToPayload(draft.payload as ReminderDraftPayload);
-    case 'table':
     case 'event':
+      return eventToPayload(draft.payload as EventDraftPayload);
+    case 'table':
       return draft.payload as Record<string, unknown>;
   }
 }

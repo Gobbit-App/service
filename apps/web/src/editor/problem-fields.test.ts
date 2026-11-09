@@ -89,6 +89,27 @@ describe('problemToErrors', () => {
     });
   });
 
+  it('maps 409 event-notify-locked to the notifications section (042)', () => {
+    const err = problem(409, { type: '/problems/event-notify-locked', detail: 'x' });
+    expect(problemToErrors(err)).toEqual({
+      fields: {
+        'payload.notify': 'Only the person who made this event can change its notifications',
+      },
+      form: null,
+    });
+  });
+
+  it('maps 422 event-audience-unknown-member to the people list (042)', () => {
+    const err = problem(422, {
+      type: '/problems/event-audience-unknown-member',
+      errors: [{ path: 'payload.notify.audience.userIds', message: 'Not a member of this deck' }],
+    });
+    expect(problemToErrors(err)).toEqual({
+      fields: { 'payload.notify.audience.userIds': 'Not a member of this deck' },
+      form: null,
+    });
+  });
+
   it('shows a 409 conflict at form level', () => {
     const err = problem(409, { type: '/problems/conflict', detail: 'Already exists' });
     expect(problemToErrors(err)).toEqual({ fields: {}, form: 'Already exists' });

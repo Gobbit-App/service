@@ -31,7 +31,8 @@
     "./reminder-constants": "./src/reminders/client.ts",
     "./events-cards": "./src/events-cards/index.ts",
     "./event-constants": "./src/events-cards/client.ts",
-    "./event-time": "./src/event-time/index.ts"
+    "./event-time": "./src/event-time/index.ts",
+    "./ics": "./src/ics/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
