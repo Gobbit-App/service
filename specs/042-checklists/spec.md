@@ -19,6 +19,11 @@ Builds on the card editor ([`007-card-editor`](../007-card-editor/spec.md)), car
 - Q: What happens when the last entry is checked? → A: The creator decides with a toggle, "Archive when everything is checked": off (default) does nothing, on archives the card.
 - Q: Are assignees notified by email or push? → A: No notifications in this feature. Assigned entries show only in the in-app notification area.
 
+### Session 2026-11-09
+
+- Q: Is anyone told when a checklist archives itself? → A: Yes, its creator. When "Archive when everything is checked" archives the card, the creator gets one push (on the devices they turned on), unless they made the last check themselves. Assignment still sends nothing.
+- Q: Is that notification also emailed? → A: No. Email notifications wait for their own system-wide design (load, queueing, per-user control over each kind); this feature sends push only.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Create a checklist and check entries off (Priority: P1)
@@ -82,11 +87,11 @@ While editing, a writer assigns an entry to a deck member ("Snacks → Noa"). As
 
 ### User Story 4 - Archive automatically when everything is checked (Priority: P2)
 
-For one-off lists ("Move-in tasks"), the creator turns on "Archive when everything is checked". When the last open entry is checked, the card moves to Archived, recorded as completed. For lists that get reused (a shopping list), they leave it off and the card stays in the deck.
+For one-off lists ("Move-in tasks"), the creator turns on "Archive when everything is checked". When the last open entry is checked, the card moves to Archived, recorded as completed, and the creator gets a push notification, so a list finished by others doesn't silently vanish from the deck. For lists that get reused (a shopping list), they leave it off and the card stays in the deck.
 
 **Why this priority**: tidies finished lists away, but manual archive already covers it.
 
-**Independent Test**: with the toggle on, check the last open entry: the card is in Archived and its activity log shows it completed. With the toggle off, check every entry: the card stays in the active list.
+**Independent Test**: with the toggle on, have another member check the last open entry: the card is in Archived, its activity log shows it completed, and the creator receives one push (on a device with push turned on) linking to the archived card, and no email. With the toggle off, check every entry: the card stays in the active list and nothing is sent.
 
 **Acceptance Scenarios**:
 
@@ -94,6 +99,10 @@ For one-off lists ("Move-in tasks"), the creator turns on "Archive when everythi
 2. **Given** the toggle is off, **When** every entry is checked, **Then** nothing else happens; the card shows "all done" and stays in the active list.
 3. **Given** an archived checklist, **When** someone tries to check or uncheck an entry, **Then** it's refused until the card is restored; restoring keeps every entry's state.
 4. **Given** a restored checklist with every entry checked and the toggle on, **When** it's restored, **Then** it stays active; it is archived again only after a further entry is unchecked and checked again, or a new entry is added and checked.
+5. **Given** the toggle is on and someone other than the creator checks the last open entry, **When** the card is archived, **Then** the creator gets one push per device they turned on, saying who completed which checklist in which deck and linking to the card. No email is sent. A creator with no push device gets nothing, and the archived card still shows who completed it.
+6. **Given** the creator checks the last open entry themselves, **When** the card is archived, **Then** nothing is sent.
+7. **Given** the creator is no longer a member of the deck, or can no longer see the card's category, **When** the card is auto-archived, **Then** nothing is sent to them.
+8. **Given** a checklist is auto-archived, restored, and auto-archived again, **When** each auto-archive happens, **Then** each one sends its own notification once; retries or restarts never send the same one twice.
 
 ---
 
@@ -165,16 +174,17 @@ The notification area (from reminders) also lists unchecked entries assigned to 
 
 - **FR-016**: When "archive when everything is checked" is on and a check leaves no unchecked entries, the card MUST move to Archived as part of the same change and be recorded as completed by the member who made the last check. When it's off, nothing happens beyond showing that everything is done.
 - **FR-017**: Restoring or undeleting a checklist MUST keep every entry's state and MUST NOT archive it again by itself.
+- **FR-017a**: When a checklist is auto-archived (FR-016) by a check from someone other than its creator, the system MUST notify the creator once by push on each device they registered, as long as they are still a member who can see the card. The message MUST carry only the checklist's title, the deck name, who made the last check and a link to the card (no entry text). Each auto-archive is notified at most once per device, including after retries and restarts. A manual archive sends nothing. This feature MUST NOT send email for it (email notifications are deferred to a system-wide design).
 
 **Notification area and search**
 
-- **FR-018**: The notification area MUST list, per checklist, the unchecked entries assigned to the member on published checklists they can see, and count them toward the alert light. No email or push is sent for assignments.
+- **FR-018**: The notification area MUST list, per checklist, the unchecked entries assigned to the member on published checklists they can see, and count them toward the alert light. No email or push is sent for assignments. The auto-archive notification (FR-017a) does not add an entry to the notification area.
 - **FR-019**: Entry texts MUST be searchable by members who can see the checklist. Who checked what MUST NOT be.
 
 **Records and limits**
 
 - **FR-020**: Creating, editing, checking and unchecking (with the entry's identity, never its text), auto-archiving and deleting a checklist MUST appear in the deck's activity log.
-- **FR-021**: Every refused check, refused change to "who can check" or the archive setting, refused assignment, and refused checklist on a communal deck MUST leave a named record identifying people by id only, per the project's accountability rules.
+- **FR-021**: Every refused check, refused change to "who can check" or the archive setting, refused assignment, refused checklist on a communal deck, and every auto-archive notification decision (sent, skipped because the creator made the last check, is no longer eligible or has no push device, failed, retried, device removed) MUST leave a named record identifying people by id only, per the project's accountability rules.
 - **FR-022**: The entry count and entry text limits MUST be operator-tunable, only downward from the documented defaults.
 
 ### Key Entities
@@ -183,6 +193,7 @@ The notification area (from reminders) also lists unchecked entries assigned to 
 - **Entry**: one line of a checklist. Has a stable identity (survives rewording and moving), text, and an optional assignee. Part of the card's content; changes with the card's edits.
 - **Entry check**: the record that an entry is checked: which entry, who checked it and when. Separate from the card's content; exists only while the entry is checked.
 - **Pending item**: the notification area's list (from reminders) gains a second kind, "assigned checklist entries", per checklist.
+- **Notification delivery** (from reminders): one attempt to tell the creator about one auto-archive on one push device, with its outcome; guarantees at-most-once per creator, push device and auto-archive.
 
 ## Success Criteria *(mandatory)*
 
@@ -203,11 +214,15 @@ The notification area (from reminders) also lists unchecked entries assigned to 
 - **No reset action**: reusable lists are unchecked entry by entry; a "reset all" action is out of scope.
 - **Archive setting default off**: a checklist that's all done stays put unless the creator chose otherwise.
 - **Notification area reuse**: assigned entries join the reminders' pending list and light; pages without the bottom bar don't show the light.
+- **Auto-archive notification channel** is push only, reusing the reminders' push delivery and per-device setting. It isn't an in-app notification-area entry, because that list holds only things waiting on the member.
+- **Email notifications** are deferred to a separate, system-wide design covering load, queueing and per-user control over each kind of notification; once that exists, the auto-archive notification can join it.
 - **Ingestion and import** don't create checklists in this feature; checklists are made in the editor.
 
 ## Out of Scope
 
-- Email, push or any other notification for assignments or completion.
+- Email, push or any other notification for assignments, for single entries being checked, or to anyone but the creator on completion.
+- Email for the auto-archive notification (waits for the system-wide email notification design), and any per-kind notification preference.
+- A notification for a manual archive or for a list that becomes all done while the archive toggle is off.
 - Due dates, reminders or recurrence per entry or per checklist.
 - Nested entries or sections within a checklist.
 - A "reset all" / "uncheck all" action.
