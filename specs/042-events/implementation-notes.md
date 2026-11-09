@@ -68,3 +68,15 @@ and ingestion (PR4).
 - **T024's smoke test is in `smoke/editor.spec.ts`, not `smoke/items.spec.ts`.** `items.spec.ts`
   only calls the API, while this journey goes through the editor. The ICS download (with the app
   offline) is the first `@full` test in `full/events.spec.ts`.
+- **Mute/Unmute (T064) is in the card's "More actions" menu, not the bar.** It's a rare action
+  and the bar already holds Add to calendar on events. Muted shows "Unmute notifications" with
+  the `bell` icon. A reader in the audience now gets a menu on events.
+- **T061's tests are in `EventFields.test.tsx`.** `EventNotifyFields` renders only inside
+  `EventFields`, whose tests already covered rows, lock and personal deck. They gained all-day
+  days-only and the past-moment hint. There is no separate `EventNotifyFields.test.tsx`.
+- **T073 empty state:** "Nothing waiting on you" still keys off `items` (as in 037). Coming up and
+  Upcoming render under it when they have entries. The screen reads `comingUp ?? []` because a
+  list persisted before 042 lacks it.
+- **T074 is narrower than listed.** `@full` covers Add to calendar, Coming up and mute/unmute.
+  Notify settings, the lock, zone note, all-day and the personal deck are covered by the editor
+  unit tests and the API int tests. A browser run would add only rendering already asserted there.

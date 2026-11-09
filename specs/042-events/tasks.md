@@ -129,10 +129,10 @@ Browse and search with date, location and preview; public JSON shows content but
 **Independent Test**: each audience mode notifies the right people; a reader mutes and gets nothing.
 
 - [x] T060 [P] [US4] [int] events.int.test.ts: `PUT`/`DELETE /items/{id}/mute` (204 idempotent, 409 `not-an-event`, 409 `event-not-in-audience`, 404 unreadable), mutes private, `event.mute` events; notify lock for non-creator and owner fallback when the creator left
-- [ ] T061 [P] [US4] [unit] apps/web/src/editor/fields/EventNotifyFields.test.tsx: ≤ 3 rows, days only for all-day, "At the start", past-moment hint, read-only when `!canEditNotify`, hidden audience on the personal deck
+- [x] T061 [P] [US4] [unit] apps/web/src/editor/fields/EventNotifyFields.test.tsx: ≤ 3 rows, days only for all-day, "At the start", past-moment hint, read-only when `!canEditNotify`, hidden audience on the personal deck
 - [x] T062 [US4] apps/web/src/editor/fields/EventNotifyFields.tsx (PR2): collapsed section with summary, notify-before rows, audience radios + people checklist
 - [x] T063 [US4] events.service mute/unmute + events.repo upsert; apps/api/src/routes/items.ts `PUT`/`DELETE /items/{id}/mute`; `pnpm api:openapi`
-- [ ] T064 [US4] apps/web/src/cards/CardActionBar.tsx Mute/Unmute (`bell-off`), only when `inAudience`, disabled offline
+- [x] T064 [US4] apps/web/src/cards/CardActionBar.tsx Mute/Unmute (`bell-off`), only when `inAudience`, disabled offline
 
 **Checkpoint**: US4 complete.
 
@@ -140,11 +140,11 @@ Browse and search with date, location and preview; public JSON shows content but
 
 ## Phase 6: User Story 5 - Coming up in the notification area (P2) — PR3
 
-- [ ] T070 [P] [US5] [unit] apps/api/src/services/pending.service.test.ts comingUp window and order; apps/web NotificationsBell.test.tsx bell ignores comingUp; ComingUp.test.tsx
-- [ ] T071 [P] [US5] [int] events.int.test.ts: `GET /me/pending` `comingUp` (first notice ≤ now < ends; muted / not in audience / archived excluded)
-- [ ] T072 [US5] `comingUp` in packages/shared/src/reminders/pending.ts; events.repo Coming-up query; apps/api/src/services/pending.service.ts; `pnpm api:openapi`
-- [ ] T073 [US5] apps/web/src/notifications/ComingUp.tsx; section order Waiting → Coming up → Upcoming in apps/web/src/routes/notifications.tsx; empty state when all three empty
-- [ ] T074 [US5] [e2e:full] e2e/tests/full/events.spec.ts: notify settings + lock, Coming up, mute, Add to calendar, zone note, all-day, personal deck
+- [x] T070 [P] [US5] [unit] apps/api/src/services/pending.service.test.ts comingUp window and order; apps/web NotificationsBell.test.tsx bell ignores comingUp; ComingUp.test.tsx
+- [x] T071 [P] [US5] [int] events.int.test.ts: `GET /me/pending` `comingUp` (first notice ≤ now < ends; muted / not in audience / archived excluded)
+- [x] T072 [US5] `comingUp` in packages/shared/src/reminders/pending.ts; events.repo Coming-up query; apps/api/src/services/pending.service.ts; `pnpm api:openapi`
+- [x] T073 [US5] apps/web/src/notifications/ComingUp.tsx; section order Waiting → Coming up → Upcoming in apps/web/src/routes/notifications.tsx; empty state when all three empty
+- [x] T074 [US5] [e2e:full] e2e/tests/full/events.spec.ts: notify settings + lock, Coming up, mute, Add to calendar, zone note, all-day, personal deck
 
 ---
 

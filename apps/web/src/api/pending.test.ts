@@ -15,21 +15,21 @@ const entry = (overdue: boolean): PendingItem => ({
 describe('bellState (037, D298)', () => {
   it('is plain "Notifications" with no light while nothing waits (or before loading)', () => {
     expect(bellState(undefined)).toEqual({ light: 'none', label: 'Notifications' });
-    expect(bellState({ items: [], upcoming: [entry(false)] })).toEqual({
+    expect(bellState({ items: [], upcoming: [entry(false)], comingUp: [] })).toEqual({
       light: 'none',
       label: 'Notifications',
     });
   });
 
   it('lights up and counts what is pending', () => {
-    expect(bellState({ items: [entry(false), entry(false)], upcoming: [] })).toEqual({
+    expect(bellState({ items: [entry(false), entry(false)], upcoming: [], comingUp: [] })).toEqual({
       light: 'pending',
       label: 'Notifications, 2 pending',
     });
   });
 
   it('turns to overdue once one is late and counts it', () => {
-    expect(bellState({ items: [entry(true), entry(false)], upcoming: [] })).toEqual({
+    expect(bellState({ items: [entry(true), entry(false)], upcoming: [], comingUp: [] })).toEqual({
       light: 'overdue',
       label: 'Notifications, 2 pending, 1 overdue',
     });
