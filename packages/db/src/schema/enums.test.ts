@@ -28,6 +28,9 @@ import {
   autoPublishOutcomes,
 } from '@gobbit/shared';
 import { ingestJobs } from './ingest-jobs';
+import { eventNoticeStates, notificationKinds } from '@gobbit/shared/event-constants';
+import { eventNoticeStateEnum } from './event-notices';
+import { notificationKindEnum } from './notification-deliveries';
 
 describe('schema enums', () => {
   it('deckKindEnum.enumValues equals deckKinds', () => {
@@ -60,6 +63,14 @@ describe('schema enums', () => {
 
   it('sessionKindEnum.enumValues equals sessionKinds', () => {
     expect(sessionKindEnum.enumValues).toEqual(sessionKinds);
+  });
+
+  it('eventNoticeStateEnum.enumValues equals eventNoticeStates (D359)', () => {
+    expect(eventNoticeStateEnum.enumValues).toEqual(eventNoticeStates);
+  });
+
+  it('notificationKindEnum.enumValues equals notificationKinds (D361)', () => {
+    expect(notificationKindEnum.enumValues).toEqual(notificationKinds);
   });
 
   it('actorViaEnum.enumValues equals actorVias', () => {
