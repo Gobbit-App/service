@@ -25,6 +25,9 @@ export * from './analytics-consent-events';
 export * from './reminders';
 export * from './push-subscriptions';
 export * from './notification-deliveries';
+export * from './event-cards';
+export * from './event-notices';
+export * from './event-mutes';
 
 import { accounts } from './accounts';
 import { users } from './users';
@@ -50,6 +53,9 @@ import { analyticsConsentEvents } from './analytics-consent-events';
 import { reminders } from './reminders';
 import { pushSubscriptions } from './push-subscriptions';
 import { notificationDeliveries } from './notification-deliveries';
+import { eventCards } from './event-cards';
+import { eventNotices } from './event-notices';
+import { eventMutes } from './event-mutes';
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -76,6 +82,9 @@ export type AnalyticsConsentEventRow = typeof analyticsConsentEvents.$inferSelec
 export type ReminderRow = typeof reminders.$inferSelect;
 export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;
 export type NotificationDeliveryRow = typeof notificationDeliveries.$inferSelect;
+export type EventCardRow = typeof eventCards.$inferSelect;
+export type EventNoticeRow = typeof eventNotices.$inferSelect;
+export type EventMuteRow = typeof eventMutes.$inferSelect;
 
 export type NewDeckRow = typeof decks.$inferInsert;
 export type NewCategoryRow = typeof categories.$inferInsert;
@@ -94,3 +103,4 @@ export type NewWaitlistEntryRow = typeof waitlistEntries.$inferInsert;
 export type NewWaitlistEventRow = typeof waitlistEvents.$inferInsert;
 export type NewPushSubscriptionRow = typeof pushSubscriptions.$inferInsert;
 export type NewNotificationDeliveryRow = typeof notificationDeliveries.$inferInsert;
+export type NewEventNoticeRow = typeof eventNotices.$inferInsert;

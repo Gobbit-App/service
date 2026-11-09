@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray, isNull, lte, or, sql } from 'drizzle-orm';
 import { items, linkChecks, type DbExecutor, type LinkCheckRow } from '@gobbit/db';
 import type { LinkFlagStatus } from '@gobbit/shared';
+import { LINK_BEARING_TYPES } from '@gobbit/shared/links';
 
 /** One sweep candidate (D164): a live published link card and its check row, if any. */
 export interface DueLink {
@@ -40,7 +41,7 @@ const activeFlag = and(
 /** D164/D165: link check state, kept out of `items` so checks never move `updated_at`. */
 export function createLinkChecksRepo(db: DbExecutor) {
   return {
-    /** Published live link cards never checked or due by `now`, never-checked first. */
+    /** Published live link cards (and events with a link, 042) never checked or due by `now`, never-checked first. */
     async due(now: Date, limit: number): Promise<DueLink[]> {
       const rows = await db
         .select({
@@ -53,7 +54,8 @@ export function createLinkChecksRepo(db: DbExecutor) {
         .leftJoin(linkChecks, eq(linkChecks.itemId, items.id))
         .where(
           and(
-            eq(items.type, 'link'),
+            inArray(items.type, [...LINK_BEARING_TYPES]),
+            sql`${items.payload} ->> 'url' is not null`,
             eq(items.status, 'published'),
             isNull(items.deletedAt),
             or(isNull(linkChecks.itemId), lte(linkChecks.nextCheckAt, now)),

@@ -8,6 +8,7 @@ import {
   type ReminderState,
 } from '@gobbit/shared';
 import type { CategoryRow, ItemRow, DeckRow } from '@gobbit/db';
+import type { EventState } from '@gobbit/shared/events-cards';
 
 /** The personal deck is addressed as `me` whatever its stored slug (Phase 3B). */
 export function toDeckDto(r: DeckRow, role: MemberRole): Deck {
@@ -46,6 +47,7 @@ export function toItemDto(
   isFavorite: boolean,
   linkHealth: LinkHealth | null = null,
   reminder: ReminderState | null = null,
+  event: EventState | null = null,
 ): Item {
   return {
     id: r.id,
@@ -69,5 +71,7 @@ export function toItemDto(
     ...(r.deletedAt ? { deletedAt: r.deletedAt.toISOString() } : {}),
     // D291: server-owned reminder state, only on reminder cards
     ...(reminder ? { reminder } : {}),
+    // 042: server-owned event state, only on event cards (never on public paths)
+    ...(event ? { event } : {}),
   };
 }

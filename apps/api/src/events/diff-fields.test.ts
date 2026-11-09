@@ -44,4 +44,55 @@ describe('diffFields (D187)', () => {
     );
     expect(diffFields(base, { ...base, verifiedAt: null })).toEqual(['verifiedAt']);
   });
+
+  describe('event cards (D369)', () => {
+    const event: ItemFields = {
+      ...base,
+      type: 'event',
+      payload: {
+        allDay: false,
+        start: '2030-06-01T18:00:00+03:00',
+        timeZone: 'Asia/Jerusalem',
+        location: 'Hall',
+        url: 'https://example.com/fair',
+        notify: {
+          before: [{ amount: 1, unit: 'days' }],
+          audience: { mode: 'everyone', userIds: [] },
+        },
+      },
+    };
+    const withPayload = (patch: Record<string, unknown>): ItemFields => ({
+      ...event,
+      payload: { ...(event.payload as object), ...patch },
+    });
+
+    it('names the changed groups instead of payload', () => {
+      expect(diffFields(event, withPayload({ start: '2030-06-02T18:00:00+03:00' }))).toEqual([
+        'when',
+      ]);
+      expect(diffFields(event, withPayload({ end: '2030-06-01T20:00:00+03:00' }))).toEqual([
+        'when',
+      ]);
+      expect(diffFields(event, withPayload({ location: 'Park' }))).toEqual(['location']);
+      expect(diffFields(event, withPayload({ preview: { title: 'Fair' } }))).toEqual(['link']);
+      expect(
+        diffFields(
+          event,
+          withPayload({ notify: { before: [], audience: { mode: 'me', userIds: [] } } }),
+        ),
+      ).toEqual(['notify']);
+    });
+
+    it('names several groups in order and nothing for an identical payload', () => {
+      expect(diffFields(event, withPayload({ notify: undefined, start: 'x', title: 1 }))).toEqual([
+        'when',
+        'notify',
+      ]);
+      expect(diffFields(event, withPayload({}))).toEqual([]);
+    });
+
+    it('keeps non-event cards on payload', () => {
+      expect(diffFields(base, { ...base, payload: { location: 'x' } })).toEqual(['payload']);
+    });
+  });
 });

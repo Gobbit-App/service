@@ -11,6 +11,7 @@ import {
   WAITLIST_PRUNE_CRON,
 } from '@gobbit/shared';
 import { parseEnv } from './env';
+import { createEventNoticeHook } from './services/event-cards.service';
 import { createBoss } from './jobs/boss';
 import { createEmbedQueue, noopEmbedQueue } from './jobs/embed-queue';
 import { createIngestHandler } from './jobs/ingest';
@@ -240,6 +241,9 @@ async function main() {
               transaction: reviewTransaction(db),
               imageReference: createImageReferenceCheck(createAssetsRepo(db)),
               now: () => new Date(),
+              noticeHook: createEventNoticeHook({
+                allDayNoticeHour: env.EVENT_ALLDAY_NOTICE_HOUR,
+              }),
             }),
             jobs: ingestJobs,
             embedQueue: workerEmbedQueue,

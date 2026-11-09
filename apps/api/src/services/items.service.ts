@@ -1,8 +1,8 @@
 import type { ItemRow } from '@gobbit/db';
-import { lockedHostOf } from '@gobbit/shared/links';
+import { isLinkBearing, lockedHostOf } from '@gobbit/shared/links';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
-import type { ItemsRepo } from '../repositories/items.repo';
+import { composeInTx, type InTx, type ItemsRepo } from '../repositories/items.repo';
 import type { DecksRepo } from '../repositories/decks.repo';
 import {
   type MemberRole,
@@ -44,6 +44,7 @@ import { rateKeys } from '../lib/rate-window';
 import type { LinkChecksRepo } from '../repositories/link-checks.repo';
 import { markNotifiedIfPast, reopenReminder } from '../repositories/reminders.repo';
 import type { RemindersService } from './reminders.service';
+import type { EventCardsService } from './event-cards.service';
 import type { ImageReferenceCheck } from './image-reference';
 import { createItemDtoMapper } from './item-dtos';
 import type { LinkChecksService } from './link-checks.service';
@@ -93,6 +94,8 @@ export function createItemsService(deps: {
   links: ItemLinkDeps;
   /** 037: reminder payload rules, dismiss and the `reminder` DTO field (D291–D294). */
   reminders: RemindersService;
+  /** 042: event payload rules, notice sync and the `event` DTO field (D356–D363). */
+  eventCards: EventCardsService;
   /** D132: clock for publish/delete timestamps and the undo window (tests inject one). */
   now?: () => Date;
   undeleteDays?: number;
@@ -109,6 +112,7 @@ export function createItemsService(deps: {
     imageReference,
     links,
     reminders,
+    eventCards,
     now = () => new Date(),
     undeleteDays = ITEM_UNDELETE_DAYS,
     purgeDeck = () => {},
@@ -118,6 +122,7 @@ export function createItemsService(deps: {
     favorites,
     linkChecks: links.checks,
     reminderStates: reminders.states,
+    eventStates: eventCards.states,
   });
   const ITEM_NOT_FOUND = 'Item not found';
 
@@ -164,10 +169,32 @@ export function createItemsService(deps: {
   }
 
   /** D294: a reminder brought back after its deadline never sends a late email or push. */
-  function reminderHook(item: ItemRow, hook: typeof markNotifiedIfPast) {
-    return item.type === 'reminder'
-      ? (tx: Parameters<typeof hook>[0]) => hook(tx, item.id)
-      : undefined;
+  function reminderHook(item: ItemRow, hook: typeof markNotifiedIfPast): InTx | undefined {
+    return item.type === 'reminder' ? (tx) => hook(tx, item.id) : undefined;
+  }
+
+  /**
+   * D163 for an event's optional link: only `url`/`preview` go through the link rules; an event
+   * without a url keeps no preview.
+   */
+  async function eventLinkFields(
+    deckId: string,
+    payload: Record<string, unknown>,
+    stored: Record<string, unknown> | null,
+  ): Promise<Record<string, unknown>> {
+    const { url, preview, ...rest } = payload;
+    if (typeof url !== 'string') return rest;
+    const link = await links.previewFields(
+      deckId,
+      { url, ...(preview ? { preview } : {}) } as LinkPayload,
+      typeof stored?.url === 'string'
+        ? ({
+            url: stored.url,
+            ...(stored.preview ? { preview: stored.preview } : {}),
+          } as LinkPayload)
+        : null,
+    );
+    return { ...rest, ...link };
   }
 
   /** Category ids of the item that `role` can't see; kept when that role rewrites the list. */
@@ -233,6 +260,7 @@ export function createItemsService(deps: {
     payload: Record<string, unknown>,
     stored: Record<string, unknown> | null,
   ): Promise<Record<string, unknown>> {
+    if (type === 'event') return eventLinkFields(deckId, payload, stored);
     if (type !== 'link') return imageReference(deckId, type, payload);
     return links.previewFields(deckId, payload as LinkPayload, stored as LinkPayload | null);
   }
@@ -247,7 +275,9 @@ export function createItemsService(deps: {
   /** D165: a member action on a live link card. */
   async function loadLink(user: CurrentUser, itemId: string) {
     const loaded = await loadItem(user, itemId, 'item.update');
-    if (loaded.item.type !== 'link' || loaded.item.status === 'archived') {
+    const { item } = loaded;
+    const hasUrl = typeof (item.payload as { url?: unknown }).url === 'string';
+    if (!isLinkBearing(item.type) || !hasUrl || item.status === 'archived') {
       throw unprocessableField('type', 'Only link cards can be checked');
     }
     return loaded;
@@ -384,9 +414,9 @@ export function createItemsService(deps: {
           { path: 'status', message: 'must be published' },
         ]);
       }
-      if (q.type && q.type !== 'link') {
-        throw badRequest('flag=link lists link cards only', [
-          { path: 'type', message: 'must be link' },
+      if (q.type && !isLinkBearing(q.type)) {
+        throw badRequest('flag=link lists link and event cards only', [
+          { path: 'type', message: 'must be link or event' },
         ]);
       }
 
@@ -433,10 +463,15 @@ export function createItemsService(deps: {
       const status = input.status ?? 'published';
       const verifiedAt = status === 'published' ? now() : null;
       const sourceKind = input.type === 'link' || input.sourceUrl ? 'link' : 'manual';
-      const payload =
-        input.type === 'reminder'
-          ? await reminders.checkPayload({ actor, role, deck }, input.payload)
-          : await referencedPayload(deck.id, input.type, input.payload, null);
+      let payload: Record<string, unknown>;
+      if (input.type === 'reminder') {
+        payload = await reminders.checkPayload({ actor, role, deck }, input.payload);
+      } else if (input.type === 'event') {
+        const checked = await eventCards.checkPayload({ actor, role, deck }, input.payload);
+        payload = await referencedPayload(deck.id, 'event', checked.payload, null);
+      } else {
+        payload = await referencedPayload(deck.id, input.type, input.payload, null);
+      }
 
       const createdItem = await items.create(
         {
@@ -454,6 +489,9 @@ export function createItemsService(deps: {
         },
         categoryIds,
         [eventFrom(actor, 'created')],
+        // D359: a new event's notices, the moments already past skipped.
+        (tx, item) =>
+          eventCards.noticeHook(item, payload, 'past_at_save')?.(tx) ?? Promise.resolve(),
       );
       await afterWrite(createdItem);
 
@@ -489,9 +527,9 @@ export function createItemsService(deps: {
         assertPermission(role, 'item.publish');
       }
 
-      // D12: type is immutable (defensive)
-      if ('type' in patch) {
-        throw badRequest('Item type is immutable');
+      // D12: the type never changes; naming the same type is harmless
+      if (patch.type !== undefined && patch.type !== item.type) {
+        eventCards.refuseTypeChange({ actor, role, deck }, item, patch.type);
       }
 
       // Validate payload if provided; D160 for image cards
@@ -499,9 +537,16 @@ export function createItemsService(deps: {
         payloadSchemaFor(item.type).parse(patch.payload);
       }
       let payload: Record<string, unknown> | undefined;
+      let notifyChanged = false;
       if (patch.payload === undefined) payload = undefined;
       else if (item.type === 'reminder') {
         payload = await reminders.checkPayload({ actor, role, deck }, patch.payload, { item });
+      } else if (item.type === 'event') {
+        const checked = await eventCards.checkPayload({ actor, role, deck }, patch.payload, {
+          item,
+        });
+        notifyChanged = checked.notifyChanged;
+        payload = await referencedPayload(item.deckId, 'event', checked.payload, item.payload);
       } else {
         payload = await referencedPayload(item.deckId, item.type, patch.payload, item.payload);
       }
@@ -549,15 +594,25 @@ export function createItemsService(deps: {
         categoryIds: resultingCategoryIds,
       });
 
+      const publishing = item.status === 'proposed' && resultingStatus === 'published';
       const updatedItem = await items.update(
         item.id,
         updatePatch,
         patch.categoryIds !== undefined ? resultingCategoryIds : undefined,
         patchEvents(actor, item.status, resultingStatus, changes),
-        item.status === 'proposed' && resultingStatus === 'published'
-          ? reminderHook(item, markNotifiedIfPast)
-          : undefined,
+        composeInTx(
+          publishing ? reminderHook(item, markNotifiedIfPast) : undefined,
+          // D359: notices follow the saved payload; a publish skips the moments already past.
+          payload !== undefined || publishing
+            ? eventCards.noticeHook(
+                item,
+                payload ?? item.payload,
+                publishing ? 'past_at_publish' : 'past_at_save',
+              )
+            : undefined,
+        ),
       );
+      if (notifyChanged) eventCards.notifyChanged({ actor, role, deck }, item.id);
       await afterWrite(updatedItem);
 
       return toDto(user, updatedItem, role);
@@ -603,7 +658,10 @@ export function createItemsService(deps: {
         { status: 'published' },
         undefined,
         [eventFrom(actor, 'restored')],
-        reminderHook(item, reopenReminder),
+        composeInTx(
+          reminderHook(item, reopenReminder),
+          eventCards.noticeHook(item, item.payload, 'past_at_restore'),
+        ),
       );
       await afterWrite(restored);
       return toDto(user, restored, role);
@@ -633,7 +691,10 @@ export function createItemsService(deps: {
       const restored = await items.undelete(
         item.id,
         [eventFrom(actor, 'undeleted')],
-        reminderHook(item, markNotifiedIfPast),
+        composeInTx(
+          reminderHook(item, markNotifiedIfPast),
+          eventCards.noticeHook(item, item.payload, 'past_at_restore'),
+        ),
       );
       await afterWrite(restored);
       return toDto(user, restored, role);

@@ -10,6 +10,17 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-09 — Event cards: backend (042, D355–D376)
+
+- Migration `0022_events` adds the `event` card type, `event_cards`, `event_notices`,
+  `event_mutes` and a `kind` on `notification_deliveries`. Its down migration refuses while any
+  event card exists.
+- New optional limits, all with defaults (unset → nothing to set). The four caps may only lower
+  the shared limit: `EVENT_NOTIFY_TIMES_MAX` (3), `EVENT_NOTIFY_BEFORE_MAX_DAYS` (365),
+  `EVENT_START_MAX_DAYS` (1826), `EVENT_LOCATION_MAX` (200). Also `EVENT_ALLDAY_NOTICE_HOUR`
+  (9, 0–23), `EVENT_NOTICE_GRACE_MINUTES` (5) and `INGEST_DEFAULT_TIME_ZONE` (`UTC`, an IANA
+  zone). An out-of-range value or an unknown zone stops the API and the worker from starting.
+
 ### 2026-11-06 — Share visuals: GobbitBot, richer preview images (041, D343–D353, ADR-075)
 
 - Preview fetches now identify as `GobbitBot/1.0` ([`docs/crawler.md`](docs/crawler.md)); link

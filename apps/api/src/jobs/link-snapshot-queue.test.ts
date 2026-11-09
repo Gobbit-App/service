@@ -100,4 +100,32 @@ describe('linkSnapshotQueue.enqueueIfNeeded (D163)', () => {
   it('the no-op queue (no image storage) enqueues nothing', async () => {
     await expect(noopLinkSnapshotQueue.enqueueIfNeeded(candidate())).resolves.toBeUndefined();
   });
+
+  it('042: enqueues an event with a link, never one without', async () => {
+    const h = harness();
+    await h.queue.enqueueIfNeeded(
+      candidate({
+        type: 'event',
+        payload: {
+          allDay: true,
+          start: '2030-06-01',
+          timeZone: 'UTC',
+          url: 'https://x.test/',
+        },
+      }),
+    );
+    await h.queue.enqueueIfNeeded(
+      candidate({
+        id: 'i2',
+        type: 'event',
+        payload: { allDay: true, start: '2030-06-01', timeZone: 'UTC' },
+      }),
+    );
+    expect(h.sender.send).toHaveBeenCalledTimes(1);
+    expect(h.sender.send).toHaveBeenCalledWith(
+      'link-snapshot',
+      { itemId: 'i1' },
+      expect.anything(),
+    );
+  });
 });

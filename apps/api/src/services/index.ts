@@ -19,6 +19,9 @@ import { createRemindersRepo } from '../repositories/reminders.repo';
 import { createRemindersService } from './reminders.service';
 import { createPendingService } from './pending.service';
 import { REMINDER_DECISION_LEVELS, type ReminderDecisions } from './reminders.events';
+import { createEventCardsRepo } from '../repositories/event-cards.repo';
+import { createEventCardsService } from './event-cards.service';
+import { EVENT_CARD_DECISION_LEVELS, type EventCardDecisions } from './event-cards.events';
 import { createLogHash } from '../lib/log-hash';
 import { decisionLogger } from '../lib/decision-event';
 import type { PushSender } from '../push/push-sender';
@@ -160,11 +163,29 @@ export function buildServices({
     }),
     now,
   });
+  // 042 (D356–D363): event rules, notice sync and the `event` DTO field.
+  const eventCards = createEventCardsService({
+    events: createEventCardsRepo(db),
+    members: remindersRepo,
+    limits: {
+      notifyTimesMax: env.EVENT_NOTIFY_TIMES_MAX,
+      notifyBeforeMaxDays: env.EVENT_NOTIFY_BEFORE_MAX_DAYS,
+      startMaxDays: env.EVENT_START_MAX_DAYS,
+      locationMax: env.EVENT_LOCATION_MAX,
+      allDayNoticeHour: env.EVENT_ALLDAY_NOTICE_HOUR,
+    },
+    decisions: decisionLogger<EventCardDecisions>('event-cards', {
+      parent: logger,
+      levels: EVENT_CARD_DECISION_LEVELS,
+    }),
+    now,
+  });
   const toDtos = createItemDtoMapper({
     items,
     favorites,
     linkChecks,
     reminderStates: reminders.states,
+    eventStates: eventCards.states,
   });
   const searchServices = buildSearchServices({
     db,
@@ -189,6 +210,7 @@ export function buildServices({
     embedder: resolveEmbedder(env, search),
     assets,
     imageReference,
+    noticeHook: eventCards.noticeHook,
     now,
     purgeDeck,
     wiring: ingest,
@@ -312,6 +334,7 @@ export function buildServices({
         rateLimits,
       },
       reminders,
+      eventCards,
       now,
       purgeDeck,
     }),

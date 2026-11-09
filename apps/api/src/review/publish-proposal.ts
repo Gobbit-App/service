@@ -4,6 +4,7 @@ import type { ItemEventInput } from '../events/item-event';
 import { createCategoriesRepo, type CategoriesRepo } from '../repositories/categories.repo';
 import { createIngestJobsRepo, type IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import { createItemsRepo, type ItemsRepo } from '../repositories/items.repo';
+import type { EventNoticeHook } from '../services/event-cards.service';
 import type { ImageReferenceCheck } from '../services/image-reference';
 
 /** Repos bound to one transaction: publish/discard change the item, categories and job together. */
@@ -32,6 +33,8 @@ export interface PublishProposalDeps {
   /** D160: a published image card references a recorded asset of its deck. */
   imageReference: ImageReferenceCheck;
   now: () => Date;
+  /** D359: a published event skips the notices already past (`past_at_publish`). */
+  noticeHook?: EventNoticeHook;
 }
 
 export interface PublishProposalInput {
@@ -78,6 +81,7 @@ export function createPublishProposal(deps: PublishProposalDeps) {
           : { status: 'published', verifiedAt: at },
         categoryIds,
         [input.event],
+        deps.noticeHook?.(item, item.payload as Record<string, unknown>, 'past_at_publish'),
       );
       if (input.jobId) {
         await tx.jobs.update(input.jobId, {

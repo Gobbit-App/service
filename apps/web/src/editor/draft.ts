@@ -47,6 +47,8 @@ export type DraftPayloadByType = {
   calc: CalcDraftPayload;
   /** 037 (D291): deadline as a local date-time while editing. */
   reminder: ReminderDraftPayload;
+  /** 042: kept as stored until the event editor lands (the composer doesn't offer events yet). */
+  event: Record<string, unknown>;
 };
 
 export type DraftPayload = DraftPayloadByType[ItemType];
@@ -81,6 +83,8 @@ export function blankPayload(type: ItemType): DraftPayload {
       return blankCalc();
     case 'reminder':
       return newReminderPayload();
+    case 'event':
+      return {};
   }
 }
 
@@ -153,6 +157,8 @@ function payloadFromItem(item: Item): DraftPayload {
     }
     case 'reminder':
       return reminderDraftFromPayload(raw);
+    case 'event':
+      return structuredClone(raw);
   }
 }
 
@@ -224,6 +230,7 @@ export function toPayload(draft: Pick<Draft, 'type' | 'payload'>): Record<string
     case 'reminder':
       return reminderToPayload(draft.payload as ReminderDraftPayload);
     case 'table':
+    case 'event':
       return draft.payload as Record<string, unknown>;
   }
 }

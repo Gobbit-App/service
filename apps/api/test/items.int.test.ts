@@ -105,7 +105,7 @@ describe('Items Integration Tests', () => {
     expect(updated.title).toBe('Hi');
   });
 
-  it('PATCH type → 400', async () => {
+  it('PATCH another type → 409 type-change-not-supported (D12)', async () => {
     const createRes = await ctx.app.request('/decks/scratch/items', {
       method: 'POST',
       headers: ctx.as(),
@@ -122,7 +122,8 @@ describe('Items Integration Tests', () => {
       headers: ctx.as(),
       body: JSON.stringify({ type: 'link' }),
     });
-    expect(patchRes.status).toBe(400);
+    expect(patchRes.status).toBe(409);
+    expect((await patchRes.json()).type).toBe('/problems/type-change-not-supported');
   });
 
   it('POST table item → 201', async () => {

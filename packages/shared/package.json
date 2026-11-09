@@ -28,7 +28,10 @@
     "./rich-text": "./src/rich-text/index.ts",
     "./rich-text/fixtures": "./src/rich-text/fixtures.ts",
     "./reminders": "./src/reminders/index.ts",
-    "./reminder-constants": "./src/reminders/client.ts"
+    "./reminder-constants": "./src/reminders/client.ts",
+    "./events-cards": "./src/events-cards/index.ts",
+    "./event-constants": "./src/events-cards/client.ts",
+    "./event-time": "./src/event-time/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

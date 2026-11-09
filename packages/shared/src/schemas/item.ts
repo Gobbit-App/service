@@ -9,6 +9,7 @@ import {
   payloadWithinBudget,
 } from './payloads';
 import { reminderPayloadSchema, reminderStateSchema } from '../reminders/schema';
+import { eventPayloadSchema, eventStateSchema } from '../events-cards/schema';
 import { pageSchema, limitSchema } from './pagination';
 import { CARD_BODY_MAX, CARD_TITLE_MAX, PAYLOAD_MAX_BYTES } from '../limits';
 import { itemTypes, itemStatuses, itemListStatuses, linkFlagStatuses, sourceKinds } from '../enums';
@@ -95,6 +96,14 @@ const reminderCreateSchema = z
   })
   .strict();
 
+const eventCreateSchema = z
+  .object({
+    type: z.literal('event'),
+    payload: eventPayloadSchema,
+    ...commonCreateFields,
+  })
+  .strict();
+
 export const itemCreateSchema = z
   .discriminatedUnion('type', [
     textCreateSchema,
@@ -103,6 +112,7 @@ export const itemCreateSchema = z
     tableCreateSchema,
     calcCreateSchema,
     reminderCreateSchema,
+    eventCreateSchema,
   ])
   .superRefine((v, ctx) => {
     if (!payloadWithinBudget(v.payload)) {
@@ -120,6 +130,8 @@ export type ItemCreateInput = z.input<typeof itemCreateSchema>;
 
 export const itemPatchSchema = z
   .object({
+    /** D12: the type never changes; a different one is refused with 409 type-change-not-supported. */
+    type: z.enum(itemTypes).optional(),
     title: itemTitleSchema.optional(),
     body: itemBodySchema.optional(),
     payload: z.record(z.string(), z.unknown()).optional(),
@@ -163,6 +175,8 @@ export const itemSchema = z.object({
   linkHealth: linkHealthSchema.nullable(),
   /** D291: present only on reminder cards. */
   reminder: reminderStateSchema.optional(),
+  /** 042: present only on event cards, member paths only. */
+  event: eventStateSchema.optional(),
 });
 
 export type Item = z.infer<typeof itemSchema>;

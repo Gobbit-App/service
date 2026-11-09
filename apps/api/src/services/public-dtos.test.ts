@@ -89,4 +89,28 @@ describe('toPublicItem link markers (D350)', () => {
       preview: { title: 'T' },
     });
   });
+
+  it('D365: an event payload drops notify and the snapshot markers', () => {
+    const event: ItemRow = {
+      ...row,
+      type: 'event',
+      payload: {
+        allDay: false,
+        start: '2030-06-01T18:00:00Z',
+        timeZone: 'UTC',
+        location: 'Hall',
+        url: 'https://x.test/',
+        preview: { title: 'T', imageLookup: 1 },
+        notify: { before: [], audience: { mode: 'people', userIds: ['u1'] } },
+      },
+    };
+    expect(toPublicItem(event, []).payload).toEqual({
+      allDay: false,
+      start: '2030-06-01T18:00:00Z',
+      timeZone: 'UTC',
+      location: 'Hall',
+      url: 'https://x.test/',
+      preview: { title: 'T' },
+    });
+  });
 });

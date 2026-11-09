@@ -18,6 +18,16 @@ import {
   LINK_ARTICLE_IMAGE_MIN_PX,
   LINK_LOOKUP_TIMEOUT_MS,
 } from '@gobbit/shared';
+import {
+  EVENT_ALLDAY_NOTICE_HOUR,
+  EVENT_LOCATION_MAX,
+  EVENT_NOTICE_GRACE_MINUTES,
+  EVENT_NOTIFY_BEFORE_MAX_DAYS,
+  EVENT_NOTIFY_TIMES_MAX,
+  EVENT_START_MAX_DAYS,
+  INGEST_DEFAULT_TIME_ZONE,
+} from '@gobbit/shared/event-constants';
+import { isTimeZone } from '@gobbit/shared/reminders';
 import { registrationModes } from '@gobbit/shared/auth';
 import { cloudNameFrom } from './lib/cloudinary-url';
 
@@ -131,6 +141,28 @@ const baseSchema = z.object({
   LINK_ARTICLE_IMAGE_MIN_PX: positiveInt(LINK_ARTICLE_IMAGE_MIN_PX),
   /** D345: host lookup (oEmbed) timeout in ms. */
   LINK_LOOKUP_TIMEOUT_MS: positiveInt(LINK_LOOKUP_TIMEOUT_MS),
+  /** D371: most notify-before times per event (may only lower the shared cap). */
+  EVENT_NOTIFY_TIMES_MAX: cappedInt(EVENT_NOTIFY_TIMES_MAX),
+  /** D371: longest notify-before, in days (may only lower the shared cap). */
+  EVENT_NOTIFY_BEFORE_MAX_DAYS: cappedInt(EVENT_NOTIFY_BEFORE_MAX_DAYS),
+  /** D371: furthest event start from now, in days (may only lower the shared cap). */
+  EVENT_START_MAX_DAYS: cappedInt(EVENT_START_MAX_DAYS),
+  /** D371: longest event location, in characters (may only lower the shared cap). */
+  EVENT_LOCATION_MAX: cappedInt(EVENT_LOCATION_MAX),
+  /** D371: hour (0–23, event zone) all-day event notices go out. */
+  EVENT_ALLDAY_NOTICE_HOUR: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(23)
+    .default(EVENT_ALLDAY_NOTICE_HOUR),
+  /** D360: a notice missed by downtime is still sent up to this many minutes after the start. */
+  EVENT_NOTICE_GRACE_MINUTES: z.coerce.number().int().min(0).default(EVENT_NOTICE_GRACE_MINUTES),
+  /** D374: zone of shared events whose share carries none (IANA). */
+  INGEST_DEFAULT_TIME_ZONE: z
+    .string()
+    .refine(isTimeZone, 'INGEST_DEFAULT_TIME_ZONE must be an IANA time zone')
+    .default(INGEST_DEFAULT_TIME_ZONE),
   /** D296: Web Push (VAPID) keys; all three or none. Without them push is off. */
   VAPID_PUBLIC_KEY: z.string().optional(),
   /** D296: never logged, never sent to the browser. */

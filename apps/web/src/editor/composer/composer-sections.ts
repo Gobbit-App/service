@@ -8,6 +8,7 @@ export const SECTION_TITLES: Record<ItemType, string | null> = {
   table: 'Table',
   calc: 'Calculator',
   reminder: 'Reminder',
+  event: 'Event',
 };
 
 /** Types whose fields lead the canvas (above the title): a link starts from its URL. */

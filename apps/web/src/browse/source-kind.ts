@@ -24,6 +24,7 @@ const TYPE_LABELS: Record<Item['type'], string> = {
   table: 'Table',
   calc: 'Calculator',
   reminder: 'Reminder',
+  event: 'Event',
 };
 
 export function itemTypeLabel(type: Item['type']): string {

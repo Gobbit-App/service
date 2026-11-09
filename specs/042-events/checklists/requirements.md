@@ -31,7 +31,7 @@
 
 ## Notes
 
-- The four open choices were settled in a pre-spec design review (spec "Clarifications", 2026-11-07): default audience is everyone who can read the event; events don't light the bell; events are public on public decks; past-start events are allowed and schedule nothing.
+- The four open choices were settled in a pre-spec design review (spec "Clarifications", 2026-11-07): default audience is everyone who can read the event; events don't light the bell; events are public on public decks; past-start events are allowed and schedule nothing. 2026-11-09: event notices are push + notification area only; email for events is out of scope.
 - Choices made as informed defaults and recorded in Assumptions/Edge Cases: no-end default length (1 hour / the start date), all-day notices at 09:00 in the event's zone, "N days before" keeps wall-clock time across DST, notices that are already past at save/publish/restore are skipped, downtime notices are sent late only before the start, duplicates = same link and same start date.
 - The pre-spec design's technical choices (reusing the 037 delivery pipeline, the link-preview pipeline, the calendar file format, numbering D356+/ADR-076/migration 0022) are kept out of the spec and go to `/speckit-plan`.
 - No extension hooks registered (`.specify/extensions.yml` absent).
