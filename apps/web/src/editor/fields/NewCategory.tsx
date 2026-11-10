@@ -4,11 +4,13 @@ import { NAME_MAX } from '@gobbit/shared/card-limits';
 import { useCreateCategory } from '../../api/create-category';
 import { problemMessages } from '../../api/problem-messages';
 import { Button } from '../../ui/buttons/Button';
+import { IconButton } from '../../ui/buttons/IconButton';
 import { Icon } from '../../ui/icons/Icon';
 
 /**
  * US6: "New category" inline in the chips. Not a nested <form> (the editor is one); Enter adds.
  * The created (or, on a 409, the existing same-named) category is handed to `onCreated`.
+ * Open, it is one 44 px row across the chip list: name, Add, and an icon-only Cancel.
  */
 export function NewCategory({
   deck,
@@ -85,11 +87,12 @@ export function NewCategory({
       <Button
         icon="plus"
         label="Add"
+        className="new-category__add"
         disabled={trimmed === '' || create.isPending}
         aria-busy={create.isPending || undefined}
         onClick={add}
       />
-      <Button icon="close" label="Cancel" variant="ghost" onClick={close} />
+      <IconButton icon="close" label="Cancel" className="new-category__cancel" onClick={close} />
       {create.isError && (
         <p id={`${id}-error`} className="field__error" role="alert">
           {problemMessages(create.error).join(' ')}
