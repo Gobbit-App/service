@@ -113,6 +113,14 @@ describe('shared control styles (D211, D214)', () => {
   });
 });
 
+describe('button reset (D383)', () => {
+  it('strips the browser border and fill from every button at zero specificity', () => {
+    const reset = /:where\(button\)\s*\{([^}]*)\}/.exec(styles)?.[1] ?? '';
+    expect(reset).toMatch(/\bborder: 0;/);
+    expect(reset).toMatch(/\bbackground: none;/);
+  });
+});
+
 describe('theme switching (D383)', () => {
   it('follows color-scheme only, so a theme picked in Settings wins over the device', () => {
     expect(styles).not.toContain('prefers-color-scheme');
