@@ -1289,7 +1289,9 @@ h2 {
   box-shadow: var(--glow-panel);
 }
 
-.toast__action {
+/* Ghost actions on the inverted banner surface take the banner's text colour. */
+.toast__action,
+.update-prompt__action {
   border-color: var(--color-banner-text);
   color: var(--color-banner-text);
 }
