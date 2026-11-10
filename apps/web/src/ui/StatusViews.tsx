@@ -64,7 +64,13 @@ export function UpdatePrompt({
     <div className="update-prompt" role="status">
       <span>A new version of Gobbit is ready.</span>
       <Button icon="refresh" label="Reload" onClick={onUpdate} />
-      <Button icon="close" label="Later" variant="ghost" onClick={onDismiss} />
+      <Button
+        icon="close"
+        label="Later"
+        variant="ghost"
+        className="update-prompt__action"
+        onClick={onDismiss}
+      />
     </div>
   );
 }
