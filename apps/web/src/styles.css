@@ -26,6 +26,20 @@
   /* The 30% colour as a solid: tooltips, toasts, notices. */
   --color-banner: light-dark(#161b21, #eadfcd);
   --color-banner-text: light-dark(#eaf1f7, #0e1b2e);
+  /* The 30% as the colour of content: cards and other repeating items sit on ivory cream (light)
+     or midnight carbon (dark). `.card-surface` rules swap these in for the page tokens. */
+  --card-bg: light-dark(#f7f2e4, #171c23);
+  --card-well: light-dark(#fdfaf2, #10141a);
+  --card-pane: light-dark(#f0e9d6, #1d232c);
+  --card-muted: light-dark(#5b5547, #a9a397);
+  --card-accent-soft: light-dark(#d9f2e3, #173b33);
+  /* Mint as the line colour: structural edges (header, bottom bar) and dividers inside a card —
+     never around repeating items, which separate by fill and spacing. */
+  --accent-line: rgb(34 227 162 / 55%);
+  --accent-hair: rgb(34 227 162 / 30%);
+  --card-shadow:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 80%), rgb(234 223 205 / 6%)),
+    0 18px 40px -26px light-dark(rgb(22 27 33 / 35%), rgb(34 227 162 / 22%));
 
   /* D383: brushed glass. Panels and overlays (bars, menus, sheets, toasts) are translucent, blur
      what's behind them, carry a fine horizontal grain and a lit top edge. Cards are quieter panes. */
@@ -314,7 +328,7 @@ h2 {
   align-items: center;
   gap: var(--header-gap);
   padding: calc(var(--safe-top) + 10px) var(--gutter) 10px;
-  border-bottom: 1px solid var(--glass-line);
+  border-bottom: 1px solid var(--accent-hair);
   box-shadow: var(--glass-edge);
 }
 
@@ -712,7 +726,7 @@ h2 {
   min-height: var(--bottom-bar-h);
   padding: 10px calc(var(--gutter) + var(--safe-right)) calc(10px + var(--safe-bottom))
     calc(var(--gutter) + var(--safe-left));
-  border-top: 1px solid var(--glass-line);
+  border-top: 1px solid var(--accent-hair);
   box-shadow: var(--glass-edge);
 }
 
@@ -810,17 +824,15 @@ h2 {
   list-style: none;
 }
 
-/* D383: a deck is a major element — a pane that lights up when pointed at. */
+/* D383: a deck is a major element — a card-coloured row that lights up when pointed at. */
 .deck-list__link {
   display: flex;
   align-items: center;
   min-height: 76px;
   padding: 0 var(--space-5);
-  border: 1px solid var(--pane-line);
-  border-inline-start: 2px solid var(--color-accent);
   border-radius: var(--radius);
-  background: var(--pane-bg);
-  box-shadow: var(--glass-edge);
+  background: var(--color-surface);
+  box-shadow: var(--card-shadow);
   color: var(--color-text);
   font-size: var(--text-lg);
   font-weight: 700;
@@ -831,7 +843,7 @@ h2 {
 
 @media (hover: hover) {
   .deck-list__link:hover {
-    box-shadow: var(--glass-edge), var(--glow-panel);
+    box-shadow: var(--card-shadow), var(--glow-panel);
   }
 }
 
@@ -852,15 +864,37 @@ h2 {
 
 /* ---------- Card frame ---------- */
 
-/* D383: a card is a quiet pane — no blur, a hairline and a lit top edge; glass is for what floats. */
+/* D383: cards and other repeating items are solid panes in the 30% colour (cream / carbon) with no
+   border — fill and spacing separate them; glass is for what floats. Inside one, the page tokens
+   become the card's, so everything a card holds (inputs, chips, dividers) follows. */
+.card,
+.browse-card,
+.deck-list__link,
+.deleted-section__item,
+.event-row,
+.notifications-entry,
+.type-tile,
+.import-row {
+  --color-surface: var(--card-bg);
+  --color-bg: var(--card-well);
+  --color-muted: var(--card-muted);
+  --color-border: var(--accent-hair);
+  --color-accent-soft: var(--card-accent-soft);
+  --pane-bg: var(--card-pane);
+}
+
 .card {
   min-width: 0;
   padding: var(--space-5);
-  border: 1px solid var(--pane-line);
   border-radius: var(--radius);
-  background: var(--pane-bg);
-  box-shadow: var(--shadow);
+  background: var(--color-surface);
+  box-shadow: var(--card-shadow);
   overflow: hidden;
+}
+
+.card .chip:not([aria-current='page'], [aria-pressed='true']) {
+  border-color: var(--accent-line);
+  background: transparent;
 }
 
 .card__header {
@@ -1276,7 +1310,6 @@ h2 {
 
 .deleted-section__item {
   padding: var(--gap) var(--gutter);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
 }
@@ -2103,7 +2136,6 @@ h2 {
 
 .event-row {
   padding: var(--gap) var(--gutter);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
 }
@@ -2182,12 +2214,12 @@ h2 {
   grid-template-columns: auto 1fr;
   gap: 4px 12px;
   padding: 8px 12px;
-  border: 1px solid var(--color-border);
   border-radius: var(--radius);
+  background: var(--color-surface);
 }
 
 .import-row--invalid {
-  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-surface));
 }
 
 .import-row__tick {

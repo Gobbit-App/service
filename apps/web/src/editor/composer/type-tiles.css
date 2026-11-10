@@ -22,7 +22,6 @@
   gap: var(--space-1) var(--space-2);
   min-height: calc(var(--tap) * 2);
   padding: var(--space-3);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);
@@ -31,13 +30,12 @@
   cursor: pointer;
   box-shadow: var(--elevation-1);
   transition:
-    border-color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out),
     box-shadow var(--motion-fast) var(--ease-out);
 }
 
 @media (hover: hover) {
   .type-tile:hover:not([aria-disabled='true']) {
-    border-color: var(--color-accent);
     box-shadow: var(--elevation-2);
   }
 }
@@ -47,8 +45,8 @@
   outline-offset: 2px;
 }
 
+/* The chosen tile is marked by fill and a ring (state, not a frame). */
 .type-tile[aria-checked='true'] {
-  border-color: var(--color-accent);
   background: var(--color-accent-soft);
   box-shadow: inset 0 0 0 1px var(--color-accent);
 }
