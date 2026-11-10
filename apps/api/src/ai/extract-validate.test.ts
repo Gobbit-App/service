@@ -70,9 +70,9 @@ describe('extract-validate (D100)', () => {
   });
 
   it('truncates a long body at a sentence end within CARD_BODY_MAX', () => {
-    const raw = { ...baseRaw, body: 'a. '.repeat(700) };
+    const raw = { ...baseRaw, body: 'a. '.repeat(1000) };
     const r = okResult(raw);
-    expect(codePointLength(r.item.body)).toBeLessThanOrEqual(600);
+    expect(codePointLength(r.item.body)).toBeLessThanOrEqual(CARD_BODY_MAX);
     expect(r.item.body.endsWith('.')).toBe(true);
   });
 
@@ -81,9 +81,9 @@ describe('extract-validate (D100)', () => {
     expect(truncateAtSentence('short', 10)).toBe('short');
     expect(truncateAtSentence('a'.repeat(50), 10).length).toBe(10);
 
-    const hebrew = 'שלום עולם. '.repeat(70);
+    const hebrew = 'שלום עולם. '.repeat(200);
     const cut = truncateAtSentence(hebrew, CARD_BODY_MAX);
-    expect(codePointLength(cut)).toBeLessThanOrEqual(600);
+    expect(codePointLength(cut)).toBeLessThanOrEqual(CARD_BODY_MAX);
     expect(codePointLength(cut)).toBeGreaterThan(0);
   });
 

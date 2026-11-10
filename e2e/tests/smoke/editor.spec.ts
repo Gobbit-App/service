@@ -105,15 +105,15 @@ test('a link card added from the editor is listed with its url @smoke', async ({
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
 
-test('a 601-character body disables Save and says why @smoke', async ({ page, webDeck }) => {
+test('a 2001-character body disables Save and says why @smoke', async ({ page, webDeck }) => {
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
 
   await page.getByLabel('Title', { exact: true }).fill('Too long');
-  await page.getByLabel('Body', { exact: true }).fill('x'.repeat(601));
+  await page.getByLabel('Body', { exact: true }).fill('x'.repeat(2001));
 
   await expect(save(page)).toBeDisabled();
   await expect(page.getByText('Fix 1 field')).toBeVisible();
-  await expect(page.getByText('601 / 600 characters')).toBeVisible();
+  await expect(page.getByText('2001 / 2000 characters')).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new\\?type=text$`));
 });
 

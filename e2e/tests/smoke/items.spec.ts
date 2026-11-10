@@ -63,7 +63,7 @@ test('items validation @smoke', async ({ api, smokeDeck }) => {
     data: {
       type: 'text',
       title: 'test',
-      body: 'a'.repeat(601),
+      body: 'a'.repeat(2001),
     },
   });
 

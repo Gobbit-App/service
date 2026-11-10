@@ -43,11 +43,11 @@ describe('validateDraft: common fields', () => {
   });
 
   it('counts the body in code points: emoji, Hebrew and combining marks', () => {
-    expect(validateDraft(draft({ body: '😀'.repeat(600) }))).toEqual({});
-    expect(validateDraft(draft({ body: 'ש'.repeat(601) }))).toHaveProperty('body');
+    expect(validateDraft(draft({ body: '😀'.repeat(2000) }))).toEqual({});
+    expect(validateDraft(draft({ body: 'ש'.repeat(2001) }))).toHaveProperty('body');
     // "é" as e + U+0301 is two code points.
-    expect(validateDraft(draft({ body: 'é'.repeat(300) }))).toEqual({});
-    expect(validateDraft(draft({ body: 'é'.repeat(300) + 'x' }))).toHaveProperty('body');
+    expect(validateDraft(draft({ body: 'é'.repeat(1000) }))).toEqual({});
+    expect(validateDraft(draft({ body: 'é'.repeat(1000) + 'x' }))).toHaveProperty('body');
   });
 
   it('needs at least one category', () => {
@@ -228,8 +228,8 @@ describe('parity with the @gobbit/shared Zod item schema', () => {
     ['text ok', draft()],
     ['blank title', draft({ title: '  ' })],
     ['121-code-point title', draft({ title: 'a'.repeat(121) })],
-    ['600 emoji body', draft({ body: '😀'.repeat(600) })],
-    ['601 Hebrew body', draft({ body: 'ש'.repeat(601) })],
+    ['2000 emoji body', draft({ body: '😀'.repeat(2000) })],
+    ['2001 Hebrew body', draft({ body: 'ש'.repeat(2001) })],
     ['bad source url', draft({ sourceUrl: 'mailto:nope' })],
     ['bare source url', draft({ sourceUrl: 'example.org' })],
     ['link uppercase scheme', draft({ type: 'link', payload: { url: 'HTTPS://a.example/' } })],

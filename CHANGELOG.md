@@ -10,6 +10,12 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-10 — Card body limit raised to 2000 characters (D384)
+
+- Migration `0024_card_body_2000` replaces the `items_body_len_chk` CHECK (600 → 2000 code
+  points). Its down migration restores 600 as `NOT VALID`: longer bodies stay, new writes are
+  checked. No new variables; nothing to set.
+
 ### 2026-11-09 — Event cards: shares become events (042, D370, D374–D378, ADR-076)
 
 - Migration `0023_events_ingest` widens the `ingest_jobs.auto_publish` CHECK with

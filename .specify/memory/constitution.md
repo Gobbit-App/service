@@ -28,7 +28,7 @@ map) and `docs/design/` (per-area detail).
 
 ### III. Invariants live in the database
 
-- Card limits (body ≤ 600 Unicode code points, payload ≤ 8192 UTF-8 bytes), default categories,
+- Card limits (body ≤ 2000 Unicode code points, payload ≤ 8192 UTF-8 bytes), default categories,
   timestamps and other invariants are enforced by CHECK constraints and triggers, not only in code
   [ADR-007].
 - Every schema change is a generated migration (`pnpm db:generate`) plus a hand-written down file in
@@ -160,4 +160,4 @@ they experience is traceable, reviewable, and ready to be monitored and alerted 
 - Amendments are PRs that edit this file and, if needed, the matching ADR. Versioning: MAJOR when a
   principle is removed or redefined, MINOR when one is added or materially expanded, PATCH for wording.
 
-**Version**: 1.3.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-26
+**Version**: 1.3.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-10

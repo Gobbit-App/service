@@ -36,11 +36,11 @@ export interface Extractor {
 }
 
 /**
- * Output budget for one `propose_card` call: a 600-character body in a non-Latin script plus
+ * Output budget for one `propose_card` call: a 2000-character body in a non-Latin script plus
  * entities can pass 1024 tokens, and a model that reasons spends its thinking from the same
  * budget, so a cut-off call is unreadable JSON (D354).
  */
-export const EXTRACT_MAX_TOKENS = 4096;
+export const EXTRACT_MAX_TOKENS = 8192;
 
 /**
  * D354: why an answer had no usable `propose_card` call. `truncated` (the output budget ran out)

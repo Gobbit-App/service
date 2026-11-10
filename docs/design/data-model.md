@@ -161,7 +161,7 @@ erDiagram
 | **D6: Empty categoryIds → default** | If item created with no categoryIds, automatically assign default category of deck. | Service `items.create()` after fetching default. |
 | **D7: Default category auto-create + protect** | Every deck gets a 'general' default category on insert. Cannot be deleted or have is_default=false. | DB trigger `decks_create_default_category` (INSERT) + `categories_protect_default` (DELETE/UPDATE); unique index `categories_one_default_uq` ensures ≤1 default per deck. |
 | **D3: Slugs** | `decks.slug` unique among live decks; `categories.slug` unique per deck. | Partial unique indexes `decks_slug_active_uq`, `categories_deck_slug_active_uq` (`WHERE deleted_at IS NULL`); 23505 → 409. |
-| **D8: Body budget** | `body` ≤ `CARD_BODY_MAX` (600) Unicode code points. | zod `itemBodySchema` in @gobbit/shared; DB check constraint on `char_length(body)` (`0003_card_limits`). |
+| **D8: Body budget** | `body` ≤ `CARD_BODY_MAX` (2000, was 600 until D384) Unicode code points. | zod `itemBodySchema` in @gobbit/shared; DB check constraint on `char_length(body)` (`0003_card_limits`, raised in `0024_card_body_2000`). |
 | **Personal deck (Phase 3B, supersedes D25's no-auto-deck)** | Each account has exactly one personal deck (`is_default`), ensured on every sign-in. It cannot be deleted, shared, re-slugged or made public; its address is `me`. | Partial unique index `decks_default_per_account_uq`; CHECKs `decks_default_is_personal`, `decks_slug_not_reserved`; trigger `decks_protect_default` (P0001 `default_deck_protected`). Service rules answer 409 `/problems/personal-deck`. |
 | **Soft delete** (master plan P1.1, ADR-005) | Deleting sets `deleted_at` on accounts, users, decks, categories, items and memberships; queries exclude soft-deleted rows. Join tables (`item_categories`, `favorites`) are hard-deleted by design. | All repository `.find*()`, `.list()` include `WHERE isNull(t.deletedAt)`. Service `items.softDelete()`. |
 | **Auto `updated_at`** (master plan P1.1) | Every update to accounts, users, decks, categories, items and memberships sets `updated_at = now()`. | DB trigger `<table>_set_updated_at` BEFORE UPDATE on each table. |
@@ -200,10 +200,14 @@ erDiagram
 
 Three check constraints on items table:
 ```sql
-check('items_body_len_chk', char_length(body) <= 600)          // CARD_BODY_MAX
+check('items_body_len_chk', char_length(body) <= 2000)          // CARD_BODY_MAX
 check('items_payload_size_chk', octet_length(payload::text) <= 9216)  // PAYLOAD_DB_BACKSTOP_BYTES
 check('items_payload_object_chk', jsonb_typeof(payload) = 'object')
 ```
+
+The body limit started at 600; `0024_card_body_2000` replaces the constraint with ≤ 2000 (D384: longer
+recipes and instructions without splitting a card). Its down file restores ≤ 600 as `NOT VALID`, so
+a rollback neither fails nor truncates bodies already longer than 600.
 
 ### Journal & rollback
 

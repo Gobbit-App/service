@@ -9222,7 +9222,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9391,7 +9391,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9531,7 +9531,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9674,7 +9674,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9836,7 +9836,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -10019,7 +10019,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -10288,7 +10288,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -11864,7 +11864,7 @@
                   },
                   "body": {
                     "type": "string",
-                    "description": "Card body, max 600 characters (Unicode code points)"
+                    "description": "Card body, max 2000 characters (Unicode code points)"
                   },
                   "payload": {
                     "type": "object",
@@ -28477,7 +28477,7 @@
                         "body": {
                           "type": "string",
                           "default": "",
-                          "description": "Card body, max 600 characters (Unicode code points)"
+                          "description": "Card body, max 2000 characters (Unicode code points)"
                         },
                         "sourceUrl": {
                           "type": "string",

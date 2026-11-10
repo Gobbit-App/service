@@ -30,8 +30,8 @@ describe('DB limits (constraint checks)', () => {
     });
   });
 
-  it('rejects item with body exceeding 600 chars', async () => {
-    const longBody = 'a'.repeat(601);
+  it('rejects item with body exceeding 2000 chars', async () => {
+    const longBody = 'a'.repeat(2001);
 
     try {
       await ctx.db.insert(items).values({
@@ -52,8 +52,8 @@ describe('DB limits (constraint checks)', () => {
     }
   });
 
-  it('accepts item with Unicode body of 600 chars', async () => {
-    const hebrewBody = 'א'.repeat(600);
+  it('accepts item with Unicode body of 2000 chars', async () => {
+    const hebrewBody = 'א'.repeat(2000);
 
     await ctx.db.insert(items).values({
       id: '550e8400-e29b-41d4-a716-446655440004',

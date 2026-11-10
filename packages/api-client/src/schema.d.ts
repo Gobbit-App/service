@@ -3121,7 +3121,7 @@ export interface paths {
                         payload?: Record<string, never>;
                         title: string;
                         /**
-                         * @description Card body, max 600 characters (Unicode code points)
+                         * @description Card body, max 2000 characters (Unicode code points)
                          * @default
                          */
                         body?: string;
@@ -3160,7 +3160,7 @@ export interface paths {
                         };
                         title: string;
                         /**
-                         * @description Card body, max 600 characters (Unicode code points)
+                         * @description Card body, max 2000 characters (Unicode code points)
                          * @default
                          */
                         body?: string;
@@ -3189,7 +3189,7 @@ export interface paths {
                         };
                         title: string;
                         /**
-                         * @description Card body, max 600 characters (Unicode code points)
+                         * @description Card body, max 2000 characters (Unicode code points)
                          * @default
                          */
                         body?: string;
@@ -3216,7 +3216,7 @@ export interface paths {
                         };
                         title: string;
                         /**
-                         * @description Card body, max 600 characters (Unicode code points)
+                         * @description Card body, max 2000 characters (Unicode code points)
                          * @default
                          */
                         body?: string;
@@ -3249,7 +3249,7 @@ export interface paths {
                         };
                         title: string;
                         /**
-                         * @description Card body, max 600 characters (Unicode code points)
+                         * @description Card body, max 2000 characters (Unicode code points)
                          * @default
                          */
                         body?: string;
@@ -3288,7 +3288,7 @@ export interface paths {
                         };
                         title: string;
                         /**
-                         * @description Card body, max 600 characters (Unicode code points)
+                         * @description Card body, max 2000 characters (Unicode code points)
                          * @default
                          */
                         body?: string;
@@ -3359,7 +3359,7 @@ export interface paths {
                         };
                         title: string;
                         /**
-                         * @description Card body, max 600 characters (Unicode code points)
+                         * @description Card body, max 2000 characters (Unicode code points)
                          * @default
                          */
                         body?: string;
@@ -3866,7 +3866,7 @@ export interface paths {
                         /** @enum {string} */
                         type?: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
                         title?: string;
-                        /** @description Card body, max 600 characters (Unicode code points) */
+                        /** @description Card body, max 2000 characters (Unicode code points) */
                         body?: string;
                         payload?: {
                             [key: string]: unknown;
@@ -8800,7 +8800,7 @@ export interface paths {
                             type: "text" | "link";
                             title: string;
                             /**
-                             * @description Card body, max 600 characters (Unicode code points)
+                             * @description Card body, max 2000 characters (Unicode code points)
                              * @default
                              */
                             body?: string;

@@ -146,7 +146,8 @@ describe('migrations: 0022_events down (042, T008)', () => {
 
   it('refuses to roll back while an event card exists, then rolls back once it is gone', async () => {
     await runMigrations(ctx.pool);
-    // 0023 (events ingestion, T093) only widens a CHECK; its down file narrows it back.
+    // 0024 (body limit, D384) and 0023 (events ingestion, T093) only change CHECKs.
+    expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
     expect(await rollbackLatest(ctx.pool)).toBe('0023_events_ingest');
     expect(await getLatestMigrationTag(ctx.pool)).toBe('0022_events');
     const account = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
@@ -172,5 +173,34 @@ describe('migrations: 0022_events down (042, T008)', () => {
 
     await ctx.pool.query(`DELETE FROM items WHERE type::text = 'event'`);
     expect(await rollbackLatest(ctx.pool)).toBe('0022_events');
+  });
+});
+
+describe('migrations: 0024_card_body_2000 down (D384)', () => {
+  const ctx = withTestDb({ template: false });
+
+  it('keeps longer bodies on rollback and checks new writes against 600 again', async () => {
+    await runMigrations(ctx.pool);
+    const account = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
+    const deck = await ctx.pool.query(
+      `INSERT INTO decks (kind, slug, name, owner_account_id, is_public)
+       VALUES ('shared', 'body-down', 'D', $1, false) RETURNING id`,
+      [account.rows[0].id],
+    );
+    const insertBody = (body: string) =>
+      ctx.pool.query(
+        `INSERT INTO items (deck_id, type, status, title, body) VALUES ($1, 'text', 'proposed', 't', $2)`,
+        [deck.rows[0].id, body],
+      );
+    await insertBody('a'.repeat(2000));
+    await expect(insertBody('a'.repeat(2001))).rejects.toThrow(/items_body_len_chk/);
+
+    expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
+    const kept = await ctx.pool.query(`SELECT char_length(body) AS n FROM items`);
+    expect(kept.rows).toEqual([{ n: 2000 }]);
+    await expect(insertBody('a'.repeat(601))).rejects.toThrow(/items_body_len_chk/);
+
+    await runMigrations(ctx.pool);
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0024_card_body_2000');
   });
 });

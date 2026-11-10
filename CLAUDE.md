@@ -25,7 +25,7 @@ specs/           — spec-kit features `NNN-name/` (spec, plan, tasks); README.m
 - **Architecture**: Routes (parse) → Services (rules) → Repositories (Drizzle SQL)
 - **Schemas**: All DTOs in `@gobbit/shared` (Zod); row types from `@gobbit/db`
 - **Database**: snake_case columns, camelCase in TS; `timestamp({ withTimezone: true, precision: 3, mode: 'date' })`
-- **Card limits**: body ≤600 Unicode points; payload ≤8192 UTF-8 bytes (DB CHECK constraints)
+- **Card limits**: body ≤2000 Unicode points; payload ≤8192 UTF-8 bytes (DB CHECK constraints)
 - **Errors**: `application/problem+json` (RFC 9457) via central handler
 - **Invariants**: Auto timestamps, default category creation & protection in migrations; hand-written down files in `packages/db/migrations/down/`
 - **Auth**: magic links → server-side sessions (`gobbit_session` cookie or `Authorization: Bearer`); access via `authorize()` + `can()`, visibility via `visibleCategoriesWhere()`. Smoke/`api.http` use the seeded `SMOKE_SESSION_TOKEN`
