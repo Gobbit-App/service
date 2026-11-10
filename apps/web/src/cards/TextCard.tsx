@@ -1,5 +1,6 @@
 import Markdown, { type Components } from 'react-markdown';
 import { useMemo, type ReactElement } from 'react';
+import { FLOW_CLASS } from '@gobbit/shared/rich-text';
 import { BODY_REMARK_PLUGINS } from './body-plugins';
 import { useTextDetection } from './text-detection';
 import './rich-text.css';
@@ -40,7 +41,7 @@ export function TextCard({
     [detection],
   );
   return (
-    <div className="text-card">
+    <div className={`text-card ${FLOW_CLASS}`}>
       <Markdown skipHtml={skipHtml} remarkPlugins={remarkPlugins} components={merged}>
         {body}
       </Markdown>

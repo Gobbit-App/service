@@ -41,6 +41,22 @@ export function isPaletteColor(name: string): name is PaletteColor {
 export const sizeClass = (size: TextSize): string => `rt-${size}`;
 export const COLOR_CLASS = 'rt-color';
 export const colorClass = (color: PaletteColor): string => `rt-color--${color}`;
+/**
+ * Vertical rhythm of a card body, shared by the reader, the editor and the public pages. Each
+ * block owns only the space above it; values are `em` of the element they sit on.
+ */
+export const FLOW_CLASS = 'rt-flow';
+export const FLOW_SPACING = {
+  /** Between sibling blocks (paragraphs, lists, quotes, code, tables). */
+  block: '0.75em',
+  /** Above a heading that follows other content. */
+  beforeHeading: '1.4em',
+  /** Between a heading and what follows it. */
+  afterHeading: '0.4em',
+  /** Between list items, and between blocks inside one item. */
+  item: '0.3em',
+} as const;
+
 export const RICH_TEXT_CLASSES: readonly string[] = [
   ...TEXT_SIZES.map(sizeClass),
   COLOR_CLASS,

@@ -112,14 +112,6 @@
   outline: none;
 }
 
-.rich-editor__content > :first-child {
-  margin-top: 0;
-}
-
-.rich-editor__content > :last-child {
-  margin-bottom: 0;
-}
-
 .rich-editor__content ul,
 .rich-editor__content ol {
   padding-inline-start: 1.25em;
