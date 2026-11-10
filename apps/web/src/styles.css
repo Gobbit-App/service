@@ -1388,6 +1388,14 @@ h2 {
   min-height: var(--tap);
 }
 
+/* Fields draw focus on their own edge (2 px, over the border) instead of a halo 3 px outside it. */
+.card-editor input:not([type='radio'], [type='checkbox']):focus-visible,
+.card-editor textarea:focus-visible,
+.card-editor select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
 .card-editor textarea {
   resize: vertical;
 }
@@ -1516,25 +1524,60 @@ h2 {
   height: 1rem;
 }
 
-.chip--add {
+/* The editor's category picker, mobile first: 44 px chips separated by fill and spacing, no
+   borders (repeating items); "New category" is a quiet text action until it opens. */
+.category-chips .chip {
+  min-height: var(--tap);
+  border-color: transparent;
+  cursor: pointer;
+}
+
+.category-chips .chip[aria-pressed='false'] {
+  background: var(--color-surface);
+}
+
+.category-chips .chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.category-chips .chip--add {
   gap: 6px;
-  border-style: dashed;
+  padding-inline: 0 4px;
+  background: transparent;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+@media (hover: hover) {
+  .category-chips .chip[aria-pressed='false']:hover:not(:disabled) {
+    background: var(--color-accent-soft);
+  }
+
+  .category-chips .chip--add:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+}
+
+/* Open, the form takes the whole row: name, Add and Cancel on one 44 px line. */
+.category-chips__new:has(.new-category) {
+  flex-basis: 100%;
 }
 
 .new-category {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .new-category input {
-  flex: 1 1 12rem;
-  min-width: 0;
+  width: 100%;
 }
 
 .new-category .field__error {
-  flex-basis: 100%;
+  grid-column: 1 / -1;
+  margin: 0;
 }
 
 /* ---------- Share target and paste (Phase 5, D108) ---------- */
