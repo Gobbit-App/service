@@ -119,7 +119,7 @@ describe('runImportNotes (D190)', () => {
   it('skips invalid rows, reports them and exits 1', async () => {
     const { request, calls } = fakeApi();
     const log = vi.fn();
-    const code = await runImportNotes(`Ok\n${'x'.repeat(700)}`, options(), request, log);
+    const code = await runImportNotes(`Ok\n${'x'.repeat(2100)}`, options(), request, log);
     expect(code).toBe(1);
     expect(log).toHaveBeenCalledWith(expect.stringMatching(/^skipped line 2/));
     const post = calls.find((c) => c.method === 'POST');

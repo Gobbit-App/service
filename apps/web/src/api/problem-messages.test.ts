@@ -35,9 +35,9 @@ describe('problemMessages', () => {
   it('returns the field messages of a validation problem', () => {
     const err = new ApiError(400, {
       title: 'Validation failed',
-      errors: [{ path: 'body', message: 'Body must be at most 600 characters' }],
+      errors: [{ path: 'body', message: 'Body must be at most 2000 characters' }],
     });
-    expect(problemMessages(err)).toEqual(['Body must be at most 600 characters']);
+    expect(problemMessages(err)).toEqual(['Body must be at most 2000 characters']);
   });
 
   it('falls back to the detail, then the title', () => {

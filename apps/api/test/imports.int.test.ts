@@ -118,7 +118,10 @@ describe('POST /decks/{id}/imports (D190)', () => {
 
     const badLink = await importRows([textRow('Fine'), { type: 'link', title: 'No URL' }]);
     expect(badLink.status).toBe(400);
-    const tooLong = await importRows([textRow('Fine'), textRow('Long', { body: 'x'.repeat(601) })]);
+    const tooLong = await importRows([
+      textRow('Fine'),
+      textRow('Long', { body: 'x'.repeat(2001) }),
+    ]);
     expect(tooLong.status).toBe(400);
 
     const rows = await ctx.t.db.select().from(items).where(eq(items.deckId, deck.id));

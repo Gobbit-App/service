@@ -45,7 +45,7 @@ repository is public (constitution, Constraints).
 
 **Performance Goals**: [domain-specific or N/A]
 
-**Constraints**: card body ≤ 600 code points / payload ≤ 8192 bytes; web initial bundle ≤ 150 KB gzip; AI keys optional; same origin [+ feature-specific]
+**Constraints**: card body ≤ 2000 code points / payload ≤ 8192 bytes; web initial bundle ≤ 150 KB gzip; AI keys optional; same origin [+ feature-specific]
 
 **Scale/Scope**: [e.g., family/community decks, hundreds to low thousands of cards per deck]
 

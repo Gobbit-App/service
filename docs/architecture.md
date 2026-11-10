@@ -51,7 +51,7 @@ composite FK); `favorites`; `memberships`; `sessions`; `magic_links`; `rate_limi
 
 Conventions: snake_case columns / camelCase TS; `timestamptz(3)` everywhere (keyset cursors,
 ADR-001); soft delete via `deleted_at` (ADR-005); `updated_at` and default-category creation and
-protection are DB triggers; card limits (body ≤ 600 code points, payload ≤ 8192 bytes) are Zod rules
+protection are DB triggers; card limits (body ≤ 2000 code points, D384, payload ≤ 8192 bytes) are Zod rules
 backed by DB CHECKs. Migrations are drizzle-kit generated plus hand-written SQL, each with a
 hand-written `down/` file (ADR-011, ADR-019); latest is `0016_import_channel`.
 → [design/data-model.md](design/data-model.md) (ER diagram, invariants table, migration notes)

@@ -108,14 +108,14 @@ describe('CardEditor: create', () => {
     });
   });
 
-  it('disables Save over 600 body code points and says why', async () => {
+  it('disables Save over 2000 body code points and says why', async () => {
     await renderCreate();
     type('Title', 'Long');
-    await typeBody('😀'.repeat(601));
+    await typeBody('😀'.repeat(2001));
     expect(saveButton()).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByText('Fix 1 field')).toBeInTheDocument();
     expect(screen.getByLabelText('Body')).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByText('601 / 600 characters')).toBeInTheDocument();
+    expect(screen.getByText('2001 / 2000 characters')).toBeInTheDocument();
   });
 
   it('disables Save with no category', async () => {

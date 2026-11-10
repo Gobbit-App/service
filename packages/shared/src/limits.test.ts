@@ -21,8 +21,8 @@ describe('limits', () => {
     expect(WAITLIST_JOIN_PER_EMAIL_PER_HOUR).toBe(3);
   });
 
-  it('CARD_BODY_MAX should be 600', () => {
-    expect(CARD_BODY_MAX).toBe(600);
+  it('CARD_BODY_MAX should be 2000', () => {
+    expect(CARD_BODY_MAX).toBe(2000);
   });
 
   it('PAYLOAD_MAX_BYTES should be 8192', () => {
