@@ -5,17 +5,18 @@ import { describe, expect, it } from 'vitest';
 
 // Vitest stubs CSS imports, so the sheet is read from disk.
 const css = readFileSync(new URL('./rich-text.css', import.meta.url), 'utf8');
-const [light = '', dark = ''] = [...css.matchAll(/:root\s*\{([^}]*)\}/g)].map((m) => m[1]);
 
 describe('cards/rich-text.css (FR-007)', () => {
   it.each(PALETTE_COLORS)('%s matches the shared palette in both themes', (name) => {
-    expect(light).toContain(`--rt-${name}: ${PALETTE[name].light};`);
-    expect(dark).toContain(`--rt-${name}: ${PALETTE[name].dark};`);
+    expect(css).toContain(
+      `--rt-${name}: light-dark(${PALETTE[name].light}, ${PALETTE[name].dark});`,
+    );
     expect(css).toContain(`.rt-color--${name} {\n  color: var(--rt-${name});`);
   });
 
-  it('puts the dark values under prefers-color-scheme: dark', () => {
-    expect(css.indexOf('@media (prefers-color-scheme: dark)')).toBeLessThan(css.indexOf(dark));
+  // D383: the theme can be pinned in Settings, so colours follow color-scheme, not the media query.
+  it('never switches on prefers-color-scheme', () => {
+    expect(css).not.toContain('prefers-color-scheme');
   });
 
   it('defines both sizes', () => {

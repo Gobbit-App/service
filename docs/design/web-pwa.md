@@ -19,10 +19,31 @@ Request routing and CI/deploy notes: [deployment.md](deployment.md).
 
 - Session (D66): the app calls `GET /api/me` on boot; any 401 sends the user to `/sign-in?next=<path>`. The magic-link request carries `next`; the API callback redirects to `APP_URL + next` only for same-origin paths (`//host` and absolute URLs are dropped). Sign-out navigates to `/sign-in` first, then calls `POST /api/auth/logout`, clears the persisted cache and the local editor drafts, so no route re-fetches with a dead cookie.
 - Runtime config (D55): `GET /api/config` → `{ cloudinaryCloudName, commit }`, cached for the session in the persisted query cache. One web image works in every environment.
-- Styling: plain CSS with custom properties and `prefers-color-scheme` (`styles.css`); no UI kit. Initial JS is asserted ≤ 150 KB gzip in CI (`pnpm budget`, reads the Vite manifest).
+- Styling: plain CSS with custom properties (`styles.css`); every colour is `light-dark(light, dark)`, so the theme follows `color-scheme` (D383); no UI kit. Initial JS is asserted ≤ 150 KB gzip in CI (`pnpm budget`, reads the Vite manifest).
 - Phone fit: every page fits a 360px viewport with no sideways scroll. Grid forms declare `grid-template-columns: minmax(0, 1fr)` (an implicit `auto` column grows to the longest `<select>` option), form controls carry `min-width: 0; max-width: 100%`, and screens rendered inside `main.page` add no gutter of their own. Guarded by `e2e/tests/full/mobile-fit.spec.ts` (`@full`).
 
+## App palette and themes (D383)
+
+A 60 / 30 / 10 palette per theme, with fresh mint `#22e3a2` as the shared 10%:
+
+| Theme | 60% (page) | 30% (text, solids) | 10% (accent) |
+| --- | --- | --- | --- |
+| Light | ice blue `#dde9f2` | midnight carbon `#161b21` | fresh mint `#22e3a2` |
+| Dark | midnight navy `#0e1b2e` | oat milk `#eadfcd` | fresh mint `#22e3a2` |
+
+- **Tokens**: one `:root` block in `styles.css` (and `cards/rich-text.css`), each colour `light-dark(#light, #dark)`; no `prefers-color-scheme` anywhere in the app CSS. Mint is split into `--color-accent-fill` (always `#22e3a2`: primary buttons, the + action, current/pressed state, native controls via `accent-color`) and `--color-accent` as ink (mint on navy, deep mint `#07664a` on ice, so links and focus rings keep ≥ 4.5:1). `styles.test.ts` parses both sides and asserts the AA pairs.
+- **Theme choice**: Settings → Appearance (`settings/AppearanceSection.tsx`): Match device / Light / Dark, saved per device in `localStorage` `gobbit:theme` (`theme/theme.ts`; Match device removes the key, unknown values read as Match device). A choice sets `data-theme` on `<html>`, which pins `color-scheme`, and repaints both `theme-color` metas. `public/theme-init.js` applies a stored choice before first paint (a same-origin file because the CSP allows no inline script); `theme.test.ts` runs it against `applyTheme`.
+- **Surfaces**: two tiers. Brushed glass (`--glass-bg` + `--brush`, a fine horizontal SVG-noise grain, `backdrop-filter: blur(22px) saturate(1.5)`, lit top edge) for the panels and overlays: header, bottom bar, menus, sheets, consent prompt, toasts and the Browse chrome. Quieter panes (`--pane-bg`, no blur) for cards and list rows. A fixed ambient mint/navy light (`body::before`) gives the glass something to blur.
+- **Glow**: `--glow-panel` for major panels only (sheets, menus, the Browse card, toasts) and `--glow-accent` for the primary action on hover/focus; ordinary cards and rows get none.
+- **Shape and rhythm**: no rounded corners (`--radius*` are 0, every literal radius uses the token); 20 px gutter (28 px from 600 px); one 4/8 px spacing scale (`--space-1`…`--space-7`).
+- **Type**: Schibsted Grotesk (variable, self-hosted via `@fontsource-variable/schibsted-grotesk`, Latin subsets only; system fonts cover Hebrew), headings tighten as they grow.
+- E2E tier: full (`e2e/tests/full/appearance.spec.ts`: a picked theme applies, persists across reload and wins over the device; Match device hands back; an unknown stored value is ignored). The restyle adds no journeys.
+- **Not yet moved** (follow-ups): the PWA manifest `theme_color`/`background_color` and the icon tiles (`pnpm og:static`), and the API-rendered public pages, landing and share previews still use the D272 palette with `prefers-color-scheme`.
+
 ## Palette (D272)
+
+_From D383 the app uses the palette above; D272 still drives the public pages, landing, OG images, icons and the manifest._
+
 
 Green brand palette from four owner-supplied colours: mint `#d7f0db`, slate `#49535e`, light green `#b2e29b`, deep teal `#195b5c`. The same values drive the app tokens (`styles.css`), the public pages and landing (`apps/api/src/public/styles.ts`, shared by `landing-styles.ts`), the OG images and icons (`OG_COLORS`, re-rendered with `pnpm og:static`), `theme-color` and the manifest.
 

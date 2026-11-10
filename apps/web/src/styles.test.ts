@@ -7,11 +7,16 @@ const styles = read('./styles.css');
 const editorCss = read('./editor/editor.css');
 const browseCss = read('./browse/browse.css');
 
-/** The custom properties of the first `:root { … }` block in `css`. */
-function tokens(css: string): Record<string, string> {
+/**
+ * D383: each colour token of the first `:root { … }` block is `light-dark(#light, #dark)`; returns
+ * the side of every such token for one theme.
+ */
+function tokens(css: string, side: 'light' | 'dark'): Record<string, string> {
   const block = /:root\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
   return Object.fromEntries(
-    [...block.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]?.trim()]),
+    [...block.matchAll(/(--[\w-]+):\s*light-dark\((#[0-9a-f]{6}),\s*(#[0-9a-f]{6})\);/gi)].map(
+      (m) => [m[1], side === 'light' ? m[2] : m[3]],
+    ),
   );
 }
 
@@ -28,8 +33,8 @@ function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-const light = tokens(styles);
-const dark = tokens(styles.slice(styles.indexOf('@media (prefers-color-scheme: dark)')));
+const light = tokens(styles, 'light');
+const dark = tokens(styles, 'dark');
 
 describe.each([
   ['light', light],
@@ -46,13 +51,13 @@ describe.each([
     expect(contrast(color('--color-danger'), color('--color-bg'))).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('keeps primary button text at 4.5:1 or more', () => {
-    expect(contrast(color('--color-accent-text'), color('--color-accent'))).toBeGreaterThanOrEqual(
-      4.5,
-    );
+  it('keeps primary button text at 4.5:1 or more on the mint fill', () => {
+    expect(
+      contrast(color('--color-accent-text'), color('--color-accent-fill')),
+    ).toBeGreaterThanOrEqual(4.5);
   });
 
-  // D272: every text pair of the green palette meets WCAG AA for normal text.
+  // D272/D383: every text pair of the palette meets WCAG AA for normal text.
   it.each([
     ['--color-text', '--color-bg'],
     ['--color-text', '--color-surface'],
@@ -95,6 +100,21 @@ describe('shared control styles (D211, D214)', () => {
       /^\.(button|icon-button|menu|menu__item|menu-button)(\b|$)(?![-_])/.test(s),
     );
     expect(leaking).toEqual([]);
+  });
+});
+
+describe('theme switching (D383)', () => {
+  it('follows color-scheme only, so a theme picked in Settings wins over the device', () => {
+    expect(styles).not.toContain('prefers-color-scheme');
+    expect(styles).toMatch(/:root\[data-theme='light'\]\s*\{\s*color-scheme: light;/);
+    expect(styles).toMatch(/:root\[data-theme='dark'\]\s*\{\s*color-scheme: dark;/);
+  });
+
+  it('defines every core colour for both themes', () => {
+    for (const name of ['--color-bg', '--color-surface', '--color-text', '--color-accent-fill']) {
+      expect(light[name]).toMatch(/^#/);
+      expect(dark[name]).toMatch(/^#/);
+    }
   });
 });
 

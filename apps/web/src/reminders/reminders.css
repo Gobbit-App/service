@@ -25,7 +25,7 @@
 }
 
 .dismiss-dialog::backdrop {
-  background: rgb(0 0 0 / 0.45);
+  background: light-dark(rgb(22 27 33 / 30%), rgb(5 11 21 / 62%));
 }
 
 .dismiss-dialog__title {

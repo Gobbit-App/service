@@ -1,22 +1,12 @@
-/* 038 (D287): card-body styles. Hexes mirror PALETTE in @gobbit/shared/rich-text (palette test). */
+/* 038 (D287): card-body styles. Hexes mirror PALETTE in @gobbit/shared/rich-text (palette test).
+   D383: light-dark() follows the app theme (device or Settings → Appearance). */
 :root {
-  --rt-red: #b42318;
-  --rt-orange: #b54708;
-  --rt-green: #067647;
-  --rt-blue: #175cd3;
-  --rt-purple: #6941c6;
-  --rt-grey: #475467;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --rt-red: #fda29b;
-    --rt-orange: #fdb022;
-    --rt-green: #75e0a7;
-    --rt-blue: #84caff;
-    --rt-purple: #bdb4fe;
-    --rt-grey: #cdd5df;
-  }
+  --rt-red: light-dark(#b42318, #fda29b);
+  --rt-orange: light-dark(#b54708, #fdb022);
+  --rt-green: light-dark(#067647, #75e0a7);
+  --rt-blue: light-dark(#175cd3, #84caff);
+  --rt-purple: light-dark(#6941c6, #bdb4fe);
+  --rt-grey: light-dark(#475467, #cdd5df);
 }
 
 .rt-small {
