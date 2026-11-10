@@ -33,6 +33,7 @@
     "workbox-strategies": "^7.4.1"
   },
   "dependencies": {
+    "@fontsource-variable/schibsted-grotesk": "^5.3.0",
     "@gobbit/api-client": "workspace:*",
     "@gobbit/shared": "workspace:*",
     "@milkdown/kit": "^7.23.0",

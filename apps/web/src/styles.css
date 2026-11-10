@@ -1,28 +1,59 @@
 /* Gobbit Reader — plain CSS with custom properties (D57). Mobile first, 16 px gutters. */
 
 :root {
+  /* D383: theme = the device's colour scheme unless the person picks one (data-theme, Settings →
+     Appearance). Every colour is defined once as light-dark(light, dark). */
   color-scheme: light dark;
-  /* D272: green brand palette — mint #d7f0db, slate #49535e, light green #b2e29b, teal #195b5c. */
-  --color-bg: #f3faf4;
-  --color-surface: #ffffff;
-  --color-text: #232b31;
-  --color-muted: #49535e;
-  --color-border: #cfe3d4;
-  --color-accent: #195b5c;
-  --color-accent-text: #ffffff;
-  --color-accent-soft: #d7f0db;
-  --color-highlight: #b2e29b;
-  --color-danger: #a12b2b;
-  --color-banner: #195b5c;
-  --color-banner-text: #ffffff;
+  /* Native checkboxes, radios and ranges in the 10% colour. */
+  accent-color: var(--color-accent-fill);
+
+  /* D383 palette, 60 / 30 / 10 —
+     dark:  midnight navy #0e1b2e (60) · oat milk #eadfcd (30) · fresh mint #22e3a2 (10)
+     light: ice blue #dde9f2 (60) · midnight carbon #161b21 (30) · fresh mint #22e3a2 (10) */
+  --color-bg: light-dark(#dde9f2, #0e1b2e);
+  --color-surface: light-dark(#f4f8fb, #16253a);
+  --color-text: light-dark(#161b21, #eadfcd);
+  --color-muted: light-dark(#46515e, #aea595);
+  --color-border: light-dark(#b9cad8, #2b3b52);
+  /* Accent as ink (text, icons, outlines on the page): mint itself on navy, a deep mint on ice. */
+  --color-accent: light-dark(#07664a, #22e3a2);
+  /* Accent as a fill (primary buttons, the + action, current state): always fresh mint. */
+  --color-accent-fill: light-dark(#22e3a2, #22e3a2);
+  --color-accent-text: light-dark(#161b21, #0e1b2e);
+  --color-accent-soft: light-dark(#c8eee0, #183c40);
+  --color-highlight: light-dark(#97ecca, #1e5a4c);
+  --color-danger: light-dark(#a8261d, #ff9384);
+  /* The 30% colour as a solid: tooltips, toasts, notices. */
+  --color-banner: light-dark(#161b21, #eadfcd);
+  --color-banner-text: light-dark(#eaf1f7, #0e1b2e);
+
+  /* D383: brushed glass. Panels and overlays (bars, menus, sheets, toasts) are translucent, blur
+     what's behind them, carry a fine horizontal grain and a lit top edge. Cards are quieter panes. */
+  --glass-bg: color-mix(in srgb, var(--color-surface) 66%, transparent);
+  --glass-blur: blur(22px) saturate(1.5);
+  --glass-line: light-dark(rgb(255 255 255 / 75%), rgb(234 223 205 / 12%));
+  --glass-edge: inset 0 1px 0 light-dark(rgb(255 255 255 / 95%), rgb(234 223 205 / 9%));
+  --brush: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.9' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.8 0 0 0 -0.8'/%3E%3C/filter%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.9' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.8 0 0 0 0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23w%29' opacity='0.10'/%3E%3Crect width='100%25' height='100%25' filter='url%28%23k%29' opacity='0.07'/%3E%3C/svg%3E");
+  --pane-bg: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  --pane-line: light-dark(rgb(255 255 255 / 65%), rgb(234 223 205 / 8%));
+
+  /* D383: glows, for major panels only (sheets, menus, the browse card, the primary action). */
+  --glow-panel:
+    0 0 0 1px light-dark(rgb(7 102 74 / 6%), rgb(34 227 162 / 7%)),
+    0 28px 64px -28px light-dark(rgb(22 27 33 / 32%), rgb(34 227 162 / 20%));
+  --glow-accent:
+    0 0 0 1px rgb(34 227 162 / 40%),
+    0 10px 30px -8px light-dark(rgb(7 102 74 / 45%), rgb(34 227 162 / 45%));
 
   --font-body:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Hebrew', sans-serif;
-  --radius: 12px;
-  --radius-pill: 999px;
-  --gutter: 16px;
-  --gap: 12px;
-  --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 2px 8px rgb(0 0 0 / 4%);
+    'Schibsted Grotesk Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans',
+    'Noto Sans Hebrew', sans-serif;
+  /* D383: hard edges everywhere; one token so the whole app agrees. */
+  --radius: 0;
+  --radius-pill: 0;
+  --gutter: 20px;
+  --gap: 16px;
+  --shadow: var(--glass-edge);
   --tap: 44px;
   --max-width: 720px;
 
@@ -32,29 +63,46 @@
   --safe-right: env(safe-area-inset-right, 0px);
 
   /* D274: the fixed bottom bar's height (without the safe area). */
-  --bottom-bar-h: calc(var(--tap) + 16px);
+  --bottom-bar-h: calc(var(--tap) + 20px);
 
-  /* D311 (039): type scale, spacing, elevation, radii and motion for the composer and sheets. */
+  /* D311 (039): type scale, spacing, elevation, radii and motion for the composer and sheets.
+     D383: one 4/8 px spacing scale; headings tighten as they grow. */
   --text-xs: 0.8125rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.4375rem;
+  --text-2xl: 1.875rem;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
   --space-6: 32px;
-  --elevation-1: 0 1px 2px rgb(0 0 0 / 6%);
-  --elevation-2: 0 2px 6px rgb(0 0 0 / 8%), 0 8px 24px rgb(0 0 0 / 6%);
-  --elevation-3: 0 8px 32px rgb(0 0 0 / 18%);
-  --radius-sm: 8px;
-  --radius-lg: 20px;
+  --space-7: 48px;
+  --elevation-1: var(--glass-edge);
+  --elevation-2: var(--glass-edge), 0 0 0 1px var(--glass-line);
+  --elevation-3: var(--glass-edge), var(--glow-panel);
+  --radius-sm: 0;
+  --radius-lg: 0;
   --motion-fast: 120ms;
   --motion-base: 220ms;
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* D383: a person's choice in Settings → Appearance overrides the device (theme/theme.ts). */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+@media (min-width: 600px) {
+  :root {
+    --gutter: 28px;
+  }
 }
 
 /* D311: no movement under "reduce motion" (FR-019). */
@@ -62,28 +110,6 @@
   :root {
     --motion-fast: 0ms;
     --motion-base: 0ms;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #121a1c;
-    --color-surface: #1a2629;
-    --color-text: #e8f3ea;
-    --color-muted: #a3b5b0;
-    --color-border: #2c3e41;
-    --color-accent: #b2e29b;
-    --color-accent-text: #121a1c;
-    --color-accent-soft: #1f4243;
-    --color-highlight: #195b5c;
-    --color-danger: #f08a8a;
-    --color-banner: #d7f0db;
-    --color-banner-text: #121a1c;
-    --shadow: none;
-    /* Shadows read poorly on dark surfaces; a lighter rim carries the elevation instead. */
-    --elevation-1: none;
-    --elevation-2: 0 0 0 1px rgb(255 255 255 / 6%);
-    --elevation-3: 0 0 0 1px rgb(255 255 255 / 8%), 0 8px 32px rgb(0 0 0 / 50%);
   }
 }
 
@@ -114,8 +140,30 @@ body {
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.55;
   overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* D383: the room's light — a cool lift at the top and a trace of mint at the top end, fixed behind
+   everything, so the glass panels have something to catch. */
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(
+      90vmax 55vmax at 100% -12%,
+      light-dark(rgb(34 227 162 / 22%), rgb(34 227 162 / 11%)),
+      transparent 62%
+    ),
+    radial-gradient(
+      110vmax 70vmax at 0% -20%,
+      light-dark(rgb(255 255 255 / 70%), rgb(52 84 128 / 42%)),
+      transparent 70%
+    );
+  content: '';
+  pointer-events: none;
 }
 
 img {
@@ -142,13 +190,53 @@ a {
 h1,
 h2,
 h3 {
-  line-height: 1.25;
+  line-height: 1.2;
   margin: 0 0 0.5em;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+}
+
+/* D383: headings tighten as they grow. */
+h1 {
+  font-size: var(--text-2xl);
+  font-weight: 760;
+  letter-spacing: -0.026em;
+}
+
+h2 {
+  font-size: var(--text-xl);
+  letter-spacing: -0.018em;
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* D383: brushed glass — every panel and overlay that floats over content (bars, menus, sheets,
+   dialogs); the components below set only their borders and glows. */
+.app-header,
+.bottom-bar,
+.menu,
+.sheet,
+.consent-prompt,
+.browse-top,
+.browse-dock,
+.browse-full__sheet,
+.browse-full__head,
+.browse-hint__sheet {
+  background-color: var(--glass-bg);
+  background-image: var(--brush);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* D383: what's behind a modal dims towards the room's own colour and softens. */
+.sheet::backdrop,
+.consent-prompt::backdrop {
+  background: light-dark(rgb(22 27 33 / 30%), rgb(5 11 21 / 62%));
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 
 .visually-hidden {
@@ -190,9 +278,11 @@ h3 {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: var(--color-accent);
-  font-size: 2rem;
+  gap: 14px;
+  color: var(--color-text);
+  font-size: 2.25rem;
+  font-weight: 780;
+  letter-spacing: -0.035em;
 }
 
 /* D321: the logo tile (`pnpm og:static`), sized to the wordmark. */
@@ -223,9 +313,9 @@ h3 {
   display: flex;
   align-items: center;
   gap: var(--header-gap);
-  padding: calc(var(--safe-top) + 8px) var(--gutter) 8px;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  padding: calc(var(--safe-top) + 10px) var(--gutter) 10px;
+  border-bottom: 1px solid var(--glass-line);
+  box-shadow: var(--glass-edge);
 }
 
 .app-header__logo {
@@ -263,7 +353,8 @@ h3 {
   flex: 1;
   min-width: 0;
   margin: 0;
-  font-size: 1.125rem;
+  font-size: var(--text-lg);
+  letter-spacing: -0.015em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -285,25 +376,41 @@ h3 {
 
 /* ---------- Buttons ---------- */
 
+/* D383: the primary action is the 10% — fresh mint with the room's dark type; it glows on hover
+   and focus. Secondary (ghost) actions are drawn in the 30% colour. */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: var(--tap);
-  padding: 0 18px;
-  border: 1px solid var(--color-accent);
+  padding: 0 22px;
+  border: 1px solid light-dark(#17c88c, var(--color-accent-fill));
   border-radius: var(--radius-pill);
-  background: var(--color-accent);
+  background: var(--color-accent-fill);
   color: var(--color-accent-text);
   font: inherit;
-  font-weight: 600;
+  font-weight: 650;
+  letter-spacing: 0.005em;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    box-shadow var(--motion-fast) ease-out,
+    border-color var(--motion-fast) ease-out;
+}
+
+.button:hover:not(:disabled, [aria-disabled='true'], .button--ghost, .button--danger),
+.button:focus-visible:not(.button--ghost, .button--danger) {
+  box-shadow: var(--glow-accent);
 }
 
 .button--ghost {
+  border-color: color-mix(in srgb, var(--color-text) 35%, transparent);
   background: transparent;
-  color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.button--ghost:hover:not(:disabled, [aria-disabled='true']) {
+  border-color: var(--color-text);
 }
 
 .button:disabled,
@@ -406,11 +513,11 @@ h3 {
   z-index: 40;
   display: none;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--color-banner);
   color: var(--color-banner-text);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 550;
   line-height: 1.3;
   white-space: nowrap;
   content: attr(data-tip);
@@ -494,14 +601,13 @@ h3 {
 .menu {
   position: fixed;
   z-index: 30;
-  min-width: 180px;
+  min-width: 200px;
   margin: 0;
-  padding: 6px;
-  border: 1px solid var(--color-border);
+  padding: 8px;
+  border: 1px solid var(--glass-line);
   border-radius: var(--radius);
-  background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+  box-shadow: var(--elevation-3);
   list-style: none;
   /* Long lists (the deck and category switchers, D381) scroll inside the menu. */
   max-height: min(70vh, 28rem);
@@ -515,9 +621,10 @@ h3 {
   gap: 12px;
   width: 100%;
   min-height: var(--tap);
-  padding: 0 12px;
+  padding: 0 14px 0 12px;
   border: 0;
-  border-radius: 8px;
+  border-inline-start: 2px solid transparent;
+  border-radius: var(--radius);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -536,8 +643,10 @@ h3 {
   cursor: default;
 }
 
+/* D383: the current choice carries the mint edge. */
 .menu__item[aria-checked='true'] {
-  font-weight: 600;
+  border-inline-start-color: var(--color-accent);
+  font-weight: 650;
 }
 
 /* D381: a choice's check mark slot, kept for every option so the labels line up. */
@@ -581,11 +690,10 @@ h3 {
   align-items: center;
   gap: var(--gap);
   min-height: var(--bottom-bar-h);
-  padding: 8px calc(var(--gutter) + var(--safe-right)) calc(8px + var(--safe-bottom))
+  padding: 10px calc(var(--gutter) + var(--safe-right)) calc(10px + var(--safe-bottom))
     calc(var(--gutter) + var(--safe-left));
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-  box-shadow: 0 -1px 8px rgb(0 0 0 / 6%);
+  border-top: 1px solid var(--glass-line);
+  box-shadow: var(--glass-edge);
 }
 
 .bottom-bar > * {
@@ -605,12 +713,14 @@ h3 {
   margin-inline-start: auto;
 }
 
+/* D383: the one always-lit control — the main action in mint with a soft glow. */
 .bottom-bar__plus {
   min-width: var(--tap);
   min-height: var(--tap);
   border-radius: var(--radius-pill);
-  background: var(--color-accent);
+  background: var(--color-accent-fill);
   color: var(--color-accent-text);
+  box-shadow: var(--glow-accent);
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -650,15 +760,16 @@ h3 {
   padding: 0 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: var(--color-surface);
+  background: var(--pane-bg);
   color: var(--color-text);
+  font-weight: 550;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .chip[aria-current='page'] {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
+  border-color: var(--color-accent-fill);
+  background: var(--color-accent-fill);
   color: var(--color-accent-text);
 }
 
@@ -679,18 +790,27 @@ h3 {
   list-style: none;
 }
 
+/* D383: a deck is a major element — a pane that lights up when pointed at. */
 .deck-list__link {
   display: flex;
   align-items: center;
-  min-height: 64px;
-  padding: 0 var(--gutter);
+  min-height: 76px;
+  padding: 0 var(--space-5);
+  border: 1px solid var(--pane-line);
+  border-inline-start: 2px solid var(--color-accent);
   border-radius: var(--radius);
-  background: var(--color-surface);
-  box-shadow: var(--shadow);
+  background: var(--pane-bg);
+  box-shadow: var(--glass-edge);
   color: var(--color-text);
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.015em;
   text-decoration: none;
+  transition: box-shadow var(--motion-fast) ease-out;
+}
+
+.deck-list__link:hover {
+  box-shadow: var(--glass-edge), var(--glow-panel);
 }
 
 .new-deck__slot {
@@ -710,11 +830,13 @@ h3 {
 
 /* ---------- Card frame ---------- */
 
+/* D383: a card is a quiet pane — no blur, a hairline and a lit top edge; glass is for what floats. */
 .card {
   min-width: 0;
-  padding: var(--gutter);
+  padding: var(--space-5);
+  border: 1px solid var(--pane-line);
   border-radius: var(--radius);
-  background: var(--color-surface);
+  background: var(--pane-bg);
   box-shadow: var(--shadow);
   overflow: hidden;
 }
@@ -728,8 +850,9 @@ h3 {
 .card__title {
   flex: 1;
   min-width: 0;
-  margin: 10px 0 8px;
-  font-size: 1.125rem;
+  margin: 8px 0 12px;
+  font-size: var(--text-lg);
+  letter-spacing: -0.015em;
 }
 
 .card__title a {
@@ -831,7 +954,7 @@ h3 {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius);
   background: var(--color-accent-soft);
 }
 
@@ -857,7 +980,7 @@ h3 {
   margin: 0;
   justify-self: start;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--color-accent-soft);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -881,7 +1004,7 @@ h3 {
 
 .link-card__image-link {
   display: block;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius);
 }
 
 /* D163: the stored snapshot keeps the 16:9 crop of the remote preview. */
@@ -896,7 +1019,7 @@ h3 {
   justify-self: start;
   margin: 0;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--color-accent-soft);
   color: var(--color-muted);
   font-size: 0.8125rem;
@@ -918,7 +1041,7 @@ h3 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius);
 }
 
 .cloud-image__img {
@@ -927,7 +1050,7 @@ h3 {
   height: auto;
   max-height: min(70vh, 640px);
   object-fit: contain;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius);
   opacity: 0;
 }
 
@@ -949,7 +1072,7 @@ h3 {
   max-width: 100%;
   overflow-x: auto;
   border: 1px solid var(--color-border);
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius);
 }
 
 .table-card__table {
@@ -1000,7 +1123,7 @@ h3 {
   min-height: var(--tap);
   padding: 0 10px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-bg);
   color: inherit;
   font: inherit;
@@ -1016,10 +1139,12 @@ h3 {
   justify-content: space-between;
   gap: 8px;
   margin: 0;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border-inline-start: 2px solid var(--color-accent);
+  border-radius: var(--radius);
   background: var(--color-accent-soft);
-  font-weight: 600;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Status views ---------- */
@@ -1082,7 +1207,7 @@ h3 {
   border-radius: var(--radius);
   background: var(--color-banner);
   color: var(--color-banner-text);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+  box-shadow: var(--glow-panel);
 }
 
 /* ---------- Toast and card actions (D146) ---------- */
@@ -1103,7 +1228,7 @@ h3 {
   border-radius: var(--radius);
   background: var(--color-banner);
   color: var(--color-banner-text);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+  box-shadow: var(--glow-panel);
 }
 
 .toast__action {
@@ -1150,7 +1275,7 @@ h3 {
   min-height: var(--tap);
   padding: 0 12px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-surface);
   color: inherit;
   font: inherit;
@@ -1193,7 +1318,7 @@ h3 {
 .admin-member > select {
   padding: 8px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-surface);
   color: inherit;
   font: inherit;
@@ -1219,8 +1344,8 @@ h3 {
 /* ---------- Editor fields (Phase 6, D136): shared by the card editor and review edit ---------- */
 
 .chip[aria-pressed='true'] {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
+  border-color: var(--color-accent-fill);
+  background: var(--color-accent-fill);
   color: var(--color-accent-text);
 }
 
@@ -1276,7 +1401,7 @@ h3 {
 .rich-editor__loading {
   min-height: 12rem;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-surface);
 }
 
@@ -1387,7 +1512,7 @@ h3 {
 .share-thumbs__image {
   width: 96px;
   height: 96px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   object-fit: cover;
   background: var(--color-border);
 }
@@ -1454,16 +1579,12 @@ h3 {
 /* ---------- Analytics consent (035, D263, D266; a modal since D281) ---------- */
 
 .consent-prompt {
-  width: min(24rem, calc(100vw - 2 * var(--gap)));
-  padding: var(--gap);
-  border: 1px solid var(--color-border);
+  width: min(26rem, calc(100vw - 2 * var(--gutter)));
+  padding: var(--space-5);
+  border: 1px solid var(--glass-line);
   border-radius: var(--radius);
-  background: var(--color-surface);
   color: var(--color-text);
-}
-
-.consent-prompt::backdrop {
-  background: rgb(0 0 0 / 0.6);
+  box-shadow: var(--elevation-3);
 }
 
 .consent-prompt h2 {
@@ -1492,7 +1613,6 @@ h3 {
 .switch input {
   width: 1.25rem;
   height: 1.25rem;
-  accent-color: var(--color-accent);
 }
 
 /* ---------- Settings: ingest tokens (Phase 5, D99) ---------- */
@@ -1506,13 +1626,72 @@ h3 {
 .settings-notice {
   margin: 0 0 var(--gap);
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--color-banner);
   color: var(--color-banner-text);
 }
 
 .settings-section {
-  margin-bottom: calc(var(--gap) * 2);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settings-section:last-child {
+  border-bottom: 0;
+}
+
+/* D383: a one-of-few choice as one square strip of radios; the chosen segment is the mint fill. */
+.segmented {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  border: 0;
+}
+
+.segmented__legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-weight: 600;
+}
+
+.segmented__options {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--color-border);
+  background: var(--pane-bg);
+}
+
+.segmented__option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-4);
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.segmented__option + .segmented__option {
+  border-inline-start: 1px solid var(--color-border);
+}
+
+.segmented__option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmented__option:has(input:checked) {
+  background: var(--color-accent-fill);
+  color: var(--color-accent-text);
+}
+
+.segmented__option:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  z-index: 1;
 }
 
 /* 037: Settings → Notifications push controls */
@@ -1565,7 +1744,7 @@ h3 {
   margin-bottom: var(--gap);
   padding: 12px;
   border: 1px solid var(--color-accent);
-  border-radius: 12px;
+  border-radius: var(--radius);
 }
 
 .token-secret__value {
@@ -1580,7 +1759,7 @@ h3 {
   min-width: 1.25rem;
   padding: 0 6px;
   border-radius: var(--radius-pill);
-  background: var(--color-accent);
+  background: var(--color-accent-fill);
   color: var(--color-accent-text);
   font-size: 0.75rem;
   font-weight: 700;
@@ -1619,7 +1798,7 @@ h3 {
 .review-card__dedup {
   padding: var(--gap);
   border: 1px dashed var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 
 .review-card__banner {
@@ -1688,7 +1867,7 @@ h3 {
   gap: 6px;
   padding: var(--gap);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 
 .bulk-publish-notice p,
@@ -1799,7 +1978,7 @@ h3 {
 }
 
 .mode-toggle__option[aria-pressed='true'] {
-  background: var(--color-accent);
+  background: var(--color-accent-fill);
   color: var(--color-accent-text);
 }
 
@@ -1830,7 +2009,7 @@ h3 {
 }
 
 .search-hit-mark {
-  border-radius: 2px;
+  border-radius: var(--radius);
   background: var(--color-highlight);
   color: inherit;
 }
@@ -1948,7 +2127,7 @@ h3 {
 .import-row__edit textarea {
   padding: 8px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-surface);
   color: inherit;
   font: inherit;
@@ -1982,7 +2161,7 @@ h3 {
   gap: 4px 12px;
   padding: 8px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 
 .import-row--invalid {
@@ -2122,7 +2301,7 @@ h3 {
 .admin-confirm__warning {
   margin: 0;
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--color-banner);
   color: var(--color-banner-text);
 }
@@ -2207,7 +2386,7 @@ h3 {
   min-height: var(--tap);
   padding: 4px 8px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-surface);
   color: inherit;
   font: inherit;
