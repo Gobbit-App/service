@@ -172,10 +172,9 @@
   width: min(calc(100% - 2 * var(--gutter) - var(--safe-left) - var(--safe-right)), 640px);
   margin: 0 auto;
   padding: var(--space-5);
-  border: 1px solid var(--pane-line);
   border-radius: var(--radius);
   background: var(--color-surface);
-  box-shadow: var(--glass-edge), var(--glow-panel);
+  box-shadow: var(--card-shadow), var(--glow-panel);
 }
 
 .browse-card .card,

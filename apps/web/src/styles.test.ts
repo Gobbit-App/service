@@ -69,6 +69,16 @@ describe.each([
     ['--color-accent', '--color-bg'],
     ['--color-accent', '--color-surface'],
     ['--color-banner-text', '--color-banner'],
+    // Cards swap in the 30% surface (cream / carbon) for the page tokens.
+    ['--color-text', '--card-bg'],
+    ['--color-text', '--card-well'],
+    ['--color-text', '--card-pane'],
+    ['--color-text', '--card-accent-soft'],
+    ['--card-muted', '--card-bg'],
+    ['--card-muted', '--card-well'],
+    ['--card-muted', '--card-accent-soft'],
+    ['--color-accent', '--card-bg'],
+    ['--color-danger', '--card-bg'],
   ])('keeps %s on %s at 4.5:1 or more', (fg, bg) => {
     expect(contrast(color(fg), color(bg))).toBeGreaterThanOrEqual(4.5);
   });
