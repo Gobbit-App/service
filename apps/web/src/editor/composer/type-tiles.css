@@ -6,8 +6,10 @@
   gap: var(--space-3);
 }
 
+/* Three columns only on the full-page chooser: the type sheet stays 28rem wide on any screen, where
+   three tiles would leave a name too little room. */
 @media (min-width: 600px) {
-  .type-tiles {
+  .type-chooser .type-tiles {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -65,6 +67,8 @@
 .type-tile__name {
   grid-area: name;
   font-weight: 600;
+  /* The body's `anywhere` would let the grid squeeze a name until it splits mid-word. */
+  overflow-wrap: break-word;
 }
 
 .type-tile__hint {
