@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Open: FR-010 (surfaces beyond lists/Browse) and FR-011 (ingestion setting avatars). Resolve before `/speckit-plan`.
+- FR-010 and FR-011 resolved in Clarifications (2026-11-10). All items pass; ready for `/speckit-plan`.
 - References to "existing photo upload", "activity log" and "clean-up" name product behaviour, not implementation.
