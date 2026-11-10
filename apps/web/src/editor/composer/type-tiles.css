@@ -35,9 +35,11 @@
     box-shadow var(--motion-fast) var(--ease-out);
 }
 
-.type-tile:hover:not([aria-disabled='true']) {
-  border-color: var(--color-accent);
-  box-shadow: var(--elevation-2);
+@media (hover: hover) {
+  .type-tile:hover:not([aria-disabled='true']) {
+    border-color: var(--color-accent);
+    box-shadow: var(--elevation-2);
+  }
 }
 
 .type-tile:focus-visible {
@@ -105,9 +107,11 @@
   cursor: pointer;
 }
 
-.type-control:hover:not([aria-disabled='true']) {
-  border-color: var(--color-accent);
-  color: var(--color-text);
+@media (hover: hover) {
+  .type-control:hover:not([aria-disabled='true']) {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
 }
 
 .type-control:focus-visible {
