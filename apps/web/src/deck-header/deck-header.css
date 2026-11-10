@@ -57,8 +57,10 @@
   white-space: nowrap;
 }
 
-.deck-crumbs__deck:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .deck-crumbs__deck:hover {
+    text-decoration: underline;
+  }
 }
 
 /* A slim caret (GitHub's repository switcher): 44 px tall, narrower than an icon button. */
@@ -80,9 +82,14 @@
   font-size: 1rem;
 }
 
-.deck-crumbs__view:hover,
 .deck-crumbs__view[aria-expanded='true'] {
   background: var(--color-accent-soft);
+}
+
+@media (hover: hover) {
+  .deck-crumbs__view:hover {
+    background: var(--color-accent-soft);
+  }
 }
 
 .deck-crumbs__view-name {
