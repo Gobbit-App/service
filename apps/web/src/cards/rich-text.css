@@ -9,6 +9,30 @@
   --rt-grey: light-dark(#475467, #cdd5df);
 }
 
+/* Body rhythm (FLOW_SPACING in @gobbit/shared/rich-text, flow test): each block owns only the
+   space above it, so the reader and the editor space headings, paragraphs and lists alike. */
+.rt-flow > *,
+.rt-flow li > * {
+  margin-block: 0;
+}
+
+.rt-flow > * + * {
+  margin-top: 0.75em;
+}
+
+.rt-flow > * + :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 1.4em;
+}
+
+.rt-flow > :is(h1, h2, h3, h4, h5, h6) + * {
+  margin-top: 0.4em;
+}
+
+.rt-flow li + li,
+.rt-flow li > * + * {
+  margin-top: 0.3em;
+}
+
 .rt-small {
   font-size: 0.85em;
 }

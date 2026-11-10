@@ -988,14 +988,6 @@ h2 {
 
 /* ---------- Card types (§4) ---------- */
 
-.text-card > :first-child {
-  margin-top: 0;
-}
-
-.text-card > :last-child {
-  margin-bottom: 0;
-}
-
 .text-card ul,
 .text-card ol {
   padding-inline-start: 1.25em;

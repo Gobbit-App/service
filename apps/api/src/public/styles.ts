@@ -24,7 +24,6 @@ nav.cats a{display:inline-block;border:1px solid var(--line);border-radius:999px
 ul.cards{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
 article.card,ul.cards li{background:var(--card);border:1px solid var(--line);border-radius:.75rem;padding:.9rem 1rem}
 ul.cards li a.title{color:var(--fg);text-decoration:none;font-weight:600}
-.body p{margin-block:.5rem}
 .body img,figure img{max-width:100%;height:auto;border-radius:.5rem}
 figure{margin:0}
 .table{overflow-x:auto}

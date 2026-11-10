@@ -8,6 +8,7 @@ import {
 } from '@gobbit/shared';
 import { evaluateCalc, formatCalcResult } from '@gobbit/shared/calc';
 import { imageAlt } from '@gobbit/shared/image-alt';
+import { FLOW_CLASS } from '@gobbit/shared/rich-text';
 import type { EventPublicPayload } from '@gobbit/shared/event-constants';
 import { eventWhenLine } from './event-summary';
 import { h, type Html } from './html';
@@ -31,7 +32,9 @@ function hostOf(url: string): string {
 }
 
 function body(item: PublicItem): Html | string {
-  return item.body.trim() ? h`<div class="body">${renderMarkdown(item.body)}</div>` : '';
+  return item.body.trim()
+    ? h`<div class="body ${FLOW_CLASS}">${renderMarkdown(item.body)}</div>`
+    : '';
 }
 
 type LinkFields = Pick<EventPublicPayload, 'url' | 'preview'> & { url: string };

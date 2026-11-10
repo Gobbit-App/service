@@ -8,6 +8,7 @@ import {
   type ReactElement,
 } from 'react';
 import type { Command, EditorState } from '@milkdown/kit/prose/state';
+import { FLOW_CLASS } from '@gobbit/shared/rich-text';
 import { FormatToolbar } from './FormatToolbar';
 import { createRichEditor, type RichEditor } from './milkdown-setup';
 import '../../cards/rich-text.css';
@@ -44,7 +45,7 @@ function editorAttributes(
 ): Record<string, string> {
   return {
     id: contentId,
-    class: 'rich-editor__content',
+    class: `rich-editor__content ${FLOW_CLASS}`,
     role: 'textbox',
     'aria-multiline': 'true',
     'aria-labelledby': labelId,

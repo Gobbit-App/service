@@ -8,7 +8,7 @@ import { TextCard } from './TextCard';
 /** Drop the reader-only attributes (dir, new-tab links) and serialisation differences. */
 function normalize(html: string): string {
   return html
-    .replace(/^<div class="text-card">|<\/div>$/g, '')
+    .replace(/^<div class="text-card rt-flow">|<\/div>$/g, '')
     .replaceAll(' dir="auto"', '')
     .replaceAll(' target="_blank" rel="noopener noreferrer"', '')
     .replaceAll('<br/>', '<br>')
