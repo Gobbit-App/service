@@ -185,6 +185,16 @@ img {
   display: block;
 }
 
+/* Design-system guard (D383): a button never shows the browser's own chrome (outset border, grey
+   fill, system font). Each control draws its own fill and edge, or none; zero specificity, so any
+   class rule wins. */
+:where(button) {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
 /* Form controls never set the page width: a long <select> option or input size shrinks to fit. */
 input,
 select,
