@@ -122,7 +122,9 @@ Removing an avatar is a change like any other.
   56 px in Browse and its full view.
 - The box is always laid out at its size, so loading causes no shift (FR-006).
 - The image URL comes from a new `avatarUrl(cloudName, publicId, px)` in `cards/cloudinary.ts`:
-  `f_auto,q_auto,c_fill,g_auto:faces,ar_1:1,w_{px}`. The `srcset` covers 1×, 2× and 3× of the box,
+  `f_auto,q_auto,c_fill,g_auto:faces,ar_1:1,w_{px}`. It is built on the module's existing
+  `deliveryUrl`, the same builder `CloudImage` uses, so every stored-image URL still comes from one
+  module. The `srcset` covers 1×, 2× and 3× of the box,
   so there are no `sizes` measurements.
 - `alt=""` and `aria-hidden` make it decorative (FR-007).
 - On `onError` the `<img>` is removed and the empty circle stays. The circle uses the card fill
@@ -138,13 +140,19 @@ Removing an avatar is a change like any other.
 **Rationale**: `CloudImage` is built for flowing images, with a measured `sizes`, a blur placeholder
 and payload dimensions (D161). An avatar is a fixed small square, and a second, much smaller component
 is simpler than adding crop modes to `CloudImage`. ADR-059/D161 says stored images render only
-through `cards/CloudImage`. This plan amends that sentence to "`CloudImage` or `CardAvatar`" in
-`docs/design/card-media.md`.
+through `cards/CloudImage`. This plan amends that rule (settled 2026-11-11) to: "stored images
+render only through `cards/CloudImage` or `cards/CardAvatar`, and every delivery URL is built in
+`cards/cloudinary.ts`". The amendment goes in `docs/design/card-media.md` and the CLAUDE.md "Web"
+bullet. The guarantee the rule exists for, one place that knows Cloudinary URLs, is kept, and each
+component is sized for its own job.
 
 **Alternatives considered**:
 
-- *A `crop="avatar"` mode on `CloudImage`*: rejected, because it would bypass most of
-  `CloudImage`'s logic (measuring, placeholder, intrinsic box).
+- *`CardAvatar` wrapping `CloudImage`, or a `crop="avatar"` mode on it*: rejected. It would have to
+  switch off most of `CloudImage`'s logic: the `c_limit` URLs (an avatar needs a square face crop),
+  the 360–1080 px `srcset` (up to 20× the bytes for a 40 px circle), per-instance measuring, the blur
+  placeholder (an extra request about the avatar's own size) and the intrinsic box from payload
+  dimensions. That is a second mode inside one component.
 - *`g_face`*: rejected, because it fails on images without faces. `g_auto:faces` prefers faces and
   falls back to the salient subject.
 - *`c_thumb`*: rejected, because `c_fill` with `ar_1:1` gives the same result and is easier to read.

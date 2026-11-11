@@ -162,7 +162,7 @@ Full reasoning is in [research.md](research.md).
 | D388 | The client sends `{ publicId }` only. The asset must be recorded for the card's deck (D160 rule), and the dimensions are copied from it | no |
 | D389 | The sweep's `unreferenced` predicate includes `avatar->>'publicId'`, covering every status. Partial expression index | no |
 | D390 | `itemEventFields` gains `avatar`; the web labels it "image" | no |
-| D391 | `CardAvatar`: a fixed circle (40/56 px), `c_fill,g_auto:faces,ar_1:1`, `alt=""`, an empty circle on error. Rendered in `Card` and `ReviewCard`. Amends "stored images render only through `CloudImage`" to include `CardAvatar` | no |
+| D391 | `CardAvatar`: a fixed circle (40/56 px), `c_fill,g_auto:faces,ar_1:1`, `alt=""`, an empty circle on error. Rendered in `Card` and `ReviewCard`. A sibling of `CloudImage`, not a wrapper; the rule becomes "stored images render only through `CloudImage` or `CardAvatar`, every URL built in `cards/cloudinary.ts`" (settled 2026-11-11) | no |
 | D392 | A top-level `Draft.avatar`, and one `AvatarField` above the type fields reusing `useImageUpload`. Paste goes to the avatar except on events. A type switch to link or image warns and clears | no |
 | D393 | Share preview, **public mode**: image card picture → generated card + delivery-time overlay of avatar ?? link/event snapshot → that visual alone on render failure → private. **Private mode** unchanged and generic | no |
 | D394 | Ingestion, import and public reads never set or see an avatar (by construction; tested) | no |
@@ -212,7 +212,7 @@ apps/api/src/
 
 apps/web/src/
 ├── cards/CardAvatar.tsx (+ .test.tsx)        # NEW
-├── cards/cloudinary.ts                       # + avatarUrl
+├── cards/cloudinary.ts                       # + avatarUrl (on the existing deliveryUrl)
 ├── cards/Card.tsx                            # header renders CardAvatar when set
 ├── review/ReviewCard.tsx                     # same
 ├── styles.css, browse/browse.css             # .card__header layout, --avatar-size
@@ -275,13 +275,14 @@ avatar's display sizes are UI constants. The two alert thresholds above go in th
     in a DTO), and the new web only sends it after the API accepts it. Both ship in one deploy.
   - No flag is needed.
 - **Docs**:
-  - `docs/design/card-media.md`: avatar section, the `CardAvatar` exception to the CloudImage-only
-    rule, sweep reference, runbook thresholds.
+  - `docs/design/card-media.md`: avatar section, the amended render rule (`CloudImage` or
+    `CardAvatar`, URLs only from `cards/cloudinary.ts`), sweep reference, runbook thresholds.
   - `web-pwa.md` share-preview section: the public visual (avatar ?? snapshot) and the private rule.
   - `card-editor.md` (AvatarField, paste rule), `activity-log.md` (`avatar`) and `data-model.md`
     (column).
   - ADR-077 in `docs/adr.md`, plus one index row in `docs/architecture.md`.
-  - `CLAUDE.md` "Media" bullet: avatars render through `CardAvatar`.
+  - `CLAUDE.md` "Web" bullet: stored images render only through `cards/CloudImage` or
+    `cards/CardAvatar`, with every URL built in `cards/cloudinary.ts`.
   - A `PLAN.md` line.
 
 ## Risks
@@ -298,8 +299,8 @@ avatar's display sizes are UI constants. The two alert thresholds above go in th
 
 ## Settle before starting
 
-- [ ] **CLAUDE.md / D161 wording**: "stored images render only through `cards/CloudImage`" gains
-  `CardAvatar` (D391). Confirm the exception, or require `CardAvatar` to wrap `CloudImage`.
+Nothing open. The share-preview questions were settled by the 2026-11-11 clarification (D393), and
+the `CardAvatar` question by choosing a sibling component with a shared URL builder (D391).
 
 ## Complexity Tracking
 
