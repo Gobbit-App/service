@@ -32,7 +32,8 @@
 ## Notes
 
 - No clarification markers: scope levers were resolved with conservative defaults recorded under
-  Assumptions (no content search or transcription, ingestion takes files not file links, one file per
-  card, no in-app recording). Revisit with `/speckit-clarify` if any default is wrong.
+  Assumptions (no content search or transcription, ingestion takes files not file links, galleries
+  photos-only up to 8, no in-app recording). Gallery support and the starting limits (video 25 MB,
+  audio 15 MB) came from the product owner after the first draft. Revisit with `/speckit-clarify` if any default is wrong.
 - The storage provider's capabilities (page pictures, stills, format conversion) appear only as
   assumptions, not as a design.

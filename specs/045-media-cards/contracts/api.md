@@ -6,13 +6,18 @@ All DTOs live in `@gobbit/shared`; run `pnpm api:openapi` after the route change
 
 - `ItemType`: `image` → `media` in every response (items, search, public, share, review, events).
 - Inputs (`POST /decks/{id}/items`, `PATCH /items/{id}`, `GET /decks/{id}/items?type=`, direct ingest)
-  also accept `image` as an alias for one release (D387); it is normalized to `media` with
-  `kind: 'image'` when the payload has no kind.
-- Media payload (request): `{ publicId: string, alt?: string, kind?: MediaKind }`; any other fact a
-  client sends (`width`, `height`, `durationMs`, `pages`, `fileName`) is accepted and replaced from the
-  asset. Response: the full payload in `data-model.md`.
-- Errors (problem+json, field `payload.publicId`): `422 Unknown file` when the asset is missing or
-  belongs to another deck (was "Unknown image").
+  also accept `image` as an alias for one release (D387); it is normalized to `media`, and a flat image
+  payload `{ publicId, alt?, width?, height? }` becomes `{ kind: 'image', images: [ … ] }`.
+- Media payload (request), by kind (D398):
+  - image: `{ kind: 'image', images: [{ publicId, alt? }, …] }`, 1–8 photos in display order.
+  - pdf, audio, video: `{ kind, publicId, alt? }`.
+  Any other fact a client sends (`width`, `height`, `durationMs`, `pages`, `fileName`) is accepted and
+  replaced from the asset. `alt` is ≤ 200 code points. Response: the full payload in `data-model.md`.
+- Errors (problem+json):
+  - `422 Unknown file` (field `payload.publicId` or `payload.images.<n>.publicId`) when an asset is
+    missing, rejected or belongs to another deck (was "Unknown image").
+  - `422` on `payload.images`: more than 8 photos, none, or the same photo twice; on `payload.kind`:
+    the kind doesn't match the asset(s) (e.g. a PDF in a gallery).
 
 ## `POST /decks/{id}/media/sign`
 
@@ -59,9 +64,11 @@ New refusals (`422`, field `file`; the stored file is deleted first):
 
 - Accepted file MIME families: `image/*` (as today), `application/pdf`, `audio/*`, `video/*`, each checked by
   magic bytes. Per-kind limits come from D393; the total body limit is unchanged.
+- An image proposal uses every shared image (≤ `INGEST_MAX_IMAGES`, still 3) as a gallery in share order (D395, D398).
 - The share status (`GET /ingest/jobs/{id}`) reports unused files with a reason: `unsupported`,
   `too_large` or `extra_file`.
 
 ## Public API (`/public/{slug}…`)
 
-`toPublicItem` media allow-list: `kind, publicId, alt, width, height, durationMs, pages` (D397).
+`toPublicItem` media allow-list (D397): `kind`; for image `images[]` of `{ publicId, alt, width, height }`;
+for the other kinds `publicId, alt, width, height, durationMs, pages`.

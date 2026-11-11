@@ -1,20 +1,21 @@
 # Research: Media cards (045)
 
-Decisions D386–D399 are reserved for this feature (D386–D397 used below). Each states the decision, why,
+Decisions D386–D399 are reserved for this feature and all are used below. Each states the decision, why,
 and what was rejected. "Verify" items are facts about the storage provider (Cloudinary) that the first
 implementation task confirms against a real account before building on them (quickstart § 0).
 
 ## D386 — Rename the `image` card type to `media`; the file kind lives in the payload
 
 **Decision**: `ALTER TYPE item_type RENAME VALUE 'image' TO 'media'`. A media payload carries
-`kind: 'image' | 'pdf' | 'audio' | 'video'`. Existing rows are backfilled with `kind: 'image'` in the
-same migration, with `items_set_updated_at` disabled for the backfill so no card's `updated_at` (and
+`kind: 'image' | 'pdf' | 'audio' | 'video'`, and its shape depends on the kind: image cards hold a
+gallery `images: [...]` (D398), the other kinds a single `publicId`. Existing rows are reshaped to
+`{ kind: 'image', images: [{ publicId, alt, width, height }] }` in the same migration, with `items_set_updated_at` disabled for the backfill so no card's `updated_at` (and
 so its list position, share content hash or "recently changed" state) moves. A CHECK constraint
 requires a valid `kind` on every media row.
 
 **Why**: one card type with one editor, one asset reference rule (D160) and one sweep is simpler than
-four near-identical types. Renaming the enum value is a catalogue-only change (no table rewrite), and
-the partial index on `payload->>'publicId'` keeps working because its predicate stores the enum OID.
+four near-identical types. Renaming the enum value is a catalogue-only change (no table rewrite); the
+payload reshape rewrites only media rows, once, and the old `publicId` index is replaced (D398).
 
 **Rejected**:
 - *Keep `image` and add `pdf`, `audio`, `video` types*: four switch arms everywhere (CardBody, render-item,
@@ -26,7 +27,8 @@ the partial index on `payload->>'publicId'` keeps working because its predicate 
 ## D387 — Old clients may still say `image` for one release (alias, logged)
 
 **Decision**: create, patch, list filter (`?type=`) and direct-ingest inputs accept `type: 'image'` and
-normalize it to `media` (with `kind: 'image'` when the payload has none). Responses always say `media`.
+normalize it to `media`; a flat image payload (`{ publicId, alt, width, height }`) becomes
+`{ kind: 'image', images: [{ … }] }` (D398). Responses always say `media`.
 Each use logs `item.type_alias` (`alias: 'image'`). The alias is removed in a later release once the
 event has been silent for 30 days (tracked in `PLAN.md`).
 
@@ -104,7 +106,7 @@ exactly one kind:
 
 **Decision**: the card picture is page 1 (`pg_1`) through `CloudImage`. "Read" opens a full-screen
 `<dialog>` (lazy chunk) listing one `<img loading="lazy">` per page (`pg_N,f_auto,q_auto,c_limit,w_<measured>`),
-a "Page n of N" indicator (IntersectionObserver), zoom steps (fit width → 2× → 3×, re-requesting a
+a "Page n of N" indicator (IntersectionObserver), built on the page viewer shared with galleries (D399), zoom steps (fit width → 2× → 3×, re-requesting a
 wider image and panning with native scroll), and "Open original" (`…/image/upload/<id>.pdf`, new tab).
 
 **Why**: zero new dependency and a few KB of code, works with the existing image cache offline for pages
@@ -141,15 +143,19 @@ only the shared eager list).
 
 ## D393 — Size limits per kind, env-tunable, enforced at confirm
 
-**Decision**: editor defaults image 8 MB (unchanged), PDF 10 MB, audio 25 MB, video 100 MB; ingest defaults
-image 8 MB (unchanged), PDF 10 MB, audio 20 MB, video 24 MB, all within `INGEST_BODY_MAX_BYTES` (25 MB).
+**Decision**: editor defaults image 8 MB per photo (unchanged), PDF 10 MB, audio 15 MB, video 25 MB;
+ingest defaults image 8 MB (unchanged), PDF 10 MB, audio 15 MB, video 24 MB, all within
+`INGEST_BODY_MAX_BYTES` (25 MB, which also carries the share's text and other parts).
 Env overrides: `MEDIA_MAX_BYTES_{PDF,AUDIO,VIDEO}` and `INGEST_MAX_BYTES_{PDF,AUDIO,VIDEO}`, defaults in
 `@gobbit/shared/media`. The sign response returns the effective limit, so the editor checks before
-upload; the server refuses at confirm (D390). Uploads stay single-request (the provider's single-request
-ceiling is 100 MB); raising the video limit beyond that needs chunked upload (a later feature).
+upload; the server refuses at confirm (D390). Uploads stay single-request; that holds up to the
+provider's 100 MB single-request ceiling, beyond which chunked upload is needed (a later feature).
 
-**Why**: the 10 MB PDF default fits the smaller provider plans' image limit; video 100 MB covers a few
-minutes of phone video.
+**Why**: the starting limits are deliberately small (product decision) to keep storage and conversion
+use modest while the feature beds in; they are env-tunable, so raising them is a deploy, not a release.
+The 10 MB PDF default fits the smaller provider plans' image limit. 25 MB of video is roughly 10–20 s
+of full-quality phone video or a minute or more at the phone's reduced "share" quality, so the editor
+copy says to choose a shorter clip or a smaller size when one is refused.
 
 ## D394 — Service worker caches only Cloudinary images
 
@@ -164,7 +170,10 @@ change (D391).
 
 **Decision**: the share target accepts `image/*, application/pdf, audio/*, video/*`; `POST /ingest` and
 email-in accept the same MIME families (sniffed by magic bytes, as images are today). If the first
-supported file is an image, today's flow is unchanged. If it is a PDF, audio or video file, the job
+supported file is an image, today's flow runs, except that an image proposal now holds every shared image
+(up to `INGEST_MAX_IMAGES`, still 3) as a gallery in share order (D398); the model's alt text goes to
+the cover and the other photos have none (D206 allows that). PDF, audio and video files in the same
+share are then unused (`extra_file`). If it is a PDF, audio or video file, the job
 uploads it (server upload, `resource_type` per D388, eager per D392), builds the proposal directly
 (`extraction.model = 'direct'`): title = the share title or email subject, else the first line of the
 text, else the file name without extension; body = the remaining share text when it fits the body limit,
@@ -182,22 +191,73 @@ while content search is out); copying files from shared URLs (spec Assumptions).
 ## D396 — Media dedup by content fingerprint
 
 **Decision**: assets store the provider's `etag` (content MD5). Media dedup adds a signal before the
-existing ones: a live or archived media card in the same deck whose asset has the same `etag` → verdict
+existing ones: a live or archived media card in the same deck holding an asset with the same `etag` as any file
+of the proposal (for a gallery, any photo) → verdict
 `possible_duplicate` with `via: 'file'`. It never returns `update` (identical bytes are not new content
 to merge). Auto-publish already skips `possible_duplicate`.
 
 ## D397 — Public pages and share previews per kind
 
-**Decision**: `toPublicItem` gains an allow-list for media payloads: `kind, publicId, alt, width, height,
-durationMs, pages` (no `fileName`, `bytes`, `format`: a file name can carry personal details).
-`render-item.ts` renders without JS: image as today; video `<video controls preload="none" poster>`;
+**Decision**: `toPublicItem` gains an allow-list for media payloads: `kind`, `images[]` of
+`{ publicId, alt, width, height }`, and `publicId, alt, width, height, durationMs, pages` for the other
+kinds (no `fileName`, `bytes`, `format`: a file name can carry personal details).
+`render-item.ts` renders without JS: each photo in order (a single image exactly as today); video `<video controls preload="none" poster>`;
 audio `<audio controls preload="none">` plus duration; PDF page-1 `<img>` linked to the original with
-"PDF · N pages". Share preview image order: image → video still (`so_auto`, `c_fill,w_1200,h_630`) →
+"PDF · N pages". Share preview image order: image (a gallery's cover) → video still (`so_auto`, `c_fill,w_1200,h_630`) →
 PDF page 1 (`pg_1,c_fill,g_north,w_1200,h_630`) → generated card image for audio. The share content hash
 includes `kind`.
+
+## D398 — A photo card is a gallery of 1–8 images
+
+**Decision**: the image-kind payload is `{ kind: 'image', images: [{ publicId, alt?, width, height }] }`
+with 1 to `MEDIA_GALLERY_MAX` (8, a constant in `@gobbit/shared/media`, not an env var: it bounds the
+payload) entries in display order; the first is the cover. The other kinds keep a flat
+`{ kind, publicId, alt?, … }`. The Zod schema is a discriminated union on `kind`; the DB checks
+`jsonb_array_length(payload->'images') BETWEEN 1 AND 8` and that every entry has a non-empty `publicId`
+(`jsonb_path_exists`, immutable, so a plain CHECK). `mediaReference()` checks every photo (own deck,
+`kind = 'image'`, not rejected, no repeats within the card) and fills each photo's dimensions from its
+asset. Per-photo `alt` is capped at `MEDIA_ALT_MAX` (200 code points) on input so 8 photos always fit
+the 8192-byte payload limit; existing longer alts are kept by the migration and only need shortening if
+the member edits that card. The card body stays the caption for the whole card.
+
+Lookups that ask "which media card holds this file" (sweep `isReferenced`, dedup, share preview) use
+`payload @> '{"images":[{"publicId":…}]}' OR payload @> '{"publicId":…}'`, served by one GIN
+(`jsonb_path_ops`) partial index on media payloads that replaces `items_image_public_id_idx`.
+`item_search_text()` indexes every photo's alt via `jsonb_path_query_array(payload, '$.images[*].alt')`.
+
+Reader: a single image renders exactly as today. A gallery shows its cover through `CloudImage` (its
+own aspect ratio, no layout shift) with an "N photos" badge; tapping opens the page viewer (D399). The
+card itself never scrolls horizontally, so it doesn't fight Browse's horizontal card swipe (ADR-065).
+Editor: multi-select picker, per-photo upload state, description, move earlier/later and remove (no
+drag library); paste and camera add to the gallery; saving waits for every upload.
+
+**Why**: a gallery is the same file kind and the same reader/editor surfaces as a photo, so it belongs
+to the image kind rather than being a fifth kind. Deciding the array shape now, while the migration is
+already reshaping every photo card, avoids a second payload migration. Always an array (even of one)
+gives every reader one code path.
+
+**Rejected**:
+- *A fifth kind `gallery`*: two kinds for photos, and converting 1 ↔ 2 photos would change the kind.
+- *Flat cover fields plus an `extra: [...]` array*: two places for the same fact, and every reader must
+  merge them.
+- *Galleries of mixed kinds*: a different viewer per slide; no demand yet.
+- *An inner horizontal carousel on the card*: conflicts with Browse's swipe between cards.
+
+## D399 — One lazy page viewer for galleries and PDFs
+
+**Decision**: `cards/media/PageViewer` is a lazy full-screen `<dialog>` that takes a list of pages
+(`{ source, width, height, alt }`), shows "k of N", zoom steps and native scroll (horizontal scroll-snap
+for photos, vertical for PDF pages), and arrow-key navigation; it restores focus to the card on close.
+The gallery passes its photos; the PDF card passes `pg_1…pg_N` sources and adds "Open original".
+
+**Why**: the two viewers differ only in scroll axis and one action; one chunk keeps the initial bundle
+untouched and halves the viewer tests.
+
+**Rejected**: two separate viewers; a lightbox library (constitution VI, ADR-065 no gesture library).
 
 ## Not decided here (left to `/speckit-clarify` if wanted)
 
 - Content search (PDF text, transcripts): out of scope per spec Assumptions; would be its own feature with
   an `item_search_text` change and an extraction job.
-- Chunked uploads for videos over 100 MB.
+- Chunked uploads for videos over 100 MB (not needed at the starting limits).
+- Raising the gallery limit above 8, or the per-share photo limit above 3 (the share body limit is the constraint).
