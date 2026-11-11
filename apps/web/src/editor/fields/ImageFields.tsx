@@ -5,6 +5,7 @@ import { useOnline } from '../../api/offline';
 import { checkImageFile } from '../image-file';
 import { withoutPhoto, withPhoto } from '../image-payload';
 import { useImageUpload, type UseImageUploadOptions } from '../use-image-upload';
+import { usePasteImage } from '../use-paste-image';
 import { PickButton } from './PickButton';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
@@ -73,6 +74,7 @@ export function ImageFields({
   const hasPhoto = payload.publicId !== '';
   const showPickers = !upload.busy && !hasPhoto;
   const pickDisabled = disabled || !online;
+  usePasteImage(pick, !pickDisabled && !upload.busy);
 
   return (
     <div className="editor__fields image-fields">
@@ -122,6 +124,7 @@ export function ImageFields({
         <div className="image-fields__pick">
           <PickButton label="Take photo" capture disabled={pickDisabled} onPick={pick} />
           <PickButton label="Choose photo" disabled={pickDisabled} onPick={pick} />
+          {!pickDisabled && <p className="muted">Or paste a photo.</p>}
         </div>
       )}
 

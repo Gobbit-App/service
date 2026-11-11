@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { useOnline } from '../../api/offline';
 import { checkImageFile } from '../image-file';
 import { useImageUpload, type UseImageUploadOptions } from '../use-image-upload';
+import { usePasteImage } from '../use-paste-image';
 import type { LinkPreview, LinkPreviewSlotContext } from './LinkFields';
 import { PickButton } from './PickButton';
 import { Button } from '../../ui/buttons/Button';
@@ -78,6 +79,7 @@ export function LinkPhoto({ deckId, disabled, uploadDeps, ...ctx }: LinkPhotoPro
   const { state } = upload;
   const hasPhoto = typeof ctx.preview.publicId === 'string' && ctx.preview.publicId !== '';
   const pickDisabled = disabled || !online;
+  usePasteImage(pick, !pickDisabled && !upload.busy);
 
   return (
     <div className="link-photo">
