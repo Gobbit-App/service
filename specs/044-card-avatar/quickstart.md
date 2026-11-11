@@ -7,7 +7,7 @@ Decisions: [research.md](research.md).
 
 ```bash
 pnpm install && pnpm db:migrate && pnpm dev
-# Cloudinary (CLOUDINARY_CLOUD_NAME / _API_KEY / _API_SECRET) is needed for real uploads, as for photo cards.
+# Cloudinary (CLOUDINARY_URL) is needed for real uploads, as for photo cards.
 # Without it, avatar upload behaves exactly like photo-card upload does; tests use the fake in e2e/fixtures/cloudinary.ts.
 ```
 
@@ -47,9 +47,13 @@ pnpm test:e2e -- --grep @full avatar    # replace/remove, failed upload keeps ol
 9. **Review**: share a page to the deck. In the review queue, edit the proposal, add an avatar,
    publish. The proposal had none before (FR-011).
 10. **Share** (D393):
-    - Make the card public (public deck, public category) and share `/s/<id>`. The preview image is
-      the avatar, cropped 1200×630.
-    - Share a card from a private deck. The preview is the generic private image.
+    - Make the card public (public deck, public category) and share `/s/<id>`. The preview is the
+      generated card (title, excerpt) with the avatar as a circle.
+    - Add an avatar to a public event card that has a preview image. The preview shows the avatar,
+      not the event's image. Remove the avatar, and the event's image is shown in the side panel.
+    - Change the avatar and share again. The preview image URL changes.
+    - Share a card with an avatar from a private deck. The preview is the generic private image and
+      text, with nothing from the card.
 11. **Missing image**: delete the avatar's image in Cloudinary. The card shows an empty circle and
     still renders.
 12. **Clean-up** (SC-003): covered by `media-sweep` integration tests, which move the clock past the

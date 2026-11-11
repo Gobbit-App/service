@@ -58,12 +58,18 @@ publishers through the same route (FR-011).
 
 ## Share preview (`/s/{itemId}`, `og:image` of `/p/…/i/{id}`)
 
-Public share mode only (D393):
+Public share mode (D393), first that applies:
 
-1. an image card's own picture;
-2. otherwise the avatar, when the card has no stored link-preview image:
-   `…/image/upload/c_fill,g_auto:faces,w_1200,h_630,f_jpg/<publicId>`;
-3. otherwise the generated card;
-4. otherwise `/og/private.png`.
+1. an image card's own picture (unchanged);
+2. the generated card (title, excerpt, category, deck) with a visual composited at delivery by a
+   Cloudinary layer. The visual is the member-set avatar (a round crop), or else the stored
+   link/event preview snapshot (a side panel), or else none. A member-set avatar always supersedes
+   an automatic image;
+3. if rendering fails or times out: the visual alone,
+   `…/image/upload/c_fill,g_auto:faces,w_1200,h_630,f_jpg/<publicId>`, or else `/og/private.png`.
 
-Private share mode is unchanged: `/og/private.png` and generic text.
+The visual's kind and `publicId` are part of the OG content hash, so changing the avatar re-renders
+the stored card.
+
+Private share mode is unchanged: `/og/private.png` and generic text, with nothing derived from the
+card (no avatar, title or image).

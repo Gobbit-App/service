@@ -180,34 +180,55 @@ through `cards/CloudImage`. This plan amends that sentence to "`CloudImage` or `
 **Alternatives considered**: putting the avatar in each type's fields component. Rejected because it
 would be five copies, and the field isn't type content.
 
-## D393 — Share preview: avatar only in public share mode
+## D393 — Share preview: generic when not public, richest when public
 
-**Decision**:
+**Decision** (clarified 2026-11-11):
 
-- `share.service` `imageFor` (public mode only) picks, in order:
-  1. an image card's own picture (D59);
-  2. the avatar, when the card has no stored link-preview image, rendered with
-     `c_fill,g_auto:faces,w_1200,h_630,f_jpg`;
-  3. the generated card (D60);
-  4. the private image.
-- Private-mode shares are unchanged: the static image and nothing content-derived (D58/D59).
-- Because public pages' `og:image` uses the same `imageFor` (D177), a public card's page metadata
-  also carries its avatar. This is consistent with D177 ("the same image `/s/` previews use"), and
-  the visible public page still doesn't render it (FR-010).
-- Events with a stored link preview keep today's generated image. Today's code never uses a link
-  preview image as `og:image`; the spec's "as today" premise is corrected here and the behaviour is
-  kept.
+- **Not public** (private share mode): unchanged. `privateMeta` keeps the static image and the generic
+  text, with no avatar, title or anything content-derived (D58/D59).
+- **Public share mode**: `share.service` `imageFor` picks the first that applies:
+  1. An image card's own picture (D59, unchanged).
+  2. The generated card (D60: title, excerpt, category, deck) **with a visual**. The visual is the
+     member-set avatar, or else an automatically gathered image (the stored link/event
+     `preview.publicId` snapshot). A member-set avatar always supersedes an automatic image. Without
+     either, it's today's generated card.
+  3. If rendering fails or times out (D61): the visual alone, cropped
+     `c_fill,g_auto:faces,w_1200,h_630,f_jpg`, or else the private image.
+- **How the visual gets in**:
+  - The renderer is never handed image bytes. `ogCardTree` gains `visual: 'avatar' | 'snapshot' |
+    null`, and it only reserves the space: a 240 px circle on the leading side for an avatar, or a
+    right-hand panel for a snapshot.
+  - Cloudinary composites the image at delivery through a layer on the stored card's URL:
+    `l_<publicId with / as :>,c_fill,g_auto:faces,w_240,h_240,r_max/fl_layer_apply,g_north_west,…`
+    for an avatar, or `…,c_fill,g_auto,w_420,h_630/fl_layer_apply,g_east` for a snapshot.
+  - Both images live in the one cloud behind `CLOUDINARY_URL`, so no outbound fetch happens and
+    safe-fetch is unaffected.
+- `OgContent` gains `visual` and `visualPublicId`, and both go into `ogContentHash`. Adding,
+  replacing or removing an avatar therefore re-renders the stored card, and the delivery URL changes
+  with it.
+- Public pages' `og:image` uses the same `imageFor` (D177), so a public card's page metadata carries
+  the same image. The visible public page still doesn't render the avatar (FR-010).
+- Behaviour change beyond avatars: public link and event cards without an avatar now show their
+  preview snapshot in the generated card. Today they get a text-only card; the spec's "as today"
+  premise about event preview images was inaccurate. This follows the clarification that public
+  previews should be as rich as possible.
 
-**Rationale**: D58/D59 (ADR-level privacy rule) say a private share reveals nothing about the card.
-The avatar is card content, so it can only appear where the card is already public. This narrows
-FR-010/SC-005 to public-mode shares; see the plan's "Settle before starting".
+**Rationale**:
+
+- Clarification 2026-11-11: nothing about a non-public card leaks, and public previews carry as much
+  content and imagery as possible.
+- A delivery-time overlay keeps the renderer pure (text only) and within its 3 s budget (D61). It
+  also adds no fetch path, and it gives the visual and the text in one image.
 
 **Alternatives considered**:
 
-- *Avatar in private-mode previews*: this would leak a private card's image to anyone holding the
-  link, and to every chat-app cache. Rejected.
-- *Compositing the avatar into the generated OG card*: nicer, but it adds a remote image fetch to the
-  renderer inside its 3 s budget (D61). Deferred.
+- *The avatar alone as `og:image`*: rejected. It loses the title and excerpt that the generated card
+  carries, which is less information.
+- *Compositing inside the renderer (Satori `<img>` with fetched bytes)*: rejected. It needs a
+  fetch, base64 bytes and a timeout inside the render budget, and the overlay does the same work at
+  Cloudinary's edge.
+- *An avatar in private-mode previews*: rejected. It would leak a non-public card's image to anyone
+  holding the link and into chat-app caches.
 
 ## D394 — People only: ingestion, import and public reads never see an avatar
 

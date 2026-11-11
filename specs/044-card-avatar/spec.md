@@ -61,7 +61,7 @@ A member swiping through cards in Browse (and its full view) sees the current ca
 - A card whose only image is its avatar keeps that image from being cleaned up as unused; removing the avatar makes the image eligible for clean-up after the usual grace period.
 - An event with a link preview image keeps both: the preview in the card body, the avatar in the title row.
 - Proposals (ingested cards awaiting review) can be given an avatar by a publisher while reviewing, like any other edit.
-- Sharing a card with an avatar: the share preview shows the avatar as its image; sharing an event with a link preview image shows the preview image, as today. Revoking or removing the avatar changes later previews only; already-unfurled messages keep what chat apps cached.
+- Sharing a card that isn't public: the share preview stays generic, with no avatar, title or other content, as today. Sharing a public card with an avatar: the preview shows the card's content together with the avatar. A member-set avatar wins over any image Gobbit picked up automatically, such as an event's or link's preview image. Removing the avatar changes later previews only; already-unfurled messages keep what chat apps cached.
 - Bulk import and existing cards are unaffected: no card gains an avatar unless someone sets one.
 
 ## Clarifications
@@ -70,6 +70,11 @@ A member swiping through cards in Browse (and its full view) sees the current ca
 
 - Q: Besides lists and Browse, where else does the avatar show? → A: In the app (card page, editor preview) and as the share preview image; not on public deck pages or public search.
 - Q: Should ingestion ever set an avatar? → A: No, people only; a publisher can add one while reviewing.
+
+### Session 2026-11-11
+
+- Q: Does a share preview of a non-public card show the avatar? → A: No. Nothing about a non-public card leaks through a share preview; it stays generic. For public cards, a richer preview (more content and visuals) is better.
+- Q: When a card has both a member-set avatar and an automatically gathered image (an event's or link's preview image), which one represents the card? → A: The member-set avatar always supersedes automatically gathered images.
 
 ## Requirements
 
@@ -82,7 +87,7 @@ A member swiping through cards in Browse (and its full view) sees the current ca
 - **FR-007** The avatar is decorative (no alt text to write); the card title remains the accessible name.
 - **FR-008** Adding, replacing or removing an avatar is a card edit: it appears in the deck's activity log like other field changes and follows the same permission and validation errors.
 - **FR-009** The avatar stays within the existing card size limits; an avatar on a type that doesn't support it is refused with a field error, never silently dropped by the server.
-- **FR-010** The avatar also shows on the card page and in the editor preview. A card's share preview (the link a member sends to someone) uses the avatar as its preview image when the card has no other image (an event's link preview image wins). Public deck pages and public search don't show avatars in this feature.
+- **FR-010** The avatar also shows on the card page and in the editor preview. A public card's share preview (the link a member sends to someone) shows the card's content with its avatar; a member-set avatar supersedes any automatically gathered image (such as a link or event preview image). A non-public card's share preview stays generic and reveals nothing about the card, avatar included. Public deck pages and public search don't show avatars in this feature.
 - **FR-011** Only people set avatars. Ingestion never sets one on a proposed card; a publisher may add one while reviewing (FR-002).
 
 ### Key Entities
@@ -95,7 +100,7 @@ A member swiping through cards in Browse (and its full view) sees the current ca
 - **SC-002** In a list of 20 cards at 360 px wide, cards with and without avatars keep their titles aligned and the page shows no layout shift as avatars load.
 - **SC-003** No image used only as an avatar is removed by clean-up while its card exists (live, archived or within the 30-day undelete window).
 - **SC-004** Cards without an avatar render identically to before the feature (no visual regression in lists or Browse).
-- **SC-005** Sharing a card whose only image is its avatar produces a preview with that image in chat apps that unfurl links.
+- **SC-005** Sharing a public card with an avatar produces a preview showing that avatar with the card's content in chat apps that unfurl links; sharing a non-public card produces the same generic preview as before the feature.
 
 ## Assumptions
 

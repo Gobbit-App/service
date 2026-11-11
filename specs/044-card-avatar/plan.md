@@ -22,8 +22,10 @@ removing an avatar logs `avatar` in the activity log (D390).
 empty circle (D391). The editor gains one `AvatarField`, which reuses the photo upload hook, and a
 top-level `Draft.avatar` that survives draft restore and type switches (D392).
 
-**Sharing.** Public-mode share previews use the avatar when the card has no other image. Private
-shares stay content-free (D393).
+**Sharing.** Non-public shares stay generic, with nothing from the card (D58/D59). A public card's
+preview is the generated card with a visual that Cloudinary composites at delivery. The visual is
+the member-set avatar, or else the automatic link/event preview snapshot, so a member-set avatar
+supersedes anything gathered automatically (D393, clarified 2026-11-11).
 
 ## Starting point
 
@@ -46,7 +48,7 @@ Code to read:
   - `repositories/assets.repo.ts` (`unreferenced`);
   - `events/diff-fields.ts`;
   - `lib/mappers.ts` (`toItemDto`), `services/public-dtos.ts`;
-  - `share/share.service.ts` (`imageFor`).
+  - `share/share.service.ts` (`imageFor`), `share/og-template.ts` (`ogCardTree` visual slot).
 - **Shared**: `packages/shared/src/schemas/item.ts`, `events/constants.ts`, `package.json` exports
   (new subpath).
 - **Web**:
@@ -162,7 +164,7 @@ Full reasoning is in [research.md](research.md).
 | D390 | `itemEventFields` gains `avatar`; the web labels it "image" | no |
 | D391 | `CardAvatar`: a fixed circle (40/56 px), `c_fill,g_auto:faces,ar_1:1`, `alt=""`, an empty circle on error. Rendered in `Card` and `ReviewCard`. Amends "stored images render only through `CloudImage`" to include `CardAvatar` | no |
 | D392 | A top-level `Draft.avatar`, and one `AvatarField` above the type fields reusing `useImageUpload`. Paste goes to the avatar except on events. A type switch to link or image warns and clears | no |
-| D393 | Share preview: image card picture → avatar (if no link-preview image) → generated → private, **public mode only**; private shares are unchanged | no |
+| D393 | Share preview, **public mode**: image card picture → generated card + delivery-time overlay of avatar ?? link/event snapshot → that visual alone on render failure → private. **Private mode** unchanged and generic | no |
 | D394 | Ingestion, import and public reads never set or see an avatar (by construction; tested) | no |
 | D395 | Offline: the DTO comes from the persisted cache and the bytes from the HTTP cache; an unloaded avatar shows the empty circle | no |
 
@@ -204,7 +206,8 @@ apps/api/src/
 ├── repositories/assets.repo.ts               # unreferenced predicate + avatar
 ├── events/diff-fields.ts                     # avatar in ItemFields
 ├── lib/mappers.ts                            # toItemDto avatar
-├── share/share.service.ts                    # imageFor: avatar step (public mode)
+├── share/share.service.ts                    # imageFor: visual (avatar ?? snapshot) + overlay (public mode)
+├── share/og-template.ts                     # ogCardTree reserves the visual's slot; hash includes it
 └── test/items-avatar.int.test.ts             # NEW
 
 apps/web/src/
@@ -239,7 +242,7 @@ travels on the existing item routes. The only new web components are `CardAvatar
 | FR-007 decorative | `alt=""` + `aria-hidden` | `CardAvatar.test.tsx` (unit) |
 | FR-008 / D390 activity log | `diffFields` + `insertItemEvents` | `diff-fields.test.ts` (unit); `items-avatar.int.test.ts` add, replace, remove, no-op (int) |
 | FR-009 refused, never dropped; bounded | strict input schema + CHECK + service | `item.test.ts` schema (unit); `items-avatar.int.test.ts` (int) |
-| FR-010 / D393 share preview in public mode; none on public pages or search | `share.service` `imageFor`; `toPublicItem` allow-list | `share.service.test.ts` (unit); `public` int test asserts no `avatar` (int) |
+| FR-010 / D393 share preview: public = generated card + avatar ?? snapshot; private = generic; none on public pages or search | `share.service` `imageFor`, `ogCardTree`, `ogContentHash`; `toPublicItem` allow-list | `share.service.test.ts` (order, avatar beats snapshot, private has nothing from the card, hash changes with avatar) (unit); `public` int test asserts no `avatar` (int) |
 | FR-011 / D394 ingestion and import never set one | no input path | `items-avatar.int.test.ts` ingestion proposal + import → `avatar` null (int) |
 | Spec edge: type switch warns and drops | `withType`, `payloadHasContent` | `draft.test.ts` (unit); `full/avatar.spec.ts` |
 | Acceptance 1.5 failed upload keeps previous | `AvatarField` | `AvatarField.test.tsx` (unit); `full/avatar.spec.ts` |
@@ -254,7 +257,7 @@ travels on the existing item routes. The only new web components are `CardAvatar
 | Avatar added, replaced or removed | `item_events` row (`updated`, `changes ∋ avatar`) | — | itemId, deckId, actorId | audit | aggregate per day | none (expected) | `items-avatar.int.test.ts` |
 | Avatar write refused | `item.avatar` log (new, `item-avatar.events.ts`) | `refused` · `unsupported_type`, `unknown_image`, `other_deck` | requestId, deckId, itemId (on PATCH), actorId | info; warn on `other_deck` | aggregate by reason; instance for `other_deck` | `other_deck` > 5/h (a client bug or probing); `unsupported_type` > 20/h (the UI offering the field wrongly) | `items-avatar.int.test.ts` |
 | Avatar image deleted after removal or purge | existing `media-sweep` events | existing | existing | existing | existing | existing | `media-sweep` int test (reference cases) |
-| Share preview picks the avatar | none: the image is derived from the state of a card that is already public, with no choice about a person. Render failures keep their existing log (D61) | — | — | — | — | — | `share.service.test.ts` |
+| Share preview picks the avatar or the snapshot | none: the image is derived from the state of a card that is already public, with no choice about a person. Render failures keep their existing log (D61) | — | — | — | — | — | `share.service.test.ts` |
 | Ingestion never sets an avatar | none: no code path makes this decision (D394) | — | — | — | — | — | `items-avatar.int.test.ts` |
 
 **Operator controls**: none new. Upload size and rate limits are the existing media ones, and the
@@ -274,6 +277,7 @@ avatar's display sizes are UI constants. The two alert thresholds above go in th
 - **Docs**:
   - `docs/design/card-media.md`: avatar section, the `CardAvatar` exception to the CloudImage-only
     rule, sweep reference, runbook thresholds.
+  - `web-pwa.md` share-preview section: the public visual (avatar ?? snapshot) and the private rule.
   - `card-editor.md` (AvatarField, paste rule), `activity-log.md` (`avatar`) and `data-model.md`
     (column).
   - ADR-077 in `docs/adr.md`, plus one index row in `docs/architecture.md`.
@@ -288,18 +292,12 @@ avatar's display sizes are UI constants. The two alert thresholds above go in th
 | More Cloudinary derived images (3 sizes per avatar, plus the OG crop) | L / L | Small sizes; only cards with avatars; the same quota family as photo cards |
 | Two paste listeners on an event card | L / M | Rule D392: avatar paste is off on events; unit test |
 | The title row jumps in Browse while swiping | M / M | A fixed `--avatar-size` box rendered before the image loads; a full e2e checks the bounding box before and after load |
-| A public card's `og:image` shows the avatar although the public page doesn't render it | L / L | Consistent with D177 (same image as `/s/`). Recorded in D393 and flagged below |
+| A public card's `og:image` shows the avatar although the public page doesn't render it | L / L | Consistent with D177 (same image as `/s/`). Recorded in D393 |
+| Public link/event previews change for cards without an avatar (the snapshot now appears in the generated card) | L / M | Intended per the 2026-11-11 clarification; the content hash re-renders on first share; covered by `share.service` unit tests |
+| A layer `publicId` from another cloud or missing at Cloudinary | L / L | Avatars and snapshots both live in the one cloud behind `CLOUDINARY_URL`; a missing layer makes Cloudinary answer an error, which chat apps treat as no image, the same as a missing photo today |
 
 ## Settle before starting
 
-- [ ] **Spec FR-010 / SC-005 vs D58/D59 (privacy)**: the spec says a shared card's preview uses
-  the avatar. Today a **private** card's share preview is a fixed, content-free image, so that
-  sharing a link never reveals a private card. This plan uses the avatar only for public-mode shares
-  (D393), which means that on typical private family decks SC-005 won't apply. Confirm, or amend the
-  spec's FR-010/SC-005 wording to "public cards" before `/speckit-tasks`.
-- [ ] **Spec edge case "event link preview image … as today"**: today no link-preview image is
-  used as `og:image` (events get the generated card). The plan keeps today's behaviour for events with
-  a preview (D393). Confirm, or treat the preview image as `og:image` as a separate change.
 - [ ] **CLAUDE.md / D161 wording**: "stored images render only through `cards/CloudImage`" gains
   `CardAvatar` (D391). Confirm the exception, or require `CardAvatar` to wrap `CloudImage`.
 
