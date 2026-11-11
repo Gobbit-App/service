@@ -59,7 +59,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `LOG_LEVEL` | `info` | API + worker log level (`trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent`). Logs are JSON lines on stdout: `level`, ISO `time`, `component`, `msg`, extra fields and `err` (with stack) |
 | `OPENROUTER_API_KEY` | — | Optional (API + worker), preferred. One key for embeddings and Ask through OpenRouter; wins over the two direct keys below (ADR-044) |
 | `OPENAI_API_KEY` | — | Optional (API + worker). Direct OpenAI fallback: enables the semantic arm of search and the embeddings worker; without it search is text-only |
-| `ANTHROPIC_API_KEY` | — | Optional (API). Direct Anthropic fallback: enables Ask (`POST /decks/{id}/ask`); without it Ask answers 503 and the PWA hides it |
+| `ANTHROPIC_API_KEY` | — | Optional (API). Direct Anthropic fallback: the Ask provider (`POST /decks/{id}/ask`) and ingestion; without an Ask key Ask answers 503 and the PWA hides it |
+| `ASK_ENABLED` | `false` | Switches Ask on (D385). Ask isn't ready for users yet, so it stays off (503, hidden in the PWA) unless `true` and an Ask key (`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`) is set. Ingestion doesn't depend on it |
 | `EMBEDDING_MODEL` / `ASK_MODEL` | `text-embedding-3-small` / provider Haiku | Models. `EMBEDDING_MODEL` is the bare OpenAI id (sent to OpenRouter as `openai/<id>`; changing it re-embeds every item through the sweep). `ASK_MODEL` is provider-specific: default `anthropic/claude-haiku-5.5` (OpenRouter) or `claude-haiku-5-5` (Anthropic); any OpenRouter model with forced tool calls works, e.g. `qwen/qwen3.7-flash` (~4× cheaper, for local testing). Add a row to `LLM_PRICES_PER_MTOK` (`ai/llm-calls.ts`) when switching, or `llm_calls` logs cost 0. Both are passed through by Compose |
 | `WORKER_CONCURRENCY` | `2` | Concurrent `embed-item` jobs per worker process |
 | `HEALTHCHECK_API_URL` / `HEALTHCHECK_WORKER_URL` | — | Healthchecks.io ping URLs (secrets, `https://`), one per process: each heartbeat pings, silence or a `/fail` ping alerts (D342, `infra/README.md` → *Monitoring*). Unset → no pings |
@@ -272,7 +273,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 - `DATABASE_URL` – the `gobbit` database on the shared Postgres, e.g. `postgres://gobbit:<pw>@<box LAN IP>:5433/gobbit` (add `?sslmode=verify-full` off the LAN)
 - `RESEND_API_KEY`
 - `CLOUDINARY_URL` – the API refuses to start in production without it; it also signs the editor's photo uploads (browser → `api.cloudinary.com`, allowed by the web CSP)
-- `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden
+- `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden. Ask also needs `ASK_ENABLED=true` (a plain value, default off)
 - `RESEND_WEBHOOK_SECRET` – only for email-in, together with `INGEST_EMAIL_DOMAIN` (a plain value; see *Sharing into Gobbit*)
 - `LOG_HASH_KEY` – ≥ 32 random characters (`openssl rand -hex 32`); the API refuses to start in production without it. Keys the `emailHash`/`ipHash` fields of decision events
 
@@ -344,7 +345,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `DELETE` | `/items/{id}/link-check/flag` | Dismiss a link card's dead/changed note until its status changes (`item.update`; 404 without a flag) |
 | **Search** |
 | `GET` | `/decks/{id}/search?q=&limit=` | Hybrid search over visible, published cards (`why`: text / semantic / both) |
-| `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
+| `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `ASK_ENABLED=true` and `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
 | **Media** |
 | `POST` | `/decks/{id}/media/sign` | Signed parameters for one direct browser → Cloudinary photo upload (`item.create`; folder `gobbit/items/<deckId>`; 60/hour per user; 503 without `CLOUDINARY_URL`) |
 | `POST` | `/decks/{id}/media/assets` | Record a finished browser upload: Cloudinary's signed answer (`publicId`, `version`, `signature`, dimensions, bytes, format) is verified and the image is registered for the deck (`item.create`; 60/hour per user; 201 new, 200 repeat, 422 bad signature / wrong folder / other deck; 503 without `CLOUDINARY_URL`). Image cards may only reference recorded images |

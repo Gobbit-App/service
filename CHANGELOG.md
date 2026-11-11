@@ -10,6 +10,14 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-11 — Ask switched off behind `ASK_ENABLED` (D385)
+
+- New `ASK_ENABLED` (API, default `false`, in the Compose `x-api-env` block). Ask isn't ready for
+  users: with it unset, `/config` reports `search.ask: false` (the PWA hides the Ask toggle) and
+  `POST /decks/{id}/ask` answers 503 even when `OPENROUTER_API_KEY`/`ANTHROPIC_API_KEY` is set.
+  Set it to `true` to turn Ask back on. Ingestion and semantic search are unaffected. Nothing to
+  set to keep deploying.
+
 ### 2026-11-10 — Card body limit raised to 2000 characters (D384)
 
 - Migration `0024_card_body_2000` replaces the `items_body_len_chk` CHECK (600 → 2000 code
