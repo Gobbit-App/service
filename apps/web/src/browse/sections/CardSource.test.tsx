@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { makeItem } from '../../test/fixtures';
-import { CardSource, sourceLink } from './CardSource';
+import { sourceLink } from '../../lib/source-link';
+import { CardSource } from './CardSource';
 
 const now = new Date('2026-03-01T12:00:00.000Z');
 
