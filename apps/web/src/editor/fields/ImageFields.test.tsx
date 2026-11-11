@@ -3,6 +3,7 @@ import { useState, type ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MediaAsset, MediaSignResponse } from '@gobbit/shared';
 import { makeDeck } from '../../test/fixtures';
+import { paste } from '../../test/paste';
 import { renderWithClient } from '../../test/render';
 import { UploadError, type signAndUpload, type UploadedImage, type UploadOptions } from '../upload';
 import { validateDraft } from '../validate';
@@ -251,10 +252,27 @@ describe('ImageFields', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:local');
   });
 
+  it('uploads a pasted image, or refuses it like a picked one', async () => {
+    renderFields();
+    expect(screen.getByText('Or paste a photo.')).toBeInTheDocument();
+    act(() => void paste(document.body, [photo('doc.gif', 'image/gif')]));
+    expect(screen.getByRole('alert')).toHaveTextContent('JPEG, PNG, WebP or HEIC');
+    const shot = photo('image.png', 'image/png');
+    act(() => void paste(document.body, [shot]));
+    expect(calls[0]!.file).toBe(shot);
+    act(() => void paste(document.body, [photo('again.png', 'image/png')]));
+    expect(fakeUpload).toHaveBeenCalledTimes(1);
+    await act(async () => calls[0]!.resolve({ publicId: 'p1' }));
+    expect(latest.publicId).toBe('p1');
+  });
+
   it('disables picking offline', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     renderFields();
     expect(screen.getByLabelText('Take photo')).toBeDisabled();
     expect(screen.getByText(/back online/)).toBeInTheDocument();
+    expect(screen.queryByText('Or paste a photo.')).not.toBeInTheDocument();
+    paste(document.body, [photo('image.png', 'image/png')]);
+    expect(fakeUpload).not.toHaveBeenCalled();
   });
 });
