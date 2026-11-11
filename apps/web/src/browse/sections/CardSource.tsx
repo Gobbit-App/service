@@ -2,20 +2,9 @@ import type { ReactElement } from 'react';
 import type { Item } from '@gobbit/shared';
 import { cardAge } from '../../lib/card-age';
 import { relativeTime } from '../../lib/relative-time';
+import { sourceLink } from '../../lib/source-link';
 import { sourceKindLabel } from '../source-kind';
 import { SectionFrame } from './SectionFrame';
-
-/** An http(s) source as `{ href, host }`, or null for anything else (never a `javascript:` link). */
-export function sourceLink(url: string | null): { href: string; host: string } | null {
-  if (!url) return null;
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
-    return { href: parsed.href, host: parsed.host };
-  } catch {
-    return null;
-  }
-}
 
 function TimeLine({ label, iso, now }: { label: string; iso: string; now: Date }) {
   const at = new Date(iso);

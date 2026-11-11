@@ -93,4 +93,18 @@ describe('Card', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Categories' })).toHaveTextContent('School');
   });
+
+  it('shows the source link button unless source is off', () => {
+    unwrap.mockReturnValue(new Promise(() => undefined));
+    const item = makeItem({ title: 'Soup', sourceUrl: 'https://example.com/soup' });
+    const { unmount } = renderWithClient(
+      <Card item={item} deckSlug="family" categories={[]} actions={false} />,
+    );
+    expect(screen.getByRole('link', { name: 'Source: example.com' })).toBeInTheDocument();
+    unmount();
+    renderWithClient(
+      <Card item={item} deckSlug="family" categories={[]} actions={false} source={false} />,
+    );
+    expect(screen.queryByRole('link', { name: /^Source:/ })).not.toBeInTheDocument();
+  });
 });

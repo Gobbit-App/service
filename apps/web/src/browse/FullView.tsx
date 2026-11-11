@@ -72,6 +72,7 @@ export function FullView({
               linkTitle={false}
               actions={false}
               meta={false}
+              source={false}
               titleId={titleId}
             />
           </div>

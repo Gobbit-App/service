@@ -971,6 +971,21 @@ h2 {
   min-width: 0;
 }
 
+.card__source {
+  max-width: 100%;
+  margin-top: var(--gap);
+}
+
+.card__source .button__label {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: hidden;
+  clip-path: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .card__meta {
   display: flex;
   flex-wrap: wrap;

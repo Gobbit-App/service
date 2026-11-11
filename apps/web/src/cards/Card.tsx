@@ -5,6 +5,7 @@ import { chipHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { CardBar, ReaderActions } from './CardBar';
 import { CardBody } from './CardBody';
+import { CardSourceLink } from './CardSourceLink';
 import type { ImageLoading } from './ImageCard';
 import { Highlighted } from '../search/Highlighted';
 import { useCloudName } from './use-cloud-name';
@@ -30,6 +31,7 @@ export function Card({
   image,
   actions,
   meta = true,
+  source = true,
   titleId = `card-title-${item.id}`,
 }: {
   item: Item;
@@ -51,6 +53,8 @@ export function Card({
   actions?: ReactNode;
   /** D327: `false` hides the chips and age row (Browse shows content only). */
   meta?: boolean;
+  /** `false` hides the source link button (the full view lists the source in its own section). */
+  source?: boolean;
   /** The heading id; a second copy of a card on screen (the full view) needs its own. */
   titleId?: string;
 }): ReactElement {
@@ -72,6 +76,7 @@ export function Card({
         </h2>
       </header>
       <CardBody item={item} cloudName={cloudName} image={image} />
+      {source && <CardSourceLink item={item} />}
       {meta && (chips.length > 0 || age) && (
         <footer className="card__meta">
           {chips.length > 0 && (
