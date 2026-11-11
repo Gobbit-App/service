@@ -2,7 +2,7 @@ import type { Db } from '@gobbit/db';
 import type { Env } from '../env';
 import type { Asker } from '../ai/asker';
 import type { Embedder } from '../ai/embedder';
-import { defaultAsker, defaultEmbedder } from '../ai/providers';
+import { askEnabled, defaultAsker, defaultEmbedder } from '../ai/providers';
 import { createQueryEmbedder } from '../ai/query-embedder';
 import { noopEmbedQueue, type EmbedQueue } from '../jobs/embed-queue';
 import { createLlmCallsRepo } from '../repositories/llm-calls.repo';
@@ -49,7 +49,9 @@ export function buildSearchServices(deps: {
 }) {
   const { db, env, decks, memberships, publicDecks, rateLimits, toDtos, wiring } = deps;
   const embedder = resolveEmbedder(env, wiring);
-  const asker = wiring?.asker === undefined ? defaultAsker(env) : wiring.asker;
+  // D385: no asker unless Ask is switched on → POST /ask answers 503.
+  const asker =
+    wiring?.asker === undefined ? (askEnabled(env) ? defaultAsker(env) : null) : wiring.asker;
   const llmCalls = createLlmCallsRepo(db);
 
   const queryEmbedder = embedder

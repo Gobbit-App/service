@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  askEnabled,
   defaultAsker,
   defaultEmbedder,
   defaultExtractor,
@@ -37,6 +38,19 @@ describe('provider flags', () => {
     expect(hasAskProvider({ ...base, OPENAI_API_KEY: 'oa-test' })).toBe(false);
     expect(hasAskProvider({ ...base, ANTHROPIC_API_KEY: 'an-test' })).toBe(true);
     expect(hasEmbeddingProvider({ ...base, ANTHROPIC_API_KEY: 'an-test' })).toBe(false);
+  });
+});
+
+describe('askEnabled (D385)', () => {
+  it('is off by default even with a chat provider key', () => {
+    expect(askEnabled({ ...base, OPENROUTER_API_KEY: 'or-test' })).toBe(false);
+    expect(askEnabled({ ...base, ANTHROPIC_API_KEY: 'an-test', ASK_ENABLED: false })).toBe(false);
+  });
+
+  it('needs a chat provider key when switched on', () => {
+    expect(askEnabled({ ...base, ASK_ENABLED: true })).toBe(false);
+    expect(askEnabled({ ...base, ASK_ENABLED: true, OPENAI_API_KEY: 'oa-test' })).toBe(false);
+    expect(askEnabled({ ...base, ASK_ENABLED: true, ANTHROPIC_API_KEY: 'an-test' })).toBe(true);
   });
 });
 

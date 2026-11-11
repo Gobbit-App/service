@@ -46,6 +46,8 @@ x-api-env: &api-env
   OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  # D385: Ask stays off (hidden, 503) unless `true`, even with an Ask key; it isn't ready for users.
+  ASK_ENABLED: ${ASK_ENABLED:-false}
   # Unset → defaults in ai/providers.ts; EMBEDDING_MODEL must match the worker's.
   ASK_MODEL: ${ASK_MODEL:-}
   EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}

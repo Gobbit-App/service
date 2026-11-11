@@ -308,3 +308,18 @@ Open decisions (TBD):
 - [ ] **1. Like and useful** — TBD with the feature spec.
 - [ ] **2. Report a problem** — TBD with the feature spec.
 - [ ] **3. Discussion threads** — TBD; needs a detailed plan first.
+
+## Phase 15 — Feature toggles and cohort releases
+
+Nov 11: stub, not planned. Decisions are TBD and get D numbers when the feature goes through `/speckit-specify`. Today a feature is either on for everyone or off for everyone through an env var (e.g. `ASK_ENABLED`, D385, which keeps Ask off until it gets more design). We want to turn unfinished features on for a small cohort first (us, a test family, a few decks), learn, and only then make them generally available.
+
+Open decisions (TBD):
+- **Flag store:** env vars only, a `feature_flags` table editable at runtime, or a small self-hosted service; how flags reach the PWA (`GET /config` today is public and cached for five minutes, so per-user flags need another path, e.g. `/me`).
+- **Targeting:** by user, by deck, by account owner, by percentage; whether a deck-level flag applies to every member of the deck.
+- **Lifecycle:** off → cohort → GA → flag removed; who flips flags (account owner only? an admin surface?) and how stale flags get cleaned up.
+- **Server enforcement:** every flagged route checks the flag server-side (never only hidden in the UI); offline PWA behaviour when a flag turns off.
+- **Accountability:** a decision event or audit row when a flag changes or a user is put in or out of a cohort (constitution VIII).
+- **Tests:** how e2e tiers run flagged features (smoke on GA paths only? `@full` with flags on?).
+- **First users:** Ask (D385), then later phases that need a soft launch (MCP, feedback and threads).
+
+- [ ] **1. Ask for a cohort** — TBD with the feature spec: Ask is on for one test deck and off for everyone else, without a redeploy.

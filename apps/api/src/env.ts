@@ -90,6 +90,8 @@ const baseSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   /** Stored model identity (bare OpenAI id); OpenRouter is sent `openai/<id>`. */
   EMBEDDING_MODEL: z.string().default(DEFAULT_EMBEDDING_MODEL),
+  /** D385: Ask is off unless `true` (not ready for users); still needs an Ask provider key. */
+  ASK_ENABLED: bool('false'),
   /** Provider-specific id; unset → the provider's Haiku default (see ai/providers.ts). */
   ASK_MODEL: z.string().optional(),
   /** D72: concurrent embed-item jobs per worker process. */

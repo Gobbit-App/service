@@ -62,6 +62,7 @@ describe('buildAppConfig', () => {
     const config = buildAppConfig({
       CLOUDINARY_URL: undefined,
       GIT_SHA: 'abc',
+      ASK_ENABLED: true,
       OPENAI_API_KEY: 'openai-test-value',
       ANTHROPIC_API_KEY: 'anthropic-test-value',
     });
@@ -73,10 +74,21 @@ describe('buildAppConfig', () => {
     const config = buildAppConfig({
       CLOUDINARY_URL: undefined,
       GIT_SHA: 'abc',
+      ASK_ENABLED: true,
       OPENROUTER_API_KEY: 'openrouter-test-value',
     });
     expect(config.search).toEqual({ semantic: true, ask: true });
     expect(JSON.stringify(config)).not.toContain('test-value');
+  });
+
+  it('D385: hides Ask unless ASK_ENABLED is on, even with a provider key', () => {
+    const config = buildAppConfig({
+      CLOUDINARY_URL: undefined,
+      GIT_SHA: 'abc',
+      OPENROUTER_API_KEY: 'openrouter-test-value',
+    });
+    expect(config.search).toEqual({ semantic: true, ask: false });
+    expect(config.ingest.enabled).toBe(true);
   });
 
   it('enables ingest with an extraction provider and shows the Shortcut link', () => {
