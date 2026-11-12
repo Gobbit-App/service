@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Card avatar
+# Specification Quality Checklist: Card cover image
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-11-10

@@ -193,6 +193,8 @@ New card type: [`042-events`](specs/042-events/spec.md): event cards with a date
 
 Deck chrome: [`043-deck-header`](specs/043-deck-header/spec.md): one breadcrumb header row (deck › view) with switcher menus and Search in a bottom sheet with recent searches, replacing the search box and chip row. Decisions D380–D382.
 
+Card cover image: [`044-card-avatar`](specs/044-card-avatar/spec.md): an optional image representing the content of text, reminder, event, table and calc cards, shown as a bar below the title (like a link preview) in lists, Browse, the card page and public share previews; added by pick, drag and drop or paste; its own `items.cover` column, counted by the media sweep. Decisions D386–D395; ADR-077.
+
 ### 025–027 renames
 
 Mechanical renames with no new behaviour, so they skip spec-kit (constitution, Development Workflow). One branch and PR each:
