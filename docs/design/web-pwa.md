@@ -94,6 +94,12 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 - The offline banner shows when a query fails with a network error while cached data is on screen, and clears on the next successful fetch.
 - Sign-out removes the persisted cache.
 
+## Open decks refresh (D401)
+
+- Nothing pushes card changes to an open deck. Its item list (`itemsQuery`, shared by the list and Browse) refetches every `DECK_REFETCH_MS` (60 s) while the page is visible. TanStack pauses the interval in the background and offline. Focus, remount, reconnect and the user's own edits still refetch as before.
+- A refetch must not move the reader: `items/use-keep-place.ts` remembers where the reader's card sits on screen (the first visible card in the list, the current card in Browse) and, after the new data renders but before the browser paints, scrolls by exactly as far as that card moved. A card added above shows only as a changed scroll position (and Browse's "n of N"). Chromium's own scroll anchoring already corrects the list during the hook's forced layout, so the hook then measures 0 and does nothing. The hook is there for Safari (no `overflow-anchor`) and Browse's snap track. If the reader's card itself was removed, nothing is adjusted.
+- E2E tier: none. The behaviour is layout timing over a 60 s interval. Unit tests cover the hook with stubbed geometry.
+
 ## Share previews (D58–D61)
 
 - The share button builds `${origin}/s/<itemId>` (Web Share API, clipboard fallback). Caddy forwards `/s/*` to the API unchanged.
