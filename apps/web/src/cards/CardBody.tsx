@@ -80,7 +80,12 @@ function TypedBody({
     case 'event': {
       const payload = asEventPayload(item.payload);
       return payload ? (
-        <EventCard payload={payload} cloudName={cloudName} health={item.linkHealth} />
+        <EventCard
+          payload={payload}
+          cloudName={cloudName}
+          health={item.linkHealth}
+          showImage={!item.cover}
+        />
       ) : (
         <Invalid />
       );

@@ -69,6 +69,7 @@ export function FullView({
               item={item}
               deckSlug={deckSlug}
               categories={categories}
+              image={{ priority: true }}
               linkTitle={false}
               actions={false}
               meta={false}

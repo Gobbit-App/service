@@ -52,6 +52,23 @@ describe('EventCard (042)', () => {
     );
   });
 
+  it('drops the link preview image when the card has a cover (044)', () => {
+    const payload = {
+      ...timed,
+      link: {
+        url: 'https://example.org/fair',
+        preview: { title: 'Fair', image: 'https://example.org/og.png' },
+      },
+    };
+    const { container, rerender } = render(<EventCard payload={payload} viewerTimeZone="UTC" />);
+    expect(container.querySelector('.link-card__image')).not.toBeNull();
+    rerender(<EventCard payload={payload} viewerTimeZone="UTC" showImage={false} />);
+    expect(container.querySelector('.link-card__image')).toBeNull();
+    expect(screen.getByText('Fair')).toBeInTheDocument();
+    expect(screen.getByText('example.org')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open link' })).toBeInTheDocument();
+  });
+
   it('shows an all-day range with the same dates for everyone', () => {
     render(
       <EventCard

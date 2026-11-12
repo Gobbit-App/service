@@ -20,10 +20,13 @@ export function LinkCard({
   payload,
   cloudName = null,
   health = null,
+  showImage = true,
 }: {
   payload: LinkPayload;
   cloudName?: string | null;
   health?: LinkHealth | null;
+  /** 044: false when the card's own cover supersedes the preview image. */
+  showImage?: boolean;
 }): ReactElement {
   // A new photo or page image (e.g. in the editor preview) starts over from the stored copy.
   const imageKey = `${payload.preview?.publicId ?? ''}|${payload.preview?.image ?? ''}`;
@@ -38,7 +41,7 @@ export function LinkCard({
   const hostLabel = isWebUrl ? (lockedHostOf(payload.url)?.label ?? null) : null;
 
   const preview = payload.preview;
-  const image = renderImage();
+  const image = showImage ? renderImage() : null;
 
   function renderImage(): ReactElement | null {
     if (source === 'stored' && cloudName && preview?.publicId) {

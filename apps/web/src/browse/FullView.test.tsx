@@ -7,6 +7,7 @@ import {
 } from '../test/intersection-observer';
 import { renderWithClient } from '../test/render';
 
+vi.mock('../cards/use-cloud-name', () => ({ useCloudName: () => 'demo' }));
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
 const { respond } = await import('../test/api-mock');
 const { FullView, SWIPE_OUT_RATIO } = await import('./FullView');
@@ -19,12 +20,12 @@ const item = makeItem({
   sourceUrl: 'https://pizza.example/menu',
 });
 
-function renderFull() {
+function renderFull(overrides: Partial<typeof item> = {}) {
   const onClose = vi.fn();
   const onCategory = vi.fn();
   renderWithClient(
     <FullView
-      item={item}
+      item={{ ...item, ...overrides }}
       deckSlug="family"
       categories={[food]}
       onClose={onClose}
@@ -51,6 +52,17 @@ describe('FullView', () => {
     expect(screen.getByRole('region', { name: 'Details' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Source' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'pizza.example' })).toBeInTheDocument();
+  });
+
+  it('renders the cover bar eagerly below the title (D391)', () => {
+    const { dialog } = renderFull({
+      cover: { publicId: 'gobbit/items/d/cover', width: 1200, height: 300 },
+    });
+    const cover = dialog.querySelector('.card__cover');
+    expect(cover?.querySelector('.cloud-image__img')).toHaveAttribute('loading', 'eager');
+    expect(cover?.previousElementSibling).toContainElement(
+      screen.getByRole('heading', { name: 'Pizza place' }),
+    );
   });
 
   it('closes from the Close button', () => {

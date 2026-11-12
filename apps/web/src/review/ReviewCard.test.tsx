@@ -4,6 +4,7 @@ import type { ReviewEntry } from '@gobbit/shared';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import { renderInRouter } from '../test/render-in-router';
 
+vi.mock('../cards/use-cloud-name', () => ({ useCloudName: () => 'demo' }));
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
 vi.mock('../editor/rich/RichBodyEditor', () => import('../test/rich-editor-mock'));
 const { ReviewCard } = await import('./ReviewCard');
@@ -63,6 +64,23 @@ async function renderCard(value: ReviewEntry, { canCreateCategory = true, busy =
 }
 
 describe('ReviewCard', () => {
+  it('renders the cover bar right below the title when the proposal has a cover (D391)', async () => {
+    const value = entry();
+    value.item = {
+      ...value.item,
+      cover: { publicId: 'gobbit/items/d/cover', width: 1200, height: 300 },
+    };
+    await renderCard(value);
+    const cover = document.body.querySelector('.card__cover');
+    expect(cover).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dentist' }).nextElementSibling).toBe(cover);
+  });
+
+  it('renders no cover bar without a cover', async () => {
+    await renderCard(entry());
+    expect(document.body.querySelector('.card__cover')).not.toBeInTheDocument();
+  });
+
   it('shows the source line, preview, details and categories', async () => {
     await renderCard(entry());
     expect(screen.getByRole('article', { name: 'Dentist' })).toBeInTheDocument();

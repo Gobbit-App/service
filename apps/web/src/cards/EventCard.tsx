@@ -19,12 +19,15 @@ export function EventCard({
   cloudName = null,
   health = null,
   viewerTimeZone = deviceTimeZone(),
+  showImage = true,
 }: {
   payload: EventCardPayload;
   cloudName?: string | null;
   health?: LinkHealth | null;
   /** Tests pin the zone. */
   viewerTimeZone?: string;
+  /** 044: false when the card's cover supersedes the link's preview image. */
+  showImage?: boolean;
 }): ReactElement {
   const now = useMinuteClock();
   const span = { ...eventSpan(payload), allDay: payload.allDay, timeZone: payload.timeZone };
@@ -45,7 +48,14 @@ export function EventCard({
           <span>{payload.location}</span>
         </p>
       )}
-      {payload.link && <LinkCard payload={payload.link} cloudName={cloudName} health={health} />}
+      {payload.link && (
+        <LinkCard
+          payload={payload.link}
+          cloudName={cloudName}
+          health={health}
+          showImage={showImage}
+        />
+      )}
     </div>
   );
 }
