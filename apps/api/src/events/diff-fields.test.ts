@@ -10,6 +10,7 @@ const base: ItemFields = {
   verifiedAt: new Date('2026-01-01T00:00:00.000Z'),
   type: 'text',
   status: 'published',
+  cover: null,
   categoryIds: ['c1', 'c2'],
 };
 
@@ -43,6 +44,27 @@ describe('diffFields (D187)', () => {
       [],
     );
     expect(diffFields(base, { ...base, verifiedAt: null })).toEqual(['verifiedAt']);
+  });
+
+  describe('cover (D390)', () => {
+    const cover = { publicId: 'gobbit/items/d1/a', width: 800, height: 400 };
+
+    it('reports add, replace and remove', () => {
+      expect(diffFields(base, { ...base, cover })).toEqual(['cover']);
+      expect(
+        diffFields(
+          { ...base, cover },
+          { ...base, cover: { ...cover, publicId: 'gobbit/items/d1/b' } },
+        ),
+      ).toEqual(['cover']);
+      expect(diffFields({ ...base, cover }, { ...base, cover: null })).toEqual(['cover']);
+    });
+
+    it('ignores width/height when the publicId is equal', () => {
+      expect(
+        diffFields({ ...base, cover }, { ...base, cover: { ...cover, width: 1, height: 2 } }),
+      ).toEqual([]);
+    });
   });
 
   describe('event cards (D369)', () => {

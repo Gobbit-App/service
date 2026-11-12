@@ -133,6 +133,7 @@ describe('createItemsService', () => {
       memberships,
       embedQueue,
       imageReference: async (_deckId, _type, payload) => payload,
+      coverReference: async () => ({ ok: false, reason: 'unknown_image' }),
       links,
       reminders: createRemindersService({
         reminders: remindersRepo,

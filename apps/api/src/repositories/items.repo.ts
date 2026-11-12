@@ -26,6 +26,7 @@ import {
   type DbTx,
   type ItemRow,
 } from '@gobbit/db';
+import type { CardCover } from '@gobbit/shared/card-cover';
 import { LINK_BEARING_TYPES } from '@gobbit/shared/links';
 import type {
   CursorData,
@@ -141,6 +142,8 @@ export function createItemsRepo(db: DbExecutor) {
         body: string;
         payload: Record<string, unknown>;
         entities?: Entities;
+        /** D386: optional cover image. */
+        cover?: CardCover | null;
         sourceUrl: string | null;
         sourceKind: SourceKind;
         verifiedAt: Date | null;
@@ -474,6 +477,8 @@ export function createItemsRepo(db: DbExecutor) {
         body: string;
         payload: Record<string, unknown>;
         entities: Entities;
+        /** D386: omitted leaves the cover unchanged; null clears it. */
+        cover: CardCover | null;
         sourceUrl: string | null;
         status: ItemStatus;
         title: string;

@@ -45,7 +45,9 @@ import type { LinkChecksRepo } from '../repositories/link-checks.repo';
 import { markNotifiedIfPast, reopenReminder } from '../repositories/reminders.repo';
 import type { RemindersService } from './reminders.service';
 import type { EventCardsService } from './event-cards.service';
-import type { ImageReferenceCheck } from './image-reference';
+import type { CoverReference, ImageReferenceCheck } from './image-reference';
+import { createItemCoverDecisions } from './item-cover.events';
+import { supportsCover, type CardCover } from '@gobbit/shared/card-cover';
 import { createItemDtoMapper } from './item-dtos';
 import type { LinkChecksService } from './link-checks.service';
 import type { LinkPreviewFields } from './link-preview-fields';
@@ -91,6 +93,10 @@ export function createItemsService(deps: {
   embedQueue: EmbedQueue;
   /** D160: image cards reference recorded assets of their deck; dimensions come from them. */
   imageReference: ImageReferenceCheck;
+  /** D388: cover images reference recorded assets of their deck. */
+  coverReference: CoverReference;
+  /** Decision log for refused cover writes (plan Accountability); tests inject a logger. */
+  coverDecisions?: ReturnType<typeof createItemCoverDecisions>;
   links: ItemLinkDeps;
   /** 037: reminder payload rules, dismiss and the `reminder` DTO field (D291–D294). */
   reminders: RemindersService;
@@ -110,6 +116,8 @@ export function createItemsService(deps: {
     memberships,
     embedQueue,
     imageReference,
+    coverReference,
+    coverDecisions = createItemCoverDecisions(),
     links,
     reminders,
     eventCards,
@@ -263,6 +271,37 @@ export function createItemsService(deps: {
     if (type === 'event') return eventLinkFields(deckId, payload, stored);
     if (type !== 'link') return imageReference(deckId, type, payload);
     return links.previewFields(deckId, payload as LinkPayload, stored as LinkPayload | null);
+  }
+
+  /**
+   * D388: a cover goes only on cards that support one, and only from an asset recorded for the
+   * deck (dimensions come from it). Refusals are decision events (ids only).
+   */
+  async function resolveCover(
+    actor: Actor,
+    deckId: string,
+    type: ItemType,
+    cover: { publicId: string },
+    itemId?: string,
+  ): Promise<CardCover> {
+    const refuse = (reason: 'unsupported_type' | 'unknown_image' | 'other_deck') =>
+      coverDecisions.refused({
+        reason,
+        requestId: actor.requestId ?? '',
+        deckId,
+        itemId,
+        actorId: actor.user.id,
+      });
+    if (!supportsCover(type)) {
+      refuse('unsupported_type');
+      throw unprocessableField('cover', 'This card type has no cover image');
+    }
+    const result = await coverReference(deckId, cover.publicId);
+    if (!result.ok) {
+      refuse(result.reason);
+      throw unprocessableField('cover.publicId', 'Unknown image');
+    }
+    return result.cover;
   }
 
   /** After each committed write: re-embed when the text changed (D72), snapshot links (D163). */
@@ -473,9 +512,14 @@ export function createItemsService(deps: {
         payload = await referencedPayload(deck.id, input.type, input.payload, null);
       }
 
+      const cover = input.cover
+        ? await resolveCover(actor, deck.id, input.type, input.cover)
+        : undefined;
+
       const createdItem = await items.create(
         {
           deckId: deck.id,
+          ...(cover ? { cover } : {}),
           type: input.type,
           status,
           title: input.title,
@@ -551,6 +595,12 @@ export function createItemsService(deps: {
         payload = await referencedPayload(item.deckId, item.type, patch.payload, item.payload);
       }
 
+      // D12 refuses type changes above, so the resulting type is the item's. Absent = unchanged.
+      let cover: CardCover | null | undefined;
+      if (patch.cover)
+        cover = await resolveCover(actor, item.deckId, item.type, patch.cover, item.id);
+      else if (patch.cover === null) cover = null;
+
       // Compute resulting status and categories before writing
       const resultingStatus = patch.status ?? item.status;
 
@@ -580,6 +630,7 @@ export function createItemsService(deps: {
       if (patch.entities !== undefined) updatePatch.entities = compactEntities(patch.entities);
       if (patch.sourceUrl !== undefined) updatePatch.sourceUrl = patch.sourceUrl;
       if (patch.status !== undefined) updatePatch.status = patch.status;
+      if (cover !== undefined) updatePatch.cover = cover;
 
       // D131: verifiedAt is the first publication date; never re-set
       if (patch.status === 'published' && item.status !== 'published' && !item.verifiedAt) {

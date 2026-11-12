@@ -178,6 +178,7 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
       sourceKind: 'share',
       sourceUrl: 'https://dan.example/',
       verifiedAt: null,
+      cover: null, // D394
     });
     expect(item.entities).toMatchObject({ phones: ['050-123-4567'] });
     const cats = await ctx.t.db

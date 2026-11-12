@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AssetRow } from '@gobbit/db';
 import { HttpError } from '../errors/http-errors';
-import { createImageReferenceCheck } from './image-reference';
+import { createCoverReference, createImageReferenceCheck } from './image-reference';
 
 const asset = (over: Partial<AssetRow> = {}) =>
   ({
@@ -50,5 +50,37 @@ describe('createImageReferenceCheck (D160)', () => {
     );
     expect(err).toBeInstanceOf(HttpError);
     expect((err as HttpError).status).toBe(422);
+  });
+});
+
+describe('createCoverReference (D388)', () => {
+  it('returns the id and recorded dimensions for an asset of the same deck', async () => {
+    const cover = createCoverReference({ byPublicId: vi.fn().mockResolvedValue(asset()) });
+    expect(await cover('d1', 'gobbit/items/d1/x')).toEqual({
+      ok: true,
+      cover: { publicId: 'gobbit/items/d1/x', width: 1200, height: 900 },
+    });
+  });
+
+  it('omits dimensions the asset lacks', async () => {
+    const cover = createCoverReference({
+      byPublicId: vi.fn().mockResolvedValue(asset({ width: null, height: null })),
+    });
+    expect(await cover('d1', 'gobbit/items/d1/x')).toEqual({
+      ok: true,
+      cover: { publicId: 'gobbit/items/d1/x' },
+    });
+  });
+
+  it('reports unknown_image for an unrecorded id', async () => {
+    const cover = createCoverReference({ byPublicId: vi.fn().mockResolvedValue(null) });
+    expect(await cover('d1', 'nope')).toEqual({ ok: false, reason: 'unknown_image' });
+  });
+
+  it('reports other_deck for an asset of another deck', async () => {
+    const cover = createCoverReference({
+      byPublicId: vi.fn().mockResolvedValue(asset({ deckId: 'd2' })),
+    });
+    expect(await cover('d1', 'gobbit/items/d2/x')).toEqual({ ok: false, reason: 'other_deck' });
   });
 });

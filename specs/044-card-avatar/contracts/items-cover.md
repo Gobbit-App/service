@@ -45,7 +45,7 @@ publishers through the same route (FR-011).
 |------|--------|---------|------------------|
 | `cover` on a `link` or `image` card | 422 | validation | `cover`: "This card type has no cover image" |
 | `publicId` unknown, or recorded for another deck | 422 | validation | `cover.publicId`: "Unknown image" (same text for both, D388) |
-| `cover` carries `width`, `height` or any other key | 422 | validation (zod strict) | `cover` |
+| `cover` carries `width`, `height` or any other key | 400 | validation (zod strict) | `cover` |
 | `publicId` empty or longer than 255 characters | 422 | validation | `cover.publicId` |
 
 ## Unchanged

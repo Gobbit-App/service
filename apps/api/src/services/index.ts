@@ -43,6 +43,7 @@ import { createDecksService } from './decks.service';
 import { createCategoriesService } from './categories.service';
 import { createPublicDeckService } from './public-deck.service';
 import { createPublicPagesService } from './public-pages.service';
+import { createItemCoverDecisions } from './item-cover.events';
 import { createItemsService } from './items.service';
 import { createFavoritesService } from './favorites.service';
 import { createEventsService } from './events.service';
@@ -53,7 +54,7 @@ import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
 import { analyticsHead } from '../public/analytics';
 import { createItemDtoMapper } from './item-dtos';
-import { createImageReferenceCheck } from './image-reference';
+import { createCoverReference, createImageReferenceCheck } from './image-reference';
 import { createLinkPreviewFields } from './link-preview-fields';
 import { createLinkChecksService, createLinkProbe } from './link-checks.service';
 import {
@@ -128,6 +129,7 @@ export function buildServices({
   const magicLinks = createMagicLinksRepo(db);
   const assets = createAssetsRepo(db);
   const imageReference = createImageReferenceCheck(assets);
+  const coverReference = createCoverReference(assets);
   const linkChecks = createLinkChecksRepo(db);
   // D180: rendered public pages; every write that changes public content purges its deck.
   const pageCache = createPageCache();
@@ -327,6 +329,8 @@ export function buildServices({
       memberships,
       embedQueue: resolveEmbedQueue(search),
       imageReference,
+      coverReference,
+      coverDecisions: createItemCoverDecisions(logger),
       links: {
         checks: linkChecks,
         checker: createLinkChecksService({
