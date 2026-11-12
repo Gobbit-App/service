@@ -107,4 +107,17 @@ An optional image that represents the content of a `text`, `reminder`, `event`, 
 
 ## Deviations from the 044 plan
 
-<!-- filled from implementation-notes at close-out -->
+- Client-sent `width`/`height` in `cover` answer 400 (strict schema, like every body validation
+  failure), not the 422 the contract first listed.
+- A PATCH can't change a card's type (409, D12), so the cover rule checks the item's own type;
+  `cover: null` is always accepted.
+- `createCoverReference` is wired in `services/index.ts` next to `createImageReference` (not
+  `media-wiring.ts`) and returns a result union so the service can log the refusal reason.
+- `items_cover_chk` wraps the `publicId` type test in `coalesce(…, false)`: without it a cover
+  missing `publicId` passed (NULL passes a CHECK).
+- `LinkCard` gained `showImage`; `ReviewCard` renders `CoverBar` itself (it doesn't use `Card`);
+  `FullView` passes the eager image hint.
+- `share.repo.findRecord` selects `cover`; `visualPublicId` joins the OG content hash only when
+  set, so cards without a visual keep their cached image.
+
+Full notes: `specs/044-card-avatar/implementation-notes.md`.
