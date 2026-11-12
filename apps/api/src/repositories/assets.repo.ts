@@ -12,12 +12,13 @@ export interface OrphanAsset {
 /**
  * True when no item of any status references the asset: proposed, published, archived and
  * soft-deleted rows all count until their payload changes or the purge (D132) removes them.
- * An image card references its `publicId`, a link or event card its `preview.publicId` (D163, 042).
+ * An image card references its `publicId`, a link or event card its `preview.publicId` (D163, 042), any card its `cover.publicId` (D389).
  */
 const unreferenced = sql`NOT EXISTS (
   SELECT 1 FROM ${items} i
   WHERE (i.type = 'image' AND i.payload->>'publicId' = ${assets.publicId})
      OR (i.type IN ('link', 'event') AND i.payload #>> '{preview,publicId}' = ${assets.publicId})
+     OR i.cover->>'publicId' = ${assets.publicId}
 )`;
 
 /** D156: the registry of every image Gobbit stored. */

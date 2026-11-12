@@ -91,6 +91,42 @@ describe('media sweep against the database (D158)', () => {
     expect(store.images.has(kept.publicId)).toBe(true);
   });
 
+  it('keeps a cover-only asset for live, archived and deleted cards; sweeps it once removed or purged (D389)', async () => {
+    const coverOf = (asset: AssetRow) => ({ publicId: asset.publicId, width: 1, height: 1 });
+    const cards: { asset: AssetRow; id: string }[] = [];
+    for (const status of ['published', 'archived'] as const) {
+      const asset = await stored(old);
+      const card = await createItem(ctx.t.db, deck, {
+        card: { type: 'text', title: 'Note', body: 'b' },
+        status,
+      });
+      await ctx.t.db
+        .update(items)
+        .set({ cover: coverOf(asset) })
+        .where(eq(items.id, card.id));
+      cards.push({ asset, id: card.id });
+    }
+    const trashedAsset = await stored(old);
+    const trashed = await createItem(ctx.t.db, deck, {
+      card: { type: 'text', title: 'Note', body: 'b' },
+    });
+    await ctx.t.db
+      .update(items)
+      .set({ cover: coverOf(trashedAsset), deletedAt: now })
+      .where(eq(items.id, trashed.id));
+    cards.push({ asset: trashedAsset, id: trashed.id });
+
+    const ids = cards.map((c) => c.asset.id);
+    expect(await sweeper.sweepOrphans({ now })).toEqual({ deleted: 0, notFound: 0, failed: 0 });
+    expect(await remaining(ids)).toHaveLength(3);
+
+    // Cover removed from the first card, the second card purged.
+    await ctx.t.db.update(items).set({ cover: null }).where(eq(items.id, cards[0]!.id));
+    await ctx.t.db.delete(items).where(eq(items.id, cards[1]!.id));
+    expect(await sweeper.sweepOrphans({ now })).toEqual({ deleted: 2, notFound: 0, failed: 0 });
+    expect(await remaining(ids)).toEqual([trashedAsset.publicId]);
+  });
+
   it('keeps every referenced asset whatever the card status, including deleted in window', async () => {
     const kept: AssetRow[] = [];
     for (const status of ['proposed', 'published', 'archived'] as const) {
