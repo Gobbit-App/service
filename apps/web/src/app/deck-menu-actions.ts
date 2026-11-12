@@ -13,10 +13,13 @@ export interface MenuActionsInput {
   onAbout: () => void;
   onSignOut: () => void;
   signingOut?: boolean;
+  /** Reloads into a waiting new version; present only while one is pending. */
+  onUpdate?: (() => void) | null;
 }
 
 /**
- * D276: the bottom bar's ⋯ menu, in order: Settings (one page, D278), Upcoming reminders
+ * D276: the bottom bar's ⋯ menu, in order: Update Gobbit (only while a new version waits),
+ * Settings (one page, D278), Upcoming reminders
  * (`item.update`, 037), Activity (`event.list`, D188), Waitlist (platform admins, 032), About
  * (D354) and Sign out with the signed-in email.
  */
@@ -27,15 +30,24 @@ export function menuActions({
   onAbout,
   onSignOut,
   signingOut = false,
+  onUpdate,
 }: MenuActionsInput): MenuAction[] {
-  const actions: MenuAction[] = [
-    {
-      key: 'settings',
-      label: 'Settings',
-      icon: 'settings',
-      href: deck ? deckHref(deck.slug, 'settings') : '/settings',
-    },
-  ];
+  const actions: MenuAction[] = [];
+  if (onUpdate) {
+    actions.push({
+      key: 'update',
+      label: 'Update Gobbit',
+      icon: 'refresh',
+      detail: 'A new version is ready',
+      onSelect: onUpdate,
+    });
+  }
+  actions.push({
+    key: 'settings',
+    label: 'Settings',
+    icon: 'settings',
+    href: deck ? deckHref(deck.slug, 'settings') : '/settings',
+  });
   if (deck && can(deck.role, 'item.update')) {
     actions.push({
       key: 'upcoming',

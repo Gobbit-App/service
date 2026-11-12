@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useId, useRef, type ReactElement } from 'react';
 import { configQuery } from '../api/queries';
 import { HEADER_LOGO_SRC } from '../app/AppHeader';
+import { usePendingUpdate } from '../app/sw-update-store';
 import { Button } from '../ui/buttons/Button';
 import { ButtonLink } from '../ui/buttons/ButtonLink';
 import { Sheet } from '../ui/sheet/Sheet';
@@ -40,7 +41,7 @@ function Version({ version }: { version: VersionLabel }): ReactElement {
  * D354: About Gobbit, from the bottom bar's ⋯ menu, in the shared sheet (D304): logo, version
  * (commit) and release date of this build, the server's commit when it differs, the outside
  * services this server uses (from `/config`), the license, the bundled packages' notices and
- * where to report problems. Works offline from the build and the persisted config.
+ * where to report problems; offers the reload while a new version waits. Works offline from the build and the persisted config.
  */
 export function AboutSheet({
   onClose,
@@ -50,6 +51,7 @@ export function AboutSheet({
   build?: BuildInfo;
 }): ReactElement {
   const config = useQuery(configQuery());
+  const applyUpdate = usePendingUpdate();
   const closeRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const servicesId = useId();
@@ -93,6 +95,13 @@ export function AboutSheet({
           </>
         )}
       </dl>
+
+      {applyUpdate && (
+        <div className="about__update" role="status">
+          <p>A new version of Gobbit is ready.</p>
+          <Button icon="refresh" label="Reload" onClick={applyUpdate} />
+        </div>
+      )}
 
       {credits.length > 0 && (
         <section className="about__section" aria-labelledby={servicesId}>
