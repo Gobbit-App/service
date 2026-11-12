@@ -96,6 +96,7 @@ describe('draftFromItem', () => {
       categoryIds: ['c1'],
       sourceUrl: '',
       entities: {},
+      cover: null,
     });
   });
 
@@ -336,5 +337,58 @@ describe('isDirty', () => {
     const base = emptyDraft('text', 'c1');
     expect(isDirty({ ...base, categoryIds: ['c1'] }, base)).toBe(false);
     expect(isDirty({ ...base, title: 'x' }, base)).toBe(true);
+  });
+
+  it('treats a null and a missing cover as the same', () => {
+    const base = emptyDraft('text', 'c1');
+    expect(isDirty({ ...base, cover: null }, { ...base, cover: undefined })).toBe(false);
+    expect(
+      isDirty({ ...base, cover: { publicId: 'p', width: 1, height: 1 } }, { ...base, cover: null }),
+    ).toBe(true);
+  });
+});
+
+describe('cover (044, D392)', () => {
+  const cover = { publicId: 'gobbit/items/d1/a', width: 800, height: 600 };
+  const textItem = makeItem({ type: 'text' });
+
+  it('draftFromItem reads the item cover, null when none', () => {
+    expect(draftFromItem(textItem).cover).toBeNull();
+    expect(draftFromItem({ ...textItem, cover }).cover).toEqual(cover);
+  });
+
+  it('toCreateBody sends only the publicId, and only when set', () => {
+    expect(toCreateBody(emptyDraft('text', null))).not.toHaveProperty('cover');
+    expect(toCreateBody({ ...emptyDraft('text', null), cover: null })).not.toHaveProperty('cover');
+    expect(toCreateBody({ ...emptyDraft('text', null), cover }).cover).toEqual({
+      publicId: cover.publicId,
+    });
+  });
+
+  it('toPatch sends cover only when the publicId differs', () => {
+    expect(toPatch(textItem, draftFromItem(textItem))).toBeNull();
+    expect(toPatch({ ...textItem, cover }, draftFromItem({ ...textItem, cover }))).toBeNull();
+    expect(toPatch(textItem, { ...draftFromItem(textItem), cover })).toEqual({
+      cover: { publicId: cover.publicId },
+    });
+    const withCover = { ...textItem, cover };
+    expect(
+      toPatch(withCover, { ...draftFromItem(withCover), cover: { publicId: 'other' } }),
+    ).toEqual({
+      cover: { publicId: 'other' },
+    });
+    expect(toPatch(withCover, { ...draftFromItem(withCover), cover: null })).toEqual({
+      cover: null,
+    });
+  });
+
+  it('withType keeps the cover on cover types and clears it for link and image', () => {
+    const draft = { ...emptyDraft('text', null), cover };
+    for (const type of ['reminder', 'event', 'table', 'calc'] as const) {
+      expect(withType(draft, type).cover).toEqual(cover);
+    }
+    expect(withType(draft, 'link').cover).toBeNull();
+    expect(withType(draft, 'image').cover).toBeNull();
+    expect(withType(emptyDraft('text', null), 'link').cover).toBeUndefined();
   });
 });

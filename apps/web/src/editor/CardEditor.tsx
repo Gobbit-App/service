@@ -9,6 +9,7 @@ import {
   type ReactElement,
 } from 'react';
 import type { Category, Deck, Item, ItemType } from '@gobbit/shared';
+import { supportsCover } from '@gobbit/shared/card-cover';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
 import { useCloudName } from '../cards/use-cloud-name';
 import { IconButton } from '../ui/buttons/IconButton';
@@ -26,6 +27,7 @@ import { editDraftKey, newDraftKey } from './drafts-store';
 import { EditorPreview } from './EditorPreview';
 import { BodyField } from './fields/BodyField';
 import { CategoryChips } from './fields/CategoryChips';
+import { CoverField } from './fields/CoverField';
 import { fieldsByType } from './fields/registry';
 import { SourceUrlField } from './fields/SourceUrlField';
 import { TitleField } from './fields/TitleField';
@@ -324,13 +326,23 @@ export function CardEditor(props: CardEditorProps): ReactElement {
             {props.mode === 'create' ? (
               <TypeControl
                 value={draft.type}
-                hasContent={payloadHasContent(draft)}
+                hasContent={payloadHasContent({ type: draft.type, payload: draft.payload })}
+                hasCover={!!draft.cover}
                 imagesOff={imagesOff}
                 disabled={saving}
                 onChange={changeType}
               />
             ) : (
               <TypeLabel type={draft.type} />
+            )}
+            {supportsCover(draft.type) && (
+              <CoverField
+                cover={draft.cover}
+                onChange={(cover) => update({ cover })}
+                deckId={deck.id}
+                disabled={saving}
+                scoped={draft.type === 'event'}
+              />
             )}
             {placement === 'leading' && typeSection}
             <div className="composer__title">

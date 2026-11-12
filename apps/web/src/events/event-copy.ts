@@ -25,6 +25,7 @@ const FIELD_LABELS: Record<string, string> = {
   verifiedAt: 'verified date',
   type: 'type',
   status: 'status',
+  cover: 'image',
 };
 
 /** D188: the action as a short verb ("Edited", "Archived", …). */

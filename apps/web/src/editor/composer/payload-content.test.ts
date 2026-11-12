@@ -25,4 +25,10 @@ describe('payloadHasContent (D303)', () => {
       payloadHasContent({ ...draft, payload: { ...draft.payload, url: 'https://example.com' } }),
     ).toBe(true);
   });
+
+  it('treats a set cover as content', () => {
+    const draft = emptyDraft('text', null);
+    expect(payloadHasContent({ ...draft, cover: { publicId: 'x' } })).toBe(true);
+    expect(payloadHasContent({ ...draft, cover: null })).toBe(false);
+  });
 });

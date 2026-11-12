@@ -186,3 +186,20 @@
   outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* 044 cover field: the preview, the pick row, and a highlight while a file is dragged over. */
+.cover-field {
+  display: grid;
+  gap: 8px;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+}
+
+.cover-field[data-dragging] {
+  background: var(--color-accent-soft);
+  outline: 2px dashed var(--color-accent);
+}
+
+.cover-field__preview {
+  max-width: 480px;
+}

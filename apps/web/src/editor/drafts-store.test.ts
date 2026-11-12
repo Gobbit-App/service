@@ -30,6 +30,15 @@ describe('drafts-store', () => {
     });
   });
 
+  it('round-trips a cover and reads a draft without one as undefined', async () => {
+    const kv = memoryDraftsKv();
+    const cover = { publicId: 'p1', width: 10, height: 20 };
+    await writeDraft('edit:i1', { ...emptyDraft('text', null), cover }, null, NOW, kv);
+    expect((await readDraft('edit:i1', kv))?.draft.cover).toEqual(cover);
+    await writeDraft('edit:i2', emptyDraft('text', null), null, NOW, kv);
+    expect((await readDraft('edit:i2', kv))?.draft.cover).toBeUndefined();
+  });
+
   it('returns null for a missing key', async () => {
     expect(await readDraft('new:d1:text', memoryDraftsKv())).toBeNull();
   });

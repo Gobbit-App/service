@@ -48,4 +48,31 @@ describe('usePasteImage', () => {
     paste(document.body, [png]);
     expect(onImage).not.toHaveBeenCalled();
   });
+
+  it('with a scope, takes pastes inside it first and leaves outside ones to page-wide hooks', () => {
+    const inside = vi.fn();
+    const page = vi.fn();
+    const scope = document.body.appendChild(document.createElement('div'));
+    const child = scope.appendChild(document.createElement('span'));
+    renderHook(() => usePasteImage(inside, true, scope));
+    renderHook(() => usePasteImage(page, true));
+
+    const event = paste(child, [png]);
+    expect(inside).toHaveBeenCalledWith(png);
+    expect(page).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(true);
+
+    inside.mockClear();
+    paste(document.body, [png]);
+    expect(inside).not.toHaveBeenCalled();
+    expect(page).toHaveBeenCalledWith(png);
+  });
+
+  it('with a scope ref, resolves the element when the paste happens', () => {
+    const onImage = vi.fn();
+    const scope = document.body.appendChild(document.createElement('div'));
+    renderHook(() => usePasteImage(onImage, true, { current: scope }));
+    paste(scope, [png]);
+    expect(onImage).toHaveBeenCalledWith(png);
+  });
 });

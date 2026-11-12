@@ -6,13 +6,15 @@ import { TypeControl, TypeLabel } from './TypeControl';
 function renderControl({
   value = 'link',
   hasContent = false,
+  hasCover = false,
   disabled = false,
-}: { value?: ItemType; hasContent?: boolean; disabled?: boolean } = {}) {
+}: { value?: ItemType; hasContent?: boolean; hasCover?: boolean; disabled?: boolean } = {}) {
   const onChange = vi.fn();
   render(
     <TypeControl
       value={value}
       hasContent={hasContent}
+      hasCover={hasCover}
       imagesOff={false}
       disabled={disabled}
       onChange={onChange}
@@ -63,6 +65,16 @@ describe('TypeControl (D303)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Keep Link' }));
     expect(onChange).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('says the cover image will be removed when switching to link or image', () => {
+    const { control, onChange } = renderControl({ value: 'text', hasCover: true });
+    fireEvent.click(control);
+    fireEvent.click(screen.getByRole('radio', { name: 'Link' }));
+    expect(screen.getByRole('dialog', { name: 'Switch to Link?' })).toHaveTextContent(
+      'The cover image will be removed too.',
+    );
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('switches after confirming', () => {

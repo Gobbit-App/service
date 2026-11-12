@@ -1,5 +1,6 @@
 import { useId, useState, type ReactElement } from 'react';
 import type { ItemType } from '@gobbit/shared';
+import { supportsCover } from '@gobbit/shared/card-cover';
 import { Icon } from '../../ui/icons/Icon';
 import { Sheet } from '../../ui/sheet/Sheet';
 import { isCreatableType, type CreatableType } from '../creatable-types';
@@ -19,6 +20,7 @@ type Step = { kind: 'closed' } | { kind: 'choosing' } | { kind: 'confirming'; to
 export function TypeControl({
   value,
   hasContent,
+  hasCover = false,
   imagesOff,
   disabled = false,
   onChange,
@@ -26,6 +28,8 @@ export function TypeControl({
   value: ItemType;
   /** `payloadHasContent(draft)`: switching would remove something. */
   hasContent: boolean;
+  /** 044: the draft has a cover image; link and image cards can't keep it. */
+  hasCover?: boolean;
   imagesOff: boolean;
   disabled?: boolean;
   onChange: (type: CreatableType) => void;
@@ -36,7 +40,8 @@ export function TypeControl({
 
   const pick = (type: CreatableType) => {
     if (type === value) return close();
-    if (hasContent) return setStep({ kind: 'confirming', to: type });
+    if (hasContent || (hasCover && !supportsCover(type)))
+      return setStep({ kind: 'confirming', to: type });
     close();
     onChange(type);
   };
@@ -74,6 +79,7 @@ export function TypeControl({
         <SwitchTypeConfirm
           from={value}
           to={step.to}
+          coverRemoved={hasCover && !supportsCover(step.to)}
           onKeep={close}
           onSwitch={() => {
             close();

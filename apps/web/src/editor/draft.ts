@@ -5,6 +5,7 @@ import {
   type ImagePayload,
   type TablePayload,
 } from '../cards/payload-guards';
+import { supportsCover, type CardCover } from '@gobbit/shared/card-cover';
 import { normalizeUrlInput } from '../lib/url-input';
 import { jsonEqual, sameIds } from './equal';
 import { blankCalc, blankTable, sampleCalc, sampleTable } from './sample-payloads';
@@ -63,6 +64,8 @@ export type Draft = {
   sourceUrl: string;
   /** Remove-only (FR-012). */
   entities: Entities | null;
+  /** 044 (D392): cover image; null = none/removed, undefined = never set (new card, old draft). */
+  cover?: CardCover | null;
 };
 
 export { CREATABLE_TYPES, isCreatableType, type CreatableType } from './creatable-types';
@@ -114,7 +117,10 @@ export function emptyDraft(type: ItemType, defaultCategoryId: string | null): Dr
 
 /** Switches a new card's type: the payload resets to the type's start, title/body/categories stay. */
 export function withType(draft: Draft, type: ItemType): Draft {
-  return draft.type === type ? draft : { ...draft, type, payload: newPayload(type) };
+  if (draft.type === type) return draft;
+  const next = { ...draft, type, payload: newPayload(type) };
+  // The cover stays on the types that support it and goes when switching to link or image.
+  return draft.cover && !supportsCover(type) ? { ...next, cover: null } : next;
 }
 
 function calcFieldToDraft(field: {
@@ -170,6 +176,7 @@ export function draftFromItem(item: Item): Draft {
     categoryIds: [...item.categoryIds],
     sourceUrl: item.sourceUrl ?? '',
     entities: item.entities ? structuredClone(item.entities) : null,
+    cover: item.cover ?? null,
   };
 }
 
@@ -250,6 +257,8 @@ export function toCreateBody(draft: Draft): ItemCreateInput {
   };
   const sourceUrl = normalizeUrlInput(draft.sourceUrl);
   if (sourceUrl !== '') body['sourceUrl'] = sourceUrl;
+  // Only the publicId: the API input is strict, width/height are server-owned (D388).
+  if (draft.cover) body['cover'] = { publicId: draft.cover.publicId };
   return body as ItemCreateInput;
 }
 
@@ -280,10 +289,19 @@ export function toPatch(original: Item, draft: Draft): ItemPatch | null {
   const entities = compactDraftEntities(draft.entities);
   if (!jsonEqual(entities, compactDraftEntities(base.entities))) patch.entities = entities;
 
+  const coverId = draft.cover?.publicId ?? null;
+  if (coverId !== (original.cover?.publicId ?? null)) {
+    patch.cover = coverId === null ? null : { publicId: coverId };
+  }
+
   return Object.keys(patch).length > 0 ? patch : null;
 }
 
 /** True when the draft differs from its starting point (structurally). */
 export function isDirty(draft: Draft, base: Draft): boolean {
-  return !jsonEqual(draft, base);
+  // null and undefined both mean "no cover" (add then remove must not leave a new card dirty).
+  return !jsonEqual(
+    { ...draft, cover: draft.cover ?? null },
+    { ...base, cover: base.cover ?? null },
+  );
 }
