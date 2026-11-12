@@ -594,3 +594,41 @@ test('an event added from the editor shows its status line and location @smoke',
   await expect(card).toContainText('18:00–20:00');
   await expect(card).toContainText('Town hall');
 });
+
+/** 044 (T026): a cover added in the editor shows as a bar between the title and the body. */
+test('a cover image added to a text card shows as a bar in the deck list @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  // Saving needs the asset recorded by the real API (D160), so the upload answer must verify.
+  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
+  const card = webDeck.items.find((item) => item.type === 'text')!;
+  const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-cover`);
+  await page.goto(webUrl(`/i/${card.id}/edit`));
+
+  await expect(page.getByRole('button', { name: 'Remove image' })).toHaveCount(0);
+  await page.locator('.cover-field input[type="file"]').setInputFiles(photoFile);
+  await expect(page.getByRole('button', { name: 'Remove image' })).toBeVisible();
+  await expect(page.getByText('Replace image')).toBeVisible();
+  expect(uploads).toHaveLength(1);
+  await save(page).click();
+
+  await expect(page).toHaveURL(new RegExp(`/i/${card.id}$`));
+  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  const listed = page.getByRole('article', { name: card.title });
+  const cover = listed.locator('.card__cover');
+  await expect(cover).toBeVisible();
+  // Between the title and the body.
+  const title = await listed.getByRole('heading', { name: card.title }).boundingBox();
+  const bar = await cover.boundingBox();
+  const body = await listed.getByText('text with a').boundingBox();
+  expect(title!.y).toBeLessThan(bar!.y);
+  expect(bar!.y).toBeLessThan(body!.y);
+});
+
+test('a link card has no cover image field @smoke', async ({ page, webDeck }) => {
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=link`));
+  await expect(page.getByLabel('URL', { exact: true })).toBeVisible();
+  await expect(page.getByText('Add image')).toHaveCount(0);
+  await expect(page.locator('.cover-field')).toHaveCount(0);
+});

@@ -82,8 +82,8 @@ card page shows the expected state each time; the deck Activity shows `updated` 
 - [X] T023 [P] [US1] [unit] apps/web/src/editor/draft.test.ts: `Draft.cover` round-trips through the drafts store; a stored draft without `cover` reads as `undefined` (unchanged); `toCreateBody` sends `cover: {publicId}` only when set; `toPatch` sends `cover` only when the publicId differs from the item (`null` = remove); `withType` keeps `cover` between text/reminder/event/table/calc and clears it for link and image; `payloadHasContent` (payload-content.ts) treats a set cover as content
 - [X] T024 [P] [US1] [unit] apps/web/src/editor/fields/CoverField.test.tsx: "Add image" with no cover; "Replace" and "Remove" when set; preview via `CoverBar`; a successful upload sets `draft.cover` to the recorded `{publicId,width,height}`; a failed upload shows the photo-upload error copy and keeps the previous cover (or none); Remove sets `null`; drop and paste both call the same pick path; on an event card paste only applies while focus is inside the field
 - [X] T025 [P] [US1] [unit] apps/web/src/events/event-copy.test.ts (or existing copy test): `cover` field label is "image"
-- [ ] T026 [P] [US1] [e2e:smoke] e2e/tests/smoke/editor.spec.ts: "add a cover image to a text card → bar in the deck list" — create card in the test's `smoke-<id>` deck, Edit → Add image (pick a fixture file, Cloudinary faked only via `routeFakeCloudinary` in e2e/fixtures/cloudinary.ts) → Save → the deck list card shows `.card__cover` between title and body; negative: a link card's editor has no "Add image"
-- [ ] T027 [P] [US1] [e2e:full] e2e/tests/full/cover.spec.ts (NEW, `@full`): replace then remove; failed upload (fake Cloudinary returns error) keeps old cover and Save still works for a title change; draft restore after reload keeps the cover; type switch to Link on a new card warns the image will be removed and drops it, switch to Table keeps it; no "Add image" on link and photo cards; drag-and-drop a file onto the field sets the cover; on an event card paste with the cover field focused sets the cover and with focus elsewhere goes to the link photo; review queue: add a cover to a proposal created through the API fixture → publish → bar in the list
+- [X] T026 [P] [US1] [e2e:smoke] e2e/tests/smoke/editor.spec.ts: "add a cover image to a text card → bar in the deck list" — create card in the test's `smoke-<id>` deck, Edit → Add image (pick a fixture file, Cloudinary faked only via `routeFakeCloudinary` in e2e/fixtures/cloudinary.ts) → Save → the deck list card shows `.card__cover` between title and body; negative: a link card's editor has no "Add image"
+- [X] T027 [P] [US1] [e2e:full] e2e/tests/full/cover.spec.ts (NEW, `@full`): replace then remove; failed upload (fake Cloudinary returns error) keeps old cover and Save still works for a title change; draft restore after reload keeps the cover; type switch to Link on a new card warns the image will be removed and drops it, switch to Table keeps it; no "Add image" on link and photo cards; drag-and-drop a file onto the field sets the cover; on an event card paste with the cover field focused sets the cover and with focus elsewhere goes to the link photo; review queue: add a cover to a proposal created through the API fixture → publish → bar in the list
 
 ### Implementation for User Story 1 — API
 
@@ -119,7 +119,7 @@ supersedes the link's preview image.
 
 - [X] T041 [P] [US2] [unit] apps/web/src/cards/EventCard.test.tsx: an event with a link preview and a cover renders the link box without its image (title, domain, button kept); without a cover the link image renders as today
 - [X] T042 [P] [US2] [unit] apps/web/src/review/ReviewCard.test.tsx (create if missing): the bar renders below the title when `cover` is set, nothing extra otherwise
-- [ ] T043 [P] [US2] [e2e:full] e2e/tests/full/cover.spec.ts: event with a link and a cover shows exactly one image (the cover bar); a card whose cover image 404s (fake Cloudinary) renders without `.card__cover`; list at 360 px: the bar's bounding box is reserved before load (same height before and after load)
+- [X] T043 [P] [US2] [e2e:full] e2e/tests/full/cover.spec.ts: event with a link and a cover shows exactly one image (the cover bar); a card whose cover image 404s (fake Cloudinary) renders without `.card__cover`; list at 360 px: the bar's bounding box is reserved before load (same height before and after load)
 
 ### Implementation for User Story 2
 
@@ -137,7 +137,7 @@ supersedes the link's preview image.
 **Independent Test**: open Browse on the US2 deck and swipe between the two cards; open the full view.
 
 - [X] T046 [P] [US3] [unit] apps/web/src/browse/BrowsePage.test.tsx / FullView.test.tsx (existing or new): the current card passes the eager loading hint so its `CoverBar` image is eager; the full view renders the bar below the title
-- [ ] T047 [P] [US3] [e2e:full] e2e/tests/full/cover.spec.ts: Browse — swipe from a card without a cover to one with; the cover is visible below the title and the card's bounding box doesn't change after the image loads; full view shows the bar
+- [X] T047 [P] [US3] [e2e:full] e2e/tests/full/cover.spec.ts: Browse — swipe from a card without a cover to one with; the cover is visible below the title and the card's bounding box doesn't change after the image loads; full view shows the bar
 - [X] T048 [US3] apps/web/src/browse/BrowsePage.tsx, FullView.tsx (+ browse/browse.css if the bar needs browse sizing): make sure both render through `Card` with the image loading hints so `CoverBar` gets them; adjust only if they bypass `Card`'s header/body slot
 
 **Checkpoint**: all three stories work independently.
@@ -161,12 +161,12 @@ delivery; private shares stay generic.
 **Purpose**: Keep the repository's docs and gates true
 
 - [X] T053 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` + `pnpm budget` (CoverBar in main chunk; CoverField/use-drop-image only in the lazy editor chunk)
-- [ ] T054 e2e: `@smoke` editor spec passes (CI `e2e` job); `pnpm test:e2e --grep @full` passes for e2e/tests/full/cover.spec.ts
+- [X] T054 e2e: `@smoke` editor spec passes (CI `e2e` job); `pnpm test:e2e --grep @full` passes for e2e/tests/full/cover.spec.ts
 - [X] T055 [P] docs/design/card-media.md: cover image section (column, D160-style reference, bar through `CloudImage`, supersedes the event link image, sweep reference, runbook thresholds `other_deck` > 5/h, `unsupported_type` > 20/h) + "Deviations from the plan" list from implementation-notes.md; docs/design/web-pwa.md share-preview section (public visual = cover ?? snapshot, private rule); docs/design/card-editor.md (CoverField, drag and drop, event paste rule; follow-up: reuse `use-drop-image` for photo/link-photo fields); docs/design/activity-log.md (`cover`); docs/design/data-model.md (column + CHECK + index)
 - [X] T056 [P] docs/adr.md: ADR-077 "Card-level attributes that aren't content live in columns, not payload" (from D386/D387); docs/architecture.md: one ADR index row + at most one line in the media summary (keep < 250 lines)
 - [X] T057 [P] CLAUDE.md "Media" bullet: covers (`items.cover`) are image references checked like image cards (D160) and counted by the media sweep; CHANGELOG.md feature line (no env change)
 - [X] T058 PLAN.md: link `specs/044-card-avatar` under Usability pass; README.md unchanged unless commands/env changed
-- [ ] T059 Run quickstart.md validation (automated section; manual steps noted as pending deploy in implementation-notes.md)
+- [X] T059 Run quickstart.md validation (automated section; manual steps noted as pending deploy in implementation-notes.md)
 - [ ] T060 `/speckit-converge` until it reports Converged
 
 ---

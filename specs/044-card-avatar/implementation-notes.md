@@ -53,6 +53,18 @@ Decisions the plan did not make, and deviations.
 - **Int test reads `og:image` from `/p/{slug}/i/{id}`**: `/s/{id}` 302-redirects public cards to the
   public page, whose head carries the share image.
 
+## Validation (T054, T059)
+
+- **Automated quickstart run green** on the branch: `pnpm test:unit`, full `pnpm test:int`, and the
+  `editor.spec.ts` (`@smoke`) + `cover.spec.ts` (`@full`) e2e specs against a local dev stack (fake
+  Cloudinary, 36 passed).
+- **e2e fixture `recordAsset(api, deckId, name)`** (`e2e/fixtures/cloudinary.ts`) records an asset
+  through `POST /decks/{id}/media/assets` with a signed fake upload answer; like the existing image
+  smoke, it needs `CLOUDINARY_API_SECRET`.
+- **Pending deploy**: the manual quickstart steps (adding a cover on a phone in under 30 s, the
+  Slow-4G layout check, blocking and deleting in real Cloudinary, chat-app unfurls of public vs
+  private shares) are run after deploy.
+
 ## Process
 
 - Some unit tests (T022, T023, T049–T052, T019) were written alongside the code rather than run

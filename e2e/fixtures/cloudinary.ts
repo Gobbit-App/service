@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { Page } from '@playwright/test';
+import type { APIRequestContext, Page } from '@playwright/test';
 import { resolveE2eEnv } from '../lib/env';
 
 /** Fake Cloudinary for e2e (D133): tests never reach the real service. */
@@ -95,4 +95,31 @@ export async function routeFakeCloudinary(page: Page, publicId: string) {
   }
   await routeImageDelivery(page);
   return uploads;
+}
+
+/**
+ * 044: records an image for a deck over the real API, the way a finished editor upload is
+ * (D157), so a test can give a card a cover without driving the editor. Needs the API secret.
+ */
+export async function recordAsset(
+  api: APIRequestContext,
+  deckId: string,
+  name: string,
+): Promise<string> {
+  if (!cloudinaryApiSecret) throw new Error('CLOUDINARY_API_SECRET is not set (012 confirm step)');
+  const publicId = `gobbit/items/${deckId}/${name}`;
+  const version = Math.floor(Date.now() / 1000);
+  const res = await api.post(`decks/${deckId}/media/assets`, {
+    data: {
+      publicId,
+      version,
+      signature: signUploadAnswer(publicId, version, cloudinaryApiSecret),
+      width: 1,
+      height: 1,
+      bytes: TINY_PNG.length,
+      format: 'png',
+    },
+  });
+  if (res.status() !== 201) throw new Error(`record asset ${name}: ${res.status()}`);
+  return publicId;
 }
