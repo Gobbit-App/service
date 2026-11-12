@@ -52,6 +52,13 @@ export const categoriesQuery = (idOrSlug: string) =>
       ).data,
   });
 
+/**
+ * D401: an open deck picks up other members' changes this often while the page is visible
+ * (TanStack pauses the interval in the background and offline); `useKeepPlace` keeps the reader's
+ * card where it was.
+ */
+export const DECK_REFETCH_MS = 60_000;
+
 export const itemsQuery = (deckSlug: string, filter: ItemFilter) =>
   infiniteQueryOptions({
     queryKey: queryKeys.items(deckSlug, filter),
@@ -64,6 +71,7 @@ export const itemsQuery = (deckSlug: string, filter: ItemFilter) =>
       ),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
+    refetchInterval: DECK_REFETCH_MS,
   });
 
 export const itemQuery = (itemId: string) =>
