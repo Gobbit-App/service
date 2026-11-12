@@ -12,6 +12,8 @@ export type ShareRecord = {
     body: string;
     payload: Record<string, unknown>;
     deletedAt: Date | null;
+    /** 044: member-set cover (public mode only reads it). */
+    cover: { publicId: string } | null;
   };
   deck: { slug: string; name: string; kind: DeckKind; isPublic: boolean; isDefault: boolean };
   /** Default category first, then by position. */
@@ -33,6 +35,7 @@ export function createShareRepo(db: Db) {
           body: items.body,
           payload: items.payload,
           deletedAt: items.deletedAt,
+          cover: items.cover,
           deckSlug: decks.slug,
           deckName: decks.name,
           deckIsDefault: decks.isDefault,
@@ -62,6 +65,7 @@ export function createShareRepo(db: Db) {
           body: row.body,
           payload: row.payload as Record<string, unknown>,
           deletedAt: row.deletedAt,
+          cover: row.cover ? { publicId: row.cover.publicId } : null,
         },
         deck: {
           slug: row.deckSlug,

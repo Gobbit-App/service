@@ -34,7 +34,12 @@ export type OgCardInput = {
   excerpt: string;
   categoryName: string | null;
   deckName: string;
+  /** D393: a cover or snapshot is layered into the right-hand panel at delivery. */
+  hasVisual?: boolean;
 };
+
+/** Width of the right-hand panel Cloudinary fills with the visual (D393). */
+export const OG_VISUAL_WIDTH = 420;
 
 /** Build a text node with automatic direction detection. */
 function textNode(text: string, additionalStyle: Record<string, string | number> = {}): OgNode {
@@ -170,6 +175,40 @@ export function ogCardTree(input: OgCardInput): OgNode {
       children: [textNode(input.deckName, {}), brandLockup(40)],
     },
   });
+
+  if (input.hasVisual) {
+    const textWidth = OG_WIDTH - 72 - OG_VISUAL_WIDTH - 48;
+    return {
+      type: 'div',
+      props: {
+        style: {
+          width: OG_WIDTH,
+          height: OG_HEIGHT,
+          display: 'flex',
+          flexDirection: 'row',
+          padding: '72px 0 72px 72px',
+          backgroundColor: OG_COLORS.background,
+          fontFamily: OG_TEMPLATE_FONT,
+          borderTop: `16px solid ${OG_COLORS.accent}`,
+        },
+        children: [
+          {
+            type: 'div',
+            props: {
+              style: {
+                display: 'flex',
+                flexDirection: 'column',
+                width: textWidth,
+                maxWidth: textWidth,
+              },
+              children,
+            },
+          },
+          { type: 'div', props: { style: { width: OG_VISUAL_WIDTH, flexShrink: 0 } } },
+        ],
+      },
+    };
+  }
 
   return {
     type: 'div',

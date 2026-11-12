@@ -10,6 +10,8 @@ export type OgContent = {
   categoryName: string | null;
   deckName: string;
   imagePublicId: string | null;
+  /** D393: cover, else link/event snapshot; part of the hash so changes re-render. */
+  visualPublicId?: string | null;
 };
 
 /** Compute SHA256 hash of OG content. */
@@ -24,6 +26,8 @@ export function ogContentHash(
     content.categoryName,
     content.deckName,
     content.imagePublicId,
+    // Appended only when set, so cards without a visual keep their stored image.
+    ...(content.visualPublicId ? [content.visualPublicId] : []),
   ];
   return createHash('sha256').update(JSON.stringify(data)).digest('hex');
 }

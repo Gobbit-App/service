@@ -7,6 +7,7 @@ import {
   OG_WIDTH,
   OG_HEIGHT,
   type OgChild,
+  type OgNode,
 } from './og-template';
 
 /** Recursively collect all text strings from an OG node tree. */
@@ -34,6 +35,21 @@ function collectText(node: OgChild | undefined): string[] {
 }
 
 describe('ogCardTree', () => {
+  it('with a visual, narrows the text column and leaves the right panel empty (D393)', () => {
+    const input = { title: 'T', excerpt: 'E', categoryName: null, deckName: 'D' };
+    const plain = ogCardTree(input);
+    const visual = ogCardTree({ ...input, hasVisual: true });
+
+    expect(collectText(visual)).toEqual(collectText(plain));
+    const [column, panel] = visual.props.children as OgNode[];
+    expect(panel!.props.children).toBeUndefined();
+    expect(panel!.props.style?.width).toBe(420);
+    expect(Number(column!.props.style?.maxWidth ?? column!.props.style?.width)).toBeLessThan(
+      OG_WIDTH - 420,
+    );
+    expect(ogCardTree({ ...input, hasVisual: false })).toEqual(plain);
+  });
+
   it('includes title, excerpt, category, deck name and Gobbit', () => {
     const tree = ogCardTree({
       title: 'My Title',

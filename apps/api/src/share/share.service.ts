@@ -5,7 +5,7 @@ import { ogContentHash, ogPublicId, type OgContent } from './content-hash';
 import { toPlainText } from '../rich-text/plain-text';
 import { excerpt, OG_DESCRIPTION_MAX, OG_IMAGE_EXCERPT_MAX } from './excerpt';
 import { shareMode } from './mode';
-import { ogCardTree, OG_HEIGHT, OG_WIDTH } from './og-template';
+import { ogCardTree, OG_HEIGHT, OG_VISUAL_WIDTH, OG_WIDTH } from './og-template';
 import type { OgImageStore } from './og-store';
 import type { OgRenderer } from './render';
 import {
@@ -28,6 +28,13 @@ export const PRIVATE_OG_IMAGE_PATH = '/og/private.png';
 
 /** Cloudinary transformation for an image card's own picture (D59). */
 export const IMAGE_CARD_OG_TRANSFORMATION = 'c_fill,w_1200,h_630,f_jpg';
+
+/** D393: the visual alone, when the generated card can't be rendered. */
+export const VISUAL_FALLBACK_TRANSFORMATION = 'c_fill,g_auto,w_1200,h_630,f_jpg';
+
+/** D393: fills the card's empty right-hand panel at delivery (public ids use `:` for `/`). */
+export const visualLayer = (publicId: string): string =>
+  `l_${publicId.replaceAll('/', ':')},c_fill,g_auto,w_${OG_VISUAL_WIDTH},h_630/fl_layer_apply,g_east`;
 
 export interface ShareServiceDeps {
   repo: ShareRepo;
@@ -66,6 +73,15 @@ function publicCategoryName(record: ShareRecord): string | null {
 
 function imagePublicIdOf(record: ShareRecord): string | null {
   const id = record.item.type === 'image' ? record.item.payload.publicId : undefined;
+  return typeof id === 'string' && id !== '' ? id : null;
+}
+
+/** D393: the member-set cover, else the stored link/event preview snapshot. */
+function visualPublicIdOf(record: ShareRecord): string | null {
+  if (record.item.cover) return record.item.cover.publicId;
+  const preview = record.item.payload.preview;
+  const id =
+    preview && typeof preview === 'object' ? (preview as { publicId?: unknown }).publicId : null;
   return typeof id === 'string' && id !== '' ? id : null;
 }
 
@@ -117,7 +133,8 @@ export function createShareService(deps: ShareServiceDeps) {
 
     const hash = ogContentHash(content);
     const existing = await repo.findOgImage(itemId);
-    if (existing?.contentHash === hash) return store.deliveryUrl(existing.publicId);
+    const layer = content.visualPublicId ? visualLayer(content.visualPublicId) : undefined;
+    if (existing?.contentHash === hash) return store.deliveryUrl(existing.publicId, layer);
 
     const publicId = ogPublicId(itemId, hash);
     try {
@@ -130,6 +147,7 @@ export function createShareService(deps: ShareServiceDeps) {
               excerpt: content.excerpt,
               categoryName: content.categoryName,
               deckName: content.deckName,
+              hasVisual: Boolean(content.visualPublicId),
             }),
           );
           await store.upload(publicId, png);
@@ -137,12 +155,14 @@ export function createShareService(deps: ShareServiceDeps) {
         renderBudgetMs,
       );
     } catch (err) {
-      log(`OG image for ${itemId} failed; serving the private image`, err);
-      return null;
+      log(`OG image for ${itemId} failed; serving the fallback image`, err);
+      return content.visualPublicId
+        ? store.deliveryUrl(content.visualPublicId, VISUAL_FALLBACK_TRANSFORMATION)
+        : null;
     }
 
     await repo.saveOgImage({ itemId, contentHash: hash, publicId });
-    return store.deliveryUrl(publicId);
+    return store.deliveryUrl(publicId, layer);
   }
 
   /** D59/D60: the card's own picture, else the generated image, else the private one. */
@@ -158,6 +178,7 @@ export function createShareService(deps: ShareServiceDeps) {
       categoryName: publicCategoryName(record),
       deckName: deck.name,
       imagePublicId,
+      visualPublicId: visualPublicIdOf(record),
     };
     return (await generatedImageUrl(item.id, content)) ?? `${origin}${PRIVATE_OG_IMAGE_PATH}`;
   }

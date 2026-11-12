@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { OgImageRecord, ShareRecord, ShareRepo } from '../repositories/share.repo';
 import { MemoryOgStore } from './og-store';
 import type { OgRenderer } from './render';
+import { ogCardTree } from './og-template';
 import { createShareService, type ShareServiceDeps } from './share.service';
 
 const ITEM_ID = '0b9a3c1e-4f2d-4c6b-9a8e-1d2c3b4a5f60';
@@ -18,6 +19,7 @@ function makeRecord(overrides: Partial<ShareRecord['item']> = {}): ShareRecord {
       body: 'Boil **water** with salt.',
       payload: {},
       deletedAt: null,
+      cover: null,
       ...overrides,
     },
     deck: { slug: 'family', name: 'Family', kind: 'shared', isPublic: true, isDefault: false },
@@ -55,6 +57,13 @@ function setup(record: ShareRecord | null, overrides: Partial<ShareServiceDeps> 
   });
   return { service, repo, saved, store, render, log };
 }
+
+const cardInput = {
+  title: 'Grandma soup',
+  excerpt: 'Boil water with salt.',
+  categoryName: 'Recipes',
+  deckName: 'Family',
+};
 
 const ogImage = (html: string) => /property="og:image" content="([^"]+)"/.exec(html)?.[1];
 
@@ -161,6 +170,74 @@ describe('share service — public mode (D59–D61)', () => {
 
     expect(html).toContain('<html lang="he">');
     expect(html).toContain('he_IL');
+  });
+});
+
+describe('share service — visual (D393)', () => {
+  const layer = (id: string) =>
+    `l_${id.replaceAll('/', ':')},c_fill,g_auto,w_420,h_630/fl_layer_apply,g_east`;
+  const failing = {
+    renderer: async () => async () => {
+      throw new Error('boom');
+    },
+  };
+
+  it('layers the cover onto the generated card and renders with hasVisual', async () => {
+    const { service, saved, render } = setup(
+      makeRecord({ cover: { publicId: 'gobbit/items/d1/cover' } }),
+    );
+    const url = ogImage(await service.sharePage(ITEM_ID))!;
+
+    expect(url).toContain(layer('gobbit/items/d1/cover'));
+    expect(url).toContain(`/${saved[0]!.publicId}`);
+    const tree = JSON.stringify(vi.mocked(render).mock.calls[0]![0]);
+    expect(tree).toBe(JSON.stringify(ogCardTree({ ...cardInput, hasVisual: true })));
+  });
+
+  it('uses the link snapshot when there is no cover, and the cover beats it', async () => {
+    const preview = { preview: { publicId: 'gobbit/links/snap' } };
+    const snap = await setup(makeRecord({ type: 'link', payload: preview })).service.sharePage(
+      ITEM_ID,
+    );
+    expect(ogImage(snap)).toContain(layer('gobbit/links/snap'));
+
+    const both = await setup(
+      makeRecord({ type: 'link', payload: preview, cover: { publicId: 'gobbit/items/d1/c' } }),
+    ).service.sharePage(ITEM_ID);
+    expect(ogImage(both)).toContain(layer('gobbit/items/d1/c'));
+    expect(ogImage(both)).not.toContain('snap');
+  });
+
+  it('adds no layer without a visual', async () => {
+    expect(ogImage(await setup(makeRecord()).service.sharePage(ITEM_ID))).not.toContain(
+      'fl_layer_apply',
+    );
+  });
+
+  it('falls back to the cropped visual, then to the private image, when rendering fails', async () => {
+    const withCover = makeRecord({ cover: { publicId: 'gobbit/items/d1/cover' } });
+    const html = await setup(withCover, failing).service.sharePage(ITEM_ID);
+    expect(ogImage(html)).toContain('c_fill,g_auto,w_1200,h_630,f_jpg/gobbit/items/d1/cover');
+
+    const plain = await setup(makeRecord(), failing).service.sharePage(ITEM_ID);
+    expect(ogImage(plain)).toBe(`${ORIGIN}/og/private.png`);
+  });
+
+  it('re-renders when the visual changes', async () => {
+    const a = await setup(makeRecord({ cover: { publicId: 'a/1' } }));
+    const b = await setup(makeRecord({ cover: { publicId: 'a/2' } }));
+    await a.service.sharePage(ITEM_ID);
+    await b.service.sharePage(ITEM_ID);
+    expect(a.saved[0]!.contentHash).not.toBe(b.saved[0]!.contentHash);
+  });
+
+  it('private mode ignores the cover entirely', async () => {
+    const record = makeRecord({ cover: { publicId: 'gobbit/items/d1/cover' } });
+    record.deck.isPublic = false;
+    const html = await setup(record).service.sharePage(ITEM_ID);
+    const missing = await setup(null).service.sharePage(ITEM_ID);
+    expect(html).toBe(missing);
+    expect(html).not.toContain('cover');
   });
 });
 
