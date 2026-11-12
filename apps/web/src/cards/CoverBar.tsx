@@ -14,9 +14,9 @@ export function CoverBar({
   image?: ImageLoading;
 }): ReactElement | null {
   const cloudName = useCloudName();
-  const [failed, setFailed] = useState(false);
+  const [failedId, setFailedId] = useState<string | null>(null);
 
-  if (!cover || !cloudName || failed) return null;
+  if (!cover || !cloudName || failedId === cover.publicId) return null;
 
   return (
     <CloudImage
@@ -27,7 +27,7 @@ export function CoverBar({
       width={cover.width}
       height={cover.height}
       priority={image?.priority}
-      onError={() => setFailed(true)}
+      onError={() => setFailedId(cover.publicId)}
     />
   );
 }

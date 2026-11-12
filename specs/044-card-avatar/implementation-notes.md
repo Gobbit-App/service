@@ -65,6 +65,14 @@ Decisions the plan did not make, and deviations.
   Slow-4G layout check, blocking and deleting in real Cloudinary, chat-app unfurls of public vs
   private shares) are run after deploy.
 
+## Convergence (T060–T063)
+
+- The first converge pass found three gaps, fixed as T061–T063:
+  - The editor Preview card ignored the draft's cover (`previewItem`).
+  - `CoverBar` stayed hidden for a replacement after a failed image.
+  - An unused `logItemCoverRefused` export.
+- The second pass converged.
+
 ## Process
 
 - Some unit tests (T022, T023, T049–T052, T019) were written alongside the code rather than run

@@ -40,9 +40,3 @@ export function createItemCoverDecisions(parent?: Logger) {
     },
   };
 }
-
-const defaultDecisions = createItemCoverDecisions();
-
-export function logItemCoverRefused(refusal: ItemCoverRefusal): void {
-  defaultDecisions.refused(refusal);
-}

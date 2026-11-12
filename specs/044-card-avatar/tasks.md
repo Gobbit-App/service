@@ -167,7 +167,7 @@ delivery; private shares stay generic.
 - [X] T057 [P] CLAUDE.md "Media" bullet: covers (`items.cover`) are image references checked like image cards (D160) and counted by the media sweep; CHANGELOG.md feature line (no env change)
 - [X] T058 PLAN.md: link `specs/044-card-avatar` under Usability pass; README.md unchanged unless commands/env changed
 - [X] T059 Run quickstart.md validation (automated section; manual steps noted as pending deploy in implementation-notes.md)
-- [ ] T060 `/speckit-converge` until it reports Converged
+- [X] T060 `/speckit-converge` until it reports Converged
 
 ---
 
@@ -204,3 +204,9 @@ delivery; private shares stay generic.
 - [P] tasks = different files, no dependencies (T019/T027/T043/T047 share files: run them sequentially)
 - Log decisions the plan did not make, and deviations, in specs/044-card-avatar/implementation-notes.md
 - Commit after each task or logical group (conventional commits, e.g. `feat(api): …`, `feat(web): …`)
+
+## Phase 7: Convergence
+
+- [X] T061 Set `cover: draft.cover ?? null` in `previewItem` (apps/web/src/editor/EditorPreview.tsx) so the editor Preview card shows the draft's cover (added, replaced, removed) and an event with a link and a cover previews without the link image; unit test in apps/web/src/editor/EditorPreview.test.tsx per FR-010, US1/AC3 (partial)
+- [X] T062 Reset `CoverBar`'s failed state when `cover.publicId` changes (apps/web/src/cards/CoverBar.tsx) so a replacement after a broken cover shows; unit test in apps/web/src/cards/CoverBar.test.tsx per spec edge case "cover image fails to load" (partial)
+- [X] T063 Remove the unused `logItemCoverRefused` / `defaultDecisions` export from apps/api/src/services/item-cover.events.ts (and its test usage) per plan: simplicity (unrequested)

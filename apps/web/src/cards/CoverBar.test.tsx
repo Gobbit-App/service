@@ -28,6 +28,16 @@ describe('CoverBar (D391)', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('shows a replacement cover after the previous one failed', () => {
+    const { container, rerender } = render(<CoverBar cover={cover} />);
+    fireEvent.error(container.querySelector('img.cloud-image__img')!);
+    expect(container).toBeEmptyDOMElement();
+    rerender(<CoverBar cover={{ ...cover, publicId: 'gobbit/items/d/other' }} />);
+    expect(container.querySelector('img.cloud-image__img')?.getAttribute('src')).toContain(
+      'gobbit/items/d/other',
+    );
+  });
+
   it('forwards the priority hint', () => {
     const { container } = render(<CoverBar cover={cover} image={{ priority: true }} />);
     const img = container.querySelector('img.cloud-image__img')!;
