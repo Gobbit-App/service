@@ -80,7 +80,10 @@ Elsewhere:
 
 **Performance Goals**:
 - PDF viewer shows page 1 in < 2 s on a mobile connection (SC-004).
-- No video or audio bytes load before the member presses play.
+- Facade first (D400): a list of media cards costs one picture per card. There's no media element and no
+  player code before intent, and no video or audio bytes before a tap. At most one media element is alive.
+- Tapping play or open feels instant: the chunk is prefetched on `pointerdown`/focus/hover or idle, and
+  the first video frame comes from an eager rendition (no conversion wait).
 - Initial bundle grows by ≤ 5 KB gzip (SC-005); the new card bodies and the viewer are lazy chunks.
 
 **Constraints**:
@@ -109,7 +112,7 @@ Elsewhere:
 
 ## Decisions this plan pins down
 
-D386–D399 are reserved (add to the ledger in `specs/README.md`). Full reasoning is in [research.md](research.md).
+D386–D400 are used (recorded in the ledger in `specs/README.md`). Full reasoning is in [research.md](research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
@@ -127,6 +130,7 @@ D386–D399 are reserved (add to the ledger in `specs/README.md`). Full reasonin
 | D397 | Public allow-list and share-preview image order per kind | no |
 | D398 | A photo card is a gallery of 1–8 images (`images[]`, cover first); one GIN index for file lookups; per-photo alt ≤ 200 | yes → ADR-077 |
 | D399 | One lazy page viewer for galleries and PDFs | no |
+| D400 | Facade first: payload-only facade in lists, chunk prefetch on intent or idle, one live media element | no |
 
 ## Project Structure
 
@@ -180,7 +184,8 @@ apps/web/src/
 ├── cards/CloudImage.tsx         # `source` prop (stills, PDF pages)
 ├── cards/payload-guards.ts      # asMediaPayload (+ legacy 'image')
 ├── cards/ImageCard.tsx          # reads images[0]
-├── cards/media/{GalleryCard,PdfCard,PageViewer,VideoCard,AudioCard,MediaUnavailable}.tsx + use-exclusive-playback.ts + media.css
+├── cards/media/{MediaFacade,GalleryCard,PdfCard,PageViewer,VideoCard,AudioCard,MediaUnavailable}.tsx
+│   + use-active-media.ts + load-media-module.ts + media.css   # D400 tiers
 ├── editor/fields/MediaFields.tsx (was ImageFields) + GalleryFields.tsx (photo list: add many, describe, move, remove), editor/media-file.ts (was image-file.ts),
 │   editor/upload.ts, editor/use-media-upload.ts, editor/draft.ts, editor/validate.ts, editor/media-payload.ts
 ├── editor/composer/type-tiles.ts, TypeTiles.tsx, pick-start-type.ts
@@ -190,7 +195,7 @@ apps/web/src/
 ├── analytics/*                  # content events send type 'media'
 └── vite.config.ts               # share_target accept list
 apps/web/Caddyfile               # CSP media-src
-apps/web/scripts/initial-chunks.ts   # no change expected; verify media chunks stay lazy
+apps/web/scripts/initial-chunks.ts   # LAZY_ONLY_MARKERS for PageViewer and the players (D400)
 
 e2e/fixtures/cloudinary.ts       # fake per resource type (pdf page, video/audio upload responses)
 e2e/tests/smoke/editor.spec.ts   # photo journey → two-photo gallery; new PDF journey
@@ -229,7 +234,9 @@ small PRs per stream). Each PR passes the gates on its own and leaves `main` dep
 | D389 signature covers formats + eager per kind | sign-upload | `sign-upload.test.ts`, unit |
 | D392 builders use only eager transformations for audio/video | shared/web/api builders | `cloudinary.test.ts` (web), `cloudinary-url.test.ts` (api), unit |
 | FR-013 viewer pages lazily, indicator, zoom, open original | web | `PageViewer.test.tsx` unit; `smoke/editor.spec.ts` PDF journey, smoke |
-| FR-014/FR-016 no preload, one plays at a time, Browse pauses | web | `VideoCard.test.tsx`, `use-exclusive-playback.test.ts` unit; `full/media.spec.ts`, full |
+| FR-014/FR-016 no preload, one plays at a time, Browse pauses | web | `VideoCard.test.tsx`, `use-active-media.test.ts` unit; `full/media.spec.ts`, full |
+| D400 facade only in lists (20 video cards → 0 media elements); prefetch on intent/idle, none on `saveData`; one live element; chunk failure → retry | web | `MediaFacade.test.tsx`, `load-media-module.test.ts`, `use-active-media.test.ts` unit; `full/media.spec.ts` request counting, full |
+| D400 viewer and players never in the initial bundle | build | `initial-chunks.test.ts` markers + `pnpm budget`, CI |
 | FR-017 reserved box, unavailable placeholder | web | `CardBody.test.tsx`, unit |
 | FR-019 offline messages | web | `full/media.spec.ts` (offline), full |
 | FR-020/021 composer accepts all kinds; legacy drafts restore | web | `MediaFields.test.tsx`, `draft.test.ts`, unit |

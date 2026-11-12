@@ -1,6 +1,6 @@
 # Research: Media cards (045)
 
-Decisions D386–D399 are reserved for this feature and all are used below. Each states the decision, why,
+Decisions D386–D400 belong to this feature (D400 added after the reservation of D386–D399 ran out). Each states the decision, why,
 and what was rejected. "Verify" items are facts about the storage provider (Cloudinary) that the first
 implementation task confirms against a real account before building on them (quickstart § 0).
 
@@ -254,6 +254,58 @@ The gallery passes its photos; the PDF card passes `pg_1…pg_N` sources and add
 untouched and halves the viewer tests.
 
 **Rejected**: two separate viewers; a lightbox library (constitution VI, ADR-065 no gesture library).
+
+## D400 — Facade first: media cards cost nothing until a member reaches for them
+
+**Decision**: every media card loads in three tiers.
+
+1. **Facade (in the list, always)**: an eager, tiny `MediaFacade` renders the card from the payload
+   alone: the cover, still or page-1 picture through `CloudImage` (with the existing list `loading`
+   rules), the kind badge ("N photos", "PDF · N pages", duration) and the play/open button. The box is
+   sized from payload dimensions. No `<video>`/`<audio>` element, no player or viewer code, no
+   metadata request. This is why duration, pages and dimensions are server-owned payload facts (D390):
+   showing them never touches the file.
+2. **Intent prefetch**: the player or viewer chunk is imported (and kept in a module cache, the D290
+   pattern) on the first sign of intent: `pointerdown`, `focus` or hover on the facade, or the card
+   becoming Browse's current card. When a media card has been on screen for a second, the chunk for its
+   kind is also prefetched in `requestIdleCallback`, unless the connection reports `saveData`. Each
+   chunk is a few KB, so this costs little and makes the tap feel instant.
+3. **Activation (on tap)**:
+   - **Video and audio**: the media element is mounted on intent (`preload="none"`, so no bytes yet),
+     and `play()` is called synchronously in the click handler. iOS only lets sound play from inside a
+     user gesture.
+   - **Viewer**: it opens showing the picture the card already loaded, then swaps in the sharper one.
+     It loads only the current photo or page ± 1; PDF pages use `loading="lazy"` with boxes reserved
+     from page 1's dimensions.
+   - **Bytes**: media bytes come from the eager renditions (D392), so the first frame doesn't wait for a
+     conversion.
+
+**One active player**: activating a player returns the previous one to its facade. Returning to the
+facade pauses the player and releases its buffer (`removeAttribute('src')` and `load()`). Closing the
+viewer, leaving Browse's current position or leaving the deck does the same. `use-exclusive-playback`
+becomes this "active media" store. At most one media element is alive, which keeps memory flat on phones.
+
+**Failure**: a chunk that fails to load (offline, stale deploy) leaves the facade in place with
+"Couldn't open · Retry", never an error boundary.
+
+**Guards**:
+- `initial-chunks.ts` `LAZY_ONLY_MARKERS` gains markers for the viewer and players, so CI fails if one
+  leaks into the initial bundle.
+- `pnpm budget` holds initial growth to ≤ 5 KB (SC-005).
+- A unit test renders 20 video cards and asserts zero media elements.
+- A full e2e test counts requests: no video or audio bytes before a tap, and no viewer chunk before
+  intent or idle.
+
+**Why**: an eagerly mounted `<video preload="none">` still costs a DOM media element, a decoder slot on
+some phones, and on iOS sometimes a metadata request. With a list of video cards that adds up, while a
+facade costs one image. Lazy-loading the whole card (the first draft) would show a placeholder until a
+chunk arrived for every PDF, video and audio card in a list. Prefetching on intent hides the chunk
+fetch behind the ~100 ms between `pointerdown` and `click`.
+
+**Rejected**:
+- *Mounting players in the list with `preload="none"`*: many media elements, and iOS metadata fetches.
+- *Lazy-loading the whole card body*: a visible placeholder flash per card.
+- *Prefetching every chunk at app start*: it spends members' data on kinds a deck may not have.
 
 ## Not decided here (left to `/speckit-clarify` if wanted)
 

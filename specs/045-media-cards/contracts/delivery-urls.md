@@ -29,11 +29,13 @@ Base: `https://res.cloudinary.com/<cloud>/<resource_type>/upload/<transformation
 |-----------|------|-------|-------|
 | `cards/ImageCard` | image, 1 photo | eager | `CloudImage`, unchanged rendering |
 | `cards/media/GalleryCard` | image, 2–8 photos | eager (small) | cover `CloudImage` + "N photos" badge; tap → `PageViewer` (D398) |
-| `cards/media/PdfCard` | pdf | lazy chunk | page-1 `CloudImage` + "PDF · N pages" + Read button → `PageViewer` |
+| `cards/media/MediaFacade` | pdf, audio, video | eager (tiny) | the picture (page 1, still or waveform) + badge + play/open button, all from the payload; prefetches the chunk on intent or idle (D400) |
+| `cards/media/PdfCard` | pdf | lazy chunk (on intent) | wraps the facade; Read → `PageViewer` |
 | `cards/media/PageViewer` | image (gallery), pdf | lazy chunk (on open) | `<dialog>`, horizontal (photos) or vertical (pages) scroll-snap, "k of N", arrows, zoom, per-photo description; PDF adds Open original (D399) |
-| `cards/media/VideoCard` | video | lazy chunk | `<video preload="none" poster>`, duration badge |
-| `cards/media/AudioCard` | audio | lazy chunk | `<audio preload="none">`, waveform mask, duration |
-| `cards/media/use-exclusive-playback` | audio/video | with the cards | one `play` listener on `document` pauses the other players |
+| `cards/media/VideoCard` | video | lazy chunk (on intent); `<video>` mounted on intent, `play()` in the click | `<video preload="none" poster>`, duration badge |
+| `cards/media/AudioCard` | audio | lazy chunk (on intent); `<audio>` mounted on intent | `<audio preload="none">`, waveform mask, duration |
+| `cards/media/use-active-media` | audio/video/viewer | eager (tiny) | at most one live media element: activating one returns the previous to its facade and releases its buffer (D400) |
+| `cards/media/load-media-module` | all lazy kinds | eager (tiny) | `import()` per kind with a module cache, prefetch on intent or idle (skipped on `saveData`), failed → retry (D290 pattern) |
 
 `CloudImage` gains a `source` prop (`{ resourceType, publicId, prefix?, ext? }`) so stills and PDF pages
 reuse its `srcSet` and measured `sizes` (D161). Stills and PDF pages skip the blurred placeholder
