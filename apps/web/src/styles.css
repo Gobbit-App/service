@@ -244,6 +244,7 @@ h2 {
 .menu,
 .sheet,
 .consent-prompt,
+.update-prompt,
 .browse-top,
 .browse-dock,
 .browse-full__sheet,
@@ -1264,23 +1265,56 @@ h2 {
   gap: 8px;
 }
 
+/* A compact brushed-glass strip centred above the bottom bar: one row, mint Reload (its label stays
+   visible on phones), icon-only dismiss. */
 .update-prompt {
   position: fixed;
   left: var(--gutter);
   right: var(--gutter);
-  bottom: calc(var(--safe-bottom) + var(--bottom-bar-h) + var(--gutter));
+  bottom: calc(var(--safe-bottom) + var(--bottom-bar-h) + var(--space-3));
   z-index: 30;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
+  width: fit-content;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 12px var(--gutter);
+  padding: var(--space-1);
+  padding-inline-start: var(--space-4);
+  border: 1px solid var(--glass-line);
   border-radius: var(--radius);
-  background: var(--color-banner);
-  color: var(--color-banner-text);
-  box-shadow: var(--glow-panel);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  box-shadow: var(--elevation-3);
+  animation: update-prompt-in var(--motion-base) var(--ease-out);
+}
+
+.update-prompt__text {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+@media (max-width: 479.98px) {
+  .update-prompt__reload .button__label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+@keyframes update-prompt-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-prompt {
+    animation: none;
+  }
 }
 
 /* ---------- Toast and card actions (D146) ---------- */
@@ -1305,8 +1339,7 @@ h2 {
 }
 
 /* Ghost actions on the inverted banner surface take the banner's text colour. */
-.toast__action,
-.update-prompt__action {
+.toast__action {
   border-color: var(--color-banner-text);
   color: var(--color-banner-text);
 }

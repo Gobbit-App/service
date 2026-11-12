@@ -14,6 +14,7 @@ import { MoreMenu } from '../ui/MoreMenu';
 import { useNavigateHref } from '../ui/NavLink';
 import { createActions } from './create-actions';
 import { menuActions } from './deck-menu-actions';
+import { usePendingUpdate } from './sw-update-store';
 import { useSignOut } from './use-sign-out';
 
 type BarDeck = Pick<Deck, 'slug' | 'role' | 'isDefault'>;
@@ -38,6 +39,7 @@ export function BottomBar({
   const signOut = useSignOut();
   const navigate = useNavigateHref();
   const [aboutOpen, setAboutOpen] = useState(false);
+  const applyUpdate = usePendingUpdate();
 
   const menu = menuActions({
     deck,
@@ -46,6 +48,7 @@ export function BottomBar({
     onAbout: () => setAboutOpen(true),
     onSignOut: signOut.signOut,
     signingOut: signOut.signingOut,
+    onUpdate: applyUpdate,
   });
   const create = deck ? createActions(deck) : [];
   const review = deck !== undefined && !deck.isDefault && can(deck.role, 'item.publish');

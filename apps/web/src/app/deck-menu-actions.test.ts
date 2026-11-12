@@ -61,4 +61,13 @@ describe('menuActions (D276)', () => {
   it('disables Sign out while signing out', () => {
     expect(menuActions({ ...base, signingOut: true }).at(-1)?.disabledReason).toBeTruthy();
   });
+
+  it('puts Update Gobbit first only while a new version is pending', () => {
+    expect(menuActions(base).some((a) => a.key === 'update')).toBe(false);
+    const onUpdate = vi.fn();
+    const [first] = menuActions({ ...base, onUpdate });
+    expect(first).toMatchObject({ key: 'update', label: 'Update Gobbit', icon: 'refresh' });
+    first?.onSelect?.();
+    expect(onUpdate).toHaveBeenCalledOnce();
+  });
 });
