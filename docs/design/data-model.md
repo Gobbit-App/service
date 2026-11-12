@@ -71,6 +71,7 @@ erDiagram
     varchar title
     text body
     jsonb payload
+    jsonb cover
     string source_url
     source_kind source_kind
     timestamptz verified_at
@@ -165,6 +166,7 @@ erDiagram
 | **Personal deck (Phase 3B, supersedes D25's no-auto-deck)** | Each account has exactly one personal deck (`is_default`), ensured on every sign-in. It cannot be deleted, shared, re-slugged or made public; its address is `me`. | Partial unique index `decks_default_per_account_uq`; CHECKs `decks_default_is_personal`, `decks_slug_not_reserved`; trigger `decks_protect_default` (P0001 `default_deck_protected`). Service rules answer 409 `/problems/personal-deck`. |
 | **Soft delete** (master plan P1.1, ADR-005) | Deleting sets `deleted_at` on accounts, users, decks, categories, items and memberships; queries exclude soft-deleted rows. Join tables (`item_categories`, `favorites`) are hard-deleted by design. | All repository `.find*()`, `.list()` include `WHERE isNull(t.deletedAt)`. Service `items.softDelete()`. |
 | **Auto `updated_at`** (master plan P1.1) | Every update to accounts, users, decks, categories, items and memberships sets `updated_at = now()`. | DB trigger `<table>_set_updated_at` BEFORE UPDATE on each table. |
+| **044: Card cover image** | `items.cover` is a nullable `{ publicId, width?, height? }`, allowed only on text, reminder, event, table and calc cards. It is a column, not payload, so search text and embeddings ignore it. | CHECK `items_cover_chk` (types, `publicId` 1-255 chars, numeric dimensions); partial index `items_cover_public_id_idx` for the media sweep; service checks the asset belongs to the deck (`0025_card_cover`). |
 | **D9/D10: Payload budget and shape** | Each item type (text, link, image, table, calc) validates payload against a strict Zod schema. Payload ≤ 8192 UTF-8 bytes; DB enforces ≤ 9216 with a check constraint. | `payloadSchemaFor(type)` and the byte budget in @gobbit/shared (zod is authoritative); service calls `parse()` on PATCH; DB check constraint `items_payload_size_chk`. |
 | **D12: Item type immutable** | Cannot PATCH an item's type. | Service `items.update()` rejects `'type' in patch` with 400. |
 | **D13: Status default published** | Item created without a status defaults to 'published' and `verified_at = now()`. | Service `items.create()` sets both. `verified_at` is the publish time, not a review; the Reader shows "Added/Edited … ago" from `created_at`/`updated_at` instead (`lib/card-age.ts`). |

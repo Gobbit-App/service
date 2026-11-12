@@ -101,6 +101,7 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 - **Public** = item published, not deleted, deck `is_public`, and at least one category with visibility `public`. Anything else, including a missing or malformed id, gets the same private page: "A card was shared with you" and `${APP_URL ?? API_URL}/og/private.png`.
 - Public image: the item's own Cloudinary image (`c_fill,w_1200,h_630,f_jpg`), otherwise a generated card. Generation is lazy on the first request whose content hash has no `og_images` row: Satori → SVG, resvg → PNG, uploaded as `og/<itemId>-<hash12>`. A failure falls back to the private image for that response and is logged.
 - `pnpm og:static` renders `apps/web/public/og/private.png`, `og/landing.png` and the logo files (D321) with the same renderer; the outputs are committed, so the web image build has no API dependencies.
+- **Cover image (044, D393)**: in public mode the preview visual is the card's cover, else the link or event preview snapshot, else none. The generated OG card gets a right-hand 420 px panel (`hasVisual`); the delivery URL layers the visual as `l_<id>,c_fill,g_auto,w_420,h_630/fl_layer_apply,g_east`. If the render fails the visual alone is served. `visualPublicId` enters the content hash only when set, so existing hashes are unchanged. Private previews are unchanged: a card that isn't public never exposes its cover.
 
 ## Deviations from the Phase 3 plan
 

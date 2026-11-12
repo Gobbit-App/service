@@ -148,3 +148,11 @@ Create and edit every card type (text, link, table, calc; image is read-only unt
 - **The counter span stays mounted** (empty below 80 %), so `aria-describedby` never dangles.
 - **A refused save focuses once per response** (handled-response ref), closing the preview first.
 - **Sheet motion shipped with the sheet** (PR1); the restore-draft card is the only US7 restyle.
+
+
+## Cover image (044, D392)
+
+- **Field**: `fields/CoverField.tsx` (its own lazy chunk) on text, reminder, event, table and calc cards: pick, drop or paste an image, replace, remove. Uploads go through the usual signed upload and `POST /decks/{id}/media/assets`; the card stores `cover: { publicId }` and the server fills the dimensions.
+- **Draft**: `Draft.cover` is top-level (`undefined` in drafts saved before 044 = unchanged, `null` = removed). Switching to a link or image card warns in `SwitchTypeConfirm` and clears it.
+- **Drop and paste**: `use-drop-image.ts` handles drag and drop; `use-paste-image.ts` takes an optional capture-phase `scope`. On event cards the cover field claims pasted images only while focus is inside its scope, so `LinkPhoto` keeps every other paste.
+- **Follow-up**: reuse `use-drop-image` for the photo and link-photo fields.

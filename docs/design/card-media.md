@@ -91,3 +91,20 @@ Every stored image renders through `cards/CloudImage.tsx` (image cards today, li
 
 - **Alt is optional** (`imagePayloadSchema.alt: z.string().optional()`, D206). Renderers use `imageAlt` from `@gobbit/shared/image-alt`: a non-blank alt wins, otherwise `alt=""` when the title is the heading right above the image (every current renderer, including the public page), otherwise the title. Agent-extracted image cards keep their generated alt.
 - **A non-string `alt` is refused with 400** (request validation), not 422.
+
+## Card cover image (044, `specs/044-card-avatar`, D386–D395, ADR-077)
+
+An optional image that represents the content of a `text`, `reminder`, `event`, `table` or `calc` card. Not for `link` or `image` cards, which already are an image.
+
+- **Column**: `items.cover` jsonb, nullable, `{ publicId, width?, height? }` (migration `0025_card_cover`, down file included). CHECK `items_cover_chk` (supported types only, `publicId` a string of 1-255, numeric dimensions); partial index `items_cover_public_id_idx` on `cover->>'publicId'`. It is not in `payload`, so search text, the embedding hash, ingestion and import never see it. `@gobbit/shared/card-cover` (`coverItemTypes`, `supportsCover`) lists the types; a new type opts in with a migration and that constant.
+- **API**: `cover: { publicId }` on create, `{ publicId } | null` on PATCH (null removes, absent leaves it). Dimensions in the input are refused (strict); the service copies them from the deck's `assets` row, like image cards (D160). 422 on `cover` "This card type has no cover image"; 422 on `cover.publicId` "Unknown image" (unknown, or recorded for another deck).
+- **Decision event**: `item.cover`, outcome `refused`, reason `unsupported_type | unknown_image | other_deck` (warn level on `other_deck`).
+- **Sweep**: `media-sweep` counts `items.cover->>'publicId'` as a reference for items of every status, so a removed or replaced cover becomes an orphan and follows the 7-day grace (ADR-054).
+- **Rendering**: `cards/CoverBar.tsx` draws it through `CloudImage` (class `card__cover`) between header and body in `Card` and `ReviewCard`; Browse's current card and the full view load it eagerly. An event with a cover hides its own link preview image (`LinkCard` `showImage`), so a card never shows two bars.
+- **Public**: public deck pages and public search never carry the cover (`toPublicItem` is an allow-list). Its only public use is the share preview ([web-pwa](web-pwa.md#share-previews-d58d61)).
+
+**Runbook**: alert when `item.cover` `other_deck` refusals exceed 5/h (a client sending another deck's image id) or `unsupported_type` exceeds 20/h (a client out of step with the supported types).
+
+## Deviations from the 044 plan
+
+<!-- filled from implementation-notes at close-out -->

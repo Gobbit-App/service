@@ -91,8 +91,8 @@ dimensions are server-owned.
 
 - `assets.repo`'s `unreferenced` predicate gains `OR i.cover->>'publicId' = assets.public_id`.
   Like the existing branches it covers items of every status, soft-deleted ones included.
-- A partial expression index `items_cover image_public_id_idx ON items ((cover image->>'publicId')) WHERE
-  cover image IS NOT NULL` keeps the sweep's `NOT EXISTS` an index lookup. This mirrors
+- A partial expression index `items_cover_public_id_idx ON items ((cover->>'publicId')) WHERE
+  cover IS NOT NULL` keeps the sweep's `NOT EXISTS` an index lookup. This mirrors
   `items_link_preview_public_id_idx`.
 - Once `prune-deleted-items` hard-deletes a card after 30 days, or a member removes the cover image, the
   image becomes unreferenced. The normal 7-day grace period (ADR-054) then applies.

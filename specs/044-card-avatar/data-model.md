@@ -84,7 +84,7 @@ set  ──purge (prune-deleted-items, day 30)────────▶ row go
 ```
 
 Each user-made add, replace or remove writes one `item_events` `updated` row with `changes ∋
-'cover image'`, in the same transaction (ADR-057). A no-op PATCH (same `publicId`) writes nothing.
+'cover'`, in the same transaction (ADR-057). A no-op PATCH (same `publicId`) writes nothing.
 
 ## Web draft (`apps/web/src/editor/draft.ts`)
 

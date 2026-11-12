@@ -10,6 +10,12 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-12 — Card cover image (044, D386–D395, ADR-077)
+
+- Migration `0025_card_cover` adds the nullable `items.cover` column, the CHECK `items_cover_chk` and
+  the index `items_cover_public_id_idx`. Its down migration drops them (cover images are lost, their
+  assets are swept after the normal 7-day grace). No new variables; nothing to set.
+
 ### 2026-11-11 — Ask switched off behind `ASK_ENABLED` (D385)
 
 - New `ASK_ENABLED` (API, default `false`, in the Compose `x-api-env` block). Ask isn't ready for

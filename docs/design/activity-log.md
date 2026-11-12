@@ -37,6 +37,8 @@ Indexes: `(deck_id, created_at desc, id desc)` for the deck log, `(item_id, crea
 
 **PWA**: lazy route `/d/$slug/log` (`?item=<uuid>` for one card's history). Admins see an "Activity" link in the deck header (next to the Review pill) and a "History" button on the card page. The query is never persisted (`NOT_PERSISTED`) and refetches on focus.
 
+**Cover (044, D390)**: adding, replacing or removing a card's cover logs `updated` with `cover` in `changes` (`diffFields` compares `cover.publicId`; dimensions follow the id). The web labels it "image". No migration: `changes` is a free `text[]`.
+
 ## Deviations from the 020 plan
 
 - **`events` array, not `event?`**: repository writes take a list, because one PATCH can log `updated` and a status move. Lines of one write are 1 ms apart (`now() + i ms`) so their order survives the shared transaction timestamp.
