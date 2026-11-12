@@ -17,6 +17,7 @@ import {
   EMBEDDING_DIMS,
   type Entities,
 } from '@gobbit/shared';
+import type { CardCover } from '@gobbit/shared/card-cover';
 import { EVENT_LOCATION_MAX, EVENT_NOTIFY_TIMES_MAX } from '@gobbit/shared/event-constants';
 import { itemStatusEnum, itemTypeEnum, sourceKindEnum, timestamps, tstz } from './common';
 import { users } from './users';
@@ -52,6 +53,8 @@ export const items = pgTable(
     embeddedAt: tstz(),
     /** D291: reminders only — deadline minus show-before; set by trigger `items_reminder_sync`. */
     revealAt: tstz(),
+    /** D386: optional cover image (text, reminder, event, table, calc cards); null when none. */
+    cover: jsonb().$type<CardCover | null>(),
   },
   (t) => [
     unique('items_id_deck_uq').on(t.id, t.deckId),
@@ -71,6 +74,15 @@ export const items = pgTable(
       'items_event_payload_chk',
       sql`${t.type}::text <> 'event' OR coalesce(jsonb_typeof(${t.payload}->'allDay') = 'boolean' AND jsonb_typeof(${t.payload}->'start') = 'string' AND jsonb_typeof(${t.payload}->'timeZone') = 'string' AND (NOT ${t.payload} ? 'location' OR char_length(${t.payload}->>'location') <= ${sql.raw(String(EVENT_LOCATION_MAX))}) AND jsonb_typeof(${t.payload}#>'{notify,before}') = 'array' AND jsonb_array_length(${t.payload}#>'{notify,before}') <= ${sql.raw(String(EVENT_NOTIFY_TIMES_MAX))}, false)`,
     ),
+    // D387/D389: the cover shape backstop (text compare, like items_reveal_at_chk).
+    check(
+      'items_cover_chk',
+      sql`${t.cover} IS NULL OR (${t.type}::text IN ('text','reminder','event','table','calc') AND jsonb_typeof(${t.cover}) = 'object' AND coalesce(jsonb_typeof(${t.cover}->'publicId') = 'string', false) AND char_length(${t.cover}->>'publicId') BETWEEN 1 AND 255 AND (NOT ${t.cover} ? 'width' OR jsonb_typeof(${t.cover}->'width') = 'number') AND (NOT ${t.cover} ? 'height' OR jsonb_typeof(${t.cover}->'height') = 'number'))`,
+    ),
+    // D389: orphan-sweep and reference lookups by Cloudinary public id.
+    index('items_cover_public_id_idx')
+      .on(sql`((${t.cover}->>'publicId'))`)
+      .where(sql`${t.cover} IS NOT NULL`),
     index('items_search_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
     index('items_embedding_hnsw_idx')
       .using('hnsw', t.embedding.op('vector_cosine_ops'))

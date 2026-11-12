@@ -146,7 +146,8 @@ describe('migrations: 0022_events down (042, T008)', () => {
 
   it('refuses to roll back while an event card exists, then rolls back once it is gone', async () => {
     await runMigrations(ctx.pool);
-    // 0024 (body limit, D384) and 0023 (events ingestion, T093) only change CHECKs.
+    // 0025 (card cover), 0024 (body limit, D384) and 0023 (events ingestion, T093) are not under test here.
+    expect(await rollbackLatest(ctx.pool)).toBe('0025_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
     expect(await rollbackLatest(ctx.pool)).toBe('0023_events_ingest');
     expect(await getLatestMigrationTag(ctx.pool)).toBe('0022_events');
@@ -181,6 +182,7 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
 
   it('keeps longer bodies on rollback and checks new writes against 600 again', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0025_card_cover');
     const account = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
     const deck = await ctx.pool.query(
       `INSERT INTO decks (kind, slug, name, owner_account_id, is_public)
@@ -201,6 +203,35 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
     await expect(insertBody('a'.repeat(601))).rejects.toThrow(/items_body_len_chk/);
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0024_card_body_2000');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0025_card_cover');
+  });
+});
+
+describe('migrations: 0025_card_cover down (D386-D389)', () => {
+  const ctx = withTestDb({ template: false });
+
+  async function coverObjects(): Promise<{ column: number; check: number; index: number }> {
+    const column = await ctx.pool.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'items' AND column_name = 'cover'`,
+    );
+    const check = await ctx.pool.query(
+      `SELECT 1 FROM pg_constraint WHERE conname = 'items_cover_chk'`,
+    );
+    const index = await ctx.pool.query(
+      `SELECT 1 FROM pg_indexes WHERE indexname = 'items_cover_public_id_idx'`,
+    );
+    return { column: column.rowCount ?? 0, check: check.rowCount ?? 0, index: index.rowCount ?? 0 };
+  }
+
+  it('up -> down -> up removes then restores the cover column, check and index', async () => {
+    await runMigrations(ctx.pool);
+    expect(await coverObjects()).toEqual({ column: 1, check: 1, index: 1 });
+
+    expect(await rollbackLatest(ctx.pool)).toBe('0025_card_cover');
+    expect(await coverObjects()).toEqual({ column: 0, check: 0, index: 0 });
+
+    await runMigrations(ctx.pool);
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0025_card_cover');
+    expect(await coverObjects()).toEqual({ column: 1, check: 1, index: 1 });
   });
 });

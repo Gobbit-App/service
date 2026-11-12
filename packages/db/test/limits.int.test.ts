@@ -139,3 +139,91 @@ describe('DB limits (constraint checks)', () => {
     }
   });
 });
+
+describe('items_cover_chk (D387/D389)', () => {
+  const cctx = withTestDb();
+  let deckId: string;
+
+  const EVENT_PAYLOAD = {
+    allDay: true,
+    start: '2030-06-01',
+    timeZone: 'UTC',
+    notify: { before: [], audience: { mode: 'everyone', userIds: [] } },
+  };
+
+  // The items_reminder_reveal trigger derives reveal_at from these.
+  const REMINDER_PAYLOAD = {
+    deadline: '2030-06-01T00:00:00Z',
+    showBefore: { amount: 1, unit: 'days' },
+  };
+
+  beforeAll(async () => {
+    const account = await cctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
+    const deck = await cctx.pool.query(
+      `INSERT INTO decks (kind, slug, name, owner_account_id, is_public)
+       VALUES ('shared', 'cover-chk', 'D', $1, false) RETURNING id`,
+      [account.rows[0].id],
+    );
+    deckId = deck.rows[0].id;
+  });
+
+  /** Raw insert so the cover reaches the DB exactly as given (JSON text, any shape). */
+  function insertCard(type: string, coverJson: string | null) {
+    const payload = type === 'event' ? EVENT_PAYLOAD : type === 'reminder' ? REMINDER_PAYLOAD : {};
+    return cctx.pool.query(
+      `INSERT INTO items (deck_id, type, status, title, payload, cover)
+       VALUES ($1, $2, 'proposed', 't', $3::jsonb, $4::jsonb)`,
+      [deckId, type, JSON.stringify(payload), coverJson],
+    );
+  }
+
+  const COVERS = [
+    ['null', null],
+    ['publicId only', JSON.stringify({ publicId: 'gobbit/items/x/a' })],
+    [
+      'publicId with dimensions',
+      JSON.stringify({ publicId: 'gobbit/items/x/a', width: 640, height: 480 }),
+    ],
+  ] as const;
+
+  for (const type of ['text', 'reminder', 'event', 'table', 'calc']) {
+    for (const [label, cover] of COVERS) {
+      it(`accepts ${label} on ${type}`, async () => {
+        await expect(insertCard(type, cover)).resolves.toBeDefined();
+      });
+    }
+  }
+
+  for (const type of ['link', 'image']) {
+    it(`accepts a null cover on ${type}`, async () => {
+      await expect(insertCard(type, null)).resolves.toBeDefined();
+    });
+    it(`rejects a cover on ${type}`, async () => {
+      await expect(insertCard(type, JSON.stringify({ publicId: 'a' }))).rejects.toThrow(
+        /items_cover_chk/,
+      );
+    });
+  }
+
+  const BAD: Array<[string, string]> = [
+    ['a JSON string', JSON.stringify('gobbit/items/x/a')],
+    ['an array', JSON.stringify(['a'])],
+    ['a missing publicId', JSON.stringify({ width: 1 })],
+    ['a non-string publicId', JSON.stringify({ publicId: 5 })],
+    ['an empty publicId', JSON.stringify({ publicId: '' })],
+    ['a 256-char publicId', JSON.stringify({ publicId: 'a'.repeat(256) })],
+    ['a string width', JSON.stringify({ publicId: 'a', width: '640' })],
+  ];
+
+  for (const [label, cover] of BAD) {
+    it(`rejects ${label} on a text card`, async () => {
+      await expect(insertCard('text', cover)).rejects.toThrow(/items_cover_chk/);
+    });
+  }
+
+  it('accepts a 255-char publicId', async () => {
+    await expect(
+      insertCard('text', JSON.stringify({ publicId: 'a'.repeat(255) })),
+    ).resolves.toBeDefined();
+  });
+});

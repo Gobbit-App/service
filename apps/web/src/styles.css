@@ -1081,8 +1081,14 @@ h2 {
   border-radius: var(--radius);
 }
 
-/* D163: the stored snapshot keeps the 16:9 crop of the remote preview. */
-.link-card__image--stored .cloud-image__img {
+/* D163: the stored snapshot keeps the 16:9 crop of the remote preview. D391: the card cover bar shares it. */
+.card__cover {
+  max-width: 100%;
+  margin-bottom: var(--gap);
+}
+
+.link-card__image--stored .cloud-image__img,
+.card__cover .cloud-image__img {
   aspect-ratio: 16 / 9;
   max-height: none;
   object-fit: cover;

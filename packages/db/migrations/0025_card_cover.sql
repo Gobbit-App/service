@@ -1,0 +1,3 @@
+ALTER TABLE "items" ADD COLUMN "cover" jsonb;--> statement-breakpoint
+CREATE INDEX "items_cover_public_id_idx" ON "items" USING btree ((("cover"->>'publicId'))) WHERE "items"."cover" IS NOT NULL;--> statement-breakpoint
+ALTER TABLE "items" ADD CONSTRAINT "items_cover_chk" CHECK ("items"."cover" IS NULL OR ("items"."type"::text IN ('text','reminder','event','table','calc') AND jsonb_typeof("items"."cover") = 'object' AND coalesce(jsonb_typeof("items"."cover"->'publicId') = 'string', false) AND char_length("items"."cover"->>'publicId') BETWEEN 1 AND 255 AND (NOT "items"."cover" ? 'width' OR jsonb_typeof("items"."cover"->'width') = 'number') AND (NOT "items"."cover" ? 'height' OR jsonb_typeof("items"."cover"->'height') = 'number')));

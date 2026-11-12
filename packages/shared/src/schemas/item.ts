@@ -15,6 +15,7 @@ import { CARD_BODY_MAX, CARD_TITLE_MAX, PAYLOAD_MAX_BYTES } from '../limits';
 import { itemTypes, itemStatuses, itemListStatuses, linkFlagStatuses, sourceKinds } from '../enums';
 import { codePointLength } from '../utils/utf8-bytes';
 import { entitiesSchema } from '../ingest/entities';
+import type { CardCover } from '../card-cover';
 
 export const itemBodySchema = z
   .string()
@@ -31,6 +32,23 @@ export const itemTitleSchema = z
     message: `Title must be at most ${CARD_TITLE_MAX} characters`,
   });
 
+/** D388: a card's cover image as served; dimensions are server-owned (from the asset row). */
+export const cardCoverSchema = z.object({
+  publicId: z.string(),
+  width: z.number().int().optional(),
+  height: z.number().int().optional(),
+});
+
+/** D388: clients send only the public id; dimensions are refused. */
+export const coverInputSchema = z.object({ publicId: z.string().min(1).max(255) }).strict();
+
+// Compile-time check: the schema output and the CardCover type stay assignable both ways.
+type CoverTypeCheck = [
+  z.infer<typeof cardCoverSchema> extends CardCover ? true : never,
+  CardCover extends z.infer<typeof cardCoverSchema> ? true : never,
+];
+export const _coverTypeCheck: CoverTypeCheck = [true, true];
+
 // Common fields for item creation
 const commonCreateFields = {
   title: itemTitleSchema,
@@ -45,6 +63,8 @@ const commonCreateFields = {
   status: z.enum(itemStatuses).optional(),
   /** D97: extracted facts (phones, addresses, …), searchable. */
   entities: entitiesSchema.optional(),
+  /** D387: type support is checked in the service, not here. */
+  cover: coverInputSchema.optional(),
 };
 
 // Per-type create schemas
@@ -139,6 +159,7 @@ export const itemPatchSchema = z
     sourceUrl: httpUrlSchema.nullable().optional(),
     status: z.enum(itemStatuses).optional(),
     entities: entitiesSchema.optional(),
+    cover: coverInputSchema.nullable().optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, 'At least one field is required');
@@ -173,6 +194,8 @@ export const itemSchema = z.object({
   /** D132: when the card was deleted; present only in the `status=deleted` listing. */
   deletedAt: isoDateTimeSchema.optional(),
   linkHealth: linkHealthSchema.nullable(),
+  /** 044: cover image; null when none. */
+  cover: cardCoverSchema.nullable(),
   /** D291: present only on reminder cards. */
   reminder: reminderStateSchema.optional(),
   /** 042: present only on event cards, member paths only. */

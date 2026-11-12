@@ -39,6 +39,8 @@ export const itemEventFields = [
   'location',
   'link',
   'notify',
+  /** D390: the card's cover image. */
+  'cover',
 ] as const;
 export type ItemEventField = (typeof itemEventFields)[number];
 

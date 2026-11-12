@@ -67,6 +67,14 @@ export function toItemDto(
     categoryIds,
     isFavorite,
     linkHealth,
+    // 044: width/height are omitted when the stored cover lacks them
+    cover: r.cover
+      ? {
+          publicId: r.cover.publicId,
+          ...(r.cover.width != null ? { width: r.cover.width } : {}),
+          ...(r.cover.height != null ? { height: r.cover.height } : {}),
+        }
+      : null,
     // D132: only deleted rows (the deleted listing / undelete) carry deletedAt
     ...(r.deletedAt ? { deletedAt: r.deletedAt.toISOString() } : {}),
     // D291: server-owned reminder state, only on reminder cards

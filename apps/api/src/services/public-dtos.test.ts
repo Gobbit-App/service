@@ -26,6 +26,7 @@ const row: ItemRow = {
   embeddedHash: 'h',
   embeddedAt: at,
   revealAt: null,
+  cover: null,
 };
 
 describe('toPublicItem (D174)', () => {
@@ -54,6 +55,14 @@ describe('toPublicItem (D174)', () => {
     for (const key of ['deckId', 'status', 'createdBy', 'sourceKind', 'searchText', 'isFavorite']) {
       expect(dto).not.toHaveProperty(key);
     }
+  });
+
+  it('never carries a cover (D394)', () => {
+    const dto = toPublicItem(
+      { ...row, cover: { publicId: 'gobbit/items/d/a', width: 8, height: 6 } },
+      [],
+    );
+    expect(dto).not.toHaveProperty('cover');
   });
 
   it('lists only public categories', () => {

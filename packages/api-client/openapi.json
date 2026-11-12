@@ -8683,6 +8683,26 @@
                               "checkedAt"
                             ]
                           },
+                          "cover": {
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "publicId": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer"
+                              },
+                              "height": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "publicId"
+                            ]
+                          },
                           "reminder": {
                             "type": "object",
                             "properties": {
@@ -8834,7 +8854,8 @@
                           "updatedAt",
                           "categoryIds",
                           "isFavorite",
-                          "linkHealth"
+                          "linkHealth",
+                          "cover"
                         ]
                       }
                     },
@@ -9311,6 +9332,20 @@
                           }
                         },
                         "additionalProperties": false
+                      },
+                      "cover": {
+                        "type": "object",
+                        "properties": {
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          }
+                        },
+                        "required": [
+                          "publicId"
+                        ],
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -9480,6 +9515,20 @@
                           }
                         },
                         "additionalProperties": false
+                      },
+                      "cover": {
+                        "type": "object",
+                        "properties": {
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          }
+                        },
+                        "required": [
+                          "publicId"
+                        ],
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -9619,6 +9668,20 @@
                             "maxItems": 10
                           }
                         },
+                        "additionalProperties": false
+                      },
+                      "cover": {
+                        "type": "object",
+                        "properties": {
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          }
+                        },
+                        "required": [
+                          "publicId"
+                        ],
                         "additionalProperties": false
                       }
                     },
@@ -9762,6 +9825,20 @@
                             "maxItems": 10
                           }
                         },
+                        "additionalProperties": false
+                      },
+                      "cover": {
+                        "type": "object",
+                        "properties": {
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          }
+                        },
+                        "required": [
+                          "publicId"
+                        ],
                         "additionalProperties": false
                       }
                     },
@@ -9924,6 +10001,20 @@
                             "maxItems": 10
                           }
                         },
+                        "additionalProperties": false
+                      },
+                      "cover": {
+                        "type": "object",
+                        "properties": {
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          }
+                        },
+                        "required": [
+                          "publicId"
+                        ],
                         "additionalProperties": false
                       }
                     },
@@ -10107,6 +10198,20 @@
                             "maxItems": 10
                           }
                         },
+                        "additionalProperties": false
+                      },
+                      "cover": {
+                        "type": "object",
+                        "properties": {
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          }
+                        },
+                        "required": [
+                          "publicId"
+                        ],
                         "additionalProperties": false
                       }
                     },
@@ -10377,6 +10482,20 @@
                           }
                         },
                         "additionalProperties": false
+                      },
+                      "cover": {
+                        "type": "object",
+                        "properties": {
+                          "publicId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          }
+                        },
+                        "required": [
+                          "publicId"
+                        ],
+                        "additionalProperties": false
                       }
                     },
                     "required": [
@@ -10577,6 +10696,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -10728,7 +10867,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }
@@ -11420,6 +11560,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -11571,7 +11731,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }
@@ -11960,6 +12121,23 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "cover": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "publicId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    },
+                    "required": [
+                      "publicId"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "additionalProperties": false
@@ -12152,6 +12330,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -12303,7 +12501,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }
@@ -13261,6 +13460,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -13412,7 +13631,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }
@@ -13946,6 +14166,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -14097,7 +14337,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }
@@ -14653,6 +14894,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -14804,7 +15065,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }
@@ -15496,6 +15758,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -15647,7 +15929,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }
@@ -16260,6 +16543,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -16411,7 +16714,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }
@@ -18232,6 +18536,26 @@
                                   "checkedAt"
                                 ]
                               },
+                              "cover": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "publicId": {
+                                    "type": "string"
+                                  },
+                                  "width": {
+                                    "type": "integer"
+                                  },
+                                  "height": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "publicId"
+                                ]
+                              },
                               "reminder": {
                                 "type": "object",
                                 "properties": {
@@ -18383,7 +18707,8 @@
                               "updatedAt",
                               "categoryIds",
                               "isFavorite",
-                              "linkHealth"
+                              "linkHealth",
+                              "cover"
                             ]
                           },
                           "why": {
@@ -23887,6 +24212,26 @@
                                   "checkedAt"
                                 ]
                               },
+                              "cover": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "publicId": {
+                                    "type": "string"
+                                  },
+                                  "width": {
+                                    "type": "integer"
+                                  },
+                                  "height": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "publicId"
+                                ]
+                              },
                               "reminder": {
                                 "type": "object",
                                 "properties": {
@@ -24038,7 +24383,8 @@
                               "updatedAt",
                               "categoryIds",
                               "isFavorite",
-                              "linkHealth"
+                              "linkHealth",
+                              "cover"
                             ]
                           },
                           "job": {
@@ -24370,6 +24716,26 @@
                                   "checkedAt"
                                 ]
                               },
+                              "cover": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "publicId": {
+                                    "type": "string"
+                                  },
+                                  "width": {
+                                    "type": "integer"
+                                  },
+                                  "height": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "publicId"
+                                ]
+                              },
                               "reminder": {
                                 "type": "object",
                                 "properties": {
@@ -24521,7 +24887,8 @@
                               "updatedAt",
                               "categoryIds",
                               "isFavorite",
-                              "linkHealth"
+                              "linkHealth",
+                              "cover"
                             ]
                           }
                         },
@@ -25381,6 +25748,26 @@
                         "checkedAt"
                       ]
                     },
+                    "cover": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "publicId": {
+                          "type": "string"
+                        },
+                        "width": {
+                          "type": "integer"
+                        },
+                        "height": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "publicId"
+                      ]
+                    },
                     "reminder": {
                       "type": "object",
                       "properties": {
@@ -25532,7 +25919,8 @@
                     "updatedAt",
                     "categoryIds",
                     "isFavorite",
-                    "linkHealth"
+                    "linkHealth",
+                    "cover"
                   ]
                 }
               }

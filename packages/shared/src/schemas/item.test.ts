@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { itemCreateSchema, itemPatchSchema, itemListQuerySchema, itemSchema } from './item';
+import {
+  itemCreateSchema,
+  itemPatchSchema,
+  itemListQuerySchema,
+  itemSchema,
+  coverInputSchema,
+} from './item';
 import { TABLE_MAX_ROWS, TABLE_MAX_COLUMNS } from '../limits';
 import { codePointLength } from '../utils/utf8-bytes';
 
@@ -224,6 +230,7 @@ describe('itemSchema.deletedAt (D132)', () => {
     categoryIds: [],
     isFavorite: false,
     linkHealth: null,
+    cover: null,
   };
 
   it('is optional', () => {
@@ -255,5 +262,71 @@ describe('link checks (D164/D165)', () => {
     expect(shape.safeParse({ ...health, status: 'changed' }).success).toBe(true);
     expect(shape.safeParse({ ...health, status: 'ok' }).success).toBe(false);
     expect(shape.safeParse(undefined).success).toBe(false);
+  });
+});
+
+describe('card cover (D387/D388)', () => {
+  const createBase = { type: 'text', title: 'Hi' } as const;
+  const itemBase = {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    deckId: '550e8400-e29b-41d4-a716-446655440001',
+    type: 'text',
+    status: 'published',
+    title: 'T',
+    body: '',
+    payload: {},
+    entities: {},
+    sourceUrl: null,
+    sourceKind: 'manual',
+    verifiedAt: null,
+    createdBy: null,
+    createdAt: '2026-10-01T08:00:00.000Z',
+    updatedAt: '2026-10-01T08:00:00.000Z',
+    categoryIds: [],
+    isFavorite: false,
+    linkHealth: null,
+  };
+
+  it('create accepts { publicId } and omitted cover', () => {
+    expect(itemCreateSchema.parse({ ...createBase, cover: { publicId: 'a/b' } }).cover).toEqual({
+      publicId: 'a/b',
+    });
+    expect(itemCreateSchema.parse(createBase).cover).toBeUndefined();
+  });
+
+  it('create accepts cover on the link variant at schema level', () => {
+    const r = itemCreateSchema.safeParse({
+      type: 'link',
+      title: 'L',
+      payload: { url: 'https://example.com' },
+      cover: { publicId: 'x' },
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('patch accepts { publicId }, null and absent', () => {
+    expect(itemPatchSchema.parse({ cover: { publicId: 'x' } }).cover).toEqual({ publicId: 'x' });
+    expect(itemPatchSchema.parse({ cover: null }).cover).toBeNull();
+    expect(itemPatchSchema.parse({ title: 'x' }).cover).toBeUndefined();
+  });
+
+  it('input refuses dimensions, unknown keys, empty and 256-char publicId', () => {
+    expect(coverInputSchema.safeParse({ publicId: 'x', width: 10 }).success).toBe(false);
+    expect(coverInputSchema.safeParse({ publicId: 'x', height: 10 }).success).toBe(false);
+    expect(coverInputSchema.safeParse({ publicId: 'x', extra: 1 }).success).toBe(false);
+    expect(coverInputSchema.safeParse({ publicId: '' }).success).toBe(false);
+    expect(coverInputSchema.safeParse({ publicId: 'a'.repeat(256) }).success).toBe(false);
+    expect(coverInputSchema.safeParse({ publicId: 'a'.repeat(255) }).success).toBe(true);
+    expect(itemPatchSchema.safeParse({ cover: { publicId: 'x', width: 1 } }).success).toBe(false);
+    expect(
+      itemCreateSchema.safeParse({ ...createBase, cover: { publicId: 'x', width: 1 } }).success,
+    ).toBe(false);
+  });
+
+  it('itemSchema parses cover null and { publicId, width, height }', () => {
+    expect(itemSchema.parse({ ...itemBase, cover: null }).cover).toBeNull();
+    const cover = { publicId: 'p', width: 800, height: 600 };
+    expect(itemSchema.parse({ ...itemBase, cover }).cover).toEqual(cover);
+    expect(itemSchema.safeParse(itemBase).success).toBe(false);
   });
 });

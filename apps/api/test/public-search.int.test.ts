@@ -129,6 +129,18 @@ describe('public search (D182, D183)', () => {
       expect(hit.item).not.toHaveProperty('createdBy');
     });
 
+    it('omits the cover of a hit that has one (D394)', async () => {
+      await ctx.t.pool.query(`UPDATE items SET cover = $2::jsonb WHERE id = $1`, [
+        cards.open!.id,
+        JSON.stringify({ publicId: 'gobbit/items/x/cover', width: 640, height: 480 }),
+      ]);
+      const res = await searchJson('our-street', 'quokka');
+      expect(res.status).toBe(200);
+      const hit = ((await json(res)).data as PublicHit[]).find((h) => h.item.id === cards.open!.id);
+      expect(hit).toBeDefined();
+      expect(hit!.item).not.toHaveProperty('cover');
+    });
+
     it('never returns shared, private, proposed or archived cards', async () => {
       for (const word of ['xylophone', 'pomegranate', 'trampoline', 'saxophone']) {
         expect(await ids('our-street', word), word).toEqual([]);

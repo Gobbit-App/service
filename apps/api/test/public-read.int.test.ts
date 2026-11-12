@@ -187,6 +187,19 @@ describe('public read API (D174, D175)', () => {
       expect((await get('/public/our-street/items?cursor=garbage')).status).toBe(400);
     });
 
+    it('omits the cover of a card that has one (D394)', async () => {
+      await ctx.t.pool.query(`UPDATE items SET cover = $2::jsonb WHERE id = $1`, [
+        cards.public1!.id,
+        JSON.stringify({ publicId: 'gobbit/items/x/cover', width: 640, height: 480 }),
+      ]);
+      const body = await json(await get('/public/our-street/items?limit=50'));
+      const covered = body.data.find((i: { id: string }) => i.id === cards.public1!.id);
+      expect(covered).toBeDefined();
+      expect(covered).not.toHaveProperty('cover');
+      const single = await json(await get(`/public/our-street/items/${cards.public1!.id}`));
+      expect(single).not.toHaveProperty('cover');
+    });
+
     it('sets the public cache header', async () => {
       const res = await get('/public/our-street/items');
       expect(res.headers.get('Cache-Control')).toBe('public, max-age=60');

@@ -124,6 +124,7 @@ describe('mappers', () => {
         embeddedHash: null,
         embeddedAt: null,
         revealAt: null,
+        cover: null,
       };
 
       const dto = toItemDto(row, ['c1'], true);
@@ -138,6 +139,51 @@ describe('mappers', () => {
 
       const parsed = itemSchema.parse(dto);
       expect(parsed).toBeDefined();
+    });
+
+    describe('cover (044)', () => {
+      const base = (cover: ItemRow['cover']): ItemRow => ({
+        id: '423e4567-e89b-12d3-a456-426614174000',
+        deckId: '123e4567-e89b-12d3-a456-426614174000',
+        type: 'text',
+        status: 'published',
+        title: 'T',
+        body: 'B',
+        payload: {},
+        entities: {},
+        sourceUrl: null,
+        sourceKind: 'manual',
+        verifiedAt: null,
+        createdBy: null,
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+        deletedAt: null,
+        searchText: 't b',
+        embeddingModel: null,
+        embeddedHash: null,
+        embeddedAt: null,
+        revealAt: null,
+        cover,
+      });
+
+      it('returns cover null when unset', () => {
+        expect(toItemDto(base(null), [], false).cover).toBeNull();
+      });
+
+      it('passes a cover with dimensions through', () => {
+        const dto = toItemDto(
+          base({ publicId: 'gobbit/items/d/a', width: 800, height: 600 }),
+          [],
+          false,
+        );
+        expect(dto.cover).toEqual({ publicId: 'gobbit/items/d/a', width: 800, height: 600 });
+        expect(itemSchema.safeParse(dto).success).toBe(true);
+      });
+
+      it('omits width and height when the stored cover lacks them', () => {
+        const dto = toItemDto(base({ publicId: 'gobbit/items/d/a' }), [], false);
+        expect(Object.keys(dto.cover ?? {})).toEqual(['publicId']);
+      });
     });
   });
 });
