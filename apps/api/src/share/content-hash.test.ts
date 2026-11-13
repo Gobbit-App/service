@@ -139,3 +139,22 @@ describe('ogPublicId', () => {
     expect(publicId1).not.toBe(publicId2);
   });
 });
+
+describe('ogContentHash media kind (D397)', () => {
+  const content: OgContent = {
+    title: 'Memo',
+    excerpt: '',
+    categoryName: null,
+    deckName: 'Family',
+    imagePublicId: null,
+  };
+
+  it('changes with the media kind', () => {
+    expect(ogContentHash({ ...content, mediaKind: 'audio' })).not.toBe(ogContentHash(content));
+  });
+
+  it('keeps the pre-045 hash of every other card', () => {
+    // The data array is unchanged when no kind is given, so stored images stay valid.
+    expect(ogContentHash({ ...content, mediaKind: undefined })).toBe(ogContentHash(content));
+  });
+});

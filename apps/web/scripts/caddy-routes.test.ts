@@ -14,7 +14,7 @@ function handleBody(path: string): string | undefined {
 
 /** D54's CSP; the same-origin tracker needs no change (D232). */
 const CSP =
-  "default-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'";
+  "default-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com; media-src 'self' https://res.cloudinary.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'";
 
 describe('Caddyfile analytics proxy (D232, contract §1)', () => {
   const proxied = [`${STATS_BASE_PATH}/script.js`, `${STATS_BASE_PATH}/api/send`];

@@ -10,6 +10,8 @@ export type OgContent = {
   categoryName: string | null;
   deckName: string;
   imagePublicId: string | null;
+  /** D397: a media card's kind (audio cards get a generated image); absent for other cards. */
+  mediaKind?: string;
 };
 
 /** Compute SHA256 hash of OG content. */
@@ -24,6 +26,8 @@ export function ogContentHash(
     content.categoryName,
     content.deckName,
     content.imagePublicId,
+    // Only media cards add it, so every other card keeps its stored image's hash.
+    ...(content.mediaKind ? [content.mediaKind] : []),
   ];
   return createHash('sha256').update(JSON.stringify(data)).digest('hex');
 }

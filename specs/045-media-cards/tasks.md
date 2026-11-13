@@ -78,7 +78,7 @@ create answers 201 `type: "media"` and logs `item.type_alias`.
 
 **Independent test**: quickstart § 4.
 
-- [ ] T032 [US2] `apps/web/Caddyfile` CSP `media-src 'self' https://res.cloudinary.com`; `apps/web/src/sw.ts` caches only `destination === 'image'` Cloudinary requests (D394); [unit] `sw.test.ts`
+- [ ] T032 [US2] (CSP `media-src` done in PR 3, T045) `apps/web/src/sw.ts` caches only `destination === 'image'` Cloudinary requests (D394); [unit] `sw.test.ts`
 - [ ] T033 [US2] `apps/web/src/cards/cloudinary.ts` resource-type aware builders from `MEDIA_DELIVERY`; `CloudImage.tsx` `source` prop (no blur placeholder for stills/pages); [unit] `cloudinary.test.ts` (audio/video only eager transformations), `CloudImage.test.tsx`
 - [ ] T034 [US7] `cards/media/use-active-media.ts` (one live element, release buffer) + `load-media-module.ts` (module cache, intent/idle prefetch, skip on `saveData`, retry) (D400); [unit] tests
 - [ ] T035 [US7] `cards/media/GalleryCard.tsx` (cover + "N photos"; single photo = today's `ImageCard`) and lazy `PageViewer.tsx` (dialog, k of N, arrows, zoom, per-photo alt, focus restore, horizontal/vertical) (D398, D399); [unit] `GalleryCard.test.tsx`, `PageViewer.test.tsx`
@@ -95,10 +95,10 @@ create answers 201 `type: "media"` and logs `item.type_alias`.
 
 ## Phase 3: PR 3 — Public + share (US6)
 
-- [ ] T044 [US6] `apps/api/src/services/public-dtos.ts` media allow-list (no `fileName`/`bytes`/`format`); [unit] `public-dtos.test.ts`
-- [ ] T045 [US6] `apps/api/src/public/render-item.ts` no-JS per kind (every photo, video, audio, PDF page 1 + link); [unit] `render-item.test.ts`
-- [ ] T046 [US6] `apps/api/src/share/share.service.ts` preview image per kind, `content-hash.ts` includes `kind`; [unit] tests
-- [ ] T047 [P] [US6] [e2e:full] `e2e/tests/full/media.spec.ts` public pages per kind, share previews per kind
+- [x] T044 [US6] `apps/api/src/services/public-dtos.ts` media allow-list (no `fileName`/`bytes`/`format`); [unit] `public-dtos.test.ts`
+- [x] T045 [US6] `apps/api/src/public/render-item.ts` no-JS per kind (every photo, video, audio, PDF page 1 + link); [unit] `render-item.test.ts`
+- [x] T046 [US6] `apps/api/src/share/share.service.ts` preview image per kind, `content-hash.ts` includes `kind`; [unit] tests
+- [x] T047 [P] [US6] [e2e:full] `e2e/tests/full/media.spec.ts` public pages per kind, share previews per kind
 
 ---
 
