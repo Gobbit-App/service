@@ -146,7 +146,9 @@ describe('migrations: 0022_events down (042, T008)', () => {
 
   it('refuses to roll back while an event card exists, then rolls back once it is gone', async () => {
     await runMigrations(ctx.pool);
-    // 0024 (body limit, D384) and 0023 (events ingestion, T093) only change CHECKs.
+    // 0025 (media cards) has nothing to refuse on an empty database; 0024 (body limit, D384) and
+    // 0023 (events ingestion, T093) only change CHECKs.
+    expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
     expect(await rollbackLatest(ctx.pool)).toBe('0023_events_ingest');
     expect(await getLatestMigrationTag(ctx.pool)).toBe('0022_events');
@@ -195,12 +197,100 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
     await insertBody('a'.repeat(2000));
     await expect(insertBody('a'.repeat(2001))).rejects.toThrow(/items_body_len_chk/);
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
     const kept = await ctx.pool.query(`SELECT char_length(body) AS n FROM items`);
     expect(kept.rows).toEqual([{ n: 2000 }]);
     await expect(insertBody('a'.repeat(601))).rejects.toThrow(/items_body_len_chk/);
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0024_card_body_2000');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0025_media_cards');
+  });
+});
+
+describe('migrations: 0025_media_cards (045, D386, D398)', () => {
+  const ctx = withTestDb({ template: false });
+
+  async function deckId(slug: string): Promise<string> {
+    const account = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
+    const deck = await ctx.pool.query(
+      `INSERT INTO decks (kind, slug, name, owner_account_id, is_public)
+       VALUES ('shared', $2, 'D', $1, false) RETURNING id`,
+      [account.rows[0].id, slug],
+    );
+    return deck.rows[0].id as string;
+  }
+
+  it('reshapes photo cards into one-photo galleries without moving updated_at, and back', async () => {
+    await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
+    const deck = await deckId('media-up');
+    const stamp = '2025-01-02T03:04:05.678Z';
+    const inserted = await ctx.pool.query(
+      `INSERT INTO items (deck_id, type, status, title, payload, created_at, updated_at)
+       VALUES ($1, 'image', 'published', 'Bread', $2::jsonb, $3, $3) RETURNING id`,
+      [deck, JSON.stringify({ publicId: 'p1', alt: 'A loaf', width: 30, height: 40 }), stamp],
+    );
+    await ctx.pool.query(
+      `INSERT INTO items (deck_id, type, status, title, payload) VALUES ($1, 'image', 'published', 'Bare', $2::jsonb)`,
+      [deck, JSON.stringify({ publicId: 'p2' })],
+    );
+    const id = inserted.rows[0].id as string;
+
+    await runMigrations(ctx.pool);
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0025_media_cards');
+    const up = await ctx.pool.query(
+      `SELECT type::text, payload, updated_at, search_text FROM items WHERE id = $1`,
+      [id],
+    );
+    expect(up.rows[0].type).toBe('media');
+    expect(up.rows[0].payload).toEqual({
+      kind: 'image',
+      images: [{ publicId: 'p1', alt: 'A loaf', width: 30, height: 40 }],
+    });
+    expect((up.rows[0].updated_at as Date).toISOString()).toBe(stamp);
+    // FR-029: every photo's description is searchable, the file id never is.
+    expect(up.rows[0].search_text).toContain('loaf');
+    expect(up.rows[0].search_text).not.toContain('p1');
+    const bare = await ctx.pool.query(`SELECT payload FROM items WHERE title = 'Bare'`);
+    expect(bare.rows[0].payload).toEqual({ kind: 'image', images: [{ publicId: 'p2' }] });
+
+    expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
+    const down = await ctx.pool.query(
+      `SELECT type::text, payload, updated_at FROM items WHERE id = $1`,
+      [id],
+    );
+    expect(down.rows[0].type).toBe('image');
+    expect(down.rows[0].payload).toEqual({ publicId: 'p1', alt: 'A loaf', width: 30, height: 40 });
+    expect((down.rows[0].updated_at as Date).toISOString()).toBe(stamp);
+    await runMigrations(ctx.pool);
+  });
+
+  it('refuses to roll back while a PDF card, a gallery or a video asset exists', async () => {
+    await runMigrations(ctx.pool);
+    const deck = await deckId('media-down');
+    const pdf = await ctx.pool.query(
+      `INSERT INTO items (deck_id, type, status, title, payload) VALUES ($1, 'media', 'proposed', 'Doc', $2::jsonb) RETURNING id`,
+      [deck, JSON.stringify({ kind: 'pdf', publicId: 'f1', pages: 3 })],
+    );
+    await expect(rollbackLatest(ctx.pool)).rejects.toThrow(/PDF, audio or video cards exist/);
+    await ctx.pool.query(`DELETE FROM items WHERE id = $1`, [pdf.rows[0].id]);
+
+    const gallery = await ctx.pool.query(
+      `INSERT INTO items (deck_id, type, status, title, payload) VALUES ($1, 'media', 'proposed', 'Play', $2::jsonb) RETURNING id`,
+      [deck, JSON.stringify({ kind: 'image', images: [{ publicId: 'a' }, { publicId: 'b' }] })],
+    );
+    await expect(rollbackLatest(ctx.pool)).rejects.toThrow(/several photos/);
+    await ctx.pool.query(`DELETE FROM items WHERE id = $1`, [gallery.rows[0].id]);
+
+    await ctx.pool.query(
+      `INSERT INTO assets (deck_id, public_id, source, kind, resource_type) VALUES ($1, 'v1', 'editor', 'video', 'video')`,
+      [deck],
+    );
+    await expect(rollbackLatest(ctx.pool)).rejects.toThrow(/files are recorded/);
+    await ctx.pool.query(`DELETE FROM assets WHERE public_id = 'v1'`);
+
+    expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
+    await runMigrations(ctx.pool);
   });
 });

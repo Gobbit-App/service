@@ -291,12 +291,12 @@ export const sampleCards: SampleCard[] = [
     status: 'published',
     lang: 'en',
     card: {
-      type: 'image',
+      type: 'media',
       title: "Children's Vaccination Record",
       body: 'Important record of all vaccinations administered. Keep this safe and bring to medical appointments and school',
       payload: {
-        publicId: 'samples/deck/vaccination-card',
-        alt: 'Vaccination card',
+        kind: 'image',
+        images: [{ publicId: 'samples/deck/vaccination-card', alt: 'Vaccination card' }],
       },
       status: 'published',
     },

@@ -86,10 +86,13 @@ export const searchCards: SearchCard[] = [
     key: 'vaccinations',
     lang: 'en',
     card: {
-      type: 'image',
+      type: 'media',
       title: 'Vaccination record',
       body: 'Photo of the vaccination booklet; bring it to the clinic.',
-      payload: { publicId: 'search-fixtures/vaccinations', alt: 'Vaccination booklet' },
+      payload: {
+        kind: 'image',
+        images: [{ publicId: 'search-fixtures/vaccinations', alt: 'Vaccination booklet' }],
+      },
     },
   },
   {
