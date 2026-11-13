@@ -428,7 +428,9 @@ test('a PDF card is uploaded and read page by page @smoke', async ({ page, webDe
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Choose file').setInputFiles(pdfFile);
-  await expect(page.getByText('PDF · 2 pages')).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Media' }).getByText('PDF · 2 pages'),
+  ).toBeVisible();
   const created = page.waitForResponse(
     (res) => /\/api\/decks\/[^/]+\/items$/.test(res.url()) && res.request().method() === 'POST',
   );
