@@ -67,7 +67,7 @@ export function makeShare(overrides: Partial<ShareSummary> = {}): ShareSummary {
     channel: 'paste',
     createdAt: STAMP,
     state: 'processing',
-    preview: { title: null, host: 'a.example', photoCount: 0 },
+    preview: { title: null, host: 'a.example', photoCount: 0, fileKind: null, unusedFiles: [] },
     failureCode: null,
     canRetry: false,
     autoPublish: null,

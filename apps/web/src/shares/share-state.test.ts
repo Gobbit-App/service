@@ -64,17 +64,17 @@ describe('share state copy (D196)', () => {
       type: 'text' as const,
       event: null,
     };
-    const preview = { title: 'Page', host: 'a.example', photoCount: 0 };
+    const preview = { title: 'Page', host: 'a.example', photoCount: 0, fileKind: null, unusedFiles: [] };
     expect(shareTitle(makeShare({ item, preview }))).toBe('Card');
     expect(shareTitle(makeShare({ preview }))).toBe('Page');
     expect(shareTitle(makeShare({ preview: { ...preview, title: null } }))).toBe('a.example');
-    expect(shareTitle(makeShare({ preview: { title: null, host: null, photoCount: 1 } }))).toBe(
+    expect(shareTitle(makeShare({ preview: { title: null, host: null, photoCount: 1, fileKind: null, unusedFiles: [] } }))).toBe(
       '1 photo',
     );
-    expect(shareTitle(makeShare({ preview: { title: null, host: null, photoCount: 3 } }))).toBe(
+    expect(shareTitle(makeShare({ preview: { title: null, host: null, photoCount: 3, fileKind: null, unusedFiles: [] } }))).toBe(
       '3 photos',
     );
-    expect(shareTitle(makeShare({ preview: { title: null, host: null, photoCount: 0 } }))).toBe(
+    expect(shareTitle(makeShare({ preview: { title: null, host: null, photoCount: 0, fileKind: null, unusedFiles: [] } }))).toBe(
       'Shared text',
     );
   });

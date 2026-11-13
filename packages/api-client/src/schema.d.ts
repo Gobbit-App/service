@@ -6121,7 +6121,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389) */
+        /**
+         * Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389)
+         * @description Optional JSON body `{ "kind": "image" | "pdf" | "audio" | "video" }` (D389). Without a body (clients before 045) the upload is an image.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -6131,17 +6134,7 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /**
-                         * @default image
-                         * @enum {string}
-                         */
-                        kind?: "image" | "pdf" | "audio" | "video";
-                    };
-                };
-            };
+            requestBody?: never;
             responses: {
                 /** @description Signed upload parameters; the API secret is never included */
                 200: {
@@ -6891,7 +6884,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Share something into a deck (D93). JSON, or multipart with up to 3 `files`. Also accepts an `ing_` ingest token as the bearer. The job runs in the background. */
+        /** @description Share something into a deck (D93). JSON, or multipart with up to 3 `files`: photos (a gallery), or one PDF, audio or video file (D395); files that can't be used are listed on the share. Also accepts an `ing_` ingest token as the bearer. The job runs in the background. */
         post: {
             parameters: {
                 query?: never;
@@ -7115,6 +7108,24 @@ export interface paths {
                                     bytes: number;
                                     mime: string;
                                 }[];
+                                file?: {
+                                    publicId: string;
+                                    /** @enum {string} */
+                                    kind: "pdf" | "audio" | "video";
+                                    bytes: number;
+                                    mime: string;
+                                    width?: number;
+                                    height?: number;
+                                    durationMs?: number;
+                                    pages?: number;
+                                    fileName?: string;
+                                };
+                                unused?: {
+                                    mime: string;
+                                    bytes: number;
+                                    /** @enum {string} */
+                                    reason: "unsupported" | "too_large" | "extra_file";
+                                }[];
                                 timeZone?: string;
                             } | null;
                             normalized: {
@@ -7178,7 +7189,7 @@ export interface paths {
                                 itemId: string | null;
                                 similarity: number | null;
                                 /** @enum {string} */
-                                via: "source_url" | "vector" | "title" | "none" | "explicit";
+                                via: "source_url" | "vector" | "title" | "none" | "explicit" | "file";
                             } | null;
                             /** Format: uuid */
                             resultItemId: string | null;
@@ -7663,7 +7674,7 @@ export interface paths {
                                         itemId: string | null;
                                         similarity: number | null;
                                         /** @enum {string} */
-                                        via: "source_url" | "vector" | "title" | "none" | "explicit";
+                                        via: "source_url" | "vector" | "title" | "none" | "explicit" | "file";
                                     } | null;
                                     newCategory: string | null;
                                     sourcePreview: string | null;
@@ -8498,6 +8509,9 @@ export interface paths {
                                     title: string | null;
                                     host: string | null;
                                     photoCount: number;
+                                    /** @enum {string|null} */
+                                    fileKind: "pdf" | "audio" | "video" | null;
+                                    unusedFiles: ("unsupported" | "too_large" | "extra_file")[];
                                 };
                                 /** @enum {string|null} */
                                 failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
@@ -8639,6 +8653,9 @@ export interface paths {
                                 title: string | null;
                                 host: string | null;
                                 photoCount: number;
+                                /** @enum {string|null} */
+                                fileKind: "pdf" | "audio" | "video" | null;
+                                unusedFiles: ("unsupported" | "too_large" | "extra_file")[];
                             };
                             /** @enum {string|null} */
                             failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
@@ -8759,6 +8776,9 @@ export interface paths {
                                 title: string | null;
                                 host: string | null;
                                 photoCount: number;
+                                /** @enum {string|null} */
+                                fileKind: "pdf" | "audio" | "video" | null;
+                                unusedFiles: ("unsupported" | "too_large" | "extra_file")[];
                             };
                             /** @enum {string|null} */
                             failureCode: "content_expired" | "sharer_left" | "fetch_failed" | "unreadable_answer" | "assistant_unavailable" | "image_unavailable" | "unknown" | null;
