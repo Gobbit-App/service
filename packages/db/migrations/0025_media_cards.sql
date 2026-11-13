@@ -49,6 +49,13 @@ LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
   )))
 $$;
 --> statement-breakpoint
+-- The 0008 overload without entities compared the enum to the literal 'image', which no longer
+-- exists. It now delegates (an empty entities object adds nothing to the text).
+CREATE OR REPLACE FUNCTION public.item_search_text(t item_type, title text, body text, payload jsonb) RETURNS text
+LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
+  SELECT public.item_search_text(t, title, body, payload, '{}'::jsonb)
+$$;
+--> statement-breakpoint
 DROP INDEX IF EXISTS "items_image_public_id_idx";--> statement-breakpoint
 -- D386/D398: every existing photo card becomes a one-photo gallery. updated_at must not move (list
 -- order, share content hash, "recently changed"), so the trigger is off for the backfill only.
