@@ -124,6 +124,39 @@ describe('share service — public mode (D59–D61)', () => {
     expect(ogImage(html)).toContain('c_fill,w_1200,h_630,f_jpg/family/soup');
   });
 
+  it("uses a gallery's cover, a video's still and a PDF's first page (D397)", async () => {
+    const cases: [Record<string, unknown>, string][] = [
+      [
+        { kind: 'image', images: [{ publicId: 'f/cover' }, { publicId: 'f/two' }] },
+        'image/upload/c_fill,w_1200,h_630,f_jpg/f/cover',
+      ],
+      [
+        { kind: 'video', publicId: 'f/clip' },
+        'video/upload/so_auto,c_fill,w_1200,h_630/f/clip.jpg',
+      ],
+      [
+        { kind: 'pdf', publicId: 'f/doc', pages: 2 },
+        'image/upload/pg_1,c_fill,g_north,w_1200,h_630,f_jpg/f/doc',
+      ],
+    ];
+    for (const [payload, expected] of cases) {
+      const { service, render } = setup(makeRecord({ type: 'media', payload }));
+      expect(ogImage(await service.sharePage(ITEM_ID))).toContain(expected);
+      expect(render).not.toHaveBeenCalled();
+    }
+  });
+
+  it('renders the generated card picture for an audio card', async () => {
+    const { service, render } = setup(
+      makeRecord({
+        type: 'media',
+        payload: { kind: 'audio', publicId: 'f/memo', durationMs: 4100 },
+      }),
+    );
+    await service.sharePage(ITEM_ID);
+    expect(render).toHaveBeenCalledTimes(1);
+  });
+
   it('falls back to the private image and logs when rendering fails', async () => {
     const { service, saved, log } = setup(makeRecord(), {
       renderer: async () => async () => {

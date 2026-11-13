@@ -73,3 +73,29 @@ of `docs/design/card-media.md` at close-out.
 
 - Integration tests (`*.int.test.ts`, Docker) weren't run in the implementation environment;
   CI runs them on the PR.
+
+## PR 3 — Public pages and share previews
+
+Built on PR 1 (independent of PR 2, as the plan allows), so the stack is 1 → 3 → 4 → 2.
+
+### Decisions
+
+- **CSP moved here**: `media-src 'self' https://res.cloudinary.com` is in the Caddyfile of PR 3,
+  not PR 2: public pages (`/p/*`, behind the same header) are the first to render `<video>` and
+  `<audio>`. PR 2 only adds the service-worker rule (D394).
+- **URL builders**: the share service and the OG store gained `mediaUrl(rendition, publicId)`
+  reading `MEDIA_DELIVERY`; `renderItem` takes it as an optional third argument (absent or null →
+  "File unavailable"), so the image-only `ImageUrlFor` callers didn't change.
+- **Public video/audio**: one `<source>` each with a download link inside the element for
+  browsers without the codec; `aria-label` is the description, else the card title (the title
+  is the page heading, but a player has no other name). Poster is the 1080 px still, one of the
+  signed eager widths.
+- **PDF page 1** on the public page is `pg_1,…,w_1080` (a viewer width, not eager; images are
+  generated on the fly), linked to the original with `rel="nofollow ugc noopener"`.
+- **Content hash**: `mediaKind` is appended to the hashed data only for media cards, so every
+  other card's stored preview keeps its hash (no mass regeneration on deploy).
+- **Share preview of a gallery** uses the cover as before (`c_fill,w_1200,h_630,f_jpg`); video
+  and PDF previews are cropped renditions; audio falls through to the generated card image.
+- **`@full` spec** `e2e/tests/full/media-public.spec.ts` records files through the real confirm
+  with a locally signed answer (`recordMediaAsset`), so it runs only where the e2e run knows
+  `CLOUDINARY_API_SECRET` (as the smoke photo journey's confirm does); otherwise it skips.

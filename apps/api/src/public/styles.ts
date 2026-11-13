@@ -24,7 +24,9 @@ nav.cats a{display:inline-block;border:1px solid var(--line);border-radius:999px
 ul.cards{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
 article.card,ul.cards li{background:var(--card);border:1px solid var(--line);border-radius:.75rem;padding:.9rem 1rem}
 ul.cards li a.title{color:var(--fg);text-decoration:none;font-weight:600}
-.body img,figure img{max-width:100%;height:auto;border-radius:.5rem}
+.body img,figure img,figure video{max-width:100%;height:auto;border-radius:.5rem}
+figure audio{width:100%}
+figure.media figcaption{margin-top:.25rem}
 figure{margin:0}
 .table{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.95rem}
