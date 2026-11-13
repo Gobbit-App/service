@@ -46,6 +46,22 @@ LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
   )))
 $$;
 
+-- The 0008 overload without entities, as it was.
+CREATE OR REPLACE FUNCTION public.item_search_text(t item_type, title text, body text, payload jsonb) RETURNS text
+LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
+  SELECT public.search_normalize(concat_ws(' ', title, body, (
+    SELECT string_agg(v #>> '{}', ' ')
+    FROM jsonb_path_query(
+      CASE t
+        WHEN 'image' THEN payload - 'publicId'
+        WHEN 'calc' THEN payload - 'expression'
+        ELSE payload
+      END,
+      'strict $.** ? (@.type() == "string")'
+    ) AS v
+  )))
+$$;
+
 ALTER TABLE "items" DISABLE TRIGGER "items_set_updated_at";
 UPDATE "items" SET "payload" = "payload" #> '{images,0}'
 WHERE "type" = 'image' AND "payload" ? 'images';

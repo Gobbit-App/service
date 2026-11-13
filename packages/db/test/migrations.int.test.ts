@@ -228,11 +228,11 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
     const stamp = '2025-01-02T03:04:05.678Z';
     const inserted = await ctx.pool.query(
       `INSERT INTO items (deck_id, type, status, title, payload, created_at, updated_at)
-       VALUES ($1, 'image', 'published', 'Bread', $2::jsonb, $3, $3) RETURNING id`,
+       VALUES ($1, 'image', 'proposed', 'Bread', $2::jsonb, $3, $3) RETURNING id`,
       [deck, JSON.stringify({ publicId: 'p1', alt: 'A loaf', width: 30, height: 40 }), stamp],
     );
     await ctx.pool.query(
-      `INSERT INTO items (deck_id, type, status, title, payload) VALUES ($1, 'image', 'published', 'Bare', $2::jsonb)`,
+      `INSERT INTO items (deck_id, type, status, title, payload) VALUES ($1, 'image', 'proposed', 'Bare', $2::jsonb)`,
       [deck, JSON.stringify({ publicId: 'p2' })],
     );
     const id = inserted.rows[0].id as string;

@@ -12,6 +12,7 @@ import {
 import type { AppEnv } from '../types';
 import type { Services } from '../services';
 import { getUser } from '../lib/current-user';
+import { badRequest } from '../errors/http-errors';
 import { AUTH_SECURITY, problems } from '../lib/openapi';
 
 const deckParams = z.object({ id: z.string().min(1) });
@@ -24,14 +25,12 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, services: Services
     tags: ['media'],
     summary:
       'Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389)',
-    request: {
-      params: deckParams,
-      // Old clients send no body: an image upload.
-      body: {
-        content: { 'application/json': { schema: mediaSignRequestSchema } },
-        required: false,
-      },
-    },
+    description:
+      'Optional JSON body `{ "kind": "image" | "pdf" | "audio" | "video" }` (D389). Without a body ' +
+      '(clients before 045) the upload is an image.',
+    // The optional body is read in the handler: a declared body is validated even when absent
+    // (no content type → 400), which would break clients that send none.
+    request: { params: deckParams },
     responses: {
       200: {
         content: { 'application/json': { schema: mediaSignResponseSchema } },
@@ -52,11 +51,22 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, services: Services
   app.openapi(signRoute, async (c) => {
     const user = getUser(c);
     const { id } = c.req.valid('param');
-    const body = (c.req.valid('json') ?? {}) as { kind?: MediaKind };
+    const text = await c.req.text();
+    let raw: unknown = {};
+    if (text.trim() !== '') {
+      try {
+        raw = JSON.parse(text);
+      } catch {
+        throw badRequest('Body must be JSON');
+      }
+    }
+    const parsed = mediaSignRequestSchema.safeParse(raw);
+    if (!parsed.success) throw badRequest('Unknown media kind');
+    const kind: MediaKind = parsed.data.kind;
     const signed = await services.media.signUpload({
       user,
       deckId: id,
-      kind: body.kind ?? 'image',
+      kind,
       requestId: c.get('requestId'),
     });
     c.header('Cache-Control', 'no-store');
