@@ -50,10 +50,15 @@ function stripReplyPrefixes(subject: string): string {
   }
 }
 
-/** True when a content type (params allowed) is one of the ingestible image MIME types. */
-function isImageMime(contentType: string): boolean {
+/** D395: true when a content type (params allowed) is a photo, PDF, audio or video file; the bytes decide later. */
+function isShareableMime(contentType: string): boolean {
   const mime = (contentType.split(';')[0] ?? '').trim().toLowerCase();
-  return (INGEST_IMAGE_MIMES as readonly string[]).includes(mime);
+  return (
+    (INGEST_IMAGE_MIMES as readonly string[]).includes(mime) ||
+    mime === 'application/pdf' ||
+    mime.startsWith('audio/') ||
+    mime.startsWith('video/')
+  );
 }
 
 /**
@@ -129,7 +134,7 @@ export function stripHtml(html: string): string {
 
 /**
  * Maps an inbound email to ingest fields: title from subject, text from body, first URL,
- * and image attachment ids.
+ * and the ids of the attachments a share can use (photos, PDF, audio, video; D395).
  */
 export function mapInboundEmail(email: InboundEmail): MappedEmail {
   const subject = stripReplyPrefixes(email.subject ?? '');
@@ -141,7 +146,7 @@ export function mapInboundEmail(email: InboundEmail): MappedEmail {
   const url = firstUrl(body) ?? firstUrl(subject);
 
   const attachmentIds = email.attachments
-    .filter((a) => isImageMime(a.contentType))
+    .filter((a) => isShareableMime(a.contentType))
     .slice(0, INGEST_MAX_IMAGES)
     .map((a) => a.id);
 

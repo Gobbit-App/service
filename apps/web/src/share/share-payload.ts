@@ -21,10 +21,22 @@ function field(form: FormData, name: string): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-/** Images the API accepts, at most `INGEST_MAX_IMAGES`; anything else is dropped. */
-export function acceptedImages(files: readonly unknown[]): File[] {
+/**
+ * D395: photos, PDFs, audio and video the API may use (it checks the bytes and decides), at most
+ * `INGEST_MAX_IMAGES` files, in share order; anything else is dropped here.
+ */
+export function isShareableFile(type: string): boolean {
+  return (
+    IMAGE_MIMES.has(type) ||
+    type === 'application/pdf' ||
+    type.startsWith('audio/') ||
+    type.startsWith('video/')
+  );
+}
+
+export function acceptedFiles(files: readonly unknown[]): File[] {
   return files
-    .filter((f): f is File => f instanceof File && IMAGE_MIMES.has(f.type) && f.size > 0)
+    .filter((f): f is File => f instanceof File && isShareableFile(f.type) && f.size > 0)
     .slice(0, INGEST_MAX_IMAGES);
 }
 
@@ -59,7 +71,7 @@ export function payloadFromFormData(form: FormData, id: string, now: number): Sh
     text: field(form, 'text'),
     url: field(form, 'url'),
   });
-  return { id, createdAt: now, ...shared, files: acceptedImages(form.getAll('files')) };
+  return { id, createdAt: now, ...shared, files: acceptedFiles(form.getAll('files')) };
 }
 
 export function isExpired(payload: Pick<SharedPayload, 'createdAt'>, now: number): boolean {

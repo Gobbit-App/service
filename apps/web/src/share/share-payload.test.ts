@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { INGEST_MAX_IMAGES } from '@gobbit/shared/ingest-constants';
 import {
   SHARE_TTL_MS,
-  acceptedImages,
+  acceptedFiles,
   buildIngestForm,
   hasContent,
   isExpired,
@@ -13,30 +13,31 @@ import {
 
 const img = (name = 'a.jpg', type = 'image/jpeg') => new File(['x'], name, { type });
 
-describe('acceptedImages (D98)', () => {
+describe('acceptedFiles (D98)', () => {
   it('keeps jpeg, png, webp and heic files', () => {
     expect(
-      acceptedImages([img('a.jpg'), img('b.png', 'image/png'), img('c.webp', 'image/webp')]).map(
+      acceptedFiles([img('a.jpg'), img('b.png', 'image/png'), img('c.webp', 'image/webp')]).map(
         (f) => f.name,
       ),
     ).toEqual(['a.jpg', 'b.png', 'c.webp']);
-    expect(acceptedImages([img('d.heic', 'image/heic')])).toHaveLength(1);
+    expect(acceptedFiles([img('d.heic', 'image/heic')])).toHaveLength(1);
   });
 
-  it('drops gif, pdf, non-File values and empty files', () => {
+  it('keeps PDF, audio and video; drops gif, zip, non-File values and empty files (D395)', () => {
     const files: unknown[] = [
       img('g.gif', 'image/gif'),
       img('p.pdf', 'application/pdf'),
+      img('z.zip', 'application/zip'),
       'not-a-file',
       new File([], 'e.jpg', { type: 'image/jpeg' }),
       img('ok.png', 'image/png'),
     ];
-    expect(acceptedImages(files).map((f) => f.name)).toEqual(['ok.png']);
+    expect(acceptedFiles(files).map((f) => f.name)).toEqual(['p.pdf', 'ok.png']);
   });
 
   it('caps at INGEST_MAX_IMAGES, keeping the first ones in order', () => {
     const files = [1, 2, 3, 4, 5].map((n) => img(`${n}.jpg`));
-    const kept = acceptedImages(files);
+    const kept = acceptedFiles(files);
     expect(kept).toHaveLength(INGEST_MAX_IMAGES);
     expect(kept.map((f) => f.name)).toEqual(
       ['1.jpg', '2.jpg', '3.jpg'].slice(0, INGEST_MAX_IMAGES),

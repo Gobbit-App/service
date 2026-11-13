@@ -41,7 +41,11 @@ function dropEmpty(form: Record<string, unknown>): Record<string, unknown> {
 async function toIngestFiles(files: File | File[] | undefined): Promise<IngestFile[]> {
   const list = files === undefined ? [] : Array.isArray(files) ? files : [files];
   return Promise.all(
-    list.map(async (f) => ({ bytes: new Uint8Array(await f.arrayBuffer()), mime: f.type })),
+    list.map(async (f) => ({
+      bytes: new Uint8Array(await f.arrayBuffer()),
+      mime: f.type,
+      ...(f.name ? { name: f.name } : {}),
+    })),
   );
 }
 
@@ -72,7 +76,8 @@ export function registerIngestRoutes(app: OpenAPIHono<AppEnv>, services: Service
     tags: ['ingest'],
     security: AUTH_SECURITY,
     description:
-      'Share something into a deck (D93). JSON, or multipart with up to 3 `files`. ' +
+      'Share something into a deck (D93). JSON, or multipart with up to 3 `files`: photos (a gallery), ' +
+      "or one PDF, audio or video file (D395); files that can't be used are listed on the share. " +
       'Also accepts an `ing_` ingest token as the bearer. The job runs in the background.',
     request: {
       body: {

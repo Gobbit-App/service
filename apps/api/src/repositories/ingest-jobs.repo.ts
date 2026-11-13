@@ -214,7 +214,8 @@ export function createIngestJobsRepo(db: DbExecutor) {
           and(
             old,
             or(eq(ingestJobs.status, 'failed'), eq(ingestJobs.status, 'discarded')),
-            sql`jsonb_array_length(${ingestJobs.raw} -> 'images') > 0`,
+            // 045 (D395): a PDF, audio or video share holds its upload under `file`.
+            sql`(jsonb_array_length(${ingestJobs.raw} -> 'images') > 0 OR ${ingestJobs.raw} ? 'file')`,
           ),
         );
       const rows = await db

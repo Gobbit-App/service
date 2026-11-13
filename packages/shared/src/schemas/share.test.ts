@@ -7,7 +7,7 @@ const validShare = {
   channel: 'pwa',
   createdAt: '2026-10-25T10:00:00.000Z',
   state: 'failed',
-  preview: { title: null, host: null, photoCount: 1 },
+  preview: { title: null, host: null, photoCount: 1, fileKind: null, unusedFiles: [] },
   failureCode: 'image_unavailable',
   canRetry: true,
   autoPublish: null,
