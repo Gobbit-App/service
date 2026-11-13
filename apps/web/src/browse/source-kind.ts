@@ -20,7 +20,7 @@ export function sourceKindLabel(kind: SourceKind): string {
 const TYPE_LABELS: Record<Item['type'], string> = {
   text: 'Text',
   link: 'Link',
-  media: 'Image',
+  media: 'Media',
   table: 'Table',
   calc: 'Calculator',
   reminder: 'Reminder',
