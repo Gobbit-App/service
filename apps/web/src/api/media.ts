@@ -2,14 +2,20 @@ import type {
   LinkPreview,
   MediaAsset,
   MediaAssetConfirmRequest,
+  MediaKind,
   MediaSignResponse,
   MediaUploadFailureRequest,
 } from '@gobbit/shared';
 import { api, unwrap } from './client';
 
 /** D133: a signed permission for one direct upload to Cloudinary (never cached). */
-export function signMediaUpload(deckId: string): Promise<MediaSignResponse> {
-  return unwrap(api.POST('/decks/{id}/media/sign', { params: { path: { id: deckId } } }));
+export function signMediaUpload(
+  deckId: string,
+  kind: MediaKind = 'image',
+): Promise<MediaSignResponse> {
+  return unwrap(
+    api.POST('/decks/{id}/media/sign', { params: { path: { id: deckId } }, body: { kind } }),
+  );
 }
 
 /** D157: records a finished direct upload from Cloudinary's signed answer (idempotent). */

@@ -85,6 +85,6 @@ describe('TypeTiles (D301)', () => {
     const image = screen.getByRole('radio', { name: 'Image' });
     expect(image).not.toHaveAttribute('aria-disabled');
     fireEvent.click(image);
-    expect(onPick).toHaveBeenCalledWith('image');
+    expect(onPick).toHaveBeenCalledWith('media');
   });
 });

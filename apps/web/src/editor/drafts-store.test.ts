@@ -56,4 +56,24 @@ describe('drafts-store', () => {
     await clearDrafts(kv);
     expect(kv.map.size).toBe(0);
   });
+
+  it('restores a pre-045 photo draft under the media key as a media card (FR-021)', async () => {
+    const kv = memoryDraftsKv();
+    const old = {
+      ...emptyDraft('text', 'c1'),
+      type: 'image',
+      title: 'Bread',
+      payload: { publicId: 'p', alt: 'Loaf' },
+    };
+    kv.map.set('new:d1:image', { v: 1, draft: old, baseUpdatedAt: null, savedAt: 'x' });
+
+    const read = await readDraft(newDraftKey('d1', 'media'), kv);
+    expect(read?.draft).toMatchObject({
+      type: 'media',
+      title: 'Bread',
+      payload: { kind: 'image', images: [{ publicId: 'p', alt: 'Loaf' }] },
+    });
+    expect(kv.map.has('new:d1:image')).toBe(false);
+    expect(kv.map.has('new:d1:media')).toBe(true);
+  });
 });

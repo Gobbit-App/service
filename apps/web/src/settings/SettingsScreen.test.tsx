@@ -35,6 +35,7 @@ function config(
     search: { semantic: false, ask: false },
     ingest: { enabled: true, emailDomain: null, shortcutUrl: null, ...ingest },
     push: null,
+    media: { maxBytes: { image: 8388608, pdf: 10485760, audio: 15728640, video: 26214400 } },
   };
 }
 

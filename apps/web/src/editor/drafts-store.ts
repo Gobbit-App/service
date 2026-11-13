@@ -1,6 +1,6 @@
 import { clear, createStore, del, get, set, type UseStore } from 'idb-keyval';
 import type { ItemType } from '@gobbit/shared';
-import type { Draft } from './draft';
+import { normalizeDraft, type Draft } from './draft';
 
 /** D145: what one stored draft holds. An unknown `v` is discarded on read. */
 export type StoredDraft = {
@@ -54,13 +54,23 @@ export async function readDraft(
   key: string,
   kv: DraftsKv = idbDraftsKv(),
 ): Promise<StoredDraft | null> {
-  const value = await kv.get(key);
+  let value = await kv.get(key);
+  // D387/FR-021: a new photo card's draft saved before 045 sits under its `image` key; it moves
+  // to the `media` key so it restores (and is cleared) like any other.
+  const legacyKey = key.endsWith(':media') ? key.replace(/:media$/, ':image') : null;
+  if (value === undefined && legacyKey) {
+    value = await kv.get(legacyKey);
+    if (value !== undefined) {
+      await kv.del(legacyKey);
+      if (isStoredDraft(value)) await kv.set(key, value);
+    }
+  }
   if (value === undefined) return null;
   if (!isStoredDraft(value)) {
     await kv.del(key);
     return null;
   }
-  return value;
+  return { ...value, draft: normalizeDraft(value.draft) };
 }
 
 export async function writeDraft(

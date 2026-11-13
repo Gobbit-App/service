@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { makeItem } from '../test/fixtures';
 import {
   draftFromItem,
+  normalizeDraft,
   emptyDraft,
   isCreatableType,
   isDirty,
@@ -75,8 +76,8 @@ describe('withType', () => {
 
 describe('isCreatableType', () => {
   it('accepts the five card types only', () => {
-    expect(['text', 'link', 'image', 'table', 'calc'].every(isCreatableType)).toBe(true);
-    expect(isCreatableType('video')).toBe(false);
+    expect(['text', 'link', 'media', 'table', 'calc'].every(isCreatableType)).toBe(true);
+    expect(isCreatableType('image')).toBe(false);
     expect(isCreatableType(undefined)).toBe(false);
   });
 });
@@ -309,12 +310,41 @@ describe('toPatch', () => {
     expect(toPatch(item, draft)).toEqual({ payload: { url: 'https://example.org' } });
   });
 
-  it('omits a blank image description and keeps a set one (D206)', () => {
-    const item = makeItem({ type: 'image', payload: { publicId: 'p', alt: 'Old' } });
-    const cleared = { ...draftFromItem(item), payload: { publicId: 'p', alt: ' ' } } as Draft;
-    expect(toPatch(item, cleared)).toEqual({ payload: { publicId: 'p' } });
-    const kept = { ...draftFromItem(item), payload: { publicId: 'p', alt: 'New' } } as Draft;
-    expect(toPatch(item, kept)).toEqual({ payload: { publicId: 'p', alt: 'New' } });
+  it('omits a blank photo description and keeps a set one (D206)', () => {
+    const gallery = (alt: string) => ({ kind: 'image', images: [{ publicId: 'p', alt }] });
+    const item = makeItem({ type: 'media', payload: gallery('Old') });
+    const cleared = { ...draftFromItem(item), payload: gallery(' ') } as Draft;
+    expect(toPatch(item, cleared)).toEqual({
+      payload: { kind: 'image', images: [{ publicId: 'p' }] },
+    });
+    const kept = { ...draftFromItem(item), payload: gallery('New') } as Draft;
+    expect(toPatch(item, kept)).toEqual({ payload: gallery('New') });
+  });
+
+  it('reads an item cached by a pre-045 build as a media card (D387)', () => {
+    const item = makeItem({ type: 'image' as never, payload: { publicId: 'p', alt: 'Old' } });
+    const draft = draftFromItem(item);
+    expect(draft.type).toBe('media');
+    expect(draft.payload).toEqual({ kind: 'image', images: [{ publicId: 'p', alt: 'Old' }] });
+  });
+
+  it('restores a pre-045 photo draft as a media card (FR-021)', () => {
+    const old = {
+      type: 'image',
+      title: 'Bread',
+      body: '',
+      payload: { publicId: 'p', alt: 'Loaf', width: 3, height: 4 },
+      categoryIds: [],
+      sourceUrl: '',
+      entities: null,
+    } as unknown as Draft;
+    expect(normalizeDraft(old)).toMatchObject({
+      type: 'media',
+      title: 'Bread',
+      payload: { kind: 'image', images: [{ publicId: 'p', alt: 'Loaf', width: 3, height: 4 }] },
+    });
+    const current = { ...old, type: 'text', payload: {} } as unknown as Draft;
+    expect(normalizeDraft(current)).toBe(current);
   });
 
   it('sends the whole entities after a removal, compacted', () => {

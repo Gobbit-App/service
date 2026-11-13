@@ -24,7 +24,7 @@ async function paste(target: Locator, { text }: { text?: string } = {}) {
 
 test('a pasted image becomes the photo of an image card @full', async ({ page, webDeck }) => {
   const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   await expect(page.getByText('Or paste a photo.')).toBeVisible();
 
   await paste(page.locator('body'));
@@ -37,7 +37,7 @@ test('text pasted into a field with a picture on the clipboard is not an upload 
   webDeck,
 }) => {
   const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   const title = page.getByLabel('Title', { exact: true });
 
   await paste(title, { text: 'From Word' });
