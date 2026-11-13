@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { makeItem } from '../test/fixtures';
 import { CardBody, INVALID_CARD_COPY } from './CardBody';
+
+vi.mock('./use-cloud-name', () => ({ useCloudName: () => 'demo' }));
 
 describe('CardBody', () => {
   // The first import of the calc chunk transforms mathjs (and instruments it under coverage),
@@ -87,5 +89,25 @@ describe('CardBody', () => {
     render(<CardBody item={item} cloudName={null} />);
     expect(screen.getByText('Bring a hat')).toBeInTheDocument();
     expect(screen.getByText('example.org')).toBeInTheDocument();
+  });
+
+  it('falls back to the event link image when the cover fails to load (D396)', () => {
+    const item = makeItem({
+      type: 'event',
+      body: '',
+      cover: { publicId: 'gobbit/items/d/cover', width: 1200, height: 300 },
+      payload: {
+        allDay: false,
+        start: '2026-12-03T18:00:00Z',
+        timeZone: 'UTC',
+        url: 'https://example.org/fair',
+        preview: { title: 'Fair', image: 'https://example.org/og.png' },
+      },
+    } as never);
+    const { container } = render(<CardBody item={item} cloudName="demo" />);
+    expect(container.querySelector('.link-card__image')).toBeNull();
+    fireEvent.error(container.querySelector('.card__cover img.cloud-image__img')!);
+    expect(container.querySelector('.card__cover')).toBeNull();
+    expect(container.querySelector('.link-card__image')).not.toBeNull();
   });
 });

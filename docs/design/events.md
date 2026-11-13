@@ -80,6 +80,8 @@ share describes one dated event.
   zone with the default notify times; the link part reuses `LinkEditorFields`.
 - The card (`cards/EventCard.tsx`; styles, calendar export and mute in `event-cards/`) shows the status line, location, link
   preview and "Add to calendar" in its bar; Mute/Unmute sits in "More actions".
+- Visual (044, D396): the card's cover, else the link preview image, else a generic event image (`calendar` icon on the
+  accent fill, `.event-card__placeholder`), so every event shows one image.
 - `/notifications` renders Coming up between Waiting on you and Upcoming.
 
 ## Ingestion (D370, D374–D378)

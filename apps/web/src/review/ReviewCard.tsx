@@ -3,7 +3,6 @@ import type { Category, Deck, ItemPatch, PublishRequest, ReviewEntry } from '@go
 import { problemMessages } from '../api/problem-messages';
 import { editHref } from '../cards/can-edit-item';
 import { CardBar } from '../cards/CardBar';
-import { CoverBar } from '../cards/CoverBar';
 import { CardBody } from '../cards/CardBody';
 import { itemCategories } from '../cards/Card';
 import { useCloudName } from '../cards/use-cloud-name';
@@ -108,7 +107,6 @@ export function ReviewCard({
           <h2 className="card__title" id={titleId} dir="auto">
             {item.title}
           </h2>
-          <CoverBar cover={item.cover} />
           <CardBody item={item} cloudName={cloudName} />
           <EntityChips entities={item.entities} />
           {chips.length > 0 && (

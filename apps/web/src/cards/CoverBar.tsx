@@ -9,9 +9,12 @@ import { useCloudName } from './use-cloud-name';
 export function CoverBar({
   cover,
   image,
+  onError,
 }: {
   cover: CardCover | null | undefined;
   image?: ImageLoading;
+  /** Called when the image fails to load. */
+  onError?: () => void;
 }): ReactElement | null {
   const cloudName = useCloudName();
   const [failedId, setFailedId] = useState<string | null>(null);
@@ -27,7 +30,10 @@ export function CoverBar({
       width={cover.width}
       height={cover.height}
       priority={image?.priority}
-      onError={() => setFailedId(cover.publicId)}
+      onError={() => {
+        setFailedId(cover.publicId);
+        onError?.();
+      }}
     />
   );
 }

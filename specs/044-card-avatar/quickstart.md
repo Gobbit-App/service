@@ -50,7 +50,9 @@ pnpm test:e2e -- --grep @full cover     # replace/remove, drop, paste on an even
    the image will be removed. Switch to Table instead, and the cover image stays.
 8. **Browse**: open Browse on the deck and swipe between a card with a cover image and one without. The
    card doesn't jump. Open the full view, and the cover image is below the title.
-   - An event with a link and a cover shows the cover bar, and its link box has no image.
+   - An event with a link and a cover shows the cover bar, and its link box has no image. Block the
+     cover image: the link image comes back. An event with no link and no cover shows the generic
+     event image (D396).
 9. **Review**: share a page to the deck. In the review queue, edit the proposal, add a cover image,
    publish. The proposal had none before (FR-011).
 10. **Share** (D393):

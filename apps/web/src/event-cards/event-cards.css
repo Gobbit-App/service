@@ -2,6 +2,23 @@
 
 /* Reader */
 
+/* 044 (D396): generic image when neither a cover nor a link image shows. */
+.event-card__placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: var(--gap);
+  border-radius: var(--radius);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.event-card__placeholder .icon {
+  width: 48px;
+  height: 48px;
+}
+
 .event-status {
   margin: 0 0 4px;
   font-size: 0.9rem;

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { LinkCard } from './LinkCard';
 import type { LinkPayload } from './payload-guards';
@@ -147,6 +147,28 @@ describe('LinkCard', () => {
       expect(remote).toBeInTheDocument();
       fireEvent.error(remote);
       expect(container.querySelector('img')).toBeNull();
+    });
+
+    it('reports onImageFailed on remote to none and stored to none, not stored to remote', () => {
+      const onImageFailed = vi.fn();
+      const { container } = render(
+        <LinkCard payload={stored} cloudName="demo" onImageFailed={onImageFailed} />,
+      );
+      fireEvent.error(container.querySelector('img.cloud-image__img')!);
+      expect(onImageFailed).not.toHaveBeenCalled();
+      fireEvent.error(container.querySelector('img[src="https://example.com/og.jpg"]')!);
+      expect(onImageFailed).toHaveBeenCalledTimes(1);
+
+      const onStoredOnly = vi.fn();
+      const storedOnly: LinkPayload = {
+        url: 'https://example.com',
+        preview: { publicId: 'gobbit/links/d1/abc', width: 10, height: 10 },
+      };
+      const second = render(
+        <LinkCard payload={storedOnly} cloudName="demo" onImageFailed={onStoredOnly} />,
+      );
+      fireEvent.error(second.container.querySelector('img.cloud-image__img')!);
+      expect(onStoredOnly).toHaveBeenCalledTimes(1);
     });
 
     it('uses the page image without a cloud name', () => {

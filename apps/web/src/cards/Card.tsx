@@ -5,7 +5,6 @@ import { chipHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { CardBar, ReaderActions } from './CardBar';
 import { CardBody } from './CardBody';
-import { CoverBar } from './CoverBar';
 import { CardSourceLink } from './CardSourceLink';
 import type { ImageLoading } from './ImageCard';
 import { Highlighted } from '../search/Highlighted';
@@ -76,7 +75,6 @@ export function Card({
           )}
         </h2>
       </header>
-      {item.cover && <CoverBar cover={item.cover} image={image} />}
       <CardBody item={item} cloudName={cloudName} image={image} />
       {source && <CardSourceLink item={item} />}
       {meta && (chips.length > 0 || age) && (

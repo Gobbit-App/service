@@ -73,6 +73,18 @@ Decisions the plan did not make, and deviations.
   - An unused `logItemCoverRefused` export.
 - The second pass converged.
 
+## Event visual fallbacks (T064–T067, clarification 2026-11-13, D396)
+
+- Added after converge at the owner's request:
+  - an event whose cover fails to load shows its link preview image;
+  - an event with no image at all shows a generic event image.
+- **`CoverBar` moved into `CardBody`.** The cover's failure state has to reach `EventCard`, so
+  `Card` and `ReviewCard` no longer render it themselves. The markup order is unchanged.
+- **The generic image is the `calendar` icon on the accent fill, not an image file.** It is
+  theme-aware, needs no network or Cloudinary, and is decorative.
+- **SC-004 is amended for events.** Share previews and public pages are unchanged. The SC-004
+  inline snapshot in `Card.test.tsx` changed only by the placeholder `div` on the imageless event.
+
 ## Process
 
 - Some unit tests (T022, T023, T049–T052, T019) were written alongside the code rather than run

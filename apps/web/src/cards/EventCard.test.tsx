@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EventCard } from './EventCard';
 import type { EventCardPayload } from './payload-guards';
@@ -100,5 +100,63 @@ describe('EventCard (042)', () => {
     });
     const ended = screen.getByText('Ended · Thu 3 Dec');
     expect(ended).toHaveClass('event-status--muted');
+  });
+
+  describe('generic event image (044, D396)', () => {
+    const placeholder = (c: HTMLElement) => c.querySelector('.event-card__placeholder');
+    const withImage = {
+      ...timed,
+      link: { url: 'https://example.org/fair', preview: { image: 'https://example.org/og.png' } },
+    };
+
+    it('shows the placeholder first when there is no link', () => {
+      const { container } = render(<EventCard payload={timed} viewerTimeZone="UTC" />);
+      expect(placeholder(container)).not.toBeNull();
+      expect(container.querySelector('.event-card')!.firstElementChild).toBe(
+        placeholder(container),
+      );
+    });
+
+    it('shows the placeholder for a link without a preview image', () => {
+      const payload = { ...timed, link: { url: 'https://example.org/fair' } };
+      const { container } = render(<EventCard payload={payload} viewerTimeZone="UTC" />);
+      expect(placeholder(container)).not.toBeNull();
+    });
+
+    it('shows no placeholder when the link has a preview image', () => {
+      const { container } = render(<EventCard payload={withImage} viewerTimeZone="UTC" />);
+      expect(placeholder(container)).toBeNull();
+    });
+
+    it('shows no placeholder when showImage is false', () => {
+      const { container } = render(
+        <EventCard payload={timed} viewerTimeZone="UTC" showImage={false} />,
+      );
+      expect(placeholder(container)).toBeNull();
+    });
+
+    it('shows the placeholder once the link image errors through to none', () => {
+      const { container } = render(<EventCard payload={withImage} viewerTimeZone="UTC" />);
+      fireEvent.error(container.querySelector('img.link-card__image')!);
+      expect(placeholder(container)).not.toBeNull();
+    });
+
+    it('starts over when the preview image changes', () => {
+      const { container, rerender } = render(
+        <EventCard payload={withImage} viewerTimeZone="UTC" />,
+      );
+      fireEvent.error(container.querySelector('img.link-card__image')!);
+      const next = {
+        ...timed,
+        link: { url: 'https://example.org/fair', preview: { image: 'https://example.org/b.png' } },
+      };
+      rerender(<EventCard payload={next} viewerTimeZone="UTC" />);
+      expect(placeholder(container)).toBeNull();
+    });
+
+    it('hides the placeholder from assistive tech', () => {
+      const { container } = render(<EventCard payload={timed} viewerTimeZone="UTC" />);
+      expect(placeholder(container)).toHaveAttribute('aria-hidden', 'true');
+    });
   });
 });

@@ -10,7 +10,8 @@ import { ButtonLink } from '../ui/buttons/ButtonLink';
 /** Which preview image is shown: the stored copy, the page's own image, or none (D163). */
 type ImageSource = 'stored' | 'remote' | 'none';
 
-function initialSource(payload: LinkPayload, cloudName: string | null): ImageSource {
+/** The image a link starts with: stored needs a cloud name, else the page's own image (D163). */
+export function initialSource(payload: LinkPayload, cloudName: string | null): ImageSource {
   if (payload.preview?.publicId && cloudName) return 'stored';
   return payload.preview?.image ? 'remote' : 'none';
 }
@@ -21,18 +22,24 @@ export function LinkCard({
   cloudName = null,
   health = null,
   showImage = true,
+  onImageFailed,
 }: {
   payload: LinkPayload;
   cloudName?: string | null;
   health?: LinkHealth | null;
   /** 044: false when the card's own cover supersedes the preview image. */
   showImage?: boolean;
+  /** 044: called when the image ends at none after an error (stored to remote is not a failure). */
+  onImageFailed?: () => void;
 }): ReactElement {
   // A new photo or page image (e.g. in the editor preview) starts over from the stored copy.
   const imageKey = `${payload.preview?.publicId ?? ''}|${payload.preview?.image ?? ''}`;
   const [failed, setFailed] = useState<{ key: string; source: ImageSource } | null>(null);
   const source = failed?.key === imageKey ? failed.source : initialSource(payload, cloudName);
-  const setSource = (next: ImageSource) => setFailed({ key: imageKey, source: next });
+  const setSource = (next: ImageSource) => {
+    setFailed({ key: imageKey, source: next });
+    if (next === 'none') onImageFailed?.();
+  };
 
   const parsed = URL.canParse(payload.url) ? new URL(payload.url) : null;
   const isWebUrl = parsed?.protocol === 'https:' || parsed?.protocol === 'http:';

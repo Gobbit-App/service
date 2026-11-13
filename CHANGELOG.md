@@ -10,7 +10,7 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
-### 2026-11-12 — Card cover image (044, D386–D395, ADR-077)
+### 2026-11-12 — Card cover image (044, D386–D396, ADR-077)
 
 - Migration `0025_card_cover` adds the nullable `items.cover` column, the CHECK `items_cover_chk` and
   the index `items_cover_public_id_idx`. Its down migration drops them (cover images are lost, their

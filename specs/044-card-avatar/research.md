@@ -281,3 +281,33 @@ the title, like a link's preview):
 
 **Rationale**: this is the existing behaviour of `CloudImage`. There's no service-worker image
 caching, consistent with ADR-036.
+
+## D396 — Event visuals: cover, then link image, then a generic event image
+
+**Decision**:
+
+- Precedence on an event card:
+  1. its cover bar;
+  2. if the cover is unset or fails to load, the link's preview image (in the link box, as before
+     044);
+  3. if neither shows (no link, no preview image, or it fails to load), a generic event image at
+     the top of the event body, where a cover bar would sit.
+- **Cover failure is tracked in `CardBody`.** `CardBody` renders `CoverBar` (moved out of `Card`
+  and `ReviewCard`) and passes "cover shown" to `EventCard`. `CoverBar` reports `onError`.
+- **Link image failure.** `LinkCard` reports when its image ends at `none` after a failure, and
+  `EventCard` keeps that state per preview.
+- **The generic image** is the `calendar` icon from `ui/icons`, centred on `--color-accent-soft`,
+  in the same 16:9 box, and decorative (`aria-hidden`).
+  - It ships no image file and adapts to the theme.
+  - It needs no Cloudinary or network, so it also shows offline.
+- **App only.** Share previews and public pages are unchanged: a public event without a visual
+  keeps the generated card with no image panel.
+
+**Rationale**: clarification 2026-11-13. Every event gets a visual, and a member-set image still
+wins (FR-010). SC-004 is amended for events: an event without any image now shows the generic one.
+
+**Alternatives considered**:
+
+- A bundled illustration file: an extra asset to keep with the theme, and one more request.
+- A placeholder inside the link box: an event without a link would then show it in a different
+  place than one with a link.

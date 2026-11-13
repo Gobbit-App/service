@@ -60,7 +60,7 @@ A member swiping through cards in Browse (and its full view) sees the current ca
 - A member offline sees cover images they have already loaded; others render without the bar.
 - A cover image must belong to the card's deck: an image recorded for another deck is refused.
 - A card whose only image is its cover image keeps that image from being cleaned up as unused; removing it makes the image eligible for clean-up after the usual grace period.
-- An event with a link: a cover image supersedes the link's preview image, so the card shows the cover bar below the title and the link box without its image. Without a cover image the event looks as today.
+- An event with a link: a cover image supersedes the link's preview image, so the card shows the cover bar below the title and the link box without its image. Without a cover image, or when it fails to load, the link box shows its preview image as today. An event with no image at all (no cover image and no link preview image, or both fail to load) shows a generic event image where the cover bar would be (D396).
 - On an event card, which already has a photo field for its link, a paste goes to the cover image when that field has focus; otherwise it goes where it goes today. Drag and drop always goes to the field it's dropped on.
 - Proposals (ingested cards awaiting review) can be given a cover image by a publisher while reviewing, like any other edit.
 - Sharing a card that isn't public: the share preview stays generic, with no image, title or other content, as today. Sharing a public card with a cover image: the preview shows the card's content together with the image. A member-set cover image wins over any image Gobbit picked up automatically, such as an event's link preview image. Removing it changes later previews only; already-unfurled messages keep what chat apps cached.
@@ -85,13 +85,18 @@ A member swiping through cards in Browse (and its full view) sees the current ca
 - Q: Where and in what shape does it show? → A: As a bar below the title and above the body, like a link card's preview image, not a circle beside the title.
 - Q: How can it be added? → A: Any image input the editor supports: pick a file, drag and drop, paste.
 
+### Session 2026-11-13
+
+- Q: An event with a link whose cover image fails to load: what does it show? → A: The link's preview image, as it would without a cover image.
+- Q: An event with no image at all (no cover image, no link preview image): what does it show? → A: A generic, built-in event image, so every event has a visual (D396).
+
 ## Requirements
 
 - **FR-001** Text, reminder, event, table and calc cards have an optional cover image; link and photo cards don't. Any later card type opts in explicitly (checklists, `042-checklists`, are expected to).
 - **FR-002** Members who can edit a card can add, replace and remove its cover image from the card editor, by picking a file, dragging and dropping an image or pasting one; nobody else can.
 - **FR-003** Cover image uploads use the existing photo upload path, limits and per-deck rules: the image is recorded for the card's deck, and a card may only reference an image recorded for its own deck.
 - **FR-004** A cover image counts as a use of its image, so unused-image clean-up never removes an image that a live, archived or recently deleted card still shows.
-- **FR-005** Wherever a card renders in a list (deck lists, search results, review queue) or in Browse (cards and full view), its cover image shows as a bar below the title and above the body, in the shape of a link card's preview image; without one the card renders as today.
+- **FR-005** Wherever a card renders in a list (deck lists, search results, review queue) or in Browse (cards and full view), its cover image shows as a bar below the title and above the body, in the shape of a link card's preview image; without one the card renders as today. An event card always has a visual: its cover image, else its link's preview image, else a generic event image (in the app only; share previews and public pages are unchanged).
 - **FR-006** Cover images fill the bar without distortion, load at the size they're shown, reserve their space before loading and are left out when they fail to load.
 - **FR-007** The cover image is decorative (no alt text to write); the card title remains the accessible name.
 - **FR-008** Adding, replacing or removing a cover image is a card edit: it appears in the deck's activity log like other field changes and follows the same permission and validation errors.
@@ -108,7 +113,7 @@ A member swiping through cards in Browse (and its full view) sees the current ca
 - **SC-001** A member can add a cover image to an existing card in under 30 seconds on a phone (open editor, pick or paste an image, save).
 - **SC-002** In a list of 20 cards at 360 px wide, mixing cards with and without cover images, the page shows no layout shift as images load.
 - **SC-003** No image used only as a cover image is removed by clean-up while its card exists (live, archived or within the 30-day undelete window).
-- **SC-004** Cards without a cover image render identically to before the feature (no visual regression in lists or Browse).
+- **SC-004** Cards without a cover image render identically to before the feature (no visual regression in lists or Browse), except events with no image at all, which show the generic event image (D396).
 - **SC-005** Sharing a public card with a cover image produces a preview showing that image with the card's content in chat apps that unfurl links; sharing a non-public card produces the same generic preview as before the feature.
 
 ## Assumptions

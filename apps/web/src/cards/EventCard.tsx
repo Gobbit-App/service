@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import type { ReactElement } from 'react';
 import type { LinkHealth } from '@gobbit/shared';
 import { eventSpan } from '@gobbit/shared/event-constants';
 import { eventPhase, formatEventStatus, formatEventWhen } from '@gobbit/shared/event-time';
-import { LinkCard } from './LinkCard';
+import { LinkCard, initialSource } from './LinkCard';
 import type { EventCardPayload } from './payload-guards';
 import { deviceTimeZone } from '../lib/device-time-zone';
 import { useMinuteClock } from '../lib/use-minute-clock';
@@ -30,6 +31,16 @@ export function EventCard({
   showImage?: boolean;
 }): ReactElement {
   const now = useMinuteClock();
+  // 044 (D396): a generic image stands in when no link image will show. A failure belongs to
+  // one preview image, so a different preview starts over.
+  const preview = payload.link?.preview;
+  const imageKey = `${preview?.publicId ?? ''}|${preview?.image ?? ''}`;
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  const linkImage =
+    payload.link !== undefined &&
+    initialSource(payload.link, cloudName) !== 'none' &&
+    failedKey !== imageKey;
+  const placeholder = showImage && !linkImage;
   const span = { ...eventSpan(payload), allDay: payload.allDay, timeZone: payload.timeZone };
   const options = { now, hasEnd: payload.end !== undefined };
   const ended = eventPhase(span, now, viewerTimeZone).phase === 'ended';
@@ -37,6 +48,11 @@ export function EventCard({
 
   return (
     <div className="event-card">
+      {placeholder && (
+        <div className="event-card__placeholder" aria-hidden="true">
+          <Icon name="calendar" />
+        </div>
+      )}
       <p className={`event-status${ended ? ' event-status--muted' : ''}`}>
         {formatEventStatus(span, now, viewerTimeZone, options)}
       </p>
@@ -54,6 +70,7 @@ export function EventCard({
           cloudName={cloudName}
           health={health}
           showImage={showImage}
+          onImageFailed={() => setFailedKey(imageKey)}
         />
       )}
     </div>

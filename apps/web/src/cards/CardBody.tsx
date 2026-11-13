@@ -1,6 +1,7 @@
-import { lazy, Suspense, type ReactElement } from 'react';
+import { lazy, Suspense, useState, type ReactElement } from 'react';
 import type { Item } from '@gobbit/shared';
 import { imageAlt } from '@gobbit/shared/image-alt';
+import { CoverBar } from './CoverBar';
 import { EventCard } from './EventCard';
 import { ImageCard, type ImageLoading } from './ImageCard';
 import { LinkCard } from './LinkCard';
@@ -29,10 +30,12 @@ function TypedBody({
   item,
   cloudName,
   image,
+  coverShown,
 }: {
   item: Item;
   cloudName: string | null;
   image?: ImageLoading;
+  coverShown: boolean;
 }): ReactElement | null {
   switch (item.type) {
     case 'text':
@@ -84,7 +87,7 @@ function TypedBody({
           payload={payload}
           cloudName={cloudName}
           health={item.linkHealth}
-          showImage={!item.cover}
+          showImage={!coverShown}
         />
       ) : (
         <Invalid />
@@ -106,10 +109,20 @@ export function CardBody({
   image?: ImageLoading;
 }): ReactElement {
   const body = item.body?.trim() ?? '';
+  // D396: a cover that fails to load gives the event's link image back its place.
+  const [failedId, setFailedId] = useState<string | null>(null);
+  const coverShown = !!item.cover && !!cloudName && failedId !== item.cover.publicId;
   return (
-    <div className="card__body">
-      <TypedBody item={item} cloudName={cloudName} image={image} />
-      {body !== '' && <TextCard body={body} />}
-    </div>
+    <>
+      <CoverBar
+        cover={item.cover}
+        image={image}
+        onError={() => item.cover && setFailedId(item.cover.publicId)}
+      />
+      <div className="card__body">
+        <TypedBody item={item} cloudName={cloudName} image={image} coverShown={coverShown} />
+        {body !== '' && <TextCard body={body} />}
+      </div>
+    </>
   );
 }

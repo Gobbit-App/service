@@ -286,6 +286,72 @@ test.describe('lists', () => {
     await expect(card.locator('img:not([aria-hidden="true"])')).toHaveCount(1);
   });
 
+  test('an event whose cover fails shows the link image instead @full', async ({
+    page,
+    api,
+    webDeck,
+  }) => {
+    const title = `Event cover fails ${webDeck.slug}`;
+    const cover = await recordAsset(api, webDeck.id, 'e2e-cover');
+    await routeCloudName(page, 'e2e-cloud');
+    await page.route('https://res.cloudinary.com/**', (route) =>
+      route.fulfill({ status: 404, body: 'not found' }),
+    );
+    await page.route('https://pics.example.test/**', (route) =>
+      route.fulfill({ contentType: 'image/png', body: TINY_PNG }),
+    );
+    await createItem(api, webDeck, {
+      type: 'event',
+      title,
+      cover: { publicId: cover },
+      payload: {
+        allDay: false,
+        start: new Date(Date.now() + 3 * 86_400_000).toISOString(),
+        timeZone: 'UTC',
+        url: 'https://example.com/tickets',
+        preview: { title: 'Tickets', image: 'https://pics.example.test/ticket.png' },
+      },
+    });
+
+    await page.goto(webUrl(`/d/${webDeck.slug}`));
+    const card = page.getByRole('article', { name: title });
+    await expect(card.locator('.link-card__image')).toBeVisible();
+    await expect(card.locator('.card__cover')).toHaveCount(0);
+    await expect(card.locator('.event-card__placeholder')).toHaveCount(0);
+  });
+
+  test('an event shows the generic image only when it has no cover and no link image @full', async ({
+    page,
+    api,
+    webDeck,
+  }) => {
+    const bare = `Event bare ${webDeck.slug}`;
+    const covered = `Event covered ${webDeck.slug}`;
+    const cover = await recordAsset(api, webDeck.id, 'e2e-cover');
+    await routeCloudName(page, 'e2e-cloud');
+    await routeImageDelivery(page);
+    const payload = {
+      allDay: false,
+      start: new Date(Date.now() + 3 * 86_400_000).toISOString(),
+      timeZone: 'UTC',
+    };
+    await createItem(api, webDeck, { type: 'event', title: bare, payload });
+    await createItem(api, webDeck, {
+      type: 'event',
+      title: covered,
+      cover: { publicId: cover },
+      payload,
+    });
+
+    await page.goto(webUrl(`/d/${webDeck.slug}`));
+    const bareCard = page.getByRole('article', { name: bare });
+    await expect(bareCard.locator('.event-card__placeholder')).toBeVisible();
+    await expect(bareCard.locator('.card__cover')).toHaveCount(0);
+    const coveredCard = page.getByRole('article', { name: covered });
+    await expect(coveredCard.locator('.card__cover .cloud-image__img')).toBeVisible();
+    await expect(coveredCard.locator('.event-card__placeholder')).toHaveCount(0);
+  });
+
   test('a cover that 404s renders no bar @full', async ({ page, api, webDeck }) => {
     const title = `Cover broken ${webDeck.slug}`;
     const cover = await recordAsset(api, webDeck.id, 'e2e-cover');

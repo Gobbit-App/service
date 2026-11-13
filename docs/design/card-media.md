@@ -92,7 +92,7 @@ Every stored image renders through `cards/CloudImage.tsx` (image cards today, li
 - **Alt is optional** (`imagePayloadSchema.alt: z.string().optional()`, D206). Renderers use `imageAlt` from `@gobbit/shared/image-alt`: a non-blank alt wins, otherwise `alt=""` when the title is the heading right above the image (every current renderer, including the public page), otherwise the title. Agent-extracted image cards keep their generated alt.
 - **A non-string `alt` is refused with 400** (request validation), not 422.
 
-## Card cover image (044, `specs/044-card-avatar`, D386–D395, ADR-077)
+## Card cover image (044, `specs/044-card-avatar`, D386–D396, ADR-077)
 
 An optional image that represents the content of a `text`, `reminder`, `event`, `table` or `calc` card. Not for `link` or `image` cards, which already are an image.
 
@@ -100,7 +100,8 @@ An optional image that represents the content of a `text`, `reminder`, `event`, 
 - **API**: `cover: { publicId }` on create, `{ publicId } | null` on PATCH (null removes, absent leaves it). Dimensions in the input are refused (strict schema, 400); the service copies them from the deck's `assets` row, like image cards (D160). 422 on `cover` "This card type has no cover image"; 422 on `cover.publicId` "Unknown image" (unknown, or recorded for another deck).
 - **Decision event**: `item.cover`, outcome `refused`, reason `unsupported_type | unknown_image | other_deck` (warn level on `other_deck`).
 - **Sweep**: `media-sweep` counts `items.cover->>'publicId'` as a reference for items of every status, so a removed or replaced cover becomes an orphan and follows the 7-day grace (ADR-054).
-- **Rendering**: `cards/CoverBar.tsx` draws it through `CloudImage` (class `card__cover`) between header and body in `Card` and `ReviewCard`; Browse's current card and the full view load it eagerly. An event with a cover hides its own link preview image (`LinkCard` `showImage`), so a card never shows two bars.
+- **Rendering**: `cards/CoverBar.tsx` draws it through `CloudImage` (class `card__cover`). `CardBody` renders it before the body, for both `Card` and `ReviewCard`. Browse's current card and the full view load it eagerly.
+- **Event visual (D396)**: an event shows its cover; if the cover is unset or fails to load, its link preview image (`LinkCard` `showImage`); if neither shows, the generic event image (`.event-card__placeholder`, the `calendar` icon on the accent fill). So an event card always has exactly one visual. App only: share previews and public pages are unchanged.
 - **Public**: public deck pages and public search never carry the cover (`toPublicItem` is an allow-list). Its only public use is the share preview ([web-pwa](web-pwa.md#share-previews-d58d61)).
 
 **Runbook**: alert when `item.cover` `other_deck` refusals exceed 5/h (a client sending another deck's image id) or `unsupported_type` exceeds 20/h (a client out of step with the supported types).
@@ -115,8 +116,10 @@ An optional image that represents the content of a `text`, `reminder`, `event`, 
   `media-wiring.ts`) and returns a result union so the service can log the refusal reason.
 - `items_cover_chk` wraps the `publicId` type test in `coalesce(…, false)`: without it a cover
   missing `publicId` passed (NULL passes a CHECK).
-- `LinkCard` gained `showImage`; `ReviewCard` renders `CoverBar` itself (it doesn't use `Card`);
-  `FullView` passes the eager image hint.
+- `LinkCard` gained `showImage` and `onImageFailed`. `CoverBar` moved into `CardBody`, so `Card`
+  and `ReviewCard` share it and the event fallback. `FullView` passes the eager image hint.
+- SC-004 is amended for events (clarification 2026-11-13, D396): an event with no image now shows
+  the generic event image.
 - `share.repo.findRecord` selects `cover`; `visualPublicId` joins the OG content hash only when
   set, so cards without a visual keep their cached image.
 
