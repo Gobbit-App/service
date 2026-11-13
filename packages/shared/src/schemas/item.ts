@@ -3,7 +3,8 @@ import { uuidSchema, slugSchema, isoDateTimeSchema, httpUrlSchema } from './comm
 import {
   textPayloadSchema,
   linkPayloadSchema,
-  imagePayloadSchema,
+  mediaPayloadSchema,
+  legacyImagePayloadSchema,
   tablePayloadSchema,
   calcPayloadSchema,
   payloadWithinBudget,
@@ -12,7 +13,15 @@ import { reminderPayloadSchema, reminderStateSchema } from '../reminders/schema'
 import { eventPayloadSchema, eventStateSchema } from '../events-cards/schema';
 import { pageSchema, limitSchema } from './pagination';
 import { CARD_BODY_MAX, CARD_TITLE_MAX, PAYLOAD_MAX_BYTES } from '../limits';
-import { itemTypes, itemStatuses, itemListStatuses, linkFlagStatuses, sourceKinds } from '../enums';
+import {
+  LEGACY_IMAGE_TYPE,
+  itemTypeInputs,
+  itemTypes,
+  itemStatuses,
+  itemListStatuses,
+  linkFlagStatuses,
+  sourceKinds,
+} from '../enums';
 import { codePointLength } from '../utils/utf8-bytes';
 import { entitiesSchema } from '../ingest/entities';
 
@@ -64,10 +73,22 @@ const linkCreateSchema = z
   })
   .strict();
 
-const imageCreateSchema = z
+const mediaCreateSchema = z
   .object({
-    type: z.literal('image'),
-    payload: imagePayloadSchema,
+    type: z.literal('media'),
+    payload: mediaPayloadSchema,
+    ...commonCreateFields,
+  })
+  .strict();
+
+/**
+ * D387: old clients still send `type: 'image'`, with the flat pre-045 payload or the new one.
+ * The items service normalizes it to `media` and logs `item.type_alias`.
+ */
+const imageAliasCreateSchema = z
+  .object({
+    type: z.literal(LEGACY_IMAGE_TYPE),
+    payload: z.union([mediaPayloadSchema, legacyImagePayloadSchema]),
     ...commonCreateFields,
   })
   .strict();
@@ -108,7 +129,8 @@ export const itemCreateSchema = z
   .discriminatedUnion('type', [
     textCreateSchema,
     linkCreateSchema,
-    imageCreateSchema,
+    mediaCreateSchema,
+    imageAliasCreateSchema,
     tableCreateSchema,
     calcCreateSchema,
     reminderCreateSchema,
@@ -130,8 +152,11 @@ export type ItemCreateInput = z.input<typeof itemCreateSchema>;
 
 export const itemPatchSchema = z
   .object({
-    /** D12: the type never changes; a different one is refused with 409 type-change-not-supported. */
-    type: z.enum(itemTypes).optional(),
+    /**
+     * D12: the type never changes; a different one is refused with 409 type-change-not-supported.
+     * D387: `image` is accepted as `media`.
+     */
+    type: z.enum(itemTypeInputs).optional(),
     title: itemTitleSchema.optional(),
     body: itemBodySchema.optional(),
     payload: z.record(z.string(), z.unknown()).optional(),
@@ -185,7 +210,8 @@ export const itemListQuerySchema = z.object({
   category: slugSchema.optional(),
   /** D132: `deleted` lists the deck's recently deleted cards (owner/maintainer). */
   status: z.enum(itemListStatuses).default('published'),
-  type: z.enum(itemTypes).optional(),
+  /** D387: `image` is accepted as `media`. */
+  type: z.enum(itemTypeInputs).optional(),
   /** P3: `favorite=true` narrows the list to the caller's favorites. */
   favorite: z.enum(['true']).optional(),
   /** D165: `flag=link` lists flagged link cards (needs `item.update`; published only). */
