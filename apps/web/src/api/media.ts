@@ -14,7 +14,12 @@ export function signMediaUpload(
   kind: MediaKind = 'image',
 ): Promise<MediaSignResponse> {
   return unwrap(
-    api.POST('/decks/{id}/media/sign', { params: { path: { id: deckId } }, body: { kind } }),
+    api.POST('/decks/{id}/media/sign', {
+      params: { path: { id: deckId } },
+      // D389: the route reads its optional `{ kind }` body itself (clients before 045 send none),
+      // so the OpenAPI contract declares no body; the API validates it.
+      body: { kind } as never,
+    }),
   );
 }
 

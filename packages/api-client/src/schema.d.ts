@@ -6121,7 +6121,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389) */
+        /**
+         * Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389)
+         * @description Optional JSON body `{ "kind": "image" | "pdf" | "audio" | "video" }` (D389). Without a body (clients before 045) the upload is an image.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -6131,17 +6134,7 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /**
-                         * @default image
-                         * @enum {string}
-                         */
-                        kind?: "image" | "pdf" | "audio" | "video";
-                    };
-                };
-            };
+            requestBody?: never;
             responses: {
                 /** @description Signed upload parameters; the API secret is never included */
                 200: {
