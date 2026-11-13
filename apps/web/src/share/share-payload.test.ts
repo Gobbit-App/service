@@ -84,13 +84,14 @@ describe('normalizeShared (D98)', () => {
 });
 
 describe('payloadFromFormData (D98)', () => {
-  it('builds the payload from a multipart form, trimming and dropping non-images', () => {
+  it('builds the payload from a multipart form, trimming and keeping photos and PDFs (D395)', () => {
     const form = new FormData();
     form.set('title', '  T  ');
     form.set('text', 'hello');
     form.set('url', 'https://a.example/');
     form.append('files', new File(['x'], 'pic.png', { type: 'image/png' }), 'pic.png');
     form.append('files', new File(['x'], 'doc.pdf', { type: 'application/pdf' }), 'doc.pdf');
+    form.append('files', new File(['x'], 'a.zip', { type: 'application/zip' }), 'a.zip');
 
     const payload = payloadFromFormData(form, 'id1', 1000);
 
@@ -99,8 +100,7 @@ describe('payloadFromFormData (D98)', () => {
     expect(payload.title).toBe('T');
     expect(payload.text).toBe('hello');
     expect(payload.url).toBe('https://a.example/');
-    expect(payload.files).toHaveLength(1);
-    expect(payload.files[0]?.name).toBe('pic.png');
+    expect(payload.files.map((f) => f.name)).toEqual(['pic.png', 'doc.pdf']);
   });
 
   it('turns missing fields into empty strings', () => {
