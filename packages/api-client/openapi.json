@@ -19906,6 +19906,7 @@
           "media"
         ],
         "summary": "Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389)",
+        "description": "Optional JSON body `{ \"kind\": \"image\" | \"pdf\" | \"audio\" | \"video\" }` (D389). Without a body (clients before 045) the upload is an image.",
         "security": [
           {
             "SessionCookie": []
@@ -19925,29 +19926,6 @@
             "in": "path"
           }
         ],
-        "requestBody": {
-          "required": false,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "image",
-                      "pdf",
-                      "audio",
-                      "video"
-                    ],
-                    "default": "image"
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Signed upload parameters; the API secret is never included",
