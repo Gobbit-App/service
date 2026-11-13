@@ -3,6 +3,8 @@ import {
   asCalcPayload,
   asEventPayload,
   asImagePayload,
+  asMediaPayload,
+  isMediaType,
   asLinkPayload,
   asTablePayload,
 } from './payload-guards';
@@ -541,6 +543,51 @@ describe('payload-guards', () => {
       ).toBeNull();
       expect(asEventPayload({ start: '2026-12-01', timeZone: 'UTC' })).toBeNull();
       expect(asEventPayload(null)).toBeNull();
+    });
+  });
+
+  describe('asMediaPayload (045)', () => {
+    it('reads a gallery in order, skipping photos that do not parse', () => {
+      expect(
+        asMediaPayload({
+          kind: 'image',
+          images: [
+            { publicId: 'b', alt: 'second', width: 3, height: 4 },
+            { publicId: '' },
+            { publicId: 'a' },
+          ],
+        }),
+      ).toEqual({
+        kind: 'image',
+        images: [{ publicId: 'b', alt: 'second', width: 3, height: 4 }, { publicId: 'a' }],
+      });
+      expect(asMediaPayload({ kind: 'image', images: [] })).toBeNull();
+    });
+
+    it('reads a pre-045 flat photo as a one-photo gallery (D387)', () => {
+      expect(asMediaPayload({ publicId: 'p', alt: 'x' })).toEqual({
+        kind: 'image',
+        images: [{ publicId: 'p', alt: 'x' }],
+      });
+    });
+
+    it('reads a file card with its facts, and refuses unknown kinds', () => {
+      expect(
+        asMediaPayload({ kind: 'pdf', publicId: 'f', pages: 3, width: 595, height: 842 }),
+      ).toEqual({ kind: 'pdf', publicId: 'f', pages: 3, width: 595, height: 842 });
+      expect(asMediaPayload({ kind: 'video', publicId: 'v', durationMs: 1500 })).toEqual({
+        kind: 'video',
+        publicId: 'v',
+        durationMs: 1500,
+      });
+      expect(asMediaPayload({ kind: 'zip', publicId: 'z' })).toBeNull();
+      expect(asMediaPayload({ kind: 'pdf' })).toBeNull();
+    });
+
+    it('treats a cached image type as media', () => {
+      expect(isMediaType('image')).toBe(true);
+      expect(isMediaType('media')).toBe(true);
+      expect(isMediaType('link')).toBe(false);
     });
   });
 });

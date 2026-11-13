@@ -2,7 +2,7 @@ import type { Deck, Item, ItemType } from '@gobbit/shared';
 import type { DraftPayloadByType } from '../draft';
 import type { FieldErrors } from '../validate';
 
-/** Props every payload editor gets (contracts/editor-ui.md); 008 registers `image`. */
+/** Props every payload editor gets (contracts/editor-ui.md); 008 registered `image` (045: `media`). */
 export type FieldsProps<T extends ItemType> = {
   payload: DraftPayloadByType[T];
   onChange: (next: DraftPayloadByType[T]) => void;

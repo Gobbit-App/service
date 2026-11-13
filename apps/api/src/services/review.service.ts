@@ -18,7 +18,7 @@ import { resolveDeck } from '../lib/resolve-deck';
 import { toSlug } from '../lib/slug';
 import type { IngestUploadStore } from '../media/ingest-uploads';
 import type { EventNoticeHook } from './event-cards.service';
-import type { ImageReferenceCheck } from './image-reference';
+import type { MediaReferenceCheck } from './media-reference';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
@@ -59,7 +59,7 @@ export function createReviewService(deps: {
   /** D163: a published link (or a merged target) gets its preview image copied. */
   linkSnapshotQueue?: LinkSnapshotQueue;
   /** D160: a published image card references a recorded asset of its deck. */
-  imageReference: ImageReferenceCheck;
+  mediaReference: MediaReferenceCheck;
   now: () => Date;
   /** D359: event notices follow a publish or merge. */
   noticeHook?: EventNoticeHook;
@@ -134,7 +134,7 @@ export function createReviewService(deps: {
     jobId: string | null,
     ensureSuggested?: (tx: ReviewTxRepos) => Promise<string[]>,
   ): Promise<string> {
-    const payload = await deps.imageReference(
+    const payload = await deps.mediaReference(
       proposal.deckId,
       proposal.type,
       proposal.payload as Record<string, unknown>,

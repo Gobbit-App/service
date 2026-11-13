@@ -4,8 +4,22 @@ export type DeckKind = (typeof deckKinds)[number];
 export const categoryVisibilities = ['private', 'shared', 'public'] as const;
 export type CategoryVisibility = (typeof categoryVisibilities)[number];
 
-export const itemTypes = ['text', 'link', 'image', 'table', 'calc', 'reminder', 'event'] as const;
+/** D386: `media` was `image` before 045; `image` is still accepted as an input alias (D387). */
+export const itemTypes = ['text', 'link', 'media', 'table', 'calc', 'reminder', 'event'] as const;
 export type ItemType = (typeof itemTypes)[number];
+/** D387: the pre-045 name of `media`, accepted on input for one release. */
+export const LEGACY_IMAGE_TYPE = 'image' as const;
+/** Item type values accepted on input: every type plus the D387 alias. */
+export const itemTypeInputs = [...itemTypes, LEGACY_IMAGE_TYPE] as const;
+export type ItemTypeInput = (typeof itemTypeInputs)[number];
+
+/** D386: the file a media card holds. */
+export const mediaKinds = ['image', 'pdf', 'audio', 'video'] as const;
+export type MediaKind = (typeof mediaKinds)[number];
+
+/** D388: the provider resource a file is stored as (PDFs are images, audio is video). */
+export const assetResourceTypes = ['image', 'video'] as const;
+export type AssetResourceType = (typeof assetResourceTypes)[number];
 
 export const itemStatuses = ['proposed', 'published', 'archived'] as const;
 export type ItemStatus = (typeof itemStatuses)[number];

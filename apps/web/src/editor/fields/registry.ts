@@ -1,7 +1,7 @@
 import { lazy, type ComponentType } from 'react';
 import type { ItemType } from '@gobbit/shared';
 import { LinkEditorFields } from './LinkEditorFields';
-import { ImageFields } from './ImageFields';
+import { MediaFields } from './MediaFields';
 import { TextFields } from './TextFields';
 import type { FieldsProps } from './types';
 
@@ -14,14 +14,14 @@ const ReminderFields = lazy(async () => ({
 const EventFields = lazy(async () => ({ default: (await import('./EventFields')).EventFields }));
 
 /**
- * D138: one payload editor per card type (`image` since 008, D133).
+ * D138: one payload editor per card type (`media` since 045, was `image` since 008, D133).
  * Typed loosely at the seam; each entry is typed against its own payload.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const fieldsByType: Record<ItemType, ComponentType<FieldsProps<any>>> = {
   text: TextFields,
   link: LinkEditorFields,
-  image: ImageFields,
+  media: MediaFields,
   table: TableFields,
   calc: CalcFields,
   reminder: ReminderFields,

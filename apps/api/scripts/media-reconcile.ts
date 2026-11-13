@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
+import { assetResourceTypes, type AssetResourceType } from '@gobbit/shared';
 import { createDb, createPool } from '@gobbit/db';
 import { parseEnv } from '../src/env';
 import { parseCloudinaryUrl } from '../src/lib/cloudinary-url';
@@ -12,13 +13,17 @@ import { createAssetsRepo } from '../src/repositories/assets.repo';
  */
 const PAGE = 500;
 
-async function listTagged(auth: Record<string, string>, tag: string): Promise<string[]> {
+async function listTagged(
+  auth: Record<string, string>,
+  tag: string,
+  resourceType: AssetResourceType,
+): Promise<string[]> {
   const ids: string[] = [];
   let cursor: string | undefined;
   do {
     const res = (await cloudinary.api.resources_by_tag(tag, {
       ...auth,
-      resource_type: 'image',
+      resource_type: resourceType,
       max_results: PAGE,
       ...(cursor ? { next_cursor: cursor } : {}),
     })) as { resources: { public_id: string }[]; next_cursor?: string };
@@ -37,26 +42,38 @@ async function main(): Promise<void> {
   const pool = createPool(env.DATABASE_URL);
   try {
     const assets = createAssetsRepo(createDb(pool));
-    const found: string[] = [];
-    for (const tag of RECONCILE_TAGS) {
-      const listed = await listTagged(auth, tag);
-      const recorded = new Set<string>();
-      for (let i = 0; i < listed.length; i += PAGE) {
-        for (const id of await assets.recordedAmong(listed.slice(i, i + PAGE))) recorded.add(id);
+    // D388: PDFs are image resources, audio and video are video resources.
+    const found = new Map<AssetResourceType, string[]>();
+    for (const resourceType of assetResourceTypes) {
+      for (const tag of RECONCILE_TAGS) {
+        const listed = await listTagged(auth, tag, resourceType);
+        const recorded = new Set<string>();
+        for (let i = 0; i < listed.length; i += PAGE) {
+          for (const id of await assets.recordedAmong(listed.slice(i, i + PAGE))) recorded.add(id);
+        }
+        const missing = unrecorded(listed, recorded);
+        console.log(
+          `${tag} (${resourceType}): ${listed.length} listed, ${missing.length} without an asset row`,
+        );
+        found.set(resourceType, [...(found.get(resourceType) ?? []), ...missing]);
       }
-      const missing = unrecorded(listed, recorded);
-      console.log(`${tag}: ${listed.length} listed, ${missing.length} without an asset row`);
-      found.push(...missing);
     }
-    for (const id of found) console.log(`  ${id}`);
+    const total = [...found.values()].flat();
+    for (const id of total) console.log(`  ${id}`);
 
     if (!args.delete) {
-      console.log(found.length ? 'dry run: pass --delete to remove them' : 'nothing to do');
+      console.log(total.length ? 'dry run: pass --delete to remove them' : 'nothing to do');
       return;
     }
-    const outcomes = await createCloudinaryMediaStore(creds).deleteMany(found);
-    const failed = [...outcomes.values()].filter((o) => o === 'failed').length;
-    console.log(`deleted ${found.length - failed}, failed ${failed}`);
+    const store = createCloudinaryMediaStore(creds);
+    let failed = 0;
+    for (const [resourceType, ids] of found) {
+      for (let i = 0; i < ids.length; i += 100) {
+        const outcomes = await store.deleteMany(ids.slice(i, i + 100), resourceType);
+        failed += [...outcomes.values()].filter((o) => o === 'failed').length;
+      }
+    }
+    console.log(`deleted ${total.length - failed}, failed ${failed}`);
     if (failed > 0) process.exitCode = 1;
   } finally {
     await pool.end();

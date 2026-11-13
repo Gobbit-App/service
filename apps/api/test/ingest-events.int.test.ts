@@ -24,7 +24,7 @@ import { createLlmCallsRepo } from '../src/repositories/llm-calls.repo';
 import { createMembershipsRepo } from '../src/repositories/memberships.repo';
 import { createUsersRepo } from '../src/repositories/users.repo';
 import { createPublishProposal, reviewTransaction } from '../src/review/publish-proposal';
-import { createImageReferenceCheck } from '../src/services/image-reference';
+import { createMediaReferenceCheck } from '../src/services/media-reference';
 import { setupApiTest } from './helpers';
 
 const fixtures = new URL('../src/fetch/__fixtures__/event-pages/', import.meta.url);
@@ -107,7 +107,7 @@ describe('ingest events (D370, D374–D376)', () => {
             roleOf,
             publishProposal: createPublishProposal({
               transaction: reviewTransaction(db),
-              imageReference: createImageReferenceCheck(createAssetsRepo(db)),
+              mediaReference: createMediaReferenceCheck(createAssetsRepo(db)),
               now: () => new Date(),
             }),
             jobs,

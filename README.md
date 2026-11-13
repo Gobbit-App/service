@@ -98,6 +98,10 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `LINK_IMAGE_TRIES` | `3` | Preview image candidates the `link-snapshot` job tries per card before dropping the image (D349) |
 | `LINK_ARTICLE_IMAGE_MIN_PX` | `300` | Smallest stated width of an in-article image used as a link preview (D344) |
 | `LINK_LOOKUP_TIMEOUT_MS` | `2500` | Timeout of a YouTube/TikTok/Vimeo oEmbed lookup for a link preview (D345) |
+| `MEDIA_MAX_BYTES_PDF` | `10485760` | Largest PDF a member can upload, in bytes (045, D393) |
+| `MEDIA_MAX_BYTES_AUDIO` | `15728640` | Largest audio file a member can upload, in bytes (045, D393) |
+| `MEDIA_MAX_BYTES_VIDEO` | `26214400` | Largest video a member can upload, in bytes; at most 100 MB (single-request uploads, 045, D393) |
+| `MEDIA_VERIFY_BATCH` | `200` | Uploads the daily `media-sweep` checks against Cloudinary per run (045, D390) |
 | `MAGIC_LINK_TTL_MINUTES` | `15` | Sign-in link lifetime |
 | `INVITE_TTL_DAYS` | `7` | Invite link lifetime |
 | `SESSION_TTL_DAYS` | `90` | Sliding session lifetime |
@@ -279,7 +283,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 
 **Reading logs**: the API and the worker write one JSON object per line, so filter them with `jq`. For example `docker logs apps-gobbit-<id>-api-1 | jq 'select(.level=="error" or .level=="warn")'`, or `jq 'select(.component=="media")'` for photo uploads. At boot the API logs `cloudinary credentials ok`, or an error saying the credentials were rejected. A photo upload that Cloudinary refuses shows up as `browser upload to cloudinary failed`, with Cloudinary's status and message.
 
-Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (web push), `ANALYTICS_UPSTREAM` (defaults to the shared Umami's container, D341), `HEALTHCHECK_API_URL`/`HEALTHCHECK_WORKER_URL` (alerts, D342), `LINK_IMAGE_TRIES`/`LINK_ARTICLE_IMAGE_MIN_PX`/`LINK_LOOKUP_TIMEOUT_MS` (link previews, 041).
+Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`, `TRAEFIK_ENTRYPOINT`, `EXTRACT_MODEL`, `EXTRACT_ESCALATION_MODEL`, `INGEST_DAILY_CAP`, `SHORTCUT_URL`, `INGEST_EMAIL_DOMAIN`, `REGISTRATION_MODE`, `WAITLIST_JOIN_PER_IP_PER_HOUR`, `WAITLIST_JOIN_PER_EMAIL_PER_HOUR`, `PLATFORM_ADMINS`, `WAITLIST_INVITE_TTL_DAYS`, `ANALYTICS_SITE_ID`, `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` (web push), `ANALYTICS_UPSTREAM` (defaults to the shared Umami's container, D341), `HEALTHCHECK_API_URL`/`HEALTHCHECK_WORKER_URL` (alerts, D342), `LINK_IMAGE_TRIES`/`LINK_ARTICLE_IMAGE_MIN_PX`/`LINK_LOOKUP_TIMEOUT_MS` (link previews, 041), `MEDIA_MAX_BYTES_PDF`/`MEDIA_MAX_BYTES_AUDIO`/`MEDIA_MAX_BYTES_VIDEO`/`MEDIA_VERIFY_BATCH` (media cards, 045).
 
 ### GitHub Actions
 

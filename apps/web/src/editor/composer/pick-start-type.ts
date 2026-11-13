@@ -21,7 +21,7 @@ export function pickStartType({
   draftType: CreatableType | null;
   imagesOff: boolean;
 }): StartScreen {
-  const usable = (type: CreatableType) => !(type === 'image' && imagesOff);
+  const usable = (type: CreatableType) => !(type === 'media' && imagesOff);
   if (urlType) return usable(urlType) ? { kind: 'composer', type: urlType } : CHOOSER;
   if (draftType && usable(draftType)) return { kind: 'composer', type: draftType };
   return CHOOSER;

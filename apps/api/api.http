@@ -224,15 +224,18 @@ Content-Type: application/json
   "categoryIds": ["{{familyFood.response.body.id}}"]
 }
 
-### Image card (publicId from the Cloudinary console)
+### Media card: a photo (publicId of a recorded upload, D160)
 POST {{baseUrl}}/decks/family/items
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "type": "image",
+  "type": "media",
   "title": "Pantry layout",
-  "payload": { "publicId": "<folder/your-uploaded-image>", "alt": "Pantry shelves" },
+  "payload": {
+    "kind": "image",
+    "images": [{ "publicId": "<folder/your-uploaded-image>", "alt": "Pantry shelves" }]
+  },
   "categoryIds": ["{{familyFood.response.body.id}}"]
 }
 

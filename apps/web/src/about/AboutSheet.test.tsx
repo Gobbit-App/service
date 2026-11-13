@@ -20,6 +20,7 @@ const CONFIG: AppConfig = {
   ingest: { enabled: true, emailDomain: null, shortcutUrl: null },
   analytics: null,
   push: null,
+  media: { maxBytes: { image: 8388608, pdf: 10485760, audio: 15728640, video: 26214400 } },
 };
 
 function setup({ config = CONFIG as AppConfig | null, build = BUILD } = {}) {

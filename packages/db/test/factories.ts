@@ -3,6 +3,7 @@ import { v5 } from 'uuid';
 import { and, eq } from 'drizzle-orm';
 import {
   itemCreateSchema,
+  normalizeLegacyMediaPayload,
   type CategoryVisibility,
   type DeckKind,
   type MemberRole,
@@ -160,7 +161,12 @@ export async function createItem(
   deck: Pick<DeckRow, 'id'>,
   opts: CreateItemOptions = {},
 ): Promise<ItemRow> {
-  const card = itemCreateSchema.parse(opts.card ?? DEFAULT_CARD);
+  const parsed = itemCreateSchema.parse(opts.card ?? DEFAULT_CARD);
+  // D387: the `image` input alias is the API's job; fixtures store what it would.
+  const card =
+    parsed.type === 'image'
+      ? { ...parsed, type: 'media' as const, payload: normalizeLegacyMediaPayload(parsed.payload) }
+      : parsed;
   const categoryIds = opts.categoryIds ?? [(await defaultCategory(db, deck)).id];
   const sourceUrl = card.type === 'link' ? (card.payload as { url: string }).url : null;
 
@@ -200,7 +206,23 @@ export interface CreateAssetOptions {
   /** Defaults to `editor`; `link_snapshot` for a link card's stored preview (D163). */
   source?: AssetRow['source'];
   createdAt?: Date;
+  /** 045: defaults to an image; the resource type and format follow the kind. */
+  kind?: AssetRow['kind'];
+  format?: string;
+  bytes?: number;
+  durationMs?: number | null;
+  pages?: number | null;
+  etag?: string | null;
+  originalFilename?: string | null;
+  rejectedAt?: Date | null;
 }
+
+const DEFAULT_FORMAT: Record<AssetRow['kind'], string> = {
+  image: 'jpg',
+  pdf: 'pdf',
+  audio: 'm4a',
+  video: 'mp4',
+};
 
 /** Records an image for `deck` (D156), as the editor confirm step or ingest would. */
 export async function createAsset(
@@ -208,16 +230,30 @@ export async function createAsset(
   deck: Pick<DeckRow, 'id'>,
   opts: CreateAssetOptions = {},
 ): Promise<AssetRow> {
+  const kind = opts.kind ?? 'image';
+  const sized = kind !== 'audio';
   const [row] = await db
     .insert(assets)
     .values({
       deckId: deck.id,
       publicId: opts.publicId ?? `gobbit/items/${deck.id}/${randomBytes(6).toString('hex')}`,
       source: opts.source ?? 'editor',
-      width: opts.width === undefined ? 640 : opts.width,
-      height: opts.height === undefined ? 480 : opts.height,
-      bytes: 1024,
-      format: 'jpg',
+      kind,
+      resourceType: kind === 'audio' || kind === 'video' ? 'video' : 'image',
+      width: opts.width === undefined ? (sized ? 640 : null) : opts.width,
+      height: opts.height === undefined ? (sized ? 480 : null) : opts.height,
+      bytes: opts.bytes ?? 1024,
+      format: opts.format ?? DEFAULT_FORMAT[kind],
+      durationMs:
+        opts.durationMs === undefined
+          ? kind === 'audio' || kind === 'video'
+            ? 12_000
+            : null
+          : opts.durationMs,
+      pages: opts.pages === undefined ? (kind === 'pdf' ? 3 : null) : opts.pages,
+      etag: opts.etag ?? null,
+      originalFilename: opts.originalFilename ?? null,
+      rejectedAt: opts.rejectedAt ?? null,
       createdAt: opts.createdAt,
     })
     .returning();

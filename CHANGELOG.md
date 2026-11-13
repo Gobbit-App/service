@@ -10,6 +10,23 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-13 — Media cards, foundation (045 PR 1, D386–D390, D393, D398)
+
+- Migration `0025_media_cards` renames the `item_type` value `image` to `media`, reshapes every
+  photo card's payload into a one-photo gallery (`{ kind: 'image', images: [...] }`) without
+  moving `updated_at`, adds the `media_kind` and `asset_resource_type` enums and new `assets`
+  columns (kind, resource type, duration, pages, etag, original file name, verified/rejected).
+  Its down migration refuses while a PDF, audio or video card, a multi-photo gallery or a
+  video/PDF file exists.
+- The API still accepts `type: 'image'` and the flat photo payload for one release (D387) and logs
+  `item.type_alias`; retire the alias once that event is silent for 30 days.
+- New optional variables (API and worker, in the Compose `x-api-env` block), all with defaults:
+  `MEDIA_MAX_BYTES_PDF` (10 MB), `MEDIA_MAX_BYTES_AUDIO` (15 MB), `MEDIA_MAX_BYTES_VIDEO` (25 MB;
+  at most 100 MB) and `MEDIA_VERIFY_BATCH` (200 files the daily `media-sweep` checks against
+  Cloudinary). Nothing to set to keep deploying.
+- **Action required before 045 PR 2 deploys**: enable *Settings → Security → Allow delivery of
+  PDF and ZIP files* on the Cloudinary cloud, or a PDF card's "Open original" answers 401.
+
 ### 2026-11-11 — Ask switched off behind `ASK_ENABLED` (D385)
 
 - New `ASK_ENABLED` (API, default `false`, in the Compose `x-api-env` block). Ask isn't ready for

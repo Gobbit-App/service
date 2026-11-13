@@ -26,6 +26,15 @@ export const appConfigSchema = z.object({
     .nullable(),
   /** D296: the VAPID public key when Web Push is configured, else null (Settings hides push). */
   push: z.object({ publicKey: z.string() }).nullable(),
+  /** D393: the effective upload limit per media kind (bytes), shown before signing. */
+  media: z.object({
+    maxBytes: z.object({
+      image: z.number().int(),
+      pdf: z.number().int(),
+      audio: z.number().int(),
+      video: z.number().int(),
+    }),
+  }),
 });
 
 export type AppConfig = z.infer<typeof appConfigSchema>;

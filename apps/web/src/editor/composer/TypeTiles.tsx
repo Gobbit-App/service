@@ -50,7 +50,7 @@ export function TypeTiles({
   return (
     <div role="radiogroup" aria-label="Card type" className="type-tiles" onKeyDown={onKeyDown}>
       {CREATABLE_TYPES.map((type, index) => {
-        const unavailable = type === 'image' && imagesOff;
+        const unavailable = type === 'media' && imagesOff;
         const nameId = `${id}-${type}-name`;
         const hintId = `${id}-${type}-hint`;
         return (

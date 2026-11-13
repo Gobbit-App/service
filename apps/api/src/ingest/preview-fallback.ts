@@ -1,4 +1,4 @@
-import type { ExtractionSummary, IngestFailureCode, ItemCreate } from '@gobbit/shared';
+import type { ExtractionSummary, IngestFailureCode, ItemCreateResolved } from '@gobbit/shared';
 import { validateProposal, type ValidateContext } from '../ai/extract-validate';
 import type { ProposeCardInput } from '../ai/extract-prompt';
 import type { Logger } from '../lib/logger';
@@ -7,7 +7,7 @@ import type { Logger } from '../lib/logger';
 export const PREVIEW_FALLBACK_EVENT = 'ingest.preview_fallback';
 
 export interface PreviewFallback {
-  item: ItemCreate;
+  item: ItemCreateResolved;
   /** Merged into the job's extraction summary; `fallback` marks it in the review queue. */
   summary: Omit<ExtractionSummary, 'model'>;
 }

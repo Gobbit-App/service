@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { assets, items, type AssetRow, type DeckRow } from '@gobbit/db';
 import type { ItemStatus } from '@gobbit/shared';
 import { MEDIA_ORPHAN_GRACE_DAYS } from '@gobbit/shared';
@@ -36,6 +35,7 @@ describe('media sweep against the database (D158)', () => {
     await ctx.t.db.delete(assets);
     store.images.clear();
     store.deleteCalls.length = 0;
+    store.resources.clear();
   });
 
   /** An asset that also exists in the store, `createdAt` as given. */
@@ -54,7 +54,11 @@ describe('media sweep against the database (D158)', () => {
 
   async function imageCard(asset: AssetRow, status: ItemStatus = 'published') {
     return createItem(ctx.t.db, deck, {
-      card: { type: 'image', title: 'Photo', payload: { publicId: asset.publicId, alt: 'x' } },
+      card: {
+        type: 'media',
+        title: 'Photo',
+        payload: { kind: 'image', images: [{ publicId: asset.publicId, alt: 'x' }] },
+      },
       status,
     });
   }
@@ -83,7 +87,7 @@ describe('media sweep against the database (D158)', () => {
       .where(eq(items.id, card.id));
 
     const summary = await sweeper.sweepOrphans({ now });
-    expect(summary).toEqual({ deleted: 1, notFound: 0, failed: 0 });
+    expect(summary).toMatchObject({ deleted: 1, notFound: 0, failed: 0 });
     expect((await remaining([kept.id, replaced.id, replacement.id])).sort()).toEqual(
       [kept.publicId, replacement.publicId].sort(),
     );
@@ -104,7 +108,7 @@ describe('media sweep against the database (D158)', () => {
     kept.push(trashed);
 
     const summary = await sweeper.sweepOrphans({ now });
-    expect(summary).toEqual({ deleted: 0, notFound: 0, failed: 0 });
+    expect(summary).toMatchObject({ deleted: 0, notFound: 0, failed: 0 });
     expect(await remaining(kept.map((a) => a.id))).toHaveLength(kept.length);
     expect(store.deleteCalls).toEqual([]);
   });
@@ -118,7 +122,7 @@ describe('media sweep against the database (D158)', () => {
     const missing = await createAsset(ctx.t.db, deck, { createdAt: old });
 
     const summary = await sweeper.sweepOrphans({ now });
-    expect(summary).toEqual({ deleted: 2, notFound: 1, failed: 0 });
+    expect(summary).toMatchObject({ deleted: 2, notFound: 1, failed: 0 });
     expect(await remaining([neverSaved.id, purged.id, missing.id, young.id])).toEqual([
       young.publicId,
     ]);
@@ -130,36 +134,103 @@ describe('media sweep against the database (D158)', () => {
     const asset = await stored(old);
     store.failing.add(asset.publicId);
     try {
-      expect(await sweeper.sweepOrphans({ now })).toEqual({ deleted: 0, notFound: 0, failed: 1 });
+      expect(await sweeper.sweepOrphans({ now })).toMatchObject({
+        deleted: 0,
+        notFound: 0,
+        failed: 1,
+      });
       expect(await remaining([asset.id])).toEqual([asset.publicId]);
     } finally {
       store.failing.delete(asset.publicId);
     }
   });
 
-  it('the 0012 backfill records every referenced image once, so the sweep keeps it', async () => {
-    const migration = readFileSync(
-      new URL('../../../packages/db/migrations/0012_media_assets.sql', import.meta.url),
-      'utf8',
-    );
-    const backfill = /INSERT INTO "assets"[\s\S]*?DO NOTHING;/.exec(migration)?.[0];
-    expect(backfill).toBeDefined();
-
-    const legacy = { publicId: `gobbit/ingest/${deck.id}/legacy`, alt: 'x' };
-    await createItem(ctx.t.db, deck, { card: { type: 'image', title: 'A', payload: legacy } });
+  it('never sweeps a photo in any gallery position (D398)', async () => {
+    const photos = [await stored(old), await stored(old), await stored(old)];
     await createItem(ctx.t.db, deck, {
-      card: { type: 'image', title: 'B', payload: legacy },
-      status: 'archived',
+      card: {
+        type: 'media',
+        title: 'School play',
+        payload: { kind: 'image', images: photos.map((p) => ({ publicId: p.publicId })) },
+      },
     });
-    await ctx.t.db.execute(sql.raw(backfill!));
+    const orphan = await stored(old);
 
-    const rows = await ctx.t.db.select().from(assets).where(eq(assets.publicId, legacy.publicId));
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ deckId: deck.id, source: 'ingest', width: null });
+    const summary = await sweeper.sweepOrphans({ now });
+    expect(summary).toMatchObject({ deleted: 1, byKind: { image: 1 } });
+    expect(await remaining(photos.map((p) => p.id))).toHaveLength(3);
+    expect(await remaining([orphan.id])).toEqual([]);
+  });
 
-    // Backdate it past the grace period: still referenced, so never swept.
-    await ctx.t.db.update(assets).set({ createdAt: old }).where(eq(assets.id, rows[0]!.id));
-    expect(await sweeper.sweepOrphans({ now })).toEqual({ deleted: 0, notFound: 0, failed: 0 });
+  it('keeps a referenced PDF, audio and video file and deletes orphans as video resources (D388)', async () => {
+    const kept = await createAsset(ctx.t.db, deck, { kind: 'pdf', createdAt: old });
+    await createItem(ctx.t.db, deck, {
+      card: { type: 'media', title: 'Doc', payload: { kind: 'pdf', publicId: kept.publicId } },
+    });
+    const clip = await createAsset(ctx.t.db, deck, { kind: 'video', createdAt: old });
+    store.resources.set(clip.publicId, {
+      resourceType: 'video',
+      bytes: 1,
+      format: 'mp4',
+      width: 1,
+      height: 1,
+      pages: null,
+      durationMs: 1,
+    });
+    store.deleteTypes.length = 0;
+
+    const summary = await sweeper.sweepOrphans({ now });
+    expect(summary).toMatchObject({ deleted: 1, byKind: { video: 1 } });
+    expect(store.deleteTypes).toEqual(['video']);
+    expect(await remaining([kept.id, clip.id])).toEqual([kept.publicId]);
+  });
+});
+
+describe('verify pass against the database (D390)', () => {
+  const ctx = setupApiTest();
+  const store = new MemoryMediaStore();
+  let deck: DeckRow;
+
+  beforeEach(async () => {
+    deck = await createDeck(ctx.t.db, ctx.world.owner);
+    await ctx.t.db.delete(assets);
+  });
+
+  it('rejects a file whose provider size breaks the limit; cards then refuse it', async () => {
+    const asset = await createAsset(ctx.t.db, deck, { kind: 'pdf', bytes: 100 });
+    store.resources.set(asset.publicId, {
+      resourceType: 'image',
+      bytes: 50_000_000,
+      format: 'pdf',
+      width: 1,
+      height: 1,
+      pages: 2,
+      durationMs: null,
+    });
+    const sweeper = createOrphanSweeper({
+      assets: createAssetsRepo(ctx.t.db),
+      store,
+      log: captureLogger().logger,
+      maxBytes: { image: 1, pdf: 10_000_000, audio: 1, video: 1 },
+    });
+
+    expect(await sweeper.verifyRecent({ now, jobId: 'job-1' })).toMatchObject({ refused: 1 });
+    const [row] = await ctx.t.db.select().from(assets).where(eq(assets.id, asset.id));
+    expect(row!.rejectedAt).not.toBeNull();
+    expect(store.resources.has(asset.publicId)).toBe(false);
+    // Checked once: the next run has nothing left to verify.
+    expect(await sweeper.verifyRecent({ now })).toMatchObject({ verified: 0, refused: 0 });
+
+    const res = await ctx.app.request(`/decks/${deck.id}/items`, {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({
+        type: 'media',
+        title: 'Doc',
+        payload: { kind: 'pdf', publicId: asset.publicId },
+      }),
+    });
+    expect(res.status).toBe(422);
   });
 });
 

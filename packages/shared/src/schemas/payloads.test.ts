@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { payloadWithinBudget, payloadSchemaFor, payloadSchemas } from './payloads';
 import { PAYLOAD_MAX_BYTES } from '../limits';
+import { MEDIA_ALT_MAX, MEDIA_GALLERY_MAX, normalizeLegacyMediaPayload } from '../media/constants';
 
 describe('payloads', () => {
   describe('payloadWithinBudget', () => {
@@ -138,37 +139,86 @@ describe('payloads', () => {
     });
   });
 
-  describe('image payload', () => {
+  describe('media payload (D386, D398)', () => {
+    const schema = payloadSchemaFor('media');
+    const gallery = (...images: Record<string, unknown>[]) => ({ kind: 'image', images });
+
     it('accepts a missing or empty alt (D206)', () => {
-      const schema = payloadSchemaFor('image');
-      expect(schema.safeParse({ publicId: 'abc123' }).success).toBe(true);
-      expect(schema.safeParse({ publicId: 'abc123', alt: '' }).success).toBe(true);
-      expect(schema.safeParse({ publicId: 'abc123', alt: 5 }).success).toBe(false);
-    });
-
-    it('accepts valid image', () => {
-      const schema = payloadSchemaFor('image');
-
-      const validPayload = {
-        publicId: 'abc123',
-        alt: 'A beautiful image',
-      };
-      expect(schema.safeParse(validPayload).success).toBe(true);
+      expect(schema.safeParse(gallery({ publicId: 'abc123' })).success).toBe(true);
+      expect(schema.safeParse(gallery({ publicId: 'abc123', alt: '' })).success).toBe(true);
+      expect(schema.safeParse(gallery({ publicId: 'abc123', alt: 5 })).success).toBe(false);
     });
 
     it('accepts optional dimensions within 1..20000 (D160)', () => {
-      const schema = payloadSchemaFor('image');
       const base = { publicId: 'abc123', alt: 'A' };
-      expect(schema.safeParse({ ...base, width: 3024, height: 4032 }).success).toBe(true);
-      expect(schema.safeParse({ ...base, width: 1, height: 20000 }).success).toBe(true);
-      expect(schema.safeParse({ ...base, width: 0 }).success).toBe(false);
-      expect(schema.safeParse({ ...base, height: 20001 }).success).toBe(false);
-      expect(schema.safeParse({ ...base, width: 1.5 }).success).toBe(false);
+      expect(schema.safeParse(gallery({ ...base, width: 3024, height: 4032 })).success).toBe(true);
+      expect(schema.safeParse(gallery({ ...base, width: 1, height: 20000 })).success).toBe(true);
+      expect(schema.safeParse(gallery({ ...base, width: 0 })).success).toBe(false);
+      expect(schema.safeParse(gallery({ ...base, height: 20001 })).success).toBe(false);
+      expect(schema.safeParse(gallery({ ...base, width: 1.5 })).success).toBe(false);
     });
 
-    it('stays strict', () => {
-      const schema = payloadSchemaFor('image');
-      expect(schema.safeParse({ publicId: 'abc123', alt: 'A', format: 'jpg' }).success).toBe(false);
+    it('holds 1 to 8 photos with no repeats', () => {
+      const photos = (n: number) => Array.from({ length: n }, (_, i) => ({ publicId: `p${i}` }));
+      expect(schema.safeParse(gallery()).success).toBe(false);
+      expect(schema.safeParse(gallery(...photos(MEDIA_GALLERY_MAX))).success).toBe(true);
+      expect(schema.safeParse(gallery(...photos(MEDIA_GALLERY_MAX + 1))).success).toBe(false);
+      const repeated = schema.safeParse(gallery({ publicId: 'a' }, { publicId: 'a' }));
+      expect(repeated.success).toBe(false);
+      expect(repeated.error?.issues[0]?.path).toEqual(['images', 1, 'publicId']);
+    });
+
+    it('caps each description at 200 code points', () => {
+      const alt = '😀'.repeat(MEDIA_ALT_MAX);
+      expect(schema.safeParse(gallery({ publicId: 'a', alt })).success).toBe(true);
+      expect(schema.safeParse(gallery({ publicId: 'a', alt: alt + 'x' })).success).toBe(false);
+    });
+
+    it('fits a full gallery of maximal descriptions in the payload budget', () => {
+      const images = Array.from({ length: MEDIA_GALLERY_MAX }, (_, i) => ({
+        publicId: `gobbit/items/00000000-0000-0000-0000-000000000000/${'x'.repeat(20)}${i}`,
+        alt: '😀'.repeat(MEDIA_ALT_MAX),
+        width: 20000,
+        height: 20000,
+      }));
+      expect(schema.safeParse(gallery(...images)).success).toBe(true);
+    });
+
+    it('takes one file for pdf, audio and video', () => {
+      for (const kind of ['pdf', 'audio', 'video']) {
+        expect(schema.safeParse({ kind, publicId: 'f', alt: 'x', durationMs: 1200 }).success).toBe(
+          true,
+        );
+        expect(schema.safeParse({ kind, images: [{ publicId: 'f' }] }).success).toBe(false);
+      }
+      expect(schema.safeParse({ kind: 'pdf', publicId: 'f', pages: 0 }).success).toBe(false);
+    });
+
+    it('requires a known kind and stays strict', () => {
+      expect(schema.safeParse({ publicId: 'abc123' }).success).toBe(false);
+      expect(schema.safeParse({ kind: 'zip', publicId: 'abc123' }).success).toBe(false);
+      expect(schema.safeParse({ ...gallery({ publicId: 'a' }), format: 'jpg' }).success).toBe(
+        false,
+      );
+    });
+  });
+
+  describe('normalizeLegacyMediaPayload (D387)', () => {
+    it('turns a flat image payload into a one-photo gallery', () => {
+      expect(normalizeLegacyMediaPayload({ publicId: 'a', alt: 'x', width: 3, height: 4 })).toEqual(
+        { kind: 'image', images: [{ publicId: 'a', alt: 'x', width: 3, height: 4 }] },
+      );
+      expect(normalizeLegacyMediaPayload({ publicId: 'a', alt: undefined })).toEqual({
+        kind: 'image',
+        images: [{ publicId: 'a' }],
+      });
+    });
+
+    it('leaves new payloads and other values alone', () => {
+      const current = { kind: 'pdf', publicId: 'a' };
+      expect(normalizeLegacyMediaPayload(current)).toBe(current);
+      expect(normalizeLegacyMediaPayload(null)).toBe(null);
+      expect(normalizeLegacyMediaPayload({ url: 'https://x' })).toEqual({ url: 'https://x' });
     });
   });
 
