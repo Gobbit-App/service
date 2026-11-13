@@ -50,6 +50,13 @@ of `docs/design/card-media.md` at close-out.
 - **Verify pass scope**: only `source = 'editor'` assets are checked; ingest and link-snapshot
   uploads are made by the server from the provider's own answer. A file the provider doesn't
   know is marked verified (logged `missing`) so it isn't looked up every day.
+- **Sign body read by hand**: `POST /decks/{id}/media/sign` documents its optional `{ kind }`
+  body in the route description instead of a declared request body. A declared optional JSON body
+  is still validated when absent (no content type → 400), which broke clients that send none
+  (caught by `media.int`).
+- **0008 search-text overload**: the 4-argument `item_search_text` from 0008 compared the enum to
+  the literal `'image'` and failed after the rename. 0025 makes it delegate to the 5-argument
+  function with empty entities (same text for every other type); the down file restores it.
 - **Images without dimensions**: confirm now accepts an image without `width`/`height` (the
   schema made them optional for audio); the asset records nulls as backfilled rows do.
 - **Upload parsing**: `uploadedImageOf()` already reads `resource_type`, `pages`, `duration`,
