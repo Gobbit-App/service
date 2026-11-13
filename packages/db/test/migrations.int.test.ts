@@ -255,7 +255,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
     const bare = await ctx.pool.query(`SELECT payload FROM items WHERE title = 'Bare'`);
     expect(bare.rows[0].payload).toEqual({ kind: 'image', images: [{ publicId: 'p2' }] });
 
-    expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
+    expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     const down = await ctx.pool.query(
       `SELECT type::text, payload, updated_at FROM items WHERE id = $1`,
       [id],
