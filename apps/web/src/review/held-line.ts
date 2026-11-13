@@ -9,6 +9,7 @@ const HELD_REASON: Readonly<Record<HeldOutcome, string>> = {
   held_duplicate: 'it may be a duplicate',
   held_duplicate_check_failed: "the duplicate check didn't finish",
   held_publish_failed: 'publishing failed',
+  held_event_unverified: 'check the date and time',
 };
 
 /** FR-011: "Not published directly: <reason>" for a held share; null otherwise. */

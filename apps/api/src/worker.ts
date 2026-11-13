@@ -11,6 +11,7 @@ import {
   WAITLIST_PRUNE_CRON,
 } from '@gobbit/shared';
 import { parseEnv } from './env';
+import { createEventNoticeHook } from './services/event-cards.service';
 import { createBoss } from './jobs/boss';
 import { createEmbedQueue, noopEmbedQueue } from './jobs/embed-queue';
 import { createIngestHandler } from './jobs/ingest';
@@ -230,6 +231,13 @@ async function main() {
       embedQueue: workerEmbedQueue,
       linkSnapshotQueue: ingestLinkSnapshotQueue,
       assets: createAssetsRepo(db),
+      // D370/D374: shares recognised as events become event proposals.
+      events: {
+        defaultTimeZone: env.INGEST_DEFAULT_TIME_ZONE,
+        startMaxDays: env.EVENT_START_MAX_DAYS,
+        locationMax: env.EVENT_LOCATION_MAX,
+        isPersonalDeck: async (deckId) => (await decks.findById(deckId))?.kind === 'personal',
+      },
       // D193: publishers' shares on opted-in decks skip review, through review's own routine.
       autoPublish: (input) =>
         autoPublish(
@@ -240,6 +248,9 @@ async function main() {
               transaction: reviewTransaction(db),
               imageReference: createImageReferenceCheck(createAssetsRepo(db)),
               now: () => new Date(),
+              noticeHook: createEventNoticeHook({
+                allDayNoticeHour: env.EVENT_ALLDAY_NOTICE_HOUR,
+              }),
             }),
             jobs: ingestJobs,
             embedQueue: workerEmbedQueue,

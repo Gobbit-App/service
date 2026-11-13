@@ -12,6 +12,25 @@ describe('payloadText', () => {
     expect(payloadText('reminder', payload)).toBe('');
   });
 
+  it('D372: an event adds its location and link text, never time, zone or notify', () => {
+    const payload = {
+      allDay: false,
+      start: '2030-06-01T18:00:00+03:00',
+      timeZone: 'Asia/Jerusalem',
+      location: 'Town Hall',
+      url: 'https://example.com/fair',
+      preview: { title: 'Summer fair', description: 'Stalls', publicId: 'gobbit/x/secret' },
+      notify: {
+        before: [{ amount: 1, unit: 'days' }],
+        audience: { mode: 'people', userIds: ['u1'] },
+      },
+    };
+    expect(payloadText('event', payload)).toBe(
+      'Town Hall https://example.com/fair Summer fair Stalls',
+    );
+    expect(payloadText('event', { allDay: true, start: '2030-06-01', timeZone: 'UTC' })).toBe('');
+  });
+
   it('collects url and preview strings from a link payload in key order', () => {
     const payload = {
       url: 'https://example.com/a',

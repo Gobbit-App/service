@@ -35,6 +35,9 @@
           "channel": {
             "type": "string"
           },
+          "timeZone": {
+            "type": "string"
+          },
           "files": {
             "anyOf": [
               {
@@ -1968,11 +1971,77 @@
                           "overdue"
                         ]
                       }
+                    },
+                    "comingUp": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "event"
+                            ]
+                          },
+                          "itemId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "deck": {
+                            "type": "object",
+                            "properties": {
+                              "slug": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "slug",
+                              "name"
+                            ]
+                          },
+                          "startsAt": {
+                            "type": "string"
+                          },
+                          "endsAt": {
+                            "type": "string"
+                          },
+                          "allDay": {
+                            "type": "boolean"
+                          },
+                          "timeZone": {
+                            "type": "string"
+                          },
+                          "location": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "itemId",
+                          "title",
+                          "deck",
+                          "startsAt",
+                          "endsAt",
+                          "allDay",
+                          "timeZone",
+                          "location"
+                        ]
+                      }
                     }
                   },
                   "required": [
                     "items",
-                    "upcoming"
+                    "upcoming",
+                    "comingUp"
                   ]
                 }
               }
@@ -8373,7 +8442,8 @@
                 "image",
                 "table",
                 "calc",
-                "reminder"
+                "reminder",
+                "event"
               ]
             },
             "required": false,
@@ -8452,7 +8522,8 @@
                               "image",
                               "table",
                               "calc",
-                              "reminder"
+                              "reminder",
+                              "event"
                             ]
                           },
                           "status": {
@@ -8671,6 +8742,78 @@
                               "hidden",
                               "canDismiss",
                               "canChangeDismissers"
+                            ]
+                          },
+                          "event": {
+                            "type": "object",
+                            "properties": {
+                              "startsAt": {
+                                "type": "string"
+                              },
+                              "endsAt": {
+                                "type": "string"
+                              },
+                              "allDay": {
+                                "type": "boolean"
+                              },
+                              "timeZone": {
+                                "type": "string"
+                              },
+                              "notices": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "amount": {
+                                      "type": "integer"
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "minutes",
+                                        "hours",
+                                        "days"
+                                      ]
+                                    },
+                                    "fireAt": {
+                                      "type": "string"
+                                    },
+                                    "state": {
+                                      "type": "string",
+                                      "enum": [
+                                        "pending",
+                                        "planned",
+                                        "skipped"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "unit",
+                                    "fireAt",
+                                    "state"
+                                  ]
+                                }
+                              },
+                              "muted": {
+                                "type": "boolean"
+                              },
+                              "inAudience": {
+                                "type": "boolean"
+                              },
+                              "canEditNotify": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "startsAt",
+                              "endsAt",
+                              "allDay",
+                              "timeZone",
+                              "notices",
+                              "muted",
+                              "inAudience",
+                              "canEditNotify"
                             ]
                           }
                         },
@@ -9079,7 +9222,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9248,7 +9391,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9388,7 +9531,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9531,7 +9674,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9693,7 +9836,7 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -9876,7 +10019,276 @@
                       "body": {
                         "type": "string",
                         "default": "",
-                        "description": "Card body, max 600 characters (Unicode code points)"
+                        "description": "Card body, max 2000 characters (Unicode code points)"
+                      },
+                      "categoryIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      },
+                      "sourceUrl": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "proposed",
+                          "published",
+                          "archived"
+                        ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "payload",
+                      "title"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "event"
+                        ]
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "allDay": {
+                            "type": "boolean"
+                          },
+                          "start": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                          },
+                          "end": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                          },
+                          "timeZone": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          },
+                          "location": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "preview": {
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "image": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "publicId": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 1
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "imageLookup": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "imageRemoved": {
+                                "type": "boolean",
+                                "enum": [
+                                  true
+                                ]
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "notify": {
+                            "type": "object",
+                            "properties": {
+                              "before": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "amount": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "minutes",
+                                        "hours",
+                                        "days"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "unit"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "maxItems": 3
+                              },
+                              "audience": {
+                                "type": "object",
+                                "properties": {
+                                  "mode": {
+                                    "type": "string",
+                                    "enum": [
+                                      "everyone",
+                                      "people",
+                                      "me",
+                                      "nobody"
+                                    ]
+                                  },
+                                  "userIds": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "maxItems": 50,
+                                    "default": []
+                                  }
+                                },
+                                "required": [
+                                  "mode"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "default": {
+                              "before": [
+                                {
+                                  "amount": 1,
+                                  "unit": "days"
+                                }
+                              ],
+                              "audience": {
+                                "mode": "everyone",
+                                "userIds": []
+                              }
+                            },
+                            "required": [
+                              "before",
+                              "audience"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "allDay",
+                          "start",
+                          "timeZone"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "body": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Card body, max 2000 characters (Unicode code points)"
                       },
                       "categoryIds": {
                         "type": "array",
@@ -10004,7 +10416,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -10223,6 +10636,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -10774,7 +11259,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -10993,6 +11479,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -11288,13 +11846,25 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "text",
+                      "link",
+                      "image",
+                      "table",
+                      "calc",
+                      "reminder",
+                      "event"
+                    ]
+                  },
                   "title": {
                     "type": "string",
                     "minLength": 1
                   },
                   "body": {
                     "type": "string",
-                    "description": "Card body, max 600 characters (Unicode code points)"
+                    "description": "Card body, max 2000 characters (Unicode code points)"
                   },
                   "payload": {
                     "type": "object",
@@ -11421,7 +11991,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -11640,6 +12211,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -12457,7 +13100,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -12676,6 +13320,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -13069,7 +13785,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -13288,6 +14005,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -13703,7 +14492,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -13922,6 +14712,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -14473,7 +15335,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -14692,6 +15555,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -15164,7 +16099,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -15383,6 +16319,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -16075,6 +17083,540 @@
         }
       }
     },
+    "/items/{id}/mute": {
+      "put": {
+        "tags": [
+          "items"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Event muted for you (idempotent, D364). 409 `/problems/not-an-event` or `/problems/event-not-in-audience`"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "items"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Event unmuted for you (idempotent, D364). 409 `/problems/not-an-event`"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/items/{id}/favorite": {
       "post": {
         "tags": [
@@ -16529,7 +18071,8 @@
                                   "image",
                                   "table",
                                   "calc",
-                                  "reminder"
+                                  "reminder",
+                                  "event"
                                 ]
                               },
                               "status": {
@@ -16748,6 +18291,78 @@
                                   "hidden",
                                   "canDismiss",
                                   "canChangeDismissers"
+                                ]
+                              },
+                              "event": {
+                                "type": "object",
+                                "properties": {
+                                  "startsAt": {
+                                    "type": "string"
+                                  },
+                                  "endsAt": {
+                                    "type": "string"
+                                  },
+                                  "allDay": {
+                                    "type": "boolean"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "notices": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "integer"
+                                        },
+                                        "unit": {
+                                          "type": "string",
+                                          "enum": [
+                                            "minutes",
+                                            "hours",
+                                            "days"
+                                          ]
+                                        },
+                                        "fireAt": {
+                                          "type": "string"
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "enum": [
+                                            "pending",
+                                            "planned",
+                                            "skipped"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "unit",
+                                        "fireAt",
+                                        "state"
+                                      ]
+                                    }
+                                  },
+                                  "muted": {
+                                    "type": "boolean"
+                                  },
+                                  "inAudience": {
+                                    "type": "boolean"
+                                  },
+                                  "canEditNotify": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "startsAt",
+                                  "endsAt",
+                                  "allDay",
+                                  "timeZone",
+                                  "notices",
+                                  "muted",
+                                  "inAudience",
+                                  "canEditNotify"
                                 ]
                               }
                             },
@@ -19994,6 +21609,11 @@
                       "pwa",
                       "paste"
                     ]
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
                   }
                 }
               }
@@ -20627,6 +22247,9 @@
                               "mime"
                             ]
                           }
+                        },
+                        "timeZone": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -20716,6 +22339,49 @@
                           },
                           "additionalProperties": false
                         },
+                        "structuredEvent": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "startDate": {
+                              "type": "string"
+                            },
+                            "endDate": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "location": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "url": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "startDate",
+                            "endDate",
+                            "location",
+                            "url"
+                          ]
+                        },
+                        "structuredEventCount": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
                         "imageCandidates": {
                           "type": "array",
                           "items": {
@@ -20789,7 +22455,8 @@
                           "enum": [
                             "text",
                             "link",
-                            "image"
+                            "image",
+                            "event"
                           ]
                         },
                         "confidence": {
@@ -20810,6 +22477,35 @@
                           "type": [
                             "string",
                             "null"
+                          ]
+                        },
+                        "fallback": {
+                          "type": "string",
+                          "enum": [
+                            "preview"
+                          ]
+                        },
+                        "event": {
+                          "type": "object",
+                          "properties": {
+                            "dateSource": {
+                              "type": "string",
+                              "enum": [
+                                "structured",
+                                "model"
+                              ]
+                            },
+                            "zoneSource": {
+                              "type": "string",
+                              "enum": [
+                                "request",
+                                "fallback"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "dateSource",
+                            "zoneSource"
                           ]
                         }
                       },
@@ -20909,6 +22605,7 @@
                         "held_duplicate",
                         "held_duplicate_check_failed",
                         "held_publish_failed",
+                        "held_event_unverified",
                         null
                       ]
                     },
@@ -22029,7 +23726,8 @@
                                   "image",
                                   "table",
                                   "calc",
-                                  "reminder"
+                                  "reminder",
+                                  "event"
                                 ]
                               },
                               "status": {
@@ -22248,6 +23946,78 @@
                                   "hidden",
                                   "canDismiss",
                                   "canChangeDismissers"
+                                ]
+                              },
+                              "event": {
+                                "type": "object",
+                                "properties": {
+                                  "startsAt": {
+                                    "type": "string"
+                                  },
+                                  "endsAt": {
+                                    "type": "string"
+                                  },
+                                  "allDay": {
+                                    "type": "boolean"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "notices": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "integer"
+                                        },
+                                        "unit": {
+                                          "type": "string",
+                                          "enum": [
+                                            "minutes",
+                                            "hours",
+                                            "days"
+                                          ]
+                                        },
+                                        "fireAt": {
+                                          "type": "string"
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "enum": [
+                                            "pending",
+                                            "planned",
+                                            "skipped"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "unit",
+                                        "fireAt",
+                                        "state"
+                                      ]
+                                    }
+                                  },
+                                  "muted": {
+                                    "type": "boolean"
+                                  },
+                                  "inAudience": {
+                                    "type": "boolean"
+                                  },
+                                  "canEditNotify": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "startsAt",
+                                  "endsAt",
+                                  "allDay",
+                                  "timeZone",
+                                  "notices",
+                                  "muted",
+                                  "inAudience",
+                                  "canEditNotify"
                                 ]
                               }
                             },
@@ -22389,6 +24159,17 @@
                                   "held_duplicate",
                                   "held_duplicate_check_failed",
                                   "held_publish_failed",
+                                  "held_event_unverified",
+                                  null
+                                ]
+                              },
+                              "extractionFallback": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "preview",
                                   null
                                 ]
                               }
@@ -22402,7 +24183,8 @@
                               "dedup",
                               "newCategory",
                               "sourcePreview",
-                              "autoPublish"
+                              "autoPublish",
+                              "extractionFallback"
                             ]
                           },
                           "target": {
@@ -22427,7 +24209,8 @@
                                   "image",
                                   "table",
                                   "calc",
-                                  "reminder"
+                                  "reminder",
+                                  "event"
                                 ]
                               },
                               "status": {
@@ -22646,6 +24429,78 @@
                                   "hidden",
                                   "canDismiss",
                                   "canChangeDismissers"
+                                ]
+                              },
+                              "event": {
+                                "type": "object",
+                                "properties": {
+                                  "startsAt": {
+                                    "type": "string"
+                                  },
+                                  "endsAt": {
+                                    "type": "string"
+                                  },
+                                  "allDay": {
+                                    "type": "boolean"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  },
+                                  "notices": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "integer"
+                                        },
+                                        "unit": {
+                                          "type": "string",
+                                          "enum": [
+                                            "minutes",
+                                            "hours",
+                                            "days"
+                                          ]
+                                        },
+                                        "fireAt": {
+                                          "type": "string"
+                                        },
+                                        "state": {
+                                          "type": "string",
+                                          "enum": [
+                                            "pending",
+                                            "planned",
+                                            "skipped"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "unit",
+                                        "fireAt",
+                                        "state"
+                                      ]
+                                    }
+                                  },
+                                  "muted": {
+                                    "type": "boolean"
+                                  },
+                                  "inAudience": {
+                                    "type": "boolean"
+                                  },
+                                  "canEditNotify": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "startsAt",
+                                  "endsAt",
+                                  "allDay",
+                                  "timeZone",
+                                  "notices",
+                                  "muted",
+                                  "inAudience",
+                                  "canEditNotify"
                                 ]
                               }
                             },
@@ -23365,7 +25220,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "status": {
@@ -23584,6 +25440,78 @@
                         "hidden",
                         "canDismiss",
                         "canChangeDismissers"
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "startsAt": {
+                          "type": "string"
+                        },
+                        "endsAt": {
+                          "type": "string"
+                        },
+                        "allDay": {
+                          "type": "boolean"
+                        },
+                        "timeZone": {
+                          "type": "string"
+                        },
+                        "notices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "minutes",
+                                  "hours",
+                                  "days"
+                                ]
+                              },
+                              "fireAt": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "pending",
+                                  "planned",
+                                  "skipped"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "unit",
+                              "fireAt",
+                              "state"
+                            ]
+                          }
+                        },
+                        "muted": {
+                          "type": "boolean"
+                        },
+                        "inAudience": {
+                          "type": "boolean"
+                        },
+                        "canEditNotify": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "startsAt",
+                        "endsAt",
+                        "allDay",
+                        "timeZone",
+                        "notices",
+                        "muted",
+                        "inAudience",
+                        "canEditNotify"
                       ]
                     }
                   },
@@ -24973,6 +26901,7 @@
                               "held_duplicate",
                               "held_duplicate_check_failed",
                               "held_publish_failed",
+                              "held_event_unverified",
                               null
                             ]
                           },
@@ -24991,12 +26920,49 @@
                               },
                               "deleted": {
                                 "type": "boolean"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "link",
+                                  "image",
+                                  "table",
+                                  "calc",
+                                  "reminder",
+                                  "event"
+                                ]
+                              },
+                              "event": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "startsAt": {
+                                    "type": "string"
+                                  },
+                                  "allDay": {
+                                    "type": "boolean"
+                                  },
+                                  "timeZone": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "startsAt",
+                                  "allDay",
+                                  "timeZone"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": [
                               "id",
                               "title",
-                              "deleted"
+                              "deleted",
+                              "type",
+                              "event"
                             ],
                             "additionalProperties": false
                           },
@@ -25407,6 +27373,7 @@
                         "held_duplicate",
                         "held_duplicate_check_failed",
                         "held_publish_failed",
+                        "held_event_unverified",
                         null
                       ]
                     },
@@ -25425,12 +27392,49 @@
                         },
                         "deleted": {
                           "type": "boolean"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "link",
+                            "image",
+                            "table",
+                            "calc",
+                            "reminder",
+                            "event"
+                          ]
+                        },
+                        "event": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "startsAt": {
+                              "type": "string"
+                            },
+                            "allDay": {
+                              "type": "boolean"
+                            },
+                            "timeZone": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "startsAt",
+                            "allDay",
+                            "timeZone"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "title",
-                        "deleted"
+                        "deleted",
+                        "type",
+                        "event"
                       ],
                       "additionalProperties": false
                     },
@@ -25756,6 +27760,7 @@
                         "held_duplicate",
                         "held_duplicate_check_failed",
                         "held_publish_failed",
+                        "held_event_unverified",
                         null
                       ]
                     },
@@ -25774,12 +27779,49 @@
                         },
                         "deleted": {
                           "type": "boolean"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "link",
+                            "image",
+                            "table",
+                            "calc",
+                            "reminder",
+                            "event"
+                          ]
+                        },
+                        "event": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "startsAt": {
+                              "type": "string"
+                            },
+                            "allDay": {
+                              "type": "boolean"
+                            },
+                            "timeZone": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "startsAt",
+                            "allDay",
+                            "timeZone"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "title",
-                        "deleted"
+                        "deleted",
+                        "type",
+                        "event"
                       ],
                       "additionalProperties": false
                     },
@@ -26435,7 +28477,7 @@
                         "body": {
                           "type": "string",
                           "default": "",
-                          "description": "Card body, max 600 characters (Unicode code points)"
+                          "description": "Card body, max 2000 characters (Unicode code points)"
                         },
                         "sourceUrl": {
                           "type": "string",
@@ -27784,7 +29826,8 @@
                               "image",
                               "table",
                               "calc",
-                              "reminder"
+                              "reminder",
+                              "event"
                             ]
                           },
                           "title": {
@@ -28221,7 +30264,8 @@
                         "image",
                         "table",
                         "calc",
-                        "reminder"
+                        "reminder",
+                        "event"
                       ]
                     },
                     "title": {
@@ -28666,7 +30710,8 @@
                                   "image",
                                   "table",
                                   "calc",
-                                  "reminder"
+                                  "reminder",
+                                  "event"
                                 ]
                               },
                               "title": {

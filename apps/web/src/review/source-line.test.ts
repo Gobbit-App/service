@@ -17,6 +17,7 @@ function makeJob(overrides: Partial<ReviewJob>): ReviewJob {
     newCategory: null,
     sourcePreview: null,
     autoPublish: null,
+    extractionFallback: null,
     ...overrides,
   };
 }

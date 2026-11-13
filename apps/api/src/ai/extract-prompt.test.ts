@@ -30,6 +30,34 @@ describe('buildExtractPrompt', () => {
     expect(user).not.toContain('<b>now</b>');
   });
 
+  it("adds the page's one event as escaped <event_data> inside <source> (D370)", () => {
+    const base = baseInput();
+    const { user, system } = buildExtractPrompt({
+      ...base,
+      source: {
+        ...base.source,
+        structuredEvent: {
+          name: 'Fair <script>',
+          startDate: '2026-12-03T18:00:00Z',
+          endDate: null,
+          location: 'Town hall',
+          url: null,
+        },
+      },
+    });
+    const inside = user.slice(user.indexOf('<source>'), user.indexOf('</source>'));
+    expect(inside).toContain(
+      '<event_data>\n<name>Fair &lt;script&gt;</name>\n<start>2026-12-03T18:00:00Z</start>\n' +
+        '<location>Town hall</location>\n</event_data>',
+    );
+    expect(user).not.toContain('<end>');
+    expect(system).toContain('Never invent a date or time');
+  });
+
+  it('has no <event_data> without a structured event', () => {
+    expect(buildExtractPrompt(baseInput()).user).not.toContain('<event_data>');
+  });
+
   it('lists categories with id and escaped name', () => {
     const { user } = buildExtractPrompt(baseInput());
     expect(user).toContain('<category id="c1">Home & &lt;Garden&gt;</category>');

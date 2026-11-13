@@ -25,6 +25,7 @@ const ingestMultipartSchema = z
     url: z.string().optional(),
     title: z.string().optional(),
     channel: z.string().optional(),
+    timeZone: z.string().optional(),
     files: z.union([fileSchema, z.array(fileSchema)]).optional(),
   })
   .openapi('IngestMultipart');

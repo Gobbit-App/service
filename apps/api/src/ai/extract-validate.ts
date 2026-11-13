@@ -9,6 +9,8 @@ import {
   entityKinds,
   itemCreateSchema,
   type Entities,
+  type EventDateSource,
+  type EventZoneSource,
   type IngestCardType,
   type ItemCreate,
   type LinkPayload,
@@ -17,7 +19,8 @@ import {
 import { LOCKED_CAPTION_MAX, type LockedHostMatch } from '@gobbit/shared/links';
 import { isGenericLockedTitle } from '../fetch/locked-host-preview';
 import { stripStyleDirectives } from '../rich-text/plain-text';
-import { proposeCardInputSchema } from './extract-prompt';
+import { proposeEvent, type EventContext, type EventDecision } from './extract-event';
+import { proposeCardInputSchema, type ProposeCardInput } from './extract-prompt';
 
 /** Context the validator needs from the deck and the shared item. */
 export interface ValidateContext {
@@ -32,6 +35,8 @@ export interface ValidateContext {
   /** D160: the recorded dimensions of `imagePublicId`, when known. */
   imageDimensions?: { width: number; height: number } | null;
   categoryIds: readonly string[];
+  /** D370: event rules for this share; without it a proposed event becomes a link or text card. */
+  event?: EventContext;
 }
 
 /** Result of validating a `propose_card` tool call. */
@@ -45,7 +50,11 @@ export type ValidatedProposal =
         language: string;
         categoryIds: string[];
         newCategory: string | null;
+        /** D375: set when the card is an event. */
+        event?: { dateSource: EventDateSource; zoneSource: EventZoneSource };
       };
+      /** D378: set whenever the share was tried as an event. */
+      eventDecision?: EventDecision;
     }
   | { ok: false; error: string };
 
@@ -195,36 +204,44 @@ export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedP
 
   const lockedHost = ctx.sourceUrl ? (ctx.lockedHost ?? null) : null;
   const url = (lockedHost && ctx.sourceUrl) || input.link?.url || ctx.sourceUrl || undefined;
-  let type: IngestCardType = lockedHost ? 'link' : input.type;
-  if (type === 'link' && !url) {
-    type = 'text';
-  }
-  if (type === 'image' && !ctx.imagePublicId) {
-    type = url ? 'link' : 'text';
+  const linkPreview = ctx.linkPreview && url === ctx.sourceUrl ? ctx.linkPreview : undefined;
+  const plainType = (type: IngestCardType): Exclude<IngestCardType, 'event'> => {
+    if (type === 'image' && ctx.imagePublicId) return 'image';
+    if (type === 'text') return 'text';
+    return url ? 'link' : 'text';
+  };
+
+  let type: IngestCardType = lockedHost ? 'link' : plainType(input.type);
+  let payload = plainPayload(type, { url, title, lockedHost, linkPreview, ctx });
+  let eventDecision: EventDecision | undefined;
+  if (!lockedHost && ctx.event && wantsEvent(input, ctx.event)) {
+    const proposed = proposeEvent(input, ctx.event, { url, preview: linkPreview });
+    eventDecision = proposed.decision;
+    if (proposed.ok) {
+      type = 'event';
+      payload = proposed.payload;
+    }
   }
 
-  let payload: Record<string, unknown> = {};
-  if (type === 'link' && url && lockedHost) {
-    payload = { url, preview: lockedPreview(url, title, { ...ctx, lockedHost }) };
-  } else if (type === 'link' && url) {
-    payload =
-      ctx.linkPreview && url === ctx.sourceUrl ? { url, preview: ctx.linkPreview } : { url };
-  } else if (type === 'image' && ctx.imagePublicId) {
-    payload = { publicId: ctx.imagePublicId, alt: title || 'Shared image' };
-  }
-
-  const candidate: Record<string, unknown> = {
+  const candidate = (t: IngestCardType, p: Record<string, unknown>): Record<string, unknown> => ({
     title,
     body,
     categoryIds,
     entities: compacted,
     status: 'proposed',
-    type,
+    type: t,
     ...(ctx.sourceUrl !== undefined ? { sourceUrl: ctx.sourceUrl } : {}),
-    payload,
-  };
+    payload: p,
+  });
 
-  const item = itemCreateSchema.safeParse(candidate);
+  let item = itemCreateSchema.safeParse(candidate(type, payload));
+  if (!item.success && type === 'event') {
+    // D370: an event the schema refuses becomes a link or text card, with no correction round trip.
+    eventDecision = { outcome: 'event_fallback', reason: 'invalid_event' };
+    type = plainType('link');
+    payload = plainPayload(type, { url, title, lockedHost, linkPreview, ctx });
+    item = itemCreateSchema.safeParse(candidate(type, payload));
+  }
   if (!item.success) {
     return { ok: false, error: formatZodError(item.error) };
   }
@@ -243,6 +260,46 @@ export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedP
       language: input.language,
       categoryIds,
       newCategory,
+      ...(eventDecision?.outcome === 'event_proposed'
+        ? {
+            event: {
+              dateSource: eventDecision.dateSource,
+              zoneSource: eventDecision.zoneSource,
+            },
+          }
+        : {}),
     },
+    ...(eventDecision ? { eventDecision } : {}),
   };
+}
+
+/** D370: the model picked an event, or the page has one schema.org Event (unless it's a photo). */
+function wantsEvent(input: ProposeCardInput, ctx: EventContext): boolean {
+  return input.type === 'event' || (ctx.structured !== undefined && input.type !== 'image');
+}
+
+/** The payload of a text, link or image card. */
+function plainPayload(
+  type: IngestCardType,
+  p: {
+    url: string | undefined;
+    title: string;
+    lockedHost: LockedHostMatch | null;
+    linkPreview: LinkPreview | undefined;
+    ctx: ValidateContext;
+  },
+): Record<string, unknown> {
+  if (type === 'link' && p.url && p.lockedHost) {
+    return {
+      url: p.url,
+      preview: lockedPreview(p.url, p.title, { ...p.ctx, lockedHost: p.lockedHost }),
+    };
+  }
+  if (type === 'link' && p.url) {
+    return p.linkPreview ? { url: p.url, preview: p.linkPreview } : { url: p.url };
+  }
+  if (type === 'image' && p.ctx.imagePublicId) {
+    return { publicId: p.ctx.imagePublicId, alt: p.title || 'Shared image' };
+  }
+  return {};
 }

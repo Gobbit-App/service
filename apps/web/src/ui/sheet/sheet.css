@@ -7,14 +7,10 @@
   margin: auto 0 0;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  background: var(--color-surface);
+  border-top: 1px solid var(--glass-line);
+  border-radius: var(--radius);
   color: var(--color-text);
   box-shadow: var(--elevation-3);
-}
-
-.sheet::backdrop {
-  background: rgb(0 0 0 / 45%);
 }
 
 .sheet__body {

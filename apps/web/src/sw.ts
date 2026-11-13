@@ -82,6 +82,8 @@ registerRoute(
       /^\/version\.json$/,
       /^\/sitemap\.xml$/,
       /^\/robots\.txt$/,
+      // D354: the open-source notices linked from About are a static file.
+      /^\/licenses\.txt$/,
     ],
   }),
 );

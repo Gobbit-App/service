@@ -1,22 +1,36 @@
-/* 038 (D287): card-body styles. Hexes mirror PALETTE in @gobbit/shared/rich-text (palette test). */
+/* 038 (D287): card-body styles. Hexes mirror PALETTE in @gobbit/shared/rich-text (palette test).
+   D383: light-dark() follows the app theme (device or Settings → Appearance). */
 :root {
-  --rt-red: #b42318;
-  --rt-orange: #b54708;
-  --rt-green: #067647;
-  --rt-blue: #175cd3;
-  --rt-purple: #6941c6;
-  --rt-grey: #475467;
+  --rt-red: light-dark(#b42318, #fda29b);
+  --rt-orange: light-dark(#b54708, #fdb022);
+  --rt-green: light-dark(#067647, #75e0a7);
+  --rt-blue: light-dark(#175cd3, #84caff);
+  --rt-purple: light-dark(#6941c6, #bdb4fe);
+  --rt-grey: light-dark(#475467, #cdd5df);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --rt-red: #fda29b;
-    --rt-orange: #fdb022;
-    --rt-green: #75e0a7;
-    --rt-blue: #84caff;
-    --rt-purple: #bdb4fe;
-    --rt-grey: #cdd5df;
-  }
+/* Body rhythm (FLOW_SPACING in @gobbit/shared/rich-text, flow test): each block owns only the
+   space above it, so the reader and the editor space headings, paragraphs and lists alike. */
+.rt-flow > *,
+.rt-flow li > * {
+  margin-block: 0;
+}
+
+.rt-flow > * + * {
+  margin-top: 0.75em;
+}
+
+.rt-flow > * + :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 1.4em;
+}
+
+.rt-flow > :is(h1, h2, h3, h4, h5, h6) + * {
+  margin-top: 0.4em;
+}
+
+.rt-flow li + li,
+.rt-flow li > * + * {
+  margin-top: 0.3em;
 }
 
 .rt-small {

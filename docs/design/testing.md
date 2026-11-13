@@ -63,7 +63,7 @@ Tagging: every test title includes `@smoke`
 - `smokeDeck`: creates a `smoke-<id>` deck before the test; afterwards removes its memberships and soft-deletes it
 - The members spec invites the single standing user `smoke-invitee@example.test`; only its membership is cleaned up
 
-**Search smoke (Phase 4)**: `search.spec.ts` checks three API cases: a phone number searched as digits without the dash, a query with no results, and the 400 for a blank `q`. `web.spec.ts` checks that typing in the search box opens `/search` with highlighted, tagged results, and checks the empty state.
+**Search smoke (Phase 4)**: `search.spec.ts` checks three API cases: a phone number searched as digits without the dash, a query with no results, and the 400 for a blank `q`. `web.spec.ts` checks that a search from the header sheet opens `/search` with highlighted, tagged results, and checks the empty state.
 
 **Browser smoke (`web-smoke` project, D62)**: `web.spec.ts`, `share.spec.ts` and `lifecycle.spec.ts` (Phase 6: demo 2 archive → Undo → search miss → restore → search hit; delete with confirm, Undo and Undelete; unavailable deck/card links) run in Chromium with a Pixel 7 viewport against `WEB_BASE_URL`. The browser is signed in by setting the `gobbit_session` cookie to the smoke token (sessions are looked up by token hash whatever the transport). Each test seeds a smoke deck with one card per type and checks: the deck list, no horizontal overflow at 360 px, the calc result, category switching via the URL, favorites surviving a reload, and the private share preview. The page itself never gets the bearer header.
 ## Seeding and test data (D49)

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isoDateTimeSchema, uuidSchema } from './common';
+import { itemTypes } from '../enums';
 import { autoPublishOutcomes, ingestFailureCodes, shareChannels } from '../ingest/constants';
 
 /** D196: what the sharer sees of one share. */
@@ -29,8 +30,23 @@ export const shareSummarySchema = z
     canRetry: z.boolean(),
     /** D193: why a publisher's share waits for review, or `published` when it skipped it. */
     autoPublish: z.enum(autoPublishOutcomes).nullable(),
-    /** The card made from the share; `deleted` once it was deleted. */
-    item: z.object({ id: uuidSchema, title: z.string(), deleted: z.boolean() }).strict().nullable(),
+    /**
+     * The card made from the share; `deleted` once it was deleted. `event` (D377) only for an
+     * event card: enough to say "Proposed as an event: Thu 3 Dec, 18:00".
+     */
+    item: z
+      .object({
+        id: uuidSchema,
+        title: z.string(),
+        deleted: z.boolean(),
+        type: z.enum(itemTypes),
+        event: z
+          .object({ startsAt: isoDateTimeSchema, allDay: z.boolean(), timeZone: z.string() })
+          .strict()
+          .nullable(),
+      })
+      .strict()
+      .nullable(),
     reviewedBy: z.object({ displayName: z.string() }).strict().nullable(),
     reviewedAt: isoDateTimeSchema.nullable(),
   })

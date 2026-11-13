@@ -12,21 +12,21 @@ beforeEach(() => resetRichEditorCache());
 
 describe('BodyField (038, D290)', () => {
   it('counts the stored Markdown, styles included (FR-012)', async () => {
-    // D307 (039): the counter shows from 80 % of the limit; 480 + the 16-point styled run.
-    const value = `${'a'.repeat(464)}:color[hi]{.red}`;
+    // D307 (039): the counter shows from 80 % of the limit; 1600 + the 16-point styled run.
+    const value = `${'a'.repeat(1584)}:color[hi]{.red}`;
     render(<BodyField value={value} onChange={vi.fn()} loadEditor={loads()} />);
     const body = await screen.findByLabelText('Body');
     expect(body).toHaveValue(value);
-    expect(screen.getByText('480 / 600 characters')).toBeInTheDocument();
+    expect(screen.getByText('1600 / 2000 characters')).toBeInTheDocument();
     expect(body.getAttribute('aria-describedby')).toContain(
-      screen.getByText('480 / 600 characters').closest('.field__hint')!.id,
+      screen.getByText('1600 / 2000 characters').closest('.field__hint')!.id,
     );
   });
 
   it('keeps the counter out of sight below 80 % (D307)', async () => {
     render(<BodyField value=":color[hi]{.red}" onChange={vi.fn()} loadEditor={loads()} />);
     await screen.findByLabelText('Body');
-    expect(screen.queryByText(/ \/ 600 characters/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ \/ 2000 characters/)).not.toBeInTheDocument();
   });
 
   it('links the error and marks the editor invalid', async () => {

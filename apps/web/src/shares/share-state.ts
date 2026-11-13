@@ -1,4 +1,5 @@
 import type { AutoPublishOutcome, ShareState, ShareSummary } from '@gobbit/shared';
+import { formatEventWhen } from '@gobbit/shared/event-time';
 
 /** D196: the status line of a share. */
 const STATE_LABEL: Readonly<Record<ShareState, string>> = {
@@ -21,6 +22,7 @@ const AUTO_PUBLISH_COPY: Readonly<Record<AutoPublishOutcome, string>> = {
   held_duplicate: 'possible duplicate',
   held_duplicate_check_failed: "the duplicate check didn't finish",
   held_publish_failed: "it couldn't be published directly",
+  held_event_unverified: 'check the date and time before publishing',
 };
 
 export function autoPublishCopy(outcome: AutoPublishOutcome): string {
@@ -48,4 +50,27 @@ export function shareTitle(share: Pick<ShareSummary, 'preview' | 'item'>): strin
 /** D198: lists poll while anything is still processing. */
 export function anyProcessing(shares: readonly Pick<ShareSummary, 'state'>[] | undefined): boolean {
   return shares?.some((s) => s.state === 'processing') ?? false;
+}
+
+/**
+ * D377: "Proposed as an event: Thu 3 Dec, 18:00" for a share that became an event card (times in
+ * the viewer's zone, all-day dates as written); null for any other card.
+ */
+export function shareEventLine(
+  share: Pick<ShareSummary, 'state' | 'item'>,
+  viewerTimeZone: string,
+  now: Date,
+): string | null {
+  const event = share.item?.event;
+  if (!event || share.item?.deleted) return null;
+  const verb =
+    share.state === 'published' ? 'Published' : share.state === 'in_review' ? 'Proposed' : null;
+  if (!verb) return null;
+  const startsAt = new Date(event.startsAt);
+  const when = formatEventWhen(
+    { ...event, startsAt, endsAt: new Date(startsAt.getTime() + 1) },
+    viewerTimeZone,
+    { now, hasEnd: false },
+  );
+  return `${verb} as an event: ${when.time ? `${when.date}, ${when.time}` : when.date}`;
 }

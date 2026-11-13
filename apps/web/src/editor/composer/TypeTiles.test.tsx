@@ -24,8 +24,11 @@ describe('TypeTiles (D301)', () => {
     renderTiles();
     expect(
       screen.getAllByRole('radio').map((tile) => tile.getAttribute('aria-label') ?? ''),
-    ).toEqual(['', '', '', '', '', '']);
+    ).toEqual(['', '', '', '', '', '', '']);
     expect(screen.getByRole('radio', { name: 'Reminder' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Event' })).toHaveAccessibleDescription(
+      TYPE_HINTS.event,
+    );
     const table = screen.getByRole('radio', { name: 'Table' });
     expect(table).toHaveAccessibleDescription(TYPE_HINTS.table);
     expect(table).toHaveAttribute('aria-checked', 'false');

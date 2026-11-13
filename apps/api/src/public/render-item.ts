@@ -8,6 +8,9 @@ import {
 } from '@gobbit/shared';
 import { evaluateCalc, formatCalcResult } from '@gobbit/shared/calc';
 import { imageAlt } from '@gobbit/shared/image-alt';
+import { FLOW_CLASS } from '@gobbit/shared/rich-text';
+import type { EventPublicPayload } from '@gobbit/shared/event-constants';
+import { eventWhenLine } from './event-summary';
 import { h, type Html } from './html';
 import { renderMarkdown } from './markdown';
 
@@ -29,13 +32,15 @@ function hostOf(url: string): string {
 }
 
 function body(item: PublicItem): Html | string {
-  return item.body.trim() ? h`<div class="body">${renderMarkdown(item.body)}</div>` : '';
+  return item.body.trim()
+    ? h`<div class="body ${FLOW_CLASS}">${renderMarkdown(item.body)}</div>`
+    : '';
 }
 
-function renderLink(item: PublicItem, imageUrl: ImageUrlFor): Html | string {
-  const parsed = linkPayloadSchema.safeParse(item.payload);
-  if (!parsed.success) return '';
-  const { url, preview } = parsed.data;
+type LinkFields = Pick<EventPublicPayload, 'url' | 'preview'> & { url: string };
+
+/** A link with its preview (link cards, and an event's optional link). */
+function renderLinkFields({ url, preview }: LinkFields, imageUrl: ImageUrlFor): Html {
   // ADR-055: the stored snapshot first, the remote image only as a fallback.
   const image = preview?.publicId
     ? imageUrl(preview.publicId, PAGE_IMAGE_TRANSFORMATION)
@@ -52,6 +57,21 @@ ${
       }></figure>`
     : ''
 }`;
+}
+
+function renderLink(item: PublicItem, imageUrl: ImageUrlFor): Html | string {
+  const parsed = linkPayloadSchema.safeParse(item.payload);
+  return parsed.success ? renderLinkFields(parsed.data, imageUrl) : '';
+}
+
+/** D367: the date and time in the event's own zone, the location and the link; no status. */
+function renderEvent(item: PublicItem, imageUrl: ImageUrlFor): Html | string {
+  const payload = item.payload as unknown as EventPublicPayload;
+  const when = eventWhenLine(payload);
+  if (!when) return '';
+  return h`<p class="event-when">${when}</p>
+${payload.location?.trim() ? h`<p class="event-location">${payload.location.trim()}</p>` : ''}
+${payload.url ? renderLinkFields({ url: payload.url, preview: payload.preview }, imageUrl) : ''}`;
 }
 
 function renderImage(item: PublicItem, imageUrl: ImageUrlFor): Html | string {
@@ -113,6 +133,9 @@ export function renderItem(item: PublicItem, imageUrl: ImageUrlFor): Html {
       break;
     case 'calc':
       content = renderCalc(item);
+      break;
+    case 'event':
+      content = renderEvent(item, imageUrl);
       break;
     case 'text':
       break;

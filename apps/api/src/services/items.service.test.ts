@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createItemsService } from './items.service';
 import { createRemindersService } from './reminders.service';
+import { createEventCardsService } from './event-cards.service';
 import type { Actor, CurrentUser } from '../types';
 
 type ItemsRepo = any;
@@ -139,6 +140,24 @@ describe('createItemsService', () => {
         decisions: decisions as any,
         now: () => NOW,
       }),
+      eventCards: createEventCardsService({
+        events: {
+          spans: vi.fn().mockResolvedValue(new Map()),
+          currentNotices: vi.fn().mockResolvedValue(new Map()),
+          mutedBy: vi.fn().mockResolvedValue(new Set()),
+          setMute: vi.fn().mockResolvedValue(undefined),
+        },
+        members: remindersRepo,
+        limits: {
+          notifyTimesMax: 3,
+          notifyBeforeMaxDays: 30,
+          startMaxDays: 1825,
+          locationMax: 200,
+          allDayNoticeHour: 9,
+        },
+        decisions: decisions as any,
+        now: () => NOW,
+      }),
       now: () => NOW,
     });
   });
@@ -167,6 +186,7 @@ describe('createItemsService', () => {
         }),
         [DEFAULT_CAT],
         [expect.objectContaining({ kind: 'created', via: 'session', actorUserId: USER.id })],
+        expect.any(Function),
       );
       expect(embedQueue.enqueueIfStale).toHaveBeenCalledWith(createItemRow().id);
     });
@@ -210,6 +230,7 @@ describe('createItemsService', () => {
         }),
         expect.any(Array),
         expect.any(Array),
+        expect.any(Function),
       );
     });
 
@@ -231,6 +252,7 @@ describe('createItemsService', () => {
         }),
         expect.any(Array),
         expect.any(Array),
+        expect.any(Function),
       );
     });
   });
@@ -265,14 +287,15 @@ describe('createItemsService', () => {
       expect(embedQueue.enqueueIfStale).toHaveBeenCalledTimes(1);
     });
 
-    it('D12: rejects update with type field', async () => {
+    it('D12/042: rejects a change of type with 409 type-change-not-supported', async () => {
       const itemId = '550e8400-e29b-41d4-a716-446655440002';
       items.findById.mockResolvedValue(createItemRow());
 
       const patch = { type: 'link' } as any;
 
       await expect(service.update(ACTOR, itemId, patch)).rejects.toMatchObject({
-        status: 400,
+        status: 409,
+        type: '/problems/type-change-not-supported',
       });
     });
 
@@ -680,6 +703,7 @@ describe('createItemsService', () => {
         expect.objectContaining({ payload: { ...PAYLOAD, dismiss: { mode: 'me', userIds: [] } } }),
         expect.anything(),
         expect.anything(),
+        expect.any(Function),
       );
     });
 

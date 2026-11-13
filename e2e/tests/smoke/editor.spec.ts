@@ -7,6 +7,7 @@ import {
   routeImageDelivery,
 } from '../../fixtures/cloudinary';
 import { expect, SMOKE_CATEGORY, test, webUrl } from '../../fixtures/web';
+import { switchView } from './helpers/deck-header';
 
 /** Below 768px (Pixel 7) the preview is a tab: open it, then read the preview region. */
 /** D309 (039): on a phone the top bar's Preview toggle swaps the canvas for the preview. */
@@ -104,15 +105,15 @@ test('a link card added from the editor is listed with its url @smoke', async ({
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
 
-test('a 601-character body disables Save and says why @smoke', async ({ page, webDeck }) => {
+test('a 2001-character body disables Save and says why @smoke', async ({ page, webDeck }) => {
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
 
   await page.getByLabel('Title', { exact: true }).fill('Too long');
-  await page.getByLabel('Body', { exact: true }).fill('x'.repeat(601));
+  await page.getByLabel('Body', { exact: true }).fill('x'.repeat(2001));
 
   await expect(save(page)).toBeDisabled();
   await expect(page.getByText('Fix 1 field')).toBeVisible();
-  await expect(page.getByText('601 / 600 characters')).toBeVisible();
+  await expect(page.getByText('2001 / 2000 characters')).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new\\?type=text$`));
 });
 
@@ -325,11 +326,8 @@ test('a category created inline is selected and the card is saved in it @smoke',
 
   await save(page).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
-  // Cards in the list show their category chips too; open it from the deck's category nav.
-  await page
-    .getByRole('navigation', { name: 'Categories' })
-    .getByRole('link', { name: category })
-    .click();
+  // Cards in the list show their category chips too; open it from the header's view switcher.
+  await switchView(page, category);
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 });
 
@@ -563,4 +561,36 @@ test('a link without a preview still saves @smoke', async ({ page, webDeck }) =>
   await save(page).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});
+
+/** 042 (T024): an event made in the editor shows on the deck with its status line and place. */
+test('an event added from the editor shows its status line and location @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  const title = `Event ${webDeck.slug}`;
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=event`));
+  await expect(page.getByRole('button', { name: 'Card type: Event' })).toBeVisible();
+  await page.getByLabel('Title', { exact: true }).fill(title);
+  // A new event starts tomorrow at 18:00 in the device's zone.
+  const start = page.getByLabel('Starts');
+  await expect(start).toHaveValue(/T18:00$/);
+  await page.getByLabel('Where (optional)').fill('Town hall');
+
+  // Negative path: an end before the start is flagged on the field and the card isn't saved.
+  const day = (await start.inputValue()).slice(0, 10);
+  const end = page.getByLabel('Ends (optional)');
+  await end.fill(`${day}T10:00`);
+  await expect(page.getByText('The end must be after the start')).toBeVisible();
+  await expect(end).toHaveAttribute('aria-invalid', 'true');
+  await expect(page).toHaveURL(/\/new\?type=event$/);
+
+  await end.fill(`${day}T20:00`);
+  await expect(page.getByText('The end must be after the start')).toHaveCount(0);
+  await save(page).click();
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  const card = page.getByRole('article').filter({ hasText: title });
+  await expect(card).toContainText(/(Tomorrow|In \d+ days?) · 18:00/);
+  await expect(card).toContainText('18:00–20:00');
+  await expect(card).toContainText('Town hall');
 });

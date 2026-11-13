@@ -2,6 +2,8 @@
 export function payloadText(type: string, payload: unknown): string {
   // D291: a reminder's settings (deadline, unit, dismiss rule, zone) are not text.
   if (type === 'reminder') return '';
+  // D372: an event's text is its location and link; time, zone and notify settings are not text.
+  if (type === 'event') return eventText(payload);
   const skipped = new Set<string>();
   if (type === 'image') skipped.add('publicId');
   if (type === 'calc') skipped.add('expression');
@@ -16,6 +18,18 @@ export function payloadText(type: string, payload: unknown): string {
     collectStrings(payload, out);
   }
   return out.join(' ');
+}
+
+function eventText(payload: unknown): string {
+  if (payload === null || typeof payload !== 'object') return '';
+  const p = payload as {
+    location?: unknown;
+    url?: unknown;
+    preview?: { title?: unknown; description?: unknown };
+  };
+  return [p.location, p.url, p.preview?.title, p.preview?.description]
+    .filter((v): v is string => typeof v === 'string' && v !== '')
+    .join(' ');
 }
 
 function collectStrings(value: unknown, out: string[]): void {

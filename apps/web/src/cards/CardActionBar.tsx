@@ -13,6 +13,14 @@ import { MoreMenu, type MenuAction } from '../ui/MoreMenu';
 import { CardBar, ReaderActions } from './CardBar';
 import { EditLink } from './EditLink';
 import { DismissDialog } from '../reminders/DismissDialog';
+import {
+  ADD_TO_CALENDAR_FAILED,
+  ADD_TO_CALENDAR_LABEL,
+  canAddToCalendar,
+  downloadEventIcs,
+} from '../event-cards/add-to-calendar';
+import { showToast } from '../ui/toast-store';
+import { useEventMuteToggle } from '../event-cards/use-event-mute-toggle';
 
 export const OFFLINE_REASON = 'needs a connection';
 
@@ -64,6 +72,7 @@ export function CardActionBar({
   const linkActions = linkCheckActions(item, role);
   const offline = online ? null : OFFLINE_REASON;
   const [dismissing, setDismissing] = useState(false);
+  const mute = useEventMuteToggle(item, deckSlug);
 
   if (item.deletedAt !== undefined) {
     return (
@@ -85,6 +94,15 @@ export function CardActionBar({
   const barAction = lifecycleActions.find((action) => action === 'restore');
   const checkInBar = !barAction && linkActions.includes('check');
   const menu: MenuAction[] = [];
+  if (mute) {
+    menu.push({
+      key: 'mute',
+      label: mute.label,
+      icon: mute.icon,
+      disabledReason: offline,
+      onSelect: mute.toggle,
+    });
+  }
   if (can(role, 'event.list')) {
     menu.push({
       key: 'history',
@@ -125,6 +143,15 @@ export function CardActionBar({
           label={DISMISS_LABEL}
           disabledReason={offline}
           onClick={() => setDismissing(true)}
+        />
+      )}
+      {canAddToCalendar(item) && (
+        <IconButton
+          icon="calendar-plus"
+          label={ADD_TO_CALENDAR_LABEL}
+          onClick={() =>
+            void downloadEventIcs(item).catch(() => showToast({ message: ADD_TO_CALENDAR_FAILED }))
+          }
         />
       )}
       {dismissing && (

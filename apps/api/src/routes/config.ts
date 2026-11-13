@@ -6,8 +6,8 @@ import { cloudNameFrom } from '../lib/cloudinary-url';
 import { vapidFrom } from '../push/push-sender';
 import { analyticsHead } from '../public/analytics';
 import {
+  askEnabled,
   emailIngestDomain,
-  hasAskProvider,
   hasEmbeddingProvider,
   hasExtractProvider,
 } from '../ai/providers';
@@ -28,6 +28,8 @@ type ConfigEnv = Pick<
   | 'VAPID_PRIVATE_KEY'
   | 'VAPID_SUBJECT'
 > &
+  // ASK_ENABLED defaults to false at runtime (env.ts); optional so tests can pass a partial env.
+  Partial<Pick<Env, 'ASK_ENABLED'>> &
   // API_URL is always set at runtime (env.ts defaults it); optional so tests can pass a partial env.
   Partial<Pick<Env, 'API_URL' | 'APP_URL'>>;
 
@@ -44,7 +46,7 @@ export function buildAppConfig(env: ConfigEnv): AppConfig {
     commit: env.GIT_SHA ?? 'dev',
     search: {
       semantic: hasEmbeddingProvider(env),
-      ask: hasAskProvider(env),
+      ask: askEnabled(env),
     },
     ingest: {
       enabled: hasExtractProvider(env),

@@ -1,6 +1,7 @@
 import type { Page, Route } from '@playwright/test';
 import { cloudinaryApiSecret, photoFile, routeFakeCloudinary } from '../../fixtures/cloudinary';
 import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { viewSwitcher } from '../smoke/helpers/deck-header';
 
 /**
  * D165 link flags (014 T042, `@full`). A real flag needs two failed daily checks, so the flag is
@@ -73,10 +74,7 @@ test('a flagged link shows its note; Dismiss clears it from "Links to check" @fu
   const seed = await seedFlag(page, card.id);
 
   await page.goto(webUrl(`/d/${webDeck.slug}/links`));
-  await expect(page.getByRole('link', { name: 'Links to check' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(viewSwitcher(page)).toHaveText('Links to check');
   await expect(page.getByText(card.title)).toBeVisible();
   await expect(page.getByText('Link may be dead')).toBeVisible();
 
@@ -108,7 +106,9 @@ test('a reader sees the note but no actions and no "Links to check" @full', asyn
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   await expect(page.getByText('Link may be dead')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Links to check' })).toHaveCount(0);
+  await viewSwitcher(page).click();
+  await expect(page.getByRole('menuitemradio', { name: 'All', exact: true })).toBeVisible();
+  await expect(page.getByRole('menuitemradio', { name: 'Links to check' })).toHaveCount(0);
 });
 
 /** 015 locked social hosts (T050, `@full`). */

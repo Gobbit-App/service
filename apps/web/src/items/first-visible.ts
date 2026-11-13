@@ -1,8 +1,8 @@
 const TITLE_PREFIX = 'card-title-';
 
-/** The bottom edge of the sticky chrome (chip row), above which a card counts as scrolled away. */
+/** The bottom edge of the sticky chrome (the header, D380), above which a card counts as scrolled away. */
 function chromeBottom(root: ParentNode): number {
-  return root.querySelector('.chip-row')?.getBoundingClientRect().bottom ?? 0;
+  return root.querySelector('.app-header')?.getBoundingClientRect().bottom ?? 0;
 }
 
 /**

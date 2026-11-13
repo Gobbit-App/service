@@ -21,7 +21,7 @@ HTTP Response (JSON, status code, problem+json on error)
 ### Single source of truth: @gobbit/shared schemas
 
 All DTOs, constraints, and enums live in @gobbit/shared:
-- **Limits** (CARD_TITLE_MAX=120, CARD_BODY_MAX=600, PAGE_LIMIT_MAX=50, PAYLOAD_MAX_BYTES=8192, etc.)
+- **Limits** (CARD_TITLE_MAX=120, CARD_BODY_MAX=2000, PAGE_LIMIT_MAX=50, PAYLOAD_MAX_BYTES=8192, etc.)
 - **Enums** (deckKinds, categoryVisibilities, itemTypes, itemStatuses, sourceKinds)
 - **Validation** (Zod schemas for create/patch inputs, payloads, pagination, problems)
 - **Utilities** (UTF-8 byte counting, cursor encoding/decoding, calc expression validation)

@@ -3,8 +3,12 @@ import { httpUrlSchema, isoDateTimeSchema, uuidSchema } from './common';
 import { itemSchema } from './item';
 import { linkPreviewSchema } from './media';
 import { LINK_IMAGE_CANDIDATES_MAX } from '../links/constants';
+import { isTimeZone } from '../reminders/schema';
 import {
   autoPublishOutcomes,
+  eventDateSources,
+  eventZoneSources,
+  extractionFallbacks,
   ingestFailureCodes,
   dedupActions,
   dedupVias,
@@ -15,6 +19,14 @@ import {
   INGEST_TITLE_MAX,
   INGEST_TOKEN_LABEL_MAX,
 } from '../ingest/constants';
+
+/** D374: an IANA zone name sent with a share. */
+export const ingestTimeZoneSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(64)
+  .refine(isTimeZone, { message: 'Unknown time zone' });
 
 /**
  * D93: POST /ingest fields (JSON body, or the text fields of a multipart body).
@@ -28,6 +40,8 @@ export const ingestRequestSchema = z.object({
   title: z.string().max(INGEST_TITLE_MAX).optional(),
   /** Session callers say `pwa` (share target) or `paste`; token callers are always `shortcut`. */
   channel: z.enum(['pwa', 'paste']).optional(),
+  /** D374: the sharer's IANA zone, used to read event times that carry no offset. */
+  timeZone: ingestTimeZoneSchema.optional(),
 });
 export type IngestRequest = z.infer<typeof ingestRequestSchema>;
 
@@ -51,6 +65,8 @@ export const ingestRawSchema = z.object({
   url: z.string().optional(),
   title: z.string().optional(),
   images: z.array(ingestImageSchema),
+  /** D374: the sharer's zone, when the share sent one. */
+  timeZone: z.string().optional(),
 });
 export type IngestRaw = z.infer<typeof ingestRawSchema>;
 
@@ -61,6 +77,16 @@ export const openGraphSchema = z.object({
   siteName: z.string().nullable(),
 });
 export type OpenGraph = z.infer<typeof openGraphSchema>;
+
+/** D370: the one schema.org Event a fetched page describes. */
+export const structuredEventSchema = z.object({
+  name: z.string().nullable(),
+  startDate: z.string(),
+  endDate: z.string().nullable(),
+  location: z.string().nullable(),
+  url: z.string().nullable(),
+});
+export type StructuredEvent = z.infer<typeof structuredEventSchema>;
 
 export const fetchFallbacks = ['none', 'og', 'shared_text', 'skipped'] as const;
 export type FetchFallback = (typeof fetchFallbacks)[number];
@@ -76,6 +102,10 @@ export const normalizedSourceSchema = z.object({
   images: z.array(z.string()),
   /** D346: the builder's preview (after the locked-host rule); absent on pre-041 jobs. */
   linkPreview: linkPreviewSchema.optional(),
+  /** D370: the page's one schema.org Event; absent when it has none or several. */
+  structuredEvent: structuredEventSchema.optional(),
+  /** D370: how many distinct schema.org Events the page has (only when > 0). */
+  structuredEventCount: z.number().int().nonnegative().optional(),
   /** D344: ordered preview image URLs, passed to the snapshot job. */
   imageCandidates: z.array(z.string()).max(LINK_IMAGE_CANDIDATES_MAX).optional(),
   fetch: z.object({
@@ -97,6 +127,12 @@ export const extractionSummarySchema = z.object({
   language: z.string(),
   categoryIds: z.array(z.string()),
   newCategory: z.string().nullable(),
+  /** D355: the model's answer was unusable; the card was built from the page preview. */
+  fallback: z.enum(extractionFallbacks).optional(),
+  /** D375: for an event proposal, where its date came from and which zone read it. */
+  event: z
+    .object({ dateSource: z.enum(eventDateSources), zoneSource: z.enum(eventZoneSources) })
+    .optional(),
 });
 export type ExtractionSummary = z.infer<typeof extractionSummarySchema>;
 
@@ -154,6 +190,8 @@ export const reviewEntrySchema = z.object({
       sourcePreview: z.string().nullable(),
       /** D193: why a publisher's share was not published directly (FR-011). */
       autoPublish: z.enum(autoPublishOutcomes).nullable(),
+      /** D355: `preview` → the assistant couldn't read the share; filled from the page preview. */
+      extractionFallback: z.enum(extractionFallbacks).nullable(),
     })
     .nullable(),
   /** The card a `possible_duplicate` / `update` verdict points at, when still visible. */

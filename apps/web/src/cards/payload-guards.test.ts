@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { asLinkPayload, asImagePayload, asTablePayload, asCalcPayload } from './payload-guards';
+import {
+  asCalcPayload,
+  asEventPayload,
+  asImagePayload,
+  asLinkPayload,
+  asTablePayload,
+} from './payload-guards';
 
 describe('payload-guards', () => {
   describe('asLinkPayload', () => {
@@ -494,6 +500,47 @@ describe('payload-guards', () => {
           resultLabel: 123,
         }),
       ).toBeNull();
+    });
+  });
+  describe('asEventPayload (042)', () => {
+    it('reads a timed event with an end, location and link', () => {
+      expect(
+        asEventPayload({
+          allDay: false,
+          start: '2026-12-01T17:00:00.000Z',
+          end: '2026-12-01T19:00:00.000Z',
+          timeZone: 'Asia/Jerusalem',
+          location: 'Town hall',
+          url: 'https://example.org',
+          preview: { title: 'Fair' },
+          notify: { before: [], audience: { mode: 'nobody', userIds: [] } },
+        }),
+      ).toEqual({
+        allDay: false,
+        start: '2026-12-01T17:00:00.000Z',
+        end: '2026-12-01T19:00:00.000Z',
+        timeZone: 'Asia/Jerusalem',
+        location: 'Town hall',
+        link: { url: 'https://example.org', preview: { title: 'Fair' } },
+      });
+    });
+
+    it('reads an all-day event and drops a blank location', () => {
+      expect(
+        asEventPayload({ allDay: true, start: '2026-12-01', timeZone: 'UTC', location: ' ' }),
+      ).toEqual({ allDay: true, start: '2026-12-01', timeZone: 'UTC' });
+    });
+
+    it('refuses malformed times', () => {
+      expect(
+        asEventPayload({ allDay: true, start: '2026-12-01T10:00:00Z', timeZone: 'UTC' }),
+      ).toBeNull();
+      expect(asEventPayload({ allDay: false, start: 'soon', timeZone: 'UTC' })).toBeNull();
+      expect(
+        asEventPayload({ allDay: false, start: '2026-12-01T10:00:00Z', end: 3, timeZone: 'UTC' }),
+      ).toBeNull();
+      expect(asEventPayload({ start: '2026-12-01', timeZone: 'UTC' })).toBeNull();
+      expect(asEventPayload(null)).toBeNull();
     });
   });
 });

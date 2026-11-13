@@ -1,7 +1,8 @@
 import type { Deck } from '@gobbit/shared';
 import { can } from '@gobbit/shared/authz';
 import { useQuery } from '@tanstack/react-query';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
+import { AboutSheet } from '../about/AboutSheet';
 import { meQuery } from '../api/queries';
 import { ALL_CATEGORIES } from '../browse/browse-params';
 import { BrowseButton } from '../items/BrowseButton';
@@ -13,6 +14,7 @@ import { MoreMenu } from '../ui/MoreMenu';
 import { useNavigateHref } from '../ui/NavLink';
 import { createActions } from './create-actions';
 import { menuActions } from './deck-menu-actions';
+import { usePendingUpdate } from './sw-update-store';
 import { useSignOut } from './use-sign-out';
 
 type BarDeck = Pick<Deck, 'slug' | 'role' | 'isDefault'>;
@@ -36,13 +38,17 @@ export function BottomBar({
   const me = useQuery(meQuery());
   const signOut = useSignOut();
   const navigate = useNavigateHref();
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const applyUpdate = usePendingUpdate();
 
   const menu = menuActions({
     deck,
     isPlatformAdmin: me.data?.isPlatformAdmin ?? false,
     email: me.data?.user.email,
+    onAbout: () => setAboutOpen(true),
     onSignOut: signOut.signOut,
     signingOut: signOut.signingOut,
+    onUpdate: applyUpdate,
   });
   const create = deck ? createActions(deck) : [];
   const review = deck !== undefined && !deck.isDefault && can(deck.role, 'item.publish');
@@ -76,6 +82,7 @@ export function BottomBar({
           />
         )}
       </nav>
+      {aboutOpen && <AboutSheet onClose={() => setAboutOpen(false)} />}
     </>
   );
 }

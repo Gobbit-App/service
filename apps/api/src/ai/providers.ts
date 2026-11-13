@@ -33,6 +33,11 @@ export function hasAskProvider(env: KeyEnv): boolean {
   return Boolean(env.OPENROUTER_API_KEY || env.ANTHROPIC_API_KEY);
 }
 
+/** D385: Ask is on only when switched on with `ASK_ENABLED` and a chat provider key is set. */
+export function askEnabled(env: KeyEnv & Partial<Pick<Env, 'ASK_ENABLED'>>): boolean {
+  return env.ASK_ENABLED === true && hasAskProvider(env);
+}
+
 /** D93: ingestion (extraction) runs on the same chat providers as Ask. */
 export function hasExtractProvider(env: KeyEnv): boolean {
   return hasAskProvider(env);

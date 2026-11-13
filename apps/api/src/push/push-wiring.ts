@@ -32,7 +32,7 @@ export function resolvePushSender(env: PushEnv, override?: PushSender | null): P
   });
 }
 
-/** The reminder sweep's service (worker and integration tests). */
+/** The reminder and event-notice sweep's service (worker and integration tests). */
 export function buildNotifyService(deps: {
   db: Db;
   env: Pick<
@@ -42,6 +42,7 @@ export function buildNotifyService(deps: {
     | 'NOTIFY_MAX_ATTEMPTS'
     | 'NOTIFY_RETRY_BASE_SECONDS'
     | 'REMINDER_SWEEP_BATCH'
+    | 'EVENT_NOTICE_GRACE_MINUTES'
   > &
     PushEnv;
   mailer: Mailer;
@@ -59,6 +60,7 @@ export function buildNotifyService(deps: {
       batch: env.REMINDER_SWEEP_BATCH,
       maxAttempts: env.NOTIFY_MAX_ATTEMPTS,
       retryBaseSeconds: env.NOTIFY_RETRY_BASE_SECONDS,
+      graceMinutes: env.EVENT_NOTICE_GRACE_MINUTES,
     },
     appUrl: env.APP_URL ?? env.API_URL,
     decisions: decisionLogger<NotifyDecisions>('notify', {

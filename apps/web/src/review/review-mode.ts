@@ -1,5 +1,11 @@
 import type { ReviewEntry } from '@gobbit/shared';
 
+/** The dedup banner over a proposal that matches an existing card (D106). */
+export const REVIEW_BANNER = {
+  duplicate: 'Looks like a card you already have',
+  update: 'Updates an existing card',
+} as const;
+
 /** How the review card presents a proposal (D106). */
 export type ReviewMode =
   { kind: 'new' } | { kind: 'duplicate' | 'update'; target: NonNullable<ReviewEntry['target']> };

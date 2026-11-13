@@ -6,6 +6,8 @@
 export const ICON_PATHS = {
   back: 'M15 5L8 12L15 19',
   forward: 'M9 5L16 12L9 19',
+  // 043 (D380): the deck header's switcher caret.
+  'caret-down': 'M7 10L12 15L17 10',
   close: 'M6 6L18 18M18 6L6 18',
   edit: 'M4 20H8L19 9A2.83 2.83 0 0 0 15 5L4 16Z M13.5 6.5L17.5 10.5',
   star: 'M12 3.5L14.6 8.8L20.5 9.7L16.25 13.8L17.25 19.6L12 16.9L6.75 19.6L7.75 13.8L3.5 9.7L9.4 8.8Z',
@@ -53,7 +55,14 @@ export const ICON_PATHS = {
   bell: 'M6 16V11A6 6 0 0 1 18 11V16L19.5 17.5H4.5L6 16Z M10 20H14',
   clock: 'M12 3.5A8.5 8.5 0 1 0 12 20.5A8.5 8.5 0 1 0 12 3.5Z M12 7.5V12L15 14',
   'bell-off': 'M6 16V11A6 6 0 0 1 15.5 6.1 M18 10.5V16L19.5 17.5H8 M10 20H14 M4 4L20 20',
+  // 042: event cards (type tile, Add to calendar, location).
+  calendar: 'M4 6H20V20H4Z M4 10H20 M8 3.5V7.5M16 3.5V7.5',
+  'calendar-plus': 'M4 6H20V12 M12 20H4V6 M4 10H20 M8 3.5V7.5M16 3.5V7.5 M18 14.5V20.5M15 17.5H21',
+  'map-pin':
+    'M12 21C12 21 5 14.5 5 9.5A7 7 0 0 1 19 9.5C19 14.5 12 21 12 21Z M12 7A2.5 2.5 0 1 0 12 12A2.5 2.5 0 1 0 12 7Z',
   list: 'M8 6H20M8 12H20M8 18H20M4 6H4.01M4 12H4.01M4 18H4.01',
+  // D354: About.
+  info: 'M12 3.5A8.5 8.5 0 1 0 12 20.5A8.5 8.5 0 1 0 12 3.5Z M12 11V16.5 M12 7.75H12.01',
   clipboard: 'M9 4H15V6.5H9Z M9 5H6V20.5H18V5H15',
   eraser: 'M8.5 19.5L4 15L14 5L19.5 10.5L10.5 19.5Z M8.5 9.5L14.5 15.5 M10.5 19.5H20',
   // Rich-text toolbar (D290)

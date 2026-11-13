@@ -11,6 +11,7 @@ const CalcFields = lazy(async () => ({ default: (await import('./CalcFields')).C
 const ReminderFields = lazy(async () => ({
   default: (await import('./ReminderFields')).ReminderFields,
 }));
+const EventFields = lazy(async () => ({ default: (await import('./EventFields')).EventFields }));
 
 /**
  * D138: one payload editor per card type (`image` since 008, D133).
@@ -24,4 +25,5 @@ export const fieldsByType: Record<ItemType, ComponentType<FieldsProps<any>>> = {
   table: TableFields,
   calc: CalcFields,
   reminder: ReminderFields,
+  event: EventFields,
 };

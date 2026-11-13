@@ -2,6 +2,7 @@ import { act, fireEvent, screen } from '@testing-library/react';
 import { useState, type ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MediaAsset, MediaSignResponse } from '@gobbit/shared';
+import { paste } from '../../test/paste';
 import { renderWithClient } from '../../test/render';
 import { UploadError, type signAndUpload, type UploadedImage, type UploadOptions } from '../upload';
 import type { LinkPreview } from './LinkFields';
@@ -130,6 +131,13 @@ describe('LinkPhoto (015)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
     expect(latest).toEqual({ title: 'T', publicId: null });
     expect(screen.getByLabelText('Add photo')).toBeInTheDocument();
+  });
+
+  it('adds a pasted image as the photo', async () => {
+    renderPhoto();
+    act(() => void paste(document.body, [new File(['x'], 'image.png', { type: 'image/png' })]));
+    await act(async () => calls[0]!.resolve('gobbit/items/d1/p1'));
+    expect(latest.publicId).toBe('gobbit/items/d1/p1');
   });
 
   it('withoutLinkPhoto keeps the text fields', () => {

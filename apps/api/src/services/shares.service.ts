@@ -1,4 +1,4 @@
-import type { IngestJobRow, ItemRow } from '@gobbit/db';
+import type { IngestJobRow } from '@gobbit/db';
 import {
   RETRYABLE_FAILURES,
   SHARE_MAX_RETRIES,
@@ -16,7 +16,7 @@ import type { IngestQueue } from '../jobs/ingest-queue';
 import { isUuid, resolveDeck } from '../lib/resolve-deck';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
-import type { ItemsRepo } from '../repositories/items.repo';
+import type { ItemRef, ItemsRepo } from '../repositories/items.repo';
 import type { UsersRepo } from '../repositories/users.repo';
 import type { CurrentUser } from '../types';
 
@@ -25,7 +25,7 @@ export const SHARES_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 const SHARE_NOT_FOUND = 'Share not found';
 
-export type ShareItemRef = Pick<ItemRow, 'id' | 'title' | 'deletedAt'>;
+export type ShareItemRef = ItemRef;
 
 const STATE_BY_STATUS: Record<IngestJobStatus, ShareState> = {
   queued: 'processing',
@@ -60,6 +60,22 @@ export function canRetryJob(
   );
 }
 
+function toShareItem(item: ShareItemRef): NonNullable<ShareSummary['item']> {
+  return {
+    id: item.id,
+    title: item.title,
+    deleted: item.deletedAt !== null,
+    type: item.type,
+    event: item.event
+      ? {
+          startsAt: item.event.startsAt.toISOString(),
+          allDay: item.event.allDay,
+          timeZone: item.event.timeZone,
+        }
+      : null,
+  };
+}
+
 /**
  * D196: the sharer's view of one job. Never carries the stored error, the shared text or the
  * provider's answer; the title comes from the card, else the page title the share came with.
@@ -84,7 +100,7 @@ export function toShareSummary(
     failureCode: job.status === 'failed' ? (job.failureCode ?? 'unknown') : null,
     canRetry: canRetryJob(job),
     autoPublish: job.autoPublish ?? null,
-    item: item ? { id: item.id, title: item.title, deleted: item.deletedAt !== null } : null,
+    item: item ? toShareItem(item) : null,
     reviewedBy: reviewerName === null ? null : { displayName: reviewerName },
     reviewedAt: job.reviewedAt?.toISOString() ?? null,
   };

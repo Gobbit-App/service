@@ -7,8 +7,9 @@ import { currentToast, dismissToast } from '../ui/toast-store';
 const GET = vi.fn();
 const POST = vi.fn();
 const DELETE = vi.fn();
+const PUT = vi.fn();
 const unwrap = vi.fn();
-vi.mock('../api/client', () => ({ api: { GET, POST, DELETE }, unwrap }));
+vi.mock('../api/client', () => ({ api: { GET, POST, DELETE, PUT }, unwrap }));
 const { CardActionBar, OFFLINE_REASON } = await import('./CardActionBar');
 const { DELETE_CONFIRM } = await import('../items/use-card-lifecycle');
 
@@ -29,6 +30,7 @@ beforeEach(() => {
   GET.mockReset();
   POST.mockReset();
   DELETE.mockReset();
+  PUT.mockReset();
   unwrap.mockReset().mockResolvedValue(undefined);
 });
 
@@ -232,6 +234,102 @@ describe('CardActionBar (D213)', () => {
       expect(dismiss).toHaveAttribute('aria-disabled', 'true');
       fireEvent.click(dismiss);
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Add to calendar (042)', () => {
+    const event = makeItem({
+      id: 'e1',
+      type: 'event',
+      title: 'School fair',
+      payload: { allDay: false, start: '2026-12-03T16:00:00.000Z', timeZone: 'UTC' },
+    });
+
+    it('is in the bar for any role, offline too, and saves <title>.ics', async () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      const createObjectURL = vi.fn(() => 'blob:ics');
+      Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      renderWithClient(<CardActionBar item={event} deckSlug="family" role="reader" />);
+      expect(barNames()).toEqual(['Add to favorites', 'Share', 'Add to calendar']);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
+      await waitFor(() => expect(click).toHaveBeenCalled());
+      const anchor = click.mock.instances[0] as unknown as HTMLAnchorElement;
+      expect(anchor.download).toBe('School fair.ics');
+      const blob = (createObjectURL.mock.calls[0] as unknown as [Blob])[0];
+      expect(blob.type).toBe('text/calendar;charset=utf-8');
+      expect(await blob.text()).toContain('DTSTART:20261203T160000Z');
+    });
+
+    it('says so when the payload is not a readable event', async () => {
+      renderWithClient(
+        <CardActionBar item={{ ...event, payload: {} }} deckSlug="family" role="owner" />,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
+      await waitFor(() => expect(currentToast()?.message).toBe("Couldn't make the calendar file"));
+    });
+
+    it('is not offered on other cards or deleted events', () => {
+      for (const item of [published, { ...event, deletedAt: '2026-01-02T00:00:00.000Z' }]) {
+        const { unmount } = renderWithClient(
+          <CardActionBar item={item} deckSlug="family" role="owner" />,
+        );
+        expect(screen.queryByRole('button', { name: 'Add to calendar' })).not.toBeInTheDocument();
+        unmount();
+      }
+    });
+  });
+  describe('Mute (042, D364)', () => {
+    const state = {
+      startsAt: '2026-12-03T16:00:00.000Z',
+      endsAt: '2026-12-03T18:00:00.000Z',
+      allDay: false,
+      timeZone: 'UTC',
+      notices: [],
+      muted: false,
+      inAudience: true,
+      canEditNotify: false,
+    };
+    const event = makeItem({
+      id: 'e1',
+      type: 'event',
+      title: 'School fair',
+      payload: { allDay: false, start: '2026-12-03T16:00:00.000Z', timeZone: 'UTC' },
+      event: state,
+    });
+
+    it('offers Mute in the menu to a reader in the audience and calls PUT', async () => {
+      renderWithClient(<CardActionBar item={event} deckSlug="family" role="reader" />);
+      openMenu();
+      expect(menuNames()).toEqual(['Mute notifications']);
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Mute notifications' }));
+      await waitFor(() => expect(currentToast()?.message).toBe('Notifications muted'));
+      expect(PUT).toHaveBeenCalledWith('/items/{id}/mute', { params: { path: { id: 'e1' } } });
+    });
+
+    it('offers Unmute once muted and calls DELETE', async () => {
+      const muted = { ...event, event: { ...state, muted: true } };
+      renderWithClient(<CardActionBar item={muted} deckSlug="family" role="reader" />);
+      openMenu();
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Unmute notifications' }));
+      await waitFor(() => expect(currentToast()?.message).toBe('Notifications on'));
+      expect(DELETE).toHaveBeenCalledWith('/items/{id}/mute', { params: { path: { id: 'e1' } } });
+    });
+
+    it('is not offered outside the audience', () => {
+      const outside = { ...event, event: { ...state, inAudience: false } };
+      renderWithClient(<CardActionBar item={outside} deckSlug="family" role="reader" />);
+      expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
+    });
+
+    it('explains itself offline and sends nothing', () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      renderWithClient(<CardActionBar item={event} deckSlug="family" role="reader" />);
+      openMenu();
+      const item = screen.getByRole('menuitem', { name: /Mute notifications/ });
+      fireEvent.click(item);
+      expect(PUT).not.toHaveBeenCalled();
     });
   });
 });

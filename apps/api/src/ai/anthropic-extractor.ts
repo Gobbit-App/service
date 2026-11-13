@@ -3,7 +3,7 @@ import { EXTRACT_TIMEOUT_MS } from '@gobbit/shared';
 import { buildExtractPrompt, PROPOSE_CARD_TOOL, PROPOSE_CARD_TOOL_NAME } from './extract-prompt';
 import {
   EXTRACT_MAX_TOKENS,
-  ExtractResponseError,
+  responseError,
   type ExtractCall,
   type ExtractInput,
   type Extractor,
@@ -27,6 +27,7 @@ export interface AnthropicExtractClient {
       options?: { signal?: AbortSignal },
     ): Promise<{
       content: ({ type: 'tool_use'; name: string; input: unknown } | { type: string })[];
+      stop_reason?: string | null;
       usage: { input_tokens: number; output_tokens: number };
     }>;
   };
@@ -77,13 +78,17 @@ export function createAnthropicExtractor(opts: {
         { signal: callOpts.signal },
       );
 
-      const toolUse = response.content.find(isProposeCard);
-      if (!toolUse) throw new ExtractResponseError('Extraction returned no propose_card call');
-      return {
-        raw: toolUse.input,
+      const usage = {
         inputTokens: response.usage.input_tokens,
         outputTokens: response.usage.output_tokens,
       };
+      const toolUse = response.content.find(isProposeCard);
+      if (!toolUse) throw responseError('no_call', response.stop_reason, usage);
+      // D354: a tool input cut off by max_tokens is incomplete even when it parses.
+      if (response.stop_reason === 'max_tokens') {
+        throw responseError('bad_json', response.stop_reason, usage);
+      }
+      return { raw: toolUse.input, ...usage };
     },
   };
 }

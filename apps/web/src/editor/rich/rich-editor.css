@@ -3,7 +3,7 @@
 
 .rich-editor {
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-surface);
 }
 
@@ -24,7 +24,7 @@
   top: calc(var(--safe-top) + 61px);
   z-index: 5;
   border-bottom: 1px solid var(--color-border);
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius);
   background: var(--color-surface);
 }
 
@@ -95,7 +95,7 @@
   min-height: var(--tap);
   padding: 8px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-bg);
   color: inherit;
   font: inherit;
@@ -112,14 +112,6 @@
   outline: none;
 }
 
-.rich-editor__content > :first-child {
-  margin-top: 0;
-}
-
-.rich-editor__content > :last-child {
-  margin-bottom: 0;
-}
-
 .rich-editor__content ul,
 .rich-editor__content ol {
   padding-inline-start: 1.25em;
@@ -134,7 +126,7 @@
 
 .rich-editor__content pre {
   padding: 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--color-accent-soft);
   overflow-x: auto;
   white-space: pre;

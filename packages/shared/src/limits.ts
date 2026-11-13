@@ -1,7 +1,7 @@
 import { ingestChannels, type IngestChannel } from './ingest/constants';
 
 /** Maximum character count (Unicode code points) for card body. */
-export const CARD_BODY_MAX = 600;
+export const CARD_BODY_MAX = 2000;
 
 /** Maximum character count for card title. */
 export const CARD_TITLE_MAX = 120;

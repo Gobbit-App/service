@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Button } from './buttons/Button';
+import { IconButton } from './buttons/IconButton';
 
 /** Banner shown when offline. */
 export function OfflineBanner({ visible }: { visible: boolean }): ReactElement | null {
@@ -62,9 +63,9 @@ export function UpdatePrompt({
   if (!visible) return null;
   return (
     <div className="update-prompt" role="status">
-      <span>A new version of Gobbit is ready.</span>
-      <Button icon="refresh" label="Reload" onClick={onUpdate} />
-      <Button icon="close" label="Later" variant="ghost" onClick={onDismiss} />
+      <span className="update-prompt__text">New version ready</span>
+      <Button icon="refresh" label="Reload" className="update-prompt__reload" onClick={onUpdate} />
+      <IconButton icon="close" label="Later" onClick={onDismiss} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { resolveE2eEnv } from '../../lib/env';
 import { SMOKE_CATEGORY, expect, test, webUrl } from '../../fixtures/web';
+import { searchDeck, switchView, viewSwitcher } from './helpers/deck-header';
 
 const { expectedSha } = resolveE2eEnv();
 const NARROW = { width: 360, height: 780 };
@@ -93,14 +94,15 @@ test('every card type renders without horizontal overflow at 360 px @smoke', asy
   await expect(result).toHaveText('600');
 });
 
-test('a category chip filters the deck and updates the URL @smoke', async ({ page, webDeck }) => {
+test('the header category switcher filters the deck and updates the URL @smoke', async ({
+  page,
+  webDeck,
+}) => {
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await page
-    .getByRole('navigation', { name: 'Categories' })
-    .getByRole('link', { name: SMOKE_CATEGORY.name })
-    .click();
+  await switchView(page, SMOKE_CATEGORY.name);
 
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/c/${SMOKE_CATEGORY.slug}$`));
+  await expect(viewSwitcher(page)).toHaveText(SMOKE_CATEGORY.name);
   await expect(page.getByRole('heading', { name: 'Smoke table' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Smoke text' })).toHaveCount(0);
 });
@@ -123,10 +125,11 @@ test('a favorite survives a reload @smoke', async ({ page, webDeck }) => {
   ).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('typing in the pinned search box lists tagged results @smoke', async ({ page, webDeck }) => {
+test('a search from the header sheet lists tagged results @smoke', async ({ page, webDeck }) => {
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await page.getByRole('searchbox', { name: 'Search this deck' }).fill('Smoke text');
+  await searchDeck(page, 'Smoke text');
   await expect(page).toHaveURL(/\/search\?q=Smoke(\+|%20)text/);
+  await expect(page.getByRole('dialog', { name: 'Search' })).toHaveCount(0);
   const hit = page.locator('.search-hit').first();
   await expect(hit.locator('.result-tag')).toBeVisible();
   await expect(hit.locator('mark.search-hit-mark').first()).toBeVisible();

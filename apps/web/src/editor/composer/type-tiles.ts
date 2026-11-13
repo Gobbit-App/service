@@ -11,6 +11,7 @@ export const TYPE_LABELS: Record<ItemType, string> = {
   table: 'Table',
   calc: 'Calc',
   reminder: 'Reminder',
+  event: 'Event',
 };
 
 /** D301: one line each, written for someone who has never made a card. */
@@ -21,6 +22,7 @@ export const TYPE_HINTS: Record<ItemType, string> = {
   image: 'A photo with a caption',
   table: 'Rows and columns, like a price list',
   calc: 'A small calculator with your own fields',
+  event: 'A date, a place, and a heads-up',
 };
 
 export const TYPE_ICONS: Record<ItemType, IconName> = {
@@ -30,4 +32,5 @@ export const TYPE_ICONS: Record<ItemType, IconName> = {
   image: 'photo',
   table: 'table',
   calc: 'calc',
+  event: 'calendar',
 };

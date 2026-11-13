@@ -59,7 +59,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `LOG_LEVEL` | `info` | API + worker log level (`trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent`). Logs are JSON lines on stdout: `level`, ISO `time`, `component`, `msg`, extra fields and `err` (with stack) |
 | `OPENROUTER_API_KEY` | — | Optional (API + worker), preferred. One key for embeddings and Ask through OpenRouter; wins over the two direct keys below (ADR-044) |
 | `OPENAI_API_KEY` | — | Optional (API + worker). Direct OpenAI fallback: enables the semantic arm of search and the embeddings worker; without it search is text-only |
-| `ANTHROPIC_API_KEY` | — | Optional (API). Direct Anthropic fallback: enables Ask (`POST /decks/{id}/ask`); without it Ask answers 503 and the PWA hides it |
+| `ANTHROPIC_API_KEY` | — | Optional (API). Direct Anthropic fallback: the Ask provider (`POST /decks/{id}/ask`) and ingestion; without an Ask key Ask answers 503 and the PWA hides it |
+| `ASK_ENABLED` | `false` | Switches Ask on (D385). Ask isn't ready for users yet, so it stays off (503, hidden in the PWA) unless `true` and an Ask key (`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`) is set. Ingestion doesn't depend on it |
 | `EMBEDDING_MODEL` / `ASK_MODEL` | `text-embedding-3-small` / provider Haiku | Models. `EMBEDDING_MODEL` is the bare OpenAI id (sent to OpenRouter as `openai/<id>`; changing it re-embeds every item through the sweep). `ASK_MODEL` is provider-specific: default `anthropic/claude-haiku-5.5` (OpenRouter) or `claude-haiku-5-5` (Anthropic); any OpenRouter model with forced tool calls works, e.g. `qwen/qwen3.7-flash` (~4× cheaper, for local testing). Add a row to `LLM_PRICES_PER_MTOK` (`ai/llm-calls.ts`) when switching, or `llm_calls` logs cost 0. Both are passed through by Compose |
 | `WORKER_CONCURRENCY` | `2` | Concurrent `embed-item` jobs per worker process |
 | `HEALTHCHECK_API_URL` / `HEALTHCHECK_WORKER_URL` | — | Healthchecks.io ping URLs (secrets, `https://`), one per process: each heartbeat pings, silence or a `/fail` ping alerts (D342, `infra/README.md` → *Monitoring*). Unset → no pings |
@@ -79,7 +80,14 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | — | Web push for due reminders (D296); all three or none. Generate with `pnpm dlx web-push generate-vapid-keys`; the subject is `mailto:` or `https://`. Unset → email only |
 | `NOTIFY_MAX_ATTEMPTS` | `5` | Delivery attempts per reminder notification before it is marked failed |
 | `NOTIFY_RETRY_BASE_SECONDS` | `60` | Base of the exponential retry delay for a failed delivery |
-| `REMINDER_SWEEP_BATCH` | `200` | Due reminders planned and deliveries sent per `reminder-sweep` tick (every minute) |
+| `REMINDER_SWEEP_BATCH` | `200` | Due reminders and event notices planned, and deliveries sent, per `reminder-sweep` tick (every minute) |
+| `EVENT_NOTIFY_TIMES_MAX` | `3` | Most notify-before times per event (may only lower the default) |
+| `EVENT_NOTIFY_BEFORE_MAX_DAYS` | `365` | Longest notify-before period, in days (may only lower the default) |
+| `EVENT_START_MAX_DAYS` | `1826` | Furthest event start from now, in days (may only lower the default) |
+| `EVENT_LOCATION_MAX` | `200` | Longest event location, in characters (may only lower the default) |
+| `EVENT_ALLDAY_NOTICE_HOUR` | `9` | Hour (0–23, in the event's zone) at which all-day event notices are sent |
+| `EVENT_NOTICE_GRACE_MINUTES` | `5` | How late after an event's start a notice may still be sent (after downtime) |
+| `INGEST_DEFAULT_TIME_ZONE` | `UTC` | IANA zone for shared events whose share carries no `timeZone`; an unknown zone stops boot |
 | `INGEST_EMAIL_DOMAIN` / `RESEND_WEBHOOK_SECRET` | — | Email-in (D104, off by default). On only when both and `RESEND_API_KEY` are set: mail to `<token>@INGEST_EMAIL_DOMAIN` becomes a share via the Resend inbound webhook |
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
@@ -265,7 +273,7 @@ Every non-secret value (`API_URL`, `APP_URL`, `MAIL_PROVIDER=resend`, `MAIL_FROM
 - `DATABASE_URL` – the `gobbit` database on the shared Postgres, e.g. `postgres://gobbit:<pw>@<box LAN IP>:5433/gobbit` (add `?sslmode=verify-full` off the LAN)
 - `RESEND_API_KEY`
 - `CLOUDINARY_URL` – the API refuses to start in production without it; it also signs the editor's photo uploads (browser → `api.cloudinary.com`, allowed by the web CSP)
-- `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden
+- `OPENROUTER_API_KEY` (API + worker) – optional, preferred: enables embeddings, Ask and ingestion. Direct fallbacks: `OPENAI_API_KEY` (API + worker, embeddings) and `ANTHROPIC_API_KEY` (API + worker, Ask and ingestion). Without them search is text-only, Ask is off and sharing is hidden. Ask also needs `ASK_ENABLED=true` (a plain value, default off)
 - `RESEND_WEBHOOK_SECRET` – only for email-in, together with `INGEST_EMAIL_DOMAIN` (a plain value; see *Sharing into Gobbit*)
 - `LOG_HASH_KEY` – ≥ 32 random characters (`openssl rand -hex 32`); the API refuses to start in production without it. Keys the `emailHash`/`ipHash` fields of decision events
 
@@ -337,7 +345,7 @@ CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks
 | `DELETE` | `/items/{id}/link-check/flag` | Dismiss a link card's dead/changed note until its status changes (`item.update`; 404 without a flag) |
 | **Search** |
 | `GET` | `/decks/{id}/search?q=&limit=` | Hybrid search over visible, published cards (`why`: text / semantic / both) |
-| `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
+| `POST` | `/decks/{id}/ask` | Short answer citing the deck's cards (needs `ASK_ENABLED=true` and `OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`; 30/hour per user) |
 | **Media** |
 | `POST` | `/decks/{id}/media/sign` | Signed parameters for one direct browser → Cloudinary photo upload (`item.create`; folder `gobbit/items/<deckId>`; 60/hour per user; 503 without `CLOUDINARY_URL`) |
 | `POST` | `/decks/{id}/media/assets` | Record a finished browser upload: Cloudinary's signed answer (`publicId`, `version`, `signature`, dimensions, bytes, format) is verified and the image is registered for the deck (`item.create`; 60/hour per user; 201 new, 200 repeat, 422 bad signature / wrong folder / other deck; 503 without `CLOUDINARY_URL`). Image cards may only reference recorded images |
@@ -578,7 +586,7 @@ Error handling via custom `HttpError` class and Postgres constraint mapping.
 
 ## License
 
-Licensed under the [Mozilla Public License 2.0](./LICENSE). You may use, modify and distribute this code, including in commercial and closed-source products; modifications to MPL-licensed files must be shared under the same license, and existing notices must be kept.
+Licensed under the [Mozilla Public License 2.0](./LICENSE). Third-party notices for the packages bundled into the web app are generated at build time and served at `/licenses.txt` (linked from ⋯ → About). You may use, modify and distribute this code, including in commercial and closed-source products; modifications to MPL-licensed files must be shared under the same license, and existing notices must be kept.
 
 ---
 

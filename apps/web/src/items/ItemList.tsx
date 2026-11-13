@@ -15,6 +15,8 @@ import { Card } from '../cards/Card';
 import { useNavigateHref } from '../ui/NavLink';
 import { EmptyState, ErrorState, LoadingState } from '../ui/StatusViews';
 import { emptyListCopy } from './empty-copy';
+import { firstVisibleItemId } from './first-visible';
+import { useKeepPlace } from './use-keep-place';
 import { Button } from '../ui/buttons/Button';
 
 /**
@@ -45,6 +47,9 @@ function useReturnFromBrowse(deckSlug: string, filter: ItemFilter, ready: boolea
     return () => cancelAnimationFrame(frame);
   }, [deckSlug, key, ready]);
 }
+
+const cardElement = (id: string) =>
+  document.getElementById(`card-title-${id}`)?.closest('article') ?? null;
 
 /** P3.3: cursor-paged list; the next page loads when the sentinel nears the viewport. */
 export function ItemList({
@@ -77,6 +82,12 @@ export function ItemList({
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   useReturnFromBrowse(deckSlug, filter, (query.data?.pages.length ?? 0) > 0);
+  useKeepPlace({
+    data: query.data,
+    scroller: () => window,
+    anchorId: () => firstVisibleItemId(),
+    element: cardElement,
+  });
 
   if (query.isPending) return <LoadingState label="Loading cards…" />;
 

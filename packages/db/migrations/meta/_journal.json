@@ -155,6 +155,27 @@
       "when": 1793725444598,
       "tag": "0021_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794223588196,
+      "tag": "0022_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794228066874,
+      "tag": "0023_events_ingest",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794326788933,
+      "tag": "0024_card_body_2000",
+      "breakpoints": true
     }
   ]
 }

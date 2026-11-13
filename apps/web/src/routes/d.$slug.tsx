@@ -6,27 +6,23 @@ import {
   useNavigate,
   useSearch,
 } from '@tanstack/react-router';
-import { can } from '@gobbit/shared/authz';
 import { useCallback, useEffect } from 'react';
 import { categoriesQuery, deckQuery } from '../api/queries';
-import { AppHeader } from '../app/AppHeader';
 import { backTarget } from '../app/back-target';
 import { BottomBar } from '../app/BottomBar';
+import { isSearchPath, showsListTools } from '../app/list-tools';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
 import { writeLastDeck } from '../lib/last-deck';
 import { categoryFromFilter, isBrowsePath } from '../browse/browse-params';
-import { SearchBox } from '../search/SearchBox';
+import { DeckHeader } from '../deck-header/DeckHeader';
 import { parseSearchParams } from '../search/search-params';
-import { viewFromPath, type ChipView } from '../ui/chip-order';
-import { ChipRow } from '../ui/ChipRow';
-import { useNavigateHref } from '../ui/NavLink';
+import { viewFromPath } from '../ui/chip-order';
 import { ErrorState, LoadingState } from '../ui/StatusViews';
 
-const ALL: ChipView = { kind: 'all' };
-
 /**
- * Deck layout (D65): header, chip row, the selected list view and the bottom bar (D274). Browse and
- * the new-card composer render without it (D139, D300).
+ * Deck layout (D65): the breadcrumb header (D380), the selected page and the bottom bar (D274).
+ * Browse and the new-card composer render without it (D139, D300); the view switcher and Search
+ * show only on the card lists, not on pages like Your shares or Review (`showsListTools`).
  */
 export const Route = createFileRoute('/d/$slug')({
   component: DeckLayout,
@@ -37,10 +33,10 @@ function DeckLayout() {
   const deck = useQuery(deckQuery(slug));
   const categories = useQuery(categoriesQuery(slug));
   const { pathname } = useLocation();
-  const navigate = useNavigateHref();
   const deckSlug = deck.data?.slug;
   const adding = pathname.endsWith('/new');
-  const searching = pathname.endsWith('/search');
+  const searching = isSearchPath(pathname);
+  const listTools = showsListTools(pathname);
   const browsing = isBrowsePath(pathname);
   const view = viewFromPath(pathname)?.view ?? null;
   // D277: Browse opens on the list's category, or All from any other deck page.
@@ -48,10 +44,9 @@ function DeckLayout() {
   const { q, mode } = parseSearchParams(useSearch({ strict: false }));
   const routerNavigate = useNavigate();
 
-  // D79: the pinned box drives `/d/$slug/search?q=`; typing there replaces history entries.
+  // D382: a search from the sheet opens `/d/$slug/search?q=`, refining one replaces it.
   const onSearch = useCallback(
     (next: string) => {
-      if (!next && !searching) return;
       void routerNavigate({
         to: '/d/$slug/search',
         params: { slug },
@@ -84,20 +79,21 @@ function DeckLayout() {
 
   return (
     <>
-      <AppHeader
-        title={deck.data.name}
+      <DeckHeader
+        deck={deck.data}
         back={backTarget(
           view?.kind === 'all' ? { kind: 'deck' } : { kind: 'deck-page', deckSlug: slug },
         )}
-      />
-      <SearchBox initialQuery={searching ? q : ''} onSearch={onSearch} />
-      <ChipRow
-        deckSlug={slug}
-        categories={categories.data ?? []}
-        active={view ?? ALL}
-        showArchived={can(deck.data.role, 'item.archive')}
-        showLinks={can(deck.data.role, 'item.update')}
-        onNavigate={navigate}
+        list={
+          listTools
+            ? {
+                categories: categories.data ?? [],
+                view,
+                query: searching ? q : '',
+                onSearch,
+              }
+            : null
+        }
       />
       <main className="page">
         <Outlet />

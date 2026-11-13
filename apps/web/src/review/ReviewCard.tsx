@@ -7,20 +7,16 @@ import { CardBody } from '../cards/CardBody';
 import { itemCategories } from '../cards/Card';
 import { useCloudName } from '../cards/use-cloud-name';
 import { EntityChips } from '../cards/EntityChips';
-import { Button } from '../ui/buttons/Button';
 import { IconButton } from '../ui/buttons/IconButton';
 import { MoreMenu } from '../ui/MoreMenu';
 import { ReviewDiff } from './ReviewDiff';
 import { ReviewEditForm } from './ReviewEditForm';
 import { reviewDiff } from './review-diff';
-import { reviewMode, suggestedCategory } from './review-mode';
+import { REVIEW_BANNER, reviewMode, suggestedCategory } from './review-mode';
+import { CreateCategoryToggle, PublishButtons } from './PublishButtons';
 import { heldLine } from './held-line';
+import { fallbackLine } from './fallback-line';
 import { sourceLine } from './source-line';
-
-const BANNERS = {
-  duplicate: 'Looks like a card you already have',
-  update: 'Updates an existing card',
-} as const;
 
 /** D106/D107: one proposal with its source, extracted details and the publish decision. */
 export function ReviewCard({
@@ -63,6 +59,7 @@ export function ReviewCard({
   const titleId = `review-title-${item.id}`;
   const source = sourceLine(job, now);
   const held = heldLine(job);
+  const fallback = fallbackLine(job);
   const withCategory = suggestion && createCategory ? { createCategory: true } : {};
 
   const saveEdit = async (patch: ItemPatch) => {
@@ -88,6 +85,7 @@ export function ReviewCard({
       )}
       {source && <p className="review-card__source">{source}</p>}
       {held && <p className="review-card__held">{held}</p>}
+      {fallback && <p className="review-card__held">{fallback}</p>}
       {job?.sourcePreview && (
         <p className="review-card__preview" dir="auto">
           {job.sourcePreview}
@@ -126,49 +124,23 @@ export function ReviewCard({
       {mode.kind !== 'new' && (
         <section className="review-card__dedup" aria-label="Existing card">
           <p className="review-card__banner">
-            {BANNERS[mode.kind]}: <strong dir="auto">{mode.target.title}</strong>
+            {REVIEW_BANNER[mode.kind]}: <strong dir="auto">{mode.target.title}</strong>
           </p>
           <ReviewDiff changes={changes} />
         </section>
       )}
 
       {suggestion && (
-        <label className="review-card__new-category">
-          <input
-            type="checkbox"
-            checked={createCategory}
-            onChange={(event) => setCreateCategory(event.currentTarget.checked)}
-          />
-          Create category “{suggestion}”
-        </label>
+        <CreateCategoryToggle
+          name={suggestion}
+          checked={createCategory}
+          onChange={setCreateCategory}
+        />
       )}
 
       {!editing && (
         <CardBar>
-          {mode.kind === 'new' ? (
-            <Button
-              icon="check"
-              label="Publish"
-              disabled={busy}
-              onClick={() => onPublish({ mode: 'new', ...withCategory })}
-            />
-          ) : (
-            <>
-              <Button
-                icon="check"
-                label="Apply update"
-                disabled={busy}
-                onClick={() => onPublish({ mode: 'update', ...withCategory })}
-              />
-              <Button
-                icon="plus"
-                label="Publish as new"
-                variant="ghost"
-                disabled={busy}
-                onClick={() => onPublish({ mode: 'new', ...withCategory })}
-              />
-            </>
-          )}
+          <PublishButtons mode={mode} busy={busy} extra={withCategory} onPublish={onPublish} />
           <IconButton
             icon="edit"
             label="Edit"

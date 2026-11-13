@@ -11,11 +11,11 @@
   width: 10px;
   height: 10px;
   border: 2px solid var(--color-surface);
-  border-radius: 50%;
+  border-radius: var(--radius);
 }
 
 .notifications-bell__light--pending {
-  background: var(--color-accent);
+  background: var(--color-accent-fill);
 }
 
 .notifications-bell__light--overdue {
@@ -34,7 +34,6 @@
   display: grid;
   gap: 2px;
   padding: 12px var(--gap);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);

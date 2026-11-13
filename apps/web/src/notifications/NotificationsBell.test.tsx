@@ -26,7 +26,7 @@ describe('NotificationsBell (037, D298)', () => {
   });
 
   it('opens /notifications', async () => {
-    answer({ items: [], upcoming: [] });
+    answer({ items: [], upcoming: [], comingUp: [] });
     const { navigate } = renderWithClient(<NotificationsBell />);
     await vi.waitFor(() => expect(respond).toHaveBeenCalledWith('GET /me/pending'));
     fireEvent.click(screen.getByRole('link', { name: 'Notifications' }));
@@ -35,17 +35,41 @@ describe('NotificationsBell (037, D298)', () => {
   });
 
   it('shows the pending light with the count in its name', async () => {
-    answer({ items: [entry(false)], upcoming: [] });
+    answer({ items: [entry(false)], upcoming: [], comingUp: [] });
     renderWithClient(<NotificationsBell />);
     await screen.findByRole('link', { name: 'Notifications, 1 pending' });
     expect(light()).toBe('pending');
   });
 
   it('shows the overdue light once one is late', async () => {
-    answer({ items: [entry(true), entry(false)], upcoming: [] });
+    answer({ items: [entry(true), entry(false)], upcoming: [], comingUp: [] });
     renderWithClient(<NotificationsBell />);
     await screen.findByRole('link', { name: 'Notifications, 2 pending, 1 overdue' });
     expect(light()).toBe('overdue');
+  });
+
+  it('never counts Coming up events (D366)', async () => {
+    answer({
+      items: [],
+      upcoming: [],
+      comingUp: [
+        {
+          kind: 'event',
+          itemId: crypto.randomUUID(),
+          title: 'Choir',
+          deck: { slug: 'home', name: 'Home' },
+          startsAt: '2026-11-05T18:00:00.000Z',
+          endsAt: '2026-11-05T20:00:00.000Z',
+          allDay: false,
+          timeZone: 'UTC',
+          location: null,
+        },
+      ],
+    });
+    renderWithClient(<NotificationsBell />);
+    await vi.waitFor(() => expect(respond).toHaveBeenCalledWith('GET /me/pending'));
+    expect(screen.getByRole('link', { name: 'Notifications' })).toBeInTheDocument();
+    expect(light()).toBeNull();
   });
 
   it('stays a plain bell when the list fails to load', async () => {

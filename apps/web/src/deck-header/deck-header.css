@@ -1,0 +1,113 @@
+/* D380 (043): deck pages' one-line header, a breadcrumb "Deck ▾ / View ▾" and a Search button.
+   It replaces the old title row, pinned search box and chip row (one sticky bar instead of three). */
+
+/* Like the plain header title, the breadcrumb sits right after Back's chevron. */
+.app-header__back + .deck-crumbs {
+  margin-inline-start: calc(-1 * var(--header-gap));
+}
+
+.deck-crumbs {
+  flex: 1;
+  min-width: 0;
+}
+
+.deck-crumbs__list {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deck-crumbs__item {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+}
+
+/* With a view crumb next to it the deck name gives up room first, but keeps a readable share. */
+.deck-crumbs__item--deck:has(+ .deck-crumbs__item--view) {
+  max-width: 60%;
+}
+
+.deck-crumbs__item--view::before {
+  flex: none;
+  padding-inline: 2px 4px;
+  color: var(--color-muted);
+  font-size: 1.125rem;
+  content: '/';
+}
+
+.deck-crumbs__title {
+  min-width: 0;
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+.deck-crumbs__deck {
+  display: block;
+  padding-block: 10px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .deck-crumbs__deck:hover {
+    text-decoration: underline;
+  }
+}
+
+/* A slim caret (GitHub's repository switcher): 44 px tall, narrower than an icon button. */
+.deck-header .deck-crumbs__caret {
+  flex: none;
+  min-width: 32px;
+  padding: 0 6px;
+}
+
+.deck-crumbs__item--view > .menu-button {
+  min-width: 0;
+}
+
+.deck-crumbs__view {
+  gap: 2px;
+  min-width: 0;
+  padding: 0 6px 0 8px;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.deck-crumbs__view[aria-expanded='true'] {
+  background: var(--color-accent-soft);
+}
+
+@media (hover: hover) {
+  .deck-crumbs__view:hover {
+    background: var(--color-accent-soft);
+  }
+}
+
+.deck-crumbs__view-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deck-crumbs__view .icon {
+  color: var(--color-muted);
+}
+
+/* The view trigger names itself; its tooltip would only repeat the label. */
+.deck-crumbs__view[data-tip]::after {
+  display: none;
+}
+
+/* D382: the search sheet: the box, then recent searches. */
+.search-sheet .recent-searches {
+  margin-top: var(--space-4);
+}

@@ -36,6 +36,7 @@ function entry(
       newCategory: null,
       sourcePreview: 'https://dentist.example/',
       autoPublish: null,
+      extractionFallback: null,
       ...job,
     },
   };
@@ -74,6 +75,39 @@ describe('ReviewCard', () => {
   it("says why a publisher's share was not published directly (D193)", async () => {
     await renderCard(entry({}, { autoPublish: 'held_duplicate' }));
     expect(screen.getByText('Not published directly: it may be a duplicate')).toBeInTheDocument();
+  });
+
+  it('renders an event proposal as an event and says to check its time (D375, D377)', async () => {
+    const event = makeItem({
+      id: 'p1',
+      status: 'proposed',
+      type: 'event',
+      title: 'Winter fair',
+      body: 'Stalls and music',
+      categoryIds: ['c-general'],
+      payload: {
+        allDay: false,
+        start: '2026-12-03T18:00',
+        end: '2026-12-03T21:00',
+        timeZone: 'Europe/London',
+        location: 'Town hall',
+      },
+    });
+    await renderCard(entry({ item: event }, { autoPublish: 'held_event_unverified' }));
+    const card = screen.getByRole('article', { name: 'Winter fair' });
+    expect(card.querySelector('.event-card')).not.toBeNull();
+    expect(screen.getByText('Town hall')).toBeInTheDocument();
+    expect(screen.getByText('Not published directly: check the date and time')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.getByRole('menuitem', { name: 'Edit fully' })).toHaveAttribute(
+      'href',
+      '/i/p1/edit?from=review',
+    );
+  });
+
+  it('says the assistant could not read a preview-filled proposal (D355)', async () => {
+    await renderCard(entry({}, { extractionFallback: 'preview' }));
+    expect(screen.getByText(/The assistant couldn't read this share/)).toBeInTheDocument();
   });
 
   it('shows no held line for an ordinary proposal', async () => {

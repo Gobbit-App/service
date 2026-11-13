@@ -1,11 +1,18 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import type { Item } from '@gobbit/shared';
 import { imageAlt } from '@gobbit/shared/image-alt';
+import { EventCard } from './EventCard';
 import { ImageCard, type ImageLoading } from './ImageCard';
 import { LinkCard } from './LinkCard';
 import { TableCard } from './TableCard';
 import { TextCard } from './TextCard';
-import { asCalcPayload, asImagePayload, asLinkPayload, asTablePayload } from './payload-guards';
+import {
+  asCalcPayload,
+  asEventPayload,
+  asImagePayload,
+  asLinkPayload,
+  asTablePayload,
+} from './payload-guards';
 import { ReminderStatus } from '../reminders/ReminderStatus';
 
 /** D57: the calculator (and the expression evaluator) loads only when a calc card renders. */
@@ -70,6 +77,14 @@ function TypedBody({
     }
     case 'reminder':
       return <ReminderStatus item={item} />;
+    case 'event': {
+      const payload = asEventPayload(item.payload);
+      return payload ? (
+        <EventCard payload={payload} cloudName={cloudName} health={item.linkHealth} />
+      ) : (
+        <Invalid />
+      );
+    }
     default:
       return <Invalid />;
   }

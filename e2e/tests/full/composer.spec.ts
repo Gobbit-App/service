@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { searchButton } from '../smoke/helpers/deck-header';
 
 /**
  * 039 composer frame (`@full`, D300/D308/D310): the editor is its own page — no deck search,
@@ -15,7 +16,7 @@ const textCard = (deck: WebDeck) => deck.items.find((item) => item.type === 'tex
 const discardDialog = (page: Page) => page.getByRole('dialog', { name: 'Discard changes?' });
 
 async function expectNoDeckChrome(page: Page): Promise<void> {
-  await expect(page.getByRole('searchbox', { name: 'Search this deck' })).toHaveCount(0);
+  await expect(searchButton(page)).toHaveCount(0);
   await expect(page.locator('.bottom-bar')).toHaveCount(0);
   await expect(page.getByRole('banner')).toHaveCount(1);
   await expect(page.getByRole('banner').getByRole('button', { name: 'Save' })).toBeVisible();
@@ -38,7 +39,7 @@ test('the composer replaces the deck chrome, which is back after leaving @full',
   await page.getByRole('link', { name: 'Close' }).click();
   await expect(page).toHaveURL(new RegExp(`/i/${textCard(webDeck).id}$`));
   await page.goto(webUrl(`/d/${webDeck.slug}`));
-  await expect(page.getByRole('searchbox', { name: 'Search this deck' })).toBeVisible();
+  await expect(searchButton(page)).toBeVisible();
   await expect(page.locator('.bottom-bar')).toBeVisible();
 });
 

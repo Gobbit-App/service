@@ -105,7 +105,7 @@ describe('Items Integration Tests', () => {
     expect(updated.title).toBe('Hi');
   });
 
-  it('PATCH type → 400', async () => {
+  it('PATCH another type → 409 type-change-not-supported (D12)', async () => {
     const createRes = await ctx.app.request('/decks/scratch/items', {
       method: 'POST',
       headers: ctx.as(),
@@ -122,7 +122,8 @@ describe('Items Integration Tests', () => {
       headers: ctx.as(),
       body: JSON.stringify({ type: 'link' }),
     });
-    expect(patchRes.status).toBe(400);
+    expect(patchRes.status).toBe(409);
+    expect((await patchRes.json()).type).toBe('/problems/type-change-not-supported');
   });
 
   it('POST table item → 201', async () => {
@@ -244,7 +245,7 @@ describe('Items Integration Tests', () => {
       body: JSON.stringify({
         type: 'text',
         title: 'LongBody',
-        body: 'a'.repeat(601),
+        body: 'a'.repeat(2001),
       }),
     });
     expect(res.status).toBe(400);
@@ -253,14 +254,14 @@ describe('Items Integration Tests', () => {
     expect(problem.errors[0]?.path).toBe('body');
   });
 
-  it('POST body with 600 Hebrew characters → 201', async () => {
+  it('POST body with 2000 Hebrew characters → 201', async () => {
     const res = await ctx.app.request('/decks/scratch/items', {
       method: 'POST',
       headers: ctx.as(),
       body: JSON.stringify({
         type: 'text',
         title: 'Hebrew',
-        body: 'א'.repeat(600),
+        body: 'א'.repeat(2000),
       }),
     });
     expect(res.status).toBe(201);

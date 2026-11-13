@@ -4,6 +4,7 @@ import {
   shareChannels,
   type AutoPublishOutcome,
   type DedupVerdict,
+  type ExtractionSummary,
   type IngestChannel,
   type MemberRole,
 } from '@gobbit/shared';
@@ -31,6 +32,8 @@ export interface AutoPublishInput {
   /** The categories the extraction chose, before the default-category fallback. */
   categoryIds: readonly string[];
   verdict: DedupVerdict | null;
+  /** D375: where an event proposal's date and zone came from (`extraction.event`). */
+  event?: ExtractionSummary['event'];
 }
 
 const SHARE_CHANNELS: readonly IngestChannel[] = shareChannels;
@@ -43,11 +46,20 @@ export function autoPublishHold(input: {
   role: MemberRole | null;
   categoryIds: readonly string[];
   verdict: DedupVerdict | null;
+  /** Set for an event proposal: its date and zone sources (none → unverified). */
+  event?: ExtractionSummary['event'] | null;
 }): Exclude<AutoPublishOutcome, 'published' | 'held_publish_failed'> | null {
   if (!input.role || !can(input.role, 'item.publish')) return 'held_not_publisher';
   if (input.categoryIds.length === 0) return 'held_needs_category';
   if (!input.verdict) return 'held_duplicate_check_failed';
   if (input.verdict.action !== 'new') return 'held_duplicate';
+  // D375: only an event read from structured data in the sharer's own zone skips a person's look.
+  if (
+    input.event !== undefined &&
+    (input.event?.dateSource !== 'structured' || input.event.zoneSource !== 'request')
+  ) {
+    return 'held_event_unverified';
+  }
   return null;
 }
 
@@ -69,7 +81,12 @@ export async function autoPublish(
     if (!deck?.autoPublishShares) return null;
 
     const role = await deps.roleOf(job.deckId, job.userId);
-    const hold = autoPublishHold({ role, categoryIds: input.categoryIds, verdict: input.verdict });
+    const hold = autoPublishHold({
+      role,
+      categoryIds: input.categoryIds,
+      verdict: input.verdict,
+      ...(proposal.type === 'event' ? { event: input.event ?? null } : {}),
+    });
     if (hold) {
       await deps.jobs.update(job.id, { autoPublish: hold });
       return hold;

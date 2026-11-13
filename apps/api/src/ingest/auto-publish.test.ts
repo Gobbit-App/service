@@ -62,6 +62,29 @@ describe('autoPublishHold (D193)', () => {
     expect(autoPublishHold({ ...base, verdict: null })).toBe('held_duplicate_check_failed');
   });
 
+  it("lets an event through only when read from structured data in the sharer's zone (D375)", () => {
+    expect(
+      autoPublishHold({ ...base, event: { dateSource: 'structured', zoneSource: 'request' } }),
+    ).toBeNull();
+    expect(
+      autoPublishHold({ ...base, event: { dateSource: 'model', zoneSource: 'request' } }),
+    ).toBe('held_event_unverified');
+    expect(
+      autoPublishHold({ ...base, event: { dateSource: 'structured', zoneSource: 'fallback' } }),
+    ).toBe('held_event_unverified');
+    expect(autoPublishHold({ ...base, event: null })).toBe('held_event_unverified');
+  });
+
+  it('holds a duplicate event as a duplicate first', () => {
+    expect(
+      autoPublishHold({
+        ...base,
+        verdict: { ...fresh, action: 'possible_duplicate' },
+        event: { dateSource: 'model', zoneSource: 'fallback' },
+      }),
+    ).toBe('held_duplicate');
+  });
+
   it('checks rights before category before duplicates', () => {
     expect(autoPublishHold({ role: 'editor', categoryIds: [], verdict: null })).toBe(
       'held_not_publisher',

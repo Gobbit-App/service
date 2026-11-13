@@ -1,6 +1,6 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { PendingItem, PendingList } from '@gobbit/shared/reminders';
+import type { ComingUpEntry, PendingItem, PendingList } from '@gobbit/shared/reminders';
 import { queryKeys } from '../api/query-keys';
 import { renderWithClient, testQueryClient } from '../test/render';
 
@@ -32,6 +32,19 @@ const LIST: PendingList = {
       deadline: new Date(Date.now() + 72 * 3_600_000).toISOString(),
     }),
   ],
+  comingUp: [],
+};
+
+const COMING_UP: ComingUpEntry = {
+  kind: 'event',
+  itemId: '00000000-0000-4000-8000-000000000003',
+  title: 'Choir concert',
+  deck: { slug: 'home', name: 'Home' },
+  startsAt: new Date(Date.now() + 3 * 3_600_000).toISOString(),
+  endsAt: new Date(Date.now() + 5 * 3_600_000).toISOString(),
+  allDay: false,
+  timeZone: 'UTC',
+  location: 'Town hall',
 };
 
 const section = (name: string) => screen.getByRole('region', { name });
@@ -56,17 +69,45 @@ describe('NotificationsScreen (037, D298)', () => {
   });
 
   it('says nothing is waiting, and hides an empty Upcoming', async () => {
-    respond.mockResolvedValue({ items: [], upcoming: [] });
+    respond.mockResolvedValue({ items: [], upcoming: [], comingUp: [] });
     renderWithClient(<NotificationsScreen />);
     expect(await screen.findByText('Nothing waiting on you')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Upcoming' })).not.toBeInTheDocument();
   });
 
   it('keeps Upcoming under the empty state', async () => {
-    respond.mockResolvedValue({ items: [], upcoming: LIST.upcoming });
+    respond.mockResolvedValue({ items: [], upcoming: LIST.upcoming, comingUp: [] });
     renderWithClient(<NotificationsScreen />);
     expect(await screen.findByText('Nothing waiting on you')).toBeInTheDocument();
     expect(section('Upcoming')).toBeInTheDocument();
+  });
+
+  it('orders Waiting on you, Coming up, Upcoming (D366)', async () => {
+    respond.mockResolvedValue({ ...LIST, comingUp: [COMING_UP] });
+    renderWithClient(<NotificationsScreen />);
+    const comingUp = await screen.findByRole('region', { name: 'Coming up' });
+    expect(within(comingUp).getByText('Choir concert')).toBeInTheDocument();
+    expect(within(comingUp).getByText('Town hall')).toBeInTheDocument();
+    const names = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    expect(names).toEqual(['Waiting on you', 'Coming up', 'Upcoming']);
+  });
+
+  it('shows Coming up under the empty state and hides it when empty', async () => {
+    respond.mockResolvedValue({ items: [], upcoming: [], comingUp: [COMING_UP] });
+    renderWithClient(<NotificationsScreen />);
+    expect(await screen.findByText('Nothing waiting on you')).toBeInTheDocument();
+    expect(section('Coming up')).toBeInTheDocument();
+  });
+
+  it('reads a list persisted before Coming up existed', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    respond.mockRejectedValue(new TypeError('Failed to fetch'));
+    const queryClient = testQueryClient();
+    const { comingUp: _dropped, ...old } = LIST;
+    queryClient.setQueryData(queryKeys.pending, old as PendingList);
+    renderWithClient(<NotificationsScreen />, { queryClient });
+    expect(await screen.findByText('Pay the plumber')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Coming up' })).not.toBeInTheDocument();
   });
 
   it('shows the last known list offline, with a note', async () => {

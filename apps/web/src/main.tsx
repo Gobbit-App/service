@@ -10,6 +10,8 @@ import { historyNavigate } from './app/history-navigate';
 import { createAppRouter } from './app/router';
 import { NavigateContext } from './ui/NavLink';
 import { installTooltipPress } from './ui/tooltip-press';
+// D383: the UI typeface, self-hosted (latin subsets load on demand via unicode-range).
+import '@fontsource-variable/schibsted-grotesk/wght.css';
 import './styles.css';
 
 const persister = createIdbPersister();

@@ -17,6 +17,7 @@ import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import { resolveDeck } from '../lib/resolve-deck';
 import { toSlug } from '../lib/slug';
 import type { IngestUploadStore } from '../media/ingest-uploads';
+import type { EventNoticeHook } from './event-cards.service';
 import type { ImageReferenceCheck } from './image-reference';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
@@ -60,6 +61,8 @@ export function createReviewService(deps: {
   /** D160: a published image card references a recorded asset of its deck. */
   imageReference: ImageReferenceCheck;
   now: () => Date;
+  /** D359: event notices follow a publish or merge. */
+  noticeHook?: EventNoticeHook;
   /** D180: a publish changes the deck's public pages; drop them after commit. */
   purgeDeck?: (deckId: string) => void;
 }) {
@@ -159,9 +162,16 @@ export function createReviewService(deps: {
         ...patch,
         categoryIds: categoryIds.length > 0 ? categoryIds : targetCategoryIds,
       });
-      await tx.items.update(target.id, patch, categoryIds.length > 0 ? categoryIds : undefined, [
-        eventFrom(actor, 'merged', changes),
-      ]);
+      await tx.items.update(
+        target.id,
+        patch,
+        categoryIds.length > 0 ? categoryIds : undefined,
+        [eventFrom(actor, 'merged', changes)],
+        // D359: a merged event's notices follow its new payload.
+        patch.payload
+          ? deps.noticeHook?.(target, patch.payload as Record<string, unknown>, 'past_at_save')
+          : undefined,
+      );
       await tx.items.softDelete(item.id);
       if (jobId) {
         await tx.jobs.update(jobId, {
@@ -228,6 +238,7 @@ export function createReviewService(deps: {
                 newCategory: job.extraction?.newCategory ?? null,
                 sourcePreview: sourcePreview(job),
                 autoPublish: job.autoPublish ?? null,
+                extractionFallback: job.extraction?.fallback ?? null,
               }
             : null,
           target: (targetId && targetDtos.get(targetId)) || null,

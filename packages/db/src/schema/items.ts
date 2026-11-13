@@ -17,6 +17,7 @@ import {
   EMBEDDING_DIMS,
   type Entities,
 } from '@gobbit/shared';
+import { EVENT_LOCATION_MAX, EVENT_NOTIFY_TIMES_MAX } from '@gobbit/shared/event-constants';
 import { itemStatusEnum, itemTypeEnum, sourceKindEnum, timestamps, tstz } from './common';
 import { users } from './users';
 import { decks } from './decks';
@@ -65,6 +66,11 @@ export const items = pgTable(
       .where(sql`${t.revealAt} IS NOT NULL`),
     // D291: only reminders have a reveal time (text compare: the enum value is new in 0021).
     check('items_reveal_at_chk', sql`(${t.type}::text = 'reminder') = (${t.revealAt} IS NOT NULL)`),
+    // D356: the event payload backstop (text compare: the enum value is new in 0022).
+    check(
+      'items_event_payload_chk',
+      sql`${t.type}::text <> 'event' OR coalesce(jsonb_typeof(${t.payload}->'allDay') = 'boolean' AND jsonb_typeof(${t.payload}->'start') = 'string' AND jsonb_typeof(${t.payload}->'timeZone') = 'string' AND (NOT ${t.payload} ? 'location' OR char_length(${t.payload}->>'location') <= ${sql.raw(String(EVENT_LOCATION_MAX))}) AND jsonb_typeof(${t.payload}#>'{notify,before}') = 'array' AND jsonb_array_length(${t.payload}#>'{notify,before}') <= ${sql.raw(String(EVENT_NOTIFY_TIMES_MAX))}, false)`,
+    ),
     index('items_search_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
     index('items_embedding_hnsw_idx')
       .using('hnsw', t.embedding.op('vector_cosine_ops'))

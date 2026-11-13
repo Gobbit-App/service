@@ -70,9 +70,9 @@ describe('extract-validate (D100)', () => {
   });
 
   it('truncates a long body at a sentence end within CARD_BODY_MAX', () => {
-    const raw = { ...baseRaw, body: 'a. '.repeat(700) };
+    const raw = { ...baseRaw, body: 'a. '.repeat(1000) };
     const r = okResult(raw);
-    expect(codePointLength(r.item.body)).toBeLessThanOrEqual(600);
+    expect(codePointLength(r.item.body)).toBeLessThanOrEqual(CARD_BODY_MAX);
     expect(r.item.body.endsWith('.')).toBe(true);
   });
 
@@ -81,9 +81,9 @@ describe('extract-validate (D100)', () => {
     expect(truncateAtSentence('short', 10)).toBe('short');
     expect(truncateAtSentence('a'.repeat(50), 10).length).toBe(10);
 
-    const hebrew = 'שלום עולם. '.repeat(70);
+    const hebrew = 'שלום עולם. '.repeat(200);
     const cut = truncateAtSentence(hebrew, CARD_BODY_MAX);
-    expect(codePointLength(cut)).toBeLessThanOrEqual(600);
+    expect(codePointLength(cut)).toBeLessThanOrEqual(CARD_BODY_MAX);
     expect(codePointLength(cut)).toBeGreaterThan(0);
   });
 
@@ -304,5 +304,100 @@ describe('extract-validate for locked hosts (D167)', () => {
   it('leaves other hosts alone', () => {
     const ctx = { ...defaultCtx, sourceUrl: 'https://e.com/x', lockedHost: null };
     expect(okResult(baseRaw, ctx).item.type).toBe('text');
+  });
+});
+
+describe('extract-validate events (D370, D375)', () => {
+  const eventCtx = (overrides: Partial<NonNullable<ValidateContext['event']>> = {}) => ({
+    ...defaultCtx,
+    sourceUrl: 'https://fair.example/whats-on',
+    event: {
+      severalEvents: false,
+      timeZone: 'Europe/London',
+      zoneSource: 'request' as const,
+      personalDeck: false,
+      startMaxDays: 730,
+      locationMax: 200,
+      now: new Date('2026-11-01T12:00:00.000Z'),
+      ...overrides,
+    },
+  });
+  const structured = {
+    name: 'Winter fair',
+    startDate: '2026-12-03T18:00:00Z',
+    endDate: null,
+    location: 'Town hall',
+    url: null,
+  };
+  const eventRaw = {
+    ...baseRaw,
+    type: 'event',
+    title: 'Winter fair',
+    event: { start: '2026-12-03T18:00', allDay: false },
+  };
+
+  it('proposes an event and reports where its date and zone came from', () => {
+    const r = okResult(eventRaw, eventCtx());
+    expect(r.item.type).toBe('event');
+    expect(r.item.payload).toMatchObject({
+      start: '2026-12-03T18:00:00.000Z',
+      timeZone: 'Europe/London',
+      url: 'https://fair.example/whats-on',
+    });
+    expect(r.summary.event).toEqual({ dateSource: 'model', zoneSource: 'request' });
+    expect(r.eventDecision).toEqual({
+      outcome: 'event_proposed',
+      dateSource: 'model',
+      zoneSource: 'request',
+    });
+  });
+
+  it("turns a page's one structured event into an event even when the model said link", () => {
+    const r = okResult({ ...baseRaw, type: 'link' }, eventCtx({ structured }));
+    expect(r.item.type).toBe('event');
+    expect(r.summary.event).toEqual({ dateSource: 'structured', zoneSource: 'request' });
+  });
+
+  it('keeps a photo a photo even on an event page', () => {
+    const r = okResult(
+      { ...baseRaw, type: 'image' },
+      { ...eventCtx({ structured }), imagePublicId: 'gobbit/x/photo' },
+    );
+    expect(r.item.type).toBe('image');
+    expect(r.eventDecision).toBeUndefined();
+  });
+
+  it('falls back to a link card with the reason when no date can be read', () => {
+    const r = okResult({ ...eventRaw, event: { allDay: false } }, eventCtx());
+    expect(r.item.type).toBe('link');
+    expect(r.item.payload).toEqual({ url: 'https://fair.example/whats-on' });
+    expect(r.summary.event).toBeUndefined();
+    expect(r.eventDecision).toEqual({ outcome: 'event_fallback', reason: 'no_start' });
+  });
+
+  it('falls back to a text card without a link', () => {
+    const { sourceUrl: _drop, ...noUrl } = eventCtx();
+    const r = okResult({ ...eventRaw, event: null }, noUrl);
+    expect(r.item.type).toBe('text');
+  });
+
+  it('falls back as invalid_event when the card schema refuses the event', () => {
+    const r = okResult(
+      { ...baseRaw, type: 'event' },
+      eventCtx({ structured: { ...structured, url: 'not a url' } }),
+    );
+    expect(r.item.type).toBe('link');
+    expect(r.eventDecision).toEqual({ outcome: 'event_fallback', reason: 'invalid_event' });
+  });
+
+  it('never proposes an event without the event context', () => {
+    const r = okResult(eventRaw, { ...defaultCtx, sourceUrl: 'https://fair.example/' });
+    expect(r.item.type).toBe('link');
+    expect(r.eventDecision).toBeUndefined();
+  });
+
+  it('notifies only the sharer on a personal deck (D362)', () => {
+    const r = okResult(eventRaw, eventCtx({ personalDeck: true }));
+    expect(r.item.payload).toMatchObject({ notify: { audience: { mode: 'me' } } });
   });
 });

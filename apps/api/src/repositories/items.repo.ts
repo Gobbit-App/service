@@ -14,6 +14,7 @@ import {
 } from 'drizzle-orm';
 import {
   categories,
+  eventCards,
   favorites,
   ingestJobs,
   itemCategories,
@@ -25,6 +26,7 @@ import {
   type DbTx,
   type ItemRow,
 } from '@gobbit/db';
+import { LINK_BEARING_TYPES } from '@gobbit/shared/links';
 import type {
   CursorData,
   Entities,
@@ -58,6 +60,20 @@ interface ItemListFilters {
 
 /** Writes another module adds to an items transaction. */
 export type InTx = (tx: DbTx) => Promise<void>;
+
+/** A card as a share summary names it (`findRefsByIds`). */
+export type ItemRef = Pick<ItemRow, 'id' | 'title' | 'deletedAt' | 'type'> & {
+  event: { startsAt: Date; allDay: boolean; timeZone: string } | null;
+};
+
+/** Runs each defined hook in order inside the same transaction; undefined when there are none. */
+export function composeInTx(...hooks: (InTx | undefined)[]): InTx | undefined {
+  const defined = hooks.filter((h): h is InTx => h !== undefined);
+  if (defined.length === 0) return undefined;
+  return async (tx) => {
+    for (const hook of defined) await hook(tx);
+  };
+}
 
 export function createItemsRepo(db: DbExecutor) {
   function filterConditions(q: ItemListFilters): SQL[] {
@@ -133,6 +149,8 @@ export function createItemsRepo(db: DbExecutor) {
       categoryIds: string[],
       /** D187: logged in the same transaction. */
       events: readonly ItemEventInput[] = [],
+      /** Extra work in the same transaction (e.g. D359 event notices). */
+      inTx?: (tx: DbTx, item: ItemRow) => Promise<void>,
     ): Promise<ItemRow> {
       return await db.transaction(async (tx) => {
         const [item] = await tx.insert(items).values(v).returning(itemColumns);
@@ -148,6 +166,7 @@ export function createItemsRepo(db: DbExecutor) {
         }
 
         await insertItemEvents(tx, item, events);
+        if (inTx) await inTx(tx, item);
         return item;
       });
     },
@@ -254,7 +273,7 @@ export function createItemsRepo(db: DbExecutor) {
     ): Promise<(ItemRow & { flaggedAt: Date })[]> {
       const conditions = [
         ...filterConditions(q),
-        eq(items.type, 'link'),
+        inArray(items.type, [...LINK_BEARING_TYPES]),
         eq(items.status, 'published'),
         isNull(items.deletedAt),
         inArray(linkChecks.status, ['dead', 'changed']),
@@ -305,9 +324,10 @@ export function createItemsRepo(db: DbExecutor) {
         .from(items)
         .where(
           and(
-            eq(items.type, 'link'),
+            inArray(items.type, [...LINK_BEARING_TYPES]),
             inArray(items.status, ['proposed', 'published']),
             isNull(items.deletedAt),
+            sql`${items.payload} ->> 'url' is not null`,
             sql`${items.payload} #>> '{preview,image}' is not null`,
             sql`${items.payload} #>> '{preview,publicId}' is null`,
             afterId ? sql`${items.id} > ${afterId}` : undefined,
@@ -363,12 +383,29 @@ export function createItemsRepo(db: DbExecutor) {
     },
 
     /** D196: id, title and deletion of several cards at once, soft-deleted ones included. */
-    async findRefsByIds(ids: string[]): Promise<Pick<ItemRow, 'id' | 'title' | 'deletedAt'>[]> {
+    /** Share summaries (D196): title and state, plus the start of an event card (D377). */
+    async findRefsByIds(ids: string[]): Promise<ItemRef[]> {
       if (ids.length === 0) return [];
-      return await db
-        .select({ id: items.id, title: items.title, deletedAt: items.deletedAt })
+      const rows = await db
+        .select({
+          id: items.id,
+          title: items.title,
+          deletedAt: items.deletedAt,
+          type: items.type,
+          startsAt: eventCards.startsAt,
+          allDay: eventCards.allDay,
+          timeZone: eventCards.timeZone,
+        })
         .from(items)
+        .leftJoin(eventCards, eq(eventCards.itemId, items.id))
         .where(inArray(items.id, ids));
+      return rows.map(({ startsAt, allDay, timeZone, ...ref }) => ({
+        ...ref,
+        event:
+          startsAt !== null && allDay !== null && timeZone !== null
+            ? { startsAt, allDay, timeZone }
+            : null,
+      }));
     },
 
     /**

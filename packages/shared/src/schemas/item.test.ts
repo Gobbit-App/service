@@ -15,9 +15,9 @@ describe('itemCreateSchema', () => {
     expect(result.payload).toEqual({});
   });
 
-  it('body of 600 ASCII chars ok', () => {
-    const body = 'a'.repeat(600);
-    expect(codePointLength(body)).toBe(600);
+  it('body of 2000 ASCII chars ok', () => {
+    const body = 'a'.repeat(2000);
+    expect(codePointLength(body)).toBe(2000);
     const result = itemCreateSchema.parse({
       type: 'text',
       title: 'Title',
@@ -26,8 +26,8 @@ describe('itemCreateSchema', () => {
     expect(result.body).toBe(body);
   });
 
-  it('body of 601 ASCII chars rejected with issue path [body]', () => {
-    const body = 'a'.repeat(601);
+  it('body of 2001 ASCII chars rejected with issue path [body]', () => {
+    const body = 'a'.repeat(2001);
     const result = itemCreateSchema.safeParse({
       type: 'text',
       title: 'Title',
@@ -40,9 +40,9 @@ describe('itemCreateSchema', () => {
     }
   });
 
-  it('600 Hebrew chars ok', () => {
-    const body = 'א'.repeat(600);
-    expect(codePointLength(body)).toBe(600);
+  it('2000 Hebrew chars ok', () => {
+    const body = 'א'.repeat(2000);
+    expect(codePointLength(body)).toBe(2000);
     const result = itemCreateSchema.parse({
       type: 'text',
       title: 'Title',
@@ -51,9 +51,9 @@ describe('itemCreateSchema', () => {
     expect(result.body).toBe(body);
   });
 
-  it('599 a + one emoji (600 code points) ok', () => {
-    const body = 'a'.repeat(599) + '👍';
-    expect(codePointLength(body)).toBe(600);
+  it('1999 a + one emoji (2000 code points) ok', () => {
+    const body = 'a'.repeat(1999) + '👍';
+    expect(codePointLength(body)).toBe(2000);
     const result = itemCreateSchema.parse({
       type: 'text',
       title: 'Title',
@@ -136,11 +136,9 @@ describe('itemCreateSchema', () => {
 });
 
 describe('itemPatchSchema', () => {
-  it("{type:'link'} rejected (strict, D12)", () => {
-    const result = itemPatchSchema.safeParse({
-      type: 'link',
-    });
-    expect(result.success).toBe(false);
+  it("042: {type:'link'} parses so the service answers 409 type-change-not-supported", () => {
+    expect(itemPatchSchema.safeParse({ type: 'link' }).success).toBe(true);
+    expect(itemPatchSchema.safeParse({ type: 'nope' }).success).toBe(false);
   });
 
   it('{} rejected', () => {

@@ -10,6 +10,42 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-11 — Ask switched off behind `ASK_ENABLED` (D385)
+
+- New `ASK_ENABLED` (API, default `false`, in the Compose `x-api-env` block). Ask isn't ready for
+  users: with it unset, `/config` reports `search.ask: false` (the PWA hides the Ask toggle) and
+  `POST /decks/{id}/ask` answers 503 even when `OPENROUTER_API_KEY`/`ANTHROPIC_API_KEY` is set.
+  Set it to `true` to turn Ask back on. Ingestion and semantic search are unaffected. Nothing to
+  set to keep deploying.
+
+### 2026-11-10 — Card body limit raised to 2000 characters (D384)
+
+- Migration `0024_card_body_2000` replaces the `items_body_len_chk` CHECK (600 → 2000 code
+  points). Its down migration restores 600 as `NOT VALID`: longer bodies stay, new writes are
+  checked. No new variables; nothing to set.
+
+### 2026-11-09 — Event cards: shares become events (042, D370, D374–D378, ADR-076)
+
+- Migration `0023_events_ingest` widens the `ingest_jobs.auto_publish` CHECK with
+  `held_event_unverified`. Its down migration fails while a row holds that value.
+- `POST /ingest` accepts an optional IANA `timeZone`. The share target and paste box send it;
+  the iPhone Shortcut sends it once it gains the Format Date `VV` step
+  (`docs/shortcut/README.md`). Without it, `INGEST_DEFAULT_TIME_ZONE` (from the backend entry below,
+  default `UTC`) applies. No new variables; nothing to set.
+- The `EVENT_*` and `INGEST_DEFAULT_TIME_ZONE` variables are now in the Compose `x-api-env`
+  block, so the deployed stack passes them through when set.
+
+### 2026-11-09 — Event cards: backend (042, D355–D376)
+
+- Migration `0022_events` adds the `event` card type, `event_cards`, `event_notices`,
+  `event_mutes` and a `kind` on `notification_deliveries`. Its down migration refuses while any
+  event card exists.
+- New optional limits, all with defaults (unset → nothing to set). The four caps may only lower
+  the shared limit: `EVENT_NOTIFY_TIMES_MAX` (3), `EVENT_NOTIFY_BEFORE_MAX_DAYS` (365),
+  `EVENT_START_MAX_DAYS` (1826), `EVENT_LOCATION_MAX` (200). Also `EVENT_ALLDAY_NOTICE_HOUR`
+  (9, 0–23), `EVENT_NOTICE_GRACE_MINUTES` (5) and `INGEST_DEFAULT_TIME_ZONE` (`UTC`, an IANA
+  zone). An out-of-range value or an unknown zone stops the API and the worker from starting.
+
 ### 2026-11-06 — Share visuals: GobbitBot, richer preview images (041, D343–D353, ADR-075)
 
 - Preview fetches now identify as `GobbitBot/1.0` ([`docs/crawler.md`](docs/crawler.md)); link

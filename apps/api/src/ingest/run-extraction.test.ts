@@ -110,7 +110,7 @@ describe('runExtraction (D105/D110)', () => {
       provider: 'test',
       async extract() {
         n++;
-        if (n === 1) throw new ExtractResponseError('no propose_card');
+        if (n === 1) throw new ExtractResponseError('no_call');
         return { raw: valid(0.9), inputTokens: 1, outputTokens: 1 };
       },
     };
@@ -121,6 +121,36 @@ describe('runExtraction (D105/D110)', () => {
     expect(out.ok).toBe(true);
     expect(n).toBe(2);
   });
+
+  it.each(['truncated', 'refused'] as const)(
+    'skips the corrective retry when the answer was %s (D354)',
+    async (kind) => {
+      let n = 0;
+      const extractor: Extractor = {
+        provider: 'test',
+        async extract() {
+          n++;
+          throw new ExtractResponseError(kind, {
+            stopReason: kind === 'truncated' ? 'length' : 'refusal',
+            usage: { inputTokens: 900, outputTokens: 4096 },
+          });
+        },
+      };
+      const llmCalls = sink();
+      const out = await runExtraction(
+        { extractor, model: 'm', escalationModel: 's', llmCalls },
+        input,
+      );
+      expect(n).toBe(1);
+      expect(out).toEqual({
+        ok: false,
+        error: expect.stringMatching(/^invalid_output: .*\(stop: /),
+      });
+      expect(llmCalls.rows).toEqual([
+        expect.objectContaining({ status: 'error', inputTokens: 900, outputTokens: 4096 }),
+      ]);
+    },
+  );
 
   it('propagates provider errors (pg-boss retries the job)', async () => {
     const extractor: Extractor = {

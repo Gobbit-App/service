@@ -40,8 +40,25 @@ function derive(input: ExtractInput, confidence: number): ProposeCardInput {
     .map((line) => line.trim())
     .find((line) => line.length > 0);
   const rawTitle = source.og?.title ?? source.pageTitle ?? firstLine ?? 'Untitled';
-  const type: ProposeCardInput['type'] =
-    source.images.length > 0 ? 'image' : source.url ? 'link' : 'text';
+  // D370: a page with one schema.org Event is proposed as an event.
+  const structured = source.structuredEvent;
+  const type: ProposeCardInput['type'] = structured
+    ? 'event'
+    : source.images.length > 0
+      ? 'image'
+      : source.url
+        ? 'link'
+        : 'text';
+  const event = structured
+    ? {
+        event: {
+          start: structured.startDate,
+          end: structured.endDate,
+          allDay: !structured.startDate.includes('T'),
+          location: structured.location,
+        },
+      }
+    : {};
   const phones = [...new Set(Array.from(source.text.matchAll(PHONE_PATTERN), (m) => m[0].trim()))];
   const first = input.categories[0];
   const categoryIds = first ? [first.id] : [];
@@ -52,6 +69,7 @@ function derive(input: ExtractInput, confidence: number): ProposeCardInput {
     title: truncateAtSentence(rawTitle.trim(), EXTRACT_TITLE_TARGET),
     body: truncateAtSentence(source.text.trim(), CARD_BODY_MAX),
     ...link,
+    ...event,
     ...entities,
     categoryIds,
     newCategory: null,

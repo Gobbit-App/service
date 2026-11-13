@@ -130,6 +130,47 @@ describe('createOpenAiChatExtractor', () => {
     await expect(extractor.extract(input, { model: 'm' })).rejects.toThrow(ExtractResponseError);
   });
 
+  it.each([
+    ['length', 'truncated'],
+    ['content_filter', 'refused'],
+    ['stop', 'no_call'],
+    [undefined, 'no_call'],
+  ] as const)('reads finish_reason %s without a call as %s (D354)', async (finish, kind) => {
+    const { client } = makeClient({
+      choices: [{ finish_reason: finish ?? null, message: { tool_calls: null } }],
+      usage: { prompt_tokens: 30, completion_tokens: 2048 },
+    });
+    const extractor = createOpenAiChatExtractor({ apiKey: 'k', client });
+
+    const err = await extractor.extract(input, { model: 'm' }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ExtractResponseError);
+    expect(err).toMatchObject({
+      kind,
+      stopReason: finish ?? null,
+      usage: { inputTokens: 30, outputTokens: 2048 },
+    });
+  });
+
+  it('treats a parseable call cut off by the budget as truncated (D354)', async () => {
+    const { client } = makeClient({
+      choices: [
+        {
+          finish_reason: 'length',
+          message: {
+            tool_calls: [{ type: 'function', function: { name: 'propose_card', arguments: '{}' } }],
+          },
+        },
+      ],
+      usage: null,
+    });
+    const extractor = createOpenAiChatExtractor({ apiKey: 'k', client });
+
+    await expect(extractor.extract(input, { model: 'm' })).rejects.toMatchObject({
+      kind: 'truncated',
+      retryable: false,
+    });
+  });
+
   it('forwards the abort signal to the client', async () => {
     const { client, create } = makeClient(okReply);
     const extractor = createOpenAiChatExtractor({ apiKey: 'k', client });

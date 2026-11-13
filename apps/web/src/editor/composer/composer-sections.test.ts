@@ -22,6 +22,7 @@ describe('composer sections (D306)', () => {
       table: 'Table',
       calc: 'Calculator',
       reminder: 'Reminder',
+      event: 'Event',
     });
   });
 });

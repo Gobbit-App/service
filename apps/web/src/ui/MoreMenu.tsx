@@ -17,7 +17,10 @@ import { useLongPress } from './use-long-press';
 export interface MenuAction {
   key: string;
   label: string;
-  icon: IconName;
+  /** Required for plain actions; a `checked` choice draws a check mark instead. */
+  icon?: IconName;
+  /** 043 (D381): a choice among the menu's options (`menuitemradio`); true = the current one. */
+  checked?: boolean;
   /** Run on select; or `href` to navigate in-app. */
   onSelect?: () => void;
   href?: string;
@@ -28,21 +31,28 @@ export interface MenuAction {
   detail?: string;
 }
 
-const ITEM = '[role="menuitem"]';
+const ITEM = '[role="menuitem"], [role="menuitemradio"]';
 const GAP_PX = 4;
+
+export type MenuAlign = 'start' | 'end';
 
 /**
  * The menu is portalled to <body> with fixed coordinates so cards (overflow: hidden) and
  * browse panes (transforms) never clip it. It opens below the trigger, or above when the
- * viewport has no room, aligned to the trigger's inline end.
+ * viewport has no room, aligned to the trigger's inline end (or start, D381).
  */
-function menuPosition(trigger: HTMLElement, menu: HTMLElement): { top: number; left: number } {
+function menuPosition(
+  trigger: HTMLElement,
+  menu: HTMLElement,
+  align: MenuAlign,
+): { top: number; left: number } {
   const rect = trigger.getBoundingClientRect();
   const height = menu.offsetHeight;
   const width = menu.offsetWidth;
   const below = rect.bottom + GAP_PX + height <= window.innerHeight || rect.top < height;
   const rtl = getComputedStyle(trigger).direction === 'rtl';
-  const left = rtl ? rect.left : rect.right - width;
+  const atStart = align === 'start';
+  const left = rtl === atStart ? rect.right - width : rect.left;
   return {
     top: below ? rect.bottom + GAP_PX : rect.top - GAP_PX - height,
     left: Math.max(GAP_PX, Math.min(left, window.innerWidth - width - GAP_PX)),
@@ -68,6 +78,7 @@ export function MoreMenu({
   triggerClassName,
   disabled = false,
   onLongPress,
+  align = 'end',
 }: {
   actions: readonly MenuAction[];
   /** Accessible name of the menu button. */
@@ -81,6 +92,8 @@ export function MoreMenu({
   disabled?: boolean;
   /** D275: press and hold runs this instead of opening the menu. */
   onLongPress?: () => void;
+  /** Which trigger edge the menu lines up with; `start` for menus that open from a title. */
+  align?: MenuAlign;
 }): ReactElement {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
@@ -93,11 +106,11 @@ export function MoreMenu({
   // Before paint: place the menu, then focus its first item.
   useLayoutEffect(() => {
     if (!open || !button.current || !menu.current) return;
-    const { top, left } = menuPosition(button.current, menu.current);
+    const { top, left } = menuPosition(button.current, menu.current, align);
     menu.current.style.top = `${top}px`;
     menu.current.style.left = `${left}px`;
     focusItem(menu.current, 0);
-  }, [open]);
+  }, [open, align]);
 
   useEffect(() => {
     if (!open) return;
@@ -195,7 +208,13 @@ export function MoreMenu({
               );
               const content = (
                 <>
-                  <Icon name={action.icon} />
+                  {action.checked === undefined ? (
+                    action.icon && <Icon name={action.icon} />
+                  ) : (
+                    <span className="menu__check" aria-hidden="true">
+                      {action.checked && <Icon name="check" />}
+                    </span>
+                  )}
                   {action.detail ? (
                     <span className="menu__text">
                       <span>{action.label}</span>
@@ -213,7 +232,8 @@ export function MoreMenu({
                 </>
               );
               const common = {
-                role: 'menuitem',
+                role: action.checked === undefined ? 'menuitem' : 'menuitemradio',
+                'aria-checked': action.checked,
                 tabIndex: -1,
                 className: itemClass,
                 'aria-disabled': action.disabledReason ? true : undefined,

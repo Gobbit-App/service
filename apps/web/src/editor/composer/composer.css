@@ -112,7 +112,7 @@
   position: absolute;
   inset-block: 0;
   width: 40%;
-  background: var(--color-accent);
+  background: var(--color-accent-fill);
 }
 
 @media (prefers-reduced-motion: no-preference) {

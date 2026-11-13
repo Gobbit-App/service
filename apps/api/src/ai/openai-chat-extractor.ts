@@ -3,10 +3,11 @@ import { EXTRACT_TIMEOUT_MS } from '@gobbit/shared';
 import { buildExtractPrompt, PROPOSE_CARD_TOOL, PROPOSE_CARD_TOOL_NAME } from './extract-prompt';
 import {
   EXTRACT_MAX_TOKENS,
-  ExtractResponseError,
+  responseError,
   type ExtractCall,
   type ExtractInput,
   type Extractor,
+  type ExtractUsage,
 } from './extractor';
 
 type UserContent =
@@ -29,6 +30,7 @@ export interface OpenAiExtractClient {
         options?: { signal?: AbortSignal },
       ): Promise<{
         choices: {
+          finish_reason?: string | null;
           message: {
             tool_calls?: { type: string; function?: { name: string; arguments: string } }[] | null;
           };
@@ -48,14 +50,6 @@ export const PROPOSE_CARD_FUNCTION_TOOL = {
     parameters: PROPOSE_CARD_TOOL.input_schema,
   },
 };
-
-function parseArguments(raw: string): unknown {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    throw new ExtractResponseError('propose_card arguments are not valid JSON');
-  }
-}
 
 /** D105: extraction over an OpenAI-compatible chat API (OpenRouter) with a forced function call. */
 export function createOpenAiChatExtractor(opts: {
@@ -98,16 +92,25 @@ export function createOpenAiChatExtractor(opts: {
         { signal: callOpts.signal },
       );
 
-      const call = response.choices[0]?.message.tool_calls?.find(
-        (c) => c.function?.name === PROPOSE_CARD_TOOL_NAME,
-      );
-      if (!call?.function)
-        throw new ExtractResponseError('Extraction returned no propose_card call');
-      return {
-        raw: parseArguments(call.function.arguments),
+      const choice = response.choices[0];
+      const usage: ExtractUsage = {
         inputTokens: response.usage?.prompt_tokens ?? 0,
         outputTokens: response.usage?.completion_tokens ?? 0,
       };
+      const stopReason = choice?.finish_reason;
+      const call = choice?.message.tool_calls?.find(
+        (c) => c.function?.name === PROPOSE_CARD_TOOL_NAME,
+      );
+      if (!call?.function) throw responseError('no_call', stopReason, usage);
+      // D354: a cut-off call can still parse (a closed prefix), so the stop reason wins.
+      if (stopReason === 'length') throw responseError('bad_json', stopReason, usage);
+      let raw: unknown;
+      try {
+        raw = JSON.parse(call.function.arguments);
+      } catch {
+        throw responseError('bad_json', stopReason, usage);
+      }
+      return { raw, ...usage };
     },
   };
 }

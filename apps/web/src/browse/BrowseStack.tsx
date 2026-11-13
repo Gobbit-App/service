@@ -13,6 +13,7 @@ import { BrowsePage } from './BrowsePage';
 import type { CycleEntry } from './category-cycle';
 import { END_PAGE_ID, END_TITLE_ID, EndPage } from './EndPage';
 import { pageElement, pagingBehavior, scrollToPage, tallScrollStep } from './motion';
+import { useKeepPlace } from '../items/use-keep-place';
 import { useBrowseKeys } from './use-browse-keys';
 import { usePrefetchAhead } from './use-browse-items';
 import { useCurrentCard } from './use-current-card';
@@ -130,6 +131,14 @@ export function BrowseStack({
   useLayoutEffect(() => {
     scrollToPage(container.current, startId, 'instant');
   }, [startId]);
+
+  // D401: a refetch that adds or removes cards before this one leaves the reader on it.
+  useKeepPlace({
+    data: items,
+    scroller: () => container.current,
+    anchorId: () => currentId,
+    element: (id) => pageElement(container.current, id),
+  });
 
   const visibleRef = useRef(currentId);
   useEffect(() => {
