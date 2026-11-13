@@ -94,12 +94,13 @@ describe('email-mapping', () => {
       expect(mapped.text).toBe('Hello there');
     });
 
-    it('selects the first three image attachments with params stripped and pdf excluded', () => {
+    it('selects the first three shareable attachments (photos, PDF, audio, video), params stripped (D395)', () => {
       const mapped = mapInboundEmail({
         ...base,
         subject: 'Photos',
         text: 'Pics',
         attachments: [
+          { id: 'a0', contentType: 'application/zip', size: 1 },
           { id: 'a1', contentType: 'image/jpeg', size: 1 },
           { id: 'a2', contentType: 'application/pdf', size: 1 },
           { id: 'a3', contentType: 'image/png; charset=binary', size: 1 },
@@ -107,7 +108,7 @@ describe('email-mapping', () => {
           { id: 'a5', contentType: 'image/heic', size: 1 },
         ],
       });
-      expect(mapped.attachmentIds).toEqual(['a1', 'a3', 'a4']);
+      expect(mapped.attachmentIds).toEqual(['a1', 'a2', 'a3']);
     });
 
     it('omits title and text keys when subject and body are empty', () => {

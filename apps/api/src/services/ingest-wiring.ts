@@ -5,7 +5,7 @@ import { runDedup } from '../ingest/run-dedup';
 import { createDedupRepo } from '../repositories/dedup.repo';
 import { createEmbeddingsRepo } from '../repositories/embeddings.repo';
 import { createLlmCallsRepo } from '../repositories/llm-calls.repo';
-import type { Env } from '../env';
+import { ingestMaxBytes, type Env } from '../env';
 import type { MembershipLookup } from '../access/authorize';
 import { hasExtractProvider } from '../ai/providers';
 import { noopIngestQueue, type IngestQueue } from '../jobs/ingest-queue';
@@ -50,6 +50,9 @@ export function buildIngestServices(deps: {
     | 'ANTHROPIC_API_KEY'
     | 'CLOUDINARY_URL'
     | 'INGEST_DAILY_CAP'
+    | 'INGEST_MAX_BYTES_PDF'
+    | 'INGEST_MAX_BYTES_AUDIO'
+    | 'INGEST_MAX_BYTES_VIDEO'
   >;
   decks: DecksRepo;
   memberships: MembershipLookup;
@@ -83,6 +86,7 @@ export function buildIngestServices(deps: {
   return {
     ingest: createIngestService({
       enabled: wiring.enabled ?? hasExtractProvider(env),
+      maxBytes: ingestMaxBytes(env),
       decks,
       memberships,
       jobs,

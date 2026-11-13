@@ -20,6 +20,8 @@ import {
   MEDIA_MAX_BYTES_DEFAULTS,
   MEDIA_SINGLE_UPLOAD_MAX_BYTES,
   MEDIA_VERIFY_BATCH,
+  INGEST_BODY_MAX_BYTES,
+  INGEST_MAX_BYTES_DEFAULTS,
   type MediaMaxBytes,
 } from '@gobbit/shared';
 import {
@@ -54,6 +56,10 @@ const httpsUrl = (name: string) => z.url().regex(/^https:\/\//, `${name} must be
 /** D393: a per-kind upload limit, at most the provider's single-request ceiling. */
 const mediaLimit = (fallback: number) =>
   z.coerce.number().int().positive().max(MEDIA_SINGLE_UPLOAD_MAX_BYTES).default(fallback);
+
+/** D393: a per-kind ingest limit, at most the share body limit (the file travels in it). */
+const ingestLimit = (fallback: number) =>
+  z.coerce.number().int().positive().max(INGEST_BODY_MAX_BYTES).default(fallback);
 
 /** D299: an env value that may only lower a shared cap. */
 const cappedInt = (cap: number) => z.coerce.number().int().positive().max(cap).default(cap);
@@ -159,6 +165,12 @@ const baseSchema = z.object({
   MEDIA_MAX_BYTES_VIDEO: mediaLimit(MEDIA_MAX_BYTES_DEFAULTS.video),
   /** D390: recorded files the daily sweep checks against the provider per run. */
   MEDIA_VERIFY_BATCH: positiveInt(MEDIA_VERIFY_BATCH),
+  /** D393: largest PDF a share may carry, in bytes (within the 25 MB share body). */
+  INGEST_MAX_BYTES_PDF: ingestLimit(INGEST_MAX_BYTES_DEFAULTS.pdf),
+  /** D393: largest audio file a share may carry, in bytes. */
+  INGEST_MAX_BYTES_AUDIO: ingestLimit(INGEST_MAX_BYTES_DEFAULTS.audio),
+  /** D393: largest video a share may carry, in bytes. */
+  INGEST_MAX_BYTES_VIDEO: ingestLimit(INGEST_MAX_BYTES_DEFAULTS.video),
   /** D371: most notify-before times per event (may only lower the shared cap). */
   EVENT_NOTIFY_TIMES_MAX: cappedInt(EVENT_NOTIFY_TIMES_MAX),
   /** D371: longest notify-before, in days (may only lower the shared cap). */
@@ -235,6 +247,18 @@ export const envSchema = baseSchema
   }));
 
 export type Env = z.output<typeof envSchema>;
+
+/** D393: the effective ingest limit per media kind (photos stay at D101's 8 MB). */
+export function ingestMaxBytes(
+  env: Pick<Env, 'INGEST_MAX_BYTES_PDF' | 'INGEST_MAX_BYTES_AUDIO' | 'INGEST_MAX_BYTES_VIDEO'>,
+): MediaMaxBytes {
+  return {
+    image: INGEST_MAX_BYTES_DEFAULTS.image,
+    pdf: env.INGEST_MAX_BYTES_PDF,
+    audio: env.INGEST_MAX_BYTES_AUDIO,
+    video: env.INGEST_MAX_BYTES_VIDEO,
+  };
+}
 
 /** D393: the effective editor upload limit per media kind (photos stay at the D133 cap). */
 export function mediaMaxBytes(

@@ -104,11 +104,11 @@ create answers 201 `type: "media"` and logs `item.type_alias`.
 
 ## Phase 4: PR 4 — Ingestion (US5)
 
-- [ ] T048 [US5] `packages/shared/src/ingest/constants.ts`: `INGEST_MEDIA_MIMES` per kind, `dedupVias` + `file`, per-kind ingest limits (`INGEST_MAX_BYTES_{PDF,AUDIO,VIDEO}` 10/15/24 MB)
-- [ ] T049 [US5] `/ingest` + email-in accept PDF/audio/video by magic bytes; `apps/web/vite.config.ts` share target accept, `share/share-target.ts`
-- [ ] T050 [US5] `services/ingest.service.ts`, `jobs/ingest.ts`: first supported file decides; direct media proposal (`extraction.model = 'direct'`, deterministic title); multi-photo gallery proposal; unused files with reasons; `ingest.media_file`, `ingest.media_proposal` events; [unit] `ingest.service.test.ts`
-- [ ] T051 [US5] `ingest/dedup-verdict.ts`, `run-dedup.ts`: `possible_duplicate` via `file` by etag; [unit] + [int] `dedup.int.test.ts`
-- [ ] T052 [P] [US5] [int] `apps/api/test/ingest.int.test.ts` PDF share → proposal; [e2e:full] ingest in `full/media.spec.ts`
+- [x] T048 [US5] `packages/shared/src/ingest/constants.ts`: `INGEST_MEDIA_MIMES` per kind, `dedupVias` + `file`, per-kind ingest limits (`INGEST_MAX_BYTES_{PDF,AUDIO,VIDEO}` 10/15/24 MB)
+- [x] T049 [US5] `/ingest` + email-in accept PDF/audio/video by magic bytes; `apps/web/vite.config.ts` share target accept, `share/share-target.ts`
+- [x] T050 [US5] `services/ingest.service.ts`, `jobs/ingest.ts`: first supported file decides; direct media proposal (`extraction.model = 'direct'`, deterministic title); multi-photo gallery proposal; unused files with reasons; `ingest.media_file`, `ingest.media_proposal` events; [unit] `ingest.service.test.ts`
+- [x] T051 [US5] `ingest/dedup-verdict.ts`, `run-dedup.ts`: `possible_duplicate` via `file` by etag; [unit] + [int] `dedup.int.test.ts`
+- [x] T052 [P] [US5] [int] `apps/api/test/ingest.int.test.ts` PDF share → proposal; [e2e:full] ingest in `full/media.spec.ts`
 
 ---
 

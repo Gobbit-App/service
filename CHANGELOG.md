@@ -10,6 +10,14 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-13 — Media cards, shared files (045 PR 4, D393, D395, D396)
+
+- Shares (share sheet, Shortcut, email-in) may now carry a PDF, audio or video file; it becomes a
+  proposed media card without a model call. Several shared photos become one gallery.
+- New optional variables (API and worker, in the Compose `x-api-env` block), with defaults:
+  `INGEST_MAX_BYTES_PDF` (10 MB), `INGEST_MAX_BYTES_AUDIO` (15 MB), `INGEST_MAX_BYTES_VIDEO`
+  (24 MB). Each must stay within the 25 MB share body limit. Nothing to set to keep deploying.
+
 ### 2026-11-13 — Media cards, foundation (045 PR 1, D386–D390, D393, D398)
 
 - Migration `0025_media_cards` renames the `item_type` value `image` to `media`, reshapes every

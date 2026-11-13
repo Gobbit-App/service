@@ -3,7 +3,7 @@ import type { Embedder } from '../ai/embedder';
 import { recordLlmCall, type LlmCallSink } from '../ai/llm-calls';
 import type { DedupRepo } from '../repositories/dedup.repo';
 import type { EmbeddingsRepo } from '../repositories/embeddings.repo';
-import { dedupVerdict, eventDedupVerdict, normalizeSourceUrl } from './dedup-verdict';
+import { dedupVerdict, eventDedupVerdict, fileVerdict, normalizeSourceUrl } from './dedup-verdict';
 import { lineSink } from '../lib/logger';
 
 export interface RunDedupDeps {
@@ -22,6 +22,8 @@ export interface RunDedupInput {
   sourceUrl: string | null;
   /** D376: an event is compared with same-day events only; omitted → not an event. */
   type?: ItemType;
+  /** D396: the files a media proposal holds (every gallery photo, or its one file). */
+  filePublicIds?: readonly string[];
   /** The event's own link (`payload.url`). */
   url?: string | null;
   jobId: string;
@@ -44,6 +46,12 @@ function hostOf(url: string): string | null {
  */
 export async function runDedup(deps: RunDedupDeps, input: RunDedupInput): Promise<DedupVerdict> {
   const log = deps.log ?? lineSink('ingest', 'warn');
+
+  // D396: the same file (any photo of a gallery) is checked first; it never needs an embedding.
+  if (input.filePublicIds && input.filePublicIds.length > 0) {
+    const match = await deps.dedup.mediaFileMatch(input.deckId, input.itemId, input.filePublicIds);
+    if (match) return fileVerdict(match);
+  }
 
   if (input.type === 'event') {
     const candidates = await deps.dedup.eventCandidates(input.deckId, input.itemId);

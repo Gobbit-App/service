@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { isoDateTimeSchema, uuidSchema } from './common';
 import { itemTypes } from '../enums';
-import { autoPublishOutcomes, ingestFailureCodes, shareChannels } from '../ingest/constants';
+import {
+  autoPublishOutcomes,
+  ingestFailureCodes,
+  ingestUnusedReasons,
+  shareChannels,
+} from '../ingest/constants';
 
 /** D196: what the sharer sees of one share. */
 export const shareStates = ['processing', 'failed', 'in_review', 'published', 'not_added'] as const;
@@ -24,6 +29,10 @@ export const shareSummarySchema = z
         title: z.string().nullable(),
         host: z.string().nullable(),
         photoCount: z.number().int().nonnegative(),
+        /** 045 (D395): the PDF, audio or video file the share carried, if any. */
+        fileKind: z.enum(['pdf', 'audio', 'video']).nullable(),
+        /** FR-027: files not used, and why (unsupported, too large, one too many). */
+        unusedFiles: z.array(z.enum(ingestUnusedReasons)),
       })
       .strict(),
     failureCode: z.enum(ingestFailureCodes).nullable(),

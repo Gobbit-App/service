@@ -13,8 +13,7 @@ import {
 import { addMember, createAccountUser, createAsset, createDeck, createItem } from '@gobbit/db/test';
 import type { DedupVerdict } from '@gobbit/shared';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
-import type { IngestUploadStore } from '../src/media/ingest-uploads';
-import type { StoredImage } from '../src/media/media-store';
+import type { IngestUploadStore, StoredUpload } from '../src/media/ingest-uploads';
 import { json, setupApiTest } from './helpers';
 
 class RecordingEmbedQueue implements EmbedQueue {
@@ -26,8 +25,18 @@ class RecordingEmbedQueue implements EmbedQueue {
 
 class RecordingUploads implements IngestUploadStore {
   readonly deleted: string[] = [];
-  async upload(): Promise<StoredImage> {
-    return { publicId: 'unused', width: 1, height: 1, bytes: 1, format: 'jpg' };
+  async upload(): Promise<StoredUpload> {
+    return {
+      publicId: 'unused',
+      width: 1,
+      height: 1,
+      bytes: 1,
+      format: 'jpg',
+      resourceType: 'image',
+      pages: null,
+      durationMs: null,
+      etag: null,
+    };
   }
   async deleteForJob(jobId: string): Promise<void> {
     this.deleted.push(jobId);
