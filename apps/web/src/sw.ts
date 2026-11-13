@@ -22,6 +22,7 @@ import {
 } from './push/sw-push';
 import { savePending } from './share/share-store';
 import { handleShareTarget, isShareTargetPost } from './share/share-target';
+import { isCloudinaryImageRequest } from './sw-routes';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -89,7 +90,7 @@ registerRoute(
 );
 
 registerRoute(
-  /^https:\/\/res\.cloudinary\.com\//,
+  isCloudinaryImageRequest,
   new CacheFirst({
     cacheName: 'cloudinary-images',
     plugins: [
