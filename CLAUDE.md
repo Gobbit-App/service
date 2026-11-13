@@ -82,3 +82,16 @@ pnpm compose:{up,down}             # Docker (Postgres + API + worker + web on 12
 ```
 
 See `README.md` for setup, `docs/architecture.md` for the system map (links to `docs/design/` and `docs/adr.md`).
+
+## Spec-kit implementation
+When running /speckit-implement, follow it exactly, with one change:
+execute each task by delegating to the speckit-worker subagent.
+- Pass: task ID + text, FEATURE_DIR, and the specific plan.md /
+  contracts / data-model.md sections the task needs (paths + headings,
+  not pasted content).
+- You alone mark tasks [X] in tasks.md, only after the worker reports
+  STATUS: done with passing tests.
+- Run [P] tasks in parallel only if they touch different files;
+  otherwise run them sequentially.
+- On STATUS: failed/blocked for a non-[P] task, halt per the skill's
+  rules and tell me.
