@@ -4,7 +4,9 @@ import {
   linkPreviewResponseSchema,
   mediaAssetConfirmRequestSchema,
   mediaAssetSchema,
+  mediaSignRequestSchema,
   mediaSignResponseSchema,
+  type MediaKind,
   mediaUploadFailureRequestSchema,
 } from '@gobbit/shared';
 import type { AppEnv } from '../types';
@@ -20,14 +22,29 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, services: Services
     method: 'post',
     path: '/decks/{id}/media/sign',
     tags: ['media'],
-    summary: 'Signed permission for one direct image upload to Cloudinary (D133)',
-    request: { params: deckParams },
+    summary:
+      'Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389)',
+    request: {
+      params: deckParams,
+      // Old clients send no body: an image upload.
+      body: {
+        content: { 'application/json': { schema: mediaSignRequestSchema } },
+        required: false,
+      },
+    },
     responses: {
       200: {
         content: { 'application/json': { schema: mediaSignResponseSchema } },
         description: 'Signed upload parameters; the API secret is never included',
       },
-      ...problems('unauthorized', 'forbidden', 'not-found', 'rate-limited', 'unavailable'),
+      ...problems(
+        'validation',
+        'unauthorized',
+        'forbidden',
+        'not-found',
+        'rate-limited',
+        'unavailable',
+      ),
     },
     security: AUTH_SECURITY,
   });
@@ -35,7 +52,13 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, services: Services
   app.openapi(signRoute, async (c) => {
     const user = getUser(c);
     const { id } = c.req.valid('param');
-    const signed = await services.media.signUpload({ user, deckId: id });
+    const body = (c.req.valid('json') ?? {}) as { kind?: MediaKind };
+    const signed = await services.media.signUpload({
+      user,
+      deckId: id,
+      kind: body.kind ?? 'image',
+      requestId: c.get('requestId'),
+    });
     c.header('Cache-Control', 'no-store');
     return c.json(signed, 200);
   });
@@ -78,7 +101,12 @@ export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, services: Services
     const user = getUser(c);
     const { id } = c.req.valid('param');
     const body = c.req.valid('json');
-    const { asset, created } = await services.media.confirmUpload({ user, deckId: id, body });
+    const { asset, created } = await services.media.confirmUpload({
+      user,
+      deckId: id,
+      body,
+      requestId: c.get('requestId'),
+    });
     c.header('Cache-Control', 'no-store');
     return created ? c.json(asset, 201) : c.json(asset, 200);
   });

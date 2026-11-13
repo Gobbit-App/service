@@ -186,17 +186,17 @@ describe('review queue (D106, D107)', () => {
       expect(again.status).toBe(409);
     });
 
-    it('publishes an image proposal only for a recorded image, with its dimensions (D160)', async () => {
+    it('publishes a photo proposal only for a recorded photo, with its dimensions (D160)', async () => {
       const image = (publicId: string) => ({
-        type: 'image',
+        type: 'media',
         title: 'Receipt',
-        payload: { publicId, alt: 'A receipt', width: 1, height: 1 },
+        payload: { kind: 'image', images: [{ publicId, alt: 'A receipt', width: 1, height: 1 }] },
       });
       const unknown = await proposal({}, image(`gobbit/ingest/${deck.id}/missing`));
       const refused = await post(`/items/${unknown.item.id}/publish`, {});
       expect(refused.status).toBe(422);
       expect((await json(refused)).errors).toEqual([
-        expect.objectContaining({ path: 'payload.publicId', message: 'Unknown image' }),
+        expect.objectContaining({ path: 'payload.images.0.publicId', message: 'Unknown file' }),
       ]);
 
       const asset = await createAsset(ctx.t.db, deck, {
@@ -207,7 +207,9 @@ describe('review queue (D106, D107)', () => {
       const { item } = await proposal({}, image(asset.publicId));
       const res = await post(`/items/${item.id}/publish`, {});
       expect(res.status).toBe(200);
-      expect((await itemRow(item.id)).payload).toMatchObject({ width: 900, height: 1600 });
+      expect((await itemRow(item.id)).payload).toMatchObject({
+        images: [{ width: 900, height: 1600 }],
+      });
     });
 
     it('creates the suggested category on demand and reuses it by slug', async () => {

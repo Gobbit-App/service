@@ -1,11 +1,12 @@
-/** D69: every string leaf of a card payload, joined by a space; skips image `publicId` and calc `expression` (top-level keys). Mirrors SQL item_search_text(). */
+/** D69: every string leaf of a card payload, joined by a space; skips calc `expression` and media file ids and facts (045). Mirrors SQL item_search_text(). */
 export function payloadText(type: string, payload: unknown): string {
   // D291: a reminder's settings (deadline, unit, dismiss rule, zone) are not text.
   if (type === 'reminder') return '';
   // D372: an event's text is its location and link; time, zone and notify settings are not text.
   if (type === 'event') return eventText(payload);
+  // D398/FR-029: every photo's description, a file's description and its file name.
+  if (type === 'media') return mediaText(payload);
   const skipped = new Set<string>();
-  if (type === 'image') skipped.add('publicId');
   if (type === 'calc') skipped.add('expression');
 
   const out: string[] = [];
@@ -18,6 +19,17 @@ export function payloadText(type: string, payload: unknown): string {
     collectStrings(payload, out);
   }
   return out.join(' ');
+}
+
+function mediaText(payload: unknown): string {
+  if (payload === null || typeof payload !== 'object') return '';
+  const p = payload as { images?: unknown; alt?: unknown; fileName?: unknown };
+  const alts = Array.isArray(p.images)
+    ? p.images.map((img) => (img as { alt?: unknown } | null)?.alt)
+    : [];
+  return [...alts, p.alt, p.fileName]
+    .filter((v): v is string => typeof v === 'string' && v !== '')
+    .join(' ');
 }
 
 function eventText(payload: unknown): string {

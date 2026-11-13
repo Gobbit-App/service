@@ -12,7 +12,7 @@ import {
   type EventDateSource,
   type EventZoneSource,
   type IngestCardType,
-  type ItemCreate,
+  type ItemCreateResolved,
   type LinkPayload,
   type LinkPreview,
 } from '@gobbit/shared';
@@ -43,7 +43,7 @@ export interface ValidateContext {
 export type ValidatedProposal =
   | {
       ok: true;
-      item: ItemCreate;
+      item: ItemCreateResolved;
       summary: {
         type: IngestCardType;
         confidence: number;
@@ -205,8 +205,8 @@ export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedP
   const lockedHost = ctx.sourceUrl ? (ctx.lockedHost ?? null) : null;
   const url = (lockedHost && ctx.sourceUrl) || input.link?.url || ctx.sourceUrl || undefined;
   const linkPreview = ctx.linkPreview && url === ctx.sourceUrl ? ctx.linkPreview : undefined;
-  const plainType = (type: IngestCardType): Exclude<IngestCardType, 'event'> => {
-    if (type === 'image' && ctx.imagePublicId) return 'image';
+  const plainType = (type: ProposeCardInput['type']): Exclude<IngestCardType, 'event'> => {
+    if (type === 'image' && ctx.imagePublicId) return 'media';
     if (type === 'text') return 'text';
     return url ? 'link' : 'text';
   };
@@ -253,7 +253,7 @@ export function validateProposal(raw: unknown, ctx: ValidateContext): ValidatedP
 
   return {
     ok: true,
-    item: item.data,
+    item: item.data as ItemCreateResolved,
     summary: {
       type,
       confidence: input.confidence,
@@ -278,7 +278,7 @@ function wantsEvent(input: ProposeCardInput, ctx: EventContext): boolean {
   return input.type === 'event' || (ctx.structured !== undefined && input.type !== 'image');
 }
 
-/** The payload of a text, link or image card. */
+/** The payload of a text, link or media (photo) card. */
 function plainPayload(
   type: IngestCardType,
   p: {
@@ -298,8 +298,11 @@ function plainPayload(
   if (type === 'link' && p.url) {
     return p.linkPreview ? { url: p.url, preview: p.linkPreview } : { url: p.url };
   }
-  if (type === 'image' && p.ctx.imagePublicId) {
-    return { publicId: p.ctx.imagePublicId, alt: p.title || 'Shared image' };
+  if (type === 'media' && p.ctx.imagePublicId) {
+    return {
+      kind: 'image',
+      images: [{ publicId: p.ctx.imagePublicId, alt: p.title || 'Shared image' }],
+    };
   }
   return {};
 }

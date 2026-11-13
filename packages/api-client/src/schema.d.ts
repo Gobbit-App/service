@@ -99,6 +99,14 @@ export interface paths {
                             push: {
                                 publicKey: string;
                             } | null;
+                            media: {
+                                maxBytes: {
+                                    image: number;
+                                    pdf: number;
+                                    audio: number;
+                                    video: number;
+                                };
+                            };
                         };
                     };
                 };
@@ -2918,7 +2926,7 @@ export interface paths {
                 query?: {
                     category?: string;
                     status?: "proposed" | "published" | "archived" | "deleted" | "upcoming";
-                    type?: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                    type?: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event" | "image";
                     favorite?: "true";
                     flag?: "link";
                     cursor?: string;
@@ -2945,7 +2953,7 @@ export interface paths {
                                 /** Format: uuid */
                                 deckId: string;
                                 /** @enum {string} */
-                                type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                 /** @enum {string} */
                                 status: "proposed" | "published" | "archived";
                                 title: string;
@@ -3180,8 +3188,110 @@ export interface paths {
                         };
                     } | {
                         /** @enum {string} */
+                        type: "media";
+                        payload: {
+                            /** @enum {string} */
+                            kind: "image";
+                            images: {
+                                publicId: string;
+                                alt?: string;
+                                width?: number;
+                                height?: number;
+                            }[];
+                        } | {
+                            /** @enum {string} */
+                            kind: "pdf";
+                            publicId: string;
+                            alt?: string;
+                            width?: number;
+                            height?: number;
+                            durationMs?: number;
+                            pages?: number;
+                            fileName?: string;
+                        } | {
+                            /** @enum {string} */
+                            kind: "audio";
+                            publicId: string;
+                            alt?: string;
+                            width?: number;
+                            height?: number;
+                            durationMs?: number;
+                            pages?: number;
+                            fileName?: string;
+                        } | {
+                            /** @enum {string} */
+                            kind: "video";
+                            publicId: string;
+                            alt?: string;
+                            width?: number;
+                            height?: number;
+                            durationMs?: number;
+                            pages?: number;
+                            fileName?: string;
+                        };
+                        title: string;
+                        /**
+                         * @description Card body, max 2000 characters (Unicode code points)
+                         * @default
+                         */
+                        body?: string;
+                        categoryIds?: string[];
+                        /** Format: uri */
+                        sourceUrl?: string;
+                        /** @enum {string} */
+                        status?: "proposed" | "published" | "archived";
+                        entities?: {
+                            phones?: string[];
+                            addresses?: string[];
+                            hours?: string[];
+                            prices?: string[];
+                            dates?: string[];
+                            people?: string[];
+                            urls?: string[];
+                        };
+                    } | {
+                        /** @enum {string} */
                         type: "image";
                         payload: {
+                            /** @enum {string} */
+                            kind: "image";
+                            images: {
+                                publicId: string;
+                                alt?: string;
+                                width?: number;
+                                height?: number;
+                            }[];
+                        } | {
+                            /** @enum {string} */
+                            kind: "pdf";
+                            publicId: string;
+                            alt?: string;
+                            width?: number;
+                            height?: number;
+                            durationMs?: number;
+                            pages?: number;
+                            fileName?: string;
+                        } | {
+                            /** @enum {string} */
+                            kind: "audio";
+                            publicId: string;
+                            alt?: string;
+                            width?: number;
+                            height?: number;
+                            durationMs?: number;
+                            pages?: number;
+                            fileName?: string;
+                        } | {
+                            /** @enum {string} */
+                            kind: "video";
+                            publicId: string;
+                            alt?: string;
+                            width?: number;
+                            height?: number;
+                            durationMs?: number;
+                            pages?: number;
+                            fileName?: string;
+                        } | {
                             publicId: string;
                             alt?: string;
                             width?: number;
@@ -3393,7 +3503,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -3628,7 +3738,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -3864,7 +3974,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        type?: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                        type?: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event" | "image";
                         title?: string;
                         /** @description Card body, max 2000 characters (Unicode code points) */
                         body?: string;
@@ -3901,7 +4011,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4134,7 +4244,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4327,7 +4437,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4527,7 +4637,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4764,7 +4874,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -4979,7 +5089,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -5627,7 +5737,7 @@ export interface paths {
                                     /** Format: uuid */
                                     deckId: string;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                    type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                     /** @enum {string} */
                                     status: "proposed" | "published" | "archived";
                                     title: string;
@@ -6011,7 +6121,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Signed permission for one direct image upload to Cloudinary (D133) */
+        /** Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389) */
         post: {
             parameters: {
                 query?: never;
@@ -6021,7 +6131,17 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @default image
+                         * @enum {string}
+                         */
+                        kind?: "image" | "pdf" | "audio" | "video";
+                    };
+                };
+            };
             responses: {
                 /** @description Signed upload parameters; the API secret is never included */
                 200: {
@@ -6030,6 +6150,10 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /** @enum {string} */
+                            kind: "image" | "pdf" | "audio" | "video";
+                            eager?: string;
+                            eagerAsync?: boolean;
                             uploadUrl: string;
                             apiKey: string;
                             timestamp: number;
@@ -6039,6 +6163,28 @@ export interface paths {
                             allowedFormats: string;
                             maxBytes: number;
                             expiresAt: string;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
                         };
                     };
                 };
@@ -6185,10 +6331,24 @@ export interface paths {
                         publicId: string;
                         version: number;
                         signature: string;
-                        width: number;
-                        height: number;
+                        width?: number;
+                        height?: number;
                         bytes: number;
                         format: string;
+                        /**
+                         * @default image
+                         * @enum {string}
+                         */
+                        kind?: "image" | "pdf" | "audio" | "video";
+                        /**
+                         * @default image
+                         * @enum {string}
+                         */
+                        resourceType?: "image" | "video";
+                        durationMs?: number;
+                        pages?: number;
+                        etag?: string;
+                        originalFilename?: string;
                     };
                 };
             };
@@ -6201,10 +6361,17 @@ export interface paths {
                     content: {
                         "application/json": {
                             publicId: string;
+                            /** @enum {string} */
+                            kind: "image" | "pdf" | "audio" | "video";
+                            /** @enum {string} */
+                            resourceType: "image" | "video";
                             width: number | null;
                             height: number | null;
                             bytes: number | null;
                             format: string | null;
+                            durationMs: number | null;
+                            pages: number | null;
+                            originalFilename: string | null;
                             /** @enum {string} */
                             source: "editor" | "ingest" | "link_snapshot" | "remote";
                             createdAt: string;
@@ -6219,10 +6386,17 @@ export interface paths {
                     content: {
                         "application/json": {
                             publicId: string;
+                            /** @enum {string} */
+                            kind: "image" | "pdf" | "audio" | "video";
+                            /** @enum {string} */
+                            resourceType: "image" | "video";
                             width: number | null;
                             height: number | null;
                             bytes: number | null;
                             format: string | null;
+                            durationMs: number | null;
+                            pages: number | null;
+                            originalFilename: string | null;
                             /** @enum {string} */
                             source: "editor" | "ingest" | "link_snapshot" | "remote";
                             createdAt: string;
@@ -6983,7 +7157,7 @@ export interface paths {
                                 model: string;
                                 escalated: boolean;
                                 /** @enum {string} */
-                                type: "text" | "link" | "image" | "event";
+                                type: "text" | "link" | "media" | "event" | "image";
                                 confidence: number;
                                 language: string;
                                 categoryIds: string[];
@@ -7407,7 +7581,7 @@ export interface paths {
                                     /** Format: uuid */
                                     deckId: string;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                    type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                     /** @enum {string} */
                                     status: "proposed" | "published" | "archived";
                                     title: string;
@@ -7504,7 +7678,7 @@ export interface paths {
                                     /** Format: uuid */
                                     deckId: string;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                    type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                     /** @enum {string} */
                                     status: "proposed" | "published" | "archived";
                                     title: string;
@@ -7818,7 +7992,7 @@ export interface paths {
                             /** Format: uuid */
                             deckId: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             /** @enum {string} */
                             status: "proposed" | "published" | "archived";
                             title: string;
@@ -8336,7 +8510,7 @@ export interface paths {
                                     title: string;
                                     deleted: boolean;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                    type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                     event: {
                                         startsAt: string;
                                         allDay: boolean;
@@ -8477,7 +8651,7 @@ export interface paths {
                                 title: string;
                                 deleted: boolean;
                                 /** @enum {string} */
-                                type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                 event: {
                                     startsAt: string;
                                     allDay: boolean;
@@ -8597,7 +8771,7 @@ export interface paths {
                                 title: string;
                                 deleted: boolean;
                                 /** @enum {string} */
-                                type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                 event: {
                                     startsAt: string;
                                     allDay: boolean;
@@ -9242,7 +9416,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                 title: string;
                                 body: string;
                                 payload: {
@@ -9376,7 +9550,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                            type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                             title: string;
                             body: string;
                             payload: {
@@ -9515,7 +9689,7 @@ export interface paths {
                                     /** Format: uuid */
                                     id: string;
                                     /** @enum {string} */
-                                    type: "text" | "link" | "image" | "table" | "calc" | "reminder" | "event";
+                                    type: "text" | "link" | "media" | "table" | "calc" | "reminder" | "event";
                                     title: string;
                                     body: string;
                                     payload: {

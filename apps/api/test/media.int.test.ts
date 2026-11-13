@@ -102,7 +102,7 @@ describe('media without CLOUDINARY_URL (US3)', () => {
     expect(res.status).toBe(503);
     expect(await json(res)).toMatchObject({
       type: '/problems/unavailable',
-      detail: 'Image uploads are not configured',
+      detail: 'Media uploads are not configured',
     });
   });
 

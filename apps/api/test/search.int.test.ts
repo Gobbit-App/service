@@ -217,18 +217,18 @@ describe('link preview copies in search text (D163)', () => {
 
   it('leaves the search text of rows without a stored copy as the 0009 function made it', async () => {
     // The pre-0013 expression, inline; rows without preview.publicId must match it exactly.
+    // Media rows are excluded: 0025 indexes their descriptions and file name only (FR-029).
     const { rows } = await ctx.t.pool.query<{ n: number; total: number }>(`
       select count(*) filter (where search_text <> search_normalize(concat_ws(' ', title, body, (
         select string_agg(v #>> '{}', ' ') from jsonb_path_query(
-          case type when 'image' then payload - 'publicId'
-                    when 'calc' then payload - 'expression'
+          case type when 'calc' then payload - 'expression'
                     else payload end,
           'strict $.** ? (@.type() == "string")') as v
       ), (
         select string_agg(v #>> '{}', ' ')
         from jsonb_path_query(coalesce(entities, '{}'::jsonb), 'strict $.** ? (@.type() == "string")') as v
       ))))::int as n, count(*)::int as total
-      from items where payload #>> '{preview,publicId}' is null`);
+      from items where payload #>> '{preview,publicId}' is null and type <> 'media'`);
     expect(rows[0]!.total).toBeGreaterThan(0);
     expect(rows[0]!.n).toBe(0);
   });

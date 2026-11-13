@@ -197,6 +197,50 @@ export function normalizeLegacyMediaPayload<T>(payload: T): T | Record<string, u
   return { kind: 'image', images: [image] };
 }
 
+/** One photo of a stored media payload, as readers see it (no input caps applied). */
+export interface MediaImageView {
+  publicId: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
+const positive = (v: unknown): number | undefined =>
+  typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : undefined;
+
+/**
+ * D398: the photos of a stored media payload in display order (cover first); [] for other kinds
+ * or a malformed payload. Reads pre-045 flat payloads too (cached items, D387). Zod-free and
+ * lenient: stored descriptions may be longer than today's input cap.
+ */
+export function mediaImagesOf(payload: unknown): MediaImageView[] {
+  const p = normalizeLegacyMediaPayload(payload) as Record<string, unknown> | null;
+  if (!p || typeof p !== 'object' || p['kind'] !== 'image' || !Array.isArray(p['images'])) {
+    return [];
+  }
+  const out: MediaImageView[] = [];
+  for (const raw of p['images'] as unknown[]) {
+    if (!raw || typeof raw !== 'object') continue;
+    const r = raw as Record<string, unknown>;
+    if (typeof r['publicId'] !== 'string' || r['publicId'] === '') continue;
+    const width = positive(r['width']);
+    const height = positive(r['height']);
+    out.push({
+      publicId: r['publicId'],
+      ...(typeof r['alt'] === 'string' ? { alt: r['alt'] } : {}),
+      ...(width && height ? { width, height } : {}),
+    });
+  }
+  return out;
+}
+
+/** The kind of a stored media payload (`image` for a pre-045 flat one), or null. */
+export function mediaKindOf(payload: unknown): MediaKind | null {
+  const p = normalizeLegacyMediaPayload(payload) as Record<string, unknown> | null;
+  const kind = p && typeof p === 'object' ? p['kind'] : null;
+  return kind === 'image' || kind === 'pdf' || kind === 'audio' || kind === 'video' ? kind : null;
+}
+
 /** Full delivery URL for one rendition. */
 export function mediaDeliveryUrl(
   cloudName: string,

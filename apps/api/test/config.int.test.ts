@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MEDIA_MAX_BYTES_DEFAULTS } from '@gobbit/shared';
 import { json, setupApiTest } from './helpers';
 
 /** Built from parts so no credentials-shaped literal sits in the source. */
@@ -20,6 +21,7 @@ describe('GET /config (D55)', () => {
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
       push: null,
+      media: { maxBytes: MEDIA_MAX_BYTES_DEFAULTS },
     });
 
     const raw = JSON.stringify(body);
@@ -41,6 +43,7 @@ describe('GET /config without Cloudinary', () => {
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
       push: null,
+      media: { maxBytes: MEDIA_MAX_BYTES_DEFAULTS },
     });
   });
 });

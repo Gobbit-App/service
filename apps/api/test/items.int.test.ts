@@ -493,7 +493,7 @@ describe('Items Integration Tests', () => {
   });
 });
 
-describe('image cards reference recorded assets (D160)', () => {
+describe('media cards reference recorded files (D160, 045)', () => {
   let deck: DeckRow;
   let other: DeckRow;
 
@@ -502,90 +502,126 @@ describe('image cards reference recorded assets (D160)', () => {
     other = await createDeck(ctx.t.db, ctx.world.owner);
   });
 
-  const createImage = (payload: Record<string, unknown>) =>
+  const create = (type: string, payload: Record<string, unknown>) =>
     ctx.app.request(`/decks/${deck.id}/items`, {
       method: 'POST',
       headers: ctx.as(),
-      body: JSON.stringify({ type: 'image', title: 'Photo', payload }),
+      body: JSON.stringify({ type, title: 'Photo', payload }),
+    });
+  const gallery = (...images: Record<string, unknown>[]) => ({ kind: 'image', images });
+  const createPhotos = (...images: Record<string, unknown>[]) =>
+    create('media', gallery(...images));
+  const patch = (id: string, body: Record<string, unknown>) =>
+    ctx.app.request(`/items/${id}`, {
+      method: 'PATCH',
+      headers: ctx.as(),
+      body: JSON.stringify(body),
     });
 
-  async function expectUnknownImage(res: Response) {
+  async function expectUnknownFile(res: Response, path = 'payload.images.0.publicId') {
     expect(res.status).toBe(422);
     const problem = await res.json();
     expect(problem.type).toBe('/problems/validation');
-    expect(problem.errors).toEqual([{ path: 'payload.publicId', message: 'Unknown image' }]);
+    expect(problem.errors).toEqual([{ path, message: 'Unknown file' }]);
   }
 
-  it('refuses an unrecorded image and one recorded for another deck', async () => {
-    await expectUnknownImage(await createImage({ publicId: 'samples/nope', alt: 'x' }));
+  it('refuses an unrecorded photo, one of another deck and one the verify pass rejected', async () => {
+    await expectUnknownFile(await createPhotos({ publicId: 'samples/nope', alt: 'x' }));
     const foreign = await createAsset(ctx.t.db, other);
-    await expectUnknownImage(await createImage({ publicId: foreign.publicId, alt: 'x' }));
+    await expectUnknownFile(await createPhotos({ publicId: foreign.publicId, alt: 'x' }));
+    const rejected = await createAsset(ctx.t.db, deck, { rejectedAt: new Date() });
+    await expectUnknownFile(await createPhotos({ publicId: rejected.publicId }));
   });
 
-  it("writes the asset's dimensions over the client's, on create and update", async () => {
-    const asset = await createAsset(ctx.t.db, deck, { width: 1200, height: 900 });
-    const res = await createImage({ publicId: asset.publicId, alt: 'x', width: 5, height: 5 });
+  it("writes every photo's dimensions from its asset, on create and update", async () => {
+    const a = await createAsset(ctx.t.db, deck, { width: 1200, height: 900 });
+    const b = await createAsset(ctx.t.db, deck, { width: 300, height: 400 });
+    const res = await createPhotos(
+      { publicId: b.publicId, alt: 'second', width: 5, height: 5 },
+      { publicId: a.publicId, alt: 'x' },
+    );
     expect(res.status).toBe(201);
     const item = await res.json();
-    expect(item.payload).toEqual({ publicId: asset.publicId, alt: 'x', width: 1200, height: 900 });
+    expect(item.type).toBe('media');
+    expect(item.payload).toEqual(
+      gallery(
+        { publicId: b.publicId, alt: 'second', width: 300, height: 400 },
+        { publicId: a.publicId, alt: 'x', width: 1200, height: 900 },
+      ),
+    );
 
     const unknownSize = await createAsset(ctx.t.db, deck, { width: null, height: null });
-    const patched = await ctx.app.request(`/items/${item.id}`, {
-      method: 'PATCH',
-      headers: ctx.as(),
-      body: JSON.stringify({ payload: { publicId: unknownSize.publicId, alt: 'y', width: 7 } }),
+    const patched = await patch(item.id, {
+      payload: gallery({ publicId: unknownSize.publicId, alt: 'y', width: 7 }),
     });
     expect(patched.status).toBe(200);
-    expect((await patched.json()).payload).toEqual({ publicId: unknownSize.publicId, alt: 'y' });
+    expect((await patched.json()).payload).toEqual(
+      gallery({ publicId: unknownSize.publicId, alt: 'y' }),
+    );
 
-    const swapped = await ctx.app.request(`/items/${item.id}`, {
-      method: 'PATCH',
-      headers: ctx.as(),
-      body: JSON.stringify({ payload: { publicId: 'samples/nope', alt: 'y' } }),
-    });
-    await expectUnknownImage(swapped);
+    await expectUnknownFile(
+      await patch(item.id, { payload: gallery({ publicId: 'samples/nope', alt: 'y' }) }),
+    );
   });
-  it('saves an image card without alt or with an empty alt, and clears it on update (D206)', async () => {
+
+  it('saves a photo without alt or with an empty alt, and clears it on update (D206)', async () => {
     const asset = await createAsset(ctx.t.db, deck, { width: 640, height: 480 });
-    const bare = await createImage({ publicId: asset.publicId });
+    const bare = await createPhotos({ publicId: asset.publicId });
     expect(bare.status).toBe(201);
     const item = await bare.json();
-    expect(item.payload).toEqual({ publicId: asset.publicId, width: 640, height: 480 });
+    expect(item.payload).toEqual(gallery({ publicId: asset.publicId, width: 640, height: 480 }));
 
-    const empty = await createImage({ publicId: asset.publicId, alt: '' });
-    expect(empty.status).toBe(201);
-    expect((await empty.json()).payload).toEqual({
-      publicId: asset.publicId,
-      alt: '',
-      width: 640,
-      height: 480,
-    });
-
-    const described = await ctx.app.request(`/items/${item.id}`, {
-      method: 'PATCH',
-      headers: ctx.as(),
-      body: JSON.stringify({ payload: { publicId: asset.publicId, alt: 'A loaf' } }),
+    const described = await patch(item.id, {
+      payload: gallery({ publicId: asset.publicId, alt: 'A loaf' }),
     });
     expect(described.status).toBe(200);
-    expect((await described.json()).payload.alt).toBe('A loaf');
-
-    const cleared = await ctx.app.request(`/items/${item.id}`, {
-      method: 'PATCH',
-      headers: ctx.as(),
-      body: JSON.stringify({ payload: { publicId: asset.publicId } }),
-    });
-    expect(cleared.status).toBe(200);
-    expect((await cleared.json()).payload).toEqual({
-      publicId: asset.publicId,
-      width: 640,
-      height: 480,
-    });
+    expect((await described.json()).payload.images[0].alt).toBe('A loaf');
   });
 
-  it('still refuses a non-string alt', async () => {
+  it('refuses a non-string alt, more than 8 photos and the same photo twice', async () => {
     const asset = await createAsset(ctx.t.db, deck);
-    const res = await createImage({ publicId: asset.publicId, alt: 5 });
-    expect(res.status).toBe(400);
+    expect((await createPhotos({ publicId: asset.publicId, alt: 5 })).status).toBe(400);
+    const nine = await Promise.all(Array.from({ length: 9 }, () => createAsset(ctx.t.db, deck)));
+    expect((await createPhotos(...nine.map((a) => ({ publicId: a.publicId })))).status).toBe(400);
+    expect(
+      (await createPhotos({ publicId: asset.publicId }, { publicId: asset.publicId })).status,
+    ).toBe(400);
+  });
+
+  it('refuses a file of another kind than the payload names (FR-004)', async () => {
+    const pdf = await createAsset(ctx.t.db, deck, { kind: 'pdf', pages: 4 });
+    const res = await createPhotos({ publicId: pdf.publicId });
+    expect(res.status).toBe(422);
+    expect((await res.json()).errors[0].path).toBe('payload.kind');
+
+    const ok = await create('media', { kind: 'pdf', publicId: pdf.publicId, pages: 99 });
+    expect(ok.status).toBe(201);
+    expect((await ok.json()).payload).toMatchObject({ kind: 'pdf', pages: 4 });
+  });
+
+  it('accepts type image and a flat payload from old clients as a media gallery (D387)', async () => {
+    const asset = await createAsset(ctx.t.db, deck, { width: 640, height: 480 });
+    const res = await create('image', { publicId: asset.publicId, alt: 'Old app' });
+    expect(res.status).toBe(201);
+    const item = await res.json();
+    expect(item.type).toBe('media');
+    expect(item.payload).toEqual(
+      gallery({ publicId: asset.publicId, alt: 'Old app', width: 640, height: 480 }),
+    );
+
+    const updated = await patch(item.id, { type: 'image', payload: { publicId: asset.publicId } });
+    expect(updated.status).toBe(200);
+    expect((await updated.json()).payload).toEqual(
+      gallery({ publicId: asset.publicId, width: 640, height: 480 }),
+    );
+
+    const listed = await ctx.app.request(`/decks/${deck.id}/items?type=image`, {
+      headers: ctx.as(),
+    });
+    expect(listed.status).toBe(200);
+    const types = (await listed.json()).data.map((i: { type: string }) => i.type);
+    expect(types.length).toBeGreaterThan(0);
+    expect(new Set(types)).toEqual(new Set(['media']));
   });
 });
 

@@ -1,5 +1,6 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { describe, expect, it } from 'vitest';
+import { MEDIA_MAX_BYTES_DEFAULTS } from '@gobbit/shared';
 import type { AppEnv } from '../types';
 import { buildAppConfig, CONFIG_CACHE_CONTROL, registerConfigRoutes } from './config';
 
@@ -42,6 +43,7 @@ describe('buildAppConfig', () => {
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
       push: null,
+      media: { maxBytes: MEDIA_MAX_BYTES_DEFAULTS },
     });
     expect(JSON.stringify(config)).not.toContain('key123');
     expect(JSON.stringify(config)).not.toContain('not-a-real-secret');
@@ -55,6 +57,7 @@ describe('buildAppConfig', () => {
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
       push: null,
+      media: { maxBytes: MEDIA_MAX_BYTES_DEFAULTS },
     });
   });
 
@@ -154,6 +157,7 @@ describe('GET /config', () => {
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
       push: null,
+      media: { maxBytes: MEDIA_MAX_BYTES_DEFAULTS },
     });
     expect(body).not.toContain('not-a-real-secret');
   });

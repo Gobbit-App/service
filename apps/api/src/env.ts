@@ -17,6 +17,10 @@ import {
   LINK_IMAGE_TRIES,
   LINK_ARTICLE_IMAGE_MIN_PX,
   LINK_LOOKUP_TIMEOUT_MS,
+  MEDIA_MAX_BYTES_DEFAULTS,
+  MEDIA_SINGLE_UPLOAD_MAX_BYTES,
+  MEDIA_VERIFY_BATCH,
+  type MediaMaxBytes,
 } from '@gobbit/shared';
 import {
   EVENT_ALLDAY_NOTICE_HOUR,
@@ -46,6 +50,10 @@ const positiveInt = (fallback: number) => z.coerce.number().int().positive().def
 
 /** An https:// URL; the message names the variable so a bad deploy says which one. */
 const httpsUrl = (name: string) => z.url().regex(/^https:\/\//, `${name} must be an https:// URL`);
+
+/** D393: a per-kind upload limit, at most the provider's single-request ceiling. */
+const mediaLimit = (fallback: number) =>
+  z.coerce.number().int().positive().max(MEDIA_SINGLE_UPLOAD_MAX_BYTES).default(fallback);
 
 /** D299: an env value that may only lower a shared cap. */
 const cappedInt = (cap: number) => z.coerce.number().int().positive().max(cap).default(cap);
@@ -143,6 +151,14 @@ const baseSchema = z.object({
   LINK_ARTICLE_IMAGE_MIN_PX: positiveInt(LINK_ARTICLE_IMAGE_MIN_PX),
   /** D345: host lookup (oEmbed) timeout in ms. */
   LINK_LOOKUP_TIMEOUT_MS: positiveInt(LINK_LOOKUP_TIMEOUT_MS),
+  /** D393: editor upload limit for a PDF, in bytes (single-request uploads cap it at 100 MB). */
+  MEDIA_MAX_BYTES_PDF: mediaLimit(MEDIA_MAX_BYTES_DEFAULTS.pdf),
+  /** D393: editor upload limit for an audio file, in bytes. */
+  MEDIA_MAX_BYTES_AUDIO: mediaLimit(MEDIA_MAX_BYTES_DEFAULTS.audio),
+  /** D393: editor upload limit for a video, in bytes. */
+  MEDIA_MAX_BYTES_VIDEO: mediaLimit(MEDIA_MAX_BYTES_DEFAULTS.video),
+  /** D390: recorded files the daily sweep checks against the provider per run. */
+  MEDIA_VERIFY_BATCH: positiveInt(MEDIA_VERIFY_BATCH),
   /** D371: most notify-before times per event (may only lower the shared cap). */
   EVENT_NOTIFY_TIMES_MAX: cappedInt(EVENT_NOTIFY_TIMES_MAX),
   /** D371: longest notify-before, in days (may only lower the shared cap). */
@@ -219,6 +235,18 @@ export const envSchema = baseSchema
   }));
 
 export type Env = z.output<typeof envSchema>;
+
+/** D393: the effective editor upload limit per media kind (photos stay at the D133 cap). */
+export function mediaMaxBytes(
+  env: Pick<Env, 'MEDIA_MAX_BYTES_PDF' | 'MEDIA_MAX_BYTES_AUDIO' | 'MEDIA_MAX_BYTES_VIDEO'>,
+): MediaMaxBytes {
+  return {
+    image: MEDIA_MAX_BYTES_DEFAULTS.image,
+    pdf: env.MEDIA_MAX_BYTES_PDF,
+    audio: env.MEDIA_MAX_BYTES_AUDIO,
+    video: env.MEDIA_MAX_BYTES_VIDEO,
+  };
+}
 
 /** Parses and validates the environment; blank values count as unset (compose passes blanks). */
 export function parseEnv(source: Record<string, string | undefined> = process.env): Env {

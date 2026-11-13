@@ -149,6 +149,8 @@ export const itemCreateSchema = z
 
 export type ItemCreate = z.infer<typeof itemCreateSchema>;
 export type ItemCreateInput = z.input<typeof itemCreateSchema>;
+/** D387: a create body once the `image` alias is resolved to `media`. */
+export type ItemCreateResolved = Exclude<ItemCreate, { type: typeof LEGACY_IMAGE_TYPE }>;
 
 export const itemPatchSchema = z
   .object({

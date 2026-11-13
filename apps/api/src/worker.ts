@@ -10,7 +10,7 @@ import {
   SEARCH_QUERY_PRUNE_CRON,
   WAITLIST_PRUNE_CRON,
 } from '@gobbit/shared';
-import { parseEnv } from './env';
+import { mediaMaxBytes, parseEnv } from './env';
 import { createEventNoticeHook } from './services/event-cards.service';
 import { createBoss } from './jobs/boss';
 import { createEmbedQueue, noopEmbedQueue } from './jobs/embed-queue';
@@ -34,7 +34,7 @@ import { normalizeRaw } from './ingest/normalize-raw';
 import { createSharerRole } from './ingest/sharer-role';
 import { autoPublish } from './ingest/auto-publish';
 import { createPublishProposal, reviewTransaction } from './review/publish-proposal';
-import { createImageReferenceCheck } from './services/image-reference';
+import { createMediaReferenceCheck } from './services/media-reference';
 import { runDedup } from './ingest/run-dedup';
 import { createDedupRepo } from './repositories/dedup.repo';
 import { createCategoriesRepo } from './repositories/categories.repo';
@@ -163,11 +163,13 @@ async function main() {
         assets: createAssetsRepo(db),
         store: mediaStore,
         log,
+        maxBytes: mediaMaxBytes(env),
+        verifyBatch: env.MEDIA_VERIFY_BATCH,
       }),
     });
     await boss.schedule(QUEUES.mediaSweep, MEDIA_SWEEP_CRON);
-    await boss.work(QUEUES.mediaSweep, async () => {
-      await mediaSweep();
+    await boss.work(QUEUES.mediaSweep, async ([job]: Job[]) => {
+      await mediaSweep(job?.id);
     });
 
     // D163: the API enqueues after commit only when CLOUDINARY_URL is set, so the queue is
@@ -246,7 +248,7 @@ async function main() {
             roleOf,
             publishProposal: createPublishProposal({
               transaction: reviewTransaction(db),
-              imageReference: createImageReferenceCheck(createAssetsRepo(db)),
+              mediaReference: createMediaReferenceCheck(createAssetsRepo(db)),
               now: () => new Date(),
               noticeHook: createEventNoticeHook({
                 allDayNoticeHour: env.EVENT_ALLDAY_NOTICE_HOUR,
