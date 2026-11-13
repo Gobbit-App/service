@@ -73,7 +73,7 @@ describe('TypeTiles (D301)', () => {
 
   it('keeps Image visible but unavailable, saying why, when image storage is off', () => {
     const { onPick } = renderTiles({ imagesOff: true });
-    const image = screen.getByRole('radio', { name: 'Image' });
+    const image = screen.getByRole('radio', { name: 'Media' });
     expect(image).toHaveAttribute('aria-disabled', 'true');
     expect(image).toHaveAccessibleDescription(IMAGES_UNAVAILABLE);
     fireEvent.click(image);
@@ -82,7 +82,7 @@ describe('TypeTiles (D301)', () => {
 
   it('offers Image when image storage is set up', () => {
     const { onPick } = renderTiles();
-    const image = screen.getByRole('radio', { name: 'Image' });
+    const image = screen.getByRole('radio', { name: 'Media' });
     expect(image).not.toHaveAttribute('aria-disabled');
     fireEvent.click(image);
     expect(onPick).toHaveBeenCalledWith('media');

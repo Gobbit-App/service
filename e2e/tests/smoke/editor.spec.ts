@@ -4,6 +4,7 @@ import {
   photoFile,
   routeCloudName,
   routeFakeCloudinary,
+  pdfFile,
   routeImageDelivery,
 } from '../../fixtures/cloudinary';
 import { expect, SMOKE_CATEGORY, test, webUrl } from '../../fixtures/web';
@@ -358,20 +359,28 @@ function storedDraftCount(page: Page): Promise<number> {
   });
 }
 
-test('an image card is uploaded, described and listed @smoke', async ({ page, webDeck }) => {
-  // Saving needs the asset recorded by the real API (D160), so the upload answer must verify.
+test('a two-photo gallery is uploaded, described, listed and viewed @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  // Saving needs the assets recorded by the real API (D160), so the upload answers must verify.
   test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
-  const title = `Editor image ${webDeck.slug}`;
+  const title = `Editor gallery ${webDeck.slug}`;
   const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
 
-  await expect(page.getByRole('button', { name: 'Card type: Image' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Card type: Media' })).toBeVisible();
   await page.getByLabel('Title', { exact: true }).fill(title);
-  await page.getByLabel('Choose photo').setInputFiles(photoFile);
-  await expect(page.getByRole('button', { name: 'Replace photo' })).toBeVisible();
-  expect(uploads).toHaveLength(1);
-  await page.getByLabel('Description (optional)', { exact: true }).fill('A test photo');
-  // The preview renders the photo through the same Card as the list (FR-008).
+  // D398: several photos picked at once upload side by side; Save waits for both.
+  await page.getByLabel('Choose photos').setInputFiles([
+    { ...photoFile, name: 'first.png' },
+    { ...photoFile, name: 'second.png' },
+  ]);
+  await expect(page.getByText('2 of 8 photos')).toBeVisible();
+  expect(uploads).toHaveLength(2);
+  await page.getByLabel('Description of photo 1 (optional)').fill('A test photo');
+  await page.getByLabel('Description of photo 2 (optional)').fill('Another photo');
+  // The preview renders the cover through the same Card as the list (FR-008).
   const preview = await showPreview(page);
   await expect(preview.getByRole('img', { name: 'A test photo' })).toBeVisible();
   const created = page.waitForResponse(
@@ -379,18 +388,72 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   );
   await save(page).click();
 
-  // The API wrote the dimensions it recorded at confirm time (D160).
+  // The API wrote the dimensions it recorded at confirm time (D160), photo by photo.
   const response = await created;
   expect(response.status()).toBe(201);
-  const saved = (await response.json()) as { payload: { images: { width?: number }[] } };
+  const saved = (await response.json()) as {
+    payload: { images: { width?: number; alt?: string }[] };
+  };
+  expect(saved.payload.images.map((img) => img.alt)).toEqual(['A test photo', 'Another photo']);
   expect(saved.payload.images[0]?.width).toBe(1);
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   const listed = page.getByRole('article').filter({ hasText: title });
-  const listedImage = listed.getByRole('img', { name: 'A test photo' });
-  await expect(listedImage).toBeVisible();
+  const cover = listed.getByRole('img', { name: 'A test photo' });
+  await expect(cover).toBeVisible();
   // CloudImage sizes from the measured column (D161) and keeps the three-width srcset.
-  await expect(listedImage).toHaveAttribute('sizes', /^\d+px$/);
-  expect((await listedImage.getAttribute('srcset'))?.split(', ')).toHaveLength(3);
+  await expect(cover).toHaveAttribute('sizes', /^\d+px$/);
+  expect((await cover.getAttribute('srcset'))?.split(', ')).toHaveLength(3);
+
+  // D399: the cover opens the viewer; the arrow key moves to the second photo.
+  await listed.getByRole('button', { name: 'Open 2 photos' }).click();
+  const viewer = page.getByRole('dialog', { name: title });
+  await expect(viewer.getByText('1 of 2')).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  await expect(viewer.getByText('2 of 2')).toBeVisible();
+  await expect(viewer.getByRole('img', { name: 'Another photo' })).toBeVisible();
+  await viewer.getByRole('button', { name: 'Close' }).click();
+  await expect(viewer).toHaveCount(0);
+});
+
+test('a PDF card is uploaded and read page by page @smoke', async ({ page, webDeck }) => {
+  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
+  const title = `Editor PDF ${webDeck.slug}`;
+  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-pdf`, {
+    kind: 'pdf',
+    format: 'pdf',
+    width: 600,
+    height: 800,
+    pages: 2,
+  });
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
+  await page.getByLabel('Title', { exact: true }).fill(title);
+  await page.getByLabel('Choose file').setInputFiles(pdfFile);
+  await expect(
+    page.getByRole('region', { name: 'Media' }).getByText('PDF · 2 pages'),
+  ).toBeVisible();
+  const created = page.waitForResponse(
+    (res) => /\/api\/decks\/[^/]+\/items$/.test(res.url()) && res.request().method() === 'POST',
+  );
+  await save(page).click();
+
+  const response = await created;
+  expect(response.status()).toBe(201);
+  const saved = (await response.json()) as { payload: { kind: string; pages?: number } };
+  expect(saved.payload).toMatchObject({ kind: 'pdf', pages: 2 });
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  const listed = page.getByRole('article').filter({ hasText: title });
+  await expect(listed.getByText('PDF · 2 pages')).toBeVisible();
+
+  // D399/FR-013: Read opens the lazy viewer; page 2 is one arrow away, the original one link.
+  await listed.getByRole('button', { name: 'Read' }).click();
+  const viewer = page.getByRole('dialog', { name: title });
+  await expect(viewer.getByText('Page 1 of 2')).toBeVisible();
+  await page.keyboard.press('ArrowDown');
+  await expect(viewer.getByText('Page 2 of 2')).toBeVisible();
+  await expect(viewer.getByRole('link', { name: 'Open original' })).toHaveAttribute(
+    'href',
+    /e2e-pdf/,
+  );
 });
 
 test('a photo Cloudinary refuses shows why and is reported to the API @smoke', async ({
@@ -410,7 +473,7 @@ test('a photo Cloudinary refuses shows why and is reported to the API @smoke', a
   const reported = page.waitForResponse(
     (res) => res.url().includes('/media/upload-failures') && res.request().method() === 'POST',
   );
-  await page.getByLabel('Choose photo').setInputFiles(photoFile);
+  await page.getByLabel('Choose photos').setInputFiles(photoFile);
   await expect(
     page.getByText("This photo's resolution is too high.", { exact: false }),
   ).toBeVisible();
@@ -443,8 +506,8 @@ test('an image card without a description saves and is decorative under its titl
   await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   await page.getByLabel('Title', { exact: true }).fill(title);
-  await page.getByLabel('Choose photo').setInputFiles(photoFile);
-  await expect(page.getByRole('button', { name: 'Replace photo' })).toBeVisible();
+  await page.getByLabel('Choose photos').setInputFiles(photoFile);
+  await expect(page.getByRole('button', { name: 'Remove photo' })).toBeVisible();
   const created = page.waitForResponse(
     (res) => /\/api\/decks\/[^/]+\/items$/.test(res.url()) && res.request().method() === 'POST',
   );
@@ -462,10 +525,10 @@ test('the image type is unavailable without image storage @smoke', async ({ page
   await routeCloudName(page, null);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
 
-  // D302: `?type=media` opens the type chooser, where Image says why it is off (FR-015).
-  const image = page.getByRole('radio', { name: 'Image' });
+  // D302: `?type=media` opens the type chooser, where Media says why it is off (FR-015).
+  const image = page.getByRole('radio', { name: 'Media' });
   await expect(image).toHaveAttribute('aria-disabled', 'true');
-  await expect(page.getByText("image storage isn't set up here")).toBeVisible();
+  await expect(page.getByText("file storage isn't set up here")).toBeVisible();
   // `force`: Playwright never clicks an aria-disabled element; the tile must still ignore one.
   await image.click({ force: true });
   await expect(page).toHaveURL(/\?type=media$/);

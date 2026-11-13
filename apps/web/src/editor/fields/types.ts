@@ -14,6 +14,8 @@ export type FieldsProps<T extends ItemType> = {
   disabled: boolean;
   /** Fills the card title when it is still empty (008's link Fetch preview). */
   setTitleIfEmpty?: (title: string) => void;
+  /** 045 (D398): true while a file is still uploading, so Save waits for it. */
+  onUploadingChange?: (uploading: boolean) => void;
   /** The saved card when editing (037: a reminder's `canChangeDismissers`). */
   item?: Item;
 };

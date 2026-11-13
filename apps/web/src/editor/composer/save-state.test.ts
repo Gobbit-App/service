@@ -7,6 +7,8 @@ describe('saveBlockedReason', () => {
     expect(saveBlockedReason(3, false)).toBe('Fix 3 fields');
     expect(saveBlockedReason(0, false)).toBe('Loading the calculator…');
     expect(saveBlockedReason(0, true)).toBeNull();
+    expect(saveBlockedReason(1, true, true)).toBe('Wait for uploads to finish');
+    expect(saveBlockedReason(0, true, false)).toBeNull();
   });
 });
 

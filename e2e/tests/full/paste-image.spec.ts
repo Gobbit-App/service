@@ -41,7 +41,7 @@ test('text pasted into a field with a picture on the clipboard is not an upload 
   const title = page.getByLabel('Title', { exact: true });
 
   await paste(title, { text: 'From Word' });
-  await expect(page.getByLabel('Choose photo')).toBeAttached();
+  await expect(page.getByLabel('Choose photos')).toBeAttached();
   await expect(page.getByRole('button', { name: 'Remove photo' })).toHaveCount(0);
   expect(uploads).toHaveLength(0);
 });

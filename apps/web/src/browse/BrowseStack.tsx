@@ -9,6 +9,7 @@ import {
 } from 'react';
 import type { Category, Item } from '@gobbit/shared';
 import { writeBrowseReturn } from './browse-return';
+import { activeMediaId, releaseActiveMedia } from '../cards/media/use-active-media';
 import { BrowsePage } from './BrowsePage';
 import type { CycleEntry } from './category-cycle';
 import { END_PAGE_ID, END_TITLE_ID, EndPage } from './EndPage';
@@ -115,6 +116,12 @@ export function BrowseStack({
   const found = atEnd ? items.length - 1 : items.findIndex((item) => item.id === currentId);
   const index = found >= 0 ? found : 0;
   const current = items[index];
+
+  // FR-016/D400: swiping to another card stops a video or audio playing on the one left behind.
+  useEffect(() => {
+    const playing = activeMediaId();
+    if (playing !== null && playing !== currentId) releaseActiveMedia();
+  }, [currentId]);
 
   // The notice stays until the reader moves off the card it opened on.
   const [notice, setNotice] = useState(notFound ? startId : null);

@@ -107,6 +107,8 @@ export type MediaFilePayload = {
   height?: number;
   durationMs?: number;
   pages?: number;
+  /** Members only (D397); the server sets it from the stored file. */
+  fileName?: string;
 };
 
 export type MediaPayload = MediaImagesPayload | MediaFilePayload;
@@ -141,6 +143,7 @@ export function asMediaPayload(p: unknown): MediaPayload | null {
   }
   if (isDimension(p.durationMs)) result.durationMs = p.durationMs;
   if (isDimension(p.pages)) result.pages = p.pages;
+  if (typeof p.fileName === 'string' && p.fileName !== '') result.fileName = p.fileName;
   return result;
 }
 

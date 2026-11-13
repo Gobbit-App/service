@@ -1,5 +1,12 @@
 import { useRef, useState, type ReactElement } from 'react';
-import { cloudinaryImageUrl, cloudinaryPlaceholderUrl, cloudinarySrcSet } from './cloudinary';
+import { mediaDeliveryUrl } from '@gobbit/shared/media-constants';
+import {
+  cloudinaryImageUrl,
+  cloudinaryPlaceholderUrl,
+  cloudinarySrcSet,
+  renditionSrcSet,
+  type RenditionAt,
+} from './cloudinary';
 import { imageSizesFor, useElementWidth } from './use-element-width';
 
 export interface CloudImageProps {
@@ -14,6 +21,11 @@ export interface CloudImageProps {
   priority?: boolean;
   /** Extra class on the wrapper. */
   className?: string;
+  /**
+   * 045: a rendition other than the photo itself (a video still, a PDF page). Shown without the
+   * blurred placeholder (one more derivation per file).
+   */
+  rendition?: RenditionAt;
   /** The caller swaps in its fallback copy. */
   onError?: () => void;
 }
@@ -32,6 +44,7 @@ export function CloudImage({
   height,
   priority = false,
   className,
+  rendition,
   onError,
 }: CloudImageProps): ReactElement {
   const wrapper = useRef<HTMLSpanElement>(null);
@@ -51,7 +64,7 @@ export function CloudImage({
 
   return (
     <span ref={wrapper} className={classes}>
-      {state === 'loading' && (
+      {state === 'loading' && !rendition && (
         <img
           className="cloud-image__placeholder"
           aria-hidden="true"
@@ -64,8 +77,16 @@ export function CloudImage({
       <img
         className="cloud-image__img"
         alt={alt}
-        src={cloudinaryImageUrl(cloudName, publicId, 720)}
-        srcSet={cloudinarySrcSet(cloudName, publicId)}
+        src={
+          rendition
+            ? mediaDeliveryUrl(cloudName, rendition(720), publicId)
+            : cloudinaryImageUrl(cloudName, publicId, 720)
+        }
+        srcSet={
+          rendition
+            ? renditionSrcSet(cloudName, publicId, rendition)
+            : cloudinarySrcSet(cloudName, publicId)
+        }
         sizes={measured === null ? imageSizesFor(window.innerWidth) : `${measured}px`}
         width={known ? width : undefined}
         height={known ? height : undefined}
