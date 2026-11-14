@@ -128,9 +128,17 @@ describe('POST /ingest + GET /ingest/{id} (D93, D101, D109, D110)', () => {
   });
 
   it('rejects a disallowed file type (400)', async () => {
+    // 045 (D395): PDF, audio and video are shareable now; the bytes decide, so send a real zip.
     const form = new FormData();
     form.set('deckId', 'family');
-    form.append('files', imageFile('doc.pdf', 'application/pdf'));
+    form.append(
+      'files',
+      imageFile(
+        'notes.zip',
+        'application/zip',
+        new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0]),
+      ),
+    );
     expect((await postForm(form, editor.email)).status).toBe(400);
   });
 

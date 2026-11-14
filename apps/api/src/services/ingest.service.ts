@@ -3,8 +3,8 @@ import {
   can,
   DIRECT_PROPOSAL_MODEL,
   INGEST_CLIENT_LABEL_MAX,
-  INGEST_IMAGE_MAX_BYTES,
-  INGEST_IMAGE_MIMES,
+  INGEST_MAX_BYTES_DEFAULTS,
+  MEDIA_FILE_NAME_MAX,
   INGEST_MAX_IMAGES,
   directCardTypes,
   itemCreateSchema,
@@ -16,6 +16,8 @@ import {
   type IngestAccepted,
   type IngestChannel,
   type IngestImage,
+  type IngestRawFile,
+  type MediaKind,
   type IngestJob,
   type IngestRaw,
   type IngestRequest,
@@ -43,9 +45,19 @@ import type { CurrentUser } from '../types';
 import { lineSink } from '../lib/logger';
 import { decisionLogger } from '../lib/decision-event';
 import type { ItemDecisions } from './items.events';
+import type { IngestMediaDecisions } from '../ingest/media.events';
+import {
+  classifyShareFiles,
+  type ClassifiedFile,
+  type ClassifiedShare,
+  type IngestMaxBytes,
+} from '../ingest/classify-files';
+import type { StoredUpload } from '../media/ingest-uploads';
 
 /** An uploaded image as received (before Cloudinary). */
 export interface IngestFile {
+  /** The name it was shared with, when known (title fallback, D395). */
+  name?: string;
   bytes: Uint8Array;
   mime: string;
 }
@@ -86,25 +98,32 @@ export interface DirectProposalResult {
   dedup: DedupVerdict | null;
 }
 
-const isAllowedMime = (mime: string): boolean =>
-  (INGEST_IMAGE_MIMES as readonly string[]).includes(mime);
-
-/** D101: rejects a submission with nothing to ingest or bad images. */
+/** D101: rejects a submission with nothing to ingest or too many files. */
 export function assertSubmissionShape(s: IngestSubmission): void {
   if (!s.text?.trim() && !s.url && s.files.length === 0) {
-    throw badRequest('Share some text, a URL or an image');
+    throw badRequest('Share some text, a URL or a file');
   }
   if (s.files.length > INGEST_MAX_IMAGES) {
-    throw badRequest(`At most ${INGEST_MAX_IMAGES} images per share`);
+    throw badRequest(`At most ${INGEST_MAX_IMAGES} files per share`);
   }
-  for (const f of s.files) {
-    if (!isAllowedMime(f.mime)) {
-      throw badRequest(`Unsupported image type: ${f.mime || 'unknown'}`);
-    }
-    if (f.bytes.byteLength > INGEST_IMAGE_MAX_BYTES) {
-      throw badRequest(`Images must be at most ${INGEST_IMAGE_MAX_BYTES / (1024 * 1024)} MB`);
-    }
+}
+
+/**
+ * D395/FR-027: which files the share uses. A share that would be left with nothing (no text, no
+ * URL and no usable file) is refused, with the first file's reason.
+ */
+export function classifySubmission(s: IngestSubmission, limits: IngestMaxBytes): ClassifiedShare {
+  const classified = classifyShareFiles(s.files, limits);
+  const usable = classified.images.length > 0 || classified.file !== null;
+  if (!usable && !s.text?.trim() && !s.url && classified.unused.length > 0) {
+    const reason = classified.unused[0]!.reason;
+    throw badRequest(
+      reason === 'too_large'
+        ? 'This file is over the size limit for shares'
+        : "This kind of file can't be shared into Gobbit",
+    );
   }
+  return classified;
 }
 
 /** D93/D99: token shares are `shortcut`, email is `email`, session shares say pwa or paste. */
@@ -168,11 +187,15 @@ export function createIngestService(deps: {
   now: () => Date;
   newId?: () => string;
   log?: (message: string, err?: unknown) => void;
+  /** D393: ingest size limit per kind; defaults to the shared defaults. */
+  maxBytes?: IngestMaxBytes;
 }) {
   const { enabled, decks, memberships, jobs, uploads, queue, now } = deps;
   const newId = deps.newId ?? randomUUID;
   const log = deps.log ?? lineSink('ingest');
   const aliasDecisions = decisionLogger<ItemDecisions>('ingest');
+  const fileDecisions = decisionLogger<IngestMediaDecisions>('ingest');
+  const maxBytes = deps.maxBytes ?? INGEST_MAX_BYTES_DEFAULTS;
 
   const assertWithinCaps = createCapGuard({
     jobs,
@@ -206,7 +229,38 @@ export function createIngestService(deps: {
     return [...ids];
   }
 
-  async function uploadAll(jobId: string, deckId: string, userId: string, files: IngestFile[]) {
+  /** Records a server upload as an asset of the deck, with the provider's facts (D157, D390). */
+  async function record(
+    deckId: string,
+    userId: string,
+    kind: MediaKind,
+    stored: StoredUpload,
+    fileName?: string,
+  ): Promise<void> {
+    await deps.assets.upsert({
+      deckId,
+      source: 'ingest',
+      uploadedBy: userId,
+      publicId: stored.publicId,
+      kind,
+      resourceType: stored.resourceType,
+      width: stored.width,
+      height: stored.height,
+      bytes: stored.bytes,
+      format: stored.format,
+      durationMs: stored.durationMs,
+      pages: stored.pages,
+      etag: stored.etag,
+      originalFilename: fileName ? [...fileName].slice(0, MEDIA_FILE_NAME_MAX).join('') : null,
+    });
+  }
+
+  async function uploadAll(
+    jobId: string,
+    deckId: string,
+    userId: string,
+    files: ClassifiedFile[],
+  ): Promise<IngestImage[]> {
     if (files.length === 0) return [];
     if (!uploads) {
       throw serviceUnavailable('Image uploads are not configured');
@@ -214,10 +268,13 @@ export function createIngestService(deps: {
     const images: IngestImage[] = [];
     try {
       for (const f of files) {
-        const stored = await uploads.upload(jobId, deckId, f);
-        const { publicId } = stored;
-        await deps.assets.upsert({ deckId, source: 'ingest', uploadedBy: userId, ...stored });
-        images.push({ publicId, bytes: f.bytes.byteLength, mime: f.mime });
+        const stored = await uploads.upload(jobId, deckId, {
+          bytes: f.bytes,
+          mime: f.uploadMime,
+          kind: 'image',
+        });
+        await record(deckId, userId, 'image', stored);
+        images.push({ publicId: stored.publicId, bytes: f.bytes.byteLength, mime: f.uploadMime });
       }
     } catch (err) {
       log(`upload failed for job ${jobId}`, err);
@@ -225,6 +282,45 @@ export function createIngestService(deps: {
       throw serviceUnavailable('Image upload failed, try again');
     }
     return images;
+  }
+
+  /**
+   * D395: uploads the share's one PDF, audio or video file. A PDF without pages or a recording
+   * without a duration can't be shown, so it's deleted and the share goes on without it (null).
+   */
+  async function uploadFile(
+    jobId: string,
+    deckId: string,
+    userId: string,
+    f: ClassifiedFile,
+  ): Promise<IngestRawFile | null> {
+    if (!uploads) throw serviceUnavailable('Media uploads are not configured');
+    const kind = f.kind as IngestRawFile['kind'];
+    let stored: StoredUpload;
+    try {
+      stored = await uploads.upload(jobId, deckId, { bytes: f.bytes, mime: f.uploadMime, kind });
+    } catch (err) {
+      log(`upload failed for job ${jobId}`, err);
+      await uploads.deleteForJob(jobId).catch(() => undefined);
+      throw serviceUnavailable('File upload failed, try again');
+    }
+    const readable = kind === 'pdf' ? stored.pages !== null : stored.durationMs !== null;
+    if (!readable) {
+      await uploads.deleteForJob(jobId).catch(() => undefined);
+      return null;
+    }
+    const fileName = f.name?.trim() || undefined;
+    await record(deckId, userId, kind, stored, fileName);
+    return {
+      publicId: stored.publicId,
+      kind,
+      bytes: f.bytes.byteLength,
+      mime: f.uploadMime,
+      ...(stored.width && stored.height ? { width: stored.width, height: stored.height } : {}),
+      ...(stored.durationMs ? { durationMs: stored.durationMs } : {}),
+      ...(stored.pages ? { pages: stored.pages } : {}),
+      ...(fileName ? { fileName } : {}),
+    };
   }
 
   return {
@@ -243,9 +339,39 @@ export function createIngestService(deps: {
       const channel = channelFor(caller, s.channel);
       await assertWithinCaps(user.id, channel);
 
+      const classified = classifySubmission(s, maxBytes);
       const id = newId();
-      const images = await uploadAll(id, deck.id, user.id, s.files);
+      const images = await uploadAll(id, deck.id, user.id, classified.images);
+      const file = classified.file ? await uploadFile(id, deck.id, user.id, classified.file) : null;
+      const unused = [...classified.unused];
+      if (classified.file && !file) {
+        unused.push({
+          mime: classified.file.mime || 'unknown',
+          bytes: classified.file.bytes.byteLength,
+          reason: 'unsupported',
+        });
+      }
+      for (const f of [...images, ...(file ? [file] : [])]) {
+        fileDecisions.record('ingest.media_file', {
+          outcome: 'used',
+          jobId: id,
+          deckId: deck.id,
+          kind: 'kind' in f ? (f.kind as string) : 'image',
+          bytes: f.bytes,
+        });
+      }
+      for (const u of unused) {
+        fileDecisions.record('ingest.media_file', {
+          outcome: 'unused',
+          reason: u.reason,
+          jobId: id,
+          deckId: deck.id,
+          bytes: u.bytes,
+        });
+      }
       const raw: IngestRaw = { images };
+      if (file) raw.file = file;
+      if (unused.length > 0) raw.unused = unused;
       if (s.text?.trim()) raw.text = s.text;
       if (s.url) raw.url = s.url;
       if (s.title?.trim()) raw.title = s.title.trim();

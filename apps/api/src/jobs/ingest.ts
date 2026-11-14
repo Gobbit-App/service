@@ -1,4 +1,5 @@
 import {
+  DIRECT_PROPOSAL_MODEL,
   EXTRACT_STYLE_EXAMPLES,
   type AutoPublishOutcome,
   type DedupVerdict,
@@ -19,6 +20,7 @@ import type { ItemsRepo } from '../repositories/items.repo';
 import { runExtraction, type RunExtractionDeps } from '../ingest/run-extraction';
 import type { RunDedupInput } from '../ingest/run-dedup';
 import { proposeItem } from '../ingest/propose';
+import { buildMediaProposal } from '../ingest/media-proposal';
 import type { AutoPublishInput } from '../ingest/auto-publish';
 import type { EmbedQueue } from './embed-queue';
 import type { LinkSnapshotQueue } from './link-snapshot-queue';
@@ -210,6 +212,63 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
     };
   }
 
+  /**
+   * D395: the share's file as a direct media proposal (`extraction.model = 'direct'`), its
+   * title and caption from the share alone. Logs `ingest.media_proposal`.
+   */
+  async function proposeFile(
+    jobRef: JobRef,
+    raw: IngestRaw,
+    signal: AbortSignal | undefined,
+  ): Promise<IngestOutcome> {
+    const built = buildMediaProposal(raw, jobRef.channel);
+    if (!built) {
+      return fail({ ...jobRef, attempts: 1 }, 'media_proposal_invalid');
+    }
+    const summary: ExtractionSummary = {
+      model: DIRECT_PROPOSAL_MODEL,
+      escalated: false,
+      type: 'media',
+      confidence: 1,
+      language: 'und',
+      categoryIds: [],
+      newCategory: null,
+    };
+    const proposed = await proposeItem(
+      {
+        categories,
+        items,
+        jobs,
+        dedup: deps.dedup,
+        embedQueue,
+        linkSnapshotQueue: deps.linkSnapshotQueue,
+        now,
+        log,
+      },
+      { job: jobRef, item: built.item, summary, signal },
+    );
+    logger.info(
+      {
+        event: 'ingest.media_proposal',
+        outcome: 'proposed',
+        reason: built.body,
+        titleSource: built.titleSource,
+        jobId: jobRef.id,
+        deckId: jobRef.deckId,
+        itemId: proposed.item.id,
+        kind: raw.file?.kind,
+      },
+      'ingest.media_proposal',
+    );
+    await deps.autoPublish?.({
+      job: jobRef,
+      proposal: proposed.item,
+      categoryIds: summary.categoryIds,
+      verdict: proposed.dedup,
+    });
+    return 'proposed';
+  }
+
   async function assetDimensions(publicId: string) {
     const asset = await deps.assets?.byPublicId(publicId);
     return asset?.width && asset.height ? { width: asset.width, height: asset.height } : null;
@@ -237,6 +296,9 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       const role = await deps.roleOf(job.deckId, job.userId);
       if (!role) return await fail(job, 'sharer_not_member');
 
+      // D395: a PDF, audio or video share is proposed as is: no fetch, no model call.
+      if (job.raw.file) return await proposeFile(jobRef, job.raw, opts?.signal);
+
       stage = 'normalize';
       const source =
         job.normalized ?? (await deps.normalize(job.raw, { jobId: job.id, deckId: job.deckId }));
@@ -257,12 +319,14 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       const linkPreview = previewOf(source);
       const lockedHost = sourceUrl ? lockedHostOf(sourceUrl) : null;
       const imagePublicId = job.raw.images[0]?.publicId;
+      const morePublicIds = job.raw.images.slice(1).map((img) => img.publicId);
       const imageDimensions =
         lockedHost && imagePublicId ? await assetDimensions(imagePublicId) : null;
       const validate: ValidateContext = {
         ...(sourceUrl ? { sourceUrl } : {}),
         ...(linkPreview ? { linkPreview } : {}),
         ...(imagePublicId ? { imagePublicId } : {}),
+        ...(morePublicIds.length > 0 ? { morePublicIds } : {}),
         ...(lockedHost ? { lockedHost, imageDimensions } : {}),
         ...(job.raw.text ? { sharedText: job.raw.text } : {}),
         categoryIds: deckCategories.map((c) => c.id),

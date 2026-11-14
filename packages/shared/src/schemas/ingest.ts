@@ -16,6 +16,7 @@ import {
   ingestCardTypes,
   ingestChannels,
   ingestJobStatuses,
+  ingestUnusedReasons,
   INGEST_TEXT_MAX,
   INGEST_TITLE_MAX,
   INGEST_TOKEN_LABEL_MAX,
@@ -60,12 +61,43 @@ export const ingestImageSchema = z.object({
 });
 export type IngestImage = z.infer<typeof ingestImageSchema>;
 
+/**
+ * D395: the one PDF, audio or video file a share is proposed as, with the facts the provider
+ * reported on the server upload (D390: server uploads report their own facts).
+ */
+export const ingestFileSchema = z.object({
+  publicId: z.string(),
+  kind: z.enum(['pdf', 'audio', 'video']),
+  bytes: z.number().int().nonnegative(),
+  mime: z.string(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  durationMs: z.number().int().positive().optional(),
+  pages: z.number().int().positive().optional(),
+  /** The name the file was shared with (title fallback, D395); never public (D397). */
+  fileName: z.string().optional(),
+});
+export type IngestRawFile = z.infer<typeof ingestFileSchema>;
+
+/** FR-027: a shared file that wasn't used, and why (shown on the share's status). */
+export const ingestUnusedFileSchema = z.object({
+  mime: z.string(),
+  bytes: z.number().int().nonnegative(),
+  reason: z.enum(ingestUnusedReasons),
+});
+export type IngestUnusedFile = z.infer<typeof ingestUnusedFileSchema>;
+
 /** D94: what was shared, before any processing. */
 export const ingestRawSchema = z.object({
   text: z.string().optional(),
   url: z.string().optional(),
   title: z.string().optional(),
+  /** D395/D398: every photo used, in share order (a gallery proposal). */
   images: z.array(ingestImageSchema),
+  /** D395: the PDF, audio or video file the share is proposed as. */
+  file: ingestFileSchema.optional(),
+  /** FR-027: files not used. */
+  unused: z.array(ingestUnusedFileSchema).optional(),
   /** D374: the sharer's zone, when the share sent one. */
   timeZone: z.string().optional(),
 });

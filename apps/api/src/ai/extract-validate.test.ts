@@ -139,6 +139,25 @@ describe('extract-validate (D100)', () => {
     });
   });
 
+  it('proposes every shared photo as one gallery, the description on the cover (D395)', () => {
+    const r = okResult(
+      { ...baseRaw, type: 'image' },
+      {
+        categoryIds: [],
+        imagePublicId: 'gobbit/ingest/d/1',
+        morePublicIds: ['gobbit/ingest/d/2', 'gobbit/ingest/d/3'],
+      },
+    );
+    expect(r.item.payload).toEqual({
+      kind: 'image',
+      images: [
+        { publicId: 'gobbit/ingest/d/1', alt: 'Plumber' },
+        { publicId: 'gobbit/ingest/d/2' },
+        { publicId: 'gobbit/ingest/d/3' },
+      ],
+    });
+  });
+
   it('rejects a proposal missing the title, mentioning title in the error', () => {
     const { title: _omitted, ...raw } = baseRaw;
     const result = validateProposal(raw, defaultCtx);

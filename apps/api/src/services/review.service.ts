@@ -350,7 +350,7 @@ export function createReviewService(deps: {
         }
       });
 
-      if (job && deps.uploads && (job.raw?.images.length ?? 0) > 0) {
+      if (job && deps.uploads && ((job.raw?.images.length ?? 0) > 0 || job.raw?.file)) {
         await deps.uploads.deleteForJob(job.id).catch((err: unknown) => {
           // The prune job removes leftovers by tag; a failed delete must not undo the discard.
           log.error({ err, jobId: job.id }, 'deleting job uploads failed');

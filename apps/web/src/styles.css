@@ -1667,6 +1667,25 @@ h2 {
   background: var(--color-border);
 }
 
+/* 045 (D395): a shared PDF, audio or video file before upload: its kind and name. */
+.share-thumbs__file {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 96px;
+  height: 96px;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.share-thumbs__name {
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
 .share-sent__links {
   display: flex;
   flex-wrap: wrap;

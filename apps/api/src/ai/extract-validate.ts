@@ -26,6 +26,8 @@ import { proposeCardInputSchema, type ProposeCardInput } from './extract-prompt'
 export interface ValidateContext {
   sourceUrl?: string;
   imagePublicId?: string;
+  /** D395/D398: the share's other photos, in order, after the cover (`imagePublicId`). */
+  morePublicIds?: readonly string[];
   /** D163: the shared page's clipped OG preview; used when the card links to `sourceUrl`. */
   linkPreview?: LinkPreview;
   /** D167: `sourceUrl` is on a locked social host; the card links to it with the shared content. */
@@ -301,7 +303,11 @@ function plainPayload(
   if (type === 'media' && p.ctx.imagePublicId) {
     return {
       kind: 'image',
-      images: [{ publicId: p.ctx.imagePublicId, alt: p.title || 'Shared image' }],
+      // D395: the model's description goes to the cover; the other photos have none (D206).
+      images: [
+        { publicId: p.ctx.imagePublicId, alt: p.title || 'Shared image' },
+        ...(p.ctx.morePublicIds ?? []).map((publicId) => ({ publicId })),
+      ],
     };
   }
   return {};

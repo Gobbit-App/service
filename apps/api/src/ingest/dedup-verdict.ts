@@ -34,6 +34,14 @@ export function explicitVerdict(itemId: string): DedupVerdict {
 }
 
 /**
+ * D396: the proposal holds a file with the same content as one already in a media card of the
+ * deck. Never `update`: identical bytes are not new content to merge.
+ */
+export function fileVerdict(itemId: string): DedupVerdict {
+  return { action: 'possible_duplicate', itemId, similarity: null, via: 'file' };
+}
+
+/**
  * Decide how an incoming source relates to existing items.
  * @param s - Dedup signals collected for the source.
  * @returns The dedup verdict (update, possible duplicate, or new).

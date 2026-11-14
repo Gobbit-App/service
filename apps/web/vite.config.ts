@@ -55,7 +55,10 @@ export default defineConfig({
             title: 'title',
             text: 'text',
             url: 'url',
-            files: [{ name: 'files', accept: ['image/*'] }],
+            // D395: photos, PDFs, audio and video (INGEST_FILE_ACCEPT); the API checks the bytes.
+            files: [
+              { name: 'files', accept: ['image/*', 'application/pdf', 'audio/*', 'video/*'] },
+            ],
           },
         },
       },

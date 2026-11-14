@@ -99,3 +99,33 @@ Built on PR 1 (independent of PR 2, as the plan allows), so the stack is 1 → 3
 - **`@full` spec** `e2e/tests/full/media-public.spec.ts` records files through the real confirm
   with a locally signed answer (`recordMediaAsset`), so it runs only where the e2e run knows
   `CLOUDINARY_API_SECRET` (as the smoke photo journey's confirm does); otherwise it skips.
+
+## PR 4 — Ingestion
+
+### Decisions
+
+- **Unused, not refused**: a file whose bytes prove no allowed kind, or that is over its kind's
+  limit, used to fail the whole share (400). It's now recorded in `raw.unused` with its reason
+  (`unsupported`, `too_large`, `extra_file`) and the share goes on from its text, link or other
+  files. A share left with nothing is still a 400, with the first file's reason. Photos follow
+  the same rule. More than 3 files is still a 400.
+- **Magic bytes decide** (`ingest/media-sniff.ts`): the declared type only breaks ties a container
+  can't (MP4, WebM or Ogg holding sound only). The upload's content type comes from the sniffed
+  format, never the client.
+- **Unreadable files**: a PDF the provider reports without pages, or a recording without a
+  duration, is deleted after upload and reported `unsupported` (the reason list has no
+  `unreadable` for shares).
+- **Ingestion stays off without an extraction provider** (D93). The media path makes no model
+  call, but turning ingestion on without a provider is a separate change.
+- **Titles longer than the card limit** (share titles may be 300 characters) are cut at 120 code
+  points with an ellipsis; the caption is never cut (dropped and logged instead, D395).
+- **Auto-publish**: a direct media proposal has no categories, so the existing rule holds it for
+  review (`held_needs_category`). Same opt-in and checks as other proposals (FR-028).
+- **File dedup includes proposals**: D396 says "live or archived"; the lookup also matches
+  proposed cards, so sharing the same file twice flags the second share while the first still
+  waits in review (US5.2).
+- **Email-in**: attachments are filtered by type family (photo, PDF, audio, video) and bounded
+  by the 25 MB share body, then classified like any share. Attachment names are kept as the
+  title fallback.
+- **Share status**: the sharer's summary gains `fileKind` and `unusedFiles` (reasons only).
+- **Discard and prune** delete a job's file upload too (`raw.file`), across both resource types.

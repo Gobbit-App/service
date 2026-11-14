@@ -8,6 +8,7 @@ function fakeRepo(overrides: Partial<DedupRepo> = {}): DedupRepo {
     nearest: vi.fn(async () => null),
     titleMatch: vi.fn(async () => null),
     eventCandidates: vi.fn(async () => []),
+    mediaFileMatch: vi.fn(async () => null),
     ...overrides,
   };
 }
@@ -89,5 +90,30 @@ describe('runDedup', () => {
       similarity: null,
       via: 'source_url',
     });
+  });
+});
+
+describe('runDedup media files (D396)', () => {
+  it('flags the same file as a possible duplicate before any other signal', async () => {
+    const repo = fakeRepo({
+      mediaFileMatch: vi.fn(async () => 'm1'),
+      titleMatch: vi.fn(async () => ({ itemId: 't1', similarity: 1 })),
+    });
+    const verdict = await run(repo, { type: 'media', filePublicIds: ['p1', 'p2'] });
+    expect(repo.mediaFileMatch).toHaveBeenCalledWith('deck', 'draft', ['p1', 'p2']);
+    expect(repo.titleMatch).not.toHaveBeenCalled();
+    expect(verdict).toEqual({
+      action: 'possible_duplicate',
+      itemId: 'm1',
+      similarity: null,
+      via: 'file',
+    });
+  });
+
+  it('falls through to the usual signals when no file matches', async () => {
+    const repo = fakeRepo();
+    const verdict = await run(repo, { type: 'media', filePublicIds: ['p1'] });
+    expect(repo.titleMatch).toHaveBeenCalled();
+    expect(verdict.via).not.toBe('file');
   });
 });

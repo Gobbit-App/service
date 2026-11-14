@@ -96,6 +96,8 @@ export function toShareSummary(
       title: item?.title ?? raw?.title ?? null,
       host: hostOf(raw?.url),
       photoCount: raw?.images.length ?? 0,
+      fileKind: raw?.file?.kind ?? null,
+      unusedFiles: (raw?.unused ?? []).map((u) => u.reason),
     },
     failureCode: job.status === 'failed' ? (job.failureCode ?? 'unknown') : null,
     canRetry: canRetryJob(job),

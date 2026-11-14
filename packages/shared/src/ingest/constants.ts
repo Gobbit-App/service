@@ -64,7 +64,8 @@ export const dedupActions = ['new', 'possible_duplicate', 'update'] as const;
 export type DedupAction = (typeof dedupActions)[number];
 
 /** `explicit`: a direct proposal named the card it updates, so no similarity search ran. */
-export const dedupVias = ['source_url', 'vector', 'title', 'none', 'explicit'] as const;
+/** `file` (D396): the proposal holds a file already in a media card of the deck (same content). */
+export const dedupVias = ['source_url', 'vector', 'title', 'none', 'explicit', 'file'] as const;
 export type DedupVia = (typeof dedupVias)[number];
 
 /** D110: jobs per user and channel in a rolling day (default of INGEST_DAILY_CAP). */
@@ -90,6 +91,35 @@ export const INGEST_IMAGE_MIMES = [
   'image/heif',
 ] as const;
 export type IngestImageMime = (typeof INGEST_IMAGE_MIMES)[number];
+
+/**
+ * D395: what a share may carry besides photos: a PDF, audio or video file. Families are matched
+ * on the declared type; the bytes decide (sniffed by magic bytes, as photos are).
+ */
+export const INGEST_FILE_ACCEPT = ['image/*', 'application/pdf', 'audio/*', 'video/*'] as const;
+
+/** D393: default ingest size limit per kind (bytes), all within `INGEST_BODY_MAX_BYTES`. */
+export const INGEST_MAX_BYTES_DEFAULTS = {
+  image: INGEST_IMAGE_MAX_BYTES,
+  pdf: 10 * 1024 * 1024,
+  audio: 15 * 1024 * 1024,
+  video: 24 * 1024 * 1024,
+} as const;
+
+/** D393: the env variable overriding each kind's ingest limit (photos stay at D101's). */
+export const INGEST_MAX_BYTES_ENV = {
+  pdf: 'INGEST_MAX_BYTES_PDF',
+  audio: 'INGEST_MAX_BYTES_AUDIO',
+  video: 'INGEST_MAX_BYTES_VIDEO',
+} as const;
+
+/** FR-027: why a shared file wasn't used (the share status says so). */
+export const ingestUnusedReasons = ['unsupported', 'too_large', 'extra_file'] as const;
+export type IngestUnusedReason = (typeof ingestUnusedReasons)[number];
+
+/** D395: where a direct media proposal's title came from (`ingest.media_proposal`). */
+export const mediaTitleSources = ['title', 'subject', 'text', 'filename', 'kind'] as const;
+export type MediaTitleSource = (typeof mediaTitleSources)[number];
 /** Shared text and title accepted by POST /ingest. */
 export const INGEST_TEXT_MAX = 10_000;
 export const INGEST_TITLE_MAX = 300;

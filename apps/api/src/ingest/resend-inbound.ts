@@ -1,4 +1,4 @@
-import { INGEST_IMAGE_MAX_BYTES } from '@gobbit/shared';
+import { INGEST_BODY_MAX_BYTES } from '@gobbit/shared';
 import type { IngestFile } from '../services/ingest.service';
 import type { InboundEmail } from './email-mapping';
 
@@ -23,6 +23,7 @@ interface ReceivedEmailResponse {
 interface ListedAttachment {
   id: string;
   content_type: string;
+  filename?: string;
   size: number;
   download_url: string;
 }
@@ -85,7 +86,8 @@ export function createResendInbound(deps: {
       );
       const wanted = attachmentIds
         .map((id) => list.data.find((a) => a.id === id))
-        .filter((a): a is ListedAttachment => a !== undefined && a.size <= INGEST_IMAGE_MAX_BYTES);
+        // D393: per-kind limits apply when the share is classified; this only bounds the download.
+        .filter((a): a is ListedAttachment => a !== undefined && a.size <= INGEST_BODY_MAX_BYTES);
 
       return Promise.all(
         wanted.map(async (a) => {
@@ -100,6 +102,7 @@ export function createResendInbound(deps: {
           return {
             bytes: new Uint8Array(await res.arrayBuffer()),
             mime: (a.content_type.split(';')[0] ?? '').trim().toLowerCase(),
+            ...(a.filename ? { name: a.filename } : {}),
           };
         }),
       );

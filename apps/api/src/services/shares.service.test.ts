@@ -74,7 +74,13 @@ describe('toShareSummary (D196)', () => {
       null,
       null,
     );
-    expect(summary.preview).toEqual({ title: null, host: 'dentist.example', photoCount: 1 });
+    expect(summary.preview).toEqual({
+      title: null,
+      host: 'dentist.example',
+      photoCount: 1,
+      fileKind: null,
+      unusedFiles: [],
+    });
     const json = JSON.stringify(summary);
     expect(json).not.toContain('secret note text');
     expect(json).not.toContain('res.example');

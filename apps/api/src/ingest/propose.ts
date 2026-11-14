@@ -11,6 +11,7 @@ import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
+import { mediaImagesOf } from '@gobbit/shared/media-constants';
 import { explicitVerdict } from './dedup-verdict';
 import type { RunDedupInput } from './run-dedup';
 
@@ -95,6 +96,7 @@ export async function proposeItem(deps: ProposeDeps, input: ProposeInput): Promi
         title: created.title,
         sourceUrl: created.sourceUrl,
         ...(created.type === 'event' ? { type: created.type, url: urlOf(created.payload) } : {}),
+        ...(created.type === 'media' ? { filePublicIds: mediaPublicIdsOf(created.payload) } : {}),
         jobId: job.id,
         userId: job.userId,
         signal: input.signal,
@@ -125,6 +127,14 @@ async function verdictFor(deps: ProposeDeps, input: RunDedupInput): Promise<Dedu
     );
     return null;
   }
+}
+
+/** D396: every file a media payload holds (each gallery photo, or the one file). */
+function mediaPublicIdsOf(payload: unknown): string[] {
+  const images = mediaImagesOf(payload).map((img) => img.publicId);
+  if (images.length > 0) return images;
+  const id = (payload as { publicId?: unknown } | null)?.publicId;
+  return typeof id === 'string' && id !== '' ? [id] : [];
 }
 
 /** An event's own link, when its payload has one. */

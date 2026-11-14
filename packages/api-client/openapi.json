@@ -22307,7 +22307,7 @@
             "BearerToken": []
           }
         ],
-        "description": "Share something into a deck (D93). JSON, or multipart with up to 3 `files`. Also accepts an `ing_` ingest token as the bearer. The job runs in the background.",
+        "description": "Share something into a deck (D93). JSON, or multipart with up to 3 `files`: photos (a gallery), or one PDF, audio or video file (D395); files that can't be used are listed on the share. Also accepts an `ing_` ingest token as the bearer. The job runs in the background.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -22976,6 +22976,82 @@
                             ]
                           }
                         },
+                        "file": {
+                          "type": "object",
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "pdf",
+                                "audio",
+                                "video"
+                              ]
+                            },
+                            "bytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "mime": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0
+                            },
+                            "height": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0
+                            },
+                            "durationMs": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0
+                            },
+                            "pages": {
+                              "type": "integer",
+                              "exclusiveMinimum": 0
+                            },
+                            "fileName": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "publicId",
+                            "kind",
+                            "bytes",
+                            "mime"
+                          ]
+                        },
+                        "unused": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "mime": {
+                                "type": "string"
+                              },
+                              "bytes": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "reason": {
+                                "type": "string",
+                                "enum": [
+                                  "unsupported",
+                                  "too_large",
+                                  "extra_file"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "mime",
+                              "bytes",
+                              "reason"
+                            ]
+                          }
+                        },
                         "timeZone": {
                           "type": "string"
                         }
@@ -23282,7 +23358,8 @@
                             "vector",
                             "title",
                             "none",
-                            "explicit"
+                            "explicit",
+                            "file"
                           ]
                         }
                       },
@@ -24853,7 +24930,8 @@
                                       "vector",
                                       "title",
                                       "none",
-                                      "explicit"
+                                      "explicit",
+                                      "file"
                                     ]
                                   }
                                 },
@@ -27590,12 +27668,37 @@
                               "photoCount": {
                                 "type": "integer",
                                 "minimum": 0
+                              },
+                              "fileKind": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "pdf",
+                                  "audio",
+                                  "video",
+                                  null
+                                ]
+                              },
+                              "unusedFiles": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "unsupported",
+                                    "too_large",
+                                    "extra_file"
+                                  ]
+                                }
                               }
                             },
                             "required": [
                               "title",
                               "host",
-                              "photoCount"
+                              "photoCount",
+                              "fileKind",
+                              "unusedFiles"
                             ],
                             "additionalProperties": false
                           },
@@ -28062,12 +28165,37 @@
                         "photoCount": {
                           "type": "integer",
                           "minimum": 0
+                        },
+                        "fileKind": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "pdf",
+                            "audio",
+                            "video",
+                            null
+                          ]
+                        },
+                        "unusedFiles": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "unsupported",
+                              "too_large",
+                              "extra_file"
+                            ]
+                          }
                         }
                       },
                       "required": [
                         "title",
                         "host",
-                        "photoCount"
+                        "photoCount",
+                        "fileKind",
+                        "unusedFiles"
                       ],
                       "additionalProperties": false
                     },
@@ -28449,12 +28577,37 @@
                         "photoCount": {
                           "type": "integer",
                           "minimum": 0
+                        },
+                        "fileKind": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "pdf",
+                            "audio",
+                            "video",
+                            null
+                          ]
+                        },
+                        "unusedFiles": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "unsupported",
+                              "too_large",
+                              "extra_file"
+                            ]
+                          }
                         }
                       },
                       "required": [
                         "title",
                         "host",
-                        "photoCount"
+                        "photoCount",
+                        "fileKind",
+                        "unusedFiles"
                       ],
                       "additionalProperties": false
                     },

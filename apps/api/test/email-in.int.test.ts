@@ -83,7 +83,7 @@ describe(`POST ${RESEND_INBOUND_PATH} (D104)`, () => {
       html: null,
       attachments: [
         { id: 'a1', filename: 'card.png', contentType: 'image/png', size: 8 },
-        { id: 'a2', filename: 'notes.pdf', contentType: 'application/pdf', size: 8 },
+        { id: 'a2', filename: 'notes.zip', contentType: 'application/zip', size: 8 },
       ],
     });
     expect(res.status).toBe(200);

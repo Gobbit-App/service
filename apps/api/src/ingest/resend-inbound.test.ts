@@ -1,4 +1,4 @@
-import { INGEST_IMAGE_MAX_BYTES } from '@gobbit/shared';
+import { INGEST_BODY_MAX_BYTES } from '@gobbit/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ResendInboundError, createResendInbound } from './resend-inbound';
 
@@ -19,7 +19,7 @@ const attachmentList = {
     {
       id: 'big',
       content_type: 'image/png',
-      size: INGEST_IMAGE_MAX_BYTES + 1,
+      size: INGEST_BODY_MAX_BYTES + 1,
       download_url: 'https://cdn.test/big',
     },
   ],

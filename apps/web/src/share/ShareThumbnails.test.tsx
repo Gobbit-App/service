@@ -29,10 +29,19 @@ describe('ShareThumbnails', () => {
 
   it('renders a labelled list with a blob-backed image per file', () => {
     render(<ShareThumbnails files={files} onRemove={vi.fn()} />);
-    expect(screen.getByRole('list', { name: 'Images' })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Files' })).toBeInTheDocument();
     const images = screen.getAllByRole('img');
     expect(images).toHaveLength(2);
     expect(images[0]).toHaveAttribute('src', 'blob:a.png');
+  });
+
+  it('shows a PDF, audio or video file by its kind and name, without an image (D395)', () => {
+    const pdf = new File(['x'], 'term.pdf', { type: 'application/pdf' });
+    render(<ShareThumbnails files={[pdf]} onRemove={vi.fn()} />);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.getByText('PDF')).toBeInTheDocument();
+    expect(screen.getByText('term.pdf')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove term.pdf' })).toBeInTheDocument();
   });
 
   it('calls onRemove with the index of the removed file', () => {
