@@ -15,7 +15,7 @@ import {
   type Draft,
   type LinkDraftPayload,
 } from './draft';
-import type { ImagePayload, TablePayload } from '../cards/payload-guards';
+import type { ImagePayload, MediaPayload, TablePayload } from '../cards/payload-guards';
 import { normalizeUrlInput } from '../lib/url-input';
 import { checkReminder, type ReminderDraftPayload } from './reminder-draft';
 import { checkEvent, type EventDraftPayload } from './event-draft';
@@ -90,9 +90,17 @@ function checkEventLink(payload: EventDraftPayload, errors: FieldErrors): void {
 
 export const PHOTO_REQUIRED = 'Add a photo';
 
-/** D133: the photo must have finished uploading (a `publicId`); alt text is optional (D206). */
-function checkImage(payload: ImagePayload, errors: FieldErrors): void {
-  if (payload.publicId === '') errors['payload.publicId'] = PHOTO_REQUIRED;
+/**
+ * D133/D398: a photo card needs at least one photo that finished uploading (a `publicId`); alt
+ * text is optional (D206). A file card needs its file.
+ */
+function checkMedia(payload: MediaPayload, errors: FieldErrors): void {
+  if (payload.kind !== 'image') {
+    if (payload.publicId === '') errors['payload.publicId'] = 'Add a file';
+    return;
+  }
+  const uploaded = payload.images.filter((img: ImagePayload) => img.publicId !== '');
+  if (uploaded.length === 0) errors['payload.images.0.publicId'] = PHOTO_REQUIRED;
 }
 
 function checkTable(payload: TablePayload, errors: FieldErrors): void {
@@ -173,8 +181,8 @@ export function validateDraft(draft: Draft, options: ValidateOptions = {}): Fiel
     case 'calc':
       checkCalc(draft.payload as CalcDraftPayload, errors, options.calcExpression);
       break;
-    case 'image':
-      checkImage(draft.payload as ImagePayload, errors);
+    case 'media':
+      checkMedia(draft.payload as MediaPayload, errors);
       break;
     case 'reminder':
       checkReminder(draft.payload as ReminderDraftPayload, errors, options.now);

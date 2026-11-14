@@ -15,6 +15,7 @@ import {
   ENTITIES_MAX_BYTES,
   PAYLOAD_DB_BACKSTOP_BYTES,
   EMBEDDING_DIMS,
+  MEDIA_GALLERY_MAX,
   type Entities,
 } from '@gobbit/shared';
 import { EVENT_LOCATION_MAX, EVENT_NOTIFY_TIMES_MAX } from '@gobbit/shared/event-constants';
@@ -70,6 +71,17 @@ export const items = pgTable(
     check(
       'items_event_payload_chk',
       sql`${t.type}::text <> 'event' OR coalesce(jsonb_typeof(${t.payload}->'allDay') = 'boolean' AND jsonb_typeof(${t.payload}->'start') = 'string' AND jsonb_typeof(${t.payload}->'timeZone') = 'string' AND (NOT ${t.payload} ? 'location' OR char_length(${t.payload}->>'location') <= ${sql.raw(String(EVENT_LOCATION_MAX))}) AND jsonb_typeof(${t.payload}#>'{notify,before}') = 'array' AND jsonb_array_length(${t.payload}#>'{notify,before}') <= ${sql.raw(String(EVENT_NOTIFY_TIMES_MAX))}, false)`,
+    ),
+    // D386 (045): every media card names the kind of file it holds.
+    check(
+      'items_media_kind_check',
+      sql`${t.type}::text <> 'media' OR coalesce(${t.payload}->>'kind' IN ('image', 'pdf', 'audio', 'video'), false)`,
+    ),
+    // D398: a photo card is a gallery of 1..MEDIA_GALLERY_MAX photos, each with a publicId; the
+    // other kinds hold one file. Raising the gallery size is a migration.
+    check(
+      'items_media_files_check',
+      sql`${t.type}::text <> 'media' OR coalesce(CASE ${t.payload}->>'kind' WHEN 'image' THEN jsonb_typeof(${t.payload}->'images') = 'array' AND jsonb_array_length(${t.payload}->'images') BETWEEN 1 AND ${sql.raw(String(MEDIA_GALLERY_MAX))} AND NOT jsonb_path_exists(${t.payload}, '$.images[*] ? (!(exists(@.publicId)) || @.publicId == "")') ELSE coalesce(${t.payload}->>'publicId', '') <> '' END, false)`,
     ),
     index('items_search_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
     index('items_embedding_hnsw_idx')

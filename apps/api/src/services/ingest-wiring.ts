@@ -28,7 +28,7 @@ import type { ItemsRepo } from '../repositories/items.repo';
 import type { UsersRepo } from '../repositories/users.repo';
 import type { AssetsRepo } from '../repositories/assets.repo';
 import type { EventNoticeHook } from './event-cards.service';
-import type { ImageReferenceCheck } from './image-reference';
+import type { MediaReferenceCheck } from './media-reference';
 
 /** Overrides for tests; production builds everything from env (D93). */
 export interface IngestWiring {
@@ -61,7 +61,7 @@ export function buildIngestServices(deps: {
   /** Embeds direct proposals for dedup (D103); null → the keyless signals only. */
   embedder: Embedder | null;
   assets: Pick<AssetsRepo, 'upsert'>;
-  imageReference: ImageReferenceCheck;
+  mediaReference: MediaReferenceCheck;
   noticeHook?: EventNoticeHook;
   now: () => Date;
   /** D180: published proposals change public pages. */
@@ -139,7 +139,7 @@ export function buildIngestServices(deps: {
       uploads,
       embedQueue: deps.embedQueue,
       linkSnapshotQueue: deps.linkSnapshotQueue,
-      imageReference: deps.imageReference,
+      mediaReference: deps.mediaReference,
       noticeHook: deps.noticeHook,
       now,
       purgeDeck: deps.purgeDeck,

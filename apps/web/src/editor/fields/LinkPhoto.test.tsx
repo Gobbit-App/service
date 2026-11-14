@@ -33,6 +33,8 @@ const fakeUpload = vi.fn<typeof signAndUpload>(
             height: 1350,
             bytes: 1,
             format: 'jpg',
+            kind: 'image',
+            resourceType: 'image',
           }),
         reject,
       });
@@ -45,8 +47,13 @@ const signer = vi.fn<(o: { fresh: boolean }) => Promise<MediaSignResponse>>();
 const confirm = vi.fn<(deckId: string, uploaded: UploadedImage) => Promise<MediaAsset>>(
   async (_deckId, { publicId, width, height, bytes, format }) => ({
     publicId,
-    width,
-    height,
+    kind: 'image',
+    resourceType: 'image',
+    width: width ?? null,
+    height: height ?? null,
+    durationMs: null,
+    pages: null,
+    originalFilename: null,
     bytes,
     format,
     source: 'editor',

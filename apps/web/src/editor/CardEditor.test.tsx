@@ -177,6 +177,7 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
       ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
       analytics: null,
       push: null,
+      media: { maxBytes: { image: 8388608, pdf: 10485760, audio: 15728640, video: 26214400 } },
     });
     return renderInRouter(
       <CardEditor
@@ -207,7 +208,7 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
   });
 
   it('blocks Save on an image card without a photo; the description is optional (D206)', async () => {
-    await renderImage('test-cloud', 'image');
+    await renderImage('test-cloud', 'media');
     type('Title', 'Bread');
     expect(screen.getByLabelText('Take photo')).toBeInTheDocument();
     expect(saveButton()).toHaveAttribute('aria-disabled', 'true');

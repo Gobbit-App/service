@@ -24,6 +24,7 @@ const config = (analytics: AppConfig['analytics']): AppConfig => ({
   search: { semantic: false, ask: false },
   ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
   push: null,
+  media: { maxBytes: { image: 8388608, pdf: 10485760, audio: 15728640, video: 26214400 } },
 });
 
 function setup({

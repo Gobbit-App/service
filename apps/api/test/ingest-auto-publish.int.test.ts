@@ -26,7 +26,7 @@ import { createItemsRepo } from '../src/repositories/items.repo';
 import { createLlmCallsRepo } from '../src/repositories/llm-calls.repo';
 import { createMembershipsRepo } from '../src/repositories/memberships.repo';
 import { createUsersRepo } from '../src/repositories/users.repo';
-import { createImageReferenceCheck } from '../src/services/image-reference';
+import { createMediaReferenceCheck } from '../src/services/media-reference';
 import { setupApiTest } from './helpers';
 
 class RecordingEmbedQueue implements EmbedQueue {
@@ -111,7 +111,7 @@ describe('ingest auto-publish (D193)', () => {
             roleOf,
             publishProposal: createPublishProposal({
               transaction: reviewTransaction(db),
-              imageReference: createImageReferenceCheck(createAssetsRepo(db)),
+              mediaReference: createMediaReferenceCheck(createAssetsRepo(db)),
               now: () => new Date(),
             }),
             jobs,

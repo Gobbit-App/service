@@ -5,7 +5,7 @@ import { createCategoriesRepo, type CategoriesRepo } from '../repositories/categ
 import { createIngestJobsRepo, type IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import { createItemsRepo, type ItemsRepo } from '../repositories/items.repo';
 import type { EventNoticeHook } from '../services/event-cards.service';
-import type { ImageReferenceCheck } from '../services/image-reference';
+import type { MediaReferenceCheck } from '../services/media-reference';
 
 /** Repos bound to one transaction: publish/discard change the item, categories and job together. */
 export interface ReviewTxRepos {
@@ -31,7 +31,7 @@ export function reviewTransaction(db: Db): ReviewTransaction {
 export interface PublishProposalDeps {
   transaction: ReviewTransaction;
   /** D160: a published image card references a recorded asset of its deck. */
-  imageReference: ImageReferenceCheck;
+  mediaReference: MediaReferenceCheck;
   now: () => Date;
   /** D359: a published event skips the notices already past (`past_at_publish`). */
   noticeHook?: EventNoticeHook;
@@ -61,7 +61,7 @@ export interface PublishProposalInput {
 export function createPublishProposal(deps: PublishProposalDeps) {
   return async function publishProposal(input: PublishProposalInput): Promise<string> {
     const { item } = input;
-    const payload = await deps.imageReference(
+    const payload = await deps.mediaReference(
       item.deckId,
       item.type,
       item.payload as Record<string, unknown>,
@@ -76,7 +76,7 @@ export function createPublishProposal(deps: PublishProposalDeps) {
       }
       await tx.items.update(
         item.id,
-        item.type === 'image'
+        item.type === 'media'
           ? { status: 'published', verifiedAt: at, payload }
           : { status: 'published', verifiedAt: at },
         categoryIds,

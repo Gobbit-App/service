@@ -1,4 +1,5 @@
 import { htmlLang, ogLocale } from '@gobbit/shared';
+import { mediaImagesOf } from '@gobbit/shared/media-constants';
 import { isUuid } from '../lib/resolve-deck';
 import type { ShareRecord, ShareRepo } from '../repositories/share.repo';
 import { ogContentHash, ogPublicId, type OgContent } from './content-hash';
@@ -65,7 +66,9 @@ function publicCategoryName(record: ShareRecord): string | null {
 }
 
 function imagePublicIdOf(record: ShareRecord): string | null {
-  const id = record.item.type === 'image' ? record.item.payload.publicId : undefined;
+  // D397: a photo card's cover; PDF and video previews arrive with 045 PR 3.
+  const id =
+    record.item.type === 'media' ? mediaImagesOf(record.item.payload)[0]?.publicId : undefined;
   return typeof id === 'string' && id !== '' ? id : null;
 }
 

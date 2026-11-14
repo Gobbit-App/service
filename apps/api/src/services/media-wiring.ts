@@ -1,5 +1,5 @@
 import { LINK_CHECK_READ_BYTES } from '@gobbit/shared';
-import type { Env } from '../env';
+import { mediaMaxBytes, type Env } from '../env';
 import type { MembershipLookup } from '../access/authorize';
 import { extractPage } from '../fetch/extract-page';
 import {
@@ -61,7 +61,15 @@ export function resolveLinkCheckFetch(wiring: MediaWiring | undefined): SafeFetc
 }
 
 export function buildMediaServices(deps: {
-  env: Pick<Env, 'CLOUDINARY_URL' | 'LINK_ARTICLE_IMAGE_MIN_PX' | 'LINK_LOOKUP_TIMEOUT_MS'>;
+  env: Pick<
+    Env,
+    | 'CLOUDINARY_URL'
+    | 'LINK_ARTICLE_IMAGE_MIN_PX'
+    | 'LINK_LOOKUP_TIMEOUT_MS'
+    | 'MEDIA_MAX_BYTES_PDF'
+    | 'MEDIA_MAX_BYTES_AUDIO'
+    | 'MEDIA_MAX_BYTES_VIDEO'
+  >;
   decks: DeckLookup;
   memberships: MembershipLookup;
   rateLimits: Pick<RateLimitService, 'enforce'>;
@@ -88,6 +96,7 @@ export function buildMediaServices(deps: {
       assets,
       store,
       imageFetch: wiring.imageFetch ?? createSafeImageFetch(),
+      maxBytes: mediaMaxBytes(env),
       now,
     }),
     linkPreview: createLinkPreviewService({

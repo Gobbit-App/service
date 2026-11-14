@@ -6,7 +6,7 @@ import {
   INGEST_JOB_RETRIES,
   type IngestFailureCode,
   type IngestRaw,
-  type ItemCreate,
+  type ItemCreateResolved,
   type MemberRole,
   type NormalizedSource,
 } from '@gobbit/shared';
@@ -134,7 +134,7 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
   async function propose(
     jobRef: JobRef,
     ctx: ExtractContext,
-    item: ItemCreate,
+    item: ItemCreateResolved,
     summary: ExtractionSummary,
     signal: AbortSignal | undefined,
   ) {

@@ -63,7 +63,13 @@ describe('linkSnapshotQueue.enqueueIfNeeded (D163)', () => {
         payload: { url: 'https://x.test/', preview: { title: 'T', imageRemoved: true } },
       }),
     ],
-    ['not a link', candidate({ type: 'image', payload: { publicId: 'p', alt: 'a' } })],
+    [
+      'not a link',
+      candidate({
+        type: 'media',
+        payload: { kind: 'image', images: [{ publicId: 'p', alt: 'a' }] },
+      }),
+    ],
     ['archived', candidate({ status: 'archived' })],
     ['deleted', candidate({ deletedAt: new Date() })],
   ])('skips %s', async (_label, row) => {

@@ -24,8 +24,13 @@ import {
   type DismissReminder,
   can,
   compactEntities,
+  normalizeLegacyMediaPayload,
   payloadSchemaFor,
+  type ItemTypeInput,
+  type ItemCreateResolved,
 } from '@gobbit/shared';
+import { decisionLogger, type DecisionLogger } from '../lib/decision-event';
+import type { ItemDecisions } from './items.events';
 import { assertPermission, authorize, type MembershipLookup } from '../access/authorize';
 import { canSeePrivate } from '../access/visibility';
 import {
@@ -45,7 +50,7 @@ import type { LinkChecksRepo } from '../repositories/link-checks.repo';
 import { markNotifiedIfPast, reopenReminder } from '../repositories/reminders.repo';
 import type { RemindersService } from './reminders.service';
 import type { EventCardsService } from './event-cards.service';
-import type { ImageReferenceCheck } from './image-reference';
+import type { MediaReferenceCheck } from './media-reference';
 import { createItemDtoMapper } from './item-dtos';
 import type { LinkChecksService } from './link-checks.service';
 import type { LinkPreviewFields } from './link-preview-fields';
@@ -72,6 +77,9 @@ export interface ItemLinkDeps {
   rateLimits: Pick<RateLimitService, 'enforce'>;
 }
 
+/** A create body after the D387 alias is resolved. */
+type CanonicalCreate = ItemCreateResolved;
+
 /** D131/D132 problem types (contracts/items-lifecycle.md). */
 export const INVALID_TRANSITION_PROBLEM = '/problems/invalid-transition';
 export const USE_RESTORE_PROBLEM = '/problems/use-restore';
@@ -89,8 +97,10 @@ export function createItemsService(deps: {
   memberships: MembershipLookup;
   /** D72: after each committed write, queue a re-embed when the text changed. */
   embedQueue: EmbedQueue;
-  /** D160: image cards reference recorded assets of their deck; dimensions come from them. */
-  imageReference: ImageReferenceCheck;
+  /** D160/045: media cards reference recorded files of their deck; their facts come from them. */
+  mediaReference: MediaReferenceCheck;
+  /** D387: `item.type_alias` (tests inject a capture). */
+  decisions?: DecisionLogger<ItemDecisions>;
   links: ItemLinkDeps;
   /** 037: reminder payload rules, dismiss and the `reminder` DTO field (D291–D294). */
   reminders: RemindersService;
@@ -109,14 +119,42 @@ export function createItemsService(deps: {
     favorites,
     memberships,
     embedQueue,
-    imageReference,
+    mediaReference,
     links,
     reminders,
     eventCards,
     now = () => new Date(),
     undeleteDays = ITEM_UNDELETE_DAYS,
     purgeDeck = () => {},
+    decisions = decisionLogger<ItemDecisions>('items'),
   } = deps;
+
+  /** D387: records an old client's use of the `image` name; the alias is retired once silent. */
+  function recordAlias(actor: Actor, deckId: string | null, route: 'create' | 'update' | 'list') {
+    decisions.record('item.type_alias', {
+      outcome: 'accepted',
+      reason: 'image',
+      requestId: actor.requestId ?? 'internal',
+      actorId: actor.user.id,
+      deckId,
+      route,
+    });
+  }
+
+  /** D387: `image` → `media`, a flat photo payload → a one-photo gallery. */
+  function normalizeCreate(actor: Actor, deckId: string, input: ItemCreate): CanonicalCreate {
+    if (input.type !== 'image') return input;
+    recordAlias(actor, deckId, 'create');
+    return {
+      ...input,
+      type: 'media',
+      payload: normalizeLegacyMediaPayload(input.payload) as CanonicalCreate['payload'],
+    } as CanonicalCreate;
+  }
+
+  function canonicalType(type: ItemTypeInput): ItemType {
+    return type === 'image' ? 'media' : type;
+  }
   const toDtos = createItemDtoMapper({
     items,
     favorites,
@@ -261,7 +299,7 @@ export function createItemsService(deps: {
     stored: Record<string, unknown> | null,
   ): Promise<Record<string, unknown>> {
     if (type === 'event') return eventLinkFields(deckId, payload, stored);
-    if (type !== 'link') return imageReference(deckId, type, payload);
+    if (type !== 'link') return mediaReference(deckId, type, payload);
     return links.previewFields(deckId, payload as LinkPayload, stored as LinkPayload | null);
   }
 
@@ -317,7 +355,9 @@ export function createItemsService(deps: {
   // Service methods
 
   const service = {
-    async list(actor: Actor, idOrSlug: string, q: ItemListQuery): Promise<ItemPage> {
+    async list(actor: Actor, idOrSlug: string, query: ItemListQuery): Promise<ItemPage> {
+      if (query.type === 'image') recordAlias(actor, null, 'list');
+      const q = { ...query, type: query.type && canonicalType(query.type) };
       if (q.status === 'deleted') return service.listDeleted(actor, idOrSlug, q);
       if (q.status === 'upcoming') return service.listUpcoming(actor, idOrSlug, q);
       if (q.flag === 'link') return service.listLinkFlagged(actor, idOrSlug, q);
@@ -336,7 +376,7 @@ export function createItemsService(deps: {
         role,
         deckId: deck.id,
         status: q.status,
-        type: q.type,
+        type: q.type && canonicalType(q.type),
         categoryId: await categoryIdForSlug(deck.id, q.category, role),
         favoriteOf: q.favorite === 'true' ? user.id : undefined,
         cursor: q.cursor ? decodeCursor(q.cursor) : undefined,
@@ -362,7 +402,7 @@ export function createItemsService(deps: {
       const rows = await items.listDeleted({
         role,
         deckId: deck.id,
-        type: q.type,
+        type: q.type && canonicalType(q.type),
         categoryId: await categoryIdForSlug(deck.id, q.category, role),
         favoriteOf: q.favorite === 'true' ? user.id : undefined,
         deletedSince: new Date(now().getTime() - undeleteDays * DAY_MS),
@@ -443,10 +483,11 @@ export function createItemsService(deps: {
       return { data: await toDtos(user, page.rows, role), nextCursor: page.nextCursor };
     },
 
-    async create(actor: Actor, idOrSlug: string, input: ItemCreate): Promise<Item> {
+    async create(actor: Actor, idOrSlug: string, body: ItemCreate): Promise<Item> {
       const { user } = actor;
       const deck = await resolveDeck(decks, idOrSlug, user);
       const role = await authorize(user, deck, 'item.create', memberships);
+      const input = normalizeCreate(actor, deck.id, body);
 
       // Determine category IDs (D6)
       let categoryIds = input.categoryIds ?? [];
@@ -527,12 +568,27 @@ export function createItemsService(deps: {
         assertPermission(role, 'item.publish');
       }
 
+      // D387: an old client names `image` or sends a flat photo payload for a media card.
+      const legacyPayload =
+        item.type === 'media' &&
+        patch.payload !== undefined &&
+        patch.payload['kind'] === undefined &&
+        typeof patch.payload['publicId'] === 'string';
+      if (patch.type === 'image' || legacyPayload) recordAlias(actor, item.deckId, 'update');
+      if (legacyPayload) {
+        patch = {
+          ...patch,
+          payload: normalizeLegacyMediaPayload(patch.payload) as Record<string, unknown>,
+        };
+      }
+      const patchType = patch.type && canonicalType(patch.type);
+
       // D12: the type never changes; naming the same type is harmless
-      if (patch.type !== undefined && patch.type !== item.type) {
-        eventCards.refuseTypeChange({ actor, role, deck }, item, patch.type);
+      if (patchType !== undefined && patchType !== item.type) {
+        eventCards.refuseTypeChange({ actor, role, deck }, item, patchType);
       }
 
-      // Validate payload if provided; D160 for image cards
+      // Validate payload if provided; D160 for media cards
       if (patch.payload !== undefined) {
         payloadSchemaFor(item.type).parse(patch.payload);
       }

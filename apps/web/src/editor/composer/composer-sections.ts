@@ -4,7 +4,7 @@ import type { ItemType } from '@gobbit/shared';
 export const SECTION_TITLES: Record<ItemType, string | null> = {
   text: null,
   link: 'Link',
-  image: 'Photo',
+  media: 'Photo',
   table: 'Table',
   calc: 'Calculator',
   reminder: 'Reminder',
@@ -12,7 +12,7 @@ export const SECTION_TITLES: Record<ItemType, string | null> = {
 };
 
 /** Types whose fields lead the canvas (above the title): a link starts from its URL. */
-const LEADING: ReadonlySet<ItemType> = new Set<ItemType>(['link', 'image']);
+const LEADING: ReadonlySet<ItemType> = new Set<ItemType>(['link', 'media']);
 
 /** Where a type's section sits: before the title, after the body, or nowhere. */
 export function sectionPlacement(type: ItemType): 'leading' | 'trailing' | null {

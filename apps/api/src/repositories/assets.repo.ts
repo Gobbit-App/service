@@ -1,26 +1,31 @@
-import { and, asc, eq, getTableColumns, inArray, lt, sql } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { assets, items, type AssetRow, type DbExecutor, type NewAssetRow } from '@gobbit/db';
 
 export type NewAsset = Omit<NewAssetRow, 'id' | 'createdAt'>;
 
-/** One sweep candidate (D158). */
+/** One sweep candidate (D158); deleted under its own resource type (D388). */
 export interface OrphanAsset {
   id: string;
   publicId: string;
+  kind: AssetRow['kind'];
+  resourceType: AssetRow['resourceType'];
 }
 
 /**
  * True when no item of any status references the asset: proposed, published, archived and
  * soft-deleted rows all count until their payload changes or the purge (D132) removes them.
- * An image card references its `publicId`, a link or event card its `preview.publicId` (D163, 042).
+ * A media card references a photo anywhere in its gallery or its one file (D398, through the
+ * GIN index `items_media_payload_idx`), a link or event card its `preview.publicId` (D163, 042).
  */
 const unreferenced = sql`NOT EXISTS (
   SELECT 1 FROM ${items} i
-  WHERE (i.type = 'image' AND i.payload->>'publicId' = ${assets.publicId})
+  WHERE (i.type = 'media' AND (
+          i.payload @> jsonb_build_object('images', jsonb_build_array(jsonb_build_object('publicId', ${assets.publicId}::text)))
+       OR i.payload @> jsonb_build_object('publicId', ${assets.publicId}::text)))
      OR (i.type IN ('link', 'event') AND i.payload #>> '{preview,publicId}' = ${assets.publicId})
 )`;
 
-/** D156: the registry of every image Gobbit stored. */
+/** D156: the registry of every file Gobbit stored (images, and since 045 PDFs, audio and video). */
 export function createAssetsRepo(db: DbExecutor) {
   return {
     /**
@@ -38,6 +43,10 @@ export function createAssetsRepo(db: DbExecutor) {
             height: sql`coalesce(${assets.height}, excluded.height)`,
             bytes: sql`coalesce(${assets.bytes}, excluded.bytes)`,
             format: sql`coalesce(${assets.format}, excluded.format)`,
+            durationMs: sql`coalesce(${assets.durationMs}, excluded.duration_ms)`,
+            pages: sql`coalesce(${assets.pages}, excluded.pages)`,
+            etag: sql`coalesce(${assets.etag}, excluded.etag)`,
+            originalFilename: sql`coalesce(${assets.originalFilename}, excluded.original_filename)`,
           },
           setWhere: eq(assets.deckId, v.deckId),
         })
@@ -65,11 +74,40 @@ export function createAssetsRepo(db: DbExecutor) {
     /** Unreferenced assets older than `cutoff`, oldest first (D158). */
     async orphans(cutoff: Date, limit: number): Promise<OrphanAsset[]> {
       return await db
-        .select({ id: assets.id, publicId: assets.publicId })
+        .select({
+          id: assets.id,
+          publicId: assets.publicId,
+          kind: assets.kind,
+          resourceType: assets.resourceType,
+        })
         .from(assets)
         .where(and(lt(assets.createdAt, cutoff), unreferenced))
         .orderBy(asc(assets.createdAt))
         .limit(limit);
+    },
+
+    /**
+     * D390: editor uploads whose client-forwarded facts the sweep hasn't checked yet, oldest
+     * first. Server uploads (ingest, link snapshots) report the provider's own facts.
+     */
+    async unverified(limit: number): Promise<AssetRow[]> {
+      return await db
+        .select()
+        .from(assets)
+        .where(
+          and(eq(assets.source, 'editor'), isNull(assets.verifiedAt), isNull(assets.rejectedAt)),
+        )
+        .orderBy(asc(assets.createdAt))
+        .limit(limit);
+    },
+
+    async markVerified(id: string, at: Date): Promise<void> {
+      await db.update(assets).set({ verifiedAt: at }).where(eq(assets.id, id));
+    },
+
+    /** D390: the file was deleted for a false or over-limit fact; cards show it as unavailable. */
+    async markRejected(id: string, at: Date): Promise<void> {
+      await db.update(assets).set({ verifiedAt: at, rejectedAt: at }).where(eq(assets.id, id));
     },
 
     /**

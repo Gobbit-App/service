@@ -1,7 +1,8 @@
 import z from 'zod';
 import { CALC_MAX_FIELDS, PAYLOAD_MAX_BYTES, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS } from '../limits';
 import type { ItemType } from '../enums';
-import { utf8Bytes } from '../utils/utf8-bytes';
+import { codePointLength, utf8Bytes } from '../utils/utf8-bytes';
+import { MEDIA_ALT_MAX, MEDIA_FILE_NAME_MAX, MEDIA_GALLERY_MAX } from '../media/constants';
 import { httpUrlSchema } from './common';
 import { validateCalcExpression } from './calc-expression';
 import { imageDimensionSchema, storedLinkPreviewSchema } from './link-preview';
@@ -19,15 +20,86 @@ export const linkPayloadSchema = z
   })
   .strict();
 
-export const imagePayloadSchema = z
+/**
+ * D387: the pre-045 flat image payload, accepted from old clients only (normalized to a
+ * one-photo gallery with `normalizeLegacyMediaPayload`).
+ */
+export const legacyImagePayloadSchema = z
   .object({
     publicId: z.string().min(1),
-    /** D206: optional, may be empty; renderers fall back via `imageAlt` (`@gobbit/shared/image-alt`). */
     alt: z.string().optional(),
     width: imageDimensionSchema.optional(),
     height: imageDimensionSchema.optional(),
   })
   .strict();
+
+/** D206/D398: optional, may be empty; renderers fall back via `imageAlt`. Capped on input. */
+const mediaAltSchema = z.string().refine((s) => codePointLength(s) <= MEDIA_ALT_MAX, {
+  message: `Description must be at most ${MEDIA_ALT_MAX} characters`,
+});
+
+/** D398: one gallery photo; `width`/`height` are replaced from the asset (D160). */
+export const mediaImageSchema = z
+  .object({
+    publicId: z.string().min(1),
+    alt: mediaAltSchema.optional(),
+    width: imageDimensionSchema.optional(),
+    height: imageDimensionSchema.optional(),
+  })
+  .strict();
+
+/** D398: a photo card is a gallery of 1–8 photos in display order; the first is the cover. */
+export const mediaImagePayloadSchema = z
+  .object({
+    kind: z.literal('image'),
+    images: z
+      .array(mediaImageSchema)
+      .min(1, 'Add at least one photo')
+      .max(MEDIA_GALLERY_MAX, `A card holds at most ${MEDIA_GALLERY_MAX} photos`)
+      .superRefine((images, ctx) => {
+        const seen = new Set<string>();
+        images.forEach((img, i) => {
+          if (seen.has(img.publicId)) {
+            ctx.addIssue({
+              code: 'custom',
+              path: [i, 'publicId'],
+              message: 'The same photo is already in this card',
+            });
+          }
+          seen.add(img.publicId);
+        });
+      }),
+  })
+  .strict();
+
+/** D386: the fields a PDF, audio or video card shares; facts other than `publicId`/`alt` are server-owned. */
+const mediaFileFields = {
+  publicId: z.string().min(1),
+  alt: mediaAltSchema.optional(),
+  width: imageDimensionSchema.optional(),
+  height: imageDimensionSchema.optional(),
+  durationMs: z.number().int().positive().optional(),
+  pages: z.number().int().positive().optional(),
+  fileName: z.string().max(MEDIA_FILE_NAME_MAX).optional(),
+};
+
+export const mediaPdfPayloadSchema = z
+  .object({ kind: z.literal('pdf'), ...mediaFileFields })
+  .strict();
+export const mediaAudioPayloadSchema = z
+  .object({ kind: z.literal('audio'), ...mediaFileFields })
+  .strict();
+export const mediaVideoPayloadSchema = z
+  .object({ kind: z.literal('video'), ...mediaFileFields })
+  .strict();
+
+/** D386/D398: a media card's payload, by the kind of file it holds. */
+export const mediaPayloadSchema = z.discriminatedUnion('kind', [
+  mediaImagePayloadSchema,
+  mediaPdfPayloadSchema,
+  mediaAudioPayloadSchema,
+  mediaVideoPayloadSchema,
+]);
 
 export const tablePayloadSchema = z
   .object({
@@ -81,7 +153,7 @@ export const calcPayloadSchema = z
 export const payloadSchemas = {
   text: textPayloadSchema,
   link: linkPayloadSchema,
-  image: imagePayloadSchema,
+  media: mediaPayloadSchema,
   table: tablePayloadSchema,
   calc: calcPayloadSchema,
   reminder: reminderPayloadSchema,
@@ -103,6 +175,12 @@ export function payloadSchemaFor(type: ItemType) {
 
 export type TextPayload = z.infer<typeof textPayloadSchema>;
 export type LinkPayload = z.infer<typeof linkPayloadSchema>;
-export type ImagePayload = z.infer<typeof imagePayloadSchema>;
+export type MediaImage = z.infer<typeof mediaImageSchema>;
+export type MediaImagePayload = z.infer<typeof mediaImagePayloadSchema>;
+export type MediaFilePayload = z.infer<
+  typeof mediaPdfPayloadSchema | typeof mediaAudioPayloadSchema | typeof mediaVideoPayloadSchema
+>;
+export type MediaPayload = z.infer<typeof mediaPayloadSchema>;
+export type LegacyImagePayload = z.infer<typeof legacyImagePayloadSchema>;
 export type TablePayload = z.infer<typeof tablePayloadSchema>;
 export type CalcPayload = z.infer<typeof calcPayloadSchema>;

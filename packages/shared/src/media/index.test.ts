@@ -21,6 +21,7 @@ import {
 const srcDir = dirname(fileURLToPath(import.meta.url));
 
 const signed = {
+  kind: 'image' as const,
   uploadUrl: 'https://api.cloudinary.com/v1_1/demo/image/upload',
   apiKey: '123',
   timestamp: 1_700_000_000,
@@ -114,7 +115,11 @@ describe('mediaAssetConfirmRequestSchema', () => {
   };
 
   it('accepts a Cloudinary upload response', () => {
-    expect(mediaAssetConfirmRequestSchema.parse(body)).toEqual(body);
+    expect(mediaAssetConfirmRequestSchema.parse(body)).toEqual({
+      ...body,
+      kind: 'image',
+      resourceType: 'image',
+    });
   });
 
   it('is strict and bounds the dimensions', () => {
@@ -132,10 +137,15 @@ describe('mediaAssetSchema', () => {
   it('allows unknown dimensions for backfilled rows', () => {
     const asset = {
       publicId: 'gobbit/items/d1/abc',
+      kind: 'image',
+      resourceType: 'image',
       width: null,
       height: null,
       bytes: null,
       format: null,
+      durationMs: null,
+      pages: null,
+      originalFilename: null,
       source: 'editor',
       createdAt: '2026-10-22T09:12:03.000Z',
     };

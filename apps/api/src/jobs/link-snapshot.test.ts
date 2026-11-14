@@ -8,6 +8,11 @@ import { createLinkSnapshotHandler } from './link-snapshot';
 const updatedAt = new Date('2026-10-22T10:00:00.000Z');
 const asset: MediaAsset = {
   publicId: 'gobbit/links/d1/abc',
+  kind: 'image',
+  resourceType: 'image',
+  durationMs: null,
+  pages: null,
+  originalFilename: null,
   width: 1200,
   height: 630,
   bytes: 1000,

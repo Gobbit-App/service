@@ -29,17 +29,17 @@ export const ingestChannels = ['pwa', 'shortcut', 'email', 'paste', 'mcp', 'impo
 export type IngestChannel = (typeof ingestChannels)[number];
 
 /** D100: the agent proposes only these card types; D370 adds events. */
-export const ingestCardTypes = ['text', 'link', 'image', 'event'] as const;
+export const ingestCardTypes = ['text', 'link', 'media', 'event'] as const;
 export type IngestCardType = (typeof ingestCardTypes)[number];
 
 /**
- * Direct proposals (MCP, bulk import) stay text, link or image: they never reach the event rules
+ * Direct proposals (MCP, bulk import) stay text, link or media (D386 renamed image): they never reach the event rules
  * (start range, personal-deck audience) the extraction applies (D377).
  */
 export const directCardTypes = [
   'text',
   'link',
-  'image',
+  'media',
 ] as const satisfies readonly IngestCardType[];
 export type DirectCardType = (typeof directCardTypes)[number];
 

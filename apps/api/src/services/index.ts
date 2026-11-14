@@ -53,7 +53,7 @@ import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
 import { analyticsHead } from '../public/analytics';
 import { createItemDtoMapper } from './item-dtos';
-import { createImageReferenceCheck } from './image-reference';
+import { createMediaReferenceCheck } from './media-reference';
 import { createLinkPreviewFields } from './link-preview-fields';
 import { createLinkChecksService, createLinkProbe } from './link-checks.service';
 import {
@@ -127,7 +127,7 @@ export function buildServices({
   const sessions = createSessionsRepo(db);
   const magicLinks = createMagicLinksRepo(db);
   const assets = createAssetsRepo(db);
-  const imageReference = createImageReferenceCheck(assets);
+  const mediaReference = createMediaReferenceCheck(assets);
   const linkChecks = createLinkChecksRepo(db);
   // D180: rendered public pages; every write that changes public content purges its deck.
   const pageCache = createPageCache();
@@ -209,7 +209,7 @@ export function buildServices({
     linkSnapshotQueue: resolveLinkSnapshotQueue(media),
     embedder: resolveEmbedder(env, search),
     assets,
-    imageReference,
+    mediaReference,
     noticeHook: eventCards.noticeHook,
     now,
     purgeDeck,
@@ -326,7 +326,7 @@ export function buildServices({
       favorites,
       memberships,
       embedQueue: resolveEmbedQueue(search),
-      imageReference,
+      mediaReference,
       links: {
         checks: linkChecks,
         checker: createLinkChecksService({

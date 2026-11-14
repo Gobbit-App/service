@@ -104,7 +104,7 @@ describe('POST /decks/{id}/media/assets (D157)', () => {
     const res = await confirm(ctx, deck.id, answer(store, publicId));
     expect(res.status).toBe(422);
     expect((await json(res)).errors).toEqual([
-      expect.objectContaining({ path: 'publicId', message: 'Image belongs to another deck' }),
+      expect.objectContaining({ path: 'publicId', message: 'File belongs to another deck' }),
     ]);
   });
 
@@ -132,9 +132,50 @@ describe('POST /decks/{id}/media/assets (D157)', () => {
     expect(Number(res.headers.get('retry-after'))).toBeGreaterThan(0);
   });
 
-  it('rejects a body without dimensions (400)', async () => {
-    const { width: _w, ...rest } = answer(store, id());
-    expect((await confirm(ctx, deck.id, rest)).status).toBe(400);
+  it('records a PDF with its pages; the kind comes from the format (D390)', async () => {
+    const body = {
+      ...answer(store, id()),
+      format: 'pdf',
+      kind: 'pdf',
+      pages: 3,
+      etag: 'e1',
+      originalFilename: 'term',
+    };
+    const res = await confirm(ctx, deck.id, body);
+    expect(res.status).toBe(201);
+    expect(await json(res)).toMatchObject({
+      kind: 'pdf',
+      resourceType: 'image',
+      pages: 3,
+      originalFilename: 'term',
+    });
+    const [row] = await ctx.t.db.select().from(assets).where(eq(assets.publicId, body.publicId));
+    expect(row).toMatchObject({ kind: 'pdf', etag: 'e1', durationMs: null });
+  });
+
+  it('refuses and deletes a file of the wrong kind, too large or unreadable (422 on file)', async () => {
+    const refusals = [
+      { format: 'mp4', kind: 'pdf' },
+      { format: 'pdf', kind: 'pdf', bytes: 100 * 1024 * 1024 },
+      { format: 'pdf', kind: 'pdf' },
+      { format: 'exe', kind: 'image' },
+    ];
+    for (const over of refusals) {
+      const body = { ...answer(store, id()), ...over };
+      const res = await confirm(ctx, deck.id, body);
+      expect(res.status).toBe(422);
+      expect((await json(res)).errors).toEqual([expect.objectContaining({ path: 'file' })]);
+      expect(store.deleteCalls.at(-1)).toEqual([body.publicId]);
+      const rows = await ctx.t.db.select().from(assets).where(eq(assets.publicId, body.publicId));
+      expect(rows).toEqual([]);
+    }
+  });
+
+  it('records an old client’s image without a kind, and one without dimensions', async () => {
+    const { width: _w, height: _h, ...rest } = answer(store, id());
+    const res = await confirm(ctx, deck.id, rest);
+    expect(res.status).toBe(201);
+    expect(await json(res)).toMatchObject({ kind: 'image', width: null, height: null });
   });
 });
 

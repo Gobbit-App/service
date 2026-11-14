@@ -4,6 +4,11 @@ import { withoutPhoto, withPhoto } from './image-payload';
 
 const asset: MediaAsset = {
   publicId: 'gobbit/items/d/new',
+  kind: 'image',
+  resourceType: 'image',
+  durationMs: null,
+  pages: null,
+  originalFilename: null,
   width: 1200,
   height: 800,
   bytes: 1,

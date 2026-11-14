@@ -13,12 +13,12 @@ describe('pickStartType (D302)', () => {
   });
 
   it('shows the chooser for ?type=image without image storage', () => {
-    expect(pickStartType({ urlType: 'image', draftType: null, imagesOff: true })).toEqual({
+    expect(pickStartType({ urlType: 'media', draftType: null, imagesOff: true })).toEqual({
       kind: 'chooser',
     });
-    expect(pickStartType({ urlType: 'image', draftType: null, imagesOff: false })).toEqual({
+    expect(pickStartType({ urlType: 'media', draftType: null, imagesOff: false })).toEqual({
       kind: 'composer',
-      type: 'image',
+      type: 'media',
     });
   });
 
@@ -30,7 +30,7 @@ describe('pickStartType (D302)', () => {
   });
 
   it('ignores an image draft when image storage is off', () => {
-    expect(pickStartType({ urlType: undefined, draftType: 'image', imagesOff: true })).toEqual({
+    expect(pickStartType({ urlType: undefined, draftType: 'media', imagesOff: true })).toEqual({
       kind: 'chooser',
     });
   });

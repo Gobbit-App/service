@@ -67,7 +67,7 @@ describe('renderItem (D177)', () => {
   it('image: limited width URL, alt and dimensions', () => {
     const out = render(
       item({
-        type: 'image',
+        type: 'media',
         payload: { publicId: 'p/1', alt: 'A "map"', width: 800, height: 600 },
       }),
     );
@@ -78,7 +78,7 @@ describe('renderItem (D177)', () => {
 
   it('image without media configured shows the alt text', () => {
     const out = render(
-      item({ type: 'image', payload: { publicId: 'p/1', alt: 'A map' } }),
+      item({ type: 'media', payload: { publicId: 'p/1', alt: 'A map' } }),
       noMedia,
     );
     expect(out).not.toContain('<img');
@@ -86,14 +86,14 @@ describe('renderItem (D177)', () => {
   });
 
   it('image without alt is decorative under its title (D206)', () => {
-    const out = render(item({ type: 'image', payload: { publicId: 'p/1' } }));
+    const out = render(item({ type: 'media', payload: { publicId: 'p/1' } }));
     expect(out).toContain('alt=""');
-    const blank = render(item({ type: 'image', payload: { publicId: 'p/1', alt: '  ' } }));
+    const blank = render(item({ type: 'media', payload: { publicId: 'p/1', alt: '  ' } }));
     expect(blank).toContain('alt=""');
   });
 
   it('image without alt and without media configured prints nothing (D206)', () => {
-    const out = render(item({ type: 'image', payload: { publicId: 'p/1' } }), noMedia);
+    const out = render(item({ type: 'media', payload: { publicId: 'p/1' } }), noMedia);
     expect(out).not.toContain('<img');
     expect(out).not.toContain('undefined');
   });

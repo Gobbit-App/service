@@ -27,6 +27,7 @@ describe('magicLinkRequestSchema', () => {
 describe('appConfigSchema', () => {
   const OFF = { semantic: false, ask: false };
   const INGEST_OFF = { enabled: false, emailDomain: null, shortcutUrl: null };
+  const MEDIA = { maxBytes: { image: 1, pdf: 2, audio: 3, video: 4 } };
 
   it('allows a missing cloud name', () => {
     expect(
@@ -37,6 +38,7 @@ describe('appConfigSchema', () => {
         ingest: INGEST_OFF,
         analytics: null,
         push: null,
+        media: MEDIA,
       }).commit,
     ).toBe('dev');
   });
@@ -49,6 +51,7 @@ describe('appConfigSchema', () => {
       ingest: INGEST_OFF,
       analytics: { siteId: 'site-1', host: 'gobbit.example', secret: 'nope' },
       push: { publicKey: 'pub', privateKey: 'nope' },
+      media: MEDIA,
       apiSecret: 'nope',
     });
     expect(parsed).toEqual({
@@ -58,6 +61,7 @@ describe('appConfigSchema', () => {
       ingest: INGEST_OFF,
       analytics: { siteId: 'site-1', host: 'gobbit.example' },
       push: { publicKey: 'pub' },
+      media: MEDIA,
     });
   });
 });

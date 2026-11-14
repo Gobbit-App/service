@@ -5,6 +5,8 @@ import {
   MEDIA_CONFIRM_RATE_PER_HOUR,
   MEDIA_SIGN_RATE_PER_HOUR,
   MEDIA_UPLOAD_FAILURE_RATE_PER_HOUR,
+  MEDIA_MAX_BYTES_DEFAULTS,
+  type MediaAssetConfirmRequest,
 } from '@gobbit/shared';
 import { MemoryMediaStore } from '../media/media-store';
 import { editorUploadFolder } from '../media/sign-upload';
@@ -109,7 +111,7 @@ describe('media.service signUpload', () => {
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(HttpError);
     expect((err as HttpError).status).toBe(503);
-    expect((err as HttpError).detail).toMatch(/Image uploads are not configured/);
+    expect((err as HttpError).detail).toMatch(/Media uploads are not configured/);
   });
 
   it('passes the rate limiter’s 429 through', async () => {
@@ -172,7 +174,7 @@ describe('media.service signUpload', () => {
 
   describe('confirmUpload (D157)', () => {
     const publicId = `${editorUploadFolder(deckId)}/abc123`;
-    const body = (over: Partial<Record<string, unknown>> = {}) => ({
+    const body = (over: Partial<MediaAssetConfirmRequest> = {}): MediaAssetConfirmRequest => ({
       publicId,
       version: 1700000000,
       signature: store.sign(publicId, 1700000000),
@@ -180,6 +182,8 @@ describe('media.service signUpload', () => {
       height: 900,
       bytes: 2048,
       format: 'jpg',
+      kind: 'image' as const,
+      resourceType: 'image' as const,
       ...over,
     });
 
@@ -251,6 +255,217 @@ describe('media.service signUpload', () => {
       rateLimits.enforce.mockRejectedValue(rateLimited(60));
       expect(await statusOf(build().confirmUpload({ user, deckId, body: body() }))).toBe(429);
       expect(upsert).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('media kinds (045, D389, D390, D393)', () => {
+    const publicId = `${editorUploadFolder(deckId)}/file1`;
+    const file = (over: Partial<MediaAssetConfirmRequest>): MediaAssetConfirmRequest => ({
+      publicId,
+      version: 1700000000,
+      signature: store.sign(publicId, 1700000000),
+      bytes: 4096,
+      format: 'pdf',
+      kind: 'pdf',
+      resourceType: 'image',
+      pages: 3,
+      width: 595,
+      height: 842,
+      ...over,
+    });
+
+    async function refusal(over: Partial<MediaAssetConfirmRequest>, path = 'file') {
+      const { lines, logger, flush } = captureLogger();
+      const err = await build(creds, logger)
+        .confirmUpload({ user, deckId, body: file(over), requestId: 'req-1' })
+        .catch((e: unknown) => e as HttpError);
+      await flush();
+      expect(err).toBeInstanceOf(HttpError);
+      expect((err as HttpError).status).toBe(422);
+      expect((err as HttpError).errors?.[0]?.path).toBe(path);
+      expect(upsert).not.toHaveBeenCalled();
+      return { lines, err: err as HttpError };
+    }
+
+    it('signs each kind with its own limit and logs media.sign', async () => {
+      role('editor');
+      const { lines, logger, flush } = captureLogger();
+      const svc = build(creds, logger);
+      const video = await svc.signUpload({ user, deckId, kind: 'video', requestId: 'req-1' });
+      await flush();
+      expect(video).toMatchObject({ kind: 'video', maxBytes: MEDIA_MAX_BYTES_DEFAULTS.video });
+      expect(video.uploadUrl).toMatch(/\/video\/upload$/);
+      expect(lines).toContainEqual(
+        expect.objectContaining({
+          event: 'media.sign',
+          outcome: 'accepted',
+          kind: 'video',
+          requestId: 'req-1',
+          deckId,
+        }),
+      );
+      const image = await svc.signUpload({ user, deckId });
+      expect(image.kind).toBe('image');
+    });
+
+    it('logs a refused signature when storage is off', async () => {
+      role('editor');
+      const { lines, logger, flush } = captureLogger();
+      await build(null, logger)
+        .signUpload({ user, deckId, kind: 'pdf', requestId: 'req-2' })
+        .catch(() => {});
+      await flush();
+      expect(lines).toContainEqual(
+        expect.objectContaining({
+          event: 'media.sign',
+          outcome: 'refused',
+          reason: 'unavailable',
+          level: 'warn',
+        }),
+      );
+    });
+
+    it('records a PDF with its pages and the kind derived from the format', async () => {
+      role('editor');
+      const { lines, logger, flush } = captureLogger();
+      const result = await build(creds, logger).confirmUpload({
+        user,
+        deckId,
+        body: file({ etag: 'abc', originalFilename: 'term-dates', format: 'PDF' }),
+        requestId: 'req-1',
+      });
+      await flush();
+      expect(upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: 'pdf',
+          resourceType: 'image',
+          pages: 3,
+          durationMs: null,
+          format: 'pdf',
+          etag: 'abc',
+          originalFilename: 'term-dates',
+        }),
+      );
+      expect(result.asset).toMatchObject({ kind: 'pdf', pages: 3 });
+      expect(lines).toContainEqual(
+        expect.objectContaining({ event: 'media.confirm', outcome: 'accepted', kind: 'pdf' }),
+      );
+    });
+
+    it('records audio without dimensions and video with them', async () => {
+      role('editor');
+      await build().confirmUpload({
+        user,
+        deckId,
+        body: file({
+          format: 'm4a',
+          kind: 'audio',
+          resourceType: 'video',
+          durationMs: 4100,
+          pages: undefined,
+          width: 10,
+          height: 10,
+        }),
+      });
+      expect(upsert).toHaveBeenLastCalledWith(
+        expect.objectContaining({ kind: 'audio', width: null, height: null, durationMs: 4100 }),
+      );
+      await build().confirmUpload({
+        user,
+        deckId,
+        body: file({
+          format: 'mov',
+          kind: 'video',
+          resourceType: 'video',
+          durationMs: 9000,
+          pages: undefined,
+          width: 1080,
+          height: 1920,
+        }),
+      });
+      expect(upsert).toHaveBeenLastCalledWith(
+        expect.objectContaining({ kind: 'video', width: 1080, height: 1920, pages: null }),
+      );
+    });
+
+    it.each([
+      ['format', { format: 'exe' }],
+      ['kind_mismatch', { format: 'mp4', kind: 'pdf' as const }],
+      ['kind_mismatch', { resourceType: 'video' as const }],
+      ['too_large', { bytes: MEDIA_MAX_BYTES_DEFAULTS.pdf + 1 }],
+      ['unreadable', { pages: undefined }],
+      [
+        'unreadable',
+        {
+          format: 'mp4',
+          kind: 'video' as const,
+          resourceType: 'video' as const,
+          durationMs: undefined,
+        },
+      ],
+    ])('refuses %s, deletes the stored file and logs both decisions', async (reason, over) => {
+      role('editor');
+      store.resources.set(publicId, {
+        resourceType: (over as Partial<MediaAssetConfirmRequest>).resourceType ?? 'image',
+        bytes: 1,
+        format: 'pdf',
+        width: null,
+        height: null,
+        pages: null,
+        durationMs: null,
+      });
+      const { lines } = await refusal(over);
+      expect(store.deleteCalls).toContainEqual([publicId]);
+      expect(lines).toContainEqual(
+        expect.objectContaining({ event: 'media.confirm', outcome: 'refused', reason }),
+      );
+      expect(lines).toContainEqual(
+        expect.objectContaining({ event: 'media.refused_delete', outcome: 'deleted' }),
+      );
+      expect(JSON.stringify(lines)).not.toContain(publicId);
+    });
+
+    it('logs kind_mismatch at warn (tampering) and a failed delete at error', async () => {
+      role('editor');
+      store.failing.add(publicId);
+      const { lines } = await refusal({ format: 'mp4', kind: 'pdf' });
+      expect(lines).toContainEqual(
+        expect.objectContaining({ event: 'media.confirm', reason: 'kind_mismatch', level: 'warn' }),
+      );
+      expect(lines).toContainEqual(
+        expect.objectContaining({
+          event: 'media.refused_delete',
+          outcome: 'failed',
+          level: 'error',
+        }),
+      );
+    });
+
+    it('never deletes a file outside the deck folder or with a bad signature', async () => {
+      role('editor');
+      await refusal({ signature: 'forged' }, 'signature');
+      const other = 'gobbit/items/another-deck/x';
+      await refusal({ publicId: other, signature: store.sign(other, 1700000000) }, 'publicId');
+      expect(store.deleteCalls).toEqual([]);
+    });
+
+    it('enforces operator limits over the defaults', async () => {
+      role('editor');
+      const svc = createMediaService({
+        decks,
+        memberships,
+        rateLimits,
+        cloudinary: creds,
+        assets: { upsert } as unknown as AssetsRepo,
+        store,
+        imageFetch: vi.fn(),
+        now: () => new Date(),
+        maxBytes: { ...MEDIA_MAX_BYTES_DEFAULTS, pdf: 100 },
+      });
+      expect((await svc.signUpload({ user, deckId, kind: 'pdf' })).maxBytes).toBe(100);
+      expect(await statusOf(svc.confirmUpload({ user, deckId, body: file({ bytes: 101 }) }))).toBe(
+        422,
+      );
     });
   });
 });

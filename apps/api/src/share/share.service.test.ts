@@ -116,7 +116,7 @@ describe('share service — public mode (D59–D61)', () => {
   });
 
   it('uses the card picture for image items without rendering', async () => {
-    const record = makeRecord({ type: 'image', payload: { publicId: 'family/soup', alt: 'Soup' } });
+    const record = makeRecord({ type: 'media', payload: { publicId: 'family/soup', alt: 'Soup' } });
     const { service, render } = setup(record);
     const html = await service.sharePage(ITEM_ID);
 

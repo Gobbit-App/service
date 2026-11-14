@@ -9,9 +9,12 @@ import { usePasteImage } from '../use-paste-image';
 import { PickButton } from './PickButton';
 import { TextInput } from './TextInput';
 import type { FieldsProps } from './types';
+import type { ImagePayload } from '../../cards/payload-guards';
 import { Button } from '../../ui/buttons/Button';
 
-export type ImageFieldsProps = FieldsProps<'image'> & {
+export type ImageFieldsProps = Omit<FieldsProps<'media'>, 'payload' | 'onChange'> & {
+  payload: ImagePayload;
+  onChange: (next: ImagePayload) => void;
   /** Tests inject a fake signer/uploader. */
   uploadDeps?: Pick<UseImageUploadOptions, 'signer' | 'upload' | 'confirm'>;
 };

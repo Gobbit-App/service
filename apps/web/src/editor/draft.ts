@@ -2,7 +2,10 @@ import type { Entities, Item, ItemCreateInput, ItemPatch, ItemType } from '@gobb
 import {
   asCalcPayload,
   asTablePayload,
+  asMediaPayload,
+  isMediaType,
   type ImagePayload,
+  type MediaPayload,
   type TablePayload,
 } from '../cards/payload-guards';
 import { normalizeUrlInput } from '../lib/url-input';
@@ -41,7 +44,8 @@ export type CalcDraftPayload = {
 export type DraftPayloadByType = {
   text: Record<string, never>;
   link: LinkDraftPayload;
-  image: ImagePayload;
+  /** 045 (D398): a photo gallery (one photo until the gallery editor) or one file. */
+  media: MediaPayload;
   table: TablePayload;
   calc: CalcDraftPayload;
   /** 037 (D291): deadline as a local date-time while editing. */
@@ -74,8 +78,8 @@ export function blankPayload(type: ItemType): DraftPayload {
       return {};
     case 'link':
       return { url: '' };
-    case 'image':
-      return { publicId: '', alt: '' };
+    case 'media':
+      return { kind: 'image', images: [{ publicId: '', alt: '' }] };
     case 'table':
       return blankTable();
     case 'calc':
@@ -133,15 +137,15 @@ function calcFieldToDraft(field: {
 
 function payloadFromItem(item: Item): DraftPayload {
   const raw = item.payload;
-  switch (item.type) {
+  switch (canonicalType(item.type)) {
     case 'text':
       return {};
     case 'link': {
       const url = typeof raw['url'] === 'string' ? raw['url'] : '';
       return { ...structuredClone(raw), url } as LinkDraftPayload;
     }
-    case 'image':
-      return structuredClone(raw) as ImagePayload;
+    case 'media':
+      return structuredClone(asMediaPayload(raw) ?? blankPayload('media')) as MediaPayload;
     case 'table':
       // Pads rows shorter than the column count (and trims longer ones) so a save is valid.
       return asTablePayload(raw) ?? blankPayload('table');
@@ -161,9 +165,31 @@ function payloadFromItem(item: Item): DraftPayload {
   }
 }
 
+/** D387: `image` (items cached or drafts saved by a pre-045 build) is `media`. */
+function canonicalType(type: string): ItemType {
+  return isMediaType(type) ? 'media' : (type as ItemType);
+}
+
+/**
+ * D387/FR-021: a draft saved before 045 (`type: 'image'`, flat photo payload) restores as a
+ * media card holding that photo. Other drafts are returned unchanged.
+ */
+export function normalizeDraft(draft: Draft): Draft {
+  if ((draft.type as string) !== 'image') return draft;
+  const photo = draft.payload as unknown as ImagePayload;
+  return {
+    ...draft,
+    type: 'media',
+    payload: {
+      kind: 'image',
+      images: [{ ...photo, publicId: photo?.publicId ?? '', alt: photo?.alt ?? '' }],
+    },
+  };
+}
+
 export function draftFromItem(item: Item): Draft {
   return {
-    type: item.type,
+    type: canonicalType(item.type),
     title: item.title,
     body: item.body,
     payload: payloadFromItem(item),
@@ -202,9 +228,18 @@ function calcPayload(p: CalcDraftPayload): Record<string, unknown> {
 }
 
 /** D206: a blank description is omitted; the renderers fall back to the title. */
-function imagePayload(p: ImagePayload): Record<string, unknown> {
+function withoutBlankAlt<P extends { alt?: string }>(p: P): Omit<P, 'alt'> | P {
   const { alt, ...rest } = p;
   return alt === undefined || alt.trim() === '' ? rest : { ...rest, alt };
+}
+
+/** D398: photos in order, blank descriptions dropped; a photo slot not yet uploaded is skipped. */
+function mediaPayload(p: MediaPayload): Record<string, unknown> {
+  if (p.kind !== 'image') return withoutBlankAlt(p);
+  return {
+    kind: 'image',
+    images: p.images.filter((img) => img.publicId !== '').map(withoutBlankAlt),
+  };
 }
 
 /**
@@ -219,8 +254,8 @@ export function toPayload(draft: Pick<Draft, 'type' | 'payload'>): Record<string
       return linkPayload(draft.payload as LinkDraftPayload);
     case 'calc':
       return calcPayload(draft.payload as CalcDraftPayload);
-    case 'image':
-      return imagePayload(draft.payload as ImagePayload);
+    case 'media':
+      return mediaPayload(draft.payload as MediaPayload);
     case 'reminder':
       return reminderToPayload(draft.payload as ReminderDraftPayload);
     case 'event':

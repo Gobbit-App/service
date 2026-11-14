@@ -1,5 +1,6 @@
 import type {
   MediaAssetConfirmRequest,
+  MediaKind,
   MediaSignResponse,
   MediaUploadFailureRequest,
 } from '@gobbit/shared';
@@ -75,8 +76,16 @@ export type UploadedImage = MediaAssetConfirmRequest;
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isText = (v: unknown): v is string => typeof v === 'string' && v !== '';
 
-/** The signed fields of Cloudinary's 200 answer; null when any is missing. */
-export function uploadedImageOf(responseText: string): UploadedImage | null {
+/**
+ * The signed fields of Cloudinary's 200 answer plus the facts the API records (D390): pages for
+ * a PDF, duration for audio and video, the content fingerprint and the original name. Null when a
+ * signed field is missing. `kind` is the kind the upload was signed for; the API derives the real
+ * one from the format.
+ */
+export function uploadedImageOf(
+  responseText: string,
+  kind: MediaKind = 'image',
+): UploadedImage | null {
   let body: Record<string, unknown>;
   try {
     body = JSON.parse(responseText) as Record<string, unknown>;
@@ -85,8 +94,29 @@ export function uploadedImageOf(responseText: string): UploadedImage | null {
   }
   const { public_id, version, signature, width, height, bytes, format } = body;
   if (!isText(public_id) || !isNumber(version) || !isText(signature)) return null;
-  if (!isNumber(width) || !isNumber(height) || !isNumber(bytes) || !isText(format)) return null;
-  return { publicId: public_id, version, signature, width, height, bytes, format };
+  if (!isNumber(bytes) || !isText(format)) return null;
+  // Photos always report their size (D161); audio never has one.
+  if (kind === 'image' && (!isNumber(width) || !isNumber(height))) return null;
+  const out: UploadedImage = {
+    publicId: public_id,
+    version,
+    signature,
+    bytes,
+    format,
+    kind,
+    resourceType: body['resource_type'] === 'video' ? 'video' : 'image',
+  };
+  if (isNumber(width) && isNumber(height) && width > 0 && height > 0) {
+    out.width = width;
+    out.height = height;
+  }
+  const { pages, duration, etag, original_filename } = body;
+  if (isNumber(pages) && pages > 0) out.pages = pages;
+  if (isNumber(duration) && duration > 0) out.durationMs = Math.max(1, Math.round(duration * 1000));
+  if (isText(etag)) out.etag = etag.slice(0, 64);
+  if (isText(original_filename))
+    out.originalFilename = [...original_filename].slice(0, 200).join('');
+  return out;
 }
 
 /** The multipart body contracts/media-sign.md lists: the file plus every signed parameter. */
@@ -99,6 +129,11 @@ export function uploadForm(file: Blob, signed: MediaSignResponse): FormData {
   form.append('folder', signed.folder);
   form.append('tags', signed.tags);
   form.append('allowed_formats', signed.allowedFormats);
+  // D392: the signed eager renditions (audio, video) go back exactly as signed.
+  if (signed.eager) {
+    form.append('eager', signed.eager);
+    form.append('eager_async', String(signed.eagerAsync ?? true));
+  }
   return form;
 }
 
@@ -127,7 +162,8 @@ export function uploadImage(
     };
     xhr.onload = () => {
       done();
-      const uploaded = xhr.status === 200 ? uploadedImageOf(xhr.responseText) : null;
+      const uploaded =
+        xhr.status === 200 ? uploadedImageOf(xhr.responseText, signed.kind ?? 'image') : null;
       if (uploaded) {
         onProgress?.(100);
         resolve(uploaded);

@@ -57,8 +57,11 @@ describe('extract-validate (D100)', () => {
       newCategory: null,
     };
     const r = okResult(raw, { ...defaultCtx, imagePublicId: 'gobbit/ingest/d/photo' });
-    expect(r.item.type).toBe('image');
-    expect(r.item.payload).toEqual({ publicId: 'gobbit/ingest/d/photo', alt: 'Plumber' });
+    expect(r.item.type).toBe('media');
+    expect(r.item.payload).toEqual({
+      kind: 'image',
+      images: [{ publicId: 'gobbit/ingest/d/photo', alt: 'Plumber' }],
+    });
     expect(r.item.categoryIds).toEqual([]);
     expect(r.item.entities).toEqual({ people: ['Dana'] });
     expect(r.summary.newCategory).toBeNull();
@@ -124,15 +127,15 @@ describe('extract-validate (D100)', () => {
     expect(r.summary.type).toBe('text');
   });
 
-  it('keeps image with publicId and alt set to the title', () => {
+  it('keeps a photo as a one-photo media card with alt set to the title (D386)', () => {
     const raw = { ...baseRaw, type: 'image' };
     const r = okResult(raw, {
       categoryIds: ['00000000-0000-4000-8000-0000000000c1', '00000000-0000-4000-8000-0000000000c2'],
       imagePublicId: 'gobbit/ingest/d/x',
     });
     expect(r.item).toMatchObject({
-      type: 'image',
-      payload: { publicId: 'gobbit/ingest/d/x', alt: 'Plumber' },
+      type: 'media',
+      payload: { kind: 'image', images: [{ publicId: 'gobbit/ingest/d/x', alt: 'Plumber' }] },
     });
   });
 
@@ -363,7 +366,7 @@ describe('extract-validate events (D370, D375)', () => {
       { ...baseRaw, type: 'image' },
       { ...eventCtx({ structured }), imagePublicId: 'gobbit/x/photo' },
     );
-    expect(r.item.type).toBe('image');
+    expect(r.item.type).toBe('media');
     expect(r.eventDecision).toBeUndefined();
   });
 

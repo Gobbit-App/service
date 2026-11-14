@@ -4,6 +4,7 @@ import { itemSchema } from './item';
 import { linkPreviewSchema } from './media';
 import { LINK_IMAGE_CANDIDATES_MAX } from '../links/constants';
 import { isTimeZone } from '../reminders/schema';
+import { LEGACY_IMAGE_TYPE } from '../enums';
 import {
   autoPublishOutcomes,
   eventDateSources,
@@ -122,7 +123,8 @@ export type NormalizedSource = z.infer<typeof normalizedSourceSchema>;
 export const extractionSummarySchema = z.object({
   model: z.string(),
   escalated: z.boolean(),
-  type: z.enum(ingestCardTypes),
+  /** D387: jobs extracted before 045 say `image`. */
+  type: z.enum([...ingestCardTypes, LEGACY_IMAGE_TYPE]),
   confidence: z.number().min(0).max(1),
   language: z.string(),
   categoryIds: z.array(z.string()),

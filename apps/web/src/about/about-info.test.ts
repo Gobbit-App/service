@@ -17,6 +17,7 @@ const config: Omit<AppConfig, 'commit'> = {
   ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
   analytics: null,
   push: null,
+  media: { maxBytes: { image: 8388608, pdf: 10485760, audio: 15728640, video: 26214400 } },
 };
 
 describe('versionLabel (D354)', () => {
@@ -71,6 +72,7 @@ describe('serviceCredits (D354)', () => {
         ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
         analytics: { siteId: 's', host: 'https://example.test' },
         push: { publicKey: 'k' },
+        media: { maxBytes: { image: 8388608, pdf: 10485760, audio: 15728640, video: 26214400 } },
       }),
     ).toEqual(['cloudinary', 'ai', 'video', 'push', 'umami']);
   });

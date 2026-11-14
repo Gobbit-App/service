@@ -70,6 +70,7 @@ describe('createItemsService', () => {
   let links: any;
   let remindersRepo: any;
   let decisions: { record: ReturnType<typeof vi.fn> };
+  let itemDecisions: { record: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     decks = {
@@ -124,6 +125,7 @@ describe('createItemsService', () => {
       dismiss: vi.fn(),
     };
     decisions = { record: vi.fn() };
+    itemDecisions = { record: vi.fn() };
 
     service = createItemsService({
       decks,
@@ -132,7 +134,8 @@ describe('createItemsService', () => {
       favorites,
       memberships,
       embedQueue,
-      imageReference: async (_deckId, _type, payload) => payload,
+      mediaReference: async (_deckId, _type, payload) => payload,
+      decisions: itemDecisions as any,
       links,
       reminders: createRemindersService({
         reminders: remindersRepo,
@@ -254,6 +257,87 @@ describe('createItemsService', () => {
         expect.any(Array),
         expect.any(Function),
       );
+    });
+  });
+
+  describe('the image alias (D387)', () => {
+    const aliasLogged = (route: string) =>
+      expect(itemDecisions.record).toHaveBeenCalledWith(
+        'item.type_alias',
+        expect.objectContaining({
+          outcome: 'accepted',
+          reason: 'image',
+          actorId: USER.id,
+          route,
+        }),
+      );
+
+    it('creates a media card from type image and a flat payload, and logs it', async () => {
+      await service.create({ ...ACTOR, requestId: 'req-1' }, 'fam', {
+        type: 'image',
+        title: 'Bread',
+        body: '',
+        payload: { publicId: 'p/1', alt: 'A loaf', width: 3, height: 4 },
+      });
+      expect(items.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'media',
+          payload: {
+            kind: 'image',
+            images: [{ publicId: 'p/1', alt: 'A loaf', width: 3, height: 4 }],
+          },
+        }),
+        expect.any(Array),
+        expect.any(Array),
+        expect.any(Function),
+      );
+      aliasLogged('create');
+      expect(itemDecisions.record.mock.calls[0]![1]).toMatchObject({
+        requestId: 'req-1',
+        deckId: PB_ID,
+      });
+    });
+
+    it('logs nothing for a media create', async () => {
+      await service.create(ACTOR, 'fam', {
+        type: 'media',
+        title: 'Bread',
+        body: '',
+        payload: { kind: 'image', images: [{ publicId: 'p/1' }] },
+      });
+      expect(itemDecisions.record).not.toHaveBeenCalled();
+    });
+
+    it('lists media for ?type=image and logs it', async () => {
+      await service.list(ACTOR, 'fam', { status: 'published', type: 'image', limit: 20 });
+      expect(items.list).toHaveBeenCalledWith(expect.objectContaining({ type: 'media' }));
+      aliasLogged('list');
+    });
+
+    it('reshapes a flat photo payload sent for a media card', async () => {
+      items.findById.mockResolvedValue(
+        createItemRow({
+          type: 'media',
+          payload: { kind: 'image', images: [{ publicId: 'p/1' }] },
+        }),
+      );
+      items.categoryIdsFor.mockResolvedValue(
+        new Map([['550e8400-e29b-41d4-a716-446655440002', [DEFAULT_CAT]]]),
+      );
+      await service.update(ACTOR, '550e8400-e29b-41d4-a716-446655440002', {
+        type: 'image',
+        payload: { publicId: 'p/2', alt: 'New' },
+      });
+      expect(items.update).toHaveBeenCalledWith(
+        '550e8400-e29b-41d4-a716-446655440002',
+        expect.objectContaining({
+          payload: { kind: 'image', images: [{ publicId: 'p/2', alt: 'New' }] },
+        }),
+        undefined,
+        expect.any(Array),
+        undefined,
+      );
+      aliasLogged('update');
     });
   });
 

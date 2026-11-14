@@ -18,8 +18,13 @@ type NewCardSearch = { type?: CreatableType };
  * the type chooser comes first (D301, D302).
  */
 export const Route = createFileRoute('/d/$slug/new')({
+  // D387: `?type=image` (links made before 045) opens the media composer.
   validateSearch: (search: Record<string, unknown>): NewCardSearch =>
-    isCreatableType(search['type']) ? { type: search['type'] } : {},
+    search['type'] === 'image'
+      ? { type: 'media' }
+      : isCreatableType(search['type'])
+        ? { type: search['type'] }
+        : {},
   component: NewCard,
 });
 

@@ -16,6 +16,8 @@ import {
   analyticsConsentChoices,
   analyticsConsentSources,
   reminderOutcomes,
+  mediaKinds,
+  assetResourceTypes,
 } from '@gobbit/shared';
 
 export const tstz = () => timestamp({ withTimezone: true, precision: 3, mode: 'date' });
@@ -45,3 +47,6 @@ export const analyticsConsentSourceEnum = pgEnum(
   analyticsConsentSources,
 );
 export const reminderOutcomeEnum = pgEnum('reminder_outcome', reminderOutcomes);
+/** D386/D388 (045): the file a media card or asset holds, and how the provider stores it. */
+export const mediaKindEnum = pgEnum('media_kind', mediaKinds);
+export const assetResourceTypeEnum = pgEnum('asset_resource_type', assetResourceTypes);

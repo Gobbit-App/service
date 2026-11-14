@@ -104,10 +104,10 @@ describe('validateDraft: link', () => {
 
 describe('validateDraft: image', () => {
   const image = (publicId: string, alt: string): Draft =>
-    draft({ type: 'image', payload: { publicId, alt } });
+    draft({ type: 'media', payload: { kind: 'image', images: [{ publicId, alt }] } });
 
   it('needs a finished upload; the description is optional (D206)', () => {
-    expect(validateDraft(image('', ''))).toEqual({ 'payload.publicId': 'Add a photo' });
+    expect(validateDraft(image('', ''))).toEqual({ 'payload.images.0.publicId': 'Add a photo' });
     expect(validateDraft(image('gobbit/items/d/p', '  '))).toEqual({});
     expect(validateDraft(image('gobbit/items/d/p', 'A loaf'))).toEqual({});
   });
@@ -119,7 +119,7 @@ describe('validateDraft: image', () => {
 
   it('an image draft without a description is a valid create body, without alt (D206)', () => {
     const body = toCreateBody(image('gobbit/items/d/p', '  '));
-    expect(body.payload).toEqual({ publicId: 'gobbit/items/d/p' });
+    expect(body.payload).toEqual({ kind: 'image', images: [{ publicId: 'gobbit/items/d/p' }] });
     expect(itemCreateSchema.safeParse(body).success).toBe(true);
   });
 });

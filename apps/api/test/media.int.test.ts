@@ -48,6 +48,24 @@ describe('POST /decks/{id}/media/sign (D133)', () => {
     expect(JSON.stringify(body)).not.toContain(API_SECRET);
   });
 
+  it('signs the kind a body names, and refuses an unknown one (D389)', async () => {
+    const post = (body: string) =>
+      ctx.app.request(`/decks/${deck.id}/media/sign`, {
+        method: 'POST',
+        headers: { ...ctx.as(), 'content-type': 'application/json' },
+        body,
+      });
+    const video = await post(JSON.stringify({ kind: 'video' }));
+    expect(video.status).toBe(200);
+    expect(await json(video)).toMatchObject({
+      kind: 'video',
+      uploadUrl: 'https://api.cloudinary.com/v1_1/test-cloud/video/upload',
+      eagerAsync: true,
+    });
+    expect((await post(JSON.stringify({ kind: 'zip' }))).status).toBe(400);
+    expect((await post('not json')).status).toBe(400);
+  });
+
   it('signs for editor and owner members, refuses readers with 403', async () => {
     const editor = await member(ctx, deck, 'editor');
     const coOwner = await member(ctx, deck, 'owner');
@@ -102,7 +120,7 @@ describe('media without CLOUDINARY_URL (US3)', () => {
     expect(res.status).toBe(503);
     expect(await json(res)).toMatchObject({
       type: '/problems/unavailable',
-      detail: 'Image uploads are not configured',
+      detail: 'Media uploads are not configured',
     });
   });
 

@@ -1,5 +1,5 @@
 /**
- * Item types the editor can create (`image` since 008, `reminder` after Text since 037, `event` after Reminder since 042). Its own module because the `/d/$slug/new`
+ * Item types the editor can create (`media` since 045, was `image` since 008; `reminder` after Text since 037, `event` after Reminder since 042). Its own module because the `/d/$slug/new`
  * route's `validateSearch` runs in the initial bundle, which must not pull in the draft model.
  */
 export const CREATABLE_TYPES = [
@@ -7,7 +7,7 @@ export const CREATABLE_TYPES = [
   'reminder',
   'event',
   'link',
-  'image',
+  'media',
   'table',
   'calc',
 ] as const;

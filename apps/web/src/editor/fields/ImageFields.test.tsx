@@ -41,6 +41,8 @@ const fakeUpload = vi.fn<typeof signAndUpload>(
             height: 10,
             bytes: 1,
             format: 'jpg',
+            kind: 'image',
+            resourceType: 'image',
           }),
         reject,
       });
@@ -54,8 +56,13 @@ const signer = vi.fn<(o: { fresh: boolean }) => Promise<MediaSignResponse>>();
 const confirm = vi.fn<(deckId: string, uploaded: UploadedImage) => Promise<MediaAsset>>(
   async (_deckId, { publicId, width, height, bytes, format }) => ({
     publicId,
-    width,
-    height,
+    kind: 'image',
+    resourceType: 'image',
+    width: width ?? null,
+    height: height ?? null,
+    durationMs: null,
+    pages: null,
+    originalFilename: null,
     bytes,
     format,
     source: 'editor',
@@ -69,12 +76,19 @@ function Harness({ initial }: { initial: Payload }): ReactElement {
     latest = next;
     setPayload(next);
   };
-  const draft = { ...emptyDraft('image', 'cat'), title: 'T', payload };
+  const draft = {
+    ...emptyDraft('media', 'cat'),
+    title: 'T',
+    payload: { kind: 'image' as const, images: [payload] },
+  };
+  const all = validateDraft(draft);
+  const missing = all['payload.images.0.publicId'];
+  const errors = missing ? { ...all, 'payload.publicId': missing } : all;
   return (
     <ImageFields
       payload={payload}
       onChange={onChange}
-      errors={validateDraft(draft)}
+      errors={errors}
       deck={deck}
       disabled={false}
       uploadDeps={{ signer, upload: fakeUpload, confirm }}
@@ -219,6 +233,11 @@ describe('ImageFields', () => {
     await act(async () =>
       finish({
         publicId: '',
+        kind: 'image',
+        resourceType: 'image',
+        durationMs: null,
+        pages: null,
+        originalFilename: null,
         width: 10,
         height: 10,
         bytes: 1,

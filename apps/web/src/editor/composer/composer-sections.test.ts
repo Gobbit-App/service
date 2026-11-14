@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { sectionPlacement, SECTION_TITLES } from './composer-sections';
 
 describe('composer sections (D306)', () => {
-  it('leads with the media for link and image cards', () => {
+  it('leads with the media for link and media cards', () => {
     expect(sectionPlacement('link')).toBe('leading');
-    expect(sectionPlacement('image')).toBe('leading');
+    expect(sectionPlacement('media')).toBe('leading');
   });
 
   it('puts the other types after the body and gives Text no section', () => {
@@ -18,7 +18,7 @@ describe('composer sections (D306)', () => {
     expect(SECTION_TITLES).toEqual({
       text: null,
       link: 'Link',
-      image: 'Photo',
+      media: 'Photo',
       table: 'Table',
       calc: 'Calculator',
       reminder: 'Reminder',

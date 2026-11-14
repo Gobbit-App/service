@@ -1,4 +1,4 @@
-import type { ExtractionSummary, ItemCreate, NormalizedSource } from '@gobbit/shared';
+import type { ExtractionSummary, ItemCreateResolved, NormalizedSource } from '@gobbit/shared';
 import type { EventDecision } from '../ai/extract-event';
 import {
   correctionMessage,
@@ -35,7 +35,12 @@ export interface RunExtractionInput {
 }
 
 export type ExtractionOutcome =
-  | { ok: true; item: ItemCreate; summary: ExtractionSummary; eventDecision?: EventDecision }
+  | {
+      ok: true;
+      item: ItemCreateResolved;
+      summary: ExtractionSummary;
+      eventDecision?: EventDecision;
+    }
   | { ok: false; error: string };
 
 type Accepted = Extract<ValidatedProposal, { ok: true }>;

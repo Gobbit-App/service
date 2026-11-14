@@ -363,7 +363,7 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `Editor image ${webDeck.slug}`;
   const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
 
   await expect(page.getByRole('button', { name: 'Card type: Image' })).toBeVisible();
   await page.getByLabel('Title', { exact: true }).fill(title);
@@ -382,7 +382,8 @@ test('an image card is uploaded, described and listed @smoke', async ({ page, we
   // The API wrote the dimensions it recorded at confirm time (D160).
   const response = await created;
   expect(response.status()).toBe(201);
-  expect(((await response.json()) as { payload: { width?: number } }).payload.width).toBe(1);
+  const saved = (await response.json()) as { payload: { images: { width?: number }[] } };
+  expect(saved.payload.images[0]?.width).toBe(1);
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   const listed = page.getByRole('article').filter({ hasText: title });
   const listedImage = listed.getByRole('img', { name: 'A test photo' });
@@ -404,7 +405,7 @@ test('a photo Cloudinary refuses shows why and is reported to the API @smoke', a
       json: { error: { message: 'Resolution too high. Maximum allowed is 25 Megapixels' } },
     }),
   );
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
 
   const reported = page.waitForResponse(
     (res) => res.url().includes('/media/upload-failures') && res.request().method() === 'POST',
@@ -421,7 +422,7 @@ test('a photo Cloudinary refuses shows why and is reported to the API @smoke', a
 
 test('an image card needs a photo but no description (D206) @smoke', async ({ page, webDeck }) => {
   await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
 
   await page.getByLabel('Title', { exact: true }).fill('No description');
   await expect(save(page)).toBeDisabled();
@@ -440,7 +441,7 @@ test('an image card without a description saves and is decorative under its titl
   test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `No description ${webDeck.slug}`;
   await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Choose photo').setInputFiles(photoFile);
   await expect(page.getByRole('button', { name: 'Replace photo' })).toBeVisible();
@@ -451,22 +452,23 @@ test('an image card without a description saves and is decorative under its titl
 
   const response = await created;
   expect(response.status()).toBe(201);
-  expect(((await response.json()) as { payload: { alt?: string } }).payload.alt).toBeUndefined();
+  const body = (await response.json()) as { payload: { images: { alt?: string }[] } };
+  expect(body.payload.images[0]?.alt).toBeUndefined();
   const listed = page.getByRole('article').filter({ hasText: title });
   await expect(listed.locator('img.cloud-image__img')).toHaveAttribute('alt', '');
 });
 
 test('the image type is unavailable without image storage @smoke', async ({ page, webDeck }) => {
   await routeCloudName(page, null);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=image`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
 
-  // D302: `?type=image` opens the type chooser, where Image says why it is off (FR-015).
+  // D302: `?type=media` opens the type chooser, where Image says why it is off (FR-015).
   const image = page.getByRole('radio', { name: 'Image' });
   await expect(image).toHaveAttribute('aria-disabled', 'true');
   await expect(page.getByText("image storage isn't set up here")).toBeVisible();
   // `force`: Playwright never clicks an aria-disabled element; the tile must still ignore one.
   await image.click({ force: true });
-  await expect(page).toHaveURL(/\?type=image$/);
+  await expect(page).toHaveURL(/\?type=media$/);
   await expect(page.getByLabel('Title', { exact: true })).toHaveCount(0);
 });
 

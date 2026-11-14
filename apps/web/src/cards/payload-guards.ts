@@ -95,6 +95,55 @@ export function asImagePayload(p: unknown): ImagePayload | null {
   return result;
 }
 
+/** D398: a photo card holds 1–8 photos in display order; the first is the cover. */
+export type MediaImagesPayload = { kind: 'image'; images: ImagePayload[] };
+
+/** D386: a PDF, audio or video card holds one file and its server-owned display facts. */
+export type MediaFilePayload = {
+  kind: 'pdf' | 'audio' | 'video';
+  publicId: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  durationMs?: number;
+  pages?: number;
+};
+
+export type MediaPayload = MediaImagesPayload | MediaFilePayload;
+
+/** D387: items cached by a pre-045 build say `image`; they read as media. */
+export function isMediaType(type: string): boolean {
+  return type === 'media' || type === 'image';
+}
+
+/**
+ * Narrows unknown payload into a MediaPayload or null. A pre-045 flat photo payload (persisted
+ * query cache, D387) reads as a one-photo gallery; photos that don't parse are skipped.
+ */
+export function asMediaPayload(p: unknown): MediaPayload | null {
+  if (!isRecord(p)) return null;
+  if (p.kind === undefined) {
+    const legacy = asImagePayload(p);
+    return legacy ? { kind: 'image', images: [legacy] } : null;
+  }
+  if (p.kind === 'image') {
+    if (!Array.isArray(p.images)) return null;
+    const images = p.images.map(asImagePayload).filter((i): i is ImagePayload => i !== null);
+    return images.length > 0 ? { kind: 'image', images } : null;
+  }
+  if (p.kind !== 'pdf' && p.kind !== 'audio' && p.kind !== 'video') return null;
+  if (typeof p.publicId !== 'string' || p.publicId === '') return null;
+  const result: MediaFilePayload = { kind: p.kind, publicId: p.publicId };
+  if (typeof p.alt === 'string') result.alt = p.alt;
+  if (isDimension(p.width) && isDimension(p.height)) {
+    result.width = p.width;
+    result.height = p.height;
+  }
+  if (isDimension(p.durationMs)) result.durationMs = p.durationMs;
+  if (isDimension(p.pages)) result.pages = p.pages;
+  return result;
+}
+
 /**
  * Narrows unknown payload into TablePayload or null.
  */

@@ -1,6 +1,5 @@
 import {
   calcPayloadSchema,
-  imagePayloadSchema,
   linkPayloadSchema,
   tablePayloadSchema,
   type CalcPayload,
@@ -8,6 +7,7 @@ import {
 } from '@gobbit/shared';
 import { evaluateCalc, formatCalcResult } from '@gobbit/shared/calc';
 import { imageAlt } from '@gobbit/shared/image-alt';
+import { mediaImagesOf } from '@gobbit/shared/media-constants';
 import { FLOW_CLASS } from '@gobbit/shared/rich-text';
 import type { EventPublicPayload } from '@gobbit/shared/event-constants';
 import { eventWhenLine } from './event-summary';
@@ -74,17 +74,18 @@ ${payload.location?.trim() ? h`<p class="event-location">${payload.location.trim
 ${payload.url ? renderLinkFields({ url: payload.url, preview: payload.preview }, imageUrl) : ''}`;
 }
 
-function renderImage(item: PublicItem, imageUrl: ImageUrlFor): Html | string {
-  const parsed = imagePayloadSchema.safeParse(item.payload);
-  if (!parsed.success) return '';
-  const { publicId, alt, width, height } = parsed.data;
-  const src = imageUrl(publicId, PAGE_IMAGE_TRANSFORMATION);
-  if (!src) return alt?.trim() ? h`<p class="muted">${alt.trim()}</p>` : '';
-  // D206: the title is right above the figure, so an image without a description is decorative.
-  const altText = imageAlt({ alt, title: item.title, titleAdjacent: true });
-  return h`<figure><img src="${src}" alt="${altText}"${
-    width && height ? h` width="${width}" height="${height}"` : ''
-  }></figure>`;
+/** D398: every photo of a photo card, in order; a single photo renders exactly as before 045. */
+function renderImages(item: PublicItem, imageUrl: ImageUrlFor): Html | string {
+  const photos = mediaImagesOf(item.payload);
+  return h`${photos.map(({ publicId, alt, width, height }) => {
+    const src = imageUrl(publicId, PAGE_IMAGE_TRANSFORMATION);
+    if (!src) return alt?.trim() ? h`<p class="muted">${alt.trim()}</p>` : '';
+    // D206: the title is right above the figure, so an image without a description is decorative.
+    const altText = imageAlt({ alt, title: item.title, titleAdjacent: true });
+    return h`<figure><img src="${src}" alt="${altText}"${
+      width && height ? h` width="${width}" height="${height}"` : ''
+    }></figure>`;
+  })}`;
 }
 
 function renderTable(item: PublicItem): Html | string {
@@ -125,8 +126,9 @@ export function renderItem(item: PublicItem, imageUrl: ImageUrlFor): Html {
     case 'link':
       content = renderLink(item, imageUrl);
       break;
-    case 'image':
-      content = renderImage(item, imageUrl);
+    case 'media':
+      // 045: PDF, audio and video render on public pages from PR 3 (D397); nothing until then.
+      content = renderImages(item, imageUrl);
       break;
     case 'table':
       content = renderTable(item);

@@ -1,7 +1,7 @@
 import { createRoute, type OpenAPIHono } from '@hono/zod-openapi';
-import { appConfigSchema, type AppConfig } from '@gobbit/shared';
+import { MEDIA_MAX_BYTES_DEFAULTS, appConfigSchema, type AppConfig } from '@gobbit/shared';
 import type { AppEnv } from '../types';
-import type { Env } from '../env';
+import { mediaMaxBytes, type Env } from '../env';
 import { cloudNameFrom } from '../lib/cloudinary-url';
 import { vapidFrom } from '../push/push-sender';
 import { analyticsHead } from '../public/analytics';
@@ -31,7 +31,9 @@ type ConfigEnv = Pick<
   // ASK_ENABLED defaults to false at runtime (env.ts); optional so tests can pass a partial env.
   Partial<Pick<Env, 'ASK_ENABLED'>> &
   // API_URL is always set at runtime (env.ts defaults it); optional so tests can pass a partial env.
-  Partial<Pick<Env, 'API_URL' | 'APP_URL'>>;
+  Partial<Pick<Env, 'API_URL' | 'APP_URL'>> &
+  // D393: optional so tests can pass a partial env; the shared defaults fill the gaps.
+  Partial<Pick<Env, 'MEDIA_MAX_BYTES_PDF' | 'MEDIA_MAX_BYTES_AUDIO' | 'MEDIA_MAX_BYTES_VIDEO'>>;
 
 /** Browsers and the web image may cache the config for five minutes (D55). */
 export const CONFIG_CACHE_CONTROL = 'public, max-age=300';
@@ -62,6 +64,14 @@ export function buildAppConfig(env: ConfigEnv): AppConfig {
       const vapid = vapidFrom(env);
       return vapid ? { publicKey: vapid.publicKey } : null;
     })(),
+    // D393: the composer shows each kind's limit before asking for a signature.
+    media: {
+      maxBytes: mediaMaxBytes({
+        MEDIA_MAX_BYTES_PDF: env.MEDIA_MAX_BYTES_PDF ?? MEDIA_MAX_BYTES_DEFAULTS.pdf,
+        MEDIA_MAX_BYTES_AUDIO: env.MEDIA_MAX_BYTES_AUDIO ?? MEDIA_MAX_BYTES_DEFAULTS.audio,
+        MEDIA_MAX_BYTES_VIDEO: env.MEDIA_MAX_BYTES_VIDEO ?? MEDIA_MAX_BYTES_DEFAULTS.video,
+      }),
+    },
   });
 }
 

@@ -1,16 +1,28 @@
 import { z } from 'zod';
 import { httpUrlSchema } from './common';
 import { imageDimensionSchema, linkPayloadSchema } from './payloads';
-import { assetSources } from '../enums';
+import { assetResourceTypes, assetSources, mediaKinds } from '../enums';
 import {
+  MEDIA_FILE_NAME_MAX,
   LINK_PREVIEW_DESCRIPTION_MAX,
   LINK_PREVIEW_TITLE_MAX,
   MEDIA_UPLOAD_FAILURE_MESSAGE_MAX,
 } from '../media/constants';
 
+/** D389: POST /decks/:id/media/sign body; old clients send none (an image upload). */
+export const mediaSignRequestSchema = z
+  .object({ kind: z.enum(mediaKinds).default('image') })
+  .strict();
+export type MediaSignRequest = z.infer<typeof mediaSignRequestSchema>;
+
 /** D133: POST /decks/:id/media/sign — one signed direct upload. The API secret is never in it. */
 export const mediaSignResponseSchema = z
   .object({
+    /** D389: the kind this signature uploads. */
+    kind: z.enum(mediaKinds),
+    /** D392: signed eager renditions (audio, video); post them unchanged with the file. */
+    eager: z.string().optional(),
+    eagerAsync: z.boolean().optional(),
     uploadUrl: z.string(),
     apiKey: z.string(),
     /** Unix seconds; signed, valid for an hour at Cloudinary. */
@@ -75,22 +87,37 @@ export const mediaAssetConfirmRequestSchema = z
     publicId: z.string().min(1).max(255),
     version: z.number().int().nonnegative(),
     signature: z.string().min(1).max(128),
-    width: imageDimensionSchema,
-    height: imageDimensionSchema,
+    /** Optional since 045: audio has none (D390). */
+    width: imageDimensionSchema.optional(),
+    height: imageDimensionSchema.optional(),
     bytes: z.number().int().nonnegative(),
     format: z.string().min(1).max(20),
+    /** D390: the kind the upload was signed for (default image, old clients); checked, never trusted. */
+    kind: z.enum(mediaKinds).default('image'),
+    resourceType: z.enum(assetResourceTypes).default('image'),
+    durationMs: z.number().int().positive().optional(),
+    pages: z.number().int().positive().optional(),
+    /** D396: the provider's content fingerprint. */
+    etag: z.string().min(1).max(64).optional(),
+    originalFilename: z.string().min(1).max(MEDIA_FILE_NAME_MAX).optional(),
   })
   .strict();
 export type MediaAssetConfirmRequest = z.infer<typeof mediaAssetConfirmRequestSchema>;
+export type MediaAssetConfirmInput = z.input<typeof mediaAssetConfirmRequestSchema>;
 
-/** D156: one recorded image. */
+/** D156: one recorded file. */
 export const mediaAssetSchema = z
   .object({
     publicId: z.string(),
+    kind: z.enum(mediaKinds),
+    resourceType: z.enum(assetResourceTypes),
     width: z.number().int().nullable(),
     height: z.number().int().nullable(),
     bytes: z.number().int().nullable(),
     format: z.string().nullable(),
+    durationMs: z.number().int().nullable(),
+    pages: z.number().int().nullable(),
+    originalFilename: z.string().nullable(),
     source: z.enum(assetSources),
     createdAt: z.string(),
   })

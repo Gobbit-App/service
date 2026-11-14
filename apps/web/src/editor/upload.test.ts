@@ -18,6 +18,7 @@ function signed(overrides: Partial<MediaSignResponse> = {}): MediaSignResponse {
     signature: 'sig',
     folder: 'gobbit/items/deck-1',
     tags: 'editor,deck:deck-1',
+    kind: 'image',
     allowedFormats: 'jpg,png,webp,heic,heif',
     maxBytes: 8 * 1024 * 1024,
     expiresAt: '2030-01-01T00:00:00.000Z',
@@ -44,6 +45,8 @@ const uploaded = (publicId: string) => ({
   height: 900,
   bytes: 2048,
   format: 'jpg',
+  kind: 'image',
+  resourceType: 'image',
 });
 
 /** Just enough XMLHttpRequest for `uploadImage`; the test drives its events. */

@@ -50,18 +50,33 @@ describe('payloadText', () => {
     expect(payloadText('table', payload)).toBe('Totals alpha beta gamma delta');
   });
 
-  it('skips publicId on image payloads but keeps alt and caption', () => {
+  it('keeps every photo description of a media gallery, never ids or facts (D398)', () => {
     const payload = {
-      publicId: 'folder/secret-id',
-      alt: 'A cat on a mat',
-      caption: 'Sleeping',
+      kind: 'image',
+      images: [
+        { publicId: 'folder/secret-id', alt: 'A cat on a mat', width: 640, height: 480 },
+        { publicId: 'folder/other', alt: '' },
+        { publicId: 'folder/third', alt: 'Sleeping' },
+      ],
     };
-    const text = payloadText('image', payload);
+    const text = payloadText('media', payload);
     expect(text).toBe('A cat on a mat Sleeping');
     expect(text).not.toContain('secret-id');
   });
 
-  it('keeps publicId for non-image payloads', () => {
+  it('keeps a file card’s description and file name (FR-029)', () => {
+    expect(
+      payloadText('media', {
+        kind: 'pdf',
+        publicId: 'folder/doc',
+        alt: 'Term dates',
+        pages: 3,
+        fileName: 'calendar.pdf',
+      }),
+    ).toBe('Term dates calendar.pdf');
+  });
+
+  it('keeps publicId for non-media payloads', () => {
     expect(payloadText('text', { publicId: 'abc', body: 'hi' })).toBe('abc hi');
   });
 

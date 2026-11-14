@@ -3,6 +3,35 @@ import { itemCreateSchema, itemPatchSchema, itemListQuerySchema, itemSchema } fr
 import { TABLE_MAX_ROWS, TABLE_MAX_COLUMNS } from '../limits';
 import { codePointLength } from '../utils/utf8-bytes';
 
+describe('media type and the image alias (D386, D387)', () => {
+  it('creates media cards with a gallery payload', () => {
+    const result = itemCreateSchema.parse({
+      type: 'media',
+      title: 'Play',
+      payload: { kind: 'image', images: [{ publicId: 'a' }, { publicId: 'b' }] },
+    });
+    expect(result.type).toBe('media');
+  });
+
+  it('still accepts type image with the flat or the new payload', () => {
+    const flat = itemCreateSchema.parse({ type: 'image', title: 'P', payload: { publicId: 'a' } });
+    expect(flat.type).toBe('image');
+    expect(flat.payload).toEqual({ publicId: 'a' });
+    const current = itemCreateSchema.parse({
+      type: 'image',
+      title: 'P',
+      payload: { kind: 'image', images: [{ publicId: 'a' }] },
+    });
+    expect(current.payload).toEqual({ kind: 'image', images: [{ publicId: 'a' }] });
+  });
+
+  it('accepts image on patch and the list filter', () => {
+    expect(itemPatchSchema.parse({ type: 'image' }).type).toBe('image');
+    expect(itemListQuerySchema.parse({ type: 'image' }).type).toBe('image');
+    expect(itemListQuerySchema.parse({ type: 'media' }).type).toBe('media');
+  });
+});
+
 describe('itemCreateSchema', () => {
   it('text item {type:"text", title:"Hi"} parses with body="" and payload={}', () => {
     const result = itemCreateSchema.parse({

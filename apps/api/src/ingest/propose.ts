@@ -3,7 +3,7 @@ import type {
   DedupVerdict,
   ExtractionSummary,
   IngestChannel,
-  ItemCreate,
+  ItemCreateResolved,
   SourceKind,
 } from '@gobbit/shared';
 import type { EmbedQueue } from '../jobs/embed-queue';
@@ -30,7 +30,7 @@ export interface ProposeDeps {
 export interface ProposeInput {
   job: { id: string; deckId: string; userId: string; channel: IngestChannel };
   /** A validated draft (card limits already checked). */
-  item: ItemCreate;
+  item: ItemCreateResolved;
   /** What decided the draft; its `categoryIds` are the draft's categories in the deck. */
   summary: ExtractionSummary;
   /** A direct proposal that names the card it updates: no similarity search (`explicit`). */

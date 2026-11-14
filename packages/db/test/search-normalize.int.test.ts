@@ -62,10 +62,31 @@ describe('item_search_text', () => {
     expect(s).toContain('desc');
   });
 
-  it('excludes the image publicId but keeps alt', async () => {
-    const s = await text('image', { publicId: 'secret-public-id', alt: 'Kitchen wall' });
+  it('excludes media publicIds and facts but keeps every photo description (D398)', async () => {
+    const s = await text('media', {
+      kind: 'image',
+      images: [
+        { publicId: 'secret-public-id', alt: 'Kitchen wall', width: 640, height: 480 },
+        { publicId: 'second-id', alt: 'Garden door' },
+      ],
+    });
     expect(s).not.toContain('secret-public-id');
+    expect(s).not.toContain('second-id');
     expect(s).toContain('kitchen wall');
+    expect(s).toContain('garden door');
+  });
+
+  it('indexes a file card by its description and file name, not its format facts (FR-029)', async () => {
+    const s = await text('media', {
+      kind: 'pdf',
+      publicId: 'secret-pdf',
+      alt: 'Term dates',
+      fileName: 'calendar-2027.pdf',
+      pages: 3,
+    });
+    expect(s).not.toContain('secret-pdf');
+    expect(s).toContain('term dates');
+    expect(s).toContain('calendar-2027.pdf');
   });
 
   it('excludes the calc expression but keeps labels', async () => {

@@ -239,6 +239,37 @@
                       "required": [
                         "publicKey"
                       ]
+                    },
+                    "media": {
+                      "type": "object",
+                      "properties": {
+                        "maxBytes": {
+                          "type": "object",
+                          "properties": {
+                            "image": {
+                              "type": "integer"
+                            },
+                            "pdf": {
+                              "type": "integer"
+                            },
+                            "audio": {
+                              "type": "integer"
+                            },
+                            "video": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "image",
+                            "pdf",
+                            "audio",
+                            "video"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "maxBytes"
+                      ]
                     }
                   },
                   "required": [
@@ -247,7 +278,8 @@
                     "search",
                     "ingest",
                     "analytics",
-                    "push"
+                    "push",
+                    "media"
                   ]
                 }
               }
@@ -8439,11 +8471,12 @@
               "enum": [
                 "text",
                 "link",
-                "image",
+                "media",
                 "table",
                 "calc",
                 "reminder",
-                "event"
+                "event",
+                "image"
               ]
             },
             "required": false,
@@ -8519,7 +8552,7 @@
                             "enum": [
                               "text",
                               "link",
-                              "image",
+                              "media",
                               "table",
                               "calc",
                               "reminder",
@@ -9495,34 +9528,520 @@
                       "type": {
                         "type": "string",
                         "enum": [
+                          "media"
+                        ]
+                      },
+                      "payload": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "image"
+                                ]
+                              },
+                              "images": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "publicId": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    },
+                                    "alt": {
+                                      "type": "string"
+                                    },
+                                    "width": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 20000
+                                    },
+                                    "height": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 20000
+                                    }
+                                  },
+                                  "required": [
+                                    "publicId"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "minItems": 1,
+                                "maxItems": 8
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "images"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "pdf"
+                                ]
+                              },
+                              "publicId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "alt": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "pages": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "fileName": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "publicId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "audio"
+                                ]
+                              },
+                              "publicId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "alt": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "pages": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "fileName": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "publicId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "video"
+                                ]
+                              },
+                              "publicId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "alt": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "pages": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "fileName": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "publicId"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "body": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Card body, max 2000 characters (Unicode code points)"
+                      },
+                      "categoryIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      },
+                      "sourceUrl": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "proposed",
+                          "published",
+                          "archived"
+                        ]
+                      },
+                      "entities": {
+                        "type": "object",
+                        "properties": {
+                          "phones": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "addresses": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "hours": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "prices": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "dates": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "people": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          },
+                          "urls": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "maxItems": 10
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "payload",
+                      "title"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
                           "image"
                         ]
                       },
                       "payload": {
-                        "type": "object",
-                        "properties": {
-                          "publicId": {
-                            "type": "string",
-                            "minLength": 1
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "image"
+                                ]
+                              },
+                              "images": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "publicId": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    },
+                                    "alt": {
+                                      "type": "string"
+                                    },
+                                    "width": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 20000
+                                    },
+                                    "height": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 20000
+                                    }
+                                  },
+                                  "required": [
+                                    "publicId"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "minItems": 1,
+                                "maxItems": 8
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "images"
+                            ],
+                            "additionalProperties": false
                           },
-                          "alt": {
-                            "type": "string"
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "pdf"
+                                ]
+                              },
+                              "publicId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "alt": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "pages": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "fileName": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "publicId"
+                            ],
+                            "additionalProperties": false
                           },
-                          "width": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 20000
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "audio"
+                                ]
+                              },
+                              "publicId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "alt": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "pages": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "fileName": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "publicId"
+                            ],
+                            "additionalProperties": false
                           },
-                          "height": {
-                            "type": "integer",
-                            "minimum": 1,
-                            "maximum": 20000
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "video"
+                                ]
+                              },
+                              "publicId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "alt": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "durationMs": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "pages": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              "fileName": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "publicId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "publicId": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "alt": {
+                                "type": "string"
+                              },
+                              "width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              },
+                              "height": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20000
+                              }
+                            },
+                            "required": [
+                              "publicId"
+                            ],
+                            "additionalProperties": false
                           }
-                        },
-                        "required": [
-                          "publicId"
-                        ],
-                        "additionalProperties": false
+                        ]
                       },
                       "title": {
                         "type": "string",
@@ -10413,7 +10932,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -11256,7 +11775,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -11851,11 +12370,12 @@
                     "enum": [
                       "text",
                       "link",
-                      "image",
+                      "media",
                       "table",
                       "calc",
                       "reminder",
-                      "event"
+                      "event",
+                      "image"
                     ]
                   },
                   "title": {
@@ -11988,7 +12508,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -13097,7 +13617,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -13782,7 +14302,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -14489,7 +15009,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -15332,7 +15852,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -16096,7 +16616,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -18068,7 +18588,7 @@
                                 "enum": [
                                   "text",
                                   "link",
-                                  "image",
+                                  "media",
                                   "table",
                                   "calc",
                                   "reminder",
@@ -19385,7 +19905,8 @@
         "tags": [
           "media"
         ],
-        "summary": "Signed permission for one direct image upload to Cloudinary (D133)",
+        "summary": "Signed permission for one direct upload of one kind of file to Cloudinary (D133, D389)",
+        "description": "Optional JSON body `{ \"kind\": \"image\" | \"pdf\" | \"audio\" | \"video\" }` (D389). Without a body (clients before 045) the upload is an image.",
         "security": [
           {
             "SessionCookie": []
@@ -19413,6 +19934,21 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "image",
+                        "pdf",
+                        "audio",
+                        "video"
+                      ]
+                    },
+                    "eager": {
+                      "type": "string"
+                    },
+                    "eagerAsync": {
+                      "type": "boolean"
+                    },
                     "uploadUrl": {
                       "type": "string"
                     },
@@ -19442,6 +19978,7 @@
                     }
                   },
                   "required": [
+                    "kind",
                     "uploadUrl",
                     "apiKey",
                     "timestamp",
@@ -19453,6 +19990,85 @@
                     "expiresAt"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
                 }
               }
             }
@@ -19919,14 +20535,48 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 20
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "image",
+                      "pdf",
+                      "audio",
+                      "video"
+                    ],
+                    "default": "image"
+                  },
+                  "resourceType": {
+                    "type": "string",
+                    "enum": [
+                      "image",
+                      "video"
+                    ],
+                    "default": "image"
+                  },
+                  "durationMs": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "pages": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "etag": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "originalFilename": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
                   }
                 },
                 "required": [
                   "publicId",
                   "version",
                   "signature",
-                  "width",
-                  "height",
                   "bytes",
                   "format"
                 ],
@@ -19946,6 +20596,22 @@
                     "publicId": {
                       "type": "string"
                     },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "image",
+                        "pdf",
+                        "audio",
+                        "video"
+                      ]
+                    },
+                    "resourceType": {
+                      "type": "string",
+                      "enum": [
+                        "image",
+                        "video"
+                      ]
+                    },
                     "width": {
                       "type": [
                         "integer",
@@ -19970,6 +20636,24 @@
                         "null"
                       ]
                     },
+                    "durationMs": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "pages": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "originalFilename": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "source": {
                       "type": "string",
                       "enum": [
@@ -19985,10 +20669,15 @@
                   },
                   "required": [
                     "publicId",
+                    "kind",
+                    "resourceType",
                     "width",
                     "height",
                     "bytes",
                     "format",
+                    "durationMs",
+                    "pages",
+                    "originalFilename",
                     "source",
                     "createdAt"
                   ],
@@ -20007,6 +20696,22 @@
                     "publicId": {
                       "type": "string"
                     },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "image",
+                        "pdf",
+                        "audio",
+                        "video"
+                      ]
+                    },
+                    "resourceType": {
+                      "type": "string",
+                      "enum": [
+                        "image",
+                        "video"
+                      ]
+                    },
                     "width": {
                       "type": [
                         "integer",
@@ -20031,6 +20736,24 @@
                         "null"
                       ]
                     },
+                    "durationMs": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "pages": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "originalFilename": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "source": {
                       "type": "string",
                       "enum": [
@@ -20046,10 +20769,15 @@
                   },
                   "required": [
                     "publicId",
+                    "kind",
+                    "resourceType",
                     "width",
                     "height",
                     "bytes",
                     "format",
+                    "durationMs",
+                    "pages",
+                    "originalFilename",
                     "source",
                     "createdAt"
                   ],
@@ -22455,8 +23183,9 @@
                           "enum": [
                             "text",
                             "link",
-                            "image",
-                            "event"
+                            "media",
+                            "event",
+                            "image"
                           ]
                         },
                         "confidence": {
@@ -23723,7 +24452,7 @@
                                 "enum": [
                                   "text",
                                   "link",
-                                  "image",
+                                  "media",
                                   "table",
                                   "calc",
                                   "reminder",
@@ -24206,7 +24935,7 @@
                                 "enum": [
                                   "text",
                                   "link",
-                                  "image",
+                                  "media",
                                   "table",
                                   "calc",
                                   "reminder",
@@ -25217,7 +25946,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -26926,7 +27655,7 @@
                                 "enum": [
                                   "text",
                                   "link",
-                                  "image",
+                                  "media",
                                   "table",
                                   "calc",
                                   "reminder",
@@ -27398,7 +28127,7 @@
                           "enum": [
                             "text",
                             "link",
-                            "image",
+                            "media",
                             "table",
                             "calc",
                             "reminder",
@@ -27785,7 +28514,7 @@
                           "enum": [
                             "text",
                             "link",
-                            "image",
+                            "media",
                             "table",
                             "calc",
                             "reminder",
@@ -29823,7 +30552,7 @@
                             "enum": [
                               "text",
                               "link",
-                              "image",
+                              "media",
                               "table",
                               "calc",
                               "reminder",
@@ -30261,7 +30990,7 @@
                       "enum": [
                         "text",
                         "link",
-                        "image",
+                        "media",
                         "table",
                         "calc",
                         "reminder",
@@ -30707,7 +31436,7 @@
                                 "enum": [
                                   "text",
                                   "link",
-                                  "image",
+                                  "media",
                                   "table",
                                   "calc",
                                   "reminder",

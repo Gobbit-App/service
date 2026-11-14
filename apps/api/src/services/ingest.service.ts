@@ -8,6 +8,8 @@ import {
   INGEST_MAX_IMAGES,
   directCardTypes,
   itemCreateSchema,
+  LEGACY_IMAGE_TYPE,
+  normalizeLegacyMediaPayload,
   NAME_MAX,
   RESERVED_DECK_SLUG,
   type DedupVerdict,
@@ -18,6 +20,7 @@ import {
   type IngestRaw,
   type IngestRequest,
   type ItemCreate,
+  type ItemCreateResolved,
   type MemberRole,
 } from '@gobbit/shared';
 import type { CategoriesRepo } from '../repositories/categories.repo';
@@ -38,6 +41,8 @@ import type { IngestUploadStore } from '../media/ingest-uploads';
 import type { AssetsRepo } from '../repositories/assets.repo';
 import type { CurrentUser } from '../types';
 import { lineSink } from '../lib/logger';
+import { decisionLogger } from '../lib/decision-event';
+import type { ItemDecisions } from './items.events';
 
 /** An uploaded image as received (before Cloudinary). */
 export interface IngestFile {
@@ -112,8 +117,13 @@ export function channelFor(caller: IngestCaller, requested?: 'pwa' | 'paste'): I
 const ITEM_NOT_FOUND = 'Item not found';
 
 /** Card limits and the D100 card types for a direct draft; returns the parsed card. */
-export function parseDirectDraft(draft: DirectDraft): ItemCreate {
-  const { newCategory: _newCategory, ...card } = draft;
+export function parseDirectDraft(draft: DirectDraft): ItemCreateResolved {
+  const { newCategory: _newCategory, ...given } = draft;
+  // D387: old clients still propose `image` cards with a flat payload.
+  const card =
+    given.type === LEGACY_IMAGE_TYPE
+      ? { ...given, type: 'media', payload: normalizeLegacyMediaPayload(given.payload) }
+      : given;
   if (!(directCardTypes as readonly string[]).includes(card.type)) {
     throw badRequest(`Proposals can only be ${directCardTypes.join(', ')} cards`);
   }
@@ -121,7 +131,7 @@ export function parseDirectDraft(draft: DirectDraft): ItemCreate {
   if (!parsed.success) {
     throw badRequest(parsed.error.issues[0]?.message ?? 'Invalid card');
   }
-  return parsed.data;
+  return parsed.data as ItemCreateResolved;
 }
 
 /** A suggested category name, trimmed; blank → null, too long → 400. */
@@ -162,6 +172,7 @@ export function createIngestService(deps: {
   const { enabled, decks, memberships, jobs, uploads, queue, now } = deps;
   const newId = deps.newId ?? randomUUID;
   const log = deps.log ?? lineSink('ingest');
+  const aliasDecisions = decisionLogger<ItemDecisions>('ingest');
 
   const assertWithinCaps = createCapGuard({
     jobs,
@@ -267,6 +278,16 @@ export function createIngestService(deps: {
       await assertWithinCaps(p.user.id, p.channel);
 
       const id = newId();
+      if (p.draft.type === LEGACY_IMAGE_TYPE) {
+        aliasDecisions.record('item.type_alias', {
+          outcome: 'accepted',
+          reason: 'image',
+          jobId: id,
+          actorId: p.user.id,
+          deckId: deck.id,
+          route: 'ingest',
+        });
+      }
       const clientLabel = p.clientLabel?.trim().slice(0, INGEST_CLIENT_LABEL_MAX) || null;
       await jobs.create({
         id,
