@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
-import type { Page } from '@playwright/test';
+import { createHash, randomUUID } from 'node:crypto';
+import type { APIRequestContext, Page } from '@playwright/test';
 import { resolveE2eEnv } from '../lib/env';
 
 /** Fake Cloudinary for e2e (D133): tests never reach the real service. */
@@ -83,10 +83,15 @@ export async function routeFakeCloudinary(page: Page, publicId: string) {
         status: 201,
         json: {
           publicId,
+          kind: 'image',
+          resourceType: 'image',
           width: 1,
           height: 1,
           bytes: TINY_PNG.length,
           format: 'png',
+          durationMs: null,
+          pages: null,
+          originalFilename: null,
           source: 'editor',
           createdAt: new Date().toISOString(),
         },
@@ -95,4 +100,45 @@ export async function routeFakeCloudinary(page: Page, publicId: string) {
   }
   await routeImageDelivery(page);
   return uploads;
+}
+
+/** 045: what one recorded file looks like to the confirm step (D390). */
+export interface FakeMediaFile {
+  kind: 'image' | 'pdf' | 'audio' | 'video';
+  format: string;
+  width?: number;
+  height?: number;
+  pages?: number;
+  durationMs?: number;
+}
+
+/**
+ * 045: records a file for `deckId` through the real API confirm step, with Cloudinary's answer
+ * signed by the API's secret as the editor's upload would be (D157, D390). Nothing reaches
+ * Cloudinary. Null when the e2e run has no `CLOUDINARY_API_SECRET` (the caller skips).
+ */
+export async function recordMediaAsset(
+  api: APIRequestContext,
+  deckId: string,
+  file: FakeMediaFile,
+): Promise<string | null> {
+  if (!cloudinaryApiSecret) return null;
+  const publicId = `gobbit/items/${deckId}/e2e-${file.kind}-${randomUUID().slice(0, 8)}`;
+  const version = Math.floor(Date.now() / 1000);
+  const res = await api.post(`decks/${deckId}/media/assets`, {
+    data: {
+      publicId,
+      version,
+      signature: signUploadAnswer(publicId, version, cloudinaryApiSecret),
+      bytes: 1024,
+      format: file.format,
+      kind: file.kind,
+      resourceType: file.kind === 'audio' || file.kind === 'video' ? 'video' : 'image',
+      ...(file.width ? { width: file.width, height: file.height } : {}),
+      ...(file.pages ? { pages: file.pages } : {}),
+      ...(file.durationMs ? { durationMs: file.durationMs } : {}),
+    },
+  });
+  if (res.status() !== 201) throw new Error(`recording a ${file.kind} answered ${res.status()}`);
+  return publicId;
 }

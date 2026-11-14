@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
+import { mediaDeliveryUrl, type MediaRendition } from '@gobbit/shared/media-constants';
 import { cloudinaryDeliveryUrl, parseCloudinaryUrl } from '../lib/cloudinary-url';
 
 /** Where generated OG images live (D60); Cloudinary in production, memory in tests. */
@@ -6,6 +7,8 @@ export interface OgImageStore {
   upload(publicId: string, png: Uint8Array): Promise<void>;
   /** Absolute URL a crawler can fetch for `publicId` with an optional transformation. */
   deliveryUrl(publicId: string, transformation?: string): string;
+  /** 045 (D388, D392): absolute URL of one rendition of a stored file, any resource type. */
+  mediaUrl(rendition: MediaRendition, publicId: string): string;
 }
 
 /** Cloudinary-backed store; credentials come from CLOUDINARY_URL and never leave the server. */
@@ -27,6 +30,7 @@ export function createCloudinaryOgStore(cloudinaryUrl: string): OgImageStore {
         overwrite: true,
       });
     },
+    mediaUrl: (rendition, publicId) => mediaDeliveryUrl(cloudName, rendition, publicId),
     deliveryUrl: (publicId, transformation = '') =>
       cloudinaryDeliveryUrl(cloudName, publicId, transformation),
   };
@@ -44,5 +48,9 @@ export class MemoryOgStore implements OgImageStore {
 
   deliveryUrl(publicId: string, transformation = ''): string {
     return cloudinaryDeliveryUrl(this.cloudName, publicId, transformation);
+  }
+
+  mediaUrl(rendition: MediaRendition, publicId: string): string {
+    return mediaDeliveryUrl(this.cloudName, rendition, publicId);
   }
 }

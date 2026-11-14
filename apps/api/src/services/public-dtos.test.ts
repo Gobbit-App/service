@@ -114,3 +114,46 @@ describe('toPublicItem link markers (D350)', () => {
     });
   });
 });
+
+describe('toPublicItem media allow-list (D397)', () => {
+  const media = (payload: Record<string, unknown>) =>
+    toPublicItem({ ...row, type: 'media', payload }, []).payload;
+
+  it('keeps every photo of a gallery in order with its alt and size, nothing else', () => {
+    expect(
+      media({
+        kind: 'image',
+        images: [
+          { publicId: 'a', alt: 'Cover', width: 3, height: 4, secret: 'x' },
+          { publicId: 'b' },
+        ],
+      }),
+    ).toEqual({
+      kind: 'image',
+      images: [{ publicId: 'a', alt: 'Cover', width: 3, height: 4 }, { publicId: 'b' }],
+    });
+  });
+
+  it("keeps a file's display facts but never its file name", () => {
+    expect(
+      media({
+        kind: 'pdf',
+        publicId: 'f',
+        alt: 'Term dates',
+        width: 595,
+        height: 842,
+        pages: 3,
+        fileName: 'dana-medical-letter.pdf',
+        bytes: 10,
+        format: 'pdf',
+      }),
+    ).toEqual({ kind: 'pdf', publicId: 'f', alt: 'Term dates', width: 595, height: 842, pages: 3 });
+    expect(media({ kind: 'audio', publicId: 'a', durationMs: 4100, fileName: 'memo.m4a' })).toEqual(
+      { kind: 'audio', publicId: 'a', durationMs: 4100 },
+    );
+  });
+
+  it('drops an unreadable media payload', () => {
+    expect(media({ kind: 'zip', publicId: 'z' })).toEqual({});
+  });
+});

@@ -16,7 +16,7 @@ import { consentOpenButton } from './consent-banner';
 import { eventSummary } from './event-summary';
 import { layout, SITE_NAME, type PageHead } from './layout';
 import { openInAppPath, publicPath, publicUrl, type PageTarget } from './public-url';
-import { renderItem, type ImageUrlFor } from './render-item';
+import { renderItem, type ImageUrlFor, type MediaUrlFor } from './render-item';
 
 /** D177: cards per deck or category page. */
 export const PUBLIC_PAGE_SIZE = 20;
@@ -33,6 +33,8 @@ export type PageContext = {
   /** D178: a member who asked for `?view=public` sees a note. */
   publicViewNote: boolean;
   imageUrl: ImageUrlFor;
+  /** 045 (D397): PDF pages and originals, video and audio renditions; absent → not rendered. */
+  mediaUrl?: MediaUrlFor;
   /** Absolute URL of the static site image (deck and category pages). */
   siteImage: string;
   /** D257: set when analytics is on; each page adds its own screen. Error pages never get it. */
@@ -161,7 +163,7 @@ export function itemPage(ctx: PageContext, { deck, item, ogImage }: ItemPageMode
   return layout(
     head,
     h`${publicViewNote(ctx)}<p class="muted"><a href="${publicPath({ kind: 'deck', slug: deck.slug })}">${deck.name}</a></p>
-${renderItem(item, ctx.imageUrl)}
+${renderItem(item, ctx.imageUrl, ctx.mediaUrl)}
 ${
   item.categories.length > 0
     ? h`<nav class="cats" aria-label="Categories">${item.categories.map(

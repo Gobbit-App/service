@@ -65,6 +65,7 @@ function setup({ memberRole }: { memberRole?: 'reader' } = {}) {
       origin: ORIGIN,
       siteImageUrl: `${ORIGIN}/og/private.png`,
       imageUrl: () => null,
+      mediaUrl: () => null,
       ogImageFor: vi.fn(async () => `${ORIGIN}/og/private.png`),
     },
     cache: createPageCache(),

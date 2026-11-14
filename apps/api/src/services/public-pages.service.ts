@@ -63,7 +63,7 @@ export function createPublicPagesService({
   decks: Pick<DecksRepo, 'findBySlug'>;
   memberships: MembershipLookup;
   sitemap: SitemapRepo;
-  share: Pick<ShareService, 'ogImageFor' | 'imageUrl' | 'siteImageUrl' | 'origin'>;
+  share: Pick<ShareService, 'ogImageFor' | 'imageUrl' | 'mediaUrl' | 'siteImageUrl' | 'origin'>;
   cache: PageCache;
   search: Pick<SearchService, 'retrievePublic'>;
   /** D257: the tracker for public pages; undefined = analytics off. */
@@ -89,6 +89,7 @@ export function createPublicPagesService({
       robots: robotsFor(deck),
       publicViewNote: audience === 'member-public-view',
       imageUrl: share.imageUrl,
+      mediaUrl: share.mediaUrl,
       siteImage: share.siteImageUrl,
       analytics,
     };

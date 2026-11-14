@@ -7,7 +7,12 @@ import {
 } from '@gobbit/shared';
 import { evaluateCalc, formatCalcResult } from '@gobbit/shared/calc';
 import { imageAlt } from '@gobbit/shared/image-alt';
-import { mediaImagesOf } from '@gobbit/shared/media-constants';
+import {
+  MEDIA_DELIVERY,
+  mediaImagesOf,
+  mediaKindOf,
+  type MediaRendition,
+} from '@gobbit/shared/media-constants';
 import { FLOW_CLASS } from '@gobbit/shared/rich-text';
 import type { EventPublicPayload } from '@gobbit/shared/event-constants';
 import { eventWhenLine } from './event-summary';
@@ -16,6 +21,9 @@ import { renderMarkdown } from './markdown';
 
 /** Cloudinary URL for a stored image, or null when media isn't configured. */
 export type ImageUrlFor = (publicId: string, transformation: string) => string | null;
+
+/** 045: URL of one rendition of a stored file (any resource type), or null without storage. */
+export type MediaUrlFor = (rendition: MediaRendition, publicId: string) => string | null;
 
 /** D177: card photos are width-limited; the browser scales them down further. */
 export const PAGE_IMAGE_TRANSFORMATION = 'c_limit,w_1280,f_auto,q_auto';
@@ -74,6 +82,69 @@ ${payload.location?.trim() ? h`<p class="event-location">${payload.location.trim
 ${payload.url ? renderLinkFields({ url: payload.url, preview: payload.preview }, imageUrl) : ''}`;
 }
 
+/** `m:ss` (or `h:mm:ss`) for a duration in milliseconds. */
+export function formatDuration(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+}
+
+/**
+ * D397: a PDF, video or audio card without scripts: the browser's own player (never autoplay,
+ * nothing loaded before play), or a PDF's first page linked to the original. Unavailable without
+ * media storage.
+ */
+function renderFile(item: PublicItem, mediaUrl: MediaUrlFor | undefined): Html | string {
+  const kind = mediaKindOf(item.payload);
+  const p = item.payload as {
+    publicId?: unknown;
+    alt?: unknown;
+    width?: unknown;
+    height?: unknown;
+    durationMs?: unknown;
+    pages?: unknown;
+  };
+  if (typeof p.publicId !== 'string' || p.publicId === '' || kind === null) return '';
+  const id = p.publicId;
+  const url = (r: Parameters<MediaUrlFor>[0]) => (mediaUrl ? mediaUrl(r, id) : null);
+  const alt = typeof p.alt === 'string' ? p.alt : undefined;
+  const size =
+    typeof p.width === 'number' && typeof p.height === 'number'
+      ? h` width="${p.width}" height="${p.height}"`
+      : '';
+  const duration = typeof p.durationMs === 'number' ? formatDuration(p.durationMs) : null;
+  const unavailable = h`<p class="muted">File unavailable</p>`;
+
+  if (kind === 'video') {
+    const src = url(MEDIA_DELIVERY.videoStream);
+    const poster = url(MEDIA_DELIVERY.videoStill(1080));
+    if (!src || !poster) return unavailable;
+    const label = imageAlt({ alt, title: item.title, titleAdjacent: false });
+    return h`<figure class="media"><video controls playsinline preload="none" poster="${poster}"${size} aria-label="${label}"><source src="${src}" type="video/mp4"><a href="${src}">Download the video</a></video>${
+      duration ? h`<figcaption class="muted">Video · ${duration}</figcaption>` : ''
+    }</figure>`;
+  }
+  if (kind === 'audio') {
+    const src = url(MEDIA_DELIVERY.audioStream);
+    if (!src) return unavailable;
+    const label = imageAlt({ alt, title: item.title, titleAdjacent: false });
+    return h`<figure class="media"><audio controls preload="none" aria-label="${label}"><source src="${src}" type="audio/mpeg"><a href="${src}">Download the audio</a></audio>${
+      duration ? h`<figcaption class="muted">Audio · ${duration}</figcaption>` : ''
+    }</figure>`;
+  }
+  // PDF: page 1 as a picture, linked to the original (needs the account's PDF delivery, D391).
+  const page = url(MEDIA_DELIVERY.pdfPage(1, 1080));
+  const original = url(MEDIA_DELIVERY.pdfOriginal);
+  if (!page || !original) return unavailable;
+  const pages = typeof p.pages === 'number' ? p.pages : null;
+  const altText = imageAlt({ alt, title: item.title, titleAdjacent: true });
+  return h`<figure class="media"><a href="${original}" rel="${USER_LINK_REL}"><img src="${page}" alt="${altText}"${size} loading="lazy"></a><figcaption class="muted"><a href="${original}" rel="${USER_LINK_REL}">Open the PDF</a>${
+    pages ? h` · ${pages === 1 ? '1 page' : `${pages} pages`}` : ''
+  }</figcaption></figure>`;
+}
+
 /** D398: every photo of a photo card, in order; a single photo renders exactly as before 045. */
 function renderImages(item: PublicItem, imageUrl: ImageUrlFor): Html | string {
   const photos = mediaImagesOf(item.payload);
@@ -120,15 +191,18 @@ ${payload.fields.map(
 }
 
 /** D177: the full card on its own page: per-type content, then the markdown body. */
-export function renderItem(item: PublicItem, imageUrl: ImageUrlFor): Html {
+export function renderItem(item: PublicItem, imageUrl: ImageUrlFor, mediaUrl?: MediaUrlFor): Html {
   let content: Html | string = '';
   switch (item.type) {
     case 'link':
       content = renderLink(item, imageUrl);
       break;
     case 'media':
-      // 045: PDF, audio and video render on public pages from PR 3 (D397); nothing until then.
-      content = renderImages(item, imageUrl);
+      // D397: photos in order; a PDF, video or audio file through `renderFile`.
+      content =
+        mediaKindOf(item.payload) === 'image'
+          ? renderImages(item, imageUrl)
+          : renderFile(item, mediaUrl);
       break;
     case 'table':
       content = renderTable(item);

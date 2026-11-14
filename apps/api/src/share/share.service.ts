@@ -1,5 +1,10 @@
 import { htmlLang, ogLocale } from '@gobbit/shared';
-import { mediaImagesOf } from '@gobbit/shared/media-constants';
+import {
+  MEDIA_DELIVERY,
+  mediaImagesOf,
+  mediaKindOf,
+  type MediaRendition,
+} from '@gobbit/shared/media-constants';
 import { isUuid } from '../lib/resolve-deck';
 import type { ShareRecord, ShareRepo } from '../repositories/share.repo';
 import { ogContentHash, ogPublicId, type OgContent } from './content-hash';
@@ -65,11 +70,29 @@ function publicCategoryName(record: ShareRecord): string | null {
   return record.categories.find((c) => c.visibility === 'public')?.name ?? null;
 }
 
+/** D397: a photo card's cover, the picture the share preview shows as is. */
 function imagePublicIdOf(record: ShareRecord): string | null {
-  // D397: a photo card's cover; PDF and video previews arrive with 045 PR 3.
   const id =
     record.item.type === 'media' ? mediaImagesOf(record.item.payload)[0]?.publicId : undefined;
   return typeof id === 'string' && id !== '' ? id : null;
+}
+
+/** D397: a video's still or a PDF's first page, cropped to the preview size; else null. */
+function filePreviewOf(
+  record: ShareRecord,
+): { rendition: MediaRendition; publicId: string } | null {
+  if (record.item.type !== 'media') return null;
+  const kind = mediaKindOf(record.item.payload);
+  const publicId = record.item.payload['publicId'];
+  if (typeof publicId !== 'string' || publicId === '') return null;
+  if (kind === 'video') return { rendition: MEDIA_DELIVERY.shareVideo, publicId };
+  if (kind === 'pdf') return { rendition: MEDIA_DELIVERY.sharePdf, publicId };
+  return null;
+}
+
+/** The media kind the generated preview depends on (audio cards get one), else undefined. */
+function mediaKindFor(record: ShareRecord): string | undefined {
+  return record.item.type === 'media' ? (mediaKindOf(record.item.payload) ?? undefined) : undefined;
 }
 
 function modeOf(record: ShareRecord) {
@@ -155,12 +178,16 @@ export function createShareService(deps: ShareServiceDeps) {
     if (imagePublicId && store) {
       return store.deliveryUrl(imagePublicId, IMAGE_CARD_OG_TRANSFORMATION);
     }
+    const file = filePreviewOf(record);
+    if (file && store) return store.mediaUrl(file.rendition, file.publicId);
+    const mediaKind = mediaKindFor(record);
     const content: OgContent = {
       title: item.title,
       excerpt: eventSummary(item) ?? excerpt(item.body, OG_IMAGE_EXCERPT_MAX),
       categoryName: publicCategoryName(record),
       deckName: deck.name,
       imagePublicId,
+      ...(mediaKind ? { mediaKind } : {}),
     };
     return (await generatedImageUrl(item.id, content)) ?? `${origin}${PRIVATE_OG_IMAGE_PATH}`;
   }
@@ -217,6 +244,11 @@ export function createShareService(deps: ShareServiceDeps) {
     /** Absolute URL of a stored image, or null without a media store (public pages, D177). */
     imageUrl(publicId: string, transformation: string): string | null {
       return store ? store.deliveryUrl(publicId, transformation) : null;
+    },
+
+    /** 045: absolute URL of one rendition of a stored file, or null without a media store. */
+    mediaUrl(rendition: MediaRendition, publicId: string): string | null {
+      return store ? store.mediaUrl(rendition, publicId) : null;
     },
 
     /** Absolute URL of the static site image (public deck and category pages). */

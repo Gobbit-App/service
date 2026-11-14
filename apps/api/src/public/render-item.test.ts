@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { PublicItem } from '@gobbit/shared';
-import { defaultCalcResult, renderItem, USER_LINK_REL, type ImageUrlFor } from './render-item';
+import { mediaDeliveryUrl } from '@gobbit/shared/media-constants';
+import {
+  defaultCalcResult,
+  formatDuration,
+  renderItem,
+  USER_LINK_REL,
+  type ImageUrlFor,
+  type MediaUrlFor,
+} from './render-item';
 
 const imageUrl: ImageUrlFor = (id, t) => `https://res.cloudinary.com/demo/image/upload/${t}/${id}`;
 const noMedia: ImageUrlFor = () => null;
@@ -173,5 +181,75 @@ describe('renderItem (D177)', () => {
     expect(out).toContain('class="event-when"');
     expect(out).not.toContain('<a ');
     expect(out).not.toContain('event-location');
+  });
+});
+
+describe('renderItem media (045, D397, D398)', () => {
+  const mediaUrl: MediaUrlFor = (r, id) => mediaDeliveryUrl('demo', r, id);
+  const renderMedia = (
+    payload: Record<string, unknown>,
+    urls: MediaUrlFor | undefined = mediaUrl,
+  ) => renderItem(item({ type: 'media', title: 'Card', payload }), imageUrl, urls).toString();
+
+  it('shows every gallery photo in order, without scripts', () => {
+    const out = renderMedia({
+      kind: 'image',
+      images: [
+        { publicId: 'p/2', alt: 'Second', width: 30, height: 40 },
+        { publicId: 'p/1', alt: 'First' },
+      ],
+    });
+    expect(out.indexOf('p/2')).toBeLessThan(out.indexOf('p/1'));
+    expect(out.match(/<img /g)).toHaveLength(2);
+    expect(out).not.toContain('<script');
+  });
+
+  it('plays a video with its still, never before a tap', () => {
+    const out = renderMedia({
+      kind: 'video',
+      publicId: 'v/1',
+      width: 720,
+      height: 1280,
+      durationMs: 65_000,
+    });
+    expect(out).toContain('<video controls playsinline preload="none"');
+    expect(out).toContain('poster="https://res.cloudinary.com/demo/video/upload/so_auto');
+    expect(out).toContain('video/upload/c_limit,w_1280,h_1280,q_auto,vc_auto/v/1.mp4');
+    expect(out).toContain('width="720" height="1280"');
+    expect(out).toContain('Video · 1:05');
+    expect(out).not.toContain('autoplay');
+  });
+
+  it('plays audio with the browser controls and its duration', () => {
+    const out = renderMedia({ kind: 'audio', publicId: 'a/1', durationMs: 4_100 });
+    expect(out).toContain('<audio controls preload="none"');
+    expect(out).toContain('video/upload/q_auto/a/1.mp3');
+    expect(out).toContain('Audio · 0:04');
+  });
+
+  it('links a PDF’s first page to the original with its page count', () => {
+    const out = renderMedia({ kind: 'pdf', publicId: 'd/1', pages: 3, alt: 'Term dates' });
+    expect(out).toContain('image/upload/pg_1,f_auto,q_auto,c_limit,w_1080/d/1"');
+    expect(out).toContain('href="https://res.cloudinary.com/demo/image/upload/d/1.pdf"');
+    expect(out).toContain('alt="Term dates"');
+    expect(out).toContain('3 pages');
+    expect(out).toContain(`rel="${USER_LINK_REL}"`);
+  });
+
+  it('says unavailable without media storage', () => {
+    const out = renderMedia({ kind: 'video', publicId: 'v/1' }, () => null);
+    expect(out).toContain('File unavailable');
+    expect(out).not.toContain('<video');
+  });
+});
+
+describe('formatDuration', () => {
+  it.each([
+    [0, '0:00'],
+    [999, '0:01'],
+    [65_000, '1:05'],
+    [3_725_000, '1:02:05'],
+  ])('%d ms → %s', (ms, text) => {
+    expect(formatDuration(ms)).toBe(text);
   });
 });
