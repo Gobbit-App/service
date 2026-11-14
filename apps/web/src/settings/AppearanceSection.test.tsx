@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { THEME_KEY } from '../theme/theme';
+import { CATEGORY_ORDER_KEY } from '../ui/category-order';
 import { AppearanceSection } from './AppearanceSection';
 
 const option = (name: string) => screen.getByRole('radio', { name });
@@ -41,5 +42,23 @@ describe('AppearanceSection', () => {
     fireEvent.click(option('Match device'));
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
     expect(localStorage.getItem(THEME_KEY)).toBeNull();
+  });
+
+  it('starts the category order on A–Z when nothing is stored (D402)', () => {
+    render(<AppearanceSection />);
+    expect(screen.getByRole('group', { name: 'Category order' })).toBeTruthy();
+    expect((option('A–Z') as HTMLInputElement).checked).toBe(true);
+  });
+
+  it('saves a creation order and forgets it for A–Z', () => {
+    localStorage.setItem(CATEGORY_ORDER_KEY, 'oldest');
+    render(<AppearanceSection />);
+    expect((option('Oldest first') as HTMLInputElement).checked).toBe(true);
+
+    fireEvent.click(option('Newest first'));
+    expect(localStorage.getItem(CATEGORY_ORDER_KEY)).toBe('newest');
+
+    fireEvent.click(option('A–Z'));
+    expect(localStorage.getItem(CATEGORY_ORDER_KEY)).toBeNull();
   });
 });

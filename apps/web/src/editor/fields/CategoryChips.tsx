@@ -1,6 +1,7 @@
 import { useId, type ReactElement } from 'react';
 import type { Category, Deck } from '@gobbit/shared';
 import { can } from '@gobbit/shared/authz';
+import { orderChips } from '../../ui/chip-order';
 import { NewCategory } from './NewCategory';
 
 export type CategoryChipsProps = {
@@ -48,7 +49,7 @@ export function CategoryChips({
         Categories
       </span>
       <ul className="category-chips__list">
-        {categories.map((category) => {
+        {orderChips(categories).map((category) => {
           const on = selected.includes(category.id);
           return (
             <li key={category.id}>

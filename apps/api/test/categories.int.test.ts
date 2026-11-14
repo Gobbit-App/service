@@ -5,7 +5,7 @@ import { categoryListSchema, categorySchema } from '@gobbit/shared';
 describe('categories routes', () => {
   const ctx = setupApiTest();
 
-  it('GET /decks/family/categories → 200 with 7 categories in order', async () => {
+  it('GET /decks/family/categories → 200 with 7 categories, default first then A–Z (D402)', async () => {
     const res = await ctx.app.request('/decks/family/categories', {
       headers: ctx.as(),
     });
@@ -17,12 +17,12 @@ describe('categories routes', () => {
     expect(parsed.data).toHaveLength(7);
     expect(parsed.data.map((c) => c.slug)).toEqual([
       'general',
-      'school',
-      'health',
-      'food',
       'admin',
-      'home',
+      'food',
       'fun',
+      'health',
+      'home',
+      'school',
     ]);
   });
 

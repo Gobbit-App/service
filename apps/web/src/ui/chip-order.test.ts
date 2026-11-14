@@ -8,6 +8,7 @@ import {
   sameView,
   type ChipView,
 } from './chip-order';
+import { CATEGORY_ORDER_KEY } from './category-order';
 
 describe('orderChips', () => {
   it('places default category first regardless of position', () => {
@@ -41,66 +42,54 @@ describe('orderChips', () => {
     expect(result[0].slug).toBe('main');
   });
 
-  it('sorts by position when not default', () => {
-    const categories: Category[] = [
-      {
-        id: '1',
-        deckId: 'd1',
-        slug: 'z',
-        name: 'Z',
-        visibility: 'private',
-        isDefault: false,
-        position: 2,
-        createdAt: '2026-01-01T00:00:00Z',
-        updatedAt: '2026-01-01T00:00:00Z',
-      },
-      {
-        id: '2',
-        deckId: 'd1',
-        slug: 'a',
-        name: 'A',
-        visibility: 'private',
-        isDefault: false,
-        position: 1,
-        createdAt: '2026-01-01T00:00:00Z',
-        updatedAt: '2026-01-01T00:00:00Z',
-      },
-    ];
+  const cat = (name: string, createdAt: string, position: number): Category => ({
+    id: name,
+    deckId: 'd1',
+    slug: name.toLowerCase(),
+    name,
+    visibility: 'private',
+    isDefault: false,
+    position,
+    createdAt,
+    updatedAt: createdAt,
+  });
+  const names = (list: Category[]) => list.map((c) => c.name);
+  // Created Banana, then apple, then Cherry: not alphabetical; positions follow creation.
+  const mixed = [
+    cat('Cherry', '2026-03-01T00:00:00Z', 3),
+    cat('Banana', '2026-01-01T00:00:00Z', 1),
+    cat('apple', '2026-02-01T00:00:00Z', 2),
+  ];
 
-    const result = orderChips(categories);
-    expect(result[0].position).toBe(1);
-    expect(result[1].position).toBe(2);
+  it('sorts A–Z by name by default, case-insensitively, ignoring position (D402)', () => {
+    expect(names(orderChips(mixed))).toEqual(['apple', 'Banana', 'Cherry']);
   });
 
-  it('sorts by name when position is equal', () => {
-    const categories: Category[] = [
-      {
-        id: '1',
-        deckId: 'd1',
-        slug: 'zebra',
-        name: 'Zebra',
-        visibility: 'private',
-        isDefault: false,
-        position: 1,
-        createdAt: '2026-01-01T00:00:00Z',
-        updatedAt: '2026-01-01T00:00:00Z',
-      },
-      {
-        id: '2',
-        deckId: 'd1',
-        slug: 'apple',
-        name: 'Apple',
-        visibility: 'private',
-        isDefault: false,
-        position: 1,
-        createdAt: '2026-01-01T00:00:00Z',
-        updatedAt: '2026-01-01T00:00:00Z',
-      },
-    ];
+  it('follows the order stored on this device', () => {
+    localStorage.setItem(CATEGORY_ORDER_KEY, 'newest');
+    try {
+      expect(names(orderChips(mixed))).toEqual(['Cherry', 'apple', 'Banana']);
+    } finally {
+      localStorage.removeItem(CATEGORY_ORDER_KEY);
+    }
+  });
 
-    const result = orderChips(categories);
-    expect(result[0].name).toBe('Apple');
-    expect(result[1].name).toBe('Zebra');
+  it('sorts by creation, oldest or newest first', () => {
+    expect(names(orderChips(mixed, 'oldest'))).toEqual(['Banana', 'apple', 'Cherry']);
+    expect(names(orderChips(mixed, 'newest'))).toEqual(['Cherry', 'apple', 'Banana']);
+  });
+
+  it('breaks equal creation times by position, then name', () => {
+    const same = '2026-01-01T00:00:00Z';
+    const tied = [cat('Zed', same, 1), cat('Bee', same, 2), cat('Ant', same, 2)];
+    expect(names(orderChips(tied, 'oldest'))).toEqual(['Zed', 'Ant', 'Bee']);
+    expect(names(orderChips(tied, 'newest'))).toEqual(['Ant', 'Bee', 'Zed']);
+  });
+
+  it('keeps the default category first in every order', () => {
+    const list = [...mixed, { ...cat('Zzz', '2025-01-01T00:00:00Z', 0), isDefault: true }];
+    expect(orderChips(list, 'name')[0].name).toBe('Zzz');
+    expect(orderChips(list, 'newest')[0].name).toBe('Zzz');
   });
 
   it('does not mutate input', () => {
