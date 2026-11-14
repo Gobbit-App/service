@@ -1,8 +1,9 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import type { Item } from '@gobbit/shared';
-import { imageAlt } from '@gobbit/shared/image-alt';
 import { EventCard } from './EventCard';
-import { ImageCard, type ImageLoading } from './ImageCard';
+import type { ImageLoading } from './ImageCard';
+import { GalleryCard } from './media/GalleryCard';
+import { MediaFacade } from './media/MediaFacade';
 import { LinkCard } from './LinkCard';
 import { TableCard } from './TableCard';
 import { TextCard } from './TextCard';
@@ -51,22 +52,18 @@ function TypedBody({
     case 'media': {
       const media = asMediaPayload(item.payload);
       if (!media) return <Invalid />;
-      // 045: PDF, audio and video bodies arrive with the reader (PR 2); until then a placeholder.
-      if (media.kind !== 'image') return <p className="card-muted">File unavailable</p>;
-      // D398: the cover stands for the card until the gallery reader lands.
-      const payload = media.images[0];
-      // Keyed by the photo, so a replaced photo (editor preview) starts without the old error.
+      // D398: photos (one renders exactly as before 045); D400: a PDF, video or audio facade.
       // Every card layout shows the title as the heading above the body (D206).
-      return payload ? (
-        <ImageCard
-          key={payload.publicId}
-          payload={payload}
-          alt={imageAlt({ alt: payload.alt, title: item.title, titleAdjacent: true })}
+      return media.kind === 'image' ? (
+        <GalleryCard title={item.title} payload={media} cloudName={cloudName} {...image} />
+      ) : (
+        <MediaFacade
+          itemId={item.id}
+          title={item.title}
+          payload={media}
           cloudName={cloudName}
           {...image}
         />
-      ) : (
-        <Invalid />
       );
     }
     case 'table': {

@@ -68,6 +68,10 @@ export function checkBudget(
 export const LAZY_ONLY_MARKERS: readonly { library: string; markers: readonly string[] }[] = [
   { library: 'papaparse', markers: ['delimitersToGuess'] },
   { library: 'milkdown', markers: ['ProseMirror-hideselection', 'editorViewOptions'] },
+  // D400: the media viewer and players load on intent or idle, never with the app.
+  { library: 'media viewer', markers: ['page-viewer__pages'] },
+  { library: 'video player', markers: ['media-player__video'] },
+  { library: 'audio player', markers: ['media-player__audio'] },
 ];
 
 /** The lazy-only libraries found in initial chunks, as `library in file` strings. */

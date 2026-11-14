@@ -4,7 +4,7 @@ import type { ItemType } from '@gobbit/shared';
 export const SECTION_TITLES: Record<ItemType, string | null> = {
   text: null,
   link: 'Link',
-  media: 'Photo',
+  media: 'Media',
   table: 'Table',
   calc: 'Calculator',
   reminder: 'Reminder',

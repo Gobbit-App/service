@@ -161,6 +161,8 @@ export function CardEditor(props: CardEditorProps): ReactElement {
   const keyboardOpen = useKeyboardInset(formRef);
   // D308: bumped when a refused Save should land on the first invalid field, once it renders.
   const [focusRequest, setFocusRequest] = useState(0);
+  // D398: a media editor reports uploads in flight; Save waits for them.
+  const [uploading, setUploading] = useState(false);
   useEffect(() => {
     if (focusRequest > 0) focusFirstInvalid(formRef.current);
   }, [focusRequest]);
@@ -236,7 +238,7 @@ export function CardEditor(props: CardEditorProps): ReactElement {
     }
   };
 
-  const blockedReason = saveBlockedReason(errorCount(clientErrors), calc.ready);
+  const blockedReason = saveBlockedReason(errorCount(clientErrors), calc.ready, uploading);
 
   /** D308: a blocked Save shows every problem and lands on the first one (out of the preview). */
   const revealErrors = () => {
@@ -270,6 +272,7 @@ export function CardEditor(props: CardEditorProps): ReactElement {
           errors={shown}
           deck={deck}
           disabled={saving}
+          onUploadingChange={setUploading}
           item={props.mode === 'edit' ? props.item : undefined}
           setTitleIfEmpty={(title: string) =>
             setDraft((d) => (d.title.trim() === '' ? { ...d, title } : d))

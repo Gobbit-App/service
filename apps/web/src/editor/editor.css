@@ -169,6 +169,60 @@
   margin: 0;
 }
 
+/* 045 (D398): the gallery's photos in order, each with its description and moves. */
+.gallery-fields__list {
+  display: grid;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gallery-fields__item {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--gap);
+}
+
+.gallery-fields__thumb {
+  width: 96px;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.gallery-fields__detail {
+  display: grid;
+  gap: calc(var(--gap) / 2);
+  min-width: 0;
+}
+
+.gallery-fields__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--gap) / 2);
+}
+
+.gallery-fields__count {
+  margin: 0;
+}
+
+/* 045: a PDF, audio or video card's one file. */
+.file-fields__file {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.file-fields__file p {
+  margin: 0;
+}
+
+.file-fields__name {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
 .image-fields__progress progress {
   flex: 1 1 160px;
 }

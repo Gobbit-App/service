@@ -78,18 +78,18 @@ create answers 201 `type: "media"` and logs `item.type_alias`.
 
 **Independent test**: quickstart § 4.
 
-- [ ] T032 [US2] (CSP `media-src` done in PR 3, T045) `apps/web/src/sw.ts` caches only `destination === 'image'` Cloudinary requests (D394); [unit] `sw.test.ts`
-- [ ] T033 [US2] `apps/web/src/cards/cloudinary.ts` resource-type aware builders from `MEDIA_DELIVERY`; `CloudImage.tsx` `source` prop (no blur placeholder for stills/pages); [unit] `cloudinary.test.ts` (audio/video only eager transformations), `CloudImage.test.tsx`
-- [ ] T034 [US7] `cards/media/use-active-media.ts` (one live element, release buffer) + `load-media-module.ts` (module cache, intent/idle prefetch, skip on `saveData`, retry) (D400); [unit] tests
-- [ ] T035 [US7] `cards/media/GalleryCard.tsx` (cover + "N photos"; single photo = today's `ImageCard`) and lazy `PageViewer.tsx` (dialog, k of N, arrows, zoom, per-photo alt, focus restore, horizontal/vertical) (D398, D399); [unit] `GalleryCard.test.tsx`, `PageViewer.test.tsx`
-- [ ] T036 [US2] `cards/media/MediaFacade.tsx` + `PdfCard.tsx` (page 1, "PDF · N pages", Read → PageViewer, Open original); `MediaUnavailable.tsx`; [unit] `MediaFacade.test.tsx` (20 video cards → 0 media elements)
-- [ ] T037 [US3] `cards/media/VideoCard.tsx` (`preload="none"`, `playsinline`, poster still, `play()` in click, still processing message, offline message); [unit] `VideoCard.test.tsx`
-- [ ] T038 [US4] `cards/media/AudioCard.tsx` (waveform mask, duration); [unit] test
-- [ ] T039 [US3] `CardBody.tsx` dispatch by kind; `browse/BrowsePage.tsx` pause off-screen players; `scripts/initial-chunks.ts` `LAZY_ONLY_MARKERS`; [unit] `CardBody.test.tsx` (reserved box, unavailable placeholder)
-- [ ] T040 [US7] `editor/fields/MediaFields.tsx` (was ImageFields) + `GalleryFields.tsx` (multi-pick, per-photo progress/alt/move/remove, cap 8, save waits); `editor/media-file.ts`, `use-media-upload.ts`, `upload.ts` per kind with size check before upload; paste/camera add to gallery; [unit] `GalleryFields.test.tsx`, `MediaFields.test.tsx`
-- [ ] T041 [US2] Composer: one "Media" tile accepting all kinds; drafts keep kind + photos/file; [unit] `draft.test.ts`, composer tests
-- [ ] T042 [P] [US7] [e2e:smoke] `e2e/tests/smoke/editor.spec.ts`: two-photo gallery journey and PDF journey (viewer page 2); fake Cloudinary per resource type
-- [ ] T043 [P] [US3] [e2e:full] `e2e/tests/full/media.spec.ts`: gallery editing, video/audio playback, one-at-a-time, offline, negatives, request counting
+- [x] T032 [US2] (CSP `media-src` done in PR 3, T045) `apps/web/src/sw.ts` caches only `destination === 'image'` Cloudinary requests (D394); [unit] `sw.test.ts`
+- [x] T033 [US2] `apps/web/src/cards/cloudinary.ts` resource-type aware builders from `MEDIA_DELIVERY`; `CloudImage.tsx` `source` prop (no blur placeholder for stills/pages); [unit] `cloudinary.test.ts` (audio/video only eager transformations), `CloudImage.test.tsx`
+- [x] T034 [US7] `cards/media/use-active-media.ts` (one live element, release buffer) + `load-media-module.ts` (module cache, intent/idle prefetch, skip on `saveData`, retry) (D400); [unit] tests
+- [x] T035 [US7] `cards/media/GalleryCard.tsx` (cover + "N photos"; single photo = today's `ImageCard`) and lazy `PageViewer.tsx` (dialog, k of N, arrows, zoom, per-photo alt, focus restore, horizontal/vertical) (D398, D399); [unit] `GalleryCard.test.tsx`, `PageViewer.test.tsx`
+- [x] T036 [US2] `cards/media/MediaFacade.tsx` + `PdfCard.tsx` (page 1, "PDF · N pages", Read → PageViewer, Open original); `MediaUnavailable.tsx`; [unit] `MediaFacade.test.tsx` (20 video cards → 0 media elements)
+- [x] T037 [US3] `cards/media/VideoCard.tsx` (`preload="none"`, `playsinline`, poster still, `play()` in click, still processing message, offline message); [unit] `VideoCard.test.tsx`
+- [x] T038 [US4] `cards/media/AudioCard.tsx` (waveform mask, duration); [unit] test
+- [x] T039 [US3] `CardBody.tsx` dispatch by kind; `browse/BrowsePage.tsx` pause off-screen players; `scripts/initial-chunks.ts` `LAZY_ONLY_MARKERS`; [unit] `CardBody.test.tsx` (reserved box, unavailable placeholder)
+- [x] T040 [US7] `editor/fields/MediaFields.tsx` (was ImageFields) + `GalleryFields.tsx` (multi-pick, per-photo progress/alt/move/remove, cap 8, save waits); `editor/media-file.ts`, `use-media-upload.ts`, `upload.ts` per kind with size check before upload; paste/camera add to gallery; [unit] `GalleryFields.test.tsx`, `MediaFields.test.tsx`
+- [x] T041 [US2] Composer: one "Media" tile accepting all kinds; drafts keep kind + photos/file; [unit] `draft.test.ts`, composer tests
+- [x] T042 [P] [US7] [e2e:smoke] `e2e/tests/smoke/editor.spec.ts`: two-photo gallery journey and PDF journey (viewer page 2); fake Cloudinary per resource type
+- [x] T043 [P] [US3] [e2e:full] `e2e/tests/full/media.spec.ts`: gallery editing, video/audio playback, one-at-a-time, offline, negatives, request counting
 
 ---
 

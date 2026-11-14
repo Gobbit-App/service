@@ -18,7 +18,7 @@ describe('composer sections (D306)', () => {
     expect(SECTION_TITLES).toEqual({
       text: null,
       link: 'Link',
-      media: 'Photo',
+      media: 'Media',
       table: 'Table',
       calc: 'Calculator',
       reminder: 'Reminder',

@@ -1,5 +1,11 @@
 /** Why Save can't run right now (D308), or null when it can. */
-export function saveBlockedReason(errorCount: number, calcReady: boolean): string | null {
+export function saveBlockedReason(
+  errorCount: number,
+  calcReady: boolean,
+  uploading = false,
+): string | null {
+  // D398: saving waits for every upload (a photo still uploading would be left out).
+  if (uploading) return 'Wait for uploads to finish';
   if (errorCount > 0) return errorCount === 1 ? 'Fix 1 field' : `Fix ${errorCount} fields`;
   if (!calcReady) return 'Loading the calculator…';
   return null;

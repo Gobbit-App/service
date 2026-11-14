@@ -74,6 +74,44 @@ of `docs/design/card-media.md` at close-out.
 - Integration tests (`*.int.test.ts`, Docker) weren't run in the implementation environment;
   CI runs them on the PR.
 
+## PR 2 — Reader and editor
+
+### Decisions
+
+- **One facade, not one card per kind** (T036–T038): `cards/media/MediaFacade.tsx` renders the PDF,
+  video and audio facades (still or waveform mask, badge, Read/Play) and loads the lazy
+  `PageViewer`, `VideoPlayer` or `AudioPlayer` module on intent; the plan's `PdfCard`, `VideoCard`
+  and `AudioCard` would have repeated the same facade three times. Facade-first is unchanged (D400).
+- **Browse releases, rather than pauses** (T039): `BrowseStack` releases the active player when the
+  current card changes (`use-active-media`), which unmounts the element and frees its buffer; a
+  paused off-screen `<video>` would keep it.
+- **Service worker** (T032): the "only `destination === 'image'` Cloudinary requests" rule lives in
+  `sw-routes.ts` (`isCloudinaryImageRequest`) so it is unit-tested without a worker.
+- **Upload hooks** (T040): no separate `use-media-upload.ts`. `useImageUpload` signs per kind
+  (`start(file, kind)`, one cached permission per kind) and a new `useGalleryUploads` runs several
+  photo uploads at once; both share `failure()`, `useKindSigners()` and `sendFailureReport()`.
+  `ImageFields.tsx` and `image-payload.ts` are gone, replaced by `GalleryFields.tsx`, `FileFields.tsx`
+  and `media-payload.ts`.
+- **Gallery order**: a photo joins the gallery when its confirm returns, so several photos picked
+  together land in the order their uploads finish; members put them in order with Move
+  earlier/later (D398 has no drag). Pick order would need placeholder slots in the payload.
+- **Photos or one file**: "Choose file" (PDF, audio, video) is offered only while the media card is
+  empty; a file card's Remove file returns to the empty card. No in-place photo ↔ file conversion.
+- **Save waits for uploads**: field editors report uploads in flight (`onUploadingChange`, new in
+  `FieldsProps`) and `saveBlockedReason` answers "Wait for uploads to finish" before any field error.
+- **FR-009 messages**: a confirm 422 whose error names `file` (wrong kind, over the limit,
+  unreadable PDF) shows the server's message with no Retry; other 422s keep "couldn't be verified".
+- **Limits**: the editor reads `/config` `media.maxBytes` (`useMediaLimits`), the defaults until it
+  loads; photos now take the configured image limit too.
+- **Labels**: the composer tile, section and Browse type label read "Media"; the hint is "Photos, a
+  PDF, audio or video". The 8-photo cap message says how many photos were left out.
+- **e2e fake Cloudinary**: `routeFakeCloudinary` gives each upload its own public id (`id`, `id-2`, …)
+  so a gallery holds distinct photos, and takes an optional `FakeMediaFile` so the permission, the
+  upload URL (`image`/`video`) and the answer (format, pages, duration) follow the kind.
+- **Full playback check** (T043): video delivery answers 404 in e2e, so `full/media.spec.ts` checks
+  what loads (no stream before Play) and how many media elements exist (one at a time), not that
+  sound or picture plays.
+
 ## PR 3 — Public pages and share previews
 
 Built on PR 1 (independent of PR 2, as the plan allows), so the stack is 1 → 3 → 4 → 2.

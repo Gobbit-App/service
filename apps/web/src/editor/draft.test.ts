@@ -321,6 +321,16 @@ describe('toPatch', () => {
     expect(toPatch(item, kept)).toEqual({ payload: gallery('New') });
   });
 
+  it('keeps a file card kind and facts; a new description is the only change (T041)', () => {
+    const pdf = { kind: 'pdf', publicId: 'f', pages: 3, fileName: 'minutes.pdf' };
+    const item = makeItem({ type: 'media', payload: pdf });
+    const draft = draftFromItem(item);
+    expect(draft.payload).toEqual(pdf);
+    expect(toPatch(item, draft)).toBeNull();
+    const described = { ...draft, payload: { ...pdf, alt: 'Minutes' } } as Draft;
+    expect(toPatch(item, described)).toEqual({ payload: { ...pdf, alt: 'Minutes' } });
+  });
+
   it('reads an item cached by a pre-045 build as a media card (D387)', () => {
     const item = makeItem({ type: 'image' as never, payload: { publicId: 'p', alt: 'Old' } });
     const draft = draftFromItem(item);

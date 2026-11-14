@@ -194,17 +194,17 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
   it('disables the image type with an explanation when image storage is off', async () => {
     await renderImage(null);
     fireEvent.click(screen.getByRole('button', { name: 'Card type: Text' }));
-    const image = screen.getByRole('radio', { name: 'Image' });
+    const image = screen.getByRole('radio', { name: 'Media' });
     expect(image).toHaveAttribute('aria-disabled', 'true');
-    expect(image).toHaveAccessibleDescription(/image storage isn't set up/);
+    expect(image).toHaveAccessibleDescription(/file storage isn't set up/);
     expect(screen.getByRole('radio', { name: 'Calc' })).not.toHaveAttribute('aria-disabled');
   });
 
   it('offers the image type when a cloud name is configured', async () => {
     await renderImage('test-cloud');
     fireEvent.click(screen.getByRole('button', { name: 'Card type: Text' }));
-    expect(screen.getByRole('radio', { name: 'Image' })).not.toHaveAttribute('aria-disabled');
-    expect(screen.queryByText(/image storage isn't set up/)).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Media' })).not.toHaveAttribute('aria-disabled');
+    expect(screen.queryByText(/file storage isn't set up/)).not.toBeInTheDocument();
   });
 
   it('blocks Save on an image card without a photo; the description is optional (D206)', async () => {

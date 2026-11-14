@@ -1142,6 +1142,151 @@ h2 {
   }
 }
 
+/* 045 (D398): a gallery's cover opens the viewer; the count sits on the cover. */
+.gallery-card__open {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.gallery-card__count,
+.media-facade__badge {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.gallery-card__count {
+  position: absolute;
+  inset-block-end: 0.5rem;
+  inset-inline-end: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  color: #fff;
+  background: rgb(0 0 0 / 0.6);
+  border-radius: 999px;
+}
+
+/* 045 (D400): a PDF, video or audio card before a tap: picture, badge, one action. */
+.media-facade {
+  display: grid;
+  gap: 0.25rem;
+}
+
+/* Stills and PDF pages skip the blurred placeholder; the box shows the surface until loaded. */
+.media-facade .cloud-image {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+}
+
+.media-facade__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* The sound visual is a mask over the text colour, so it follows the theme (D392, D383). */
+.media-facade__wave {
+  display: block;
+  height: 96px;
+  background: currentColor;
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  opacity: 0.8;
+}
+
+.media-player {
+  margin: 0;
+}
+
+.media-player__video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(70vh, 640px);
+  background: #000;
+  border-radius: var(--radius);
+}
+
+.media-player__audio {
+  width: 100%;
+}
+
+/* 045 (D399): the full-screen viewer for gallery photos and PDF pages. */
+.page-viewer {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  background: #000;
+}
+
+.page-viewer::backdrop {
+  background: #000;
+}
+
+.page-viewer__bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgb(0 0 0 / 0.7);
+}
+
+.page-viewer__count {
+  flex: 1;
+  margin: 0;
+}
+
+.page-viewer__pages {
+  height: calc(100dvh - 3.5rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.page-viewer--x .page-viewer__pages {
+  display: flex;
+  scroll-snap-type: x mandatory;
+}
+
+.page-viewer--y .page-viewer__pages {
+  scroll-snap-type: y proximity;
+}
+
+.page-viewer__page {
+  flex: 0 0 100%;
+  margin: 0;
+  scroll-snap-align: start;
+  text-align: center;
+}
+
+.page-viewer__page img {
+  display: block;
+  width: calc(100% * var(--page-zoom, 1));
+  max-width: none;
+  height: auto;
+  margin: 0 auto;
+}
+
+.page-viewer--x .page-viewer__page img {
+  max-height: calc(100dvh - 7rem);
+  object-fit: contain;
+}
+
+.page-viewer__page figcaption {
+  padding: 0.5rem 1rem;
+}
+
 .table-card {
   max-width: 100%;
   overflow-x: auto;
