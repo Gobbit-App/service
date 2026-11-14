@@ -6,6 +6,7 @@ import { SettingsSection } from '../settings/SettingsSection';
 import { AdminError } from './AdminError';
 import { useUpdateCategory } from './deck-admin-queries';
 import { Button } from '../ui/buttons/Button';
+import { orderChips } from '../ui/chip-order';
 
 /** D184: rename and the three-way visibility select per category (`category.update`). */
 export function CategoriesSection({
@@ -23,7 +24,7 @@ export function CategoriesSection({
         <p className="muted">“Everyone” categories show only once the deck is public.</p>
       )}
       <ul className="admin-list">
-        {categories.map((category) => (
+        {orderChips(categories).map((category) => (
           <CategoryRow key={category.id} deck={deck} category={category} online={online} />
         ))}
       </ul>

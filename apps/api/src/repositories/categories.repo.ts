@@ -1,4 +1,4 @@
-import { eq, isNull, asc, and, inArray, sql } from 'drizzle-orm';
+import { eq, isNull, asc, desc, and, inArray, sql } from 'drizzle-orm';
 import type { CategoryRow, DbExecutor } from '@gobbit/db';
 import { categories, itemCategories, items } from '@gobbit/db';
 import type { CategoryVisibility, MemberRole } from '@gobbit/shared';
@@ -6,7 +6,7 @@ import { itemRevealedWhere, visibleCategoriesWhere } from '../access/visibility'
 
 export function createCategoriesRepo(db: DbExecutor) {
   return {
-    /** D38: only the categories `role` may see. */
+    /** D38: only the categories `role` may see; D402: default first, then by name A–Z. */
     async listByDeck(deckId: string, role: MemberRole | null): Promise<CategoryRow[]> {
       return db
         .select()
@@ -18,7 +18,11 @@ export function createCategoriesRepo(db: DbExecutor) {
             visibleCategoriesWhere(role),
           ),
         )
-        .orderBy(asc(categories.position), asc(categories.name));
+        .orderBy(
+          desc(categories.isDefault),
+          asc(sql`lower(${categories.name})`),
+          asc(categories.name),
+        );
     },
 
     /** D38: an invisible slug is indistinguishable from a missing one. */
