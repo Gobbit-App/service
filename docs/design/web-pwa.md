@@ -100,6 +100,13 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 - A refetch must not move the reader: `items/use-keep-place.ts` remembers where the reader's card sits on screen (the first visible card in the list, the current card in Browse) and, after the new data renders but before the browser paints, scrolls by exactly as far as that card moved. A card added above shows only as a changed scroll position (and Browse's "n of N"). Chromium's own scroll anchoring already corrects the list during the hook's forced layout, so the hook then measures 0 and does nothing. The hook is there for Safari (no `overflow-anchor`) and Browse's snap track. If the reader's card itself was removed, nothing is adjusted.
 - E2E tier: none. The behaviour is layout timing over a 60 s interval. Unit tests cover the hook with stubbed geometry.
 
+## Category order (D402)
+
+- Categories list A–Z by name by default. Settings → Appearance → Category order offers A–Z / Oldest first / Newest first (by `createdAt`, ties by `position`, then name), saved per device in `localStorage` `gobbit:category-order` (`ui/category-order.ts`; A–Z removes the key, unknown values read as A–Z). It is a reader preference, not a deck setting, so it needs no API.
+- `orderChips` (`ui/chip-order.ts`) is the one sort: the chip row and deck switcher, the Browse category cycle and list, the editor's category chips and the deck-settings category list. The default category stays first in every order.
+- `GET /decks/{id}/categories` (and so the public pages) returns default first, then case-insensitive A–Z.
+- E2E tier: none. A client-side sort plus a stored choice; unit tests cover each order, the stored choice and the Appearance control.
+
 ## Share previews (D58–D61)
 
 - The share button builds `${origin}/s/<itemId>` (Web Share API, clipboard fallback). Caddy forwards `/s/*` to the API unchanged.

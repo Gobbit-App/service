@@ -1,4 +1,5 @@
 import type { Category } from '@gobbit/shared';
+import { readCategoryOrder, type CategoryOrder } from './category-order';
 
 /** Category view type: all, favorites, archived, or a specific category. */
 export type ChipView =
@@ -8,15 +9,24 @@ export type ChipView =
   | { kind: 'links' }
   | { kind: 'category'; slug: string };
 
-/** Sort categories: default first, then by position, then by name. */
-export function orderChips(categories: readonly Category[]): Category[] {
+/**
+ * Sort categories: default first, then by `order` (D402) — name A–Z, or creation time oldest /
+ * newest first (ties by position, then name). The order defaults to this device's choice.
+ */
+export function orderChips(
+  categories: readonly Category[],
+  order: CategoryOrder = readCategoryOrder(),
+): Category[] {
   const arr = [...categories];
   arr.sort((a, b) => {
     if (a.isDefault !== b.isDefault) {
       return a.isDefault ? -1 : 1;
     }
-    if (a.position !== b.position) {
-      return a.position - b.position;
+    if (order !== 'name') {
+      const sign = order === 'oldest' ? 1 : -1;
+      const created = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+      if (created !== 0) return sign * created;
+      if (a.position !== b.position) return sign * (a.position - b.position);
     }
     return a.name.localeCompare(b.name);
   });
