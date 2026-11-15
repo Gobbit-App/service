@@ -328,13 +328,14 @@ Open decisions (TBD):
 
 ## Phase 16 — Community membership and onboarding
 
-Nov 16: stub, not planned. Decisions are TBD and get D numbers when each feature goes through `/speckit-specify`. Found while planning the first communal deck ([`community-go-list.md`](community-go-list.md), Track H). Four separate features.
+Nov 16: stub, not planned. Decisions are TBD and get D numbers when each feature goes through `/speckit-specify`. Found while planning the first communal deck ([`community-go-list.md`](community-go-list.md), Track H). Five separate features.
 
 Rules already decided:
 - **Suggesting is a communal-deck setting.** Off by default; only owners switch it on. When on, readers can suggest cards, which are always proposals. Shared and personal decks never have it.
 - **No email addresses in member data.** No deck kind and no role, owners included, sees another member's email address.
 - **One registration flow.** Anyone can be invited to a deck. Someone not yet registered goes through the same registration as a person arriving from the welcome page; the invite travels with it and decides where they land.
 - **Every registered user is a full user**, with a personal deck, whoever invited them and whether or not a deck came with the invite.
+- **Model spend is guarded.** Any feature that calls a model in the background is protected from over-use and misuse by anonymous visitors and readers: their calls are bounded by ceilings that hold across all users (per deck and platform-wide), not only per person, and are refused or served without the model beyond them. Applies to every later phase (Ask, suggesting, curation agents, MCP).
 
 Open decisions (TBD):
 - **Suggesting:** the form and the share paths open to readers, caps, what name shows on a suggestion, how a suggester hears the outcome.
@@ -347,6 +348,7 @@ Open decisions (TBD):
 - [ ] **2. Member list without email addresses** — TBD with the feature spec.
 - [ ] **3. Invites through registration** — TBD with the feature spec.
 - [ ] **4. Onboarding for invited users** — TBD with the feature spec.
+- [ ] **5. Model spend guard** — a reader and an anonymous caller driven past the ceilings cause no further model calls; the refusals show as decision events.
 
 ## Phase 17 — Members-only categories on public decks
 
