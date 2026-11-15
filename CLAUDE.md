@@ -78,6 +78,14 @@ Follow the skill exactly, with one change: execute each task by delegating to th
 - Run [P] tasks in parallel only if they touch different files; otherwise run them sequentially
 - On STATUS: failed/blocked for a non-[P] task, halt per the skill's rules and tell me
 
+### Spec-kit + ponytail
+
+- **Authority**: spec.md and tasks.md decide scope (what gets built); ponytail decides implementation size (how much code). Both apply; neither overrides the other
+- **No silent divergence**: if a task looks unnecessary or over-built, say so and propose an edit to tasks.md (or plan.md) before skipping or shrinking it
+- **Prune the plan**: after `/speckit-plan` writes plan.md, check every component, dependency and abstraction against constitution IX (Reuse before writing) and remove what the spec doesn't require; list what was removed and why
+- **Before a PR**: run both `/speckit-converge` (spec conformance) and `/ponytail-review` (bugs, security, load, over-building); they check different things
+- **`shortcut:` comments** are tracked debt: when `/ponytail-debt` collects them, propose the ones worth keeping as follow-up tasks rather than leaving them only in code
+
 ## Key Commands
 
 ```
