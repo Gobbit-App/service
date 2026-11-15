@@ -221,6 +221,8 @@ export type EventCardPayload = {
   start: string;
   end?: string;
   timeZone: string;
+  /** D402: `start`/`end` hold the current or next occurrence of a yearly event. */
+  repeat?: 'yearly';
   location?: string;
   /** The optional link, read with the link card's rules. */
   link?: LinkPayload;
@@ -243,6 +245,7 @@ export function asEventPayload(p: unknown): EventCardPayload | null {
 
   const result: EventCardPayload = { allDay, start, timeZone };
   if (typeof end === 'string') result.end = end;
+  if (p.repeat === 'yearly') result.repeat = 'yearly';
   if (typeof p.location === 'string' && p.location.trim() !== '') result.location = p.location;
   const link = typeof p.url === 'string' ? asLinkPayload({ url: p.url, preview: p.preview }) : null;
   if (link) result.link = link;

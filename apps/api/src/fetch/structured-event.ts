@@ -63,6 +63,18 @@ function locationText(location: unknown): string | null {
   return unique.length > 0 ? text(unique.join(', '), EVENT_LOCATION_MAX) : null;
 }
 
+/** D405: `repeatFrequency` of an `eventSchedule` (object or array) that means every year. */
+const YEARLY_FREQUENCY = /^(P1Y|yearly|annually)$/i;
+
+function repeatsYearly(schedule: unknown): boolean {
+  const list = Array.isArray(schedule) ? schedule : [schedule];
+  return list.some((s) => {
+    if (!s || typeof s !== 'object') return false;
+    const frequency = (s as JsonLdNode).repeatFrequency;
+    return typeof frequency === 'string' && YEARLY_FREQUENCY.test(frequency.trim());
+  });
+}
+
 function toStructuredEvent(node: JsonLdNode): StructuredEvent | null {
   const startDate = text(node.startDate, 40);
   if (!startDate) return null;
@@ -72,6 +84,7 @@ function toStructuredEvent(node: JsonLdNode): StructuredEvent | null {
     endDate: text(node.endDate, 40),
     location: locationText(node.location),
     url: text(node.url),
+    yearly: repeatsYearly(node.eventSchedule),
   };
 }
 

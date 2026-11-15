@@ -10,6 +10,14 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-15 — Yearly event repeats (D402–D405)
+
+- Event cards can be marked "Repeats every year" in the editor, and shares whose page says so
+  (schema.org `eventSchedule` P1Y, or the model reads "every year") propose one. The card always
+  shows its current or next occurrence; the new worker sweep `event-roll-sweep` (every 15 minutes)
+  rolls ended yearly cards forward and their notifications with them.
+- No new environment variables and no migration; nothing to set.
+
 ### 2026-11-13 — Media cards, shared files (045 PR 4, D393, D395, D396)
 
 - Shares (share sheet, Shortcut, email-in) may now carry a PDF, audio or video file; it becomes a

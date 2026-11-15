@@ -140,3 +140,17 @@ describe('eventPayloadSchema', () => {
     ).toBe(true);
   });
 });
+
+describe('eventPayloadSchema repeat (D402)', () => {
+  it('accepts yearly and keeps it', () => {
+    expect(eventPayloadSchema.parse({ ...timed, repeat: 'yearly' }).repeat).toBe('yearly');
+  });
+
+  it('leaves repeat absent for one-off events', () => {
+    expect(eventPayloadSchema.parse(timed)).not.toHaveProperty('repeat');
+  });
+
+  it('rejects other repeat values', () => {
+    expect(eventPayloadSchema.safeParse({ ...timed, repeat: 'weekly' }).success).toBe(false);
+  });
+});

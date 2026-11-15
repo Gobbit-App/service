@@ -6,6 +6,7 @@ import {
   eventAudience,
   eventNoticeMoments,
   eventSpan,
+  nextOccurrence,
   notifyBeforeKey,
 } from '@gobbit/shared/event-constants';
 import {
@@ -221,10 +222,12 @@ export function createEventCardsService(deps: {
       before?: { item: ItemRow },
     ): Promise<CheckedEventPayload> {
       const parsed = eventPayloadSchema.parse(input);
-      const payload: EventPayload =
+      const audienced: EventPayload =
         ctx.deck.kind === 'personal'
           ? { ...parsed, notify: { ...parsed.notify, audience: { mode: 'me', userIds: [] } } }
           : parsed;
+      // D402/D403: a yearly card stores its current or next occurrence, not a past one.
+      const payload = nextOccurrence(audienced, now());
       const previous = before ? storedEventPayload(before.item) : null;
       const itemId = before?.item.id ?? null;
 

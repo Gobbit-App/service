@@ -10717,6 +10717,12 @@
                             },
                             "additionalProperties": false
                           },
+                          "repeat": {
+                            "type": "string",
+                            "enum": [
+                              "yearly"
+                            ]
+                          },
                           "notify": {
                             "type": "object",
                             "properties": {
@@ -23172,6 +23178,9 @@
                                 "string",
                                 "null"
                               ]
+                            },
+                            "yearly": {
+                              "type": "boolean"
                             }
                           },
                           "required": [

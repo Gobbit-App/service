@@ -1,4 +1,5 @@
 import type { StoredLinkPreview as LinkPreview } from '../schemas/link-preview';
+import type { EventRepeat } from './constants';
 
 /** Fields of an event payload strangers may see (D365). */
 export interface EventPublicPayload {
@@ -6,6 +7,8 @@ export interface EventPublicPayload {
   start: string;
   end?: string;
   timeZone: string;
+  /** D402 */
+  repeat?: EventRepeat;
   location?: string;
   url?: string;
   preview?: Omit<LinkPreview, 'imageLookup' | 'imageRemoved'>;
@@ -26,6 +29,7 @@ export function eventPublicPayload(payload: StoredEventPayload): EventPublicPayl
     timeZone: payload.timeZone,
   };
   if (payload.end !== undefined) out.end = payload.end;
+  if (payload.repeat !== undefined) out.repeat = payload.repeat;
   if (payload.location !== undefined) out.location = payload.location;
   if (payload.url !== undefined) out.url = payload.url;
   if (payload.preview) {

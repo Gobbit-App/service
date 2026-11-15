@@ -1,5 +1,6 @@
 import { and, asc, eq, gt, inArray, isNull, lte, sql } from 'drizzle-orm';
 import {
+  decks,
   eventCards,
   eventMutes,
   eventNotices,
@@ -97,6 +98,14 @@ export interface ComingUpRow {
   span: Pick<EventCardRow, 'startsAt' | 'endsAt' | 'allDay' | 'timeZone'>;
 }
 
+/** D403: a yearly event card whose occurrence has ended, as the roll sweep reads it. */
+export interface DueRollRow {
+  id: string;
+  deckId: string;
+  type: ItemRow['type'];
+  payload: Record<string, unknown>;
+}
+
 /** 042: reads behind the `event` DTO field (span, current notices, the caller's mute). */
 export function createEventCardsRepo(db: DbExecutor) {
   return {
@@ -187,6 +196,41 @@ export function createEventCardsRepo(db: DbExecutor) {
         .orderBy(asc(eventCards.startsAt), asc(items.id))
         .limit(limit);
       return rows.map(({ item, ...span }) => ({ item, span }));
+    },
+
+    /**
+     * D403: up to `limit` live yearly event cards (published or proposed, in a live deck) whose span
+     * has ended, oldest first. Rows are locked for the caller's transaction; locked rows are skipped.
+     */
+    async dueRolls(tx: DbTx, limit: number): Promise<DueRollRow[]> {
+      return tx
+        .select({
+          id: items.id,
+          deckId: items.deckId,
+          type: items.type,
+          payload: items.payload,
+        })
+        .from(items)
+        .innerJoin(eventCards, eq(eventCards.itemId, items.id))
+        .innerJoin(decks, eq(decks.id, items.deckId))
+        .where(
+          and(
+            eq(items.type, 'event'),
+            sql`${items.payload}->>'repeat' = 'yearly'`,
+            inArray(items.status, ['published', 'proposed']),
+            isNull(items.deletedAt),
+            isNull(decks.deletedAt),
+            lte(eventCards.endsAt, sql`now()`),
+          ),
+        )
+        .orderBy(asc(eventCards.endsAt), asc(items.id))
+        .limit(limit)
+        .for('update', { of: items, skipLocked: true });
+    },
+
+    /** D403: rewrites an item's payload; the `items_event_sync` trigger refreshes `event_cards`. */
+    async setPayload(tx: DbTx, itemId: string, payload: Record<string, unknown>): Promise<void> {
+      await tx.update(items).set({ payload }).where(eq(items.id, itemId));
     },
 
     /** D364: one row per member and event; unmute keeps the row with `muted = false`. */

@@ -15,8 +15,8 @@ describe('ensureQueues', () => {
 
     await ensureQueues(boss as never);
 
-    expect(boss.getQueue).toHaveBeenCalledTimes(12);
-    expect(boss.createQueue).toHaveBeenCalledTimes(12);
+    expect(boss.getQueue).toHaveBeenCalledTimes(13);
+    expect(boss.createQueue).toHaveBeenCalledTimes(13);
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedItem, { policy: 'stately' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedSweep, { policy: 'singleton' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.pruneSearchQueries, {
@@ -71,11 +71,12 @@ describe('ensureQueues', () => {
       [QUEUES.linkCheckSweep]: { name: QUEUES.linkCheckSweep },
       [QUEUES.pruneWaitlist]: { name: QUEUES.pruneWaitlist },
       [QUEUES.reminderSweep]: { name: QUEUES.reminderSweep },
+      [QUEUES.eventRollSweep]: { name: QUEUES.eventRollSweep },
     });
 
     await ensureQueues(boss as never);
 
-    expect(boss.getQueue).toHaveBeenCalledTimes(12);
+    expect(boss.getQueue).toHaveBeenCalledTimes(13);
     expect(boss.createQueue).not.toHaveBeenCalled();
   });
 
@@ -86,7 +87,7 @@ describe('ensureQueues', () => {
 
     await ensureQueues(boss as never);
 
-    expect(boss.createQueue).toHaveBeenCalledTimes(11);
+    expect(boss.createQueue).toHaveBeenCalledTimes(12);
     expect(boss.createQueue).not.toHaveBeenCalledWith(QUEUES.embedItem, expect.anything());
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.embedSweep, { policy: 'singleton' });
     expect(boss.createQueue).toHaveBeenCalledWith(QUEUES.pruneSearchQueries, {

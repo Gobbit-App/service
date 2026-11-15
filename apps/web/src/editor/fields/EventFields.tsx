@@ -50,6 +50,15 @@ export function EventFields(props: FieldsProps<'event'>): ReactElement {
           />
           All day
         </label>
+        <label className="card-editor__choice">
+          <input
+            type="checkbox"
+            checked={payload.repeat}
+            disabled={disabled}
+            onChange={(e) => set({ repeat: e.currentTarget.checked })}
+          />
+          Repeats every year
+        </label>
         <div className="event-fields__times">
           <div className="field">
             <label htmlFor={`${id}-start`}>Starts</label>

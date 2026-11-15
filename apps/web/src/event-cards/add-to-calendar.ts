@@ -1,4 +1,5 @@
 import type { Item } from '@gobbit/shared';
+import { nextOccurrence } from '@gobbit/shared/event-constants';
 import { asEventPayload } from '../cards/payload-guards';
 import { shareUrl } from '../lib/share';
 
@@ -14,17 +15,20 @@ export function canAddToCalendar(item: Item): boolean {
 export async function eventIcs(item: Item, origin: string, now: Date): Promise<string | null> {
   const payload = asEventPayload(item.payload);
   if (!payload) return null;
+  // D402: the file starts at the current or next occurrence; RRULE repeats it yearly.
+  const current = nextOccurrence(payload, now);
   // D368: the writer is a lazy chunk (precached, so this works offline).
   const { toIcs } = await import('@gobbit/shared/ics');
   return toIcs(
     {
       id: item.id,
       title: item.title,
-      allDay: payload.allDay,
-      start: payload.start,
-      end: payload.end,
-      timeZone: payload.timeZone,
-      location: payload.location,
+      allDay: current.allDay,
+      start: current.start,
+      end: current.end,
+      timeZone: current.timeZone,
+      repeat: current.repeat,
+      location: current.location,
       url: payload.link?.url,
     },
     { cardUrl: shareUrl(origin, item.id), now },

@@ -34,4 +34,10 @@ describe('eventPublicPayload', () => {
       timeZone: 'UTC',
     });
   });
+
+  it('keeps repeat when present', () => {
+    expect(
+      eventPublicPayload({ allDay: true, start: '2026-12-03', timeZone: 'UTC', repeat: 'yearly' }),
+    ).toEqual({ allDay: true, start: '2026-12-03', timeZone: 'UTC', repeat: 'yearly' });
+  });
 });

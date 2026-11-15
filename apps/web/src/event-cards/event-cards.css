@@ -24,6 +24,12 @@
   color: var(--color-muted);
 }
 
+.event-repeat {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
 .event-location {
   display: flex;
   align-items: flex-start;

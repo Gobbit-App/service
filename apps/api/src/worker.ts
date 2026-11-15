@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import type { Job } from 'pg-boss';
 import { createDb, createPool } from '@gobbit/db';
+import { EVENT_ROLL_SWEEP_CRON } from '@gobbit/shared/event-constants';
 import {
   DELETED_ITEM_PRUNE_CRON,
   EMBED_SWEEP_CRON,
@@ -12,6 +13,10 @@ import {
 } from '@gobbit/shared';
 import { mediaMaxBytes, parseEnv } from './env';
 import { createEventNoticeHook } from './services/event-cards.service';
+import { EVENT_CARD_DECISION_LEVELS, type EventCardDecisions } from './services/event-cards.events';
+import { createEventRollSweep } from './jobs/event-roll-sweep';
+import { createEventCardsRepo } from './repositories/event-cards.repo';
+import { decisionLogger } from './lib/decision-event';
 import { createBoss } from './jobs/boss';
 import { createEmbedQueue, noopEmbedQueue } from './jobs/embed-queue';
 import { createIngestHandler } from './jobs/ingest';
@@ -119,6 +124,21 @@ async function main() {
   await boss.schedule(QUEUES.pruneWaitlist, WAITLIST_PRUNE_CRON);
   await boss.work(QUEUES.pruneWaitlist, async ([job]: Job[]) => {
     await pruneWaitlist(job?.id ?? 'unknown');
+  });
+
+  // D403: every 15 minutes, yearly event cards move to their next occurrence (notices included).
+  const eventRollSweep = createEventRollSweep({
+    events: createEventCardsRepo(db),
+    transaction: (fn) => db.transaction(fn),
+    noticeHook: createEventNoticeHook({ allDayNoticeHour: env.EVENT_ALLDAY_NOTICE_HOUR }),
+    decisions: decisionLogger<EventCardDecisions>('event-cards', {
+      parent: log,
+      levels: EVENT_CARD_DECISION_LEVELS,
+    }),
+  });
+  await boss.schedule(QUEUES.eventRollSweep, EVENT_ROLL_SWEEP_CRON);
+  await boss.work(QUEUES.eventRollSweep, async ([job]: Job[]) => {
+    await eventRollSweep(job?.id);
   });
 
   // D346: one preview builder for ingest and the snapshot job.

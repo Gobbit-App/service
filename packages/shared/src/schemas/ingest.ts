@@ -118,6 +118,8 @@ export const structuredEventSchema = z.object({
   endDate: z.string().nullable(),
   location: z.string().nullable(),
   url: z.string().nullable(),
+  /** D405: the page says the event repeats every year (`eventSchedule` P1Y / yearly / annually). */
+  yearly: z.boolean().optional(),
 });
 export type StructuredEvent = z.infer<typeof structuredEventSchema>;
 

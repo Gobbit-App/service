@@ -92,6 +92,15 @@ describe('event draft (042)', () => {
     });
   });
 
+  it('round-trips "Repeats every year" as repeat: yearly, and omits it when off', () => {
+    const yearly = eventDraftFromPayload({ ...stored, repeat: 'yearly' });
+    expect(yearly.repeat).toBe(true);
+    expect(eventToPayload(yearly)).toMatchObject({ repeat: 'yearly' });
+    const oneOff = eventDraftFromPayload(stored);
+    expect(oneOff.repeat).toBe(false);
+    expect(eventToPayload(oneOff)).not.toHaveProperty('repeat');
+  });
+
   it('changed times are sent in the device zone', () => {
     const p = { ...eventDraftFromPayload(stored), start: '2026-12-02T10:00', end: '' };
     expect(timesUnchanged(p)).toBe(false);

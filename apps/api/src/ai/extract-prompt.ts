@@ -55,6 +55,12 @@ export const PROPOSE_CARD_TOOL = {
           },
           allDay: { type: 'boolean', description: 'True when the source gives no time of day.' },
           location: { type: 'string', description: 'Where it happens, verbatim from the source.' },
+          repeat: {
+            type: ['string', 'null'],
+            enum: ['yearly', null],
+            description:
+              'yearly only when the source says it happens every year (annual, yearly, every Christmas); otherwise null. Never guess.',
+          },
         },
         required: ['start', 'allDay'],
         description: 'When the card is an event: its date, time and place, taken from the source.',
@@ -105,6 +111,8 @@ export const proposeCardInputSchema = z.object({
       end: z.string().nullish(),
       allDay: z.boolean().nullish(),
       location: z.string().nullish(),
+      /** D405: lenient; only the value "yearly" counts (see `proposeEvent`). */
+      repeat: z.string().nullish(),
     })
     .nullish(),
   entities: z.record(z.string(), z.array(z.string()).nullish()).nullish(),
@@ -134,6 +142,7 @@ function eventDataLines(source: ExtractInput['source']): string[] {
     ['start', e.startDate],
     ['end', e.endDate],
     ['location', e.location],
+    ['repeats', e.yearly ? 'yearly' : null],
   ];
   const inner = fields.flatMap(([tag, value]) =>
     value ? [`<${tag}>${escapeAngles(value)}</${tag}>`] : [],

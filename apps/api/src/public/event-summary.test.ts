@@ -57,3 +57,29 @@ describe('eventSummary (042 share description)', () => {
     expect(eventSummary({ type: 'text', payload: {} })).toBeNull();
   });
 });
+
+describe('eventWhenLine yearly repeats (D402)', () => {
+  it('shows the next occurrence of a yearly event, suffixed "every year"', () => {
+    const line = eventWhenLine(
+      {
+        allDay: false,
+        start: '2029-12-05T18:00:00Z',
+        end: '2029-12-05T20:00:00Z',
+        timeZone: 'UTC',
+        repeat: 'yearly',
+      },
+      NOW,
+    );
+    // 5 Dec 2030 is a Thursday; the stored 2029 date (a Wednesday) has ended by NOW.
+    expect(line).toContain('Thu 5 Dec');
+    expect(line).toMatch(/ · every year$/);
+  });
+
+  it('leaves a one-off event without the suffix', () => {
+    const line = eventWhenLine(
+      { allDay: true, start: '2030-12-05', end: '2030-12-07', timeZone: 'UTC' },
+      NOW,
+    );
+    expect(line).not.toContain('every year');
+  });
+});

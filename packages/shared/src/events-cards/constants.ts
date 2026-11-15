@@ -4,6 +4,15 @@
  * (`cappedInt`), which the DB CHECK also backs.
  */
 
+/** D402: how an event card repeats. Yearly only; absent in the payload means one-off. */
+export const eventRepeats = ['yearly'] as const;
+export type EventRepeat = (typeof eventRepeats)[number];
+
+/** D403: the yearly roll sweep runs every 15 minutes, so a card shows its next date soon after it ends. */
+export const EVENT_ROLL_SWEEP_CRON = '*/15 * * * *';
+/** D403: cards rolled per transaction; the sweep loops until a batch comes back short. */
+export const EVENT_ROLL_BATCH = 100;
+
 /** D362: who an event notifies. */
 export const eventAudienceModes = ['everyone', 'people', 'me', 'nobody'] as const;
 export type EventAudienceMode = (typeof eventAudienceModes)[number];

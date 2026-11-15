@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import type { LinkHealth } from '@gobbit/shared';
-import { eventSpan } from '@gobbit/shared/event-constants';
+import { eventSpan, nextOccurrence } from '@gobbit/shared/event-constants';
 import { eventPhase, formatEventStatus, formatEventWhen } from '@gobbit/shared/event-time';
 import { LinkCard } from './LinkCard';
 import type { EventCardPayload } from './payload-guards';
@@ -27,8 +27,10 @@ export function EventCard({
   viewerTimeZone?: string;
 }): ReactElement {
   const now = useMinuteClock();
-  const span = { ...eventSpan(payload), allDay: payload.allDay, timeZone: payload.timeZone };
-  const options = { now, hasEnd: payload.end !== undefined };
+  // D402: a yearly event shows its next occurrence even when the stored one has ended.
+  const current = nextOccurrence(payload, now);
+  const span = { ...eventSpan(current), allDay: current.allDay, timeZone: current.timeZone };
+  const options = { now, hasEnd: current.end !== undefined };
   const ended = eventPhase(span, now, viewerTimeZone).phase === 'ended';
   const when = formatEventWhen(span, viewerTimeZone, options);
 
@@ -37,6 +39,7 @@ export function EventCard({
       <p className={`event-status${ended ? ' event-status--muted' : ''}`}>
         {formatEventStatus(span, now, viewerTimeZone, options)}
       </p>
+      {current.repeat === 'yearly' && <p className="event-repeat">Every year</p>}
       <p className="event-when">{when.range}</p>
       {when.zoneNote && <p className="event-zone">{when.zoneNote}</p>}
       {payload.location && (

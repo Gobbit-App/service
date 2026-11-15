@@ -18,6 +18,7 @@ describe('structured events (D370)', () => {
       endDate: '2026-12-03T21:00:00+01:00',
       location: 'Town hall, 1 High Street, Springfield',
       url: 'https://fair.example/events/winter-fair',
+      yearly: false,
     });
   });
 
@@ -28,6 +29,7 @@ describe('structured events (D370)', () => {
       endDate: null,
       location: "St Mary's church",
       url: null,
+      yearly: false,
     });
   });
 
@@ -66,5 +68,32 @@ describe('structured events (D370)', () => {
     expect(structuredEvents([{ '@type': 'Event', name: 'No date' }])).toEqual({});
     const r = structuredEvents([{ '@type': 'Event', startDate: '2026-12-03', location: long }]);
     expect(Array.from(r.structuredEvent?.location ?? '')).toHaveLength(EVENT_LOCATION_MAX);
+  });
+
+  it.each([
+    ['P1Y', true],
+    ['yearly', true],
+    ['Annually', true],
+    ['P1M', false],
+  ])('reads eventSchedule repeatFrequency %s as yearly=%s (D405)', (frequency, yearly) => {
+    const node = {
+      '@type': 'Event',
+      name: 'Tree lighting',
+      startDate: '2026-12-01T18:00:00+01:00',
+      eventSchedule: { '@type': 'Schedule', repeatFrequency: frequency },
+    };
+    expect(structuredEvents([node]).structuredEvent?.yearly).toBe(yearly);
+  });
+
+  it('reads yearly from an array of schedules, and false without one', () => {
+    const node = {
+      '@type': 'Event',
+      startDate: '2026-12-01',
+      eventSchedule: [{ repeatFrequency: 'P1M' }, { repeatFrequency: 'P1Y' }],
+    };
+    expect(structuredEvents([node]).structuredEvent?.yearly).toBe(true);
+    expect(
+      structuredEvents([{ '@type': 'Event', startDate: '2026-12-01' }]).structuredEvent?.yearly,
+    ).toBe(false);
   });
 });

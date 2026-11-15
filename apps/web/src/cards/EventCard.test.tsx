@@ -28,6 +28,19 @@ describe('EventCard (042)', () => {
     expect(screen.queryByText(/time$/)).not.toBeInTheDocument();
   });
 
+  it('shows a yearly event at its next occurrence, labelled "Every year", never as ended', () => {
+    const lastYear = {
+      ...timed,
+      start: '2025-12-03T18:00:00Z',
+      end: '2025-12-03T20:00:00Z',
+      repeat: 'yearly' as const,
+    };
+    render(<EventCard payload={lastYear} viewerTimeZone="UTC" />);
+    expect(screen.getByText('In 2 days · Thu 3 Dec, 18:00')).toBeInTheDocument();
+    expect(screen.getByText('Thu 3 Dec, 18:00–20:00')).toBeInTheDocument();
+    expect(screen.getByText('Every year')).toBeInTheDocument();
+  });
+
   it("notes the event's own clock for a viewer in another zone", () => {
     render(<EventCard payload={{ ...timed, timeZone: 'Asia/Jerusalem' }} viewerTimeZone="UTC" />);
     expect(screen.getByText('20:00 Jerusalem time')).toBeInTheDocument();

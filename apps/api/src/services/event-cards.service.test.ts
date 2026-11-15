@@ -102,6 +102,28 @@ describe('createEventCardsService', () => {
       expect(members.deckMembers).not.toHaveBeenCalled();
     });
 
+    it('stores a yearly event on its next occurrence (D403)', async () => {
+      const out = await service.checkPayload(ctx(), {
+        ...PAYLOAD,
+        repeat: 'yearly',
+        start: '2029-06-01T18:00:00+03:00',
+        end: '2029-06-01T20:00:00+03:00',
+      });
+      expect(out.payload).toMatchObject({
+        start: '2030-06-01T15:00:00.000Z',
+        end: '2030-06-01T17:00:00.000Z',
+        repeat: 'yearly',
+      });
+    });
+
+    it('keeps a one-off event date as sent', async () => {
+      const out = await service.checkPayload(ctx(), {
+        ...PAYLOAD,
+        start: '2029-06-01T18:00:00+03:00',
+      });
+      expect(out.payload.start).toBe('2029-06-01T18:00:00+03:00');
+    });
+
     it('stores audience "me" on a personal deck', async () => {
       const out = await service.checkPayload(ctx(CREATOR, 'owner', 'personal'), {
         ...PAYLOAD,

@@ -18,6 +18,11 @@ export type EventCardDecisions = {
   };
   /** D363: a change of notify times or audience, or a refused one. */
   'event.notify_settings': { outcome: 'changed' | 'refused'; reason: 'creator' | 'not_creator' };
+  /**
+   * D403: a yearly event card moved to its next occurrence by the roll sweep (a system write, so no
+   * item_events line). `years` is recorded as a subject field.
+   */
+  'event.roll': { outcome: 'rolled'; reason: 'yearly' };
   /** D364: a member muted or unmuted an event for themselves, or was refused. */
   'event.mute': {
     outcome: 'muted' | 'unmuted' | 'refused';
