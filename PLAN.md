@@ -335,7 +335,7 @@ Rules already decided:
 - **No email addresses in member data.** No deck kind and no role, owners included, sees another member's email address. Invites go by email address or by username (usernames come with spec `046`). The one exception: an invite made by typing an address keeps showing that address in the invites list; an invite made by username never reveals the address, then or later.
 - **One registration flow.** Anyone can be invited to a deck. Someone not yet registered goes through the same registration as a person arriving from the welcome page; the invite travels with it and decides where they land.
 - **Every registered user is a full user**, with a personal deck, whoever invited them and whether or not a deck came with the invite.
-- **Model spend is guarded.** Any feature that calls a model in the background is protected from over-use and misuse by anonymous visitors and readers: their calls are bounded by ceilings that hold across all users (per deck and platform-wide), not only per person, and are refused or served without the model beyond them. Applies to every later phase (Ask, suggesting, curation agents, MCP).
+- **Model spend is guarded.** Anonymous visitors and readers cannot run up model spend. Search and its query embeddings stay as they are. Ask stays off until it is ready for general availability. Model extraction on ingestion is off by default for every user and is switched on per user in the database (likely a paid or tightly limited free feature later; no features-per-plan table yet). Item embeddings for a user's own cards are open to all for now. Every later feature that calls a model (suggesting, curation agents, MCP) follows the same rule.
 
 Open decisions (TBD):
 - **Suggesting:** the form and the share paths open to readers, caps, what name shows on a suggestion, how a suggester hears the outcome.
@@ -348,7 +348,7 @@ Open decisions (TBD):
 - [ ] **2. Member list without email addresses** — TBD with the feature spec.
 - [ ] **3. Invites through registration** — TBD with the feature spec.
 - [ ] **4. Onboarding for invited users** — TBD with the feature spec.
-- [ ] **5. Model spend guard** — a reader and an anonymous caller driven past the ceilings cause no further model calls; the refusals show as decision events.
+- [ ] **5. Model spend guard** — a user without the extraction switch causes no model call when sharing, and the refusal shows as a decision event; with the switch on, the share is extracted.
 
 ## Phase 17 — Members-only categories on public decks
 

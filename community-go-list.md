@@ -61,7 +61,7 @@ Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and regist
 | G18 | Invites and registration are tangled. A deck invite creates the account at invite time, before the person has done anything; a waitlist invite creates an account with no deck. There is one flow per door and no shared registration step, no cohort size and no batch invite. **To build (H7).** | `memberships.service.invite`, `waitlist-admin.service`, `users.service.register` reasons |
 | G19 | Not a gap (decided Nov 16): registering always makes a full user with a personal deck, whoever invited them and whether or not a deck came with the invite. What is missing is onboarding that says so (H8). | `users.service.register` |
 | G20 | `robots.txt` has one `User-agent: *` group, so communal public pages are open to every crawler, AI ones included. Accepted for now (decided Nov 16); revisit with real traffic. | `apps/api/src/public/seo.ts` |
-| G21 | Model spend has per-person limits only. Readers can use Ask (30 an hour each, when `ASK_ENABLED`) and spend 300 query embeddings an hour each; every registered user owns a personal deck and can run model extraction there (50 shares a day per channel, 200 combined). Anonymous search is the only path with a ceiling across everyone (30 an hour per IP, 300 an hour in total). Nothing caps the total per deck or per day, so spend grows with the number of users. | `ask.service.ts`, `query-budget.ts`, `ingest/caps.ts`, `@gobbit/shared` limits |
+| G21 | Model spend has per-person limits only, and every registered user owns a personal deck where they can run model extraction (50 shares a day per channel, 200 combined), so spend grows with the number of users. Search embeddings (300 an hour per member; anonymous 30 an hour per IP, 300 in total) are accepted as they are; Ask is off (`ASK_ENABLED`). **To fix: extraction off by default (H11).** | `ask.service.ts`, `query-budget.ts`, `ingest/caps.ts`, `@gobbit/shared` limits |
 
 ## Track A — Import v2 (blocks seeding)
 
@@ -179,14 +179,15 @@ How people get into the communal deck at each stage, what the code does today an
 - [ ] **H8. Onboarding** (stub in `PLAN.md` Phase 16). Someone who first met Gobbit through a communal or shared deck learns that they are a full user: they have a personal deck, can save their own cards and can start decks of their own. Lands them on the inviting deck first. Needed for stage 4.
 - [ ] **H9. Crawler policy** (G20). Deferred: all crawlers allowed for now; revisit with real traffic.
 - [ ] **H10. Custom host and members.** On the deck's own domain (Track J) a session acts on that deck only, so community members never see `/d/me` there. That works against H8 (every user is a full user): the onboarding spec and the Track J spec must say how someone on the custom host reaches their personal deck on the main domain.
-- [ ] **H11. Model spend guard** (closes G21; to implement, spec-kit; rule in `PLAN.md` Phase 16). Rule: anonymous visitors and readers cannot run up model spend; any model call made for them is refused or served without the model once a ceiling is reached, and the ceilings hold across all users, not only per person. Applies to every feature that calls a model in the background, present and future. What it means per surface:
-  - Anonymous search: already bounded per IP and in total; keep, make both env-tunable, alert near the ceiling.
-  - Reader search on a communal deck: add a per-deck hourly ceiling on query embeddings beside the per-user one; over it, search falls back to text only.
-  - Ask: stays off (`ASK_ENABLED`). Before it is turned on for a communal deck: editors and up only, or readers under a per-deck daily ceiling.
-  - Suggesting (H5): a reader's suggestion never starts model extraction on its own; it is stored as typed, or extraction runs only when a curator opens it, or under a per-deck daily ceiling.
-  - Personal decks of people who arrived through a deck invite or the waitlist (H8): ingestion keeps a per-user cap, set lower for new users, plus a platform-wide daily ceiling.
-  - A platform-wide daily ceiling over all model calls (`llm_calls` already records each call and its cost), env-tunable, with an alert and a decision event for every refusal.
-  - Verify: an integration test per surface drives a reader and an anonymous caller past the ceiling and sees no further `llm_calls` rows. Needed before stage 3.
+- [ ] **H11. Model spend guard** (closes G21; to implement, spec-kit; rule in `PLAN.md` Phase 16). Rule: anonymous visitors and readers cannot run up model spend. Applies to every feature that calls a model in the background, present and future. Decided Nov 16, per surface:
+  - Search and its query embeddings, anonymous and member: fine as they are. No change.
+  - Ask: off (`ASK_ENABLED`) until it is ready for general availability. No work here.
+  - Model extraction on ingestion (shares, paste, email-in, the iPhone Shortcut): off by default for every user. It is switched on per user in the database, by hand, with no screen for it. The switch belongs to the person, so it holds on every deck they can add to. Without it nothing reaches the model and the refusal is a decision event. Likely a paid or tightly limited free feature later; a table of features per plan is deliberately not built yet.
+  - Bulk import calls no model and stays open.
+  - Item embeddings for cards a user writes, personal decks included: open to all for now; revisit with the features-per-plan question.
+  - Suggesting (H5): a reader's suggestion never reaches the model unless that reader has the switch.
+  - To settle in the spec: what a share does for a user without the switch (refused, or saved as a plain link or text proposal with no model); the daily caps for users who do have it (today 50 per channel, 200 combined); which existing users get the switch in the migration (assumed: the platform admins only, the rest by hand).
+  - Verify: an integration test shares as a user without the switch and sees no `llm_calls` row and a refusal event; the same share with the switch on is extracted. Needed before stage 3.
 
 Order within the track: H1 → H2, H3 (with Track B) → H5, H6, H11 → stage 3 → H7, H8 → stage 4 → stage 5.
 
@@ -298,7 +299,7 @@ If Track J slips, the fallback is to go public on the product domain after step 
 - H2: your own user or a dedicated community user as the deck's owner; who holds its mailbox.
 - Members-only categories on a public deck: stub in `PLAN.md` Phase 17, not urgent.
 - H7: whether a deck invite skips waitlist approval.
-- H11: the ceilings themselves (per deck, per new user, platform-wide per day), and whether Ask on a communal deck is for editors and up only.
+- H11: what a share does for a user without the extraction switch; who gets the switch in the migration.
 
 ## To verify
 
