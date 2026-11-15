@@ -125,6 +125,23 @@ they experience is traceable, reviewable, and ready to be monitored and alerted 
 - Code that predates this principle is brought into line when it is next changed, and by the
   retrofit tracked in `PLAN.md`.
 
+### IX. Reuse before writing
+
+New code is the last resort. Before writing any, look for the answer in this order and take the first
+that fully works; a plan or PR that writes new code names what it checked and why each earlier
+level fell short.
+
+- Order: (1) what already exists in this repo (helpers, services, components, `@gobbit/shared`
+  schemas); (2) the language standard library; (3) platform features (browser, Node, PostgreSQL);
+  (4) a dependency already installed. A new dependency needs a reason in `research.md` (Principle
+  VII).
+- Less code never means less safety. Validation at trust boundaries, security, error handling that
+  prevents data loss, and accessibility are never cut to keep a change small.
+- Code with branches (conditions, loops, parsers, state changes) ships with at least one small test
+  that exercises it; this is the minimum, and Principle V decides the tier and the full set.
+- Rationale: less code means less to review, secure and maintain, and the repo already holds the
+  conventions a duplicate would drift from.
+
 ## Constraints
 
 - Stack: Hono + Zod OpenAPI (API), pg-boss worker (separate process) [ADR-042], PostgreSQL 17 with
@@ -160,4 +177,4 @@ they experience is traceable, reviewable, and ready to be monitored and alerted 
 - Amendments are PRs that edit this file and, if needed, the matching ADR. Versioning: MAJOR when a
   principle is removed or redefined, MINOR when one is added or materially expanded, PATCH for wording.
 
-**Version**: 1.3.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-10
+**Version**: 1.4.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-16
