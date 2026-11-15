@@ -13,7 +13,7 @@ Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and regist
 - Backups, abuse limits and privacy basics are in place before the link is shared.
 - Nothing the public deck depends on runs in the home lab: compute, database, backups and analytics are on external services, and the app answers on a product domain (Track I).
 - The deck is served white-labelled on its own domain (Track J).
-- The deck belongs to a community account, not the family one, and each launch stage (curators, invited readers, waitlist cohort, anonymous readers) has a defined way in (Track H).
+- Each launch stage (curators, invited readers, waitlist cohort, anonymous readers) has a defined way in (Track H).
 
 ## Working method
 
@@ -55,12 +55,12 @@ Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and regist
 | G12 | Community members cannot suggest cards without an invite; registration is waitlist-gated. | `REGISTRATION_MODE` |
 | G13 | Categories are flat; there is no second axis such as city or region. | data model |
 | G14 | Re-importing a corrected file creates flagged duplicates, not updates. | `imports.service.ts` (no explicit target) |
-| G15 | Every user of the account that owns a deck is an owner of it, with no membership row and no way to lower the role. A communal deck created under the family account makes every family user an owner. A deck cannot be moved to another account **(verify)**. | `resolveRole`, `docs/design/auth.md`; `deckPatchSchema` |
-| G16 | No role can only suggest. A reader cannot create or share a card (`item.create` is editor and up). An editor's card from the composer is published at once, and an editor can edit and archive any card. Only shares and imports arrive as proposals. | `PERMISSION_MATRIX`, `items.service.create` (status defaults to `published`) |
-| G17 | Every role, readers included, can list the deck's members with their email addresses. Fine for a family, not for a community of strangers. | `member.list`, `memberSchema` |
-| G18 | The waitlist and decks are not connected. A waitlist invite creates an account and a personal deck, not a membership in the communal deck. There is no cohort size ("first X"), no join link and no self-join; deck invites are one address at a time, by owners only. | `waitlist-admin.service`, `inviteCreateSchema`, `member.invite` |
-| G19 | Registration is one global switch. `open` lets anyone create an account with a personal deck and its ingestion costs; nothing lets a visitor register for one deck as a reader. | `REGISTRATION_MODE`, `users.service.register` reasons |
-| G20 | `robots.txt` has one `User-agent: *` group. Communal public pages are indexable by every crawler; there is no setting for AI crawlers. | `apps/api/src/public/seo.ts` |
+| G15 | Withdrawn Nov 16. The implicit-owner rule covers only users of the owning account, and every registration creates its own account (`createWithAccount` is the only place a user is made), so invited family members are in their own accounts and get nothing on a new deck. The rule matters only if a second user is ever added to an account, which no code does today. | `users.repo.ts`, `resolveRole` |
+| G16 | No way to only suggest. A reader cannot create or share a card (`item.create` is editor and up). An editor's card from the composer is published at once, and an editor can edit and archive any card. Only shares and imports arrive as proposals. **To build (H5).** | `PERMISSION_MATRIX`, `items.service.create` (status defaults to `published`) |
+| G17 | Every role can list the deck's members with their email addresses; role changes and invites return the address too. **To fix for every deck kind and every role, owners included (H6).** | `member.list`, `memberSchema`, `membershipSchema` |
+| G18 | Invites and registration are tangled. A deck invite creates the account at invite time, before the person has done anything; a waitlist invite creates an account with no deck. There is one flow per door and no shared registration step, no cohort size and no batch invite. **To build (H7).** | `memberships.service.invite`, `waitlist-admin.service`, `users.service.register` reasons |
+| G19 | Not a gap (decided Nov 16): registering always makes a full user with a personal deck, whoever invited them and whether or not a deck came with the invite. What is missing is onboarding that says so (H8). | `users.service.register` |
+| G20 | `robots.txt` has one `User-agent: *` group, so communal public pages are open to every crawler, AI ones included. Accepted for now (decided Nov 16); revisit with real traffic. | `apps/api/src/public/seo.ts` |
 
 ## Track A — Import v2 (blocks seeding)
 
@@ -82,7 +82,7 @@ Left out on purpose: table, calc, reminder and event cards on import (events hav
 
 ## Track B — Deck setup
 
-- [ ] **B1. Create the deck** from the community account (H2) as `communal` with an explicit Latin slug and `isPublic: false`. Today this is one API call; a kind choice in the web app is optional and small.
+- [ ] **B1. Create the deck** from the account chosen in H2 as `communal` with an explicit Latin slug and `isPublic: false`. Today this is one API call; a kind choice in the web app is optional and small.
 - [ ] **B2. Taxonomy.** Agree 10–15 categories before any import: Hebrew display name, Latin slug, visibility. Slugs are public URLs (`/p/<deck>/c/<category>`), so choose them once.
 - [ ] **B3. Location axis.** Decide how city or region is expressed. Recommended: location categories used as a second category on a card (needs A3); no new data model.
 - [ ] **B4. Roles.** Per H3: one co-owner, curators as maintainers. Keep `autoPublishShares` off.
@@ -135,7 +135,7 @@ How people get into the communal deck at each stage, what the code does today an
 
 ### The model today
 
-- **Account and users.** Every user belongs to one account. Registering creates a new account with one user and, on first sign-in, a personal deck at `/d/me`. Users of the account that owns a deck are its owners implicitly (G15).
+- **Account and users.** Every registration creates its own account with one user and, on first sign-in, a personal deck at `/d/me`. A deck belongs to the account of the user who created it; everyone else, family included, has only the role their invite gave them.
 - **Membership roles** on a deck, by invite to an email address (the invite registers the address even while registration is closed):
 
 | Role | Can | Cannot |
@@ -155,26 +155,26 @@ How people get into the communal deck at each stage, what the code does today an
 | Stage | What happens | Works today? |
 |---|---|---|
 | 0. New stack | Restore the full home-lab dump (I9): family account, users, personal and family decks come across unchanged. | yes |
-| 1. Community account | A dedicated address is registered as its own account and creates the communal deck. Your own user and one more get `owner` memberships. Family users get nothing on it. | yes, by hand (H2) |
+| 1. Communal deck | Created by your own user or by a dedicated community user (a separate account, so the deck is not tied to a personal mailbox). Either way nobody else gets a role without an invite. | yes (H2) |
 | 2. Curators | One or two people as `maintainer` (curate and publish) or `owner` (also manage members). | yes (H3) |
-| 3. Soft launch | Invited `reader`s; deck not public. | reading yes; suggesting no (G16); member emails exposed (G17) |
-| 4. Waitlist cohort | Announce; the first X confirmed entries are let in to this deck. | by hand only (H4); not connected (G18) |
-| 5. Public | `isPublic` on, categories `public`; anonymous reading, indexed. Any interaction needs an account. | reading yes; self-registration for the deck no (G19); interactions are Phase 14; AI crawlers undecided (G20) |
+| 3. Soft launch | Invited `reader`s; deck not public; suggesting switched on. | reading yes; suggesting no (H5); member emails exposed (H6) |
+| 4. Waitlist cohort | Announce; the first X confirmed entries are let in with the deck attached to their invite. | by hand only (H4); needs H7 |
+| 5. Public | `isPublic` on, categories `public`; anonymous reading, indexed. Any interaction needs a registered user, who is a full Gobbit user. | reading yes; registering from the public pages goes through the normal door (H7); interactions are Phase 14 |
 
 ### Steps
 
-- [ ] **H1. Decide the open points below** before B1; the owning account cannot be changed afterwards **(verify)**.
-- [ ] **H2. Community account.** A dedicated mailbox that more than one person can recover. On the new stack, the platform admin invites it from the waitlist screen; it signs in and creates the deck (B1). Keep your own address as platform admin and add it to the deck as `owner`. Verify: `GET /decks/<slug>/members` lists the community user as implicit owner and no family user.
+- [ ] **H1. Decide the open points below** before B1.
+- [ ] **H2. Owning user.** Either your own user or a dedicated community user with a mailbox more than one person can recover. A dedicated one keeps the community deck apart from your personal decks and survives a change of hands; it is a choice, not a safety need (G15 withdrawn). If dedicated: the platform admin invites it from the waitlist screen, it signs in and creates the deck, and your own user gets an `owner` membership. Verify: `GET /decks/<slug>/members` lists exactly the people invited.
 - [ ] **H3. Curators.** `maintainer` for people who review and publish; `owner` only for whoever also manages members. Avoid `editor` on this deck: it publishes without review.
 - [ ] **H4. Soft launch and cohort, with no new code.** Invite readers from deck settings one address at a time. For the waitlist cohort, read confirmed `community` entries in `/admin/waitlist` and send each a deck invite instead of a waitlist invite; the cap is counted by hand and the entries stay `confirmed`. Good for tens of people, not hundreds.
-- [ ] **H5. Suggesting members** (closes G16, part of G12). A member who can only propose: the share and paste paths and a short "suggest a card" form, always `proposed`, own proposals visible, daily caps. Either a new role between reader and editor or a deck setting that lets readers propose. Needed before stage 3 if early readers should contribute.
-- [ ] **H6. Member privacy on communal decks** (closes G17). Readers and suggesting members do not see the member list or anyone's email; decide what name, if any, shows on a suggested card. Needed before stage 3.
-- [ ] **H7. Waitlist to deck** (closes G18). Invite a waitlist entry into a named deck with a role, in batches, with a cohort size and a decision event per invite and per refusal; the entry becomes `invited`. Needed before stage 4 at any real size.
-- [ ] **H8. Join the public deck** (closes G19). A "join" action on the public pages that registers a visitor as a reader (or suggesting member) of that deck only, behind the abuse controls of Phase 11.3, with its own registration reason and decision events. Whether such a user also gets a personal deck is an open point. Needed for stage 5; Phase 14 reactions, reports and threads then require this membership.
-- [ ] **H9. Crawler policy** (closes G20). Decide search engines and AI crawlers separately; implement as named `User-agent` groups in `robots.txt` plus the Cloudflare AI-crawler setting **(verify)**. `robots.txt` is a request, not a control: public text can be copied either way.
-- [ ] **H10. Custom host and members.** On the deck's own domain (Track J) a session acts on that deck only, so community members never see `/d/me` there. Decide with H8 whether that is the intended experience.
+- [ ] **H5. Suggesting on communal decks** (closes G16; to implement, spec-kit). A deck setting, communal decks only, off by default, switched by owners only. When on, readers can suggest: the share and paste paths and a short "suggest a card" form, always `proposed`, never published by the suggester, own proposals visible to them, daily caps, a decision event per accepted and refused suggestion. Roles are unchanged; shared and personal decks never have the setting. Needed before stage 3.
+- [ ] **H6. No email addresses in member data** (closes G17; to implement, spec-kit). No API answer about a deck's members carries an email address, for any deck kind and any role, owners included: member list, role change, invite answer, reminder and event audience pickers. People appear by display name. To settle in the spec: what stands for a pending invite before the person has a name, and how an owner tells two people with the same name apart. Needed before stage 3.
+- [ ] **H7. One registration flow, invites ride along** (closes G18; to implement, spec-kit). Anyone can be invited to a deck by email. A registered user gets the membership as today. An unregistered one goes through the same registration as someone arriving from the welcome page, and the invite travels with it: on completion the membership is created and the app opens on that deck. A waitlist invite can carry a deck and role the same way, in batches with a cohort size. No account exists until the person completes registration. Every invite, acceptance, expiry and refusal is a decision event. To settle in the spec: whether a deck invite skips waitlist approval (today it does, and the plan assumes it still does). Needed before stage 4 at any real size.
+- [ ] **H8. Onboarding** (stub in `PLAN.md` Phase 16). Someone who first met Gobbit through a communal or shared deck learns that they are a full user: they have a personal deck, can save their own cards and can start decks of their own. Lands them on the inviting deck first. Needed for stage 4.
+- [ ] **H9. Crawler policy** (G20). Deferred: all crawlers allowed for now; revisit with real traffic.
+- [ ] **H10. Custom host and members.** On the deck's own domain (Track J) a session acts on that deck only, so community members never see `/d/me` there. That works against H8 (every user is a full user): the onboarding spec and the Track J spec must say how someone on the custom host reaches their personal deck on the main domain.
 
-Order within the track: H1 → H2, H3 (with Track B) → H5, H6 → stage 3 → H7 → stage 4 → H8, H9 → stage 5.
+Order within the track: H1 → H2, H3 (with Track B) → H5, H6 → stage 3 → H7, H8 → stage 4 → stage 5.
 
 ## Track I — Infrastructure out of the home lab
 
@@ -263,8 +263,8 @@ Depends on Track I (the hostnames route to the new origin, and the main domain m
 3. H1–H3 with B1, B4, B5, then D1.
 4. D2–D6 (the deck stays non-public).
 5. Track I cut-over (I9) at the latest here, so nothing public is ever on the home-lab hostname.
-6. H5 and H6, then the soft launch (stage 3); H7, then the waitlist cohort (stage 4).
-7. Track E, H8 and H9.
+6. H5 and H6, then the soft launch (stage 3); H7 and H8, then the waitlist cohort (stage 4).
+7. Track E.
 8. Track J, then switch the deck to public and share the custom-domain link (stage 5).
 
 If Track J slips, the fallback is to go public on the product domain after step 7 and add the custom domain later; the J6 redirects keep those links working.
@@ -281,11 +281,9 @@ If Track J slips, the fallback is to go public on the product domain after step 
 - I2 and J2: the product domain and the community domain.
 - I3: whether to change the ping and polling pattern to fit a suspend-when-idle database.
 - Track J: whether the custom domain is required for launch or follows it.
-- H1: dedicated community account (recommended) or the family account; who holds its mailbox.
-- H1: once the deck is public, what members see that visitors do not (members-only `shared` categories, or everything `public` and membership only unlocks interaction).
-- H5: suggesting as a new role or as a deck setting for readers.
-- H8: whether people who join only the communal deck get a personal deck, and whether its ingestion is on for them.
-- H9: search engines yes or no; AI crawlers yes or no.
+- H2: your own user or a dedicated community user as the deck's owner; who holds its mailbox.
+- Members-only categories on a public deck: stub in `PLAN.md` Phase 17, not urgent.
+- H7: whether a deck invite skips waitlist approval.
 
 ## To verify
 

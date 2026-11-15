@@ -325,3 +325,37 @@ Open decisions (TBD):
 - **First users:** Ask (D385), then later phases that need a soft launch (MCP, feedback and threads).
 
 - [ ] **1. Ask for a cohort** — TBD with the feature spec: Ask is on for one test deck and off for everyone else, without a redeploy.
+
+## Phase 16 — Community membership and onboarding
+
+Nov 16: stub, not planned. Decisions are TBD and get D numbers when each feature goes through `/speckit-specify`. Found while planning the first communal deck ([`community-go-list.md`](community-go-list.md), Track H). Four separate features.
+
+Rules already decided:
+- **Suggesting is a communal-deck setting.** Off by default; only owners switch it on. When on, readers can suggest cards, which are always proposals. Shared and personal decks never have it.
+- **No email addresses in member data.** No deck kind and no role, owners included, sees another member's email address.
+- **One registration flow.** Anyone can be invited to a deck. Someone not yet registered goes through the same registration as a person arriving from the welcome page; the invite travels with it and decides where they land.
+- **Every registered user is a full user**, with a personal deck, whoever invited them and whether or not a deck came with the invite.
+
+Open decisions (TBD):
+- **Suggesting:** the form and the share paths open to readers, caps, what name shows on a suggestion, how a suggester hears the outcome.
+- **Member data:** what stands for a pending invite before the person has a display name; telling apart two people with the same name.
+- **Invites:** whether a deck invite skips waitlist approval; when the account is created; waitlist invites that carry a deck and role, in batches with a cohort size.
+- **Onboarding:** what a new user sees first when they came in through a communal or shared deck, and how they learn about their personal deck and their own decks.
+- **Accountability:** decision events for suggestions, invites, acceptances, expiries and refusals (constitution VIII).
+
+- [ ] **1. Suggest a card** — TBD with the feature spec.
+- [ ] **2. Member list without email addresses** — TBD with the feature spec.
+- [ ] **3. Invites through registration** — TBD with the feature spec.
+- [ ] **4. Onboarding for invited users** — TBD with the feature spec.
+
+## Phase 17 — Members-only categories on public decks
+
+Nov 16: stub, not planned, not urgent. A public communal deck can keep some categories for members. The mechanism exists: anonymous visitors see `public` categories, members also see `shared` ones. What is not designed is the product around it.
+
+Open decisions (TBD):
+- **Visibility to visitors:** whether a public page shows that members-only categories exist (names, counts, a prompt to join) or hides them completely, as today.
+- **Search:** whether public search hints at members-only results.
+- **Links:** what a visitor sees when a member shares a card from a members-only category.
+- **Purpose:** what belongs there (recommendations naming people, contact details, discussions) and whether it changes what suggesting members may post.
+
+- [ ] **1. Members-only categories** — TBD with the feature spec.
