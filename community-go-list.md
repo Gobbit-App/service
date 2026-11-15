@@ -182,12 +182,13 @@ How people get into the communal deck at each stage, what the code does today an
 - [ ] **H11. Model spend guard** (closes G21; to implement, spec-kit; rule in `PLAN.md` Phase 16). Rule: anonymous visitors and readers cannot run up model spend. Applies to every feature that calls a model in the background, present and future. Decided Nov 16, per surface:
   - Search and its query embeddings, anonymous and member: fine as they are. No change.
   - Ask: off (`ASK_ENABLED`) until it is ready for general availability. No work here.
-  - Model extraction on ingestion (shares, paste, email-in, the iPhone Shortcut): off by default for every user. It is switched on per user in the database, by hand, with no screen for it. The switch belongs to the person, so it holds on every deck they can add to. Without it nothing reaches the model and the refusal is a decision event. Likely a paid or tightly limited free feature later; a table of features per plan is deliberately not built yet.
+  - Model extraction on ingestion (shares, paste, email-in, the iPhone Shortcut): off by default for every user. It is switched on per user in the database, by hand, with no screen for it. The switch belongs to the person, so it holds on every deck they can add to. Without it nothing reaches the model: the share is still saved as a proposal on a best-effort basis (the link or text as given, with whatever the page itself states), the person sees a notice that smart share is coming soon, and the skipped extraction is a decision event. Likely a paid or tightly limited free feature later; a table of features per plan is deliberately not built yet.
   - Bulk import calls no model and stays open.
   - Item embeddings for cards a user writes, personal decks included: open to all for now; revisit with the features-per-plan question.
   - Suggesting (H5): a reader's suggestion never reaches the model unless that reader has the switch.
-  - To settle in the spec: what a share does for a user without the switch (refused, or saved as a plain link or text proposal with no model); the daily caps for users who do have it (today 50 per channel, 200 combined); which existing users get the switch in the migration (assumed: the platform admins only, the rest by hand).
-  - Verify: an integration test shares as a user without the switch and sees no `llm_calls` row and a refusal event; the same share with the switch on is extracted. Needed before stage 3.
+  - With the switch on, today's daily caps stay (50 per channel, 200 combined). The migration switches it on for the platform admins only; everyone else is switched on by hand.
+  - To settle in the spec: what best effort contains for each kind of share without the model (link, text, image, email).
+  - Verify: an integration test shares as a user without the switch and sees a proposal, no `llm_calls` row, the notice and the decision event; the same share with the switch on is extracted. Needed before stage 3.
 
 Order within the track: H1 → H2, H3 (with Track B) → H5, H6, H11 → stage 3 → H7, H8 → stage 4 → stage 5.
 
@@ -299,7 +300,6 @@ If Track J slips, the fallback is to go public on the product domain after step 
 - H2: your own user or a dedicated community user as the deck's owner; who holds its mailbox.
 - Members-only categories on a public deck: stub in `PLAN.md` Phase 17, not urgent.
 - H7: whether a deck invite skips waitlist approval.
-- H11: what a share does for a user without the extraction switch; who gets the switch in the migration.
 
 ## To verify
 

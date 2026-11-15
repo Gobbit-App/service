@@ -348,7 +348,7 @@ Open decisions (TBD):
 - [ ] **2. Member list without email addresses** — TBD with the feature spec.
 - [ ] **3. Invites through registration** — TBD with the feature spec.
 - [ ] **4. Onboarding for invited users** — TBD with the feature spec.
-- [ ] **5. Model spend guard** — a user without the extraction switch causes no model call when sharing, and the refusal shows as a decision event; with the switch on, the share is extracted.
+- [ ] **5. Model spend guard** — a user without the extraction switch causes no model call when sharing: the share is saved best effort with a notice that smart share is coming soon, and the skip shows as a decision event; with the switch on, the share is extracted under today's caps.
 
 ## Phase 17 — Members-only categories on public decks
 
