@@ -332,14 +332,14 @@ Nov 16: stub, not planned. Decisions are TBD and get D numbers when each feature
 
 Rules already decided:
 - **Suggesting is a communal-deck setting.** Off by default; only owners switch it on. When on, readers can suggest cards, which are always proposals. Shared and personal decks never have it.
-- **No email addresses in member data.** No deck kind and no role, owners included, sees another member's email address.
+- **No email addresses in member data.** No deck kind and no role, owners included, sees another member's email address. Invites go by email address or by username (usernames come with spec `046`). The one exception: an invite made by typing an address keeps showing that address in the invites list; an invite made by username never reveals the address, then or later.
 - **One registration flow.** Anyone can be invited to a deck. Someone not yet registered goes through the same registration as a person arriving from the welcome page; the invite travels with it and decides where they land.
 - **Every registered user is a full user**, with a personal deck, whoever invited them and whether or not a deck came with the invite.
 - **Model spend is guarded.** Any feature that calls a model in the background is protected from over-use and misuse by anonymous visitors and readers: their calls are bounded by ceilings that hold across all users (per deck and platform-wide), not only per person, and are refused or served without the model beyond them. Applies to every later phase (Ask, suggesting, curation agents, MCP).
 
 Open decisions (TBD):
 - **Suggesting:** the form and the share paths open to readers, caps, what name shows on a suggestion, how a suggester hears the outcome.
-- **Member data:** what stands for a pending invite before the person has a display name; telling apart two people with the same name.
+- **Member data:** whether a typed invite address shows to the inviter only or to every owner; a fallback display name that is not derived from the email address; limits on username lookups; telling apart two people with the same name.
 - **Invites:** whether a deck invite skips waitlist approval; when the account is created; waitlist invites that carry a deck and role, in batches with a cohort size.
 - **Onboarding:** what a new user sees first when they came in through a communal or shared deck, and how they learn about their personal deck and their own decks.
 - **Accountability:** decision events for suggestions, invites, acceptances, expiries and refusals (constitution VIII).
