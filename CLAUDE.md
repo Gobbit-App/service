@@ -1,16 +1,18 @@
-# Gobbit — Phase 5 (ingestion)
+# Gobbit
 
-A collaborative knowledge-card API for families/communities. Decks (personal/shared/communal) organize cards (text/link/image/table/calc) with categories, sources, favorites. Phase 1 delivered the core data model + typed REST API; Phase 2 added magic-link sessions, memberships/roles and category visibility; Phase 3 added the Reader PWA (offline reading, favorites, share previews); Phase 3B adds a personal deck at `/d/me` (created on every sign-in) and a minimal card editor. Phase 4 adds hybrid search (pg_trgm + pgvector, RRF), an optional cited Ask answer and an embeddings worker. Phase 5 adds ingestion: shares (Android share target, iPhone Shortcut with ingest tokens, paste box, flagged email-in) become `ingest_jobs` that the worker fetches (SSRF-guarded), extracts with an LLM into a **proposed** card and dedups; publishers approve them in a review queue. From Phase 6 on, work is specified and planned with spec-kit under `specs/` (see Planning below).
+A collaborative knowledge-card app for families and communities. Decks (personal/shared/communal) hold cards (`text`, `link`, `image`, `table`, `calc`, `reminder`, `event`) filed in categories, with sources and favorites. Members sign in by magic link and read in an offline-capable PWA with hybrid search and an optional cited Ask; shares (Android share target, iPhone Shortcut, paste box, email-in, bulk import) become **proposed** cards that publishers review; communal decks can be public, with server-rendered pages. Sign-up goes through a waitlist and landing page.
+
+Roadmap and status: `PLAN.md` (phases and their demos). Phases 0–5 are summarised in `specs/005-phases-0-5`; every feature since is a spec-kit folder under `specs/` (see Planning).
 
 ## Repo Layout
 
 ```
-apps/api/        — Hono REST API (TypeScript strict) + worker (`src/worker.ts`, pg-boss: embeddings, ingestion)
+apps/api/        — Hono REST API (TypeScript strict) + worker (`src/worker.ts`, pg-boss jobs in `src/jobs/`)
 apps/web/        — Reader PWA (React, Vite, TanStack Router/Query) + Caddy image
 packages/api-client/ — Generated OpenAPI types + typed client (@gobbit/api-client)
 packages/shared/ — Zod schemas, limits, utils (@gobbit/shared)
 packages/db/     — Drizzle ORM, migrations, seed (@gobbit/db)
-e2e/             — Playwright smoke tests
+e2e/             — Playwright: `tests/smoke` (@smoke, every PR) and `tests/full` (@full, nightly)
 infra/           — Docker Compose (base = deployed, docker-compose.local.yml = local ports/dev defaults)
 apps/api/Dockerfile — API image (also used by Compose)
 apps/web/Dockerfile + Caddyfile — web image (static PWA; routes /api and /s to the API)
@@ -30,17 +32,17 @@ specs/           — spec-kit features `NNN-name/` (spec, plan, tasks); README.m
 - **Invariants**: Auto timestamps, default category creation & protection in migrations; hand-written down files in `packages/db/migrations/down/`
 - **Auth**: magic links → server-side sessions (`gobbit_session` cookie or `Authorization: Bearer`); access via `authorize()` + `can()`, visibility via `visibleCategoriesWhere()`. Smoke/`api.http` use the seeded `SMOKE_SESSION_TOKEN`
 - **Seed**: local development only (refuses production); creates only the owner account/user from `SEED_OWNER_EMAIL` (+ optional smoke session); no sample decks or cards — tests build data with factories/fixtures (D49)
-- **Deploy**: CI builds `ghcr.io/gobbit-app/service/{api,web}` with `GIT_SHA`, then a `deploy` job calls the Dokploy webhook once; only `web` (Caddy) faces Traefik and proxies `/api` (stripped) and `/s` to the internal API; smoke waits for `/health` and `/version.json` to report the commit (ADR-033/034/038, `infra/README.md`)
+- **Deploy**: CI builds `ghcr.io/gobbit-app/service/{api,web}` with `GIT_SHA`, then a `deploy` job calls the Dokploy webhook once, which deploys `infra/docker-compose.yml` from `main` (ADR-073); only `web` (Caddy) faces Traefik and proxies `/api` (stripped) and `/s` to the internal API; smoke waits for `/health` and `/version.json` to report the commit (ADR-033/034/038/073, `infra/README.md`)
 - **Card lifecycle**: archive/restore/delete/undelete only through `items.service`, called with an `actor` (`getActor(c)`, ADR-050); undelete within 30 days, weekly `prune-deleted-items` hard-deletes after; web deck links via `deckHref(slug, path)` (D143)
 - **Roles**: co-owners (owner memberships) can do everything except delete the deck; re-inviting a pending member replaces the invite (new role, older links expired)
 - **Env**: `pnpm dev` and `pnpm db:*` load the repo-root `.env` if present (`tsx --env-file-if-exists`); real env vars win; every PR that adds, renames, removes or makes required an env var adds a `CHANGELOG.md` entry (mark deploy blockers **Action required**)
 - **Testing**: Unit `*.test.ts` next to code; Integration `*.int.test.ts` + Docker; Search eval `*.search.test.ts` (`pnpm test:search`, committed embedding cache); E2E `@smoke` → each test creates and deletes its own `smoke-<id>` deck (D50). Two e2e tiers (constitution V, ADR-053): `@smoke` = critical journeys (every PR + post-deploy, ≤5 min, nothing inside Gobbit faked) and `@full` = everything else (nightly, `e2e/tests/full/`); every plan and PR states "E2E tier: smoke | full | none — reason", and an escaped bug gets its regression test at the tier that would have caught it (plans: `specs/010-e2e-journeys`, `specs/011-e2e-nightly`)
 - **Git hooks**: `.githooks/` via `prepare` — pre-commit = Prettier + ESLint on staged files (check only), pre-push = typecheck + unit
 - **Search**: `searchRepo.hybrid()` filters both arms by deck, status and `visibleCategoriesWhere()`; fusion in `lib/rrf.ts`. `OPENROUTER_API_KEY` (preferred, both features) or `OPENAI_API_KEY`/`ANTHROPIC_API_KEY` are optional (text-only search / Ask off); providers resolved in `ai/providers.ts` (ADR-044); writes call `embedQueue.enqueueIfStale()` after commit, the worker sweep heals misses (ADR-041–043)
-- **Ingestion**: `POST /ingest` → `ingest_jobs` → worker `jobs/ingest.ts` (fetch → normalize → extract → proposed item → dedup). The agent never publishes; proposals are visible only to publishers and their creator (D96); published items need ≥ 1 category (DB trigger, D95). `ing_` ingest tokens work only on `POST /ingest` (ADR-046); outbound fetches go through `fetch/safe-fetch.ts` only (ADR-048). Bulk import (`POST /decks/{id}/imports`, channel `import`, no LLM) uses the shared `@gobbit/shared/import` parser in web and CLI; bulk publish skips duplicates (D189–D191). Every new card type includes ingestion support: extraction proposes it when a share is recognised as one (structured data first, never an invented value), with its own dedup rule (e.g. events, D370–D376).
-- **Media**: editor photo uploads go browser → Cloudinary with a per-deck signature from `POST /decks/{id}/media/sign` (`item.create`; folder `gobbit/items/<deckId>`, tags `editor`,`deck:<deckId>`; secret never leaves the API, ADR-051); `POST /decks/{id}/link-preview` fetches only via `safe-fetch` and answers `{ preview: null }` on any failure without the reason (D134). Tests never call Cloudinary or real sites Email-in (`/webhooks/resend/inbound`) is on only with `INGEST_EMAIL_DOMAIN` + `RESEND_WEBHOOK_SECRET` + `RESEND_API_KEY`
-- **Media**: every stored image has an `assets` row; image cards may only reference an asset recorded for their deck (D160, dimensions come from the asset); browser uploads are recorded via `POST /decks/{id}/media/assets`; outbound image downloads go only through `createSafeImageFetch` (`media.uploadFromUrl`); `media-sweep` deletes unreferenced images after 7 days (ADR-054)
+- **Ingestion**: `POST /ingest` → `ingest_jobs` → worker `jobs/ingest.ts` (fetch → normalize → extract → proposed item → dedup). The agent never publishes; proposals are visible only to publishers and their creator (D96); published items need ≥ 1 category (DB trigger, D95). `ing_` ingest tokens work only on `POST /ingest` (ADR-046); outbound fetches go through `fetch/safe-fetch.ts` only (ADR-048). Bulk import (`POST /decks/{id}/imports`, channel `import`, no LLM) uses the shared `@gobbit/shared/import` parser in web and CLI; bulk publish skips duplicates (D189–D191). Every new card type includes ingestion support: extraction proposes it when a share is recognised as one (structured data first, never an invented value), with its own dedup rule (e.g. events, D370–D376). Email-in (`/webhooks/resend/inbound`) is on only with `INGEST_EMAIL_DOMAIN` + `RESEND_WEBHOOK_SECRET` + `RESEND_API_KEY`
+- **Media**: every stored image has an `assets` row; image cards may only reference an asset recorded for their deck (D160, dimensions come from the asset). Editor uploads go browser → Cloudinary with a per-deck signature from `POST /decks/{id}/media/sign` (`item.create`; folder `gobbit/items/<deckId>`, tags `editor`,`deck:<deckId>`; secret never leaves the API, ADR-051) and are recorded via `POST /decks/{id}/media/assets`; outbound image downloads go only through `createSafeImageFetch` (`media.uploadFromUrl`); `media-sweep` deletes unreferenced images after 7 days (ADR-054); `POST /decks/{id}/link-preview` fetches only via `safe-fetch` and answers `{ preview: null }` on any failure without the reason (D134). Tests never call Cloudinary or real sites
 - **Links**: link preview images render from the stored snapshot (`link-snapshot` job, server-owned `preview.publicId`/`width`/`height`), the remote image only as a fallback; link checks (`link-check-sweep`, `POST /items/{id}/link-check`) fetch only through `safe-fetch` and keep their state in `link_checks`, never on `items` (ADR-055)
+- **Reminders & events**: card types whose server-owned state lives in side tables synced by DB triggers (`reminders`; `event_cards` + one `event_notices` row per notify moment), never in the payload; reminders stay hidden until reveal (`itemRevealedWhere()` on every member read) and are never public; all notifications go through `notify.service.tick()` on the `reminder-sweep` queue, re-checking access before each send, at most once per delivery key; push is off unless all three `VAPID_*` vars are set (ADR-070, ADR-076, `docs/design/reminders.md`, `docs/design/events.md`)
 - **Public**: anonymous reads (`/public/{slug}`) go only through `public-deck.service` with `role = null` and the `toPublicItem` allow-list DTO; a deck is public when live, `isPublic` and not personal, else the member 404; session-auth ignores credentials on `/public/*`; anonymous routes share the in-process per-IP `anon-rate-limiter` (ADR-056)
 - **Public pages**: `/p/{slug}[/c/{category}|/i/{id}]` are API-rendered HTML (`hono/html`, no JS, outside OpenAPI) reading through `public-deck.service`; build every public URL with `publicUrl()`/`publicPath()`; members get a 302 to the app; writes that change public content call `purgeDeck(deckId)` after commit (D177–D181)
 - **Public search**: anonymous search goes only through `search.retrievePublic` (role null, `toPublicItem`, logged `mode = 'public'`); stranger query embeddings use the anonymous budgets (`query-budget.ts`, per IP then global), never a user's; no public Ask (D182, D183)
@@ -61,11 +63,20 @@ specs/           — spec-kit features `NNN-name/` (spec, plan, tasks); README.m
 - **Flow**: `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement` → `/speckit-converge` (repeat implement/converge until Converged). Use these instead of the personal `plan-feature` skill in this repo. Small fixes with no new behaviour skip it
 - **Constitution**: `.specify/memory/constitution.md` holds the principles every plan gates on; amend it (versioned) rather than working around it. Customise templates only in `.specify/templates/overrides/` (survives `specify` upgrades)
 - **Numbering**: sequential from `006` (Phases 0–5 are recorded in `specs/005-phases-0-5`); a phase may span several features; `PLAN.md` stays the roadmap and links each feature
-- **Decisions**: `research.md` continues the `D` series (next free number across `docs/` and `specs/*/research.md`; Phase 6 reserves D129–D147); durable ones become the next ADR in `docs/adr.md` plus a one-line row in the `docs/architecture.md` index
+- **Decisions**: `research.md` continues the `D` series (next free number across `docs/` and `specs/*/research.md`; reservations are listed in `specs/README.md`, add yours there); durable ones become the next ADR in `docs/adr.md` plus a one-line row in the `docs/architecture.md` index
 - **E2E tier**: decide it in `/speckit-plan` (Technical Context "E2E tier" line) and tag tasks `[e2e:smoke]` / `[e2e:full]`; small fixes state it in the PR template
 - **Implementing**: log decisions the plan didn't make and deviations in `specs/NNN-*/implementation-notes.md` (committed with the feature); at close-out copy deviations into the "Deviations" list of the matching `docs/design/<area>.md`
 - **Public repo**: specs are committed and public — no personal data, private notes, costs or secrets (ADR-023, ADR-049). Private scratch still goes in gitignored `plans/`
 - **spec-kit version**: pinned 1.2.2 (`uvx --from specify-cli==1.2.2 specify …`); upgrade deliberately and review the diff
+
+### /speckit-implement
+
+Follow the skill exactly, with one change: execute each task by delegating to the `speckit-worker` subagent.
+
+- Pass: task ID + text, FEATURE_DIR, and the specific plan.md / contracts / data-model.md sections the task needs (paths + headings, not pasted content)
+- You alone mark tasks [X] in tasks.md, only after the worker reports STATUS: done with passing tests
+- Run [P] tasks in parallel only if they touch different files; otherwise run them sequentially
+- On STATUS: failed/blocked for a non-[P] task, halt per the skill's rules and tell me
 
 ## Key Commands
 
@@ -79,19 +90,8 @@ pnpm import:notes <file> --deck <slug>  # Notes file → proposals (GOBBIT_API_U
 pnpm api:openapi                   # Regenerate api-client after route changes (CI checks drift)
 pnpm build:web / budget / og:static # Web build, 150 KB gzip budget, static OG/icons
 pnpm compose:{up,down}             # Docker (Postgres + API + worker + web on 127.0.0.1:8080)
+pnpm job:run <queue>               # Enqueue one run of a scheduled job now (running worker picks it up)
+pnpm media:reconcile [--delete]    # List (or delete) Cloudinary uploads with no assets row; dry run by default
 ```
 
 See `README.md` for setup, `docs/architecture.md` for the system map (links to `docs/design/` and `docs/adr.md`).
-
-## Spec-kit implementation
-When running /speckit-implement, follow it exactly, with one change:
-execute each task by delegating to the speckit-worker subagent.
-- Pass: task ID + text, FEATURE_DIR, and the specific plan.md /
-  contracts / data-model.md sections the task needs (paths + headings,
-  not pasted content).
-- You alone mark tasks [X] in tasks.md, only after the worker reports
-  STATUS: done with passing tests.
-- Run [P] tasks in parallel only if they touch different files;
-  otherwise run them sequentially.
-- On STATUS: failed/blocked for a non-[P] task, halt per the skill's
-  rules and tell me.
