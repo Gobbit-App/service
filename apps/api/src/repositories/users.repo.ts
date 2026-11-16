@@ -1,5 +1,5 @@
-import { and, asc, eq, isNull } from 'drizzle-orm';
-import { accounts, analyticsConsentEvents, users } from '@gobbit/db';
+import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { accounts, analyticsConsentEvents, displayNameSql, users } from '@gobbit/db';
 import type { DbExecutor } from '@gobbit/db';
 import type { RegistrationReason } from '@gobbit/shared/auth';
 import type { AnalyticsConsentChoice, AnalyticsConsentSource } from '@gobbit/shared/analytics';
@@ -9,7 +9,7 @@ const currentUserColumns = {
   id: users.id,
   accountId: users.accountId,
   email: users.email,
-  displayName: users.displayName,
+  displayName: displayNameSql(),
 };
 
 const consentColumns = {
@@ -30,6 +30,38 @@ export type SetAnalyticsConsentResult = {
   consent: StoredAnalyticsConsent;
 };
 
+const profileColumns = {
+  id: users.id,
+  email: users.email,
+  displayName: displayNameSql(),
+  username: users.username,
+  firstName: users.firstName,
+  lastName: users.lastName,
+  location: users.location,
+  avatar: users.avatar,
+};
+
+/** `email` is selected ONLY so the caller can compute initials; never put it in a DTO. */
+export type ProfileRow = {
+  id: string;
+  email: string;
+  displayName: string;
+  username: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  location: string | null;
+  avatar: { publicId: string; width?: number; height?: number } | null;
+};
+
+export type ProfilePatch = Partial<
+  Pick<ProfileRow, 'username' | 'firstName' | 'lastName' | 'location' | 'avatar'>
+>;
+
+export type UserSummaryRow = Pick<
+  ProfileRow,
+  'id' | 'firstName' | 'lastName' | 'username' | 'avatar' | 'email'
+>;
+
 export function createUsersRepo(db: DbExecutor) {
   return {
     /** `email` must already be normalised (trimmed, lowercased) — emails are stored that way. */
@@ -48,6 +80,59 @@ export function createUsersRepo(db: DbExecutor) {
         .from(users)
         .where(and(eq(users.id, id), isNull(users.deletedAt)))
         .limit(1);
+      return row ?? null;
+    },
+
+    async profileById(id: string): Promise<ProfileRow | null> {
+      const [row] = await db
+        .select(profileColumns)
+        .from(users)
+        .where(and(eq(users.id, id), isNull(users.deletedAt)))
+        .limit(1);
+      return row ?? null;
+    },
+
+    /**
+     * Explicit columns only. `email` is here ONLY for initials: callers must never return it.
+     * Live users only (deleted ones are absent, like the other reads).
+     */
+    async summariesByIds(ids: string[]): Promise<UserSummaryRow[]> {
+      if (ids.length === 0) return [];
+      return db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          username: users.username,
+          avatar: users.avatar,
+          email: users.email,
+        })
+        .from(users)
+        .where(and(inArray(users.id, ids), isNull(users.deletedAt)));
+    },
+
+    /** `lowerUsername` must already be lower-cased; matching is case-insensitive. */
+    async findByUsername(lowerUsername: string): Promise<ProfileRow | null> {
+      const [row] = await db
+        .select(profileColumns)
+        .from(users)
+        .where(and(sql`lower(${users.username}) = ${lowerUsername}`, isNull(users.deletedAt)))
+        .limit(1);
+      return row ?? null;
+    },
+
+    /** Runs on the caller's transaction handle so the service can add username holds and events. */
+    async updateProfile(
+      tx: DbExecutor,
+      userId: string,
+      patch: ProfilePatch,
+    ): Promise<ProfileRow | null> {
+      if (Object.keys(patch).length === 0) return this.profileById(userId);
+      const [row] = await tx
+        .update(users)
+        .set(patch)
+        .where(and(eq(users.id, userId), isNull(users.deletedAt)))
+        .returning(profileColumns);
       return row ?? null;
     },
 

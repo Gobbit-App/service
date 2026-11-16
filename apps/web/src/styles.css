@@ -35,6 +35,27 @@
   --card-accent-soft: light-dark(#d9f2e3, #173b33);
   /* Mint as the line colour: structural edges (header, bottom bar) and dividers inside a card —
      never around repeating items, which separate by fill and spacing. */
+  /* D420: ten avatar colour pairs (light, dark); every pair keeps 4.5:1 (ui/avatar-palette.test.ts). */
+  --avatar-1-bg: light-dark(#eabfb8, #64322b);
+  --avatar-1-fg: light-dark(#161b21, #f4eee2);
+  --avatar-2-bg: light-dark(#eacfb8, #64452b);
+  --avatar-2-fg: light-dark(#161b21, #f4eee2);
+  --avatar-3-bg: light-dark(#eadeb8, #64562b);
+  --avatar-3-fg: light-dark(#161b21, #f4eee2);
+  --avatar-4-bg: light-dark(#d5eab8, #4c642b);
+  --avatar-4-fg: light-dark(#161b21, #f4eee2);
+  --avatar-5-bg: light-dark(#b8ead1, #2b6447);
+  --avatar-5-fg: light-dark(#161b21, #f4eee2);
+  --avatar-6-bg: light-dark(#b8eae6, #2b645f);
+  --avatar-6-fg: light-dark(#161b21, #f4eee2);
+  --avatar-7-bg: light-dark(#b8daea, #2b5164);
+  --avatar-7-fg: light-dark(#161b21, #f4eee2);
+  --avatar-8-bg: light-dark(#b8c4ea, #2b3964);
+  --avatar-8-fg: light-dark(#161b21, #f4eee2);
+  --avatar-9-bg: light-dark(#cdb8ea, #432b64);
+  --avatar-9-fg: light-dark(#161b21, #f4eee2);
+  --avatar-10-bg: light-dark(#eab8da, #642b51);
+  --avatar-10-fg: light-dark(#161b21, #f4eee2);
   --accent-line: rgb(34 227 162 / 55%);
   --accent-hair: rgb(34 227 162 / 30%);
   --card-shadow:

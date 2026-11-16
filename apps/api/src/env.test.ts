@@ -19,6 +19,8 @@ describe('env', () => {
     expect(env.ALLOW_CONSOLE_MAIL).toBe(false);
     expect(env.MAGIC_LINK_TTL_MINUTES).toBe(15);
     expect(env.INVITE_TTL_DAYS).toBe(7);
+    expect(env.USERNAME_HOLD_DAYS).toBe(30);
+    expect(env.PROFILE_LOOKUP_RATE_PER_HOUR).toBe(30);
     expect(env.SESSION_TTL_DAYS).toBe(90);
   });
 

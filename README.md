@@ -107,6 +107,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `INGEST_MAX_BYTES_VIDEO` | `25165824` | Largest video a share may carry, in bytes (045, D393) |
 | `MAGIC_LINK_TTL_MINUTES` | `15` | Sign-in link lifetime |
 | `INVITE_TTL_DAYS` | `7` | Invite link lifetime |
+| `USERNAME_HOLD_DAYS` | `30` | Days a released username stays reserved for its previous owner (046) |
+| `PROFILE_LOOKUP_RATE_PER_HOUR` | `30` | Profile lookups per member per hour (046) |
 | `SESSION_TTL_DAYS` | `90` | Sliding session lifetime |
 | `CLIENT_IP_HEADER` | — (socket address) | Header with the real client IP behind a proxy (e.g. `cf-connecting-ip`) |
 | `SEED_OWNER_EMAIL` / `SEED_OWNER_NAME` | — | Owner created by `pnpm db:seed` (email required; local development only) |
