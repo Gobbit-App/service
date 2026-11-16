@@ -22,6 +22,9 @@ right tier (unit / int / search / e2e), and every row of the plan's traceability
   `[search]` `*.search.test.ts`, `[e2e:smoke]` Playwright `@smoke` journey in `e2e/tests/smoke/`,
   `[e2e:full]` Playwright `@full` spec in `e2e/tests/full/` (tier from the plan's "E2E tier" line, constitution V)
 - Include exact file paths in descriptions
+- **UI tasks** (any `.tsx`/`.css` change) name the sibling they copy from the plan's "UI reference" line and end with
+  "screenshots: phone 412 px + desktop 1280 px, light + dark, compared with <sibling>" (constitution X); without
+  screenshots the task is blocked, not done
 
 ## Path Conventions
 
