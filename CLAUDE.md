@@ -84,7 +84,7 @@ Follow the skill exactly, with one change: execute each task by delegating to th
 - **No silent divergence**: if a task looks unnecessary or over-built, say so and propose an edit to tasks.md (or plan.md) before skipping or shrinking it
 - **Prune the plan**: after `/speckit-plan` writes plan.md, check every component, dependency and abstraction against constitution IX (Reuse before writing) and remove what the spec doesn't require; list what was removed and why
 - **Before a PR**: run both `/speckit-converge` (spec conformance) and `/ponytail:ponytail-review` (bugs, security, load, over-building); they check different things
-- **`shortcut:` comments** are tracked debt: collect them at close-out (`git grep -n 'shortcut:'`) and propose the ones worth keeping as follow-up tasks rather than leaving them only in code
+- **`shortcut:` comments** are tracked debt: when `/ponytail:ponytail-debt` collects them, propose the ones worth keeping as follow-up tasks rather than leaving them only in code
 
 ## Key Commands
 
