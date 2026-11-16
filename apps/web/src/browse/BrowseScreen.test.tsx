@@ -145,7 +145,7 @@ describe('BrowseScreen: cards (vertical)', () => {
       'aria-hidden',
       'true',
     );
-    expect(live()).toHaveTextContent('Card 1 of 6');
+    await waitFor(() => expect(live()).toHaveTextContent('Card 1 of 6'));
     expect(screen.getByText('1 / 6')).toBeInTheDocument();
   });
 
