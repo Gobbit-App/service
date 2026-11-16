@@ -39,6 +39,8 @@ repository is public (constitution, Constraints).
 
 **E2E tier**: [smoke | full | none] — [reason, per constitution V: smoke = critical journey, blocks core use, or crosses a deployment boundary; full = secondary/variant/async/cross-browser; none = no new UI or flow]
 
+**UI reference**: [none — no UI | for each new screen, field or control: the existing sibling it copies (e.g. "cover field → `.field-group` + action row like `LinkFields`' URL"), or "none — <why>" with the layout described in `docs/design/ui-system.md` terms; constitution X]
+
 **Target Platform**: Docker Compose on Dokploy; PWA on Android Chrome (iOS where stated)
 
 **Project Type**: pnpm monorepo — API + worker, PWA, shared packages
@@ -63,6 +65,8 @@ repository is public (constitution, Constraints).
 | VI. Lean, offline-first web | [bundle impact; query cache; subpath imports] |
 | VII. Simple, optional, deployable | [new deps justified; works without AI keys; deploy impact] |
 | VIII. Accountable by default | [every decision has an event or audit row in the Accountability table; ids/hashes only; limits env-tunable] |
+| IX. Reuse before writing | [what was checked (repo, stdlib, platform, installed deps) before each new piece of code] |
+| X. One UI system | [UI reference line filled; tokens and `ui/` primitives only; no new breakpoints, colours or layout patterns; screenshots per UI task] |
 
 ## Decisions this plan pins down
 

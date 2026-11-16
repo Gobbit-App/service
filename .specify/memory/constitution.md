@@ -142,6 +142,23 @@ level fell short.
 - Rationale: less code means less to review, secure and maintain, and the repo already holds the
   conventions a duplicate would drift from.
 
+### X. One UI system
+
+New UI extends the system the app already has; it never invents its own layout, spacing or
+controls. The rules live in `docs/design/ui-system.md` [ADR-079].
+
+- Every new screen, field or control names an existing sibling it copies (the plan's "UI reference"
+  line, and each UI task), and matches its structure, classes and spacing.
+- Spacing, type, colour, breakpoints and motion come from the `styles.css` tokens; rhythm comes from
+  the parent's `gap` in the D323 steps; every class a component uses has a CSS rule.
+- Actions, file picks, images, panels and status views render only through the `ui/` primitives
+  listed in the UI system; visible labels are short and the accessible name carries the context.
+- jsdom renders no CSS, so passing tests say nothing about layout: a task that changes `.tsx` or
+  `.css` is done only with phone- and desktop-width screenshots of the changed screen compared
+  against its sibling; without them it is blocked. `ui-system.test.ts` ratchets the rest.
+- Rationale: a feature that looks unlike the rest of the app is a bug users see first, and only a
+  written system with a check at each step keeps every new feature inside it.
+
 ## Constraints
 
 - Stack: Hono + Zod OpenAPI (API), pg-boss worker (separate process) [ADR-042], PostgreSQL 17 with
@@ -163,6 +180,8 @@ level fell short.
   content or their experience, with the reason.
 - Decisions in `research.md` continue the project-wide `D` numbering; any that will outlive the
   feature become an ADR in `docs/adr.md`, with a one-line row in the `docs/architecture.md` index.
+- A plan with UI fills the Technical Context "UI reference" line (Principle X): the sibling each new
+  screen, field or control copies, or "none — why".
 - Before merge: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int`
   pass; `README.md` and `docs/` reflect the change. Feature detail and its "Deviations" list (when
   the code departs from the plan) go in `docs/design/<area>.md`; `docs/architecture.md` stays a
@@ -177,4 +196,4 @@ level fell short.
 - Amendments are PRs that edit this file and, if needed, the matching ADR. Versioning: MAJOR when a
   principle is removed or redefined, MINOR when one is added or materially expanded, PATCH for wording.
 
-**Version**: 1.4.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-16
+**Version**: 1.5.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-16
