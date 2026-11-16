@@ -11,8 +11,11 @@ export function PickButton({
   accept = IMAGE_ACCEPT,
   multiple = false,
   icon,
+  ariaLabel,
 }: {
   label: string;
+  /** A name that says more than the visible label (e.g. "Replace cover image"). */
+  ariaLabel?: string;
   capture?: boolean;
   disabled: boolean;
   /** Every picked file, in the order the device gave them (one unless `multiple`). */
@@ -34,6 +37,7 @@ export function PickButton({
       <input
         type="file"
         className="visually-hidden"
+        aria-label={ariaLabel}
         accept={accept}
         multiple={multiple}
         capture={capture ? 'environment' : undefined}

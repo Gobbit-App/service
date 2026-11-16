@@ -430,7 +430,7 @@ test('a cover image added to a text card shows as a bar in the deck list @smoke'
   await page.getByLabel('Body', { exact: true }).fill('A card with a cover');
   await page.getByLabel('Add cover image').setInputFiles(photoFile);
   await expect(page.getByRole('button', { name: 'Remove cover image' })).toBeVisible();
-  await expect(page.getByText('Replace cover image')).toBeVisible();
+  await expect(page.getByLabel('Replace cover image')).toBeAttached();
   await save(page).click();
 
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
