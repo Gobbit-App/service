@@ -120,8 +120,8 @@ description: "Tasks for 044 card cover image"
 
 - [ ] T029 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` and `pnpm build:web && pnpm budget` (main chunk ≤ 150 KB gzip; `CoverField` and `use-drop-image` only in the editor chunk)
 - [ ] T030 e2e: `@smoke` editor journey passes; `pnpm test:e2e --grep @full cover` passes
-- [ ] T031 [P] Docs: `docs/design/card-media.md` cover section (bar via `CloudImage`, supersedes the event link image, sweep reference, runbook thresholds `other_deck` > 5/h, `unsupported_type` > 20/h) + Deviations from implementation-notes.md; `docs/design/web-pwa.md` share preview (public visual, private rule); `card-editor.md` (CoverField, drag and drop, event paste rule); `activity-log.md` (`cover`); `data-model.md` (column)
-- [ ] T032 [P] `docs/adr.md` ADR-078 (cover as its own column, D406/D407); `docs/architecture.md` one index row; `CLAUDE.md` "Media" bullet: covers are image references checked like media cards (D160) and counted by the sweep; `CHANGELOG.md` feature line (no env change); `PLAN.md` link stays, demo unticked
+- [X] T031 [P] Docs: `docs/design/card-media.md` cover section (bar via `CloudImage`, supersedes the event link image, sweep reference, runbook thresholds `other_deck` > 5/h, `unsupported_type` > 20/h) + Deviations from implementation-notes.md; `docs/design/web-pwa.md` share preview (public visual, private rule); `card-editor.md` (CoverField, drag and drop, event paste rule); `activity-log.md` (`cover`); `data-model.md` (column)
+- [X] T032 [P] `docs/adr.md` ADR-078 (cover as its own column, D406/D407); `docs/architecture.md` one index row; `CLAUDE.md` "Media" bullet: covers are image references checked like media cards (D160) and counted by the sweep; `CHANGELOG.md` feature line (no env change); `PLAN.md` link stays, demo unticked
 - [ ] T033 Run quickstart.md validation (automated part)
 - [ ] T034 `/speckit-converge` until Converged, then `/ponytail:ponytail-review`
 

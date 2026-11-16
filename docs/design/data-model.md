@@ -209,6 +209,13 @@ The body limit started at 600; `0024_card_body_2000` replaces the constraint wit
 recipes and instructions without splitting a card). Its down file restores ≤ 600 as `NOT VALID`, so
 a rollback neither fails nor truncates bodies already longer than 600.
 
+### Card cover: 0026_card_cover (D406, D407, D409)
+
+`items.cover jsonb NULL` (no backfill) holds `{ publicId, width?, height? }`.
+
+- `items_cover_chk`: `cover` is null, or the type is one of text, reminder, event, table, calc and the value is an object with a string `publicId` (1-255 chars) and numeric `width`/`height` when present.
+- `items_cover_public_id_idx`: partial btree on `cover->>'publicId'` where `cover IS NOT NULL`, used by the media sweep's reference check.
+
 ### Journal & rollback
 
 - `migrations/meta/_journal.json`: drizzle-kit maintains this; each entry: `{ idx, when, tag }`
