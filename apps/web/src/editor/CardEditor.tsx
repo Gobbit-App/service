@@ -9,6 +9,7 @@ import {
   type ReactElement,
 } from 'react';
 import type { Category, Deck, Item, ItemType } from '@gobbit/shared';
+import { supportsCover } from '@gobbit/shared/card-cover';
 import { EntityChips, removeEntity } from '../cards/EntityChips';
 import { useCloudName } from '../cards/use-cloud-name';
 import { IconButton } from '../ui/buttons/IconButton';
@@ -25,6 +26,7 @@ import { DraftRestoreBanner } from './DraftRestoreBanner';
 import { editDraftKey, newDraftKey } from './drafts-store';
 import { EditorPreview } from './EditorPreview';
 import { BodyField } from './fields/BodyField';
+import { CoverField } from './fields/CoverField';
 import { CategoryChips } from './fields/CategoryChips';
 import { fieldsByType } from './fields/registry';
 import { SourceUrlField } from './fields/SourceUrlField';
@@ -335,6 +337,15 @@ export function CardEditor(props: CardEditorProps): ReactElement {
               />
             ) : (
               <TypeLabel type={draft.type} />
+            )}
+            {supportsCover(draft.type) && !imagesOff && (
+              <CoverField
+                deckId={deck.id}
+                cover={draft.cover}
+                onChange={(cover) => update({ cover })}
+                onUploadingChange={setUploading}
+                disabled={saving}
+              />
             )}
             {placement === 'leading' && typeSection}
             <div className="composer__title">

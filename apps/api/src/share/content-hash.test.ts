@@ -8,6 +8,7 @@ describe('ogContentHash', () => {
     categoryName: 'Tech',
     deckName: 'My Deck',
     imagePublicId: 'image-123',
+    visualPublicId: null,
   };
 
   it('returns 64 hex chars for valid input', () => {
@@ -19,6 +20,13 @@ describe('ogContentHash', () => {
     const hash1 = ogContentHash(baseContent);
     const hash2 = ogContentHash(baseContent);
     expect(hash1).toBe(hash2);
+  });
+
+  it('changes with the visual publicId only', () => {
+    const a = { ...baseContent, visualPublicId: 'cover/a' };
+    expect(ogContentHash(a)).toBe(ogContentHash({ ...a }));
+    expect(ogContentHash(a)).not.toBe(ogContentHash({ ...a, visualPublicId: 'cover/b' }));
+    expect(ogContentHash(a)).not.toBe(ogContentHash({ ...a, visualPublicId: null }));
   });
 
   it('changes when title changes', () => {

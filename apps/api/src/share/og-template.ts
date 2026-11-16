@@ -34,7 +34,12 @@ export type OgCardInput = {
   excerpt: string;
   categoryName: string | null;
   deckName: string;
+  /** 044 D413: reserve the right-hand panel Cloudinary composites the visual into. */
+  visualPanel?: boolean;
 };
+
+/** Width of that panel; the layer is applied at delivery (g_east). */
+export const OG_VISUAL_PANEL_WIDTH = 420;
 
 /** Build a text node with automatic direction detection. */
 function textNode(text: string, additionalStyle: Record<string, string | number> = {}): OgNode {
@@ -180,6 +185,7 @@ export function ogCardTree(input: OgCardInput): OgNode {
         display: 'flex',
         flexDirection: 'column',
         padding: 72,
+        ...(input.visualPanel ? { paddingRight: 72 + OG_VISUAL_PANEL_WIDTH } : {}),
         backgroundColor: OG_COLORS.background,
         fontFamily: OG_TEMPLATE_FONT,
         borderTop: `16px solid ${OG_COLORS.accent}`,

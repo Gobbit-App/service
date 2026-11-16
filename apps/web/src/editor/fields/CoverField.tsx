@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import type { CardCover } from '@gobbit/shared/card-cover';
 import { useOnline } from '../../api/offline';
 import { CoverBar } from '../../cards/CoverBar';
@@ -15,6 +15,8 @@ export type CoverFieldProps = {
   cover: CardCover | null | undefined;
   onChange: (cover: CardCover | null) => void;
   disabled?: boolean;
+  /** Holds Save while an upload runs, like MediaFields (media cards never carry a cover). */
+  onUploadingChange?: (uploading: boolean) => void;
   /** Tests inject a fake signer/uploader. */
   uploadDeps?: Pick<UseImageUploadOptions, 'signer' | 'upload' | 'confirm'>;
 };
@@ -28,6 +30,7 @@ export function CoverField({
   cover,
   onChange,
   disabled = false,
+  onUploadingChange,
   uploadDeps,
 }: CoverFieldProps): ReactElement {
   const online = useOnline();
@@ -45,6 +48,10 @@ export function CoverField({
       }),
     ...uploadDeps,
   });
+  useEffect(() => {
+    onUploadingChange?.(upload.busy);
+  }, [upload.busy, onUploadingChange]);
+  useEffect(() => () => onUploadingChange?.(false), [onUploadingChange]);
 
   const pickDisabled = disabled || !online;
   const pick = (file: File) => {

@@ -23,6 +23,7 @@ const FIELD_LABELS: Record<string, string> = {
   sourceUrl: 'source',
   entities: 'contacts',
   verifiedAt: 'verified date',
+  cover: 'image',
   type: 'type',
   status: 'status',
 };
