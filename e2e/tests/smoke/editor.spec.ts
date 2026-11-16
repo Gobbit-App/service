@@ -415,6 +415,29 @@ test('a two-photo gallery is uploaded, described, listed and viewed @smoke', asy
   await expect(viewer).toHaveCount(0);
 });
 
+/** 044 US1: a cover added in the editor shows as the bar on the card in the list. */
+test('a cover image added to a text card shows as a bar in the deck list @smoke', async ({
+  page,
+  webDeck,
+}) => {
+  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
+  const title = `Editor cover ${webDeck.slug}`;
+  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-cover`);
+  await routeImageDelivery(page);
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
+
+  await page.getByLabel('Title', { exact: true }).fill(title);
+  await page.getByLabel('Body', { exact: true }).fill('A card with a cover');
+  await page.getByLabel('Add cover image').setInputFiles(photoFile);
+  await expect(page.getByRole('button', { name: 'Remove cover image' })).toBeVisible();
+  await expect(page.getByText('Replace cover image')).toBeVisible();
+  await save(page).click();
+
+  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
+  const listed = page.getByRole('article').filter({ hasText: title });
+  await expect(listed.locator('.card__cover')).toBeVisible();
+});
+
 test('a PDF card is uploaded and read page by page @smoke', async ({ page, webDeck }) => {
   test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `Editor PDF ${webDeck.slug}`;
