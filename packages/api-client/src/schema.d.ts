@@ -2985,6 +2985,11 @@ export interface paths {
                                     status: "dead" | "changed";
                                     checkedAt: string;
                                 } | null;
+                                cover: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
                                 reminder?: {
                                     deadline: string;
                                     revealAt: string;
@@ -3147,6 +3152,9 @@ export interface paths {
                             people?: string[];
                             urls?: string[];
                         };
+                        cover?: {
+                            publicId: string;
+                        };
                     } | {
                         /** @enum {string} */
                         type: "link";
@@ -3185,6 +3193,9 @@ export interface paths {
                             dates?: string[];
                             people?: string[];
                             urls?: string[];
+                        };
+                        cover?: {
+                            publicId: string;
                         };
                     } | {
                         /** @enum {string} */
@@ -3248,6 +3259,9 @@ export interface paths {
                             dates?: string[];
                             people?: string[];
                             urls?: string[];
+                        };
+                        cover?: {
+                            publicId: string;
                         };
                     } | {
                         /** @enum {string} */
@@ -3317,6 +3331,9 @@ export interface paths {
                             people?: string[];
                             urls?: string[];
                         };
+                        cover?: {
+                            publicId: string;
+                        };
                     } | {
                         /** @enum {string} */
                         type: "table";
@@ -3343,6 +3360,9 @@ export interface paths {
                             dates?: string[];
                             people?: string[];
                             urls?: string[];
+                        };
+                        cover?: {
+                            publicId: string;
                         };
                     } | {
                         /** @enum {string} */
@@ -3376,6 +3396,9 @@ export interface paths {
                             dates?: string[];
                             people?: string[];
                             urls?: string[];
+                        };
+                        cover?: {
+                            publicId: string;
                         };
                     } | {
                         /** @enum {string} */
@@ -3415,6 +3438,9 @@ export interface paths {
                             dates?: string[];
                             people?: string[];
                             urls?: string[];
+                        };
+                        cover?: {
+                            publicId: string;
                         };
                     } | {
                         /** @enum {string} */
@@ -3489,6 +3515,9 @@ export interface paths {
                             people?: string[];
                             urls?: string[];
                         };
+                        cover?: {
+                            publicId: string;
+                        };
                     };
                 };
             };
@@ -3536,6 +3565,11 @@ export interface paths {
                                 /** @enum {string} */
                                 status: "dead" | "changed";
                                 checkedAt: string;
+                            } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
                             } | null;
                             reminder?: {
                                 deadline: string;
@@ -3772,6 +3806,11 @@ export interface paths {
                                 status: "dead" | "changed";
                                 checkedAt: string;
                             } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
+                            } | null;
                             reminder?: {
                                 deadline: string;
                                 revealAt: string;
@@ -3997,6 +4036,9 @@ export interface paths {
                             people?: string[];
                             urls?: string[];
                         };
+                        cover?: {
+                            publicId: string;
+                        } | null;
                     };
                 };
             };
@@ -4044,6 +4086,11 @@ export interface paths {
                                 /** @enum {string} */
                                 status: "dead" | "changed";
                                 checkedAt: string;
+                            } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
                             } | null;
                             reminder?: {
                                 deadline: string;
@@ -4278,6 +4325,11 @@ export interface paths {
                                 status: "dead" | "changed";
                                 checkedAt: string;
                             } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
+                            } | null;
                             reminder?: {
                                 deadline: string;
                                 revealAt: string;
@@ -4470,6 +4522,11 @@ export interface paths {
                                 /** @enum {string} */
                                 status: "dead" | "changed";
                                 checkedAt: string;
+                            } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
                             } | null;
                             reminder?: {
                                 deadline: string;
@@ -4670,6 +4727,11 @@ export interface paths {
                                 /** @enum {string} */
                                 status: "dead" | "changed";
                                 checkedAt: string;
+                            } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
                             } | null;
                             reminder?: {
                                 deadline: string;
@@ -4908,6 +4970,11 @@ export interface paths {
                                 status: "dead" | "changed";
                                 checkedAt: string;
                             } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
+                            } | null;
                             reminder?: {
                                 deadline: string;
                                 revealAt: string;
@@ -5122,6 +5189,11 @@ export interface paths {
                                 /** @enum {string} */
                                 status: "dead" | "changed";
                                 checkedAt: string;
+                            } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
                             } | null;
                             reminder?: {
                                 deadline: string;
@@ -5770,6 +5842,11 @@ export interface paths {
                                         /** @enum {string} */
                                         status: "dead" | "changed";
                                         checkedAt: string;
+                                    } | null;
+                                    cover: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
                                     } | null;
                                     reminder?: {
                                         deadline: string;
@@ -7627,6 +7704,11 @@ export interface paths {
                                         status: "dead" | "changed";
                                         checkedAt: string;
                                     } | null;
+                                    cover: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
+                                    } | null;
                                     reminder?: {
                                         deadline: string;
                                         revealAt: string;
@@ -7723,6 +7805,11 @@ export interface paths {
                                         /** @enum {string} */
                                         status: "dead" | "changed";
                                         checkedAt: string;
+                                    } | null;
+                                    cover: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
                                     } | null;
                                     reminder?: {
                                         deadline: string;
@@ -8037,6 +8124,11 @@ export interface paths {
                                 /** @enum {string} */
                                 status: "dead" | "changed";
                                 checkedAt: string;
+                            } | null;
+                            cover: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
                             } | null;
                             reminder?: {
                                 deadline: string;

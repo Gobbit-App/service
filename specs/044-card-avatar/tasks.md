@@ -40,7 +40,7 @@ description: "Tasks for 044 card cover image"
 - [ ] T005 [P] [int] `packages/db/test/migrations.int.test.ts` (round trip incl. 0026) and `packages/db/test/invariants.int.test.ts` (or a new `card-cover.int.test.ts`): CHECK refuses a cover on `link`/`media`, a non-object, a missing/empty/256-char `publicId`, non-number width; accepts the five types and NULL
 - [X] T006 `apps/api/src/lib/mappers.ts` `toItemDto` returns `cover` (null when unset); `apps/api/src/repositories/items.repo.ts` writes `cover` on insert/update (it rides on `itemColumns` for reads); `apps/api/src/events/diff-fields.ts` `ItemFields` includes `cover`, compared by `publicId` (null vs set, A vs B). [unit] `apps/api/src/events/diff-fields.test.ts`: add, replace, remove → `cover`; same `publicId` → nothing. Confirm `apps/api/src/services/public-dtos.ts` `toPublicItem` doesn't copy `cover` (allow-list, D414)
 - [X] T007 [P] `apps/web/src/cards/CoverBar.tsx` (NEW): renders nothing when `cover` is null; else `CloudImage` in a 16:9 bar sharing the link snapshot's CSS (`.link-card__image--stored`; add `.card__cover` in `apps/web/src/styles.css`), `alt=""`, box reserved from the payload dimensions, removed on load error (D411); `loading` prop (lazy default, eager allowed). [unit] `apps/web/src/cards/CoverBar.test.tsx`: renders only when set, `alt=""`, nothing after an `error` event
-- [ ] T008 `pnpm api:openapi` (item DTO, create and patch gained `cover`); commit the regenerated `packages/api-client`
+- [X] T008 `pnpm api:openapi` (item DTO, create and patch gained `cover`); commit the regenerated `packages/api-client`
 
 **Checkpoint**: the column exists, DTOs carry `cover`, `CoverBar` renders it
 
@@ -54,10 +54,10 @@ description: "Tasks for 044 card cover image"
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] [unit] `apps/api/src/services/media-reference.test.ts`: `createCoverReference` returns `{ publicId, width?, height? }` from the asset row (client dimensions never used); refuses with 422 `cover.publicId` "Unknown image" for an unknown id, another deck's asset, a rejected asset (`rejectedAt` set) and a non-`image` kind (pdf/audio/video)
+- [X] T009 [P] [US1] [unit] `apps/api/src/services/media-reference.test.ts`: `createCoverReference` returns `{ publicId, width?, height? }` from the asset row (client dimensions never used); refuses with 422 `cover.publicId` "Unknown image" for an unknown id, another deck's asset, a rejected asset (`rejectedAt` set) and a non-`image` kind (pdf/audio/video)
 - [ ] T010 [P] [US1] [int] `apps/api/test/items-cover.int.test.ts` (NEW): create with cover; PATCH set/replace/remove/absent; 422 `cover` on `link`, `media` and the legacy `image` alias, and on a PATCH that changes the type to link/media while a cover remains; 422 `cover.publicId` for unknown, other deck and a PDF asset; 422 for `width` in the input; dimensions copied from the asset; `item_events` `updated` row with `changes ∋ 'cover'` on add, replace and remove, none for a same-`publicId` PATCH; a reader can't set it (existing 403/404); a publisher sets one on a proposal; ingestion proposals and imports have `cover = null` (D414); `GET /public/{slug}` items and public search results have no `cover` key; refusals log `item.cover` with the reason
 - [ ] T011 [P] [US1] [int] `apps/api/test/media-sweep.int.test.ts`: an image referenced only by a cover is kept while the card is live, archived or soft-deleted; freed after the cover is removed or the card is purged (D409)
-- [ ] T012 [P] [US1] [unit] `apps/web/src/editor/draft.test.ts`: `Draft.cover` round trip through `toCreateBody`/`toPatch` (unchanged → absent, set → `{ publicId }` only, removed → `null`); a pre-044 draft (`cover` undefined) means unchanged; `withType` to `link` or `media` clears it; `payloadHasContent` counts a cover
+- [X] T012 [P] [US1] [unit] `apps/web/src/editor/draft.test.ts`: `Draft.cover` round trip through `toCreateBody`/`toPatch` (unchanged → absent, set → `{ publicId }` only, removed → `null`); a pre-044 draft (`cover` undefined) means unchanged; `withType` to `link` or `media` clears it; `payloadHasContent` counts a cover
 
 ### Implementation for User Story 1
 
