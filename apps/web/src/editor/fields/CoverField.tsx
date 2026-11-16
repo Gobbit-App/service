@@ -84,7 +84,7 @@ export function CoverField({
       ) : (
         <div className="image-fields__pick">
           <PickButton
-            label={cover ? 'Replace' : 'Add image'}
+            label={cover ? 'Replace' : 'Add cover'}
             ariaLabel={cover ? 'Replace cover image' : 'Add cover image'}
             disabled={pickDisabled}
             onPick={pick}
