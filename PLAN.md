@@ -325,3 +325,39 @@ Open decisions (TBD):
 - **First users:** Ask (D385), then later phases that need a soft launch (MCP, feedback and threads).
 
 - [ ] **1. Ask for a cohort** — TBD with the feature spec: Ask is on for one test deck and off for everyone else, without a redeploy.
+
+## Phase 16 — Community membership and onboarding
+
+Nov 16: stub, not planned. Decisions are TBD and get D numbers when each feature goes through `/speckit-specify`. Found while planning the first communal deck ([`community-go-list.md`](community-go-list.md), Track H). Five separate features.
+
+Rules already decided:
+- **Suggesting is a communal-deck setting.** Off by default; only owners switch it on. When on, readers can suggest cards, which are always proposals. Shared and personal decks never have it.
+- **No email addresses in member data.** No deck kind and no role, owners included, sees another member's email address. Invites go by email address or by username (usernames come with spec `046`). The one exception: an invite made by typing an address keeps showing that address in the invites list; an invite made by username never reveals the address, then or later.
+- **One registration flow.** Anyone can be invited to a deck. Someone not yet registered goes through the same registration as a person arriving from the welcome page; the invite travels with it and decides where they land.
+- **Every registered user is a full user**, with a personal deck, whoever invited them and whether or not a deck came with the invite.
+- **Model spend is guarded.** Anonymous visitors and readers cannot run up model spend. Search and its query embeddings stay as they are. Ask stays off until it is ready for general availability. Model extraction on ingestion is off by default for every user and is switched on per user in the database (likely a paid or tightly limited free feature later; no features-per-plan table yet). Item embeddings for a user's own cards are open to all for now. Every later feature that calls a model (suggesting, curation agents, MCP) follows the same rule.
+
+Open decisions (TBD):
+- **Suggesting:** the form and the share paths open to readers, caps, what name shows on a suggestion, how a suggester hears the outcome.
+- **Member data:** whether a typed invite address shows to the inviter only or to every owner; a fallback display name that is not derived from the email address; limits on username lookups; telling apart two people with the same name.
+- **Invites:** whether a deck invite skips waitlist approval; when the account is created; waitlist invites that carry a deck and role, in batches with a cohort size.
+- **Onboarding:** what a new user sees first when they came in through a communal or shared deck, and how they learn about their personal deck and their own decks.
+- **Accountability:** decision events for suggestions, invites, acceptances, expiries and refusals (constitution VIII).
+
+- [ ] **1. Suggest a card** — TBD with the feature spec.
+- [ ] **2. Member list without email addresses** — TBD with the feature spec.
+- [ ] **3. Invites through registration** — TBD with the feature spec.
+- [ ] **4. Onboarding for invited users** — TBD with the feature spec.
+- [ ] **5. Model spend guard** — a user without the extraction switch causes no model call when sharing: the share is saved best effort with a notice that smart share is coming soon, and the skip shows as a decision event; with the switch on, the share is extracted under today's caps.
+
+## Phase 17 — Members-only categories on public decks
+
+Nov 16: stub, not planned, not urgent. A public communal deck can keep some categories for members. The mechanism exists: anonymous visitors see `public` categories, members also see `shared` ones. What is not designed is the product around it.
+
+Open decisions (TBD):
+- **Visibility to visitors:** whether a public page shows that members-only categories exist (names, counts, a prompt to join) or hides them completely, as today.
+- **Search:** whether public search hints at members-only results.
+- **Links:** what a visitor sees when a member shares a card from a members-only category.
+- **Purpose:** what belongs there (recommendations naming people, contact details, discussions) and whether it changes what suggesting members may post.
+
+- [ ] **1. Members-only categories** — TBD with the feature spec.
