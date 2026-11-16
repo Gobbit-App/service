@@ -84,14 +84,16 @@ export function CoverField({
       ) : (
         <div className="image-fields__pick">
           <PickButton
-            label={cover ? 'Replace cover image' : 'Add cover image'}
+            label={cover ? 'Replace' : 'Add image'}
+            ariaLabel={cover ? 'Replace cover image' : 'Add cover image'}
             disabled={pickDisabled}
             onPick={pick}
           />
           {cover && (
             <Button
               icon="trash"
-              label="Remove cover image"
+              label="Remove"
+              aria-label="Remove cover image"
               variant="ghost"
               onClick={() => {
                 upload.reset();
