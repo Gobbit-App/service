@@ -1,3 +1,4 @@
+import type { CardCover } from '@gobbit/shared/card-cover';
 import {
   and,
   desc,
@@ -142,6 +143,7 @@ export function createItemsRepo(db: DbExecutor) {
         payload: Record<string, unknown>;
         entities?: Entities;
         sourceUrl: string | null;
+        cover?: CardCover | null;
         sourceKind: SourceKind;
         verifiedAt: Date | null;
         createdBy: string;
@@ -475,6 +477,7 @@ export function createItemsRepo(db: DbExecutor) {
         payload: Record<string, unknown>;
         entities: Entities;
         sourceUrl: string | null;
+        cover?: CardCover | null;
         status: ItemStatus;
         title: string;
         verifiedAt: Date | null;

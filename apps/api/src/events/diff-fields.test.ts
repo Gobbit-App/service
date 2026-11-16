@@ -6,6 +6,7 @@ const base: ItemFields = {
   body: 'Dan',
   payload: { a: 1, b: [1, 2] },
   sourceUrl: null,
+  cover: null,
   entities: {},
   verifiedAt: new Date('2026-01-01T00:00:00.000Z'),
   type: 'text',
@@ -94,5 +95,14 @@ describe('diffFields (D187)', () => {
     it('keeps non-event cards on payload', () => {
       expect(diffFields(base, { ...base, payload: { location: 'x' } })).toEqual(['payload']);
     });
+  });
+
+  it('names cover on add, replace and remove, not for the same publicId (D410)', () => {
+    const a = { publicId: 'a', width: 1, height: 1 };
+    const withA = { ...base, cover: a };
+    expect(diffFields(base, withA)).toEqual(['cover']);
+    expect(diffFields(withA, { ...base, cover: { ...a, publicId: 'b' } })).toEqual(['cover']);
+    expect(diffFields(withA, base)).toEqual(['cover']);
+    expect(diffFields(withA, { ...withA, cover: { ...a, width: 9 } })).toEqual([]);
   });
 });
