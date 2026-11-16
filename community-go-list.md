@@ -2,7 +2,7 @@
 
 Everything needed to launch the first communal deck: a public, Hebrew-first knowledge deck for a community living abroad, seeded from a curated Markdown file (plus media) through bulk import and reviewed card by card.
 
-Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`; Track I target decided Nov 16; monitoring (Track K) and early wins (Track L) added Nov 16. This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
+Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`; Track I target decided Nov 16; monitoring (Track K) and early wins (Track L) added Nov 16; launch order by importance, alpha first, decided Nov 16 (see Order). This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
 
 ## Goal and definition of done
 
@@ -107,28 +107,30 @@ Left out on purpose: table, calc, reminder and event cards on import (events hav
 - [ ] **D4. Review** per label. Resolve flagged duplicates first, then bulk publish what is clean, then edit the rest.
 - [ ] **D5. Spot check search** with 20 real questions in the three scripts; add missing spellings to cards rather than tuning search.
 - [ ] **D6. Check the public pages** on a phone: deck page, a category, a card, a share preview pasted into a chat.
+- [ ] **D7. Alpha walkthrough.** With the seeded deck, on an iPhone and an Android phone: open the app from an invite, browse every category, open cards, search in the three scripts, go back, share a card. Note every place that is slow, confusing or reads wrong (direction, alignment, mixed Hebrew and English). Fix each as a small fix (E2a) or file it against the matching spec, then walk again. This is how "navigation is fluent" is checked.
 
 ## Track E — Before the link is shared
 
-| Item | Source | Gap | Why |
-|---|---|---|---|
-| Phase 8 demos 1–6 run against production | `PLAN.md` Phase 8 | | The public pages are the product for strangers |
-| Hebrew, right-to-left chrome on public pages | new | G9 | The audience reads Hebrew; card text already renders correctly, the frame does not |
-| Report a problem on a card | Phase 14, item 2 | G10 | Community information goes wrong; curators need the signal |
-| "Last verified" shown on cards and public pages | new, small | G11 | Readers must be able to judge how fresh a phone number or price is |
-| Backups that restore | Phase 11.1 | | Hundreds of hand-reviewed cards |
-| Abuse controls on public routes | Phase 11.3 | | Public and indexed |
-| Privacy basics (export, delete), privacy notice | Phase 11.4 | | Public deck with community-sourced content |
-| Monitoring thresholds on decision events | Phase 11.2 | | Liveness exists; refusals and failures are not alerted |
-| Take-down path | new, process | | A named contact and a same-day way to unpublish a card; archive already does the unpublishing |
+- [ ] **E1. Phase 8 demos 1–6 against production** (`PLAN.md` Phase 8). The public pages are the product for strangers.
+- [ ] **E2a. Right to left reads right** (G9; small fixes, no spec). Hebrew titles, bodies (lists, quotes, tables, links), category names, the search box and results align right to left in the reader, the editor and the public pages, and mixed Hebrew, English and Greek lines keep their order. Found and checked in D7.
+- [ ] **E2b. Hebrew chrome** (G9; spec: a small translation layer). Hebrew labels and a `lang="he" dir="rtl"` frame, first on the surfaces new people meet (public pages, invite page, sign-in, H8a first run), then the rest of the reader. Takes in Track F's "member app in Hebrew".
+- [ ] **E3a. Feedback link** (G10; small fix). A "report a problem" link on every card and in the app menu that opens a prefilled mail or chat to the curators with the card link. Enough for alpha and the cohort.
+- [ ] **E3b. Report a problem** (G10, Phase 14.2; spec). Reports stored and routed to curators, never public; anonymous reports behind the rate limiter.
+- [ ] **E4. "Last verified"** (G11; small fix). `verifiedAt` shown on cards and public pages, so readers can judge how fresh a phone number or price is.
+- [ ] **E5. Backups that restore** (Phase 11.1; delivered by I5). Hundreds of hand-reviewed cards.
+- [ ] **E6. Abuse controls on public routes** (Phase 11.3). Run the demo against the `anon-rate-limiter` and the Cloudflare rule; a failure becomes a small fix.
+- [ ] **E7a. Privacy notice and requests by contact** (Phase 11.4; no spec). A privacy notice linked from the landing page, sign-in, the app menu and public pages, naming a contact for export, correction and deletion; requests handled by hand within the legal deadline, with a runbook in `infra/README.md`. Enough for alpha and the cohort.
+- [ ] **E7b. Self-serve export and delete** (Phase 11.4 demo; spec). Before the deck goes public.
+- [ ] **E8. Monitoring thresholds on decision events** (Phase 11.2; delivered by Track K).
+- [ ] **E9. Take-down path** (process). A named contact and a same-day way to unpublish a card; archive already unpublishes, and with L1 a Cloudflare purge clears the cached page.
 
-Each of these that adds behaviour goes through spec-kit; the two "new" product items are small features of their own.
+Items marked "spec" go through `/speckit-specify`; the rest are small fixes, configuration or process.
 
 ## Track F — Soon after launch
 
 - **Suggest a card** without an invite (G12; members suggesting is H5): a public form that creates a proposal, behind the anonymous rate limiter, or a low-friction contributor role. Needs Phase 11.3 first.
 - **Staleness watcher** (Phase 10.1) and **gap detection** from failed searches (Phase 10.4).
-- **Member app in Hebrew** (rest of G9).
+- **Member app in Hebrew**: moved into E2b.
 - **Like and useful** (Phase 14.1). Threads (14.3) and MCP (Phase 13) can wait.
 
 ## Track H — People and access
@@ -159,7 +161,7 @@ How people get into the communal deck at each stage, what the code does today an
 | 0. New stack | Restore the full home-lab dump (I9): family account, users, personal and family decks come across unchanged. | yes |
 | 1. Communal deck | Created by your own user or by a dedicated community user (a separate account, so the deck is not tied to a personal mailbox). Either way nobody else gets a role without an invite. | yes (H2) |
 | 2. Curators | One or two people as `maintainer` (curate and publish) or `owner` (also manage members). | yes (H3) |
-| 3. Soft launch | Invited `reader`s; deck not public; suggesting switched on. | reading yes; suggesting no (H5); member emails exposed (H6) |
+| 3. Alpha | Invited `reader`s we know personally, who test and give feedback; deck not public. | reading yes; member emails exposed (H6); invites by mail only (H12) |
 | 4. Waitlist cohort | Announce; the first X confirmed entries are let in with the deck attached to their invite. | by hand only (H4); needs H7 |
 | 5. Public | `isPublic` on, categories `public`; anonymous reading, indexed. Any interaction needs a registered user, who is a full Gobbit user. | reading yes; registering from the public pages goes through the normal door (H7); interactions are Phase 14 |
 
@@ -169,7 +171,7 @@ How people get into the communal deck at each stage, what the code does today an
 - [ ] **H2. Owning user.** Either your own user or a dedicated community user with a mailbox more than one person can recover. A dedicated one keeps the community deck apart from your personal decks and survives a change of hands; it is a choice, not a safety need (G15 withdrawn). If dedicated: the platform admin invites it from the waitlist screen, it signs in and creates the deck, and your own user gets an `owner` membership. Verify: `GET /decks/<slug>/members` lists exactly the people invited.
 - [ ] **H3. Curators.** `maintainer` for people who review and publish; `owner` only for whoever also manages members. Avoid `editor` on this deck: it publishes without review.
 - [ ] **H4. Soft launch and cohort, with no new code.** Invite readers from deck settings one address at a time (by WhatsApp once H12 exists). For the waitlist cohort, read confirmed `community` entries in `/admin/waitlist` and send each a deck invite instead of a waitlist invite; the cap is counted by hand and the entries stay `confirmed`. Good for tens of people, not hundreds.
-- [ ] **H5. Suggesting on communal decks** (closes G16; to implement, spec-kit). A deck setting, communal decks only, off by default, switched by owners only. When on, readers can suggest: the share and paste paths and a short "suggest a card" form, always `proposed`, never published by the suggester, own proposals visible to them, daily caps, a decision event per accepted and refused suggestion. Model use on a suggestion follows H11. Roles are unchanged; shared and personal decks never have the setting. Needed before stage 3.
+- [ ] **H5. Suggesting on communal decks** (closes G16; to implement, spec-kit). A deck setting, communal decks only, off by default, switched by owners only. When on, readers can suggest: the share and paste paths and a short "suggest a card" form, always `proposed`, never published by the suggester, own proposals visible to them, daily caps, a decision event per accepted and refused suggestion. Model use on a suggestion follows H11. Roles are unchanged; shared and personal decks never have the setting. After the launch basics (see Order).
 - [ ] **H6. No email addresses in member data** (closes G17; to implement, spec-kit). No API answer about a deck's members carries an email address, for any deck kind and any role, owners included: member list, role change, invite answer, reminder and event audience pickers. People appear by profile name and avatar (spec `046`, user profile). Needed before stage 3.
   - Inviting: by email address or by username (usernames arrive with spec `046`). A username lookup answers with the profile name and avatar, never the address.
   - One exception: an invite made by typing an email address keeps showing that address in the invites list, because the inviter already knows it. Nowhere else.
@@ -177,6 +179,7 @@ How people get into the communal deck at each stage, what the code does today an
   - To settle in the spec: whether the typed address in the invites list shows to the inviter only (assumed here) or to every owner; a display name derived from the email address gives away its first part, so the fallback name needs another source; limits and decision events on username lookups so they cannot be used to list users; how an owner tells two people with the same name apart.
   - Spec `046` as drafted has no username and says emails stay visible where they are today; both need changing there.
 - [ ] **H7. One registration flow, invites ride along** (closes G18; to implement, spec-kit). Anyone can be invited to a deck by email. A registered user gets the membership as today. An unregistered one goes through the same registration as someone arriving from the welcome page, and the invite travels with it: on completion the membership is created and the app opens on that deck. A waitlist invite can carry a deck and role the same way, in batches with a cohort size. No account exists until the person completes registration. Every invite, acceptance, expiry and refusal is a decision event. To settle in the spec: whether a deck invite skips waitlist approval (today it does, and the plan assumes it still does). Needed before stage 4 at any real size.
+- [ ] **H8a. First run for invited users** (spec, small; first slice of H8). Accepting an invite lands on that deck with a short welcome naming the deck and the inviter and pointing at categories and search; nothing else to decide on day one. Needed for stage 3.
 - [ ] **H8. Onboarding** (stub in `PLAN.md` Phase 16). Someone who first met Gobbit through a communal or shared deck learns that they are a full user: they have a personal deck, can save their own cards and can start decks of their own. Lands them on the inviting deck first. Needed for stage 4.
 - [ ] **H9. Crawler policy** (G20). Deferred: all crawlers allowed for now; revisit with real traffic.
 - [ ] **H10. Custom host and members.** On the deck's own domain (Track J) a session acts on that deck only, so community members never see `/d/me` there. That works against H8 (every user is a full user): the onboarding spec and the Track J spec must say how someone on the custom host reaches their personal deck on the main domain.
@@ -201,7 +204,7 @@ How people get into the communal deck at each stage, what the code does today an
   - E2E tier: smoke: an owner creates a link invite, a second user opens it, accepts and lands on the deck; a second use of the same link is refused.
   - Wanted for stage 3 (soft launch invites go out by WhatsApp), needed for stage 4.
 
-Order within the track: H1 → H2, H3 (with Track B) → H5, H6, H11, H12 → stage 3 → H7, H8 → stage 4 → stage 5.
+Order within the track: H1 → H2, H3 (with Track B) → H6, H11, H12, H8a → stage 3 → H7, H8 → stage 4 → stage 5 → H5.
 
 ## Track I — Infrastructure out of the home lab
 
@@ -390,28 +393,65 @@ Small changes to do now, before load arrives. L1–L3 are small fixes (no spec-k
 
 ## Order
 
-1. B2 and C1 now; they shape both the importer and the content. L1–L3 any time; they are independent.
-2. Track A through spec-kit, in parallel with Track C writing. Track I can run alongside; it touches no application behaviour. K2 goes in with I4, and K1 runs as its own small spec-kit feature.
-3. H1–H3 with B1, B4, B5, then D1.
-4. D2–D6 (the deck stays non-public).
-5. Track I cut-over (I9) at the latest here, so nothing public is ever on the home-lab hostname.
-6. K3 and K4 done; H5, H6, H11 and H12, then the soft launch (stage 3). H7, H8 and L4 (at least Google sign-in), then the waitlist cohort (stage 4).
-7. Track E.
-8. Track J, then switch the deck to public and share the custom-domain link (stage 5).
+Decided Nov 16. Everything in this file ships; this is the order, by importance. The first audience is **alpha** (stage 3): testers we know personally, invited, who give feedback. Then the waitlist cohort (stage 4), then public (stage 5).
 
-If Track J slips, the fallback is to go public on the product domain after step 7 and add the custom domain later; the J6 redirects keep those links working.
+What matters, in this order:
+
+1. People find usable information.
+2. The app is inviting and easy: content reads right in Hebrew, right to left, and navigation is fluent.
+3. We see every limit and failure as people start using it.
+4. Onboarding and first use are clear, with as little to figure out as possible.
+5. Then everything that improves or expands the basics.
+
+Mandatory items (backups, privacy) come first in their simplest compliant form and get their full form before the stage that needs it. Progress is ticked in the tracks above; this list only sequences them. "Spec" means a spec-kit feature; the rest are small fixes, configuration or process.
+
+### Now, alongside everything
+
+- B2, B3 and C1: they shape the importer and the content. Track C writing runs in parallel with all of the below.
+- H1: settle its open points, including whether a deck invite skips waitlist approval (shared by H7, H12 and L4).
+- A7 as a small fix ahead of the Import v2 spec: it is a bug in bulk publish, not only an import problem.
+- L1–L3 (small fixes).
+
+### Stage 3 — Alpha
+
+1. **Usable information.** Import v2 (spec; Track A) PR 1: A1, A2 (text and link fields), A3, A5, A6, A8, A9, A10. PR 2: A4 (media; cards can get media after the first seeding). Then B1, B4, B5, H2, H3 and D1–D5.
+2. **Reads right, moves fluently.** D7 with its E2a fixes; E4.
+3. **Off the home lab.** I1–I10, so testers never meet the old hostname and never have to sign in again or reinstall.
+4. **Monitoring.** K2–K4 on the VM, alerting from logs and exporters (decision events are already log lines). K1 (spec) follows in stage 4, unless mail sends cannot be counted from logs **(verify)**; then K1 comes here, since sign-in stops at the mail cap.
+5. **Getting in.** H11 (spec); H6 as an amendment to `046-user-profile` (spec only so far); H12 (spec; assumed to ride on today's deck-invite registration, to check in its spec); H8a (spec).
+6. **Mandatory basics.** E5 (I5 restore rehearsed), E7a, E9, E3a.
+7. Invite the testers.
+
+### Stage 4 — Waitlist cohort
+
+1. Alpha feedback fixed, as small fixes or against the matching spec.
+2. E2b Hebrew chrome (spec), the surfaces new people meet first.
+3. H7 (spec), then the rest of H8 (spec).
+4. L4 Google sign-in (spec).
+5. K1 (spec), if not done in stage 3.
+
+### Stage 5 — Public
+
+1. E1, E6 and L1 checked on the public host.
+2. E7b self-serve export and delete (spec).
+3. The rest of the reader in Hebrew (E2b).
+4. Track J (spec, Phase 12), then switch the deck to public and share the custom-domain link. If Track J slips, go public on the product domain and add the custom domain later; the J6 redirects keep those links working.
+
+### After launch — improve and expand
+
+H5 suggesting (spec), E3b report a problem (spec), password sign-in (L4, second spec), and Track F (staleness watcher, gap detection, like and useful).
 
 ## Open decisions
 
 - A5: transliterate Hebrew slugs or require an explicit slug.
 - A8: env-tunable cap or an owner exemption.
 - B3: location as categories or something new.
-- E: how much Hebrew chrome is needed for launch (public pages only, or the reader too).
-- F: whether "suggest a card" is needed at launch rather than after.
+- E: Hebrew chrome (decided Nov 16: right to left correct for alpha (E2a); Hebrew labels before the cohort, the surfaces new people meet first; the rest of the reader before public (E2b)).
+- F: "suggest a card" (decided Nov 16: after the launch basics, see Order).
 - Whether the import can target an existing card later (G14), should the seed file need a second pass.
 - I1: Hetzner or another VM provider (decided: one small paid VM, Postgres on it, deployed by Dokploy as a remote server).
 - I2 and J2: the product domain and the community domain.
-- Track J: whether the custom domain is required for launch or follows it.
+- Track J: custom domain (decided Nov 16: required before public, not for alpha or the cohort).
 - H2: your own user or a dedicated community user as the deck's owner; who holds its mailbox.
 - Members-only categories on a public deck: stub in `PLAN.md` Phase 17, not urgent.
 - H7: whether a deck invite skips waitlist approval.
