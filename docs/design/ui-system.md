@@ -42,11 +42,11 @@ The values live in [web-pwa.md › App palette and themes](web-pwa.md#app-palett
 
 - **Spacing**: `--space-1`…`--space-7` (4/8/12/16/24/32/48), `--gap`, `--gutter`. Raw px are allowed only for measures, never spacing: an icon or media size, a max width, a hairline.
 - **Type**: `--text-xs`…`--text-2xl`; labels and titles at weight 600 like `.field__label`.
-- **Colour**: `--color-*`, `--card-*`, `--accent-*` only. A hex or `rgb()` outside the `:root` blocks fails review. New colours are tokens with both `light-dark()` sides, and `styles.test.ts` checks their contrast.
+- **Colour**: `--color-*`, `--card-*`, `--accent-*` only. Don't add a hex or `rgb()` outside the `:root` blocks (a few legacy ones remain). New colours are tokens with both `light-dark()` sides, and `styles.test.ts` checks their contrast.
 - **Shape and depth**: `--radius*` (0), `--elevation-*`, the glass/solid surface tiers (D383). Don't add new shadows or borders between repeating items.
 - **Motion**: `--motion-fast`/`--motion-base` with `--ease-out`, inside `prefers-reduced-motion: no-preference`.
 - **Breakpoints**: 480 px (`max-width: 479.98px` collapses `Button` labels, D211), 600 px (gutter, sheets as dialogs), 768 px (editor side by side). Other values in today's CSS (400, 760, 767) are legacy. Don't add new ones.
-- **Touch**: every control is at least `--tap` (44 px).
+- **Touch**: every new control is at least `--tap` (44 px); `.chip--small` (28 px) is the one compact exception and stays inside a larger tap row.
 
 `ui-system.test.ts` counts raw px spacing, raw font sizes and off-list breakpoints across `apps/web/src/**/*.css`. It fails if any count rises above its committed baseline. Lower the baseline when you remove some; never raise it.
 
@@ -67,7 +67,8 @@ A new primitive belongs in `ui/` and needs an entry in this page.
 
 ## 5. Copy
 
-- **Visible labels are short.** One or two words: a verb, plus a noun only when the context doesn't already name it ("Add image", "Replace", "Remove"). Put the full context in the accessible name (`aria-label`, or `PickButton`'s `ariaLabel`). Tests find controls by the accessible name.
+- **Visible labels are short.** One or two words: a verb, plus a noun only when the context doesn't already name it ("Add cover", "Replace", "Remove"). Put the full context in the accessible name (`aria-label`, or `PickButton`'s `ariaLabel`). Tests find controls by the accessible name.
+- **The visible label starts the accessible name** (WCAG 2.5.3, Label in Name): `Revoke` → "Revoke Phone", "Add cover" → "Add cover image". A name that doesn't contain the visible words ("Add image" → "Add cover image") breaks voice control.
 - No explanatory sentences where a label, hint or empty state already does the job. Field hints go in `.field__hint`, one line.
 - Sentence case, no trailing punctuation on labels, no glyphs (D210).
 
@@ -76,5 +77,6 @@ A new primitive belongs in `ui/` and needs an entry in this page.
 Unit tests run in jsdom, which renders no CSS. "The tests pass" therefore says nothing about layout.
 
 - A task that changes `.tsx` or `.css` ends with screenshots of the changed screen at **phone width (412 px)** and **desktop width (1280 px)**, in light and dark, from the running app. Compare them side by side with the sibling. Spacing, alignment and label length should match.
+- How: run the app (`pnpm compose:up`, or Postgres + `pnpm dev`), then take Playwright `page.screenshot()` shots of the screen with `devices['Pixel 7']` (as the e2e `smoke` project does) and a 1280 × 800 viewport, with `colorScheme` `light` and `dark`. Save them under the job's tmp dir, not the repo.
 - If the screenshots can't be taken (no browser, no app), the task is **blocked**, not done. Never report it done without them.
 - The reviewer of a UI PR checks the screenshots against this page before merging.
