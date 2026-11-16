@@ -44,6 +44,16 @@ export const itemEventFields = [
 ] as const;
 export type ItemEventField = (typeof itemEventFields)[number];
 
+/** The profile fields a profile event's `changes` list names (names only, never values). */
+export const profileEventFields = [
+  'username',
+  'firstName',
+  'lastName',
+  'location',
+  'avatar',
+] as const;
+export type ProfileEventField = (typeof profileEventFields)[number];
+
 /** D186: the only kinds that carry a `changes` list (DB CHECK `item_events_changes_chk`). */
 export const itemEventKindsWithChanges = ['updated', 'merged'] as const;
 

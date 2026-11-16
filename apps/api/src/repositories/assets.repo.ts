@@ -50,7 +50,8 @@ export function createAssetsRepo(db: DbExecutor) {
             etag: sql`coalesce(${assets.etag}, excluded.etag)`,
             originalFilename: sql`coalesce(${assets.originalFilename}, excluded.original_filename)`,
           },
-          setWhere: eq(assets.deckId, v.deckId),
+          // A profile asset (no deck) is never re-claimed through this path.
+          setWhere: v.deckId ? eq(assets.deckId, v.deckId) : sql`false`,
         })
         .returning({ ...getTableColumns(assets), created: sql<boolean>`(xmax = 0)` });
       if (!row) return null;

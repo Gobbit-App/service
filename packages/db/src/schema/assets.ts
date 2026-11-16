@@ -15,9 +15,10 @@ export const assets = pgTable(
   'assets',
   {
     id: uuid().primaryKey().defaultRandom(),
-    deckId: uuid()
-      .notNull()
-      .references(() => decks.id, { onDelete: 'cascade' }),
+    /** D423 (046): null for profile-scoped assets (avatars). */
+    deckId: uuid().references(() => decks.id, { onDelete: 'cascade' }),
+    scope: text().notNull().default('deck'),
+    ownerUserId: uuid().references(() => users.id, { onDelete: 'set null' }),
     publicId: text().notNull().unique('assets_public_id_key'),
     source: assetSourceEnum().notNull(),
     width: integer(),
@@ -42,6 +43,11 @@ export const assets = pgTable(
   },
   (t) => [
     index('assets_created_at_idx').on(t.createdAt),
+    index('assets_owner_idx')
+      .on(t.ownerUserId)
+      .where(sql`${t.ownerUserId} IS NOT NULL`),
+    check('assets_scope_values_chk', sql`${t.scope} IN ('deck', 'profile')`),
+    check('assets_scope_chk', sql`(${t.scope} = 'deck') = (${t.deckId} IS NOT NULL)`),
     index('assets_deck_id_idx').on(t.deckId),
     // D396: media dedup looks up a deck's files by fingerprint.
     index('assets_deck_etag_idx')

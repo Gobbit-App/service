@@ -148,6 +148,7 @@ describe('migrations: 0022_events down (042, T008)', () => {
     await runMigrations(ctx.pool);
     // 0026 (card cover) and 0025 (media cards) have nothing to refuse on an empty database; 0024 (body limit, D384) and
     // 0023 (events ingestion, T093) only change CHECKs.
+    expect(await rollbackLatest(ctx.pool)).toBe('0027_member_profile');
     expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
@@ -198,6 +199,7 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
     await insertBody('a'.repeat(2000));
     await expect(insertBody('a'.repeat(2001))).rejects.toThrow(/items_body_len_chk/);
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0027_member_profile');
     expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
@@ -206,7 +208,7 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
     await expect(insertBody('a'.repeat(601))).rejects.toThrow(/items_body_len_chk/);
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0026_card_cover');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0027_member_profile');
   });
 });
 
@@ -225,6 +227,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
 
   it('reshapes photo cards into one-photo galleries without moving updated_at, and back', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0027_member_profile');
     expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     const deck = await deckId('media-up');
@@ -241,7 +244,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
     const id = inserted.rows[0].id as string;
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0026_card_cover');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0027_member_profile');
     const up = await ctx.pool.query(
       `SELECT type::text, payload, updated_at, search_text FROM items WHERE id = $1`,
       [id],
@@ -258,6 +261,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
     const bare = await ctx.pool.query(`SELECT payload FROM items WHERE title = 'Bare'`);
     expect(bare.rows[0].payload).toEqual({ kind: 'image', images: [{ publicId: 'p2' }] });
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0027_member_profile');
     expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     const down = await ctx.pool.query(
@@ -272,6 +276,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
 
   it('refuses to roll back while a PDF card, a gallery or a video asset exists', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0027_member_profile');
     expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover'); // the refusals below are 0025's
     const deck = await deckId('media-down');
     const pdf = await ctx.pool.query(
@@ -305,6 +310,7 @@ describe('migrations: 0026_card_cover (044, D406)', () => {
 
   it('drops the cover column and check on rollback and restores them', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0027_member_profile');
     expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     const gone = await ctx.pool.query(
       `SELECT 1 FROM information_schema.columns WHERE table_name = 'items' AND column_name = 'cover'`,
@@ -313,6 +319,37 @@ describe('migrations: 0026_card_cover (044, D406)', () => {
     await runMigrations(ctx.pool);
     const back = await ctx.pool.query(
       `SELECT 1 FROM pg_constraint WHERE conname = 'items_cover_chk'`,
+    );
+    expect(back.rowCount).toBe(1);
+  });
+});
+
+describe('migrations: 0027_member_profile (046, D417)', () => {
+  const ctx = withTestDb({ template: false });
+
+  it('rolls back and re-applies with a profile asset and a username present', async () => {
+    await runMigrations(ctx.pool);
+    const account = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
+    const user = await ctx.pool.query(
+      `INSERT INTO users (account_id, email, display_name, username) VALUES ($1, 'p@example.test', 'P', 'pat') RETURNING id`,
+      [account.rows[0].id],
+    );
+    await ctx.pool.query(
+      `INSERT INTO assets (deck_id, scope, owner_user_id, public_id, source, kind, resource_type)
+       VALUES (NULL, 'profile', $1, 'gobbit/avatars/p1', 'editor', 'image', 'image')`,
+      [user.rows[0].id],
+    );
+
+    expect(await rollbackLatest(ctx.pool)).toBe('0027_member_profile');
+    const gone = await ctx.pool.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'username'`,
+    );
+    expect(gone.rowCount).toBe(0);
+
+    await runMigrations(ctx.pool);
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0027_member_profile');
+    const back = await ctx.pool.query(
+      `SELECT 1 FROM pg_constraint WHERE conname = 'assets_scope_chk'`,
     );
     expect(back.rowCount).toBe(1);
   });

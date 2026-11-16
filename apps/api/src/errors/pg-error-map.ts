@@ -33,6 +33,23 @@ export function findPgError(
   return null;
 }
 
+/** D425: taken and held look alike to the client; the service reads the real reason here for its decision event. */
+export function usernameConflictReason(err: unknown): 'taken' | 'held' | null {
+  const pg = findPgError(err);
+  if (!pg) return null;
+  if (pg.code === '23505' && pg.constraint === 'users_username_lower_uq') return 'taken';
+  if (pg.code === 'P0001' && pg.message.includes('username_held')) return 'held';
+  return null;
+}
+
+const USERNAME_UNAVAILABLE: Problem = {
+  type: '/problems/username-unavailable',
+  title: 'Unprocessable Content',
+  status: 422,
+  detail: 'That username is not available',
+  errors: [{ path: 'username', message: 'unavailable' }],
+};
+
 export function mapPgError(err: unknown): Problem | null {
   const pgErr = findPgError(err);
 
@@ -41,6 +58,10 @@ export function mapPgError(err: unknown): Problem | null {
   }
 
   const { code, message } = pgErr;
+
+  if (usernameConflictReason(err)) {
+    return { ...USERNAME_UNAVAILABLE };
+  }
 
   if (code === 'P0001' && message.includes('default_category_protected')) {
     return {

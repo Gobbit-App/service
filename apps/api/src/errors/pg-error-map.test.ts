@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mapPgError, findPgError } from './pg-error-map';
+import { mapPgError, findPgError, usernameConflictReason } from './pg-error-map';
 
 describe('pg-error-map', () => {
   describe('mapPgError', () => {
@@ -125,6 +125,24 @@ describe('pg-error-map', () => {
         type: '/problems/item-needs-category',
         status: 422,
       });
+    });
+
+    it('maps username unique violation and username_held alike, reasons stay internal (D425)', () => {
+      const taken = Object.assign(new Error('dup'), {
+        code: '23505',
+        constraint: 'users_username_lower_uq',
+      });
+      const held = Object.assign(new Error('username_held'), { code: 'P0001' });
+      const expected = {
+        type: '/problems/username-unavailable',
+        status: 422,
+        errors: [{ path: 'username', message: 'unavailable' }],
+      };
+      expect(mapPgError(taken)).toMatchObject(expected);
+      expect(mapPgError(held)).toEqual(mapPgError(taken));
+      expect(usernameConflictReason(taken)).toBe('taken');
+      expect(usernameConflictReason(held)).toBe('held');
+      expect(usernameConflictReason(new Error('x'))).toBeNull();
     });
 
     it('returns null for P0001 with other message', () => {
