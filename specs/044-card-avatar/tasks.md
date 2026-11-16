@@ -123,7 +123,7 @@ description: "Tasks for 044 card cover image"
 - [X] T031 [P] Docs: `docs/design/card-media.md` cover section (bar via `CloudImage`, supersedes the event link image, sweep reference, runbook thresholds `other_deck` > 5/h, `unsupported_type` > 20/h) + Deviations from implementation-notes.md; `docs/design/web-pwa.md` share preview (public visual, private rule); `card-editor.md` (CoverField, drag and drop, event paste rule); `activity-log.md` (`cover`); `data-model.md` (column)
 - [X] T032 [P] `docs/adr.md` ADR-078 (cover as its own column, D406/D407); `docs/architecture.md` one index row; `CLAUDE.md` "Media" bullet: covers are image references checked like media cards (D160) and counted by the sweep; `CHANGELOG.md` feature line (no env change); `PLAN.md` link stays, demo unticked
 - [ ] T033 Run quickstart.md validation (automated part)
-- [ ] T034 `/speckit-converge` until Converged, then `/ponytail:ponytail-review`
+- [X] T034 `/speckit-converge` until Converged, then `/ponytail:ponytail-review`
 
 ---
 

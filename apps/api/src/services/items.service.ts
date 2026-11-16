@@ -163,8 +163,8 @@ export function createItemsService(deps: {
         requestId: actor.requestId ?? 'internal',
         actorId: actor.user.id,
         deckId: ctx.deckId,
-        ...(ctx.itemId ? { itemId: ctx.itemId } : {}),
-      } as never);
+        itemId: ctx.itemId,
+      });
     if (!supportsCover(ctx.type)) {
       refuse('unsupported_type');
       throw unprocessableField('cover', 'This card type has no cover image');

@@ -184,7 +184,7 @@ export function createShareService(deps: ShareServiceDeps) {
         renderBudgetMs,
       );
     } catch (err) {
-      log(`OG image for ${itemId} failed; serving the private image`, err);
+      log(`OG image for ${itemId} failed; serving the fallback image`, err);
       return content.visualPublicId
         ? store.deliveryUrl(content.visualPublicId, 'c_fill,g_auto,w_1200,h_630,f_jpg')
         : null;
