@@ -53,7 +53,7 @@ import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
 import { analyticsHead } from '../public/analytics';
 import { createItemDtoMapper } from './item-dtos';
-import { createMediaReferenceCheck } from './media-reference';
+import { createCoverReference, createMediaReferenceCheck } from './media-reference';
 import { createLinkPreviewFields } from './link-preview-fields';
 import { createLinkChecksService, createLinkProbe } from './link-checks.service';
 import {
@@ -327,6 +327,7 @@ export function buildServices({
       memberships,
       embedQueue: resolveEmbedQueue(search),
       mediaReference,
+      coverReference: createCoverReference(assets),
       links: {
         checks: linkChecks,
         checker: createLinkChecksService({

@@ -23,21 +23,32 @@ export function pastedImage(event: ClipboardEvent): File | null {
   return image;
 }
 
-/** Hands an image pasted anywhere on the page to `onImage` while `enabled`. */
-export function usePasteImage(onImage: (file: File) => void, enabled: boolean): void {
+/**
+ * Hands an image pasted anywhere on the page to `onImage` while `enabled`. With `scope` (an
+ * element, or null while it isn't mounted) it only takes pastes whose target is inside it, in the
+ * capture phase: it preventDefaults, so unscoped handlers (which skip a defaultPrevented paste)
+ * leave that paste alone, and pastes outside the scope still reach them (D412).
+ */
+export function usePasteImage(
+  onImage: (file: File) => void,
+  enabled: boolean,
+  scope?: HTMLElement | null,
+): void {
   const latest = useRef(onImage);
   useEffect(() => {
     latest.current = onImage;
   });
+  const scoped = scope !== undefined;
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || scope === null) return;
     const onPaste = (event: ClipboardEvent) => {
+      if (scope && !(event.target instanceof Node && scope.contains(event.target))) return;
       const image = pastedImage(event);
       if (!image) return;
       event.preventDefault();
       latest.current(image);
     };
-    document.addEventListener('paste', onPaste);
-    return () => document.removeEventListener('paste', onPaste);
-  }, [enabled]);
+    document.addEventListener('paste', onPaste, scoped);
+    return () => document.removeEventListener('paste', onPaste, scoped);
+  }, [enabled, scope, scoped]);
 }

@@ -4,6 +4,7 @@ import { problemMessages } from '../api/problem-messages';
 import { editHref } from '../cards/can-edit-item';
 import { CardBar } from '../cards/CardBar';
 import { CardBody } from '../cards/CardBody';
+import { CoverBar } from '../cards/CoverBar';
 import { itemCategories } from '../cards/Card';
 import { useCloudName } from '../cards/use-cloud-name';
 import { EntityChips } from '../cards/EntityChips';
@@ -107,6 +108,7 @@ export function ReviewCard({
           <h2 className="card__title" id={titleId} dir="auto">
             {item.title}
           </h2>
+          <CoverBar cover={item.cover} cloudName={cloudName} />
           <CardBody item={item} cloudName={cloudName} />
           <EntityChips entities={item.entities} />
           {chips.length > 0 && (

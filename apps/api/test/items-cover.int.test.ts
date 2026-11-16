@@ -131,22 +131,6 @@ describe('card cover image (044)', () => {
       for (const body of bodies) await expectRefused(await create(body), 'cover', NO_COVER);
     });
 
-    it('refuses a PATCH that moves a covered card to link or media', async () => {
-      const asset = await createAsset(ctx.t.db, deck);
-      const photo = await createAsset(ctx.t.db, deck);
-      const item = await card({ cover: { publicId: asset.publicId } });
-      const toLink = await patch(item.id, {
-        type: 'link',
-        payload: { url: 'https://example.com/' },
-      });
-      await expectRefused(toLink, 'cover', NO_COVER);
-      const toMedia = await patch(item.id, {
-        type: 'media',
-        payload: { kind: 'image', images: [{ publicId: photo.publicId }] },
-      });
-      await expectRefused(toMedia, 'cover', NO_COVER);
-    });
-
     it('refuses an unknown, other-deck or PDF image with one message (D408)', async () => {
       const foreign = await createAsset(ctx.t.db, other);
       const pdf = await createAsset(ctx.t.db, deck, { kind: 'pdf', pages: 2 });

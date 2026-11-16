@@ -65,6 +65,24 @@ describe('EventCard (042)', () => {
     );
   });
 
+  it('hides the link image when showImage is false', () => {
+    const payload = {
+      ...timed,
+      link: {
+        url: 'https://example.org/fair',
+        preview: { publicId: 'p/fair', width: 8, height: 4 },
+      },
+    };
+    const { container, rerender } = render(
+      <EventCard payload={payload} cloudName="demo" viewerTimeZone="UTC" />,
+    );
+    expect(container.querySelector('.link-card__image')).not.toBeNull();
+    rerender(
+      <EventCard payload={payload} cloudName="demo" viewerTimeZone="UTC" showImage={false} />,
+    );
+    expect(container.querySelector('.link-card__image')).toBeNull();
+  });
+
   it('shows an all-day range with the same dates for everyone', () => {
     render(
       <EventCard

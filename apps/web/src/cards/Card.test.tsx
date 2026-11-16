@@ -4,7 +4,7 @@ import { makeCategory, makeItem } from '../test/fixtures';
 import { renderWithClient } from '../test/render';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
-const { respond: unwrap } = await import('../test/api-mock');
+const { respond: unwrap, mockConfig } = await import('../test/api-mock');
 const { Card, itemCategories } = await import('./Card');
 
 const school = makeCategory({ id: 'c-school', slug: 'school', name: 'School', isDefault: false });
@@ -106,5 +106,21 @@ describe('Card', () => {
       <Card item={item} deckSlug="family" categories={[]} actions={false} source={false} />,
     );
     expect(screen.queryByRole('link', { name: /^Source:/ })).not.toBeInTheDocument();
+  });
+
+  it('renders the cover bar only when the item has a cover', async () => {
+    mockConfig.cloudinaryCloudName = 'demo';
+    const cover = { publicId: 'gobbit/c1', width: 800, height: 450 };
+    const { container, unmount } = renderWithClient(
+      <Card item={makeItem({ cover })} deckSlug="family" categories={[]} actions={false} />,
+    );
+    await waitFor(() => expect(container.querySelector('.card__cover')).not.toBeNull());
+    unmount();
+    const plain = renderWithClient(
+      <Card item={makeItem()} deckSlug="family" categories={[]} actions={false} />,
+    );
+    await Promise.resolve();
+    expect(plain.container.querySelector('.card__cover')).toBeNull();
+    mockConfig.cloudinaryCloudName = null;
   });
 });

@@ -203,7 +203,7 @@ export function draftFromItem(item: Item): Draft {
     categoryIds: [...item.categoryIds],
     sourceUrl: item.sourceUrl ?? '',
     entities: item.entities ? structuredClone(item.entities) : null,
-    cover: item.cover ? { ...item.cover } : null,
+    ...(item.cover ? { cover: { ...item.cover } } : {}),
   };
 }
 
