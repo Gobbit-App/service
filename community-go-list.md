@@ -2,7 +2,7 @@
 
 Everything needed to launch the first communal deck: a public, Hebrew-first knowledge deck for a community living abroad, seeded from a curated Markdown file (plus media) through bulk import and reviewed card by card.
 
-Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`; Track I target decided Nov 16. This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
+Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`; Track I target decided Nov 16; monitoring (Track K) and early wins (Track L) added Nov 16. This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
 
 ## Goal and definition of done
 
@@ -14,6 +14,7 @@ Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and regist
 - Nothing the public deck depends on to serve runs in the home lab: compute, database, backups and analytics are on external services, and the app answers on a product domain (Track I). Deploys may still go through the home-lab Dokploy.
 - The deck is served white-labelled on its own domain (Track J).
 - Each launch stage (curators, invited readers, waitlist cohort, anonymous readers) has a defined way in (Track H).
+- Every limit, slowdown and failure shows on one dashboard with an alert, before the soft launch (Track K).
 
 ## Working method
 
@@ -255,7 +256,7 @@ Users never see the VM: the hostname, TLS and the tunnel stay at Cloudflare, so 
 | Ingress, TLS, DNS, DDoS | Tunnel, Universal SSL | Already in use; the tunnel is what makes a provider change invisible. |
 | Backups | R2, 10 GB, no egress fee | Nightly dumps. |
 | Old-hostname 301s | Redirect Rules | Serve the I9 redirects from Cloudflare, so they need nothing in the home lab. |
-| Static assets | CDN cache | Hashed JS, CSS and images are cached by default. Caching public HTML pages would need a cache rule that skips requests with `gobbit_session` and a Cloudflare purge from `purgeDeck`; not now. |
+| Static assets | CDN cache | Hashed JS, CSS and images are cached by default. Public HTML pages too, through one cache rule that skips requests with `gobbit_session` (L1). |
 | Abuse controls (Phase 11.3) | One rate limiting rule (10 s period), WAF custom and managed rules, Turnstile | A first line in front of the in-process `anon-rate-limiter`, not a replacement. Turnstile fits the waitlist form and a later public "suggest a card" form. |
 | Not Bot Fight Mode | | On the free plan it cannot be skipped per path, so it would challenge the iPhone Shortcut, `pnpm import:notes` and the Resend inbound webhook. |
 | Custom domain (Track J) | Cloudflare for SaaS, 100 custom hostnames free | Enough for this deck and many after it. |
@@ -272,7 +273,7 @@ Not used: Cloudflare Web Analytics (no custom events, does not follow our consen
 - [ ] **I5. Backups.** Nightly `pg_dump` to R2 with retention, either through Dokploy's scheduled database backups (if they run on a remote server, **(verify)**) or a cron container; a Healthchecks ping on each run; a pull copy on the NAS. Rehearse the restore on a scratch VM and write the date in `infra/README.md`. Verify: Phase 11.1 and 11.6 demos (this rehearsal is also the escape hatch).
 - [ ] **I6. Analytics.** Create the site in Umami Cloud, point `ANALYTICS_UPSTREAM` at it, check visitor IP and country still arrive through the proxy. Old history stays behind unless exported. Verify: a landing view shows up; the `landing.render` versus Umami check still holds.
 - [ ] **I7. Host-bound settings.** `API_URL`, `APP_URL`, `CORS_ORIGINS`, `PUBLIC_HOST`, `MAIL_FROM` and the Resend sending domain (SPF, DKIM), `INGEST_EMAIL_DOMAIN` and the inbound webhook, the iPhone Shortcut URL, Healthchecks names, Umami website host. Keep a copy of the env file outside Dokploy. Add a `CHANGELOG.md` entry marked **Action required**.
-- [ ] **I8. Limits check.** Compare launch estimates with the free tiers kept: Resend sends, Cloudinary credits, Healthchecks checks, R2 storage, embedding spend.
+- [ ] **I8. Limits check.** Compare launch estimates with the free tiers kept: Resend sends, Cloudinary credits, Healthchecks checks, R2 storage, embedding spend. From then on the Track K headroom row tracks them.
 - [ ] **I9. Cut-over.** Announce a short write freeze; dump and restore into the VM's database (extensions first, pg-boss schema included); switch the tunnel and DNS; Cloudflare Redirect Rules answer 301 from the old hostname to the new one for `/p/*`, `/s/*` and the app. Members sign in again and re-install the PWA; push subscriptions are re-created on first open; unsynced drafts on the old origin are lost, so say so beforehand. Verify: post-deploy smoke on the new host; a shared link from before the move lands on the same card.
 - [ ] **I10. Fallback deploy.** Deploy once by hand over SSH without Dokploy, from the env file copy. Verify: smoke green after the manual deploy.
 - [ ] **I11. Decommission.** After two quiet weeks: remove the old Dokploy Compose project, the `gobbit` database on the shared instance and the old tunnel. Dokploy itself stays. Keep the Redirect Rules for a year.
@@ -297,14 +298,94 @@ Depends on Track I (the hostnames route to the new origin, and the main domain m
 - [ ] **J9. White-label finish.** Deck name in the title, manifest and `og:site_name`; footer "Powered by Gobbit"; the mail sender stays Gobbit. Hebrew chrome from Track E applies on the custom host; the privacy notice and take-down contact are reachable there; analytics counts the custom host; the sitemap and canonical URLs name the custom domain so search engines index one address.
 - [ ] **J10. Launch order.** Share only custom-domain links from day one. If the deck was already public on the main domain, the 301s from J6 carry the old links.
 
+## Track K — Monitoring and alerting
+
+The aim: as usage grows, we see each limit coming and fix it before users feel it. The worst case is something biting with no one knowing what or where. Everything that can run out, slow down or fail shows on **one dashboard**, and every line on it has an alert. This track delivers `PLAN.md` Phase 11.2 (monitoring thresholds), and gives the decision events of constitution VIII somewhere to be watched and alerted. It must be live before the soft launch (stage 3), and is set up together with I4 on the VM.
+
+### Where it lives
+
+- **Grafana Cloud, free plan:** about 10k metric series, 50 GB logs, 14 days of retention, 3 users (third-party summaries, **(verify)**). It is off the VM, so the dashboard and its alerts survive a VM, Dokploy or home-lab outage. It holds the one dashboard, the alert rules, and the logs.
+- **Grafana Alloy** (one more Compose service on the VM) collects everything and ships it: host metrics, container metrics, a Postgres exporter with a read-only monitoring role and `pg_stat_statements`, the app's `/metrics`, and container logs to Loki.
+- **Healthchecks.io stays** as the dead man's switch (D342). It alerts on its own even if Grafana or Alloy is broken.
+- **Labels stay low-cardinality:** route patterns rather than paths, queue names, event names from the catalogue. No deck, user or IP labels. This keeps the free series limit safe and the data free of personal details.
+- Self-hosting Grafana on the VM would go down with the VM; in the home lab it would undo Track I. Neither.
+
+### What it watches
+
+| Area | Signal | Source | Warn (email) | Page (phone) |
+|---|---|---|---|---|
+| Mail (Resend free: 100 a day, 3,000 a month) | mails sent today and this month, by kind (sign-in, invite, waitlist, reminder, other) | our own counter at the mailer; the Resend usage API once it leaves beta | 70 % of either | 90 %, or any send refused for quota. Magic-link sign-in stops at the cap, so this is the worst one. |
+| Images (Cloudinary free: 25 credits a month) | credits used, % of limit, storage, bandwidth, transformations | Cloudinary Admin API `usage`, hourly | 70 %, or forecast to run out within 10 days | 90 % |
+| Model spend | estimated cost per day by feature (extraction, embeddings, Ask), from `LLM_PRICES_PER_MTOK`; OpenRouter balance | our counter; OpenRouter `GET /api/v1/credits` (needs a management key) | daily spend over budget, balance under 30 days of spend | balance under 7 days |
+| Anonymous query budget | per-IP and global embedding budget used, refusals | `query-budget.ts` | global budget refused on 3 days in a row | none (it degrades to text search) |
+| R2 backups (10 GB free) | bucket size, last dump size and age | backup job | 70 % | last good dump older than 26 h |
+| Umami Cloud | events this month against the plan | Umami API **(verify)** | 70 % | 90 % |
+| Healthchecks, Grafana itself | checks in use, series in use | their own pages | 70 % | none |
+| API | requests, 5xx rate, p95 latency per route pattern, anonymous rate-limit refusals, public page cache hit rate | app `/metrics` | p95 over 500 ms for 15 min, 5xx over 1 % | 5xx over 5 % for 5 min |
+| Jobs | queue depth and oldest waiting job per queue, failures, duration; reminder lateness | app `/metrics` (pg-boss queue stats) | oldest `ingest`/`embed-item` job over 5 min; reminders over 3 min late | a queue growing for 30 min, or reminders over 15 min late |
+| Database | size and growth, connections in use against the pool, slowest queries (`pg_stat_statements`), cache hit ratio, `items_embedding_hnsw_idx` size against memory, locks, dead tuples | Postgres exporter | p95 query time doubles week on week; cache hit under 99 %; HNSW index over half the memory | connections at the limit; disk over 85 % |
+| Host | CPU, memory, disk, container restarts | Alloy | memory over 80 %, disk over 70 % | disk over 85 %; a container restarting in a loop |
+| Edge | requests, cache hit ratio, 429s from the rate limiting rule, WAF blocks | Cloudflare GraphQL Analytics API **(verify)** | a sudden rise in 429s or blocks | none |
+| Decisions | decision events by `event` and `outcome` (waitlist refusals, ingest drops, budget refusals) | app `/metrics` counters from `decisionLogger` | refusals for any event above its usual rate | none |
+| Growth | users, decks, cards, public page views, waitlist size | database counts, hourly | none (trend only) | none |
+
+"Forecast to run out" uses Grafana's linear prediction over the last 7 days, so a limit growing slowly shows as "N days left" long before it alarms. Limits themselves are env vars, so a plan upgrade changes one value, not a dashboard.
+
+### Dashboard layout
+
+One dashboard, top to bottom, so a single look answers "is anything biting, and where":
+
+1. **Status:** up or down per process, 5xx rate, p95 latency, last deploy (commit), last backup.
+2. **Headroom:** one bar per limited resource, % used and days left: Resend day and month, Cloudinary credits, model spend, R2, Umami, Grafana series, database disk, VM memory.
+3. **Growth:** users, decks, cards, public views, waitlist, all over 90 days.
+4. **Database:** connections, slowest queries, size, cache hit ratio, HNSW index against memory.
+5. **Jobs:** depth and oldest age per queue, failures, reminder lateness.
+6. **Edge and abuse:** Cloudflare cache ratio, 429s, WAF blocks, anonymous budget refusals.
+7. **Logs:** recent errors, linked from each panel.
+
+### Steps
+
+- [ ] **K1. Spec** the app side through spec-kit (one small feature): a `/metrics` endpoint on `api` and `worker` that only the Compose network can reach (its own port, never routed by Caddy); `prom-client` (new dependency) for counters and histograms; a `usage-poll` worker job (hourly cron) that reads the vendor usage APIs and database counts into gauges; the limit env vars. Each vendor call is its own decision event, so a failing poll is itself visible. E2E tier: none, since nothing user-facing changes.
+- [ ] **K2. Collector.** Add Alloy and the Postgres monitoring role to the VM's Compose project, with `pg_stat_statements` on. Verify: metrics and logs from all five containers arrive in Grafana Cloud.
+- [ ] **K3. Dashboard and alerts** as above, kept as JSON in `infra/monitoring/` so they can be reviewed and restored. Contact points: email for warn, phone push (the same channel as Healthchecks) for page. Verify: each alert fired once on purpose (for example, a lowered limit env var).
+- [ ] **K4. Weekly look.** A short checklist in `infra/README.md`: headroom row, days left, slowest queries, growth. Verify: done once before stage 3.
+- [ ] **K5. Docs.** `infra/README.md` (monitoring), `docs/design/deployment.md`; an ADR for "Grafana Cloud as the single pane, Healthchecks independent".
+
+## Track L — Early wins
+
+Small changes to do now, before load arrives. L1–L3 are small fixes (no spec-kit). L4 is not small: it is its own feature.
+
+- [ ] **L1. Public HTML cached at Cloudflare.** Public pages already send `Cache-Control: public, max-age=300` to strangers (`apps/api/src/public/responses.ts`; search pages 60 s) and `private, no-store` to members. One Cloudflare cache rule is enough: host is the app host, the path starts with `/p/`, and the cookie does not contain `gobbit_session` → eligible for cache, respect the origin TTL. Crawlers and link-preview bots then stop reaching the single API process. No code change.
+  - Edits show within 5 minutes, which browsers already accept today. A take-down that cannot wait is a manual purge (by URL or prefix, free on every plan) in the take-down runbook. A purge call from `purgeDeck` is only worth adding if 5 minutes ever hurts (free plan: 25 purge requests in a bucket, refilled 5 a minute).
+  - Not `/welcome`: Umami is checked against `landing.render` (D231), and edge hits would never be counted.
+  - Track J: the rule has to cover the custom hostnames too.
+  - Verify: a second anonymous request shows `cf-cache-status: HIT`; a signed-in request is still redirected to the app; public pages set no cookie **(verify)**, since Cloudflare does not cache a response that sets one.
+- [ ] **L2. Embedding sweep every 10 minutes.** `EMBED_SWEEP_CRON` to `*/10 * * * *` and `EMBED_SWEEP_BATCH` from 50 to 500 (`packages/shared/src/search/constants.ts`), so it still drains 3,000 cards an hour after an outage or a model change. Writes already enqueue their own embedding after commit; the sweep only heals misses, so a missed card is text-search-only for at most 10 minutes. E2E tier: none.
+- [ ] **L3. Job polling.** Not a blanket 60 s. pg-boss polls each of the 12 queues every 2 s by default, about 6 small queries a second when idle. That is cheap on an always-on database, but it is noise in the query stats.
+  - **Scheduled queues** (9 sweeps and prunes, `reminder-sweep` included): `pollingIntervalSeconds: 30`. A cron fires at most once a minute, so 30 s adds at most 30 s of delay. Reminders stay well inside the 3-minute warning.
+  - **Queues people wait on** (`ingest`, `embed-item`, `link-snapshot`): keep 2 s. At 60 s, a share would take up to a minute to show in the review queue.
+  - Result: about 1.8 polls a second when idle instead of 6. E2E tier: none.
+- [ ] **L4. Sign-in without magic links** (decided Nov 16; a spec-kit feature, next free number). Registration with username and password (the address confirmed before the account works), or with Google. Sign-in with either.
+  - **Recommendation: ship Google first.** It stores no passwords and sends no mail (Google vouches for the address). Add passwords second.
+  - **Mail does not go away:** password sign-up confirmation, password reset, invites and the waitlist all still send mail. Sessions last 90 days (`SESSION_TTL_DAYS`), so sign-in links are not where mail volume comes from. Launch cohorts are: waitlist confirm, invite and first sign-in are about 3 mails a person, so the 100-a-day cap admits about 33 new people a day. K shows which kind dominates. If the cap bites before L4 ships, the Resend paid plan is the quick lever.
+  - **Passwords bring:** a hashing library (Argon2id, new dependency); reset by mail, which is a magic link that lands on "set password", so that part of the code stays; rate limits and lockout; sessions revoked on password change; a decision event for every refusal (constitution VIII).
+  - **It touches:**
+    - Registration gate: `users.service.register` gets new reasons; waitlist mode still holds, so an unknown Google account joins the waitlist.
+    - H7 invites: accepting an invite registers by either method; what happens when the Google address differs from the invited one.
+    - Spec `046` usernames: username sign-in needs them first.
+    - Track J: Google redirect URIs are per host, so either OAuth runs on the main domain and hands the session over, or each custom host is registered.
+    - Existing users: they keep a "mail me a link" fallback until they have set a method.
+  - Before stage 4 (waitlist cohort), where mail volume peaks.
+  - E2E tier: smoke for sign-up and sign-in by password; full for Google (faked provider) and reset.
+
 ## Order
 
-1. B2 and C1 now; they shape both the importer and the content.
-2. Track A through spec-kit, in parallel with Track C writing. Track I can run alongside; it touches no application behaviour.
+1. B2 and C1 now; they shape both the importer and the content. L1–L3 any time; they are independent.
+2. Track A through spec-kit, in parallel with Track C writing. Track I can run alongside; it touches no application behaviour. K2 goes in with I4, and K1 runs as its own small spec-kit feature.
 3. H1–H3 with B1, B4, B5, then D1.
 4. D2–D6 (the deck stays non-public).
 5. Track I cut-over (I9) at the latest here, so nothing public is ever on the home-lab hostname.
-6. H5, H6 and H11, then the soft launch (stage 3); H7 and H8, then the waitlist cohort (stage 4).
+6. K3 and K4 done; H5, H6 and H11, then the soft launch (stage 3). H7, H8 and L4 (at least Google sign-in), then the waitlist cohort (stage 4).
 7. Track E.
 8. Track J, then switch the deck to public and share the custom-domain link (stage 5).
 
@@ -324,6 +405,7 @@ If Track J slips, the fallback is to go public on the product domain after step 
 - H2: your own user or a dedicated community user as the deck's owner; who holds its mailbox.
 - Members-only categories on a public deck: stub in `PLAN.md` Phase 17, not urgent.
 - H7: whether a deck invite skips waitlist approval.
+- L4: Google first, passwords second (recommended), or both together; whether existing users keep a mail-me-a-link fallback; what happens when an invite is accepted with a Google address other than the invited one.
 
 ## To verify
 
@@ -332,6 +414,10 @@ If Track J slips, the fallback is to go public on the product domain after step 
 - Whether the Cloudinary plan and the media sweep settings fit a few hundred seed images.
 - Every price in Track I, on the provider's own page.
 - That `dokploy-network` exists on a Dokploy remote server, and whether Dokploy's database backups run there.
+- Grafana Cloud free plan limits, alerting included, on Grafana's own pricing page.
+- That public pages set no cookie (Cloudflare does not cache responses that do).
+- Umami Cloud's monthly event limit and whether its API reports usage; Cloudflare GraphQL Analytics on the free plan.
+- The exact fields of Cloudinary's `usage` response; whether the Resend usage API has left private beta.
 
 ## Sources
 
@@ -344,3 +430,11 @@ Track I prices and features, read Nov 16 (mostly third-party summaries; confirm 
 - Cloudflare rate limiting rules: <https://developers.cloudflare.com/waf/rate-limiting-rules/>
 - Cloudflare for SaaS plans: <https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/plans/>
 - Cloudflare free plan summary: <https://costbench.com/software/cdn-edge/cloudflare/free-plan/>
+
+Track K and L, read Nov 16:
+
+- Grafana Cloud free plan (third-party summaries): <https://costbench.com/software/observability/grafana-cloud/free-plan/>, <https://last9.io/blog/grafana-cloud-pricing/>
+- Cloudflare purge for all plans and its rate limits: <https://developers.cloudflare.com/changelog/post/2025-04-01-purge-for-all/>, <https://blog.cloudflare.com/instant-purge-for-all/>
+- Cloudinary usage limits and the Admin API `usage` method: <https://cloudinary.com/documentation/developer_onboarding_faq_usage_limits>
+- Resend usage API (private beta) and quota headers: <https://resend.com/docs/api-reference/usage/retrieve-usage>, <https://www.resend.com/docs/api-reference/rate-limit>
+- OpenRouter credits: <https://openrouter.ai/docs/api/api-reference/credits/get-remaining-credits>
