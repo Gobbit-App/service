@@ -43,8 +43,8 @@ publishers through the same route (FR-011).
 
 | Case | Status | Problem (`/problems/validation`) | `errors[].path` |
 |------|--------|---------|------------------|
-| `cover` on a `link` or `image` card | 422 | validation | `cover`: "This card type has no cover image" |
-| `publicId` unknown, or recorded for another deck | 422 | validation | `cover.publicId`: "Unknown image" (same text for both, D388) |
+| `cover` on a `link` or `media` card | 422 | validation | `cover`: "This card type has no cover image" |
+| `publicId` unknown, or recorded for another deck | 422 | validation | `cover.publicId`: "Unknown image" (same text for both, D408) |
 | `cover` carries `width`, `height` or any other key | 422 | validation (zod strict) | `cover` |
 | `publicId` empty or longer than 255 characters | 422 | validation | `cover.publicId` |
 
@@ -52,13 +52,13 @@ publishers through the same route (FR-011).
 
 - `POST /decks/{id}/media/sign` and `POST /decks/{id}/media/assets`: the cover image upload uses them
   as they are. The folder (`gobbit/items/<deckId>`) and tags (`editor`, `deck:<deckId>`) are the same.
-- Public reads (`/public/{slug}`, `/p/…`, public search): no `cover` field (D394).
+- Public reads (`/public/{slug}`, `/p/…`, public search): no `cover` field (D414).
 - `POST /ingest`, `POST /decks/{id}/imports`: no `cover` input.
 - `GET /decks/{id}/events`: entries may now list `"cover"` in `changes`.
 
 ## Share preview (`/s/{itemId}`, `og:image` of `/p/…/i/{id}`)
 
-Public share mode (D393), first that applies:
+Public share mode (D413), first that applies:
 
 1. an image card's own picture (unchanged);
 2. the generated card (title, excerpt, category, deck) with a visual composited at delivery by a

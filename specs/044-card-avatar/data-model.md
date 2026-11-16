@@ -1,6 +1,6 @@
 # Data model: Card cover image (044)
 
-## Migration `0025_card_cover`
+## Migration `0026_card_cover`
 
 One table changes; nothing is backfilled, because existing cards get no cover image (spec edge case).
 
@@ -8,11 +8,11 @@ One table changes; nothing is backfilled, because existing cards get no cover im
 
 | Column | Type | Null | Notes |
 |--------|------|------|-------|
-| `cover` | `jsonb` | yes | `{ "publicId": string, "width"?: int, "height"?: int }`; `NULL` = no cover image (D386). `width`/`height` are copied from the asset row at write time (D388) |
+| `cover` | `jsonb` | yes | `{ "publicId": string, "width"?: int, "height"?: int }`; `NULL` = no cover image (D406). `width`/`height` are copied from the asset row at write time (D408) |
 
 Constraints and indexes:
 
-- `items_cover_chk` (CHECK, D387):
+- `items_cover_chk` (CHECK, D407):
   ```text
   cover IS NULL
   OR (
@@ -27,7 +27,7 @@ Constraints and indexes:
   The CHECK uses `type::text` like `items_reveal_at_chk`, and the type list matches
   `coverItemTypes`.
 - `items_cover_public_id_idx`: btree on `((cover->>'publicId')) WHERE cover IS NOT NULL`, which
-  the sweep's reference lookup uses (D389).
+  the sweep's reference lookup uses (D409).
 
 Unchanged on purpose:
 
@@ -35,9 +35,9 @@ Unchanged on purpose:
   (spec Assumptions).
 - `payload` CHECKs. The cover image isn't in the payload, so `items_payload_size_chk` doesn't count it.
   The column CHECK bounds its size instead (FR-009).
-- `item_events`: `changes` is a free `text[]`, and the new value `cover` needs no migration (D390).
+- `item_events`: `changes` is a free `text[]`, and the new value `cover` needs no migration (D410).
 
-Down file `packages/db/migrations/down/0025_card_cover.down.sql` drops the index, the CHECK and the
+Down file `packages/db/migrations/down/0026_card_cover.down.sql` drops the index, the CHECK and the
 column. Dropping the column loses the cover images, which is acceptable for a rollback, and their assets
 then become unreferenced and are swept after the grace period.
 
@@ -54,12 +54,12 @@ so every member read path (list, search, review, card page) returns it without q
 - `schemas/item.ts`:
   - `cardCoverSchema` (output): `{ publicId, width?, height? }`.
   - `coverInputSchema` (input): `z.object({ publicId: z.string().min(1).max(255) }).strict()`.
-    Dimensions are refused on input (D388).
+    Dimensions are refused on input (D408).
   - `itemSchema.cover`: `cardCoverSchema.nullable()`.
   - The create variants gain `cover: coverInputSchema.optional()` on the shared base.
-    Type support is checked in the service so the error names the field (D387).
+    Type support is checked in the service so the error names the field (D407).
   - `itemPatchSchema.cover`: `coverInputSchema.nullable().optional()`.
-- `events/constants.ts`: `itemEventFields` gains `'cover'` (D390).
+- `events/constants.ts`: `itemEventFields` gains `'cover'` (D410).
 
 ## Entity: card cover image
 
@@ -67,11 +67,11 @@ so every member read path (list, search, review, card page) returns it without q
 |----------|------|-------------|
 | At most one per card | single column | DB |
 | Only on text, reminder, event, table, calc | `items_cover_chk`; 422 `cover` | DB + `items.service` |
-| References an asset recorded for the card's deck | `assets.byPublicId(id).deckId === item.deckId`, else 422 `cover.publicId` | `items.service` via `createCoverReference` (D388) |
+| References an asset recorded for the card's deck | `assets.byPublicId(id).deckId === item.deckId`, else 422 `cover.publicId` | `items.service` via `createCoverReference` (D408) |
 | Dimensions are the asset's | copied from `assets.width/height`; input schema refuses them | service + shared schema |
-| Keeps its image from clean-up while the card exists (any status, incl. soft-deleted) | `unreferenced` predicate | `assets.repo` (D389) |
-| Never set by ingestion or import | no input path | by construction (D394) |
-| Never in public DTOs | `toPublicItem` allow-list | `public-dtos.ts` (D394) |
+| Keeps its image from clean-up while the card exists (any status, incl. soft-deleted) | `unreferenced` predicate | `assets.repo` (D409) |
+| Never set by ingestion or import | no input path | by construction (D414) |
+| Never in public DTOs | `toPublicItem` allow-list | `public-dtos.ts` (D414) |
 
 ### State transitions
 
@@ -84,10 +84,10 @@ set  ──purge (prune-deleted-items, day 30)────────▶ row go
 ```
 
 Each user-made add, replace or remove writes one `item_events` `updated` row with `changes ∋
-'cover image'`, in the same transaction (ADR-057). A no-op PATCH (same `publicId`) writes nothing.
+'cover'`, in the same transaction (ADR-057). A no-op PATCH (same `publicId`) writes nothing.
 
 ## Web draft (`apps/web/src/editor/draft.ts`)
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `Draft.cover` | `CardCover \| null \| undefined` | `undefined` in drafts saved before 044 = unchanged; `withType` clears it for link/image (D392) |
+| `Draft.cover` | `CardCover \| null \| undefined` | `undefined` in drafts saved before 044 = unchanged; `withType` clears it for link/image (D412) |

@@ -1088,6 +1088,13 @@ h2 {
   object-fit: cover;
 }
 
+/* D411: the card cover bar reuses the stored-snapshot crop above. */
+.card__cover {
+  display: block;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
 /* D165: a quiet note on a flagged link; the check date is the title. */
 .link-health {
   justify-self: start;

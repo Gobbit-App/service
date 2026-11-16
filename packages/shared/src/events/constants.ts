@@ -39,6 +39,8 @@ export const itemEventFields = [
   'location',
   'link',
   'notify',
+  /** D410 */
+  'cover',
 ] as const;
 export type ItemEventField = (typeof itemEventFields)[number];
 

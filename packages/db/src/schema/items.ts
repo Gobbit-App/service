@@ -18,6 +18,7 @@ import {
   MEDIA_GALLERY_MAX,
   type Entities,
 } from '@gobbit/shared';
+import type { CardCover } from '@gobbit/shared/card-cover';
 import { EVENT_LOCATION_MAX, EVENT_NOTIFY_TIMES_MAX } from '@gobbit/shared/event-constants';
 import { itemStatusEnum, itemTypeEnum, sourceKindEnum, timestamps, tstz } from './common';
 import { users } from './users';
@@ -53,6 +54,8 @@ export const items = pgTable(
     embeddedAt: tstz(),
     /** D291: reminders only — deadline minus show-before; set by trigger `items_reminder_sync`. */
     revealAt: tstz(),
+    /** D-cover: optional cover image of a text/reminder/event/table/calc card (044); null = none. */
+    cover: jsonb().$type<CardCover | null>(),
   },
   (t) => [
     unique('items_id_deck_uq').on(t.id, t.deckId),
@@ -83,6 +86,14 @@ export const items = pgTable(
       'items_media_files_check',
       sql`${t.type}::text <> 'media' OR coalesce(CASE ${t.payload}->>'kind' WHEN 'image' THEN jsonb_typeof(${t.payload}->'images') = 'array' AND jsonb_array_length(${t.payload}->'images') BETWEEN 1 AND ${sql.raw(String(MEDIA_GALLERY_MAX))} AND NOT jsonb_path_exists(${t.payload}, '$.images[*] ? (!(exists(@.publicId)) || @.publicId == "")') ELSE coalesce(${t.payload}->>'publicId', '') <> '' END, false)`,
     ),
+    // 044: a cover only on the types without their own image; shape backstop (type is text: enum compare).
+    check(
+      'items_cover_chk',
+      sql`${t.cover} IS NULL OR (${t.type}::text IN ('text','reminder','event','table','calc') AND jsonb_typeof(${t.cover}) = 'object' AND jsonb_typeof(${t.cover}->'publicId') = 'string' AND char_length(${t.cover}->>'publicId') BETWEEN 1 AND 255 AND (NOT ${t.cover} ? 'width' OR jsonb_typeof(${t.cover}->'width') = 'number') AND (NOT ${t.cover} ? 'height' OR jsonb_typeof(${t.cover}->'height') = 'number'))`,
+    ),
+    index('items_cover_public_id_idx')
+      .on(sql`(${t.cover}->>'publicId')`)
+      .where(sql`${t.cover} IS NOT NULL`),
     index('items_search_trgm_idx').using('gin', t.searchText.op('gin_trgm_ops')),
     index('items_embedding_hnsw_idx')
       .using('hnsw', t.embedding.op('vector_cosine_ops'))

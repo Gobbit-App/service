@@ -40,6 +40,16 @@ export const itemTitleSchema = z
     message: `Title must be at most ${CARD_TITLE_MAX} characters`,
   });
 
+/** 044: a card's cover as returned; dimensions are server-owned (D408). */
+export const cardCoverSchema = z.object({
+  publicId: z.string(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+});
+
+/** D408: input is the id only; the server reads dimensions from the asset. */
+export const coverInputSchema = z.object({ publicId: z.string().min(1).max(255) }).strict();
+
 // Common fields for item creation
 const commonCreateFields = {
   title: itemTitleSchema,
@@ -54,6 +64,8 @@ const commonCreateFields = {
   status: z.enum(itemStatuses).optional(),
   /** D97: extracted facts (phones, addresses, …), searchable. */
   entities: entitiesSchema.optional(),
+  /** D407: type support is checked in the service. */
+  cover: coverInputSchema.optional(),
 };
 
 // Per-type create schemas
@@ -166,6 +178,7 @@ export const itemPatchSchema = z
     sourceUrl: httpUrlSchema.nullable().optional(),
     status: z.enum(itemStatuses).optional(),
     entities: entitiesSchema.optional(),
+    cover: coverInputSchema.nullable().optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, 'At least one field is required');
@@ -200,6 +213,7 @@ export const itemSchema = z.object({
   /** D132: when the card was deleted; present only in the `status=deleted` listing. */
   deletedAt: isoDateTimeSchema.optional(),
   linkHealth: linkHealthSchema.nullable(),
+  cover: cardCoverSchema.nullable(),
   /** D291: present only on reminder cards. */
   reminder: reminderStateSchema.optional(),
   /** 042: present only on event cards, member paths only. */

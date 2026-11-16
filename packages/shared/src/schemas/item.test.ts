@@ -253,6 +253,7 @@ describe('itemSchema.deletedAt (D132)', () => {
     categoryIds: [],
     isFavorite: false,
     linkHealth: null,
+    cover: null,
   };
 
   it('is optional', () => {
@@ -284,5 +285,30 @@ describe('link checks (D164/D165)', () => {
     expect(shape.safeParse({ ...health, status: 'changed' }).success).toBe(true);
     expect(shape.safeParse({ ...health, status: 'ok' }).success).toBe(false);
     expect(shape.safeParse(undefined).success).toBe(false);
+  });
+});
+
+describe('cover input (044, D408)', () => {
+  const base = { type: 'text', title: 'T' } as const;
+  it('accepts a publicId only', () => {
+    expect(itemCreateSchema.parse({ ...base, cover: { publicId: 'a' } }).cover).toEqual({
+      publicId: 'a',
+    });
+  });
+  it.each([
+    { publicId: 'a', width: 1 },
+    { publicId: 'a', height: 1 },
+    { publicId: 'a', x: 1 },
+    { publicId: '' },
+    { publicId: 'a'.repeat(256) },
+  ])('refuses %j', (cover) => {
+    expect(itemCreateSchema.safeParse({ ...base, cover }).success).toBe(false);
+    expect(itemPatchSchema.safeParse({ cover }).success).toBe(false);
+  });
+  it('accepts 255 chars and null on patch', () => {
+    expect(
+      itemCreateSchema.safeParse({ ...base, cover: { publicId: 'a'.repeat(255) } }).success,
+    ).toBe(true);
+    expect(itemPatchSchema.parse({ cover: null }).cover).toBeNull();
   });
 });

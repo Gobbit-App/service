@@ -146,8 +146,9 @@ describe('migrations: 0022_events down (042, T008)', () => {
 
   it('refuses to roll back while an event card exists, then rolls back once it is gone', async () => {
     await runMigrations(ctx.pool);
-    // 0025 (media cards) has nothing to refuse on an empty database; 0024 (body limit, D384) and
+    // 0026 (card cover) and 0025 (media cards) have nothing to refuse on an empty database; 0024 (body limit, D384) and
     // 0023 (events ingestion, T093) only change CHECKs.
+    expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
     expect(await rollbackLatest(ctx.pool)).toBe('0023_events_ingest');
@@ -197,6 +198,7 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
     await insertBody('a'.repeat(2000));
     await expect(insertBody('a'.repeat(2001))).rejects.toThrow(/items_body_len_chk/);
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     expect(await rollbackLatest(ctx.pool)).toBe('0024_card_body_2000');
     const kept = await ctx.pool.query(`SELECT char_length(body) AS n FROM items`);
@@ -204,7 +206,7 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
     await expect(insertBody('a'.repeat(601))).rejects.toThrow(/items_body_len_chk/);
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0025_media_cards');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0026_card_cover');
   });
 });
 
@@ -223,6 +225,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
 
   it('reshapes photo cards into one-photo galleries without moving updated_at, and back', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     const deck = await deckId('media-up');
     const stamp = '2025-01-02T03:04:05.678Z';
@@ -238,7 +241,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
     const id = inserted.rows[0].id as string;
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0025_media_cards');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0026_card_cover');
     const up = await ctx.pool.query(
       `SELECT type::text, payload, updated_at, search_text FROM items WHERE id = $1`,
       [id],
@@ -255,6 +258,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
     const bare = await ctx.pool.query(`SELECT payload FROM items WHERE title = 'Bare'`);
     expect(bare.rows[0].payload).toEqual({ kind: 'image', images: [{ publicId: 'p2' }] });
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     const down = await ctx.pool.query(
       `SELECT type::text, payload, updated_at FROM items WHERE id = $1`,
@@ -268,6 +272,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
 
   it('refuses to roll back while a PDF card, a gallery or a video asset exists', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover'); // the refusals below are 0025's
     const deck = await deckId('media-down');
     const pdf = await ctx.pool.query(
       `INSERT INTO items (deck_id, type, status, title, payload) VALUES ($1, 'media', 'proposed', 'Doc', $2::jsonb) RETURNING id`,
@@ -292,5 +297,23 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
 
     expect(await rollbackLatest(ctx.pool)).toBe('0025_media_cards');
     await runMigrations(ctx.pool);
+  });
+});
+
+describe('migrations: 0026_card_cover (044, D406)', () => {
+  const ctx = withTestDb({ template: false });
+
+  it('drops the cover column and check on rollback and restores them', async () => {
+    await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0026_card_cover');
+    const gone = await ctx.pool.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'items' AND column_name = 'cover'`,
+    );
+    expect(gone.rowCount).toBe(0);
+    await runMigrations(ctx.pool);
+    const back = await ctx.pool.query(
+      `SELECT 1 FROM pg_constraint WHERE conname = 'items_cover_chk'`,
+    );
+    expect(back.rowCount).toBe(1);
   });
 });

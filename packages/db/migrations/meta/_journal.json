@@ -183,6 +183,13 @@
       "when": 1794586123624,
       "tag": "0025_media_cards",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794837847734,
+      "tag": "0026_card_cover",
+      "breakpoints": true
     }
   ]
 }
