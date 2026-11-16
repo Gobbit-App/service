@@ -54,7 +54,7 @@ export const items = pgTable(
     embeddedAt: tstz(),
     /** D291: reminders only — deadline minus show-before; set by trigger `items_reminder_sync`. */
     revealAt: tstz(),
-    /** D-cover: optional cover image of a text/reminder/event/table/calc card (044); null = none. */
+    /** D406: optional cover image of a text/reminder/event/table/calc card (044); null = none. */
     cover: jsonb().$type<CardCover | null>(),
   },
   (t) => [

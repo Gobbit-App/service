@@ -149,3 +149,7 @@ MVP = Phases 1–4 (set a cover and see it in lists). US3 is a small follow-on t
 
 - Log decisions the plan didn't make, and deviations, in `implementation-notes.md`
 - Commit after each task or logical group (conventional commits)
+
+## Phase 9: Convergence
+
+- [X] T035 Carry a publisher-set cover through a proposal merge ("apply update", D106): `mergeProposalPatch` in `apps/api/src/review/review-helpers.ts` copies `proposal.cover` when it is set and `supportsCover(target.type)`, else leaves the target's cover; unit test in `review-helpers.test.ts` per spec Edge case "Proposals … can be given a cover image by a publisher while reviewing" / FR-002 (partial)

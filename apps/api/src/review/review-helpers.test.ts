@@ -116,6 +116,36 @@ describe('mergeProposalPatch', () => {
   });
 });
 
+describe('mergeProposalPatch cover (044)', () => {
+  const now = new Date('2026-01-01T00:00:00Z');
+  const base = { title: 't', body: 'b', payload: {}, entities: {}, sourceUrl: null };
+  const cover = { publicId: 'gobbit/items/d/x' };
+
+  it('copies a set cover onto a cover-capable target', () => {
+    const r = mergeProposalPatch(
+      { ...base, type: 'text', cover } as never,
+      { type: 'text' } as never,
+      now,
+    );
+    expect(r.cover).toEqual(cover);
+  });
+
+  it('leaves the target cover when the proposal has none or the target cannot have one', () => {
+    const none = mergeProposalPatch(
+      { ...base, type: 'text', cover: null } as never,
+      { type: 'text' } as never,
+      now,
+    );
+    expect('cover' in none).toBe(false);
+    const link = mergeProposalPatch(
+      { ...base, type: 'text', cover } as never,
+      { type: 'link' } as never,
+      now,
+    );
+    expect('cover' in link).toBe(false);
+  });
+});
+
 describe('bulkSkipReason (D191)', () => {
   const deckId = 'deck-1';
   const proposal = { deckId, status: 'proposed' as const, deletedAt: null };

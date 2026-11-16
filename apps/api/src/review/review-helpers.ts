@@ -1,4 +1,5 @@
 import type { IngestJobRow, ItemRow } from '@gobbit/db';
+import { supportsCover, type CardCover } from '@gobbit/shared/card-cover';
 import type { BulkPublishSkipReason, DedupVerdict, Entities } from '@gobbit/shared';
 
 /** Characters of shared text shown as the source line when no URL was shared. */
@@ -45,6 +46,7 @@ export interface MergePatch {
   status: 'published';
   verifiedAt: Date;
   payload?: Record<string, unknown>;
+  cover?: CardCover;
 }
 
 /**
@@ -53,7 +55,10 @@ export interface MergePatch {
  * target's.
  */
 export function mergeProposalPatch(
-  proposal: Pick<ItemRow, 'type' | 'title' | 'body' | 'payload' | 'entities' | 'sourceUrl'>,
+  proposal: Pick<
+    ItemRow,
+    'type' | 'title' | 'body' | 'payload' | 'entities' | 'sourceUrl' | 'cover'
+  >,
   target: Pick<ItemRow, 'type' | 'sourceUrl'>,
   now: Date,
 ): MergePatch {
@@ -65,5 +70,7 @@ export function mergeProposalPatch(
     status: 'published',
     verifiedAt: now,
     ...(proposal.type === target.type ? { payload: proposal.payload } : {}),
+    // 044: a publisher-set cover carries over; none on the proposal keeps the target's.
+    ...(proposal.cover && supportsCover(target.type) ? { cover: proposal.cover } : {}),
   };
 }
