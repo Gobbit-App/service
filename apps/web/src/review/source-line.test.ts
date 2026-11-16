@@ -30,7 +30,14 @@ describe('sourceLine (D107)', () => {
   it('formats sharer, channel label and relative time', () => {
     const job = makeJob({
       channel: 'shortcut',
-      sharedBy: { id: 'u', displayName: 'Dana' },
+      sharedBy: {
+        id: 'u',
+        displayName: 'Dana',
+        name: null,
+        username: null,
+        initials: 'D',
+        photo: null,
+      },
       createdAt: '2026-01-01T11:58:00.000Z',
     });
     expect(sourceLine(job, NOW)).toBe('shared by Dana via Shortcut · 2 minutes ago');
@@ -58,7 +65,14 @@ describe('sourceLine (D107)', () => {
     const job = makeJob({
       channel: 'mcp',
       clientLabel: 'Claude',
-      sharedBy: { id: 'u', displayName: 'Dana' },
+      sharedBy: {
+        id: 'u',
+        displayName: 'Dana',
+        name: null,
+        username: null,
+        initials: 'D',
+        photo: null,
+      },
     });
     expect(sourceLine(job, NOW)).toBe('shared by Dana via Claude (AI app) · 2 minutes ago');
     expect(sourceLine(makeJob({ channel: 'mcp' }), NOW)).toContain('via AI app');
@@ -68,7 +82,14 @@ describe('sourceLine (D107)', () => {
     const job = makeJob({
       channel: 'import',
       clientLabel: 'Street notes.md',
-      sharedBy: { id: 'u', displayName: 'Dana' },
+      sharedBy: {
+        id: 'u',
+        displayName: 'Dana',
+        name: null,
+        username: null,
+        initials: 'D',
+        photo: null,
+      },
     });
     expect(sourceLine(job, NOW)).toBe(
       'shared by Dana via Street notes.md (Imported) · 2 minutes ago',
@@ -78,7 +99,14 @@ describe('sourceLine (D107)', () => {
   it('omits the time part when createdAt is invalid', () => {
     const job = makeJob({
       channel: 'paste',
-      sharedBy: { id: 'u', displayName: 'Dana' },
+      sharedBy: {
+        id: 'u',
+        displayName: 'Dana',
+        name: null,
+        username: null,
+        initials: 'D',
+        photo: null,
+      },
       createdAt: 'nope',
     });
     const line = sourceLine(job, NOW);

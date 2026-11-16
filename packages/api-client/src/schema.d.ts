@@ -3385,6 +3385,18 @@ export interface paths {
                                 sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                 verifiedAt: string | null;
                                 createdBy: string | null;
+                                creator: {
+                                    /** Format: uuid */
+                                    id: string | null;
+                                    name: string | null;
+                                    username: string | null;
+                                    initials: string;
+                                    photo: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
+                                    } | null;
+                                } | null;
                                 createdAt: string;
                                 updatedAt: string;
                                 categoryIds: string[];
@@ -3966,6 +3978,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4206,6 +4230,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4487,6 +4523,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4725,6 +4773,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4923,6 +4983,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -5128,6 +5200,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -5370,6 +5454,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -5590,6 +5686,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -6243,6 +6351,18 @@ export interface paths {
                                     sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
+                                    creator: {
+                                        /** Format: uuid */
+                                        id: string | null;
+                                        name: string | null;
+                                        username: string | null;
+                                        initials: string;
+                                        photo: {
+                                            publicId: string;
+                                            width?: number;
+                                            height?: number;
+                                        } | null;
+                                    } | null;
                                     createdAt: string;
                                     updatedAt: string;
                                     categoryIds: string[];
@@ -8104,6 +8224,18 @@ export interface paths {
                                     sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
+                                    creator: {
+                                        /** Format: uuid */
+                                        id: string | null;
+                                        name: string | null;
+                                        username: string | null;
+                                        initials: string;
+                                        photo: {
+                                            publicId: string;
+                                            width?: number;
+                                            height?: number;
+                                        } | null;
+                                    } | null;
                                     createdAt: string;
                                     updatedAt: string;
                                     categoryIds: string[];
@@ -8158,6 +8290,14 @@ export interface paths {
                                     sharedBy: {
                                         /** Format: uuid */
                                         id: string;
+                                        name: string | null;
+                                        username: string | null;
+                                        initials: string;
+                                        photo: {
+                                            publicId: string;
+                                            width?: number;
+                                            height?: number;
+                                        } | null;
                                         displayName: string;
                                     } | null;
                                     clientLabel: string | null;
@@ -8206,6 +8346,18 @@ export interface paths {
                                     sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
+                                    creator: {
+                                        /** Format: uuid */
+                                        id: string | null;
+                                        name: string | null;
+                                        username: string | null;
+                                        initials: string;
+                                        photo: {
+                                            publicId: string;
+                                            width?: number;
+                                            height?: number;
+                                        } | null;
+                                    } | null;
                                     createdAt: string;
                                     updatedAt: string;
                                     categoryIds: string[];
@@ -8525,6 +8677,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];

@@ -18,6 +18,7 @@ import { Route as AdminWaitlistRouteImport } from './routes/admin.waitlist'
 import { Route as AuthErrorRouteImport } from './routes/auth.error'
 import { Route as DSlugRouteImport } from './routes/d.$slug'
 import { Route as IItemIdRouteImport } from './routes/i.$itemId'
+import { Route as SettingsProfileRouteImport } from './routes/settings_.profile'
 import { Route as DSlugIndexRouteImport } from './routes/d.$slug.index'
 import { Route as DSlugArchivedRouteImport } from './routes/d.$slug.archived'
 import { Route as DSlugBrowseRouteImport } from './routes/d.$slug.browse'
@@ -77,6 +78,11 @@ const DSlugRoute = DSlugRouteImport.update({
 const IItemIdRoute = IItemIdRouteImport.update({
   id: '/i/$itemId',
   path: '/i/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsProfileRoute = SettingsProfileRouteImport.update({
+  id: '/settings_/profile',
+  path: '/settings/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DSlugIndexRoute = DSlugIndexRouteImport.update({
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/auth/error': typeof AuthErrorRoute
   '/d/$slug': typeof DSlugRouteWithChildren
   '/i/$itemId': typeof IItemIdRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/admin/waitlist': typeof AdminWaitlistRoute
   '/auth/error': typeof AuthErrorRoute
   '/i/$itemId': typeof IItemIdRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/auth/error': typeof AuthErrorRoute
   '/d/$slug': typeof DSlugRouteWithChildren
   '/i/$itemId': typeof IItemIdRoute
+  '/settings_/profile': typeof SettingsProfileRoute
   '/d/$slug/archived': typeof DSlugArchivedRoute
   '/d/$slug/browse': typeof DSlugBrowseRoute
   '/d/$slug/favorites': typeof DSlugFavoritesRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/auth/error'
     | '/d/$slug'
     | '/i/$itemId'
+    | '/settings/profile'
     | '/d/$slug/archived'
     | '/d/$slug/browse'
     | '/d/$slug/favorites'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/admin/waitlist'
     | '/auth/error'
     | '/i/$itemId'
+    | '/settings/profile'
     | '/d/$slug/archived'
     | '/d/$slug/browse'
     | '/d/$slug/favorites'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/auth/error'
     | '/d/$slug'
     | '/i/$itemId'
+    | '/settings_/profile'
     | '/d/$slug/archived'
     | '/d/$slug/browse'
     | '/d/$slug/favorites'
@@ -323,6 +335,7 @@ export interface RootRouteChildren {
   AuthErrorRoute: typeof AuthErrorRoute
   DSlugRoute: typeof DSlugRouteWithChildren
   IItemIdRoute: typeof IItemIdRoute
+  SettingsProfileRoute: typeof SettingsProfileRoute
   IItemIdEditRoute: typeof IItemIdEditRoute
 }
 
@@ -389,6 +402,13 @@ declare module '@tanstack/react-router' {
       path: '/i/$itemId'
       fullPath: '/i/$itemId'
       preLoaderRoute: typeof IItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings_/profile': {
+      id: '/settings_/profile'
+      path: '/settings/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof SettingsProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/d/$slug/': {
@@ -545,6 +565,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthErrorRoute: AuthErrorRoute,
   DSlugRoute: DSlugRouteWithChildren,
   IItemIdRoute: IItemIdRoute,
+  SettingsProfileRoute: SettingsProfileRoute,
   IItemIdEditRoute: IItemIdEditRoute,
 }
 export const routeTree = rootRouteImport

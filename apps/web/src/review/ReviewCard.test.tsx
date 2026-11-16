@@ -30,7 +30,14 @@ function entry(
     job: {
       id: 'j1',
       channel: 'shortcut',
-      sharedBy: { id: 'u1', displayName: 'Dana' },
+      sharedBy: {
+        id: 'u1',
+        displayName: 'Dana',
+        name: null,
+        username: null,
+        initials: 'D',
+        photo: null,
+      },
       clientLabel: null,
       createdAt: '2026-01-01T11:58:00.000Z',
       dedup: null,
@@ -64,6 +71,22 @@ async function renderCard(value: ReviewEntry, { canCreateCategory = true, busy =
 }
 
 describe('ReviewCard', () => {
+  it("shows the sharer's avatar (D421)", async () => {
+    const value = entry();
+    value.item = {
+      ...value.item,
+      creator: {
+        id: 'u1',
+        name: null,
+        username: 'dana',
+        initials: 'D',
+        photo: null,
+      },
+    };
+    await renderCard(value);
+    expect(screen.getByRole('img', { name: 'Added by dana' })).toBeInTheDocument();
+  });
+
   it('shows the cover bar when the proposal has a cover, and none without (D411)', async () => {
     mockConfig.cloudinaryCloudName = 'demo';
     try {

@@ -121,3 +121,50 @@ describe('installTooltipPress (D212)', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('installTooltipPress tap mode (046, D428)', () => {
+  let avatar: HTMLElement;
+  let other: HTMLElement;
+  let uninstall: () => void;
+
+  beforeEach(() => {
+    document.body.innerHTML =
+      '<span data-tip="dana" data-tip-tap tabindex="0" id="a">DL</span><p id="o">x</p><button data-tip="Edit">e</button>';
+    avatar = document.getElementById('a')!;
+    other = document.getElementById('o')!;
+    uninstall = installTooltipPress(document);
+  });
+
+  afterEach(() => uninstall());
+
+  it('opens on a tap and closes on a second tap', () => {
+    avatar.click();
+    expect(avatar.hasAttribute('data-tip-open')).toBe(true);
+    avatar.click();
+    expect(avatar.hasAttribute('data-tip-open')).toBe(false);
+  });
+
+  it('closes on a click outside', () => {
+    avatar.click();
+    other.click();
+    expect(avatar.hasAttribute('data-tip-open')).toBe(false);
+  });
+
+  it('closes on Escape', () => {
+    avatar.click();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(avatar.hasAttribute('data-tip-open')).toBe(false);
+  });
+
+  it('closes when the pointer leaves', () => {
+    avatar.click();
+    avatar.dispatchEvent(new Event('pointerleave'));
+    expect(avatar.hasAttribute('data-tip-open')).toBe(false);
+  });
+
+  it('does not toggle controls without data-tip-tap', () => {
+    const button = document.querySelector('button')!;
+    button.click();
+    expect(button.hasAttribute('data-tip-open')).toBe(false);
+  });
+});

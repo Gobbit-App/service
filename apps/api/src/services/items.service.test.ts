@@ -77,6 +77,7 @@ describe('createItemsService', () => {
     decks = {
       findBySlug: vi.fn().mockResolvedValue(PB_ROW),
       findById: vi.fn().mockResolvedValue(PB_ROW),
+      kindsByIds: vi.fn().mockResolvedValue(new Map()),
     } as unknown as DecksRepo;
 
     categories = {
@@ -134,6 +135,10 @@ describe('createItemsService', () => {
       categories,
       items,
       favorites,
+      summaries: {
+        summaries: vi.fn().mockResolvedValue(new Map()),
+        cardCreator: vi.fn().mockReturnValue(null),
+      },
       memberships,
       embedQueue,
       mediaReference: async (_deckId, _type, payload) => payload,

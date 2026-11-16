@@ -3,6 +3,7 @@ import type { Category, Deck, ItemPatch, PublishRequest, ReviewEntry } from '@go
 import { problemMessages } from '../api/problem-messages';
 import { editHref } from '../cards/can-edit-item';
 import { CardBar } from '../cards/CardBar';
+import { CreatorAvatar } from '../cards/CreatorAvatar';
 import { CardBody } from '../cards/CardBody';
 import { CoverBar } from '../cards/CoverBar';
 import { itemCategories } from '../cards/Card';
@@ -119,6 +120,11 @@ export function ReviewCard({
                 </li>
               ))}
             </ul>
+          )}
+          {item.creator && (
+            <footer className="card__meta">
+              <CreatorAvatar creator={item.creator} />
+            </footer>
           )}
         </>
       )}

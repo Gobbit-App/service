@@ -10,6 +10,18 @@ The local implementation environment has no Docker or Postgres, so integration t
 runs them on the PR; every task marked done with an `[int]` tag or a migration is unverified until CI is green.
 Unit tests, `pnpm typecheck`, ESLint and Prettier ran locally.
 
+## Screenshots (constitution X) — blocked locally
+
+The authoring environment cannot run the app (no Postgres/Docker), so the phone and desktop, light and dark
+screenshot tasks (T036, T049, T060, T066) are **not done**: `.tsx`/`.css` tasks that depend on them are only
+statically checked (typecheck, ESLint, unit tests, `ui-system.test.ts`). They must be taken on a machine
+with the stack running (`pnpm compose:up`) before merge; the palette (T020) and the `.avatar` clipping
+(photo clipped to a circle, tooltip as `::after`) especially need an eye.
+
+**Check first in the screenshots**: `.card__meta` is now `flex-wrap: nowrap` (chips shrink first; the age label and
+avatar stay fixed) so the avatar never drops onto the action bar. This touches the footer of every card, not only
+shared-deck cards: compare a card with many chips at 412 px against `main`.
+
 ## Decisions
 
 - **Hold trigger error**: the trigger raises `P0001` with the message `username_held`, matching the other

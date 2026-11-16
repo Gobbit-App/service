@@ -6,6 +6,7 @@ import { NavLink } from '../ui/NavLink';
 import { CardBar, ReaderActions } from './CardBar';
 import { CoverBar } from './CoverBar';
 import { CardBody } from './CardBody';
+import { CreatorAvatar } from './CreatorAvatar';
 import { CardSourceLink } from './CardSourceLink';
 import type { ImageLoading } from './ImageCard';
 import { Highlighted } from '../search/Highlighted';
@@ -82,7 +83,7 @@ export function Card({
       <CoverBar cover={item.cover} cloudName={cloudName} loading={coverLoading} />
       <CardBody item={item} cloudName={cloudName} image={image} />
       {source && <CardSourceLink item={item} />}
-      {meta && (chips.length > 0 || age) && (
+      {meta && (chips.length > 0 || age || item.creator) && (
         <footer className="card__meta">
           {chips.length > 0 && (
             <ul className="card__chips" aria-label="Categories">
@@ -111,6 +112,7 @@ export function Card({
               {age.label}
             </time>
           )}
+          <CreatorAvatar creator={item.creator} />
         </footer>
       )}
       {!preview &&

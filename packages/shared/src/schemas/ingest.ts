@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { httpUrlSchema, isoDateTimeSchema, uuidSchema } from './common';
 import { itemSchema } from './item';
+import { memberSummarySchema } from './profile';
 import { linkPreviewSchema } from './media';
 import { LINK_IMAGE_CANDIDATES_MAX } from '../links/constants';
 import { isTimeZone } from '../reminders/schema';
@@ -216,7 +217,7 @@ export const reviewEntrySchema = z.object({
     .object({
       id: uuidSchema,
       channel: z.enum(ingestChannels),
-      sharedBy: z.object({ id: uuidSchema, displayName: z.string() }).nullable(),
+      sharedBy: memberSummarySchema.extend({ displayName: z.string() }).nullable(),
       /** The AI app that made a direct proposal (`mcp` channel), e.g. "Claude". */
       clientLabel: z.string().nullable(),
       createdAt: isoDateTimeSchema,

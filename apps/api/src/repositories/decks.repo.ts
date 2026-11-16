@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull, ne } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, ne } from 'drizzle-orm';
 import type { DeckKind, MemberRole } from '@gobbit/shared';
 import { decks, memberships, type DeckRow, type DbExecutor } from '@gobbit/db';
 
@@ -58,6 +58,16 @@ export function createDecksRepo(db: DbExecutor) {
           a.deck.createdAt.getTime() - b.deck.createdAt.getTime() ||
           a.deck.id.localeCompare(b.deck.id),
       );
+    },
+
+    /** One query: kind of each deck id (item DTO creators, D421). */
+    async kindsByIds(ids: string[]): Promise<Map<string, DeckKind>> {
+      if (ids.length === 0) return new Map();
+      const rows = await db
+        .select({ id: decks.id, kind: decks.kind })
+        .from(decks)
+        .where(inArray(decks.id, ids));
+      return new Map(rows.map((r) => [r.id, r.kind]));
     },
 
     async findById(id: string): Promise<DeckRow | null> {

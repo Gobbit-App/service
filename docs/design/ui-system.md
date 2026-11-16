@@ -65,6 +65,14 @@ These are the only ways to render:
 
 A new primitive belongs in `ui/` and needs an entry in this page.
 
+### Avatar (`ui/Avatar`, D422, D428)
+
+A member's round picture: a photo (through `CloudImage`, `alt=""`), else initials on the member's palette colour (`--avatar-N-bg/fg`, from `avatarColorIndex(id)`; a null id is neutral), else the `user` glyph. Used in the card footer (24 px) and for the profile and members (40 px).
+
+- **Props**: `member` (`id`, `initials`, optional `name`, `username`, `photo`), `size` (`sm` 24 px, default, or `md` 40 px), `label` (tooltip text, default `avatarLabel(member)`), `ariaLabel` (default "Added by <label>").
+- **Label**: username, else profile name, else "Member" (`avatarLabel`); never the email-derived name, never an email.
+- **Rules**: a `span` with `role="img"` and `tabIndex={0}`, never a link or button (no action, so no `--tap` target). The box is fixed, so a loading photo moves nothing; a photo that fails falls back to initials. No `title`: the label is `data-tip` with `data-tip-tap`, which `installTooltipPress` opens on hover, keyboard focus and tap, and closes on a second tap, an outside click, Escape or pointer leave.
+
 ## 5. Copy
 
 - **Visible labels are short.** One or two words: a verb, plus a noun only when the context doesn't already name it ("Add cover", "Replace", "Remove"). Put the full context in the accessible name (`aria-label`, or `PickButton`'s `ariaLabel`). Tests find controls by the accessible name.

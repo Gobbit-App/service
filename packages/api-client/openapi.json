@@ -9933,6 +9933,63 @@
                               "null"
                             ]
                           },
+                          "creator": {
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "username": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "initials": {
+                                "type": "string"
+                              },
+                              "photo": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "publicId": {
+                                    "type": "string"
+                                  },
+                                  "width": {
+                                    "type": "integer"
+                                  },
+                                  "height": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "publicId"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "username",
+                              "initials",
+                              "photo"
+                            ]
+                          },
                           "createdAt": {
                             "type": "string"
                           },
@@ -10142,6 +10199,7 @@
                           "sourceKind",
                           "verifiedAt",
                           "createdBy",
+                          "creator",
                           "createdAt",
                           "updatedAt",
                           "categoryIds",
@@ -12454,6 +12512,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -12663,6 +12778,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
@@ -13320,6 +13436,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -13529,6 +13702,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
@@ -14093,6 +14267,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -14302,6 +14533,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
@@ -15225,6 +15457,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -15434,6 +15723,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
@@ -15933,6 +16223,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -16142,6 +16489,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
@@ -16663,6 +17011,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -16872,6 +17277,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
@@ -17529,6 +17935,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -17738,6 +18201,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
@@ -18316,6 +18780,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -18525,6 +19046,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",
@@ -20311,6 +20833,63 @@
                                   "null"
                                 ]
                               },
+                              "creator": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "format": "uuid"
+                                  },
+                                  "name": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "username": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "initials": {
+                                    "type": "string"
+                                  },
+                                  "photo": {
+                                    "type": [
+                                      "object",
+                                      "null"
+                                    ],
+                                    "properties": {
+                                      "publicId": {
+                                        "type": "string"
+                                      },
+                                      "width": {
+                                        "type": "integer"
+                                      },
+                                      "height": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "required": [
+                                      "publicId"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "username",
+                                  "initials",
+                                  "photo"
+                                ]
+                              },
                               "createdAt": {
                                 "type": "string"
                               },
@@ -20520,6 +21099,7 @@
                               "sourceKind",
                               "verifiedAt",
                               "createdBy",
+                              "creator",
                               "createdAt",
                               "updatedAt",
                               "categoryIds",
@@ -26278,6 +26858,63 @@
                                   "null"
                                 ]
                               },
+                              "creator": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "format": "uuid"
+                                  },
+                                  "name": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "username": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "initials": {
+                                    "type": "string"
+                                  },
+                                  "photo": {
+                                    "type": [
+                                      "object",
+                                      "null"
+                                    ],
+                                    "properties": {
+                                      "publicId": {
+                                        "type": "string"
+                                      },
+                                      "width": {
+                                        "type": "integer"
+                                      },
+                                      "height": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "required": [
+                                      "publicId"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "username",
+                                  "initials",
+                                  "photo"
+                                ]
+                              },
                               "createdAt": {
                                 "type": "string"
                               },
@@ -26487,6 +27124,7 @@
                               "sourceKind",
                               "verifiedAt",
                               "createdBy",
+                              "creator",
                               "createdAt",
                               "updatedAt",
                               "categoryIds",
@@ -26526,12 +27164,51 @@
                                     "type": "string",
                                     "format": "uuid"
                                   },
+                                  "name": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "username": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "initials": {
+                                    "type": "string"
+                                  },
+                                  "photo": {
+                                    "type": [
+                                      "object",
+                                      "null"
+                                    ],
+                                    "properties": {
+                                      "publicId": {
+                                        "type": "string"
+                                      },
+                                      "width": {
+                                        "type": "integer"
+                                      },
+                                      "height": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "required": [
+                                      "publicId"
+                                    ]
+                                  },
                                   "displayName": {
                                     "type": "string"
                                   }
                                 },
                                 "required": [
                                   "id",
+                                  "name",
+                                  "username",
+                                  "initials",
+                                  "photo",
                                   "displayName"
                                 ]
                               },
@@ -26785,6 +27462,63 @@
                                   "null"
                                 ]
                               },
+                              "creator": {
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "format": "uuid"
+                                  },
+                                  "name": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "username": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "initials": {
+                                    "type": "string"
+                                  },
+                                  "photo": {
+                                    "type": [
+                                      "object",
+                                      "null"
+                                    ],
+                                    "properties": {
+                                      "publicId": {
+                                        "type": "string"
+                                      },
+                                      "width": {
+                                        "type": "integer"
+                                      },
+                                      "height": {
+                                        "type": "integer"
+                                      }
+                                    },
+                                    "required": [
+                                      "publicId"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "username",
+                                  "initials",
+                                  "photo"
+                                ]
+                              },
                               "createdAt": {
                                 "type": "string"
                               },
@@ -26994,6 +27728,7 @@
                               "sourceKind",
                               "verifiedAt",
                               "createdBy",
+                              "creator",
                               "createdAt",
                               "updatedAt",
                               "categoryIds",
@@ -27819,6 +28554,63 @@
                         "null"
                       ]
                     },
+                    "creator": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "username": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "initials": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "publicId": {
+                              "type": "string"
+                            },
+                            "width": {
+                              "type": "integer"
+                            },
+                            "height": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "username",
+                        "initials",
+                        "photo"
+                      ]
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -28028,6 +28820,7 @@
                     "sourceKind",
                     "verifiedAt",
                     "createdBy",
+                    "creator",
                     "createdAt",
                     "updatedAt",
                     "categoryIds",

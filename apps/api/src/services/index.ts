@@ -186,10 +186,13 @@ export function buildServices({
     }),
     now,
   });
+  const memberSummaries = createMemberSummaries({ users });
   const toDtos = createItemDtoMapper({
     items,
     favorites,
     linkChecks,
+    decks,
+    summaries: memberSummaries,
     reminderStates: reminders.states,
     eventStates: eventCards.states,
   });
@@ -210,6 +213,7 @@ export function buildServices({
     memberships,
     items,
     users,
+    summaries: memberSummaries,
     toDtos,
     embedQueue: resolveEmbedQueue(search),
     linkSnapshotQueue: resolveLinkSnapshotQueue(media),
@@ -256,7 +260,7 @@ export function buildServices({
       decisions: createProfileDecisions(logger),
       lookupRatePerHour: env.PROFILE_LOOKUP_RATE_PER_HOUR,
       rateLimits,
-      summaries: createMemberSummaries({ users }),
+      summaries: memberSummaries,
       findByUsername: (lower) => users.findByUsername(lower),
       findByEmail: (email) => users.findByEmail(email),
       activeHold: (lower, at) => createProfileRepo(db).activeHold(lower, at),
@@ -330,7 +334,7 @@ export function buildServices({
       magicLinks,
       users,
       usersService,
-      summaries: createMemberSummaries({ users }),
+      summaries: memberSummaries,
       logHash,
       decisions: createProfileDecisions(logger),
     }),
@@ -358,6 +362,7 @@ export function buildServices({
       categories,
       items,
       favorites,
+      summaries: memberSummaries,
       memberships,
       embedQueue: resolveEmbedQueue(search),
       mediaReference,

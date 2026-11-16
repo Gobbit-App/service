@@ -17,6 +17,7 @@ export const SCREENS: Record<RouteId, Screen | null> = {
   __root__: null,
   '/': { pattern: '/', name: 'Home' },
   '/settings': { pattern: '/settings', name: 'Settings' },
+  '/settings_/profile': { pattern: '/settings/profile', name: 'Profile' },
   '/notifications': { pattern: '/notifications', name: 'Notifications' },
   '/share': { pattern: '/share', name: 'Share' },
   '/sign-in': null,

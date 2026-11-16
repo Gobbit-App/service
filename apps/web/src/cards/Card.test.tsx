@@ -45,6 +45,39 @@ describe('Card', () => {
     expect(navigate).toHaveBeenCalledWith('/i/i1');
   });
 
+  it('shows the creator avatar in the footer, not the action bar; none for personal decks (D421)', () => {
+    unwrap.mockReturnValue(new Promise(() => undefined));
+    const creator = {
+      id: '00000000-0000-4000-8000-0000000000a1',
+      name: null,
+      username: 'dana',
+      initials: 'D',
+      photo: null,
+    };
+    const shared = renderWithClient(
+      <Card
+        item={makeItem({ title: 'Shared', creator })}
+        deckSlug="family"
+        categories={[]}
+        now={now}
+      />,
+    );
+    const avatar = screen.getByRole('img', { name: 'Added by dana' });
+    expect(avatar.closest('footer.card__meta')).not.toBeNull();
+    expect(avatar.closest('.card__bar')).toBeNull();
+    shared.unmount();
+
+    const { container } = renderWithClient(
+      <Card
+        item={makeItem({ title: 'Mine', creator: null })}
+        deckSlug="family"
+        categories={[]}
+        now={now}
+      />,
+    );
+    expect(container.querySelector('.avatar')).toBeNull();
+  });
+
   it('hides the chips and age row when meta is off (D327)', () => {
     unwrap.mockReturnValue(new Promise(() => undefined));
     const item = makeItem({ title: 'Bus times', categoryIds: ['c-school'] });

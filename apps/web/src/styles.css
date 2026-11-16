@@ -558,6 +558,57 @@ h2 {
   color: var(--color-accent);
 }
 
+/* 046 (D428): the member avatar, a fixed round box so nothing shifts. The box itself never clips
+   (its data-tip label sits outside it); the photo wrapper does. */
+.avatar {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.avatar--sm {
+  width: 24px;
+  height: 24px;
+  font-size: var(--text-xs);
+}
+
+.avatar--md {
+  width: 40px;
+  height: 40px;
+  font-size: var(--text-md);
+}
+
+.avatar__initials {
+  user-select: none;
+}
+
+.avatar__glyph {
+  width: 60%;
+  height: 60%;
+}
+
+.avatar__photo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.avatar__photo .cloud-image__img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 /* D212: tooltips from data-tip on hover (pointer devices), keyboard focus and long-press. */
 [data-tip] {
   position: relative;
@@ -1010,12 +1061,27 @@ h2 {
 
 .card__meta {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
   margin-top: var(--gap);
   color: var(--color-muted);
   font-size: 0.8125rem;
+}
+
+/* D428: the fixed avatar ends the row; chips wrap inside their own box first. */
+.card__meta .avatar {
+  flex: none;
+  margin-inline-start: auto;
+}
+
+.card__meta .card__age {
+  flex: none;
+}
+
+.card__meta .card__chips {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .card__chips {
@@ -2768,4 +2834,21 @@ h2 {
 
 .waitlist-row > .form-error {
   flex-basis: 100%;
+}
+
+/* 046: Settings -> Profile */
+.profile-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.profile-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.profile-preview .muted {
+  margin: 0;
 }
