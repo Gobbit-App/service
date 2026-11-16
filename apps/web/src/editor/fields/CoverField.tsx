@@ -66,7 +66,7 @@ export function CoverField({
   const { state } = upload;
   return (
     <div
-      className="cover-field"
+      className="field-group cover-field"
       ref={(el) => {
         rootRef.current = el;
         setRoot(el);

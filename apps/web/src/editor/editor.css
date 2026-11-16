@@ -145,13 +145,7 @@
   border-radius: var(--radius);
 }
 
-/* 044 (D412): the cover preview, sized like the image card's photo, with its actions in one row under it. */
-.cover-field {
-  display: grid;
-  justify-items: start;
-  gap: var(--gap);
-}
-
+/* 044 (D412): a .field-group (D323); the preview is sized like the image card's photo. */
 .cover-field .card__cover {
   width: 100%;
   max-width: 360px;
