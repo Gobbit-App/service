@@ -28,6 +28,7 @@ describe('createMembershipsService', () => {
   let users: any;
   let usersService: any;
   let mailer: any;
+  let decisions: any;
   let service: ReturnType<typeof createMembershipsService>;
 
   beforeEach(() => {
@@ -45,6 +46,7 @@ describe('createMembershipsService', () => {
       register: vi.fn().mockResolvedValue({ user: invitee, created: true }),
     };
     mailer = { send: vi.fn().mockResolvedValue(undefined) };
+    decisions = { record: vi.fn() };
 
     service = createMembershipsService({
       env: { API_URL: 'https://api.test', INVITE_TTL_DAYS: 7 },
@@ -55,6 +57,23 @@ describe('createMembershipsService', () => {
       magicLinks,
       users,
       usersService,
+      summaries: {
+        summaries: async (ids: string[]) =>
+          new Map(
+            ids.map((id) => [
+              id,
+              {
+                id,
+                name: null,
+                username: id === 'inv' ? 'newbie' : null,
+                initials: id === 'inv' ? 'N' : 'O',
+                photo: null,
+              },
+            ]),
+          ),
+      },
+      logHash: (k: string, v: string) => `${k}:${v}`,
+      decisions,
     });
   });
 
@@ -73,6 +92,22 @@ describe('createMembershipsService', () => {
       ]);
       expect(result[0]).toMatchObject({ invitedAt: null, acceptedAt: null });
       expect(result[1].invitedAt).toBe(NOW.toISOString());
+      expect(result[0]).toMatchObject({ username: null, initials: 'O', photo: null });
+      expect(result[1]).toMatchObject({ username: 'newbie', initials: 'N', photo: null });
+    });
+
+    it('masks the email of a username holder except to themselves; others unchanged', async () => {
+      users.listByAccount.mockResolvedValue([caller]);
+      memberships.listByDeck.mockResolvedValue([
+        { membership: membershipRow({ role: 'editor' }), user: invitee },
+      ]);
+
+      const other = await service.list(caller, UUID);
+      expect(other.map((m) => m.email)).toEqual(['o@x.co', null]);
+
+      // same id as the listed member (account owner passes authorize): sees their own address
+      const self = await service.list({ ...caller, id: 'inv' }, UUID);
+      expect(self[1].email).toBe('new@x.co');
     });
   });
 
@@ -130,6 +165,56 @@ describe('createMembershipsService', () => {
       });
       const err = await service.invite(caller, UUID, input, CTX).catch((e) => e);
       expect(err.status).toBe(400);
+    });
+
+    it('invites by username: mail goes to the member, the DTO carries no new email field', async () => {
+      users.findByUsername = vi.fn().mockResolvedValue({ ...invitee, username: 'newbie' });
+      memberships.create.mockResolvedValue(membershipRow({ role: 'editor' }));
+
+      const result = await service.invite(
+        caller,
+        UUID,
+        { username: 'NewBie', role: 'editor' },
+        CTX,
+      );
+
+      expect(users.findByUsername).toHaveBeenCalledWith('newbie');
+      expect(usersService.register).toHaveBeenCalledWith('new@x.co', 'deck_invite', {
+        requestId: 'req-1',
+        actorId: 'caller',
+      });
+      expect(mailer.send.mock.calls[0][0].to).toBe('new@x.co');
+      expect(result.membership.email).toBeNull();
+      expect(Object.keys(result.membership).sort()).toEqual(
+        [
+          'acceptedAt',
+          'deckId',
+          'displayName',
+          'email',
+          'id',
+          'invitedAt',
+          'role',
+          'userId',
+        ].sort(),
+      );
+      expect(result.created).toBe(true);
+    });
+
+    it('404s an unknown username and records the miss with a hash only', async () => {
+      users.findByUsername = vi.fn().mockResolvedValue(null);
+      const err = await service
+        .invite(caller, UUID, { username: 'ghost', role: 'reader' }, CTX)
+        .catch((e) => e);
+      expect(err).toMatchObject({ status: 404, detail: 'Member not found' });
+      expect(decisions.record).toHaveBeenCalledWith('profile.lookup', {
+        outcome: 'not_found',
+        kind: 'username',
+        queryHash: 'username:ghost',
+        requestId: 'req-1',
+        userId: 'caller',
+      });
+      expect(usersService.register).not.toHaveBeenCalled();
+      expect(mailer.send).not.toHaveBeenCalled();
     });
 
     it('409s for an accepted member', async () => {

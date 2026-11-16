@@ -67,6 +67,10 @@ import {
 import { buildIngestServices, type IngestWiring } from './ingest-wiring';
 import { createImportsService } from './imports.service';
 import { createWaitlistService } from './waitlist.service';
+import { createMemberSummaries } from './member-summaries';
+import { createProfileService } from './profile.service';
+import { createProfileDecisions } from './profile.events';
+import { createProfileRepo } from '../repositories/profile.repo';
 import { buildAdminServices, type RegistrationDeps } from './admin-wiring';
 import {
   buildMediaServices,
@@ -245,6 +249,31 @@ export function buildServices({
 
   return {
     users: usersService,
+    profile: createProfileService({
+      usernameHoldDays: env.USERNAME_HOLD_DAYS,
+      now,
+      logHash,
+      decisions: createProfileDecisions(logger),
+      lookupRatePerHour: env.PROFILE_LOOKUP_RATE_PER_HOUR,
+      rateLimits,
+      summaries: createMemberSummaries({ users }),
+      findByUsername: (lower) => users.findByUsername(lower),
+      findByEmail: (email) => users.findByEmail(email),
+      activeHold: (lower, at) => createProfileRepo(db).activeHold(lower, at),
+      sharesDeckWith: (a, b) => createProfileRepo(db).sharesDeckWith(a, b),
+      profileById: (id) => users.profileById(id),
+      transaction: (fn) =>
+        db.transaction((tx) => {
+          const txUsers = createUsersRepo(tx);
+          return fn({
+            users: {
+              profileById: (id) => txUsers.profileById(id),
+              updateProfile: (id, patch) => txUsers.updateProfile(tx, id, patch),
+            },
+            profile: createProfileRepo(tx),
+          });
+        }),
+    }),
     analyticsConsent: createAnalyticsConsentService({
       users,
       now,
@@ -301,6 +330,9 @@ export function buildServices({
       magicLinks,
       users,
       usersService,
+      summaries: createMemberSummaries({ users }),
+      logHash,
+      decisions: createProfileDecisions(logger),
     }),
     decks: createDecksService({
       decks,

@@ -19,6 +19,9 @@ export type ProfileDecisions = {
   'profile.lookup': {
     outcome: 'found' | 'not_found' | 'refused';
     reason?: 'rate_limited';
+    kind?: 'username' | 'email';
+    queryHash?: string;
+    targetId?: string;
   };
 };
 

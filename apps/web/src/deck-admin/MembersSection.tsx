@@ -82,7 +82,9 @@ function MemberRow({
           {member.displayName}
           {isMe && ' (you)'}
         </strong>
-        <span className="muted">{member.email}</span>
+        <span className="muted">
+          {member.email ?? (member.username ? `@${member.username}` : null)}
+        </span>
       </div>
       {controls && !pending ? (
         <select

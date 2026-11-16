@@ -29,4 +29,12 @@ Unit tests, `pnpm typecheck`, ESLint and Prettier ran locally.
 
 ## Deviations
 
-None yet.
+- **Invite decision (Accountability row "Invite by username")**: the plan said invite events gain `via: 'username'`,
+  but the codebase records no invite decision event or audit row today (`usersService.register` logs only the
+  registration), so there was nothing to extend. Only the unknown-username miss is recorded (`profile.lookup`
+  `not_found`). Constitution VIII says inviting is a decision that needs a record; that gap pre-dates this
+  feature and is left for the accountability retrofit tracked in `PLAN.md`.
+
+## Deviations: email masking (spec Story 5.3 / 7.6, FR-010, FR-022)
+
+Invite-by-username (D425) would let an owner turn a username into an address, and `GET /decks/{id}/members` already returned every member's `email`. Decision: `email` is nullable in `membershipSchema` and `memberSchema`. A `{username}` invite answers `membership.email = null` (the email path is unchanged: the owner typed it). In `GET /decks/{id}/members` and the role-change response, `email` is `null` for any member whose profile has a `username`, except to that member themselves; members without a username keep today's behaviour. The web members list shows `@username` when the email is null.

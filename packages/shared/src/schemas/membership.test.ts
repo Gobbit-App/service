@@ -26,4 +26,18 @@ describe('inviteCreateSchema', () => {
   it('rejects unknown keys', () => {
     expect(inviteCreateSchema.safeParse({ email: 'a@b.co', extra: 1 }).success).toBe(false);
   });
+
+  it('accepts a username instead of an email', () => {
+    expect(inviteCreateSchema.parse({ username: 'ana' })).toEqual({
+      username: 'ana',
+      role: 'reader',
+    });
+  });
+
+  it('needs exactly one of email or username', () => {
+    expect(inviteCreateSchema.safeParse({ email: 'a@b.co', username: 'ana' }).success).toBe(false);
+    expect(inviteCreateSchema.safeParse({ role: 'reader' }).success).toBe(false);
+    expect(inviteCreateSchema.safeParse({ username: '' }).success).toBe(false);
+    expect(inviteCreateSchema.safeParse({ username: 'x'.repeat(31) }).success).toBe(false);
+  });
 });

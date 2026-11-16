@@ -35,6 +35,14 @@ function setup({
   queryClient.setQueryData(queryKeys.config, config(analytics));
   queryClient.setQueryData<Me>(queryKeys.me, {
     user: { id: 'u1', email: 'a@b.c', displayName: 'A' },
+    profile: {
+      username: null,
+      firstName: null,
+      lastName: null,
+      location: null,
+      avatar: null,
+      initials: 'A',
+    },
     decks: [],
     isPlatformAdmin: false,
     analyticsConsent: consent,
