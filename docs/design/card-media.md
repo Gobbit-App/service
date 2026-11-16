@@ -91,3 +91,21 @@ Every stored image renders through `cards/CloudImage.tsx` (image cards today, li
 
 - **Alt is optional** (`imagePayloadSchema.alt: z.string().optional()`, D206). Renderers use `imageAlt` from `@gobbit/shared/image-alt`: a non-blank alt wins, otherwise `alt=""` when the title is the heading right above the image (every current renderer, including the public page), otherwise the title. Agent-extracted image cards keep their generated alt.
 - **A non-string `alt` is refused with 400** (request validation), not 422.
+
+## Card cover image (044, `specs/044-card-avatar`, D406–D415, ADR-078)
+
+Text, reminder, event, table and calc cards take an optional cover image (`link` and `media` cards refuse it). It is the nullable `items.cover` column `{ publicId, width?, height? }`, not a payload key (D406; migration `0026_card_cover`, see [data-model.md](data-model.md)); `supportsCover` lists the types (D407).
+
+- **Reference (D408)**: `createCoverReference` (`services/media-reference.ts`, beside the D160 media check) accepts only an image asset recorded for the card's own deck and not rejected; dimensions come from the asset. Refusals are 422 with a `coverReason` (`other_deck`, `unknown_image`, `unsupported_type`).
+- **Sweep (D409)**: the `media-sweep` predicate in `assets.repo.ts` also counts `items.cover->>'publicId'` as a reference (served by `items_cover_public_id_idx`), so a covered image is never deleted; a replaced or removed cover becomes unreferenced and is swept after 7 days.
+- **Rendering (D411)**: `CoverBar` (`apps/web/src/cards/CoverBar.tsx`) shows the cover through `CloudImage`, shaped like a link preview, in lists, review and Browse. On an event card with a link it supersedes the automatic link image, so a card shows one image.
+- **Never public (D414)**: ingestion proposals, imports, public DTOs and public search carry `cover = null`.
+- **Decision event**: `item.cover` (`services/media.events.ts`, outcome `refused` only, with a `reason`). `lib/decision-event.ts` resolves levels by `event:outcome:reason` first, so `item.cover:refused:other_deck` logs at `warn` and the other reasons at `info`.
+- **Runbook thresholds**: investigate `item.cover` `refused:other_deck` above 5 per hour (a client sending another deck's asset) and `refused:unsupported_type` above 20 per hour (a client offering a cover on link/media cards).
+
+### Deviations from the 044 plan
+
+- **No `image-reference.ts`**: 045 moved the D160 check to `media-reference.ts`; `createCoverReference` sits beside it and classifies its own refusals (it needs the asset row anyway) instead of reusing the check's `recorded()` closure.
+- **`item.cover` lives in `media.events.ts`** (constitution IX), not a new events file; `decision-event` gained the `event:outcome:reason` level key (one line plus a unit test).
+- **No PATCH type change**: a card's type never changes (D12), so "type change with a cover" cannot arise on PATCH; the switch-type warning (D412) applies to the new-card composer only.
+- **Covers sign as `image`** through `use-image-upload.ts`; `use-drop-image.ts` is new (no drop helper existed).

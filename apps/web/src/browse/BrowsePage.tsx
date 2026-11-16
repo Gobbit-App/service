@@ -54,6 +54,7 @@ export function BrowsePage({
           deckSlug={deckSlug}
           categories={categories}
           image={{ priority: current }}
+          coverLoading={current ? 'eager' : 'lazy'}
           actions={false}
           meta={false}
         />

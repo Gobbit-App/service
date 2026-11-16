@@ -26,6 +26,16 @@ function renderControl({
   };
 }
 
+describe('TypeControl cover (044, D412)', () => {
+  it('says the cover image goes when switching to a type without covers', () => {
+    const onChange = vi.fn();
+    render(<TypeControl value="text" hasContent hasCover imagesOff={false} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Card type: Text' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Link' }));
+    expect(screen.getByText(/cover image/)).toBeInTheDocument();
+  });
+});
+
 describe('TypeControl (D303)', () => {
   it('opens the tiles in a sheet with the current type checked', async () => {
     const { control } = renderControl();

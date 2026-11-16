@@ -8,6 +8,7 @@ import {
   type MediaPayload,
   type TablePayload,
 } from '../cards/payload-guards';
+import { supportsCover, type CardCover } from '@gobbit/shared/card-cover';
 import { normalizeUrlInput } from '../lib/url-input';
 import { jsonEqual, sameIds } from './equal';
 import { blankCalc, blankTable, sampleCalc, sampleTable } from './sample-payloads';
@@ -67,6 +68,8 @@ export type Draft = {
   sourceUrl: string;
   /** Remove-only (FR-012). */
   entities: Entities | null;
+  /** 044: undefined (a pre-044 draft) = unchanged, null = none/removed. Never on link or media. */
+  cover?: CardCover | null;
 };
 
 export { CREATABLE_TYPES, isCreatableType, type CreatableType } from './creatable-types';
@@ -118,7 +121,11 @@ export function emptyDraft(type: ItemType, defaultCategoryId: string | null): Dr
 
 /** Switches a new card's type: the payload resets to the type's start, title/body/categories stay. */
 export function withType(draft: Draft, type: ItemType): Draft {
-  return draft.type === type ? draft : { ...draft, type, payload: newPayload(type) };
+  if (draft.type === type) return draft;
+  const next = { ...draft, type, payload: newPayload(type) };
+  // D412: a type without covers drops the image.
+  if (!supportsCover(type)) next.cover = null;
+  return next;
 }
 
 function calcFieldToDraft(field: {
@@ -196,6 +203,7 @@ export function draftFromItem(item: Item): Draft {
     categoryIds: [...item.categoryIds],
     sourceUrl: item.sourceUrl ?? '',
     entities: item.entities ? structuredClone(item.entities) : null,
+    ...(item.cover ? { cover: { ...item.cover } } : {}),
   };
 }
 
@@ -285,6 +293,7 @@ export function toCreateBody(draft: Draft): ItemCreateInput {
   };
   const sourceUrl = normalizeUrlInput(draft.sourceUrl);
   if (sourceUrl !== '') body['sourceUrl'] = sourceUrl;
+  if (draft.cover) body['cover'] = { publicId: draft.cover.publicId };
   return body as ItemCreateInput;
 }
 
@@ -314,6 +323,14 @@ export function toPatch(original: Item, draft: Draft): ItemPatch | null {
 
   const entities = compactDraftEntities(draft.entities);
   if (!jsonEqual(entities, compactDraftEntities(base.entities))) patch.entities = entities;
+
+  // Undefined (a pre-044 draft) is unchanged; dimensions are server-owned, so compare publicId.
+  if (
+    draft.cover !== undefined &&
+    (draft.cover?.publicId ?? null) !== (original.cover?.publicId ?? null)
+  ) {
+    patch.cover = draft.cover ? { publicId: draft.cover.publicId } : null;
+  }
 
   return Object.keys(patch).length > 0 ? patch : null;
 }

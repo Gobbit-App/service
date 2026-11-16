@@ -1,13 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { categories, decks, ogImages } from '@gobbit/db';
+import { categories, decks, items, ogImages } from '@gobbit/db';
 import { MemoryOgStore } from '../src/share/og-store';
 import { FAMILY_ID, fixtureId, setupApiTest } from './helpers';
 
 const APP_URL = 'http://app.test';
 const PUBLIC_ITEM = fixtureId('family/food/recipe-scaling');
 const PUBLIC_TITLE = 'Recipe Scaling Calculator';
+const COVER_ITEM = fixtureId('family/food/smoothie-bowl');
+const COVER_ID = 'gobbit/items/deck/cover-1';
 const PRIVATE_ITEM = fixtureId('family/school/homework-checklist');
 
 function meta(html: string, property: string): string | undefined {
@@ -83,6 +85,27 @@ describe('GET /s/:itemId (P3.6, D58–D61)', () => {
     expect(meta(await page(), 'og:image')).toBe(image);
     expect(ogRenderer).toHaveBeenCalledTimes(1);
     expect(store.uploads.size).toBe(1);
+  });
+
+  it('composites a public card cover into its og:image (044)', async () => {
+    await ctx.t.db
+      .update(items)
+      .set({ cover: { publicId: COVER_ID } })
+      .where(eq(items.id, COVER_ITEM));
+    const res = await ctx.app.request(`/p/family/i/${COVER_ITEM}`, { headers: ctx.anon() });
+    const image = meta(await res.text(), 'og:image');
+    expect(image).toContain(`l_${COVER_ID.replaceAll('/', ':')}`);
+  });
+
+  it('keeps a private card cover out of the preview (044)', async () => {
+    await ctx.t.db
+      .update(items)
+      .set({ cover: { publicId: COVER_ID } })
+      .where(eq(items.id, PRIVATE_ITEM));
+    const { html } = await share(PRIVATE_ITEM);
+    expect(meta(html, 'og:image')).toBe(`${APP_URL}/og/private.png`);
+    expect(html).not.toContain('cover-1');
+    expect(html).not.toContain('Daily Homework Checklist');
   });
 
   it('turns private once the card is archived', async () => {

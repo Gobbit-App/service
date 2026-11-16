@@ -7,8 +7,8 @@ import { jsonEqual } from '../equal';
  * cells, calc fields or reminder settings. An untouched sample switches freely.
  */
 export function payloadHasContent(
-  draft: Pick<Draft, 'type' | 'payload'>,
+  draft: Pick<Draft, 'type' | 'payload' | 'cover'>,
   start: Draft['payload'] = newPayload(draft.type),
 ): boolean {
-  return !jsonEqual(draft.payload, start);
+  return !!draft.cover || !jsonEqual(draft.payload, start);
 }

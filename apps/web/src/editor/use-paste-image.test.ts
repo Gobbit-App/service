@@ -48,4 +48,29 @@ describe('usePasteImage', () => {
     paste(document.body, [png]);
     expect(onImage).not.toHaveBeenCalled();
   });
+
+  it('with a scope only takes pastes inside it and leaves the unscoped hook the rest', () => {
+    const scoped = vi.fn();
+    const unscoped = vi.fn();
+    const box = document.body.appendChild(document.createElement('div'));
+    const inside = box.appendChild(document.createElement('input'));
+    const outside = field('input');
+    renderHook(() => {
+      usePasteImage(scoped, true, box);
+      usePasteImage(unscoped, true);
+    });
+    paste(inside, [png]);
+    expect(scoped).toHaveBeenCalledTimes(1);
+    expect(unscoped).not.toHaveBeenCalled();
+    paste(outside, [png]);
+    expect(scoped).toHaveBeenCalledTimes(1);
+    expect(unscoped).toHaveBeenCalledWith(png);
+  });
+
+  it('with a null scope takes nothing', () => {
+    const onImage = vi.fn();
+    renderHook(() => usePasteImage(onImage, true, null));
+    paste(document.body, [png]);
+    expect(onImage).not.toHaveBeenCalled();
+  });
 });

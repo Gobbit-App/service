@@ -14,6 +14,7 @@ const row: ItemRow = {
   body: 'Open 8–20',
   payload: {},
   sourceUrl: 'https://example.com/pharmacy',
+  cover: null,
   sourceKind: 'share',
   verifiedAt: at,
   createdBy: '00000000-0000-4000-8000-0000000000u1',

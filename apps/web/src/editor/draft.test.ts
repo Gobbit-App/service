@@ -16,6 +16,7 @@ import {
 } from './draft';
 import { blankCalc, blankTable, sampleCalc, sampleTable } from './sample-payloads';
 import type { TablePayload } from '../cards/payload-guards';
+import { payloadHasContent } from './composer/payload-content';
 
 const calcItem = makeItem({
   type: 'calc',
@@ -376,5 +377,65 @@ describe('isDirty', () => {
     const base = emptyDraft('text', 'c1');
     expect(isDirty({ ...base, categoryIds: ['c1'] }, base)).toBe(false);
     expect(isDirty({ ...base, title: 'x' }, base)).toBe(true);
+  });
+});
+
+describe('cover (044, D412)', () => {
+  const withCover = (d: Draft, cover: Draft['cover']): Draft => ({ ...d, cover });
+  const coverItem = makeItem({ type: 'text', cover: { publicId: 'a', width: 10, height: 20 } });
+  const plainItem = makeItem({ type: 'text' });
+
+  it('toCreateBody sends { publicId } only when set', () => {
+    const d = emptyDraft('text', 'c1');
+    expect(toCreateBody(withCover(d, { publicId: 'a', width: 10, height: 20 })).cover).toEqual({
+      publicId: 'a',
+    });
+    expect('cover' in toCreateBody(withCover(d, null))).toBe(false);
+    expect('cover' in toCreateBody(d)).toBe(false);
+  });
+
+  it('toPatch: unchanged cover is absent', () => {
+    expect(toPatch(coverItem, draftFromItem(coverItem))).toBeNull();
+    expect(toPatch(plainItem, withCover(draftFromItem(plainItem), null))).toBeNull();
+  });
+
+  it('toPatch: a pre-044 draft (cover undefined) means unchanged', () => {
+    const draft = { ...draftFromItem(coverItem), title: 'New' };
+    delete draft.cover;
+    expect(toPatch(coverItem, draft)).toEqual({ title: 'New' });
+  });
+
+  it('toPatch: set or replaced is { publicId } only; removed is null', () => {
+    expect(toPatch(plainItem, withCover(draftFromItem(plainItem), { publicId: 'b' }))).toEqual({
+      cover: { publicId: 'b' },
+    });
+    expect(
+      toPatch(
+        coverItem,
+        withCover(draftFromItem(coverItem), { publicId: 'b', width: 1, height: 2 }),
+      ),
+    ).toEqual({ cover: { publicId: 'b' } });
+    expect(toPatch(coverItem, withCover(draftFromItem(coverItem), null))).toEqual({ cover: null });
+  });
+
+  it('draftFromItem carries the item cover', () => {
+    expect(draftFromItem(coverItem).cover?.publicId).toBe('a');
+  });
+
+  it.each(['link', 'media'] as const)('withType to %s clears the cover', (type) => {
+    const d = withCover(emptyDraft('text', null), { publicId: 'a' });
+    expect(withType(d, type).cover).toBeFalsy();
+  });
+
+  it('withType between cover types keeps it', () => {
+    const d = withCover(emptyDraft('text', null), { publicId: 'a' });
+    expect(withType(d, 'table').cover).toEqual({ publicId: 'a' });
+  });
+
+  it('payloadHasContent counts a cover', () => {
+    const d = emptyDraft('text', null);
+    expect(payloadHasContent(d)).toBe(false);
+    expect(payloadHasContent(withCover(d, null))).toBe(false);
+    expect(payloadHasContent(withCover(d, { publicId: 'a' }))).toBe(true);
   });
 });

@@ -148,3 +148,12 @@ Create and edit every card type (text, link, table, calc; image is read-only unt
 - **The counter span stays mounted** (empty below 80 %), so `aria-describedby` never dangles.
 - **A refused save focuses once per response** (handled-response ref), closing the preview first.
 - **Sheet motion shipped with the sheet** (PR1); the restore-draft card is the only US7 restyle.
+
+## Cover image field (044, D412, ADR-078)
+
+`CoverField` (`editor/fields/CoverField.tsx`) adds a cover image to text, reminder, event, table and calc cards; it is stored as a top-level `Draft.cover` (kept across drafts, cleared on save and sign-out).
+
+- **Inputs**: pick a file, drop (`use-drop-image.ts`) or paste (`usePasteImage` with an optional `scope`). Uploads go through `use-image-upload.ts`, signed as `image`. A failed upload keeps the previous cover.
+- **Event paste rule**: on events `LinkPhoto` already takes page-wide paste, so `CoverField` listens in the capture phase scoped to its own element and marks the event handled (`defaultPrevented`, which `pastedImage` respects); a paste with focus in the field goes to the cover, any other paste to `LinkPhoto`. Other types: the cover is the only image field.
+- **Save waits for the upload**: the field reports through `onUploadingChange` like `MediaFields`, so Save is held while a cover uploads.
+- **No media store**: the field is hidden when the deck has no media store (no cloud name), like the Media type.

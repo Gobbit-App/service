@@ -10,6 +10,8 @@ export type OgContent = {
   categoryName: string | null;
   deckName: string;
   imagePublicId: string | null;
+  /** 044 D413: the cover or link/event snapshot composited into the generated card, if any. */
+  visualPublicId?: string | null;
   /** D397: a media card's kind (audio cards get a generated image); absent for other cards. */
   mediaKind?: string;
 };
@@ -26,6 +28,7 @@ export function ogContentHash(
     content.categoryName,
     content.deckName,
     content.imagePublicId,
+    ...(content.visualPublicId ? [content.visualPublicId] : []),
     // Only media cards add it, so every other card keeps its stored image's hash.
     ...(content.mediaKind ? [content.mediaKind] : []),
   ];

@@ -70,6 +70,7 @@ export function FullView({
               deckSlug={deckSlug}
               categories={categories}
               linkTitle={false}
+              coverLoading="eager"
               actions={false}
               meta={false}
               source={false}

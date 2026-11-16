@@ -29,6 +29,7 @@ export function previewItem(draft: Draft, base: Item | null, deckId: string): It
     categoryIds: draft.categoryIds,
     sourceUrl: sourceUrl === '' ? null : sourceUrl,
     entities: draft.entities ?? {},
+    cover: draft.cover ?? null,
   } as Item;
 }
 

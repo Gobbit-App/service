@@ -4,6 +4,7 @@ import { cardAge } from '../lib/card-age';
 import { chipHref } from '../ui/chip-order';
 import { NavLink } from '../ui/NavLink';
 import { CardBar, ReaderActions } from './CardBar';
+import { CoverBar } from './CoverBar';
 import { CardBody } from './CardBody';
 import { CardSourceLink } from './CardSourceLink';
 import type { ImageLoading } from './ImageCard';
@@ -29,6 +30,7 @@ export function Card({
   now = new Date(),
   preview = false,
   image,
+  coverLoading,
   actions,
   meta = true,
   source = true,
@@ -46,6 +48,8 @@ export function Card({
   preview?: boolean;
   /** D144: image loading hints (Browse: measured width, priority for the current card). */
   image?: ImageLoading;
+  /** D411: Browse loads the current card's cover eagerly. */
+  coverLoading?: 'lazy' | 'eager';
   /**
    * The card's action bar (e.g. CardActionBar); defaults to Favorite + Share. `false` renders
    * no bar (Browse puts the actions in its dock, D249).
@@ -75,6 +79,7 @@ export function Card({
           )}
         </h2>
       </header>
+      <CoverBar cover={item.cover} cloudName={cloudName} loading={coverLoading} />
       <CardBody item={item} cloudName={cloudName} image={image} />
       {source && <CardSourceLink item={item} />}
       {meta && (chips.length > 0 || age) && (

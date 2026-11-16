@@ -28,7 +28,7 @@ const FORBIDDEN_KEYS = new Set(['email', 'ip', 'emailAddress', 'ipAddress', 'to'
 
 /**
  * D239 / ADR-060: one JSON line per decision about a person, their content or experience.
- * `levels` maps `event` or `event:outcome` to a level (default `info`); a missing correlation id
+ * `levels` maps `event`, `event:outcome` or `event:outcome:reason` to a level (default `info`); a missing correlation id
  * or a raw `email`/`ip` field is a programming error and throws.
  */
 export function decisionLogger<C extends DecisionCatalog>(
@@ -49,7 +49,12 @@ export function decisionLogger<C extends DecisionCatalog>(
       if (!correlated.requestId && !correlated.jobId && !correlated.bootId) {
         throw new Error(`decision event ${event}: requestId, jobId or bootId is required`);
       }
-      const level = levels[`${event}:${String(fields.outcome)}`] ?? levels[event] ?? 'info';
+      const outcome = `${event}:${String(fields.outcome)}`;
+      const level =
+        (fields.reason ? levels[`${outcome}:${String(fields.reason)}`] : undefined) ??
+        levels[outcome] ??
+        levels[event] ??
+        'info';
       log[level]({ event, ...fields }, event);
     },
   };

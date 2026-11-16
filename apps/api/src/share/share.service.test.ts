@@ -8,7 +8,9 @@ const ITEM_ID = '0b9a3c1e-4f2d-4c6b-9a8e-1d2c3b4a5f60';
 const ORIGIN = 'https://gobbit.example';
 const PNG = new Uint8Array([137, 80, 78, 71]);
 
-function makeRecord(overrides: Partial<ShareRecord['item']> = {}): ShareRecord {
+function makeRecord(
+  overrides: Partial<ShareRecord['item']> & { cover?: { publicId: string } | null } = {},
+): ShareRecord {
   return {
     item: {
       id: ITEM_ID,
@@ -18,8 +20,9 @@ function makeRecord(overrides: Partial<ShareRecord['item']> = {}): ShareRecord {
       body: 'Boil **water** with salt.',
       payload: {},
       deletedAt: null,
+      cover: null,
       ...overrides,
-    },
+    } as ShareRecord['item'],
     deck: { slug: 'family', name: 'Family', kind: 'shared', isPublic: true, isDefault: false },
     categories: [
       { name: 'General', visibility: 'shared' },
@@ -194,6 +197,89 @@ describe('share service — public mode (D59–D61)', () => {
 
     expect(html).toContain('<html lang="he">');
     expect(html).toContain('he_IL');
+  });
+});
+
+describe('share service — card cover and snapshot (044 FR-010, D413)', () => {
+  const COVER = 'gobbit/items/d1/cover';
+  const SNAP = 'gobbit/items/d1/snap';
+  const layer = (id: string) => id.replaceAll('/', ':');
+  const link = (extra = {}) =>
+    makeRecord({
+      type: 'link',
+      payload: { url: 'https://a.example', preview: { publicId: SNAP } },
+      ...extra,
+    });
+  const failing = { renderer: async () => async () => Promise.reject(new Error('boom')) };
+
+  it('overlays the cover on the generated card', async () => {
+    const { service, saved } = setup(makeRecord({ cover: { publicId: COVER } }));
+    const url = ogImage(await service.sharePage(ITEM_ID))!;
+    expect(url).toContain('l_');
+    expect(url).toContain(layer(COVER));
+    expect(url).toContain(saved[0]!.publicId);
+  });
+
+  it('a cover beats the link snapshot; the snapshot is used without one', async () => {
+    const both = ogImage(
+      await setup(link({ cover: { publicId: COVER } })).service.sharePage(ITEM_ID),
+    )!;
+    expect(both).toContain(layer(COVER));
+    expect(both).not.toContain(layer(SNAP));
+    const snap = ogImage(await setup(link()).service.sharePage(ITEM_ID))!;
+    expect(snap).toContain(layer(SNAP));
+  });
+
+  it('uses an event snapshot', async () => {
+    const record = makeRecord({
+      type: 'event',
+      payload: { startsAt: '2030-01-01T10:00:00Z', preview: { publicId: SNAP } },
+    });
+    expect(ogImage(await setup(record).service.sharePage(ITEM_ID))).toContain(layer(SNAP));
+  });
+
+  it('a media photo still wins over a cover', async () => {
+    const record = makeRecord({
+      type: 'media',
+      payload: { publicId: 'family/soup', alt: 'Soup' },
+      cover: { publicId: COVER },
+    });
+    const { service, render } = setup(record);
+    const url = ogImage(await service.sharePage(ITEM_ID))!;
+    expect(url).toContain('c_fill,w_1200,h_630,f_jpg/family/soup');
+    expect(url).not.toContain(layer(COVER));
+    expect(render).not.toHaveBeenCalled();
+  });
+
+  it('serves the visual alone when rendering fails', async () => {
+    const { service } = setup(makeRecord({ cover: { publicId: COVER } }), failing);
+    expect(ogImage(await service.sharePage(ITEM_ID))).toContain(
+      `c_fill,g_auto,w_1200,h_630,f_jpg/${COVER}`,
+    );
+  });
+
+  it('serves the visual alone when rendering exceeds the budget', async () => {
+    const { service } = setup(makeRecord({ cover: { publicId: COVER } }), {
+      renderBudgetMs: 5,
+      renderer: async () => () => new Promise<Uint8Array>((r) => setTimeout(() => r(PNG), 50)),
+    });
+    expect(ogImage(await service.sharePage(ITEM_ID))).toContain(
+      `c_fill,g_auto,w_1200,h_630,f_jpg/${COVER}`,
+    );
+  });
+
+  it('falls back to the private image when rendering fails and there is no visual', async () => {
+    const { service } = setup(makeRecord(), failing);
+    expect(ogImage(await service.sharePage(ITEM_ID))).toBe(`${ORIGIN}/og/private.png`);
+  });
+
+  it('private mode has nothing from the card', async () => {
+    const record = makeRecord({ cover: { publicId: COVER } });
+    record.deck.isPublic = false;
+    const html = await setup(record).service.sharePage(ITEM_ID);
+    expect(html).not.toContain(COVER);
+    expect(html).not.toContain(layer(COVER));
+    expect(ogImage(html)).toBe(`${ORIGIN}/og/private.png`);
   });
 });
 

@@ -15,7 +15,8 @@ export interface OrphanAsset {
  * True when no item of any status references the asset: proposed, published, archived and
  * soft-deleted rows all count until their payload changes or the purge (D132) removes them.
  * A media card references a photo anywhere in its gallery or its one file (D398, through the
- * GIN index `items_media_payload_idx`), a link or event card its `preview.publicId` (D163, 042).
+ * GIN index `items_media_payload_idx`), a link or event card its `preview.publicId` (D163, 042),
+ * any card its `cover` (044 D409; no status filter, so archived and soft-deleted cards keep it). `i.cover IS NOT NULL` lets the planner use the partial index.
  */
 const unreferenced = sql`NOT EXISTS (
   SELECT 1 FROM ${items} i
@@ -23,6 +24,7 @@ const unreferenced = sql`NOT EXISTS (
           i.payload @> jsonb_build_object('images', jsonb_build_array(jsonb_build_object('publicId', ${assets.publicId}::text)))
        OR i.payload @> jsonb_build_object('publicId', ${assets.publicId}::text)))
      OR (i.type IN ('link', 'event') AND i.payload #>> '{preview,publicId}' = ${assets.publicId})
+     OR (i.cover IS NOT NULL AND (i.cover->>'publicId') = ${assets.publicId})
 )`;
 
 /** D156: the registry of every file Gobbit stored (images, and since 045 PDFs, audio and video). */

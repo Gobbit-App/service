@@ -1,9 +1,9 @@
 # Research: Card cover image (044)
 
-Decisions continue the project-wide D series (D386–D395). Each lists the decision, its rationale and the
+Decisions continue the project-wide D series (D406–D415). Each lists the decision, its rationale and the
 alternatives considered.
 
-## D386 — The cover image is its own item column, not a payload key
+## D406 — The cover image is its own item column, not a payload key
 
 **Decision**: `items.cover` is a nullable `jsonb` column holding `{ publicId, width?, height? }`. It is
 not stored inside `payload`. The member DTO gains `cover: CardCover | null`, and create and PATCH
@@ -27,7 +27,7 @@ valid.
   to every later type.
 - The editor resets `payload` on a type switch (`withType`). A top-level field survives a switch
   between supporting types without special handling.
-- The activity log names it as its own field (D390). As a payload key it would need a group, like
+- The activity log names it as its own field (D410). As a payload key it would need a group, like
   D369's event sub-fields.
 
 **Alternatives considered**:
@@ -43,10 +43,10 @@ valid.
   spread one value over three nullable columns that must be null together. One `jsonb` with a shape
   CHECK is simpler and matches `preview` on link cards.
 
-**ADR**: yes → ADR-077 ("Card-level attributes that aren't content live in columns, not payload").
-Checklists (`042-checklists`) and later types opt in through D387.
+**ADR**: yes → ADR-078 ("Card-level attributes that aren't content live in columns, not payload").
+Checklists (`042-checklists`) and later types opt in through D407.
 
-## D387 — Which types carry a cover image, and how a type opts in
+## D407 — Which types carry a cover image, and how a type opts in
 
 **Decision**: `@gobbit/shared/card-cover` exports `coverItemTypes = ['text', 'reminder', 'event',
 'table', 'calc']` and `supportsCover(type)`. This is a zod-free subpath, because the web reads it.
@@ -56,7 +56,7 @@ snapshot.
 
 Writes are refused, never dropped (FR-009):
 
-- A cover image on `link` or `image` → 422 problem, field `cover`, "This card type has no cover image".
+- A cover image on `link` or `media` → 422 problem, field `cover`, "This card type has no cover image".
 - PATCH can't change type (D12, 409 `type-change-not-supported`), so a stored cover image can never end up
   on an unsupported type.
 
@@ -66,13 +66,13 @@ Writes are refused, never dropped (FR-009):
 **Alternatives considered**: a per-type flag in `payloadSchemas` metadata. Rejected because the web
 can't import the zod schemas (bundle rule), so it would need a second list anyway.
 
-## D388 — Reference rule: the D160 check, extended to cover images
+## D408 — Reference rule: the D160 check, extended to cover images
 
 **Decision**:
 
 - The client sends only `cover: { publicId }` (or `null` on PATCH to remove it).
-- `createCoverReference(assets)` sits next to `createImageReference` in
-  `services/image-reference.ts`, and it applies the same rule:
+- `createCoverReference(assets)` sits next to `createMediaReferenceCheck` in
+  `services/media-reference.ts`, and it applies the same rule:
   - the asset must exist and belong to the card's deck;
   - otherwise the write fails with 422, field `cover.publicId`, "Unknown image".
 - `width` and `height` come from the asset row; client values are refused by the strict input schema.
@@ -85,14 +85,14 @@ can't import the zod schemas (bundle rule), so it would need a second list anywa
 **Alternatives considered**: trusting client dimensions. Rejected because D160 already decided that
 dimensions are server-owned.
 
-## D389 — Clean-up counts cover images as references
+## D409 — Clean-up counts cover images as references
 
 **Decision**:
 
 - `assets.repo`'s `unreferenced` predicate gains `OR i.cover->>'publicId' = assets.public_id`.
   Like the existing branches it covers items of every status, soft-deleted ones included.
-- A partial expression index `items_cover image_public_id_idx ON items ((cover image->>'publicId')) WHERE
-  cover image IS NOT NULL` keeps the sweep's `NOT EXISTS` an index lookup. This mirrors
+- A partial expression index `items_cover_public_id_idx ON items ((cover->>'publicId')) WHERE
+  cover IS NOT NULL` keeps the sweep's `NOT EXISTS` an index lookup. This mirrors
   `items_link_preview_public_id_idx`.
 - Once `prune-deleted-items` hard-deletes a card after 30 days, or a member removes the cover image, the
   image becomes unreferenced. The normal 7-day grace period (ADR-054) then applies.
@@ -103,7 +103,7 @@ dimensions are server-owned.
 **Alternatives considered**: a reference-count column on `assets`. Rejected: the sweep already
 derives references from `items`, and a counter would be a second source of truth.
 
-## D390 — Activity log names `cover`
+## D410 — Activity log names `cover`
 
 **Decision**:
 
@@ -117,7 +117,7 @@ derives references from `items`, and a counter would be a second source of truth
 **Rationale**: the activity log lists field names only (ADR-057), and `cover` is a field name.
 Removing a cover image is a change like any other.
 
-## D391 — Rendering: a cover bar through `CloudImage`, shaped like a link preview
+## D411 — Rendering: a cover bar through `CloudImage`, shaped like a link preview
 
 **Decision** (clarified 2026-11-12: the image represents the card's content and shows as a bar below
 the title, like a link's preview):
@@ -160,7 +160,7 @@ the title, like a link's preview):
 - *Showing both the cover and an event's link preview image*: rejected. That would be two large
   images on one card, and the member-set image supersedes the automatic one.
 
-## D392 — Editor: a top-level `Draft.cover` and one `CoverField`, with every image input
+## D412 — Editor: a top-level `Draft.cover` and one `CoverField`, with every image input
 
 **Decision**:
 
@@ -170,7 +170,7 @@ the title, like a link's preview):
 - `toCreateBody` sends `cover` when it is set. `toPatch` sends it only when it differs from the
   item (`null` = remove).
 - `editor/fields/CoverField.tsx` is rendered by `CardEditor` above the type fields, for
-  `supportsCover(type)` only. Link and image cards never show it (acceptance 1.1). It offers:
+  `supportsCover(type)` only. Link and media cards never show it (acceptance 1.1). It offers:
   - "Add image" with no cover set, and "Replace" and "Remove" once one is set (acceptance 1.4);
   - a bar preview through `CoverBar`.
 - It reuses `useImageUpload`, `checkImageFile` and `PickButton`, with the same limits, progress and
@@ -209,7 +209,7 @@ the title, like a link's preview):
 - *A whole-editor drop zone*: rejected. On event cards a drop would be ambiguous between the cover
   and the link photo, and the field is a clear target.
 
-## D393 — Share preview: generic when not public, richest when public
+## D413 — Share preview: generic when not public, richest when public
 
 **Decision** (clarified 2026-11-11):
 
@@ -257,7 +257,7 @@ the title, like a link's preview):
 - *A cover in private-mode previews*: rejected. It would leak a non-public card's image to anyone
   holding the link and into chat-app caches.
 
-## D394 — People only: ingestion, import and public reads never see a cover image
+## D414 — People only: ingestion, import and public reads never see a cover image
 
 **Decision**:
 
@@ -268,9 +268,9 @@ the title, like a link's preview):
 - `toPublicItem` stays as it is. A test asserts that `cover` is absent from public DTOs and public
   search.
 
-**Rationale**: FR-011, FR-010 and constitution IV. With D386 this needs no code beyond the tests.
+**Rationale**: FR-011, FR-010 and constitution IV. With D406 this needs no code beyond the tests.
 
-## D395 — Offline and failure behaviour need no new mechanism
+## D415 — Offline and failure behaviour need no new mechanism
 
 **Decision**:
 

@@ -10,6 +10,13 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-16 — Card cover image (044, D406–D415)
+
+- Text, reminder, event, table and calc cards can carry an optional cover image, shown as a bar below
+  the title. It lives in a new `items.cover` column (migration `0026_card_cover`, additive) and is
+  counted by the media sweep.
+- No new environment variables; nothing to set.
+
 ### 2026-11-15 — Yearly event repeats (D402–D405)
 
 - Event cards can be marked "Repeats every year" in the editor, and shares whose page says so

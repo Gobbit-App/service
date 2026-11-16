@@ -113,6 +113,47 @@ describe('media sweep against the database (D158)', () => {
     expect(store.deleteCalls).toEqual([]);
   });
 
+  it('keeps an image only a cover references whatever the card state; frees it once unreferenced (D409)', async () => {
+    const cover = (a: AssetRow) => ({ publicId: a.publicId, width: 1, height: 1 });
+    const setCover = (id: string, a: AssetRow | null) =>
+      ctx.t.db
+        .update(items)
+        .set({ cover: a ? cover(a) : null })
+        .where(eq(items.id, id));
+    const coverCard = async (a: AssetRow, status: ItemStatus = 'published') => {
+      const card = await createItem(ctx.t.db, deck, {
+        card: { type: 'text', title: 'Cover', body: 'x' },
+        status,
+      });
+      await setCover(card.id, a);
+      return card;
+    };
+
+    const live = await stored(old);
+    await coverCard(live);
+    const archived = await stored(old);
+    await coverCard(archived, 'archived');
+    const trashed = await stored(old);
+    const trashedCard = await coverCard(trashed);
+    await ctx.t.db.update(items).set({ deletedAt: now }).where(eq(items.id, trashedCard.id));
+    const kept = [live, archived, trashed];
+
+    expect(await sweeper.sweepOrphans({ now })).toMatchObject({ deleted: 0, failed: 0 });
+    expect(await remaining(kept.map((a) => a.id))).toHaveLength(3);
+
+    const removed = await stored(old);
+    const removedCard = await coverCard(removed);
+    const purged = await stored(old);
+    const purgedCard = await coverCard(purged);
+    await setCover(removedCard.id, null);
+    await ctx.t.db.delete(items).where(eq(items.id, purgedCard.id));
+
+    const summary = await sweeper.sweepOrphans({ now });
+    expect(summary).toMatchObject({ deleted: 2, failed: 0 });
+    expect(await remaining([removed.id, purged.id])).toEqual([]);
+    expect(await remaining(kept.map((a) => a.id))).toHaveLength(3);
+  });
+
   it('deletes never-saved and purged assets past the grace period; keeps young ones', async () => {
     const neverSaved = await stored(old);
     const purged = await stored(old);

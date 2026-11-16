@@ -1,3 +1,5 @@
+import type { MediaDecisions } from './media.events';
+
 /** 045 (plan Accountability table): decisions the items service makes about a request. */
 export type ItemDecisions = {
   /**
@@ -5,4 +7,4 @@ export type ItemDecisions = {
    * read as `media`. Silent for 30 days → the alias is retired.
    */
   'item.type_alias': { outcome: 'accepted'; reason: 'image' };
-};
+} & Pick<MediaDecisions, 'item.cover'>;

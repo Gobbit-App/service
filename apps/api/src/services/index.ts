@@ -24,6 +24,8 @@ import { createEventCardsService } from './event-cards.service';
 import { EVENT_CARD_DECISION_LEVELS, type EventCardDecisions } from './event-cards.events';
 import { createLogHash } from '../lib/log-hash';
 import { decisionLogger } from '../lib/decision-event';
+import type { ItemDecisions } from './items.events';
+import { MEDIA_DECISION_LEVELS } from './media.events';
 import type { PushSender } from '../push/push-sender';
 import { resolvePushSender } from '../push/push-wiring';
 import { createPushSubscriptionsRepo } from '../repositories/push-subscriptions.repo';
@@ -53,7 +55,7 @@ import { createMembershipsService } from './memberships.service';
 import { buildShareService, type ShareWiring } from '../share/wiring';
 import { analyticsHead } from '../public/analytics';
 import { createItemDtoMapper } from './item-dtos';
-import { createMediaReferenceCheck } from './media-reference';
+import { createCoverReference, createMediaReferenceCheck } from './media-reference';
 import { createLinkPreviewFields } from './link-preview-fields';
 import { createLinkChecksService, createLinkProbe } from './link-checks.service';
 import {
@@ -327,6 +329,11 @@ export function buildServices({
       memberships,
       embedQueue: resolveEmbedQueue(search),
       mediaReference,
+      coverReference: createCoverReference(assets),
+      decisions: decisionLogger<ItemDecisions>('items', {
+        parent: logger,
+        levels: MEDIA_DECISION_LEVELS,
+      }),
       links: {
         checks: linkChecks,
         checker: createLinkChecksService({

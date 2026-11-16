@@ -5,7 +5,15 @@ import { itemEventFields, type ItemEventField } from '@gobbit/shared';
 /** The card fields D186 compares, with categories as ids. */
 export type ItemFields = Pick<
   ItemRow,
-  'title' | 'body' | 'payload' | 'sourceUrl' | 'entities' | 'verifiedAt' | 'type' | 'status'
+  | 'title'
+  | 'body'
+  | 'payload'
+  | 'sourceUrl'
+  | 'cover'
+  | 'entities'
+  | 'verifiedAt'
+  | 'type'
+  | 'status'
 > & { categoryIds: readonly string[] };
 
 export function itemFields(row: ItemRow, categoryIds: readonly string[]): ItemFields {
@@ -14,6 +22,7 @@ export function itemFields(row: ItemRow, categoryIds: readonly string[]): ItemFi
     body: row.body,
     payload: row.payload,
     sourceUrl: row.sourceUrl,
+    cover: row.cover,
     entities: row.entities,
     verifiedAt: row.verifiedAt,
     type: row.type,
@@ -58,6 +67,8 @@ function sameValue(field: ItemEventField, before: ItemFields, after: ItemFields)
     }
     case 'verifiedAt':
       return (before.verifiedAt?.getTime() ?? null) === (after.verifiedAt?.getTime() ?? null);
+    case 'cover':
+      return (before.cover?.publicId ?? null) === (after.cover?.publicId ?? null);
     case 'entities':
       return isDeepStrictEqual(before.entities ?? {}, after.entities ?? {});
     default:

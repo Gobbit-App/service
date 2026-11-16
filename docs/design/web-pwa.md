@@ -220,3 +220,7 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 - Two latent 033 e2e bugs fixed: `app-analytics.spec.ts` keeps its record in `sessionStorage` across loads; `smoke/public.spec.ts` allows the `page.js` loader.
 - D281 (after merge): opt-in with a modal question for members and visitors, replacing "on unless declined" and the in-flow prompt/banner; see the ADR-068 amendment.
 - Down migration named `0020_analytics_consent.down.sql` (repo convention). Detail: `specs/035-analytics-consent/implementation-notes.md`.
+
+## Share preview with a cover (044, D413, ADR-078)
+
+For a public card the share image is built from the generated visual (or the card's own image) and, when the card has a cover, a right panel: the cover (or else the link/event snapshot) is composited as a Cloudinary layer, `l_<id>,c_fill,g_auto,w_420,h_630/fl_layer_apply,g_east`, so the visual fills the left and the image the right 420 px. Without a usable cover or snapshot, or if the layer fails, the visual alone is used. The private rule is unchanged: a non-public card always gets the generic private page and image, never a cover. E2E tier: full.

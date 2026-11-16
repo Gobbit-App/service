@@ -113,6 +113,7 @@ describe('mappers', () => {
         payload: {},
         entities: { phones: ['+972-3-555-0100'] },
         sourceUrl: null,
+        cover: null,
         sourceKind: 'manual',
         verifiedAt: null,
         createdBy: '523e4567-e89b-12d3-a456-426614174000',

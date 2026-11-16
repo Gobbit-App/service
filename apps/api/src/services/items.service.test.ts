@@ -71,6 +71,7 @@ describe('createItemsService', () => {
   let remindersRepo: any;
   let decisions: { record: ReturnType<typeof vi.fn> };
   let itemDecisions: { record: ReturnType<typeof vi.fn> };
+  let coverReference: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     decks = {
@@ -126,6 +127,7 @@ describe('createItemsService', () => {
     };
     decisions = { record: vi.fn() };
     itemDecisions = { record: vi.fn() };
+    coverReference = vi.fn(async (_d: string, c: { publicId: string }) => ({ ...c, width: 10 }));
 
     service = createItemsService({
       decks,
@@ -135,6 +137,7 @@ describe('createItemsService', () => {
       memberships,
       embedQueue,
       mediaReference: async (_deckId, _type, payload) => payload,
+      coverReference: coverReference as any,
       decisions: itemDecisions as any,
       links,
       reminders: createRemindersService({
@@ -171,6 +174,68 @@ describe('createItemsService', () => {
     decks.findBySlug.mockResolvedValue({ ...PB_ROW, ownerAccountId: 'other-account' });
     memberships.findActive.mockResolvedValue({ role, acceptedAt: new Date() });
   }
+
+  describe('cover (D407, D408)', () => {
+    const base = { title: 'T', body: '', payload: {} };
+    beforeEach(() => {
+      items.categoryIdsFor.mockResolvedValue(new Map([[createItemRow().id, [DEFAULT_CAT]]]));
+    });
+
+    it('refuses a cover on a type without one and logs it', async () => {
+      await expect(
+        service.create(ACTOR, 'fam', { ...base, type: 'link', cover: { publicId: 'p' } }),
+      ).rejects.toMatchObject({ status: 422 });
+      expect(items.create).not.toHaveBeenCalled();
+      expect(itemDecisions.record).toHaveBeenCalledWith(
+        'item.cover',
+        expect.objectContaining({ outcome: 'refused', reason: 'unsupported_type', deckId: PB_ID }),
+      );
+    });
+
+    it('logs the reference reason and rethrows', async () => {
+      const err = Object.assign(new Error('Unknown image'), {
+        status: 422,
+        coverReason: 'other_deck',
+      });
+      coverReference.mockRejectedValue(err);
+      await expect(
+        service.create(ACTOR, 'fam', { ...base, type: 'text', cover: { publicId: 'p' } }),
+      ).rejects.toBe(err);
+      expect(itemDecisions.record).toHaveBeenCalledWith(
+        'item.cover',
+        expect.objectContaining({ reason: 'other_deck' }),
+      );
+    });
+
+    it('stores the checked cover on create', async () => {
+      await service.create(ACTOR, 'fam', { ...base, type: 'text', cover: { publicId: 'p' } });
+      expect(items.create.mock.calls[0][0].cover).toEqual({ publicId: 'p', width: 10 });
+    });
+
+    it('skips the lookup when the publicId is the stored one', async () => {
+      items.findById.mockResolvedValue(createItemRow({ type: 'text', cover: { publicId: 'p' } }));
+      await service.update(ACTOR, createItemRow().id, { cover: { publicId: 'p' } });
+      expect(coverReference).not.toHaveBeenCalled();
+      expect(items.update.mock.calls[0][1]).not.toHaveProperty('cover');
+    });
+
+    it('null removes the cover', async () => {
+      items.findById.mockResolvedValue(createItemRow({ type: 'text', cover: { publicId: 'p' } }));
+      await service.update(ACTOR, createItemRow().id, { cover: null });
+      expect(items.update.mock.calls[0][1].cover).toBeNull();
+    });
+
+    it('refuses a cover patch on a card type without one', async () => {
+      items.findById.mockResolvedValue(createItemRow({ type: 'media' }));
+      await expect(
+        service.update(ACTOR, createItemRow().id, { cover: { publicId: 'p' } }),
+      ).rejects.toMatchObject({ status: 422 });
+      expect(itemDecisions.record).toHaveBeenCalledWith(
+        'item.cover',
+        expect.objectContaining({ reason: 'unsupported_type', itemId: createItemRow().id }),
+      );
+    });
+  });
 
   describe('create', () => {
     it('D6: uses default category when categoryIds not provided', async () => {

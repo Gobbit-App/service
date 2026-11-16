@@ -11,7 +11,7 @@ import { ogContentHash, ogPublicId, type OgContent } from './content-hash';
 import { toPlainText } from '../rich-text/plain-text';
 import { excerpt, OG_DESCRIPTION_MAX, OG_IMAGE_EXCERPT_MAX } from './excerpt';
 import { shareMode } from './mode';
-import { ogCardTree, OG_HEIGHT, OG_WIDTH } from './og-template';
+import { ogCardTree, OG_HEIGHT, OG_VISUAL_PANEL_WIDTH, OG_WIDTH } from './og-template';
 import type { OgImageStore } from './og-store';
 import type { OgRenderer } from './render';
 import {
@@ -68,6 +68,22 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 /** First public category in display order (default first, then position). */
 function publicCategoryName(record: ShareRecord): string | null {
   return record.categories.find((c) => c.visibility === 'public')?.name ?? null;
+}
+
+/** 044 D413: the cover, else a link/event snapshot; media cards keep their own branches. */
+function visualPublicIdOf(record: ShareRecord): string | null {
+  const { item } = record;
+  if (item.type === 'media') return null;
+  const preview = item.payload['preview'];
+  const snap =
+    preview && typeof preview === 'object' ? (preview as { publicId?: unknown }).publicId : null;
+  return item.cover?.publicId ?? (typeof snap === 'string' && snap !== '' ? snap : null);
+}
+
+/** Cloudinary layer: the visual fills a right-hand panel of the generated card (layer ids use ':'). */
+function visualOverlay(visualPublicId: string): string {
+  const layer = visualPublicId.replaceAll('/', ':');
+  return `l_${layer},c_fill,g_auto,w_${OG_VISUAL_PANEL_WIDTH},h_${OG_HEIGHT}/fl_layer_apply,g_east`;
 }
 
 /** D397: a photo card's cover, the picture the share preview shows as is. */
@@ -143,7 +159,11 @@ export function createShareService(deps: ShareServiceDeps) {
 
     const hash = ogContentHash(content);
     const existing = await repo.findOgImage(itemId);
-    if (existing?.contentHash === hash) return store.deliveryUrl(existing.publicId);
+    const deliver = (id: string) =>
+      content.visualPublicId
+        ? store.deliveryUrl(id, visualOverlay(content.visualPublicId))
+        : store.deliveryUrl(id);
+    if (existing?.contentHash === hash) return deliver(existing.publicId);
 
     const publicId = ogPublicId(itemId, hash);
     try {
@@ -156,6 +176,7 @@ export function createShareService(deps: ShareServiceDeps) {
               excerpt: content.excerpt,
               categoryName: content.categoryName,
               deckName: content.deckName,
+              visualPanel: !!content.visualPublicId,
             }),
           );
           await store.upload(publicId, png);
@@ -163,12 +184,14 @@ export function createShareService(deps: ShareServiceDeps) {
         renderBudgetMs,
       );
     } catch (err) {
-      log(`OG image for ${itemId} failed; serving the private image`, err);
-      return null;
+      log(`OG image for ${itemId} failed; serving the fallback image`, err);
+      return content.visualPublicId
+        ? store.deliveryUrl(content.visualPublicId, 'c_fill,g_auto,w_1200,h_630,f_jpg')
+        : null;
     }
 
     await repo.saveOgImage({ itemId, contentHash: hash, publicId });
-    return store.deliveryUrl(publicId);
+    return deliver(publicId);
   }
 
   /** D59/D60: the card's own picture, else the generated image, else the private one. */
@@ -187,6 +210,7 @@ export function createShareService(deps: ShareServiceDeps) {
       categoryName: publicCategoryName(record),
       deckName: deck.name,
       imagePublicId,
+      visualPublicId: visualPublicIdOf(record),
       ...(mediaKind ? { mediaKind } : {}),
     };
     return (await generatedImageUrl(item.id, content)) ?? `${origin}${PRIVATE_OG_IMAGE_PATH}`;

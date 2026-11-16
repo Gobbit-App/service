@@ -218,6 +218,46 @@ describe('CardEditor: image cards (D133, FR-015)', () => {
   });
 });
 
+describe('CardEditor: cover (D412)', () => {
+  const coverField = () => screen.queryByRole('button', { name: 'Add cover image' });
+  const hasCover = async (type: ItemType) => {
+    await renderImage('test-cloud', type);
+    return coverField() !== null || document.querySelector('.cover-field') !== null;
+  };
+  async function renderImage(cloudName: string | null, initialType: ItemType) {
+    const queryClient = testQueryClient();
+    queryClient.setQueryData(configQuery().queryKey, {
+      cloudinaryCloudName: cloudName,
+      commit: 'test',
+      search: { semantic: false, ask: false },
+      ingest: { enabled: false, emailDomain: null, shortcutUrl: null },
+      analytics: null,
+      push: null,
+      media: { maxBytes: { image: 8388608, pdf: 10485760, audio: 15728640, video: 26214400 } },
+    });
+    return renderInRouter(
+      <CardEditor
+        backHref="/d/family"
+        mode="create"
+        deck={deck}
+        type={initialType}
+        categories={categories}
+      />,
+      { queryClient },
+    );
+  }
+
+  it('shows the cover field for text, not for link or media', async () => {
+    expect(await hasCover('text')).toBe(true);
+  });
+  it('omits it for link', async () => {
+    expect(await hasCover('link')).toBe(false);
+  });
+  it('omits it for media', async () => {
+    expect(await hasCover('media')).toBe(false);
+  });
+});
+
 describe('CardEditor: edit', () => {
   const item = makeItem({
     id: 'i1',

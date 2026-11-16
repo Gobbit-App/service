@@ -53,7 +53,7 @@ pnpm test:e2e -- --grep @full cover     # replace/remove, drop, paste on an even
    - An event with a link and a cover shows the cover bar, and its link box has no image.
 9. **Review**: share a page to the deck. In the review queue, edit the proposal, add a cover image,
    publish. The proposal had none before (FR-011).
-10. **Share** (D393):
+10. **Share** (D413):
     - Make the card public (public deck, public category) and share `/s/<id>`. The preview is the
       generated card (title, excerpt) with the cover image in the right-hand panel.
     - Add a cover image to a public event card that has a preview image. The preview shows the cover image,

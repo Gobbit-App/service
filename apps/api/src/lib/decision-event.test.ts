@@ -48,6 +48,19 @@ describe('decisionLogger (D239)', () => {
     });
   });
 
+  it('prefers a per-reason level over the per-outcome one (044)', async () => {
+    const capture = captureLogger();
+    const decisions = decisionLogger<Catalog>('demo', {
+      parent: capture.logger,
+      levels: { 'demo.join:refused:per_email': 'error', 'demo.join:refused': 'warn' },
+    });
+    decisions.record('demo.join', { outcome: 'refused', reason: 'per_email', requestId: 'r' });
+    decisions.record('demo.join', { outcome: 'refused', requestId: 'r2' });
+    await capture.flush();
+    const levels = capture.lines.filter((l) => l['event'] === 'demo.join').map((l) => l['level']);
+    expect(levels).toEqual(['error', 'warn']);
+  });
+
   it.each(['email', 'ip', 'to'])('refuses a raw %s field', (key) => {
     const { decisions } = setup();
     const fields = { outcome: 'created', requestId: 'r', [key]: 'parent@example.test' } as never;

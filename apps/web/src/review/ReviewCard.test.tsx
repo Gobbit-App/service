@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ReviewEntry } from '@gobbit/shared';
 import { makeCategory, makeDeck, makeItem } from '../test/fixtures';
 import { renderInRouter } from '../test/render-in-router';
+import { mockConfig } from '../test/api-mock';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
 vi.mock('../editor/rich/RichBodyEditor', () => import('../test/rich-editor-mock'));
@@ -63,6 +64,30 @@ async function renderCard(value: ReviewEntry, { canCreateCategory = true, busy =
 }
 
 describe('ReviewCard', () => {
+  it('shows the cover bar when the proposal has a cover, and none without (D411)', async () => {
+    mockConfig.cloudinaryCloudName = 'demo';
+    try {
+      const cover = { publicId: 'gobbit/items/d1/cover', width: 1600, height: 900 };
+      const withCover = entry();
+      withCover.item = { ...withCover.item, cover };
+      await renderCard(withCover);
+      await waitFor(() => expect(document.querySelector('.card__cover')).not.toBeNull());
+    } finally {
+      mockConfig.cloudinaryCloudName = null;
+    }
+  });
+
+  it('shows no cover bar without a cover', async () => {
+    mockConfig.cloudinaryCloudName = 'demo';
+    try {
+      await renderCard(entry());
+      await screen.findByText('555-0100');
+      expect(document.querySelector('.card__cover')).toBeNull();
+    } finally {
+      mockConfig.cloudinaryCloudName = null;
+    }
+  });
+
   it('shows the source line, preview, details and categories', async () => {
     await renderCard(entry());
     expect(screen.getByRole('article', { name: 'Dentist' })).toBeInTheDocument();

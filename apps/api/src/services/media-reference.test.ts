@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AssetRow } from '@gobbit/db';
 import { HttpError } from '../errors/http-errors';
-import { createMediaReferenceCheck, fileName } from './media-reference';
+import { createCoverReference, createMediaReferenceCheck, fileName } from './media-reference';
 
 const asset = (over: Partial<AssetRow> = {}) =>
   ({
@@ -160,6 +160,40 @@ describe('createMediaReferenceCheck (D160, D390, D398)', () => {
       height: 1920,
       durationMs: 9000,
     });
+  });
+});
+
+describe('createCoverReference (D408)', () => {
+  it('returns the recorded id and dimensions, never the client’s', async () => {
+    const cover = createCoverReference({ byPublicId: lookup([asset({ publicId: 'a' })]) });
+    expect(
+      await cover('d1', { publicId: 'a', width: 1, height: 2 } as { publicId: string }),
+    ).toEqual({
+      publicId: 'a',
+      width: 1200,
+      height: 900,
+    });
+  });
+
+  it('leaves out dimensions the asset does not have', async () => {
+    const cover = createCoverReference({
+      byPublicId: lookup([asset({ publicId: 'a', width: null, height: null })]),
+    });
+    expect(await cover('d1', { publicId: 'a' })).toEqual({ publicId: 'a' });
+  });
+
+  it.each([
+    ['an unknown id', []],
+    ["another deck's asset", [asset({ publicId: 'a', deckId: 'd2' })]],
+    ['a rejected asset', [asset({ publicId: 'a', rejectedAt: new Date() })]],
+    ['a pdf', [asset({ publicId: 'a', kind: 'pdf' })]],
+    ['audio', [asset({ publicId: 'a', kind: 'audio' })]],
+    ['a video', [asset({ publicId: 'a', kind: 'video' })]],
+  ])('refuses %s with 422 Unknown image', async (_label, rows) => {
+    const err = await refusal(
+      createCoverReference({ byPublicId: lookup(rows) })('d1', { publicId: 'a' }),
+    );
+    expect(err.errors?.[0]).toEqual({ path: 'cover.publicId', message: 'Unknown image' });
   });
 });
 

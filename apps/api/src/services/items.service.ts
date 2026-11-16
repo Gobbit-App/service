@@ -50,7 +50,9 @@ import type { LinkChecksRepo } from '../repositories/link-checks.repo';
 import { markNotifiedIfPast, reopenReminder } from '../repositories/reminders.repo';
 import type { RemindersService } from './reminders.service';
 import type { EventCardsService } from './event-cards.service';
-import type { MediaReferenceCheck } from './media-reference';
+import type { CoverRefusal, MediaReferenceCheck } from './media-reference';
+import { MEDIA_DECISION_LEVELS } from './media.events';
+import { supportsCover, type CardCover } from '@gobbit/shared/card-cover';
 import { createItemDtoMapper } from './item-dtos';
 import type { LinkChecksService } from './link-checks.service';
 import type { LinkPreviewFields } from './link-preview-fields';
@@ -99,6 +101,8 @@ export function createItemsService(deps: {
   embedQueue: EmbedQueue;
   /** D160/045: media cards reference recorded files of their deck; their facts come from them. */
   mediaReference: MediaReferenceCheck;
+  /** D408: a card cover is an image recorded for the card's own deck. */
+  coverReference: (deckId: string, cover: { publicId: string }) => Promise<CardCover>;
   /** D387: `item.type_alias` (tests inject a capture). */
   decisions?: DecisionLogger<ItemDecisions>;
   links: ItemLinkDeps;
@@ -120,13 +124,14 @@ export function createItemsService(deps: {
     memberships,
     embedQueue,
     mediaReference,
+    coverReference,
     links,
     reminders,
     eventCards,
     now = () => new Date(),
     undeleteDays = ITEM_UNDELETE_DAYS,
     purgeDeck = () => {},
-    decisions = decisionLogger<ItemDecisions>('items'),
+    decisions = decisionLogger<ItemDecisions>('items', { levels: MEDIA_DECISION_LEVELS }),
   } = deps;
 
   /** D387: records an old client's use of the `image` name; the alias is retired once silent. */
@@ -139,6 +144,39 @@ export function createItemsService(deps: {
       deckId,
       route,
     });
+  }
+
+  /**
+   * D407/D408: the cover to write (`undefined` keeps the stored one). A cover on a type without
+   * one is refused, never dropped (FR-009); refusals are logged, the member sees one message.
+   */
+  async function resolveCover(
+    actor: Actor,
+    ctx: { deckId: string; itemId?: string; type: ItemType; stored: CardCover | null },
+    given: { publicId: string } | null | undefined,
+  ): Promise<CardCover | null | undefined> {
+    if (!given) return given;
+    const refuse = (reason: CoverRefusal['coverReason']) =>
+      decisions.record('item.cover', {
+        outcome: 'refused',
+        reason,
+        requestId: actor.requestId ?? 'internal',
+        actorId: actor.user.id,
+        deckId: ctx.deckId,
+        itemId: ctx.itemId,
+      });
+    if (!supportsCover(ctx.type)) {
+      refuse('unsupported_type');
+      throw unprocessableField('cover', 'This card type has no cover image');
+    }
+    if (ctx.stored?.publicId === given.publicId) return undefined;
+    try {
+      return await coverReference(ctx.deckId, given);
+    } catch (err) {
+      const reason = (err as Partial<CoverRefusal>).coverReason;
+      if (reason) refuse(reason);
+      throw err;
+    }
   }
 
   /** D387: `image` → `media`, a flat photo payload → a one-photo gallery. */
@@ -514,6 +552,12 @@ export function createItemsService(deps: {
         payload = await referencedPayload(deck.id, input.type, input.payload, null);
       }
 
+      const cover = await resolveCover(
+        actor,
+        { deckId: deck.id, type: input.type, stored: null },
+        input.cover,
+      );
+
       const createdItem = await items.create(
         {
           deckId: deck.id,
@@ -524,6 +568,7 @@ export function createItemsService(deps: {
           payload,
           entities: compactEntities(input.entities ?? {}),
           sourceUrl: input.sourceUrl ?? null,
+          cover: cover ?? null,
           sourceKind,
           verifiedAt,
           createdBy: user.id,
@@ -636,6 +681,12 @@ export function createItemsService(deps: {
       if (patch.entities !== undefined) updatePatch.entities = compactEntities(patch.entities);
       if (patch.sourceUrl !== undefined) updatePatch.sourceUrl = patch.sourceUrl;
       if (patch.status !== undefined) updatePatch.status = patch.status;
+      const cover = await resolveCover(
+        actor,
+        { deckId: item.deckId, itemId: item.id, type: item.type, stored: item.cover ?? null },
+        patch.cover,
+      );
+      if (cover !== undefined) updatePatch.cover = cover;
 
       // D131: verifiedAt is the first publication date; never re-set
       if (patch.status === 'published' && item.status !== 'published' && !item.verifiedAt) {

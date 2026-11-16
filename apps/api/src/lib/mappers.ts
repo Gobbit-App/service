@@ -59,6 +59,7 @@ export function toItemDto(
     payload: r.payload,
     entities: r.entities,
     sourceUrl: r.sourceUrl ?? null,
+    cover: r.cover ?? null,
     sourceKind: r.sourceKind,
     verifiedAt: r.verifiedAt?.toISOString() ?? null,
     createdBy: r.createdBy ?? null,
