@@ -142,7 +142,7 @@ describe('card cover image (044)', () => {
       }
     });
 
-    it('refuses width, height or any other key in the input, and a bad publicId', async () => {
+    it('refuses width, height or any other key in the input, and a bad publicId (400, request schema)', async () => {
       const asset = await createAsset(ctx.t.db, deck);
       const item = await card();
       for (const cover of [
@@ -152,7 +152,7 @@ describe('card cover image (044)', () => {
         { publicId: '' },
         { publicId: 'x'.repeat(256) },
       ]) {
-        expect((await patch(item.id, { cover })).status, JSON.stringify(cover)).toBe(422);
+        expect((await patch(item.id, { cover })).status, JSON.stringify(cover)).toBe(400);
       }
     });
 

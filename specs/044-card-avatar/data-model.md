@@ -18,6 +18,7 @@ Constraints and indexes:
   OR (
     type::text IN ('text', 'reminder', 'event', 'table', 'calc')
     AND jsonb_typeof(cover) = 'object'
+    AND cover ? 'publicId'  -- without it a missing key makes the CHECK NULL, which passes
     AND jsonb_typeof(cover->'publicId') = 'string'
     AND char_length(cover->>'publicId') BETWEEN 1 AND 255
     AND (NOT cover ? 'width'  OR jsonb_typeof(cover->'width')  = 'number')

@@ -27,12 +27,18 @@ describe('schema', () => {
       ORDER BY column_name
     `);
 
-    expect(result.rows).toHaveLength(21);
+    expect(result.rows).toHaveLength(22);
     expect(result.rows).toEqual([
       {
         column_name: 'body',
         data_type: 'text',
         is_nullable: 'NO',
+        datetime_precision: null,
+      },
+      {
+        column_name: 'cover',
+        data_type: 'jsonb',
+        is_nullable: 'YES',
         datetime_precision: null,
       },
       {

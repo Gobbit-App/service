@@ -89,7 +89,7 @@ export const items = pgTable(
     // 044: a cover only on the types without their own image; shape backstop (type is text: enum compare).
     check(
       'items_cover_chk',
-      sql`${t.cover} IS NULL OR (${t.type}::text IN ('text','reminder','event','table','calc') AND jsonb_typeof(${t.cover}) = 'object' AND jsonb_typeof(${t.cover}->'publicId') = 'string' AND char_length(${t.cover}->>'publicId') BETWEEN 1 AND 255 AND (NOT ${t.cover} ? 'width' OR jsonb_typeof(${t.cover}->'width') = 'number') AND (NOT ${t.cover} ? 'height' OR jsonb_typeof(${t.cover}->'height') = 'number'))`,
+      sql`${t.cover} IS NULL OR (${t.type}::text IN ('text','reminder','event','table','calc') AND jsonb_typeof(${t.cover}) = 'object' AND ${t.cover} ? 'publicId' AND jsonb_typeof(${t.cover}->'publicId') = 'string' AND char_length(${t.cover}->>'publicId') BETWEEN 1 AND 255 AND (NOT ${t.cover} ? 'width' OR jsonb_typeof(${t.cover}->'width') = 'number') AND (NOT ${t.cover} ? 'height' OR jsonb_typeof(${t.cover}->'height') = 'number'))`,
     ),
     index('items_cover_public_id_idx')
       .on(sql`(${t.cover}->>'publicId')`)

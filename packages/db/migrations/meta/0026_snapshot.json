@@ -852,7 +852,7 @@
         },
         "items_cover_chk": {
           "name": "items_cover_chk",
-          "value": "\"items\".\"cover\" IS NULL OR (\"items\".\"type\"::text IN ('text','reminder','event','table','calc') AND jsonb_typeof(\"items\".\"cover\") = 'object' AND jsonb_typeof(\"items\".\"cover\"->'publicId') = 'string' AND char_length(\"items\".\"cover\"->>'publicId') BETWEEN 1 AND 255 AND (NOT \"items\".\"cover\" ? 'width' OR jsonb_typeof(\"items\".\"cover\"->'width') = 'number') AND (NOT \"items\".\"cover\" ? 'height' OR jsonb_typeof(\"items\".\"cover\"->'height') = 'number'))"
+          "value": "\"items\".\"cover\" IS NULL OR (\"items\".\"type\"::text IN ('text','reminder','event','table','calc') AND jsonb_typeof(\"items\".\"cover\") = 'object' AND \"items\".\"cover\" ? 'publicId' AND jsonb_typeof(\"items\".\"cover\"->'publicId') = 'string' AND char_length(\"items\".\"cover\"->>'publicId') BETWEEN 1 AND 255 AND (NOT \"items\".\"cover\" ? 'width' OR jsonb_typeof(\"items\".\"cover\"->'width') = 'number') AND (NOT \"items\".\"cover\" ? 'height' OR jsonb_typeof(\"items\".\"cover\"->'height') = 'number'))"
         },
         "items_body_len_chk": {
           "name": "items_body_len_chk",
