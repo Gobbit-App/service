@@ -266,6 +266,7 @@ export function buildServices({
       activeHold: (lower, at) => createProfileRepo(db).activeHold(lower, at),
       sharesDeckWith: (a, b) => createProfileRepo(db).sharesDeckWith(a, b),
       profileById: (id) => users.profileById(id),
+      assetByPublicId: (publicId) => assets.byPublicId(publicId),
       transaction: (fn) =>
         db.transaction((tx) => {
           const txUsers = createUsersRepo(tx);
@@ -388,7 +389,12 @@ export function buildServices({
       purgeDeck,
     }),
     favorites: createFavoritesService({ decks, items, favorites, memberships }),
-    events: createEventsService({ decks, memberships, events: createItemEventsRepo(db) }),
+    events: createEventsService({
+      decks,
+      memberships,
+      events: createItemEventsRepo(db),
+      summaries: memberSummaries,
+    }),
     share,
     search: searchServices.search,
     ask: searchServices.ask,

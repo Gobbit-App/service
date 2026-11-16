@@ -12,6 +12,7 @@ import {
 } from '@gobbit/db/test';
 import { itemSchema, type MemberRole } from '@gobbit/shared';
 import { createItemsRepo } from '../src/repositories/items.repo';
+import { createProfileRepo } from '../src/repositories/profile.repo';
 import { createPruneDeletedItems } from '../src/jobs/prune-deleted-items';
 import { json, OTHER_EMAIL, OWNER_EMAIL, setupApiTest } from './helpers';
 
@@ -297,6 +298,7 @@ describe('item lifecycle (006)', () => {
 
       const purged = await createPruneDeletedItems({
         items: createItemsRepo(ctx.t.db),
+        profile: createProfileRepo(ctx.t.db),
         log: () => undefined,
       })();
 

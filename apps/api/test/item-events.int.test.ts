@@ -5,6 +5,7 @@ import { addMember, createAccountUser, createCategory, createDeck } from '@gobbi
 import { itemEventPageSchema, type ItemEvent } from '@gobbit/shared';
 import { buildServices } from '../src/services';
 import { createItemsRepo } from '../src/repositories/items.repo';
+import { createProfileRepo } from '../src/repositories/profile.repo';
 import { createPruneDeletedItems } from '../src/jobs/prune-deleted-items';
 import { json, OTHER_EMAIL, setupApiTest } from './helpers';
 
@@ -259,7 +260,11 @@ describe('item events (020)', () => {
         .update(items)
         .set({ deletedAt: new Date(Date.now() - 31 * DAY_MS) })
         .where(eq(items.id, card.id));
-      await createPruneDeletedItems({ items: createItemsRepo(ctx.t.db), log: () => undefined })();
+      await createPruneDeletedItems({
+        items: createItemsRepo(ctx.t.db),
+        profile: createProfileRepo(ctx.t.db),
+        log: () => undefined,
+      })();
 
       const lines = await log();
       expect(lines.map((l) => [l.kind, l.itemId, l.title])).toEqual([

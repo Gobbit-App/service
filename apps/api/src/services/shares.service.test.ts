@@ -1,7 +1,7 @@
 import type { IngestJobRow } from '@gobbit/db';
 import type { ShareChannel } from '@gobbit/shared';
 import { describe, expect, it } from 'vitest';
-import { canRetryJob, toShareSummary, type ShareItemRef } from './shares.service';
+import { canRetryJob, reviewerOf, toShareSummary, type ShareItemRef } from './shares.service';
 
 const created = new Date('2026-10-25T10:00:00.000Z');
 
@@ -129,9 +129,14 @@ describe('toShareSummary (D196)', () => {
     const summary = toShareSummary(
       job({ status: 'discarded', reviewedBy: 'u-9', reviewedAt }),
       null,
-      'Dana',
+      { displayName: 'Dana', username: 'dana', initials: 'D', photo: null },
     );
-    expect(summary.reviewedBy).toEqual({ displayName: 'Dana' });
+    expect(summary.reviewedBy).toEqual({
+      displayName: 'Dana',
+      username: 'dana',
+      initials: 'D',
+      photo: null,
+    });
     expect(summary.reviewedAt).toBe(reviewedAt.toISOString());
   });
 
@@ -158,5 +163,19 @@ describe('canRetryJob (D197)', () => {
 
   it.each(['sharer_left', 'content_expired'] as const)('refuses %s', (failureCode) => {
     expect(canRetryJob({ ...failed, failureCode })).toBe(false);
+  });
+});
+
+describe('reviewerOf (D419/D421)', () => {
+  it('uses the computed name and the summary fields', () => {
+    const summary = { id: 'u', name: 'X', username: 'dd', initials: 'DL', photo: null };
+    expect(
+      reviewerOf({ firstName: 'Dana', lastName: 'Lev', displayName: 'dana' }, summary),
+    ).toEqual({
+      displayName: 'Dana Lev',
+      username: 'dd',
+      initials: 'DL',
+      photo: null,
+    });
   });
 });

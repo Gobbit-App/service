@@ -23,7 +23,12 @@ import { rateKeys } from '../lib/rate-window';
 import { resolveDeck } from '../lib/resolve-deck';
 import { toMediaAsset } from '../media/asset-dto';
 import type { MediaStore } from '../media/media-store';
-import { editorUploadFolder, signEditorUpload } from '../media/sign-upload';
+import {
+  editorUploadFolder,
+  profileUploadFolder,
+  signEditorUpload,
+  signProfileUpload,
+} from '../media/sign-upload';
 import type { AssetsRepo } from '../repositories/assets.repo';
 import type { SafeImageFetch } from '../fetch/safe-fetch';
 import type { CurrentUser } from '../types';
@@ -112,7 +117,7 @@ export function createMediaService(deps: {
   }
 
   type ConfirmReason = NonNullable<MediaDecisions['media.confirm']['reason']>;
-  type Context = { requestId: string; actorId: string; deckId: string };
+  type Context = { requestId: string; actorId: string; deckId?: string; scope?: 'profile' };
 
   function refuseConfirm(
     ctx: Context,
@@ -147,9 +152,97 @@ export function createMediaService(deps: {
     decisions.record('media.refused_delete', {
       outcome,
       requestId: ctx.requestId,
-      deckId: ctx.deckId,
+      ...(ctx.deckId ? { deckId: ctx.deckId } : { scope: ctx.scope }),
       publicIdHash: hashForLog(publicId),
     });
+  }
+
+  const baseCtx = (input: { user: CurrentUser; requestId?: string }) => ({
+    requestId: input.requestId ?? 'internal',
+    actorId: input.user.id,
+  });
+
+  async function sign(
+    ctx: Context,
+    user: CurrentUser,
+    kind: MediaKind,
+    signer: (
+      c: CloudinaryCredentials,
+      n: Date,
+      o: { kind: MediaKind; maxBytes: number },
+    ) => MediaSignResponse,
+  ): Promise<MediaSignResponse> {
+    if (!cloudinary) {
+      decisions.record('media.sign', { outcome: 'refused', reason: 'unavailable', ...ctx, kind });
+      throw serviceUnavailable('Media uploads are not configured');
+    }
+    await rateLimits.enforce(rateKeys.mediaSignUser(user.id), MEDIA_SIGN_RATE_PER_HOUR);
+    decisions.record('media.sign', { outcome: 'accepted', ...ctx, kind });
+    return signer(cloudinary, now(), { kind, maxBytes: maxBytes[kind] });
+  }
+
+  /** The shared confirm: `folder` is the only place the caller may have uploaded to. */
+  async function confirm(
+    ctx: Context,
+    user: CurrentUser,
+    b: MediaAssetConfirmRequest,
+    folder: string,
+    owner: { deckId: string | null; scope?: 'profile'; ownerUserId?: string },
+  ): Promise<{ asset: MediaAsset; created: boolean }> {
+    if (!store) throw serviceUnavailable('Media uploads are not configured');
+    await rateLimits.enforce(rateKeys.mediaConfirmUser(user.id), MEDIA_CONFIRM_RATE_PER_HOUR);
+    const facts = { kind: b.kind, bytes: b.bytes, publicId: b.publicId };
+    if (!store.verifyResponse(b.publicId, b.version, b.signature)) {
+      refuseConfirm(ctx, 'bad_signature', facts);
+    }
+    if (!b.publicId.startsWith(`${folder}/`)) {
+      // Not this folder's file: nothing is deleted.
+      refuseConfirm(ctx, 'wrong_folder', facts);
+    }
+
+    const kind = kindForFormat(b.format);
+    const reason: ConfirmReason | null =
+      kind === null || (owner.scope === 'profile' && kind !== 'image')
+        ? 'format'
+        : kind !== b.kind || b.resourceType !== resourceTypeForKind(kind)
+          ? 'kind_mismatch'
+          : b.bytes > maxBytes[kind]
+            ? 'too_large'
+            : (kind === 'pdf' && !b.pages) ||
+                ((kind === 'audio' || kind === 'video') && !b.durationMs)
+              ? 'unreadable'
+              : null;
+    if (reason !== null || kind === null) {
+      await deleteRefused(ctx, b.publicId, b.resourceType);
+      refuseConfirm(ctx, reason ?? 'format', { ...facts, kind });
+    }
+
+    const sized = kind === 'image' || kind === 'pdf' || kind === 'video';
+    const recorded = await assets.upsert({
+      ...owner,
+      publicId: b.publicId,
+      source: 'editor',
+      kind,
+      resourceType: resourceTypeForKind(kind),
+      width: sized ? (b.width ?? null) : null,
+      height: sized ? (b.height ?? null) : null,
+      bytes: b.bytes,
+      format: b.format.toLowerCase(),
+      durationMs: kind === 'audio' || kind === 'video' ? (b.durationMs ?? null) : null,
+      pages: kind === 'pdf' ? (b.pages ?? null) : null,
+      etag: b.etag ?? null,
+      originalFilename: b.originalFilename ?? null,
+      uploadedBy: user.id,
+    });
+    if (!recorded) refuseConfirm(ctx, 'other_deck', { ...facts, kind });
+    decisions.record('media.confirm', {
+      outcome: 'accepted',
+      ...ctx,
+      assetId: recorded.row.id,
+      kind,
+      bytes: b.bytes,
+    });
+    return { asset: toMediaAsset(recorded.row), created: recorded.created };
   }
 
   return {
@@ -165,18 +258,19 @@ export function createMediaService(deps: {
     }): Promise<MediaSignResponse> {
       const kind = input.kind ?? 'image';
       const deck = await uploadableDeck(input.user, input.deckId);
-      const ctx = {
-        requestId: input.requestId ?? 'internal',
-        actorId: input.user.id,
-        deckId: deck.id,
-      };
-      if (!cloudinary) {
-        decisions.record('media.sign', { outcome: 'refused', reason: 'unavailable', ...ctx, kind });
-        throw serviceUnavailable('Media uploads are not configured');
-      }
-      await rateLimits.enforce(rateKeys.mediaSignUser(input.user.id), MEDIA_SIGN_RATE_PER_HOUR);
-      decisions.record('media.sign', { outcome: 'accepted', ...ctx, kind });
-      return signEditorUpload(cloudinary, deck.id, now(), { kind, maxBytes: maxBytes[kind] });
+      return sign({ ...baseCtx(input), deckId: deck.id }, input.user, kind, (c, n, o) =>
+        signEditorUpload(c, deck.id, n, o),
+      );
+    },
+
+    /** 046 D423: a member's permission to upload their own profile photo (images only). */
+    async signProfileUpload(input: {
+      user: CurrentUser;
+      requestId?: string;
+    }): Promise<MediaSignResponse> {
+      return sign({ ...baseCtx(input), scope: 'profile' }, input.user, 'image', (c, n, o) =>
+        signProfileUpload(c, input.user.id, n, o),
+      );
     },
 
     /**
@@ -192,69 +286,28 @@ export function createMediaService(deps: {
       requestId?: string;
     }): Promise<{ asset: MediaAsset; created: boolean }> {
       const deck = await uploadableDeck(input.user, input.deckId);
-      if (!store) throw serviceUnavailable('Media uploads are not configured');
-      await rateLimits.enforce(
-        rateKeys.mediaConfirmUser(input.user.id),
-        MEDIA_CONFIRM_RATE_PER_HOUR,
+      return confirm(
+        { ...baseCtx(input), deckId: deck.id },
+        input.user,
+        input.body,
+        editorUploadFolder(deck.id),
+        { deckId: deck.id },
       );
-      const b = input.body;
-      const ctx = {
-        requestId: input.requestId ?? 'internal',
-        actorId: input.user.id,
-        deckId: deck.id,
-      };
-      const facts = { kind: b.kind, bytes: b.bytes, publicId: b.publicId };
-      if (!store.verifyResponse(b.publicId, b.version, b.signature)) {
-        refuseConfirm(ctx, 'bad_signature', facts);
-      }
-      if (!b.publicId.startsWith(`${editorUploadFolder(deck.id)}/`)) {
-        // Not this deck's file: nothing is deleted.
-        refuseConfirm(ctx, 'wrong_folder', facts);
-      }
+    },
 
-      const kind = kindForFormat(b.format);
-      const reason: ConfirmReason | null =
-        kind === null
-          ? 'format'
-          : kind !== b.kind || b.resourceType !== resourceTypeForKind(kind)
-            ? 'kind_mismatch'
-            : b.bytes > maxBytes[kind]
-              ? 'too_large'
-              : (kind === 'pdf' && !b.pages) ||
-                  ((kind === 'audio' || kind === 'video') && !b.durationMs)
-                ? 'unreadable'
-                : null;
-      if (reason !== null || kind === null) {
-        await deleteRefused(ctx, b.publicId, b.resourceType);
-        refuseConfirm(ctx, reason ?? 'format', { ...facts, kind });
-      }
-
-      const sized = kind === 'image' || kind === 'pdf' || kind === 'video';
-      const recorded = await assets.upsert({
-        deckId: deck.id,
-        publicId: b.publicId,
-        source: 'editor',
-        kind,
-        resourceType: resourceTypeForKind(kind),
-        width: sized ? (b.width ?? null) : null,
-        height: sized ? (b.height ?? null) : null,
-        bytes: b.bytes,
-        format: b.format.toLowerCase(),
-        durationMs: kind === 'audio' || kind === 'video' ? (b.durationMs ?? null) : null,
-        pages: kind === 'pdf' ? (b.pages ?? null) : null,
-        etag: b.etag ?? null,
-        originalFilename: b.originalFilename ?? null,
-        uploadedBy: input.user.id,
-      });
-      if (!recorded) refuseConfirm(ctx, 'other_deck', { ...facts, kind });
-      decisions.record('media.confirm', {
-        outcome: 'accepted',
-        ...ctx,
-        assetId: recorded.row.id,
-        kind,
-        bytes: b.bytes,
-      });
-      return { asset: toMediaAsset(recorded.row), created: recorded.created };
+    /** 046 D423: records the member's own finished profile-photo upload (images only). */
+    async confirmProfileUpload(input: {
+      user: CurrentUser;
+      body: MediaAssetConfirmRequest;
+      requestId?: string;
+    }): Promise<{ asset: MediaAsset; created: boolean }> {
+      return confirm(
+        { ...baseCtx(input), scope: 'profile' },
+        input.user,
+        input.body,
+        profileUploadFolder(input.user.id),
+        { deckId: null, scope: 'profile', ownerUserId: input.user.id },
+      );
     },
 
     /** Writes the browser's failed-upload report to the log; nothing is stored. */

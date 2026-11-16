@@ -16,7 +16,8 @@ export function PickButton({
   label: string;
   /** A name that says more than the visible label (e.g. "Replace cover image"). */
   ariaLabel?: string;
-  capture?: boolean;
+  /** `true` opens the back camera; 'user' the selfie camera. */
+  capture?: boolean | 'user' | 'environment';
   disabled: boolean;
   /** Every picked file, in the order the device gave them (one unless `multiple`). */
   onPick: (file: File, ...more: File[]) => void;
@@ -40,7 +41,7 @@ export function PickButton({
         aria-label={ariaLabel}
         accept={accept}
         multiple={multiple}
-        capture={capture ? 'environment' : undefined}
+        capture={capture === true ? 'environment' : capture || undefined}
         disabled={disabled}
         onChange={onInput}
       />

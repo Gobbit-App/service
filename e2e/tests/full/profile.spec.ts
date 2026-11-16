@@ -16,6 +16,7 @@ import {
   seedBrowseDeck,
   skipHint,
 } from '../smoke/helpers/browse-deck';
+import { cloudinaryApiSecret, photoFile, routeFakeCloudinary } from '../../fixtures/cloudinary';
 import { swipeCard } from '../smoke/helpers/swipe';
 
 /**
@@ -36,7 +37,7 @@ const SESSION_COOKIE = 'gobbit_session';
 
 const NOT_AVAILABLE = "That name isn't available";
 const BAD_SHAPE = 'Use 3–30 letters, digits, ., _ or -';
-const CLEARED = { username: null, firstName: null, lastName: null, location: null };
+const CLEARED = { username: null, firstName: null, lastName: null, location: null, avatar: null };
 
 const test = base.extend<{ tag: string; b: APIRequestContext; c: APIRequestContext }>({
   // A short unique suffix for names, so a held username from an earlier run never collides.
@@ -455,5 +456,298 @@ test.describe('creator avatar @full', () => {
     } finally {
       await context.setOffline(false);
     }
+  });
+});
+
+/* ------------------------------------------------------------------------------------------ */
+/* Part 3: profile photo (Story 3)                                                             */
+/* ------------------------------------------------------------------------------------------ */
+
+const AVATAR_SIGN = {
+  kind: 'image',
+  uploadUrl: 'https://api.cloudinary.com/v1_1/e2e-cloud/image/upload',
+  apiKey: 'e2e-key',
+  signature: 'e2e-signature',
+  tags: 'profile',
+  allowedFormats: 'jpg,png,webp,heic,heif',
+  maxBytes: 8 * 1024 * 1024,
+};
+
+/**
+ * Cloudinary and the profile-photo permission, answered locally (D133). `routeFakeCloudinary` does
+ * the upload answer, cloud name and delivery; the member's own sign and confirm routes are added
+ * here. With the API's secret the real confirm verifies the signed answer (the id must sit in the
+ * member's folder), otherwise it is stubbed too.
+ */
+async function routeFakeAvatar(page: Page, api: APIRequestContext, name: string): Promise<string> {
+  const me = (await (await api.get('me')).json()) as { user: { id: string } };
+  const folder = `gobbit/profiles/${me.user.id}`;
+  const publicId = `${folder}/e2e-${name}`;
+  await routeFakeCloudinary(page, publicId);
+  await page.route('**/api/me/avatar/sign', (route) =>
+    route.fulfill({
+      json: {
+        ...AVATAR_SIGN,
+        timestamp: Math.floor(Date.now() / 1000),
+        folder,
+        expiresAt: new Date(Date.now() + 50 * 60_000).toISOString(),
+      },
+    }),
+  );
+  if (!cloudinaryApiSecret) {
+    await page.route('**/api/me/avatar/assets', (route) => {
+      const sent = route.request().postDataJSON() as { publicId?: string };
+      return route.fulfill({
+        status: 201,
+        json: {
+          publicId: sent.publicId ?? publicId,
+          kind: 'image',
+          resourceType: 'image',
+          width: 1,
+          height: 1,
+          bytes: photoFile.buffer.length,
+          format: 'png',
+          durationMs: null,
+          pages: null,
+          originalFilename: null,
+          source: 'editor',
+          createdAt: new Date().toISOString(),
+        },
+      });
+    });
+  }
+  return publicId;
+}
+
+/** Pick, crop in the sheet (zoom, "Use photo") and close it; the upload then runs. */
+async function pickAndCrop(page: Page, label: 'Add photo' | 'Replace photo') {
+  await page.getByLabel(label).setInputFiles(photoFile);
+  const sheet = page.getByRole('dialog', { name: 'Crop your photo' });
+  await expect(sheet).toBeVisible();
+  await sheet.getByLabel('Zoom').fill('2');
+  await sheet.getByRole('button', { name: 'Use photo' }).click();
+  await expect(sheet).toBeHidden();
+}
+
+const photoOn = (page: Page, title: string) => card(page, title).locator('.avatar img');
+
+test.describe('profile photo @full', () => {
+  // Saving a photo needs the API to find the recorded asset: the UI flow only records it through the
+  // real signed confirm, so these tests need the Cloudinary secret (the third-party host is still faked).
+  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is needed to record the profile asset');
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto(webUrl('/settings/profile'));
+    await expect(username(page)).toBeVisible();
+  });
+
+  test('upload, crop, save shows the photo on a card; replace; remove brings initials back @full', async ({
+    page,
+    api,
+    webDeck,
+    tag,
+  }) => {
+    await setProfile(api, { firstName: 'Pho', lastName: `To${tag}` });
+    await page.reload();
+    const title = `Photo card ${tag}`;
+    await addCard(api, webDeck, title);
+
+    await routeFakeAvatar(page, api, `first-${tag}`);
+    await pickAndCrop(page, 'Add photo');
+    await expect(page.getByRole('button', { name: 'Remove photo' })).toBeVisible();
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+
+    await page.goto(webUrl(`/d/${webDeck.slug}`));
+    await expect(photoOn(page, title)).toBeVisible();
+
+    // replace
+    await page.goto(webUrl('/settings/profile'));
+    await pickAndCrop(page, 'Replace photo');
+    await expect(page.getByRole('button', { name: 'Remove photo' })).toBeVisible();
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+    await page.goto(webUrl(`/d/${webDeck.slug}`));
+    await expect(photoOn(page, title)).toBeVisible();
+
+    // remove: the initials return
+    await page.goto(webUrl('/settings/profile'));
+    await page.getByRole('button', { name: 'Remove photo' }).click();
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+    await page.goto(webUrl(`/d/${webDeck.slug}`));
+    await expect(card(page, title).locator('.avatar__initials')).toHaveText('PT');
+    await expect(photoOn(page, title)).toHaveCount(0);
+  });
+
+  test('a failed upload keeps the previous photo and other edits and says so @full', async ({
+    page,
+    api,
+    tag,
+  }) => {
+    const publicId = await routeFakeAvatar(page, api, `prev-${tag}`);
+    // The previous photo comes through the real upload flow, so its asset is recorded.
+    await pickAndCrop(page, 'Add photo');
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole('button', { name: 'Remove photo' })).toBeVisible();
+
+    await page.getByLabel('First name').fill(`Keep${tag}`);
+    // Registered last, so it wins over the fake upload answer.
+    await page.route('https://api.cloudinary.com/**', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }),
+    );
+    await pickAndCrop(page, 'Replace photo');
+
+    await expect(page.locator('.photo-field').getByRole('alert')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Remove photo' })).toBeVisible();
+    await expect(page.getByLabel('First name')).toHaveValue(`Keep${tag}`);
+
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+    const me = (await (await api.get('me')).json()) as {
+      profile: { firstName: string; avatar: { publicId: string } | null };
+    };
+    expect(me.profile.firstName).toBe(`Keep${tag}`);
+    expect(me.profile.avatar?.publicId).toBe(publicId);
+  });
+
+  test('a too large, wrong-type or unreadable file is refused with a message @full', async ({
+    page,
+    api,
+    tag,
+  }) => {
+    await routeFakeAvatar(page, api, `refused-${tag}`);
+    const field = page.locator('.photo-field');
+
+    await page.getByLabel('Add photo').setInputFiles({
+      name: 'huge.png',
+      mimeType: 'image/png',
+      buffer: Buffer.alloc(9 * 1024 * 1024),
+    });
+    await expect(field.getByRole('alert')).toContainText(/at most \d+ MB/);
+
+    await page.getByLabel('Add photo').setInputFiles({
+      name: 'notes.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('not a photo'),
+    });
+    await expect(field.getByRole('alert')).toContainText('Choose a JPEG, PNG, WebP or HEIC photo.');
+
+    await page.getByLabel('Add photo').setInputFiles({
+      name: 'broken.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('this is not a png'),
+    });
+    await expect(field.getByRole('alert')).toContainText("Couldn't read this photo");
+    await expect(page.getByRole('dialog', { name: 'Crop your photo' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Remove photo' })).toHaveCount(0);
+  });
+
+  test('a broken photo falls back to initials @full', async ({ page, api, webDeck, tag }) => {
+    test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is needed to record the profile asset');
+    await routeFakeAvatar(page, api, `broken-${tag}`);
+    await page.goto(webUrl('/settings/profile'));
+    await page.getByLabel('First name').fill('Bro');
+    await page.getByLabel('Last name').fill(`Ken${tag}`);
+    await pickAndCrop(page, 'Add photo');
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+    const title = `Broken photo ${tag}`;
+    await addCard(api, webDeck, title);
+    // Registered last, so it wins over the fake delivery.
+    await page.route('https://res.cloudinary.com/**', (route) => route.abort());
+
+    await page.goto(webUrl(`/d/${webDeck.slug}`));
+    await expect(card(page, title).locator('.avatar__initials')).toHaveText('BK');
+    await expect(photoOn(page, title)).toHaveCount(0);
+  });
+});
+
+/* ------------------------------------------------------------------------------------------ */
+/* Part 4: names show up everywhere without signing out (Story 5)                              */
+/* ------------------------------------------------------------------------------------------ */
+
+test.describe('profile names everywhere @full', () => {
+  test('a new name shows in the members row and the activity log; clearing restores the old @full', async ({
+    page,
+    api,
+    webDeck,
+    tag,
+  }) => {
+    const me = (await (await api.get('me')).json()) as { user: { displayName: string } };
+    const before = me.user.displayName;
+
+    // a log entry written by the owner
+    expect((await api.post(`items/${webDeck.items[0]!.id}/archive`)).status()).toBe(200);
+
+    await page.goto(webUrl('/settings/profile'));
+    await page.getByLabel('First name').fill('Nia');
+    await page.getByLabel('Last name').fill(`Name${tag}`);
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+
+    const named = `Nia Name${tag}`;
+    const row = page.locator('.admin-member');
+    const archived = page.locator('.event-row', { hasText: 'Archived' }).first();
+    await page.goto(webUrl(`/d/${webDeck.slug}/settings`));
+    await expect(row.filter({ hasText: named })).toBeVisible();
+    await expect(row.filter({ hasText: named }).locator('.avatar')).toBeVisible();
+    await page.goto(webUrl(`/d/${webDeck.slug}/log`));
+    await expect(archived).toContainText(named);
+
+    await page.goto(webUrl('/settings/profile'));
+    await page.getByLabel('First name').fill('');
+    await page.getByLabel('Last name').fill('');
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+
+    await page.goto(webUrl(`/d/${webDeck.slug}/settings`));
+    await expect(row.filter({ hasText: before }).first()).toBeVisible();
+    await expect(page.getByText(named)).toHaveCount(0);
+    await page.goto(webUrl(`/d/${webDeck.slug}/log`));
+    await expect(archived).toContainText(before);
+  });
+});
+
+/* ------------------------------------------------------------------------------------------ */
+/* Part 5: location stays private (Story 6)                                                    */
+/* ------------------------------------------------------------------------------------------ */
+
+test.describe('profile location @full', () => {
+  test('persists, clears, and never shows to other members @full', async ({
+    page,
+    api,
+    webDeck,
+    tag,
+  }) => {
+    const place = `Nowhereville${tag}`;
+    const title = `Place card ${tag}`;
+    await addCard(api, webDeck, title);
+
+    await page.goto(webUrl('/settings/profile'));
+    await page.getByLabel('Location').fill(place);
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+    await page.reload();
+    await expect(page.getByLabel('Location')).toHaveValue(place);
+
+    // never on a shared-deck card (label, tooltip) or in the members list
+    await page.goto(webUrl(`/d/${webDeck.slug}`));
+    await expect(card(page, title).locator('.avatar')).toBeVisible();
+    await card(page, title).locator('.avatar').click();
+    await expect(page.getByText(place)).toHaveCount(0);
+    await page.goto(webUrl(`/d/${webDeck.slug}/settings`));
+    await expect(page.locator('.admin-member').first()).toBeVisible();
+    await expect(page.getByText(place)).toHaveCount(0);
+
+    // clear: gone
+    await page.goto(webUrl('/settings/profile'));
+    await page.getByLabel('Location').fill('');
+    await saveButton(page).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+    await page.reload();
+    await expect(page.getByLabel('Location')).toHaveValue('');
   });
 });

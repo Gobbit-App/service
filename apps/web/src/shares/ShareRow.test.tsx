@@ -108,12 +108,13 @@ describe('ShareRow (D198)', () => {
     renderRow(
       makeShare({
         state: 'not_added',
-        reviewedBy: { displayName: 'Dana' },
+        reviewedBy: { displayName: 'Dana', username: null, initials: 'D', photo: null },
         reviewedAt: '2026-01-01T00:04:00.000Z',
       }),
     );
     expect(screen.getByText('Not added')).toBeInTheDocument();
     expect(screen.getByText('By Dana')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Dana' })).toHaveTextContent('D');
   });
 
   it('explains a failure and retries it', async () => {

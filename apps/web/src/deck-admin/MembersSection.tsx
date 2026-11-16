@@ -9,6 +9,7 @@ import { AdminError } from './AdminError';
 import { membersQuery, useChangeRole, useRemoveMember } from './deck-admin-queries';
 import { InviteForm } from './InviteForm';
 import { Button } from '../ui/buttons/Button';
+import { Avatar } from '../ui/Avatar';
 
 /**
  * D184/D185: everyone sees the member list; owners (`member.invite`, `member.remove`) also
@@ -77,14 +78,27 @@ function MemberRow({
 
   return (
     <li className="admin-list__item admin-member">
-      <div className="admin-member__who">
-        <strong dir="auto">
-          {member.displayName}
-          {isMe && ' (you)'}
-        </strong>
-        <span className="muted">
-          {member.email ?? (member.username ? `@${member.username}` : null)}
-        </span>
+      <div className="admin-member__id">
+        <Avatar
+          size="md"
+          ariaLabel={member.displayName}
+          member={{
+            id: member.userId,
+            initials: member.initials,
+            photo: member.photo,
+            username: member.username,
+            name: member.displayName,
+          }}
+        />
+        <div className="admin-member__who">
+          <strong dir="auto">
+            {member.displayName}
+            {isMe && ' (you)'}
+          </strong>
+          <span className="muted">
+            {member.email ?? (member.username ? `@${member.username}` : null)}
+          </span>
+        </div>
       </div>
       {controls && !pending ? (
         <select

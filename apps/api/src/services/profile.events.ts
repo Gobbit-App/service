@@ -15,6 +15,8 @@ export type ProfileDecisions = {
     outcome: 'available' | 'unavailable' | 'refused';
     reason?: 'invalid' | 'reserved' | 'unavailable' | 'rate_limited';
   };
+  /** D429: a profile photo was refused; the member only sees "Unknown image". */
+  'profile.avatar': { outcome: 'refused'; reason: 'unknown' | 'foreign' | 'rejected' };
   /** A member lookup by username or email; `targetId` only on `found`. */
   'profile.lookup': {
     outcome: 'found' | 'not_found' | 'refused';
@@ -28,6 +30,8 @@ export type ProfileDecisions = {
 export const PROFILE_DECISION_LEVELS: Partial<Record<string, DecisionLevel>> = {
   // Impersonation attempts; the other refusals stay info.
   'profile.username:refused:reserved': 'warn',
+  // Someone else's file or a deck image points at a client bug or probing.
+  'profile.avatar:refused:foreign': 'warn',
 };
 
 export function createProfileDecisions(parent?: Logger) {

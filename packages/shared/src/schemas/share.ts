@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isoDateTimeSchema, uuidSchema } from './common';
+import { photoSchema } from './profile';
 import { itemTypes } from '../enums';
 import {
   autoPublishOutcomes,
@@ -56,7 +57,15 @@ export const shareSummarySchema = z
       })
       .strict()
       .nullable(),
-    reviewedBy: z.object({ displayName: z.string() }).strict().nullable(),
+    reviewedBy: z
+      .object({
+        displayName: z.string(),
+        username: z.string().nullable(),
+        initials: z.string(),
+        photo: photoSchema.nullable(),
+      })
+      .strict()
+      .nullable(),
     reviewedAt: isoDateTimeSchema.nullable(),
   })
   .strict();

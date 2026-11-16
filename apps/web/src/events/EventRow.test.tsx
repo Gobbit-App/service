@@ -1,9 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import type { ItemEvent } from '@gobbit/shared';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { itemEventKinds } from '@gobbit/shared/events';
 import { EventRow } from './EventRow';
 import { eventLabel } from './event-copy';
+
+vi.mock('../cards/use-cloud-name', () => ({ useCloudName: () => null }));
 
 const NOW = new Date('2026-10-24T12:00:00.000Z');
 
@@ -14,7 +16,7 @@ function event(over: Partial<ItemEvent> = {}): ItemEvent {
     title: 'Plumber',
     kind: 'updated',
     via: 'session',
-    actor: { userId: 'u1', displayName: 'Maya' },
+    actor: { userId: 'u1', displayName: 'Maya', username: null, initials: 'M', photo: null },
     changes: ['title', 'body'],
     createdAt: '2026-10-24T11:00:00.000Z',
     ...over,
@@ -46,9 +48,15 @@ describe('EventRow (D188)', () => {
     expect(screen.queryByText('via share/import')).not.toBeInTheDocument();
   });
 
+  it('shows the actor avatar named after the person', () => {
+    renderRow(event());
+    expect(screen.getByRole('img', { name: 'Maya' })).toHaveTextContent('M');
+  });
+
   it('reads "Former member" for a deleted account', () => {
     renderRow(event({ actor: null }));
     expect(screen.getByText('Former member')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
   it('badges proposals from a share', () => {

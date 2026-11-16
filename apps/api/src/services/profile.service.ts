@@ -1,6 +1,7 @@
 import type { MemberSummary, Profile, ProfilePatch } from '@gobbit/shared';
 import { checkUsernameShape } from '@gobbit/shared/username';
 import { initialsFor } from '@gobbit/shared/avatar';
+import type { AssetRow } from '@gobbit/db';
 import type { DecisionLogger } from '../lib/decision-event';
 import type { LogHash } from '../lib/log-hash';
 import type { ProfilePatch as ProfileColumns, ProfileRow } from '../repositories/users.repo';
@@ -35,11 +36,13 @@ export interface ProfileServiceDeps {
   activeHold(lower: string, now: Date): Promise<{ releasedBy: string } | null>;
   sharesDeckWith(callerId: string, targetId: string): Promise<boolean>;
   profileById(id: string): Promise<ProfileRow | null>;
+  assetByPublicId(publicId: string): Promise<AssetRow | null>;
   transaction<T>(fn: (repos: ProfileTxRepos) => Promise<T>): Promise<T>;
 }
 
 const DAY_MS = 86_400_000;
 const FIELDS = ['username', 'firstName', 'lastName', 'location'] as const;
+const PROFILE_FIELDS = [...FIELDS, 'avatar'] as const;
 
 /** The email is read only to compute initials; it never reaches the DTO. */
 export function toProfile(row: ProfileRow): Profile {
@@ -60,6 +63,37 @@ type Outcome = { row: ProfileRow; from: string | null; heldUntil: Date | null; c
 export function createProfileService(deps: ProfileServiceDeps) {
   const { decisions, logHash } = deps;
   const hash = (name: string) => logHash('username', name);
+
+  /** D429: the photo must be the caller's own recorded profile image; dimensions come from it. */
+  async function resolveAvatar(
+    user: CurrentUser,
+    given: { publicId: string } | null,
+    requestId: string,
+  ): Promise<ProfileRow['avatar']> {
+    if (!given) return null;
+    const asset = await deps.assetByPublicId(given.publicId);
+    const reason = !asset
+      ? 'unknown'
+      : asset.scope !== 'profile' || asset.ownerUserId !== user.id || asset.kind !== 'image'
+        ? 'foreign'
+        : asset.rejectedAt !== null
+          ? 'rejected'
+          : null;
+    if (reason || !asset) {
+      decisions.record('profile.avatar', {
+        outcome: 'refused',
+        reason: reason ?? 'unknown',
+        requestId,
+        userId: user.id,
+      });
+      throw unprocessableField('avatar.publicId', 'Unknown image');
+    }
+    return {
+      publicId: asset.publicId,
+      ...(asset.width !== null ? { width: asset.width } : {}),
+      ...(asset.height !== null ? { height: asset.height } : {}),
+    };
+  }
 
   return {
     async get(user: CurrentUser): Promise<Profile> {
@@ -147,11 +181,11 @@ export function createProfileService(deps: ProfileServiceDeps) {
     },
 
     async update(user: CurrentUser, patch: ProfilePatch, requestId: string): Promise<Profile> {
-      // avatar: US3 (T053)
-      if (patch.avatar !== undefined) throw unprocessableField('avatar.publicId', 'Unknown image');
-
       const next: ProfileColumns = {};
       for (const f of FIELDS) if (patch[f] !== undefined) next[f] = clean(patch[f]);
+      if (patch.avatar !== undefined) {
+        next.avatar = await resolveAvatar(user, patch.avatar, requestId);
+      }
 
       if (next.username) {
         const shape = checkUsernameShape(next.username);
@@ -173,12 +207,17 @@ export function createProfileService(deps: ProfileServiceDeps) {
           const current = await users.profileById(user.id);
           if (!current) throw unauthorized();
 
-          const changes = FIELDS.filter((f) => f in next && next[f] !== current[f]);
+          const changes = PROFILE_FIELDS.filter(
+            (f) =>
+              f in next &&
+              (f === 'avatar'
+                ? next.avatar?.publicId !== current.avatar?.publicId
+                : next[f] !== current[f]),
+          );
           if (changes.length === 0) {
             return { row: current, from: null, heldUntil: null, changed: false };
           }
-          const write: ProfileColumns = {};
-          for (const f of changes) write[f] = next[f];
+          const write = Object.fromEntries(changes.map((f) => [f, next[f]])) as ProfileColumns;
 
           // A case-only rename keeps the same lower-cased name, so there is nothing to hold.
           const old = current.username;

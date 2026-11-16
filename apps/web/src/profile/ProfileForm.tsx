@@ -14,8 +14,8 @@ import { idbDraftsKv } from '../editor/drafts-store';
 import { LimitMeter } from '../editor/fields/LimitMeter';
 import { TextInput } from '../editor/fields/TextInput';
 import { useLeaveGuard } from '../editor/use-leave-guard';
-import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/buttons/Button';
+import { PhotoField, type ProfilePhoto } from './PhotoField';
 import { usernameMessage, useUsernameCheck } from './use-username-check';
 
 export type ProfileValues = {
@@ -23,6 +23,8 @@ export type ProfileValues = {
   firstName: string;
   lastName: string;
   location: string;
+  /** The photo the form will save (an uploaded asset), or null for none. */
+  avatar: ProfilePhoto | null;
 };
 
 export type SavedProfile = {
@@ -58,6 +60,7 @@ const toValues = (p: SavedProfile): ProfileValues => ({
   firstName: p.firstName ?? '',
   lastName: p.lastName ?? '',
   location: p.location ?? '',
+  avatar: p.avatar,
 });
 
 /** The server's field messages (`errors[].path/message`), usernames in human words. */
@@ -77,10 +80,17 @@ function serverErrors(err: unknown): Errors {
     : { fields, form: PROFILE_COPY.failed };
 }
 
-function isStored(v: unknown): v is { v: 1; values: ProfileValues } {
+/** The draft keeps only the uploaded photo's publicId (never image data). */
+type Stored = { v: 1; values: Record<Field, string> & { avatar?: string | null } };
+function isStored(v: unknown): v is Stored {
   const r = v as { v?: unknown; values?: Record<string, unknown> } | null;
   return r?.v === 1 && FIELDS.every((f) => typeof r.values?.[f] === 'string');
 }
+const photoId = (v: Pick<ProfileValues, 'avatar'>) => v.avatar?.publicId ?? null;
+const fromStored = (s: Stored['values']): ProfileValues => ({
+  ...s,
+  avatar: s.avatar ? { publicId: s.avatar } : null,
+});
 
 /**
  * 046 (Story 1, 7): the profile fields. Empty means cleared; the server trims, validates and
@@ -109,7 +119,10 @@ export function ProfileForm({
   const [restored, setRestored] = useState(false);
   const [errors, setErrors] = useState<Errors>(NO_ERRORS);
 
-  const dirty = FIELDS.some((f) => values[f] !== saved[f]);
+  const [uploading, setUploading] = useState(false);
+  const differs = (a: ProfileValues, b: ProfileValues) =>
+    FIELDS.some((f) => a[f] !== b[f]) || photoId(a) !== photoId(b);
+  const dirty = differs(values, saved);
   const check = useUsernameCheck(values.username, profile.username);
 
   useEffect(() => {
@@ -117,12 +130,8 @@ export function ProfileForm({
     idbDraftsKv()
       .get(PROFILE_DRAFT_KEY)
       .then((stored) => {
-        if (
-          live &&
-          isStored(stored) &&
-          FIELDS.some((f) => stored.values[f] !== savedRef.current[f])
-        ) {
-          setValues(stored.values);
+        if (live && isStored(stored) && differs(fromStored(stored.values), savedRef.current)) {
+          setValues(fromStored(stored.values));
           setRestored(true);
         }
       })
@@ -138,7 +147,9 @@ export function ProfileForm({
   useEffect(() => {
     if (!ready) return;
     const kv = idbDraftsKv();
-    const write = dirty ? kv.set(PROFILE_DRAFT_KEY, { v: 1, values }) : kv.del(PROFILE_DRAFT_KEY);
+    const write = dirty
+      ? kv.set(PROFILE_DRAFT_KEY, { v: 1, values: { ...values, avatar: photoId(values) } })
+      : kv.del(PROFILE_DRAFT_KEY);
     write.catch(() => undefined);
   }, [ready, dirty, values]);
 
@@ -157,6 +168,10 @@ export function ProfileForm({
             firstName: v.firstName.trim() || null,
             lastName: v.lastName.trim() || null,
             location: v.location.trim() || null,
+            // Only a changed photo is sent; absent leaves it as it is.
+            ...(photoId(v) !== photoId(saved)
+              ? { avatar: v.avatar ? { publicId: v.avatar.publicId } : null }
+              : {}),
           },
         }),
       ),
@@ -182,6 +197,11 @@ export function ProfileForm({
     },
     onError: (err) => setErrors(serverErrors(err)),
   });
+
+  const setAvatar = (avatar: ProfilePhoto | null) => {
+    setValues((v) => ({ ...v, avatar }));
+    save.reset();
+  };
 
   const edit = (field: Field) => (value: string) => {
     setValues((v) => ({ ...v, [field]: value }));
@@ -230,24 +250,18 @@ export function ProfileForm({
         if (dirty && online && !blocked && !save.isPending) save.mutate(values);
       }}
     >
-      <div className="profile-preview">
-        <Avatar
-          size="md"
-          member={{
-            id: userId,
-            initials: initialsFor({
-              firstName: values.firstName,
-              lastName: values.lastName,
-              email,
-            }),
-            name: name || null,
-            username: username || null,
-            photo: profile.avatar,
-          }}
-          ariaLabel="Your avatar, as others see it"
-        />
-        <p className="muted">How others see you</p>
-      </div>
+      <PhotoField
+        member={{
+          id: userId,
+          initials: initialsFor({ firstName: values.firstName, lastName: values.lastName, email }),
+          name: name || null,
+          username: username || null,
+        }}
+        photo={values.avatar}
+        onChange={setAvatar}
+        onUploadingChange={setUploading}
+        disabled={save.isPending}
+      />
       <div className="field-group">
         <TextInput
           label="First name"
@@ -284,7 +298,7 @@ export function ProfileForm({
           type="submit"
           icon="check"
           label="Save"
-          disabled={!dirty || save.isPending}
+          disabled={!dirty || save.isPending || uploading}
           disabledReason={dirty && !online ? PROFILE_COPY.offline : null}
         />
         <Button

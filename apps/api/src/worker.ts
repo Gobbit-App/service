@@ -54,6 +54,7 @@ import { ensureQueues } from './jobs/ensure-queues';
 import { createPruneSearchQueries } from './jobs/prune-search-queries';
 import { createPruneIngestJobs } from './jobs/prune-ingest-jobs';
 import { createPruneDeletedItems } from './jobs/prune-deleted-items';
+import { createProfileRepo } from './repositories/profile.repo';
 import { createPruneWaitlist } from './jobs/prune-waitlist';
 import { createWaitlistRepo } from './repositories/waitlist.repo';
 import { createIngestJobsRepo } from './repositories/ingest-jobs.repo';
@@ -113,7 +114,10 @@ async function main() {
   );
 
   // D132: cards deleted more than ITEM_UNDELETE_DAYS ago are purged weekly
-  const pruneDeletedItems = createPruneDeletedItems({ items: createItemsRepo(db) });
+  const pruneDeletedItems = createPruneDeletedItems({
+    items: createItemsRepo(db),
+    profile: createProfileRepo(db),
+  });
   await boss.schedule(QUEUES.pruneDeletedItems, DELETED_ITEM_PRUNE_CRON);
   await boss.work(QUEUES.pruneDeletedItems, async () => {
     await pruneDeletedItems();

@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/api-error';
-import { requests, respond } from '../test/api-mock';
+import { mockConfig, requests, respond } from '../test/api-mock';
 import type { memoryDraftsKv } from '../test/memory-drafts-kv';
 import { renderInRouter } from '../test/render-in-router';
 import type { SavedProfile } from './ProfileForm';
@@ -162,5 +162,56 @@ describe('ProfileForm (046)', () => {
     expect(await screen.findByText("That name isn't available")).toBeInTheDocument();
     type('Username', 'ab');
     expect(screen.getByText('Use 3–30 letters, digits, ., _ or -')).toBeInTheDocument();
+  });
+
+  describe('photo', () => {
+    afterEach(() => {
+      mockConfig.cloudinaryCloudName = null;
+    });
+
+    it('restores a draft photo and saves it with the other fields', async () => {
+      await kv.set(PROFILE_DRAFT_KEY, {
+        v: 1,
+        values: {
+          username: '',
+          firstName: 'Dana',
+          lastName: '',
+          location: 'Haifa',
+          avatar: 'p/new',
+        },
+      });
+      respond.mockResolvedValue({ ...SAVED, avatar: { publicId: 'p/new' } });
+      await render();
+      expect(await screen.findByText(PROFILE_COPY.restored)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await screen.findByText(PROFILE_COPY.saved);
+      expect(patches()[0]![1]).toEqual({
+        body: {
+          username: null,
+          firstName: 'Dana',
+          lastName: null,
+          location: 'Haifa',
+          avatar: { publicId: 'p/new' },
+        },
+      });
+    });
+
+    it('removes the photo (avatar null), keeps it in the draft, and Reset restores it', async () => {
+      mockConfig.cloudinaryCloudName = 'demo';
+      await render({ ...SAVED, avatar: { publicId: 'p/old' } });
+      fireEvent.click(await screen.findByRole('button', { name: 'Remove photo' }));
+      await waitFor(() =>
+        expect(
+          (kv.map.get(PROFILE_DRAFT_KEY) as { values: { avatar: unknown } }).values.avatar,
+        ).toBe(null),
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+      expect(screen.getByRole('button', { name: 'Remove photo' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove photo' }));
+      respond.mockResolvedValue({ ...SAVED, avatar: null });
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await screen.findByText(PROFILE_COPY.saved);
+      expect((patches()[0]![1] as { body: { avatar?: unknown } }).body.avatar).toBeNull();
+    });
   });
 });

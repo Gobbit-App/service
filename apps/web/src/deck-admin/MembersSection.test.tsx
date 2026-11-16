@@ -6,6 +6,7 @@ import { makeDeck } from '../test/fixtures';
 import { renderWithClient } from '../test/render';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
+vi.mock('../cards/use-cloud-name', () => ({ useCloudName: () => null }));
 const { respond, requests } = await import('../test/api-mock');
 const { MembersSection } = await import('./MembersSection');
 
@@ -45,6 +46,20 @@ const row = async (name: string) =>
   (await screen.findByText(name, { selector: 'strong', exact: false })).closest(
     'li',
   ) as HTMLElement;
+
+describe('MembersSection avatars (046)', () => {
+  it('shows an avatar named after the member; username holders show @username, no email', async () => {
+    members.push(
+      member('Dana', { email: null, username: 'dana', initials: 'DL', userId: 'user-dana' }),
+    );
+    setup();
+    const dana = await row('Dana');
+    expect(within(dana).getByRole('img', { name: 'Dana' })).toHaveTextContent('DL');
+    expect(within(dana).getByText('@dana')).toBeInTheDocument();
+    expect(dana.textContent).not.toContain('@example');
+    members.pop();
+  });
+});
 
 describe('MembersSection (D184, D185)', () => {
   beforeEach(() => {

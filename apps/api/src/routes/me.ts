@@ -1,6 +1,9 @@
 import { createRoute, type OpenAPIHono } from '@hono/zod-openapi';
 import {
   analyticsConsentSchema,
+  mediaAssetConfirmRequestSchema,
+  mediaAssetSchema,
+  mediaSignResponseSchema,
   meSchema,
   profilePatchSchema,
   profileSchema,
@@ -128,5 +131,65 @@ export function registerMeRoutes(app: OpenAPIHono<AppEnv>, services: Services): 
       c.get('requestId'),
     );
     return c.json(result, 200);
+  });
+
+  const avatarSignRoute = createRoute({
+    method: 'post',
+    path: '/me/avatar/sign',
+    tags: ['auth'],
+    summary: "Signed permission to upload the caller's own profile photo (046, D423)",
+    security: AUTH_SECURITY,
+    responses: {
+      200: {
+        content: { 'application/json': { schema: mediaSignResponseSchema } },
+        description:
+          'Signed image upload parameters for `gobbit/profiles/<userId>`; the API secret is never included',
+      },
+      ...problems('unauthorized', 'rate-limited', 'unavailable'),
+    },
+  });
+
+  app.openapi(avatarSignRoute, async (c) => {
+    const signed = await services.media.signProfileUpload({
+      user: getUser(c),
+      requestId: c.get('requestId'),
+    });
+    c.header('Cache-Control', 'no-store');
+    return c.json(signed, 200);
+  });
+
+  const avatarAssetRoute = createRoute({
+    method: 'post',
+    path: '/me/avatar/assets',
+    tags: ['auth'],
+    summary: 'Record a finished profile-photo upload from its signed Cloudinary response (046)',
+    security: AUTH_SECURITY,
+    request: {
+      body: {
+        content: { 'application/json': { schema: mediaAssetConfirmRequestSchema } },
+        required: true,
+      },
+    },
+    responses: {
+      201: {
+        content: { 'application/json': { schema: mediaAssetSchema } },
+        description: 'Recorded',
+      },
+      200: {
+        content: { 'application/json': { schema: mediaAssetSchema } },
+        description: 'Already recorded (idempotent)',
+      },
+      ...problems('validation', 'unauthorized', 'unprocessable', 'rate-limited', 'unavailable'),
+    },
+  });
+
+  app.openapi(avatarAssetRoute, async (c) => {
+    const { asset, created } = await services.media.confirmProfileUpload({
+      user: getUser(c),
+      body: c.req.valid('json'),
+      requestId: c.get('requestId'),
+    });
+    c.header('Cache-Control', 'no-store');
+    return created ? c.json(asset, 201) : c.json(asset, 200);
   });
 }

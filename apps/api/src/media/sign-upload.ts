@@ -21,6 +21,11 @@ export function deckTag(deckId: string): string {
   return `deck:${deckId}`;
 }
 
+/** 046 D423: a member's profile photos live apart from every deck. */
+export function profileUploadFolder(userId: string): string {
+  return `gobbit/profiles/${userId}`;
+}
+
 /**
  * D133/D389: the signed parameters for one direct browser → Cloudinary upload of one kind of
  * file. Everything the browser sends besides `file`, `api_key` and `signature` is covered by the
@@ -31,14 +36,43 @@ export function signEditorUpload(
   creds: CloudinaryCredentials,
   deckId: string,
   now: Date,
+  opts: { kind: MediaKind; maxBytes: number },
+): MediaSignResponse {
+  return signUploadIn(
+    creds,
+    { folder: editorUploadFolder(deckId), tags: [EDITOR_UPLOAD_TAG, deckTag(deckId)] },
+    now,
+    opts,
+  );
+}
+
+/** 046 D423: the same signed permission for a member's profile photo. */
+export function signProfileUpload(
+  creds: CloudinaryCredentials,
+  userId: string,
+  now: Date,
+  opts: { kind: MediaKind; maxBytes: number },
+): MediaSignResponse {
+  return signUploadIn(
+    creds,
+    { folder: profileUploadFolder(userId), tags: ['profile', `user:${userId}`] },
+    now,
+    opts,
+  );
+}
+
+function signUploadIn(
+  creds: CloudinaryCredentials,
+  where: { folder: string; tags: string[] },
+  now: Date,
   { kind, maxBytes }: { kind: MediaKind; maxBytes: number },
 ): MediaSignResponse {
   const timestamp = Math.floor(now.getTime() / 1000);
   const eager = mediaEagerParam(kind);
   const params: Record<string, string | number | boolean> = {
     allowed_formats: MEDIA_FORMATS[kind].join(','),
-    folder: editorUploadFolder(deckId),
-    tags: [EDITOR_UPLOAD_TAG, deckTag(deckId)].join(','),
+    folder: where.folder,
+    tags: where.tags.join(','),
     timestamp,
     // D392: audio and video renditions are generated at upload, so playback never waits.
     ...(eager ? { eager, eager_async: true } : {}),

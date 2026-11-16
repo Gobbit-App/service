@@ -125,6 +125,7 @@ export function buildIngestServices(deps: {
       jobs,
       items: deps.items,
       users: deps.users,
+      summaries: deps.summaries,
       queue,
       assertWithinCaps: createCapGuard({
         jobs,

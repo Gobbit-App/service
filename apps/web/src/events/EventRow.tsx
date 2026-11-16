@@ -1,6 +1,7 @@
 import type { ItemEvent } from '@gobbit/shared';
 import type { ReactElement } from 'react';
 import { relativeTime } from '../lib/relative-time';
+import { Avatar } from '../ui/Avatar';
 import { NavLink } from '../ui/NavLink';
 import { actorLabel, changesLabel, eventLabel, viaBadge } from './event-copy';
 
@@ -24,6 +25,19 @@ export function EventRow({ event, now }: { event: ItemEvent; now: Date }): React
         {changes && <span className="event-row__changes"> · {changes}</span>}
       </div>
       <div className="event-row__meta">
+        {event.actor && (
+          <Avatar
+            size="sm"
+            ariaLabel={event.actor.displayName}
+            member={{
+              id: event.actor.userId,
+              initials: event.actor.initials,
+              photo: event.actor.photo,
+              username: event.actor.username,
+              name: event.actor.displayName,
+            }}
+          />
+        )}{' '}
         <span dir="auto">{actorLabel(event)}</span>
         {' · '}
         <time dateTime={event.createdAt}>{relativeTime(new Date(event.createdAt), now)}</time>

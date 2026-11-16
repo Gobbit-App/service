@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isApiError, type Problem } from '../api/api-error';
-import { confirmMediaAsset, reportUploadFailure, signMediaUpload } from '../api/media';
+import {
+  confirmAvatarAsset,
+  confirmMediaAsset,
+  reportUploadFailure,
+  signAvatarUpload,
+  signMediaUpload,
+} from '../api/media';
 import type { MediaAsset, MediaKind, MediaUploadFailureRequest } from '@gobbit/shared';
 import {
   cachedSigner,
@@ -19,8 +25,17 @@ export type ImageUploadState =
   | { status: 'confirming' }
   | { status: 'failed'; message: string; canRetry: boolean };
 
+const confirmProfilePhoto = (_deckId: string, uploaded: UploadedImage) =>
+  confirmAvatarAsset(uploaded);
+const skipReport = async (): Promise<void> => undefined;
+
+/** Where an upload belongs: a deck's media, or the member's own profile photo (046). */
+export type UploadTarget = { kind: 'deck'; deckId: string } | { kind: 'profile' };
+
 export type UseImageUploadOptions = {
-  deckId: string;
+  /** Shorthand for `target: { kind: 'deck', deckId }`. */
+  deckId?: string;
+  target?: UploadTarget;
   /** Called once per finished and confirmed upload with the recorded asset. */
   onUploaded: (asset: MediaAsset) => void;
   /** Tests inject these; production signs through the API (per kind, D389) and uploads with XHR. */
@@ -69,19 +84,23 @@ export function failure(error: unknown): { message: string; canRetry: boolean } 
 }
 
 /** One cached permission per kind: a PDF can't be uploaded with a photo's signature (D389). */
-export function useKindSigners(deckId: string, injected?: Signer): (kind: MediaKind) => Signer {
+export function useKindSigners(
+  deckId: string,
+  injected?: Signer,
+  profile = false,
+): (kind: MediaKind) => Signer {
   const [signers] = useState(() => new Map<MediaKind, Signer>());
   return useCallback(
     (kind: MediaKind): Signer => {
       if (injected) return injected;
       let signer = signers.get(kind);
       if (!signer) {
-        signer = cachedSigner(() => signMediaUpload(deckId, kind));
+        signer = cachedSigner(() => (profile ? signAvatarUpload() : signMediaUpload(deckId, kind)));
         signers.set(kind, signer);
       }
       return signer;
     },
-    [deckId, injected, signers],
+    [deckId, injected, profile, signers],
   );
 }
 
@@ -104,15 +123,21 @@ export function sendFailureReport(
  * previous one; the picked file is kept so a failed upload can be retried without re-picking.
  */
 export function useImageUpload({
-  deckId,
+  deckId: deckIdOption,
+  target,
   onUploaded,
   signer: injectedSigner,
   upload = signAndUpload,
-  confirm = confirmMediaAsset,
-  report = reportUploadFailure,
+  confirm: injectedConfirm,
+  report: injectedReport,
 }: UseImageUploadOptions) {
+  const profile = target?.kind === 'profile';
+  const deckId = (target?.kind === 'deck' ? target.deckId : deckIdOption) ?? '';
+  const confirm = injectedConfirm ?? (profile ? confirmProfilePhoto : confirmMediaAsset);
+  // The failure log is per deck; a profile photo has none.
+  const report = injectedReport ?? (profile ? skipReport : reportUploadFailure);
   const [state, setState] = useState<ImageUploadState>({ status: 'idle' });
-  const signerFor = useKindSigners(deckId, injectedSigner);
+  const signerFor = useKindSigners(deckId, injectedSigner, profile);
   const file = useRef<{ picked: File; kind: MediaKind } | null>(null);
   const controller = useRef<AbortController | null>(null);
   const latestOnUploaded = useRef(onUploaded);

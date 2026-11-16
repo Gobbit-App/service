@@ -1,14 +1,29 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import type { CategoryRow, DeckRow, ItemRow, UserRow } from '@gobbit/db';
+import { eq, inArray } from 'drizzle-orm';
+import {
+  assets,
+  ingestJobs,
+  usernameHolds,
+  type CategoryRow,
+  type DeckRow,
+  type ItemRow,
+  type UserRow,
+} from '@gobbit/db';
 import {
   addFavorite,
   addMember,
   createAccountUser,
+  createAsset,
   createCategory,
   createDeck,
   createItem,
+  makeProfileAsset,
 } from '@gobbit/db/test';
 import { createFakeEmbedder } from '../src/ai/fake-embedder';
+import { MemoryIngestUploads } from '../src/media/ingest-uploads';
+import { MemoryMediaStore } from '../src/media/media-store';
+import { createProfileRepo } from '../src/repositories/profile.repo';
+import { createAssetsRepo } from '../src/repositories/assets.repo';
 import { json, OWNER_EMAIL, setupApiTest } from './helpers';
 
 /** 046 traceability: part 1 (profile, username, lookup, invite by username). */
@@ -576,5 +591,506 @@ describe('profile (046 part 2: creator)', () => {
         expectNoLeak(s, ada, false);
       }
     });
+  });
+});
+
+// Fake credentials (split so secret scanners don't flag them).
+const API_SECRET = ['not-a-real', 'secret'].join('-');
+const CLOUDINARY_URL = ['cloudinary://', 'key123', ':', API_SECRET, '@', 'test-cloud'].join('');
+
+const ingestOn = () => ({
+  enabled: true,
+  uploads: new MemoryIngestUploads(),
+  queue: { enqueue: async () => undefined },
+});
+
+/** 046 traceability: part 3 (profile photo, FR-003/FR-011, D423). */
+describe('profile (046 part 3: photo)', () => {
+  const store = new MemoryMediaStore();
+  const ctx = setupApiTest({ env: { CLOUDINARY_URL }, media: { mediaStore: store } });
+  let crew: DeckRow;
+  let n = 0;
+
+  const call = (path: string, email: string, method = 'GET', body?: unknown) =>
+    ctx.app.request(path, {
+      method,
+      headers: ctx.as(email),
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  const patchAvatar = (u: UserRow, publicId: string) =>
+    call('/me/profile', u.email, 'PATCH', { avatar: { publicId } });
+  const answer = (publicId: string, version = 1_700_000_000) => ({
+    publicId,
+    version,
+    signature: store.sign(publicId, version),
+    width: 256,
+    height: 256,
+    bytes: 4_000,
+    format: 'jpg',
+  });
+  const confirm = (u: UserRow, body: unknown) => call('/me/avatar/assets', u.email, 'POST', body);
+  const rowsFor = (publicId: string) =>
+    ctx.t.db.select().from(assets).where(eq(assets.publicId, publicId));
+
+  async function member(): Promise<UserRow> {
+    const u = await createAccountUser(ctx.t.db);
+    await ctx.sessionFor(u);
+    await addMember(ctx.t.db, crew, u, 'editor');
+    return u;
+  }
+
+  beforeAll(async () => {
+    crew = await createDeck(ctx.t.db, ctx.world.owner, { slug: 'crew' });
+  });
+
+  it('signs for the caller own profile folder, with no-store and no secret', async () => {
+    const u = await member();
+    const res = await call('/me/avatar/sign', u.email, 'POST');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const body = await json(res);
+    expect(body).toMatchObject({
+      apiKey: 'key123',
+      folder: `gobbit/profiles/${u.id}`,
+      tags: `profile,user:${u.id}`,
+    });
+    expect(JSON.stringify(body)).not.toContain(API_SECRET);
+    const anon = await ctx.app.request('/me/avatar/sign', { method: 'POST', headers: ctx.anon() });
+    expect(anon.status).toBe(401);
+  });
+
+  it('confirms an upload (201 then 200), sets it, and every summary shows the photo', async () => {
+    const u = await member();
+    const publicId = `gobbit/profiles/${u.id}/pic-${(n += 1)}`;
+    expect((await confirm(u, answer(publicId))).status).toBe(201);
+    expect((await confirm(u, answer(publicId))).status).toBe(200);
+    expect((await rowsFor(publicId))[0]).toMatchObject({
+      scope: 'profile',
+      ownerUserId: u.id,
+      deckId: null,
+    });
+
+    const res = await patchAvatar(u, publicId);
+    expect(res.status).toBe(200);
+    const photo = { publicId, width: 256, height: 256 };
+    expect((await json(res)).avatar).toEqual(photo);
+    expect((await json(await call('/me', u.email))).profile.avatar).toEqual(photo);
+
+    const card = await createItem(ctx.t.db, crew, {
+      card: { type: 'text', title: 'With photo', body: '', payload: {} },
+      createdBy: u.id,
+    });
+    const item = await json(await call(`/items/${card.id}`, OWNER_EMAIL));
+    expect(item.creator.photo).toEqual(photo);
+    const members = await json(await call('/decks/crew/members', OWNER_EMAIL));
+    expect(members.data.find((m: { userId: string }) => m.userId === u.id).photo).toEqual(photo);
+  });
+
+  it('refuses an upload in another folder, a bad signature and a non-image', async () => {
+    const u = await member();
+    const v = await member();
+    for (const publicId of [
+      `gobbit/profiles/${v.id}/steal`,
+      `gobbit/items/${crew.id}/x`,
+      `gobbit/avatars/${u.id}/x`,
+    ]) {
+      expect((await confirm(u, answer(publicId))).status, publicId).toBe(422);
+      expect(await rowsFor(publicId)).toEqual([]);
+    }
+    const mine = `gobbit/profiles/${u.id}/bad`;
+    expect((await confirm(u, { ...answer(mine), signature: 'nope' })).status).toBe(422);
+    const pdf = { ...answer(mine), format: 'pdf', kind: 'pdf', resourceType: 'image', pages: 1 };
+    expect((await confirm(u, pdf)).status).toBe(422);
+    expect(await rowsFor(mine)).toEqual([]);
+  });
+
+  it('PATCH avatar refuses another member, a deck asset, a rejected asset and an unknown id', async () => {
+    const u = await member();
+    const v = await member();
+    const theirs = await makeProfileAsset(ctx.t.db, v.id);
+    const deckAsset = await createAsset(ctx.t.db, crew);
+    const rejected = await makeProfileAsset(ctx.t.db, u.id, { rejectedAt: new Date() });
+    for (const publicId of [
+      theirs.publicId,
+      deckAsset.publicId,
+      rejected.publicId,
+      'gobbit/profiles/none',
+    ]) {
+      const res = await patchAvatar(u, publicId);
+      expect(res.status, publicId).toBe(422);
+      expect((await json(res)).errors).toEqual([
+        expect.objectContaining({ path: 'avatar.publicId' }),
+      ]);
+    }
+    expect((await json(await call('/me', u.email))).profile.avatar).toBeNull();
+
+    const mine = await makeProfileAsset(ctx.t.db, u.id);
+    expect((await patchAvatar(u, mine.publicId)).status).toBe(200);
+    expect((await call('/me/profile', u.email, 'PATCH', { avatar: null })).status).toBe(200);
+    expect((await json(await call('/me', u.email))).profile.avatar).toBeNull();
+  });
+
+  it('a deck owner cannot set another member photo: PATCH /me/profile only touches the caller', async () => {
+    const u = await member();
+    const theirs = await makeProfileAsset(ctx.t.db, u.id);
+    const asOwner = await call('/me/profile', OWNER_EMAIL, 'PATCH', {
+      userId: u.id,
+      avatar: { publicId: theirs.publicId },
+    });
+    expect(asOwner.status).toBe(422);
+    const spoof = await call('/me/profile', OWNER_EMAIL, 'PATCH', {
+      userId: u.id,
+      firstName: 'Own',
+    });
+    expect(spoof.status).toBe(200);
+    expect((await json(await call('/me', u.email))).profile).toMatchObject({
+      avatar: null,
+      firstName: null,
+    });
+    expect((await json(await call('/me', OWNER_EMAIL))).profile.firstName).toBe('Own');
+  });
+
+  it('assets.repo.upsert is idempotent for its owner and refuses another owner publicId', async () => {
+    const repo = createAssetsRepo(ctx.t.db);
+    const a = await member();
+    const b = await member();
+    const publicId = `gobbit/profiles/${a.id}/upsert`;
+    const base = {
+      scope: 'profile',
+      deckId: null,
+      publicId,
+      source: 'editor',
+      kind: 'image',
+      resourceType: 'image',
+      bytes: 10,
+      format: 'jpg',
+    } as const;
+    const first = await repo.upsert({ ...base, ownerUserId: a.id, uploadedBy: a.id });
+    expect(first?.created).toBe(true);
+    const again = await repo.upsert({ ...base, width: 5, ownerUserId: a.id, uploadedBy: a.id });
+    expect(again).toMatchObject({ created: false, row: { id: first!.row.id, width: 5 } });
+    expect(await repo.upsert({ ...base, ownerUserId: b.id, uploadedBy: b.id })).toBeNull();
+    const asDeck = { ...base, scope: 'deck', deckId: crew.id, uploadedBy: b.id };
+    expect(await repo.upsert(asDeck)).toBeNull();
+  });
+});
+
+/** 046 traceability: part 4 (names show everywhere, FR-007/008/013). */
+describe('profile (046 part 4: names everywhere)', () => {
+  const ctx = setupApiTest({ ingest: ingestOn() });
+  let ed: UserRow; // the member whose names change
+  let peer: UserRow; // sharer of a share that `ed` reviewed
+  let baseline: string;
+  let shareId: string;
+
+  const call = (path: string, email: string, method = 'GET', body?: unknown) =>
+    ctx.app.request(path, {
+      method,
+      headers: ctx.as(email),
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  const setNames = async (body: unknown, email = ed.email) =>
+    expect((await call('/me/profile', email, 'PATCH', body)).status).toBe(200);
+  type Actor = { actor: { userId: string } | null };
+  const actorOf = async () => {
+    const events = await json(await call('/decks/family/events?limit=50', OWNER_EMAIL));
+    return events.data.find((e: Actor) => e.actor?.userId === ed.id).actor;
+  };
+
+  /** The name `ed` is shown with on each surface. */
+  async function names() {
+    const members = await json(await call('/decks/family/members', OWNER_EMAIL));
+    const review = await json(await call('/decks/family/review', OWNER_EMAIL));
+    const share = await json(await call(`/shares/${shareId}`, peer.email));
+    return {
+      members: members.data.find((m: { userId: string }) => m.userId === ed.id).displayName,
+      events: (await actorOf()).displayName,
+      review: review.data[0].job.sharedBy.displayName,
+      share: share.reviewedBy.displayName,
+    };
+  }
+  const allAre = async (name: string) =>
+    expect(await names()).toEqual({ members: name, events: name, review: name, share: name });
+
+  beforeAll(async () => {
+    const family = ctx.world.decks.family;
+    ed = await createAccountUser(ctx.t.db);
+    peer = await createAccountUser(ctx.t.db);
+    for (const u of [ed, peer]) {
+      await ctx.sessionFor(u);
+      await addMember(ctx.t.db, family, u, 'editor');
+    }
+    baseline = ed.displayName;
+
+    // A logged card change by `ed`, a proposal shared by `ed`, a share of `peer` reviewed by `ed`.
+    const made = await call('/decks/family/items', ed.email, 'POST', {
+      type: 'text',
+      title: 'Logged',
+      body: 'x',
+    });
+    expect(made.status).toBe(201);
+    const proposed = await createItem(ctx.t.db, family, {
+      card: { type: 'text', title: 'Proposed', body: 'x', payload: {} },
+      status: 'proposed',
+      verifiedAt: null,
+      createdBy: ed.id,
+    });
+    await ctx.t.db.insert(ingestJobs).values({
+      userId: ed.id,
+      deckId: family.id,
+      channel: 'pwa',
+      status: 'proposed',
+      raw: { text: 'x', images: [] },
+      resultItemId: proposed.id,
+    });
+    const published = await createItem(ctx.t.db, family, {
+      card: { type: 'text', title: 'Shared', body: 'x', payload: {} },
+      createdBy: peer.id,
+    });
+    const [job] = await ctx.t.db
+      .insert(ingestJobs)
+      .values({
+        userId: peer.id,
+        deckId: family.id,
+        channel: 'paste',
+        status: 'published',
+        raw: { text: 'x', images: [] },
+        resultItemId: published.id,
+        reviewedBy: ed.id,
+        reviewedAt: ctx.clock.now(),
+      })
+      .returning();
+    shareId = job!.id;
+  });
+
+  it('shows the email-derived name until a profile name is set', async () => {
+    await allAre(baseline);
+  });
+
+  it('shows the profile name on every surface, including entries made before the rename', async () => {
+    await setNames({ firstName: 'Eda', lastName: 'Editor' });
+    await allAre('Eda Editor');
+  });
+
+  it('one name alone shows just that name', async () => {
+    await setNames({ firstName: 'Eda', lastName: null });
+    await allAre('Eda');
+    await setNames({ firstName: null, lastName: 'Editor' });
+    await allAre('Editor');
+  });
+
+  it('clearing the names reverts to the exact previous email-derived value', async () => {
+    await setNames({ firstName: 'Eda', lastName: 'Editor' });
+    await setNames({ firstName: null, lastName: null });
+    await allAre(baseline);
+  });
+
+  it('the invite mail names the inviter by profile name, then by the email-derived one', async () => {
+    const invite = async (email: string) => {
+      const res = await call('/decks/family/invites', OWNER_EMAIL, 'POST', {
+        email,
+        role: 'reader',
+      });
+      expect(res.status).toBe(201);
+      return ctx.mailer.last()!;
+    };
+    await setNames({ firstName: 'Olive', lastName: 'Owner' }, OWNER_EMAIL);
+    expect((await invite('invitee-one@example.test')).subject).toContain('Olive Owner invited');
+    await setNames({ firstName: null, lastName: null }, OWNER_EMAIL);
+    const mail = await invite('invitee-two@example.test');
+    expect(mail.subject).toContain(`${ctx.world.owner.displayName} invited you to`);
+  });
+
+  it('emails show where they do today, never beside a username; actors carry no email', async () => {
+    const memberRow = async (viewer: string) =>
+      (await json(await call('/decks/family/members', viewer))).data.find(
+        (m: { userId: string }) => m.userId === ed.id,
+      );
+    expect((await memberRow(OWNER_EMAIL)).email).toBe(ed.email);
+    expect((await memberRow(peer.email)).email).toBe(ed.email);
+
+    await setNames({ username: 'eda-ed' });
+    expect(await memberRow(OWNER_EMAIL)).toMatchObject({ email: null, username: 'eda-ed' });
+    expect(await memberRow(peer.email)).toMatchObject({ email: null });
+    expect(await memberRow(ed.email)).toMatchObject({ email: ed.email });
+
+    const actor = await actorOf();
+    expect(Object.keys(actor).sort()).toEqual([
+      'displayName',
+      'initials',
+      'photo',
+      'userId',
+      'username',
+    ]);
+    expect(actor).toMatchObject({ username: 'eda-ed' });
+    expect(actor.initials).not.toBe('');
+
+    const review = await json(await call('/decks/family/review', OWNER_EMAIL));
+    expect(review.data[0].job.sharedBy).not.toHaveProperty('email');
+    const share = await json(await call(`/shares/${shareId}`, peer.email));
+    expect(share.reviewedBy).toMatchObject({ username: 'eda-ed' });
+    expect(JSON.stringify(share.reviewedBy)).not.toContain(ed.email);
+  });
+});
+
+/** 046 traceability: part 5 (location stays private, FR-006, D427). */
+describe('profile (046 part 5: location privacy)', () => {
+  const ctx = setupApiTest({ search: { embedder: createFakeEmbedder() }, ingest: ingestOn() });
+  const PLACE = 'Narnia5';
+  let ada: UserRow;
+  let peer: UserRow;
+  let pubItem: ItemRow;
+  let familyItem: ItemRow;
+  let shareId: string;
+
+  const call = (path: string, email: string, method = 'GET', body?: unknown) =>
+    ctx.app.request(path, {
+      method,
+      headers: ctx.as(email),
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  const scan = async (res: Response, label: string) => {
+    expect(res.status, label).toBe(200);
+    const raw = await res.text();
+    expect(raw, label).not.toContain(PLACE);
+    expect(raw, label).not.toMatch(/"location"\s*:/);
+  };
+
+  beforeAll(async () => {
+    const { family } = ctx.world.decks;
+    ada = await createAccountUser(ctx.t.db, {
+      username: 'ada-loc',
+      firstName: 'Ada',
+      location: PLACE,
+    });
+    peer = await createAccountUser(ctx.t.db);
+    for (const u of [ada, peer]) {
+      await ctx.sessionFor(u);
+      await addMember(ctx.t.db, family, u, 'editor');
+    }
+    familyItem = await createItem(ctx.t.db, family, {
+      card: { type: 'text', title: 'Zebracorn family', body: 'findable', payload: {} },
+      createdBy: ada.id,
+    });
+    const proposed = await createItem(ctx.t.db, family, {
+      card: { type: 'text', title: 'Proposed', body: 'x', payload: {} },
+      status: 'proposed',
+      verifiedAt: null,
+      createdBy: ada.id,
+    });
+    await ctx.t.db.insert(ingestJobs).values({
+      userId: ada.id,
+      deckId: family.id,
+      channel: 'pwa',
+      status: 'proposed',
+      raw: { text: 'x', images: [] },
+      resultItemId: proposed.id,
+    });
+    const [job] = await ctx.t.db
+      .insert(ingestJobs)
+      .values({
+        userId: peer.id,
+        deckId: family.id,
+        channel: 'paste',
+        status: 'published',
+        raw: { text: 'x', images: [] },
+        resultItemId: familyItem.id,
+        reviewedBy: ada.id,
+        reviewedAt: ctx.clock.now(),
+      })
+      .returning();
+    shareId = job!.id;
+    const logged = await call('/decks/family/items', ada.email, 'POST', {
+      type: 'text',
+      title: 'Logged',
+      body: 'x',
+    });
+    expect(logged.status).toBe(201);
+
+    const pub = await createDeck(ctx.t.db, ctx.world.owner, {
+      slug: 'open-street',
+      kind: 'communal',
+      isPublic: true,
+    });
+    const open = await createCategory(ctx.t.db, pub, { slug: 'open', visibility: 'public' });
+    pubItem = await createItem(ctx.t.db, pub, {
+      card: { type: 'text', title: 'Zebracorn public', body: 'findable', payload: {} },
+      createdBy: ada.id,
+      categoryIds: [open.id],
+    });
+  });
+
+  it('GET /me and PATCH /me/profile return it; set, change and clear persist', async () => {
+    const own = async () => (await json(await call('/me', peer.email))).profile.location;
+    expect(await own()).toBeNull();
+    for (const place of [PLACE, 'Elsewhere9']) {
+      const res = await call('/me/profile', peer.email, 'PATCH', { location: place });
+      expect((await json(res)).location).toBe(place);
+      expect(await own()).toBe(place);
+    }
+    const cleared = await call('/me/profile', peer.email, 'PATCH', { location: null });
+    expect((await json(cleared)).location).toBeNull();
+    expect(await own()).toBeNull();
+  });
+
+  it('is absent from lookup, summaries, creator, members, activity log, review and shares', async () => {
+    const lookup = () => call('/members/lookup', peer.email, 'POST', { query: 'ada-loc' });
+    // Not vacuous: the lookup finds her.
+    expect((await json(await lookup())).member).toMatchObject({ username: 'ada-loc' });
+
+    const surfaces: [string, Response][] = [
+      ['lookup', await lookup()],
+      ['item', await call(`/items/${familyItem.id}`, peer.email)],
+      ['items', await call('/decks/family/items?limit=50', peer.email)],
+      ['search', await call('/decks/family/search?q=Zebracorn', peer.email)],
+      ['members owner', await call('/decks/family/members', OWNER_EMAIL)],
+      ['members peer', await call('/decks/family/members', peer.email)],
+      ['events', await call('/decks/family/events?limit=50', OWNER_EMAIL)],
+      ['review', await call('/decks/family/review', OWNER_EMAIL)],
+      ['share', await call(`/shares/${shareId}`, peer.email)],
+    ];
+    for (const [label, res] of surfaces) await scan(res, label);
+  });
+
+  it('is absent from public JSON, public pages, public search and share previews', async () => {
+    const paths = [
+      '/public/open-street',
+      '/public/open-street/items',
+      `/public/open-street/items/${pubItem.id}`,
+      `/public/open-street/search?${new URLSearchParams({ q: 'Zebracorn' })}`,
+      '/p/open-street',
+      `/p/open-street/i/${pubItem.id}`,
+      `/s/${pubItem.id}`,
+    ];
+    for (const path of paths)
+      await scan(await ctx.app.request(path, { headers: ctx.anon() }), path);
+  });
+});
+
+describe('profile username hold pruning (046)', () => {
+  const ctx = setupApiTest();
+
+  it('deletes expired holds and keeps unexpired ones', async () => {
+    const owner = await createAccountUser(ctx.t.db);
+    const now = new Date();
+    const expired = `expired-${Date.now()}`;
+    const live = `live-${Date.now()}`;
+    await ctx.t.db.insert(usernameHolds).values([
+      { usernameLower: expired, releasedBy: owner.id, holdUntil: new Date(now.getTime() - 1000) },
+      {
+        usernameLower: live,
+        releasedBy: owner.id,
+        holdUntil: new Date(now.getTime() + 86_400_000),
+      },
+    ]);
+
+    const count = await createProfileRepo(ctx.t.db).pruneExpiredHolds(now);
+
+    expect(count).toBeGreaterThanOrEqual(1);
+    const left = await ctx.t.db
+      .select({ name: usernameHolds.usernameLower })
+      .from(usernameHolds)
+      .where(inArray(usernameHolds.usernameLower, [expired, live]));
+    expect(left.map((r) => r.name)).toEqual([live]);
   });
 });

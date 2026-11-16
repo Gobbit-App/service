@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { photoSchema } from './profile';
 import {
   ITEM_EVENT_PAGE_DEFAULT,
   ITEM_EVENT_PAGE_MAX,
@@ -14,7 +15,15 @@ export const itemEventSchema = z.object({
   title: z.string(),
   kind: z.enum(itemEventKinds),
   via: z.enum(actorVias),
-  actor: z.object({ userId: z.string(), displayName: z.string() }).nullable(),
+  actor: z
+    .object({
+      userId: z.string(),
+      displayName: z.string(),
+      username: z.string().nullable(),
+      initials: z.string(),
+      photo: photoSchema.nullable(),
+    })
+    .nullable(),
   changes: z.array(z.string()),
   createdAt: z.string(),
 });

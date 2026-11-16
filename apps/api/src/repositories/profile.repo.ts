@@ -1,4 +1,4 @@
-import { and, eq, gt, sql } from 'drizzle-orm';
+import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import { profileEvents, usernameHolds, type DbExecutor } from '@gobbit/db';
 
 /** 046: audit rows and username holds; both run on the caller's transaction. */
@@ -41,6 +41,15 @@ export function createProfileRepo(db: DbExecutor) {
       requestId: string;
     }): Promise<void> {
       await db.insert(profileEvents).values(input);
+    },
+
+    /** Deletes holds whose window has passed (the guard already ignores them); returns the count. */
+    async pruneExpiredHolds(now: Date): Promise<number> {
+      const rows = await db
+        .delete(usernameHolds)
+        .where(lt(usernameHolds.holdUntil, now))
+        .returning({ id: usernameHolds.usernameLower });
+      return rows.length;
     },
 
     /** A re-release extends the hold (the new release time and owner win). */

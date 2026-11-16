@@ -126,16 +126,16 @@ desktop (1280 px) screenshots, light and dark, compared with the sibling. Use `p
 
 **Independent test**: quickstart § 2 step 6.
 
-- [ ] T052 [US3] `apps/api/src/media/sign-upload.ts` + `services/media.service.ts`: generalise signing/confirming by scope — `signProfileUpload(userId)` (folder `gobbit/profiles/<userId>`, tags `profile`, `user:<userId>`, images only, same size and type limits), `confirmProfileUpload` records the asset with `scope = 'profile'`, `owner_user_id`, `deck_id` null; same rate keys `mediaSignUser`/`mediaConfirmUser`; `media.*` decisions get `scope`; `routes/me.ts`: `POST /me/avatar/sign`, `POST /me/avatar/assets`
-- [ ] T053 [US3] `profile.service.ts` `update`: `avatar: { publicId } | null` — the asset must be `scope = 'profile'`, `owner_user_id = caller`, not rejected, else 422 `avatar.publicId` "Unknown image"; width/height copied from the asset; changed field `avatar` in `profile_events`; `member-summaries.ts` returns `photo`
-- [ ] T054 [US3] `apps/api/src/repositories/assets.repo.ts` `unreferenced` + `services/media-sweep.ts`: add `users.avatar->>'publicId'` as a reference (uses `users_avatar_public_id_idx`) and cover the `gobbit/profiles/` prefix; a profile asset with `owner_user_id` null and no reference is an orphan like any other
-- [ ] T055 [P] [unit] `media.service.test.ts` (profile folder/tags, images only, over-limit refused), `profile.service.test.ts` (foreign, deck-scope, rejected and unknown assets → 422; replace and remove)
-- [ ] T056 [P] [int] `profile.int.test.ts` (part 3) and `media-sweep.int.test.ts`: a referenced avatar is never swept; a replaced or removed avatar is freed after `MEDIA_ORPHAN_GRACE_DAYS`; removing the user row leaves the asset orphaned (owner null) and swept, the cards show the placeholder; another member cannot set your photo; a deck owner cannot (FR-003); `pnpm api:openapi`
-- [ ] T057 [US3] `apps/web/src/profile/AvatarCropper.tsx` (lazy chunk, in a `ui/sheet` Sheet): circular mask, pointer drag and a zoom range input, decode with `createImageBitmap` after the size limit, draw the visible square to a 512 px canvas (JPEG 0.9), keyboard arrows move, labelled controls; UI reference: `CoverField` action row + Sheet
-- [ ] T058 [US3] `apps/web/src/profile/PhotoField.tsx`: `PickButton` with `capture="user"` offered where the device has a camera, drop through `editor/use-drop-image.ts`, then the cropper; `editor/use-image-upload.ts` accepts a target (`deck` or `profile` → `/me/avatar/*`); Replace and Remove once a photo exists; a failed upload keeps the previous photo and the other edits; the avatar preview uses `Avatar` md; wired into `ProfileForm`
-- [ ] T059 [P] [unit] `AvatarCropper.test.tsx` (output size 512×512 from a stubbed canvas, zoom/pan clamp, cancel), `PhotoField.test.tsx` (pick, drop, replace, remove, failed upload keeps previous, unreadable file message)
+- [X] T052 [US3] `apps/api/src/media/sign-upload.ts` + `services/media.service.ts`: generalise signing/confirming by scope — `signProfileUpload(userId)` (folder `gobbit/profiles/<userId>`, tags `profile`, `user:<userId>`, images only, same size and type limits), `confirmProfileUpload` records the asset with `scope = 'profile'`, `owner_user_id`, `deck_id` null; same rate keys `mediaSignUser`/`mediaConfirmUser`; `media.*` decisions get `scope`; `routes/me.ts`: `POST /me/avatar/sign`, `POST /me/avatar/assets`
+- [X] T053 [US3] `profile.service.ts` `update`: `avatar: { publicId } | null` — the asset must be `scope = 'profile'`, `owner_user_id = caller`, not rejected, else 422 `avatar.publicId` "Unknown image"; width/height copied from the asset; changed field `avatar` in `profile_events`; `member-summaries.ts` returns `photo`
+- [X] T054 [US3] `apps/api/src/repositories/assets.repo.ts` `unreferenced` + `services/media-sweep.ts`: add `users.avatar->>'publicId'` as a reference (uses `users_avatar_public_id_idx`) and cover the `gobbit/profiles/` prefix; a profile asset with `owner_user_id` null and no reference is an orphan like any other
+- [X] T055 [P] [unit] `media.service.test.ts` (profile folder/tags, images only, over-limit refused), `profile.service.test.ts` (foreign, deck-scope, rejected and unknown assets → 422; replace and remove)
+- [X] T056 [P] [int] `profile.int.test.ts` (part 3) and `media-sweep.int.test.ts`: a referenced avatar is never swept; a replaced or removed avatar is freed after `MEDIA_ORPHAN_GRACE_DAYS`; removing the user row leaves the asset orphaned (owner null) and swept, the cards show the placeholder; another member cannot set your photo; a deck owner cannot (FR-003); `pnpm api:openapi`
+- [X] T057 [US3] `apps/web/src/profile/AvatarCropper.tsx` (lazy chunk, in a `ui/sheet` Sheet): circular mask, pointer drag and a zoom range input, decode with `createImageBitmap` after the size limit, draw the visible square to a 512 px canvas (JPEG 0.9), keyboard arrows move, labelled controls; UI reference: `CoverField` action row + Sheet
+- [X] T058 [US3] `apps/web/src/profile/PhotoField.tsx`: `PickButton` with `capture="user"` offered where the device has a camera, drop through `editor/use-drop-image.ts`, then the cropper; `editor/use-image-upload.ts` accepts a target (`deck` or `profile` → `/me/avatar/*`); Replace and Remove once a photo exists; a failed upload keeps the previous photo and the other edits; the avatar preview uses `Avatar` md; wired into `ProfileForm`
+- [X] T059 [P] [unit] `AvatarCropper.test.tsx` (output size 512×512 from a stubbed canvas, zoom/pan clamp, cancel), `PhotoField.test.tsx` (pick, drop, replace, remove, failed upload keeps previous, unreadable file message)
 - [ ] T060 [US3] Screenshots at 412 and 1280 px, light and dark: photo field empty and set, cropper sheet vs `CoverField` and an existing Sheet; `pnpm budget` (the cropper and page stay out of the initial chunk)
-- [ ] T061 [P] [e2e:full] `e2e/tests/full/profile.spec.ts` (part 3): upload through `routeFakeCloudinary`, crop, save → card shows the photo; replace; remove → initials; failed upload keeps previous; over-limit and wrong-type messages; broken image → initials
+- [X] T061 [P] [e2e:full] `e2e/tests/full/profile.spec.ts` (part 3): upload through `routeFakeCloudinary`, crop, save → card shows the photo; replace; remove → initials; failed upload keeps previous; over-limit and wrong-type messages; broken image → initials
 
 ---
 
@@ -145,27 +145,27 @@ desktop (1280 px) screenshots, light and dark, compared with the sibling. Use `p
 
 **Independent test**: set names → members list, activity log, review queue and share rows show them; clear → previous values.
 
-- [ ] T062 [US5] Apply `displayNameSql`/`displayNameOf` and add `initials`/`username`/`photo` where a name already appears: `memberships.service.ts` (`list`, `changeRole`, invite mail `inviterName`), `events.service.ts` actor, `review.service.ts` `sharedBy`, `shares.service.ts` `reviewedBy`, `waitlist-admin.service.ts` `invitedBy`, `/me`; schemas in `packages/shared/src/schemas/{membership,event,ingest,share,waitlist-admin,auth}.ts`; `pnpm api:openapi`
-- [ ] T063 [P] [int] `profile.int.test.ts` (part 4): members list, activity log (past entries too), review `sharedBy`, share rows and invite mail show the profile name; clearing names reverts to the exact previous value; one name only shows that one; emails appear only where they do today (owners' member list)
-- [ ] T064 [US5] Web: `deck-admin/MembersSection.tsx` rows show `Avatar` md + name; `reminders/use-member-name.ts`, activity log and review rows use the new fields; UI reference: the current member row
-- [ ] T065 [P] [unit] `MembersSection.test.tsx`, `use-member-name.test.ts` (profile name, fallback, "someone")
+- [X] T062 [US5] Apply `displayNameSql`/`displayNameOf` and add `initials`/`username`/`photo` where a name already appears: `memberships.service.ts` (`list`, `changeRole`, invite mail `inviterName`), `events.service.ts` actor, `review.service.ts` `sharedBy`, `shares.service.ts` `reviewedBy`, `waitlist-admin.service.ts` `invitedBy`, `/me`; schemas in `packages/shared/src/schemas/{membership,event,ingest,share,waitlist-admin,auth}.ts`; `pnpm api:openapi`
+- [X] T063 [P] [int] `profile.int.test.ts` (part 4): members list, activity log (past entries too), review `sharedBy`, share rows and invite mail show the profile name; clearing names reverts to the exact previous value; one name only shows that one; emails appear only where they do today (owners' member list)
+- [X] T064 [US5] Web: `deck-admin/MembersSection.tsx` rows show `Avatar` md + name; `reminders/use-member-name.ts`, activity log and review rows use the new fields; UI reference: the current member row
+- [X] T065 [P] [unit] `MembersSection.test.tsx`, `use-member-name.test.ts` (profile name, fallback, "someone")
 - [ ] T066 [US5] Screenshots at 412 and 1280 px, light and dark: members list and activity log vs current
-- [ ] T067 [P] [e2e:full] `e2e/tests/full/profile.spec.ts` (part 4) and `activity-log.spec.ts`: set names → members list, activity log and review queue update without sign-out; clear → previous names
+- [X] T067 [P] [e2e:full] `e2e/tests/full/profile.spec.ts` (part 4) and `activity-log.spec.ts`: set names → members list, activity log and review queue update without sign-out; clear → previous names
 
 ---
 
 ## Phase 6: US6 — Location (P3)
 
-- [ ] T068 [US6] Location is already a profile field (T005, T008, T021, T030); add the owner-only guarantee test: [int] `profile.int.test.ts` (part 5): location returned only by `GET /me` / `PATCH /me/profile`, absent from summaries, lookup, members, activity log, public and share responses; set, change and clear persist
-- [ ] T069 [P] [e2e:full] `e2e/tests/full/profile.spec.ts` (part 5): set, reload, clear the location
+- [X] T068 [US6] Location is already a profile field (T005, T008, T021, T030); add the owner-only guarantee test: [int] `profile.int.test.ts` (part 5): location returned only by `GET /me` / `PATCH /me/profile`, absent from summaries, lookup, members, activity log, public and share responses; set, change and clear persist
+- [X] T069 [P] [e2e:full] `e2e/tests/full/profile.spec.ts` (part 5): set, reload, clear the location
 
 ---
 
 ## Phase 7: Polish and docs
 
-- [ ] T070 `docs/design/profile.md` (new): columns, username and hold rules, display name computation, creator summary, lookup and its email rule, photo flow, runbook thresholds from the plan's Accountability table (`reserved` > 10/h; `taken`+`held` > 50/h per member; lookup `rate_limited` > 20/h and `found` > 200/h per member), env vars, Deviations list
-- [ ] T071 `docs/adr.md` ADR-080 (D417, D418, D420, D421, D423, D424); `docs/architecture.md` one index row (file stays < 250 lines); `docs/design/{card-media.md,activity-log.md,data-model.md,ui-system.md}` updates per the plan; `CLAUDE.md` one "Profile" bullet; `PLAN.md` line; `README.md` env table
-- [ ] T072 `implementation-notes.md`: decisions not made by the plan and every deviation; copy deviations into `docs/design/profile.md`
+- [X] T070 `docs/design/profile.md` (new): columns, username and hold rules, display name computation, creator summary, lookup and its email rule, photo flow, runbook thresholds from the plan's Accountability table (`reserved` > 10/h; `taken`+`held` > 50/h per member; lookup `rate_limited` > 20/h and `found` > 200/h per member), env vars, Deviations list
+- [X] T071 `docs/adr.md` ADR-080 (D417, D418, D420, D421, D423, D424); `docs/architecture.md` one index row (file stays < 250 lines); `docs/design/{card-media.md,activity-log.md,data-model.md,ui-system.md}` updates per the plan; `CLAUDE.md` one "Profile" bullet; `PLAN.md` line; `README.md` env table
+- [X] T072 `implementation-notes.md`: decisions not made by the plan and every deviation; copy deviations into `docs/design/profile.md`
 - [ ] T073 Final gates: `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int && pnpm api:openapi` (no diff) `&& pnpm budget && pnpm test:e2e`; walk `quickstart.md` § 2 by hand; open the PR stating "E2E tier: smoke + full"
 
 ---

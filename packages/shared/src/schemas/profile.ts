@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { PROFILE_LOCATION_MAX, PROFILE_NAME_MAX } from '../limits';
 import { checkUsernameShape } from '../username';
 
-const photoSchema = z.object({
+export const photoSchema = z.object({
   publicId: z.string(),
   width: z.number().int().optional(),
   height: z.number().int().optional(),

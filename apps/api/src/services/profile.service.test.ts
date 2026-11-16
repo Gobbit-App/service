@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ProfilePatch } from '@gobbit/shared';
+import type { AssetRow } from '@gobbit/db';
 import { createLogHash } from '../lib/log-hash';
 import type { ProfileRow } from '../repositories/users.repo';
 import { createProfileService, type ProfileTxRepos } from './profile.service';
@@ -13,6 +14,7 @@ const world = {
   emails: {} as Record<string, { id: string }>,
   holds: {} as Record<string, { releasedBy: string }>,
   mates: [] as string[],
+  assets: {} as Record<string, AssetRow>,
 };
 
 function setup(initial: Partial<ProfileRow> = {}, failWith?: unknown) {
@@ -74,6 +76,7 @@ function setup(initial: Partial<ProfileRow> = {}, failWith?: unknown) {
     activeHold: async (l) => world.holds[l] ?? null,
     sharesDeckWith: async (_a, b) => world.mates.includes(b),
     profileById: async () => row,
+    assetByPublicId: async (id) => world.assets[id] ?? null,
     transaction: async (fn) => {
       inTx = true;
       try {
@@ -203,10 +206,62 @@ describe('profile.service', () => {
     expect(JSON.stringify(t.events)).not.toMatch(/bob99|Rome|Paris/);
   });
 
-  it('rejects avatar for now', async () => {
-    const t = setup();
-    await expect(t.update({ avatar: { publicId: 'x' } })).rejects.toMatchObject({
-      errors: [{ path: 'avatar.publicId', message: 'Unknown image' }],
+  describe('avatar', () => {
+    const asset = (over: Partial<AssetRow> = {}) =>
+      ({
+        publicId: 'gobbit/profiles/u1/a',
+        scope: 'profile',
+        ownerUserId: 'u1',
+        deckId: null,
+        kind: 'image',
+        width: 300,
+        height: 200,
+        rejectedAt: null,
+        ...over,
+      }) as AssetRow;
+    beforeEach(() => {
+      world.assets = {};
+    });
+
+    it('sets the photo with the asset dimensions and lists avatar in the event', async () => {
+      world.assets['gobbit/profiles/u1/a'] = asset();
+      const t = setup();
+      const p = await t.update({ avatar: { publicId: 'gobbit/profiles/u1/a' } });
+      expect(p.avatar).toEqual({ publicId: 'gobbit/profiles/u1/a', width: 300, height: 200 });
+      expect(t.events[0]!.changes).toEqual(['avatar']);
+    });
+
+    it('replaces and removes; the same photo again changes nothing', async () => {
+      world.assets['gobbit/profiles/u1/a'] = asset();
+      world.assets['gobbit/profiles/u1/b'] = asset({ publicId: 'gobbit/profiles/u1/b' });
+      const t = setup({ avatar: { publicId: 'gobbit/profiles/u1/a', width: 300, height: 200 } });
+      await t.update({ avatar: { publicId: 'gobbit/profiles/u1/a' } });
+      expect(t.events).toEqual([]);
+      await t.update({ avatar: { publicId: 'gobbit/profiles/u1/b' } });
+      expect(t.row().avatar?.publicId).toBe('gobbit/profiles/u1/b');
+      expect((await t.update({ avatar: null })).avatar).toBeNull();
+      expect(t.events.map((e) => e.changes)).toEqual([['avatar'], ['avatar']]);
+    });
+
+    it.each([
+      ['unknown', undefined],
+      ['foreign', asset({ ownerUserId: 'u2' })],
+      ['foreign', asset({ scope: 'deck', deckId: 'd1', ownerUserId: null })],
+      ['foreign', asset({ ownerUserId: null })],
+      ['rejected', asset({ rejectedAt: NOW })],
+    ])('refuses a %s asset with 422 and a decision', async (reason, a) => {
+      if (a) world.assets[a.publicId] = a;
+      const t = setup();
+      await expect(
+        t.update({ avatar: { publicId: 'gobbit/profiles/u1/a' } }),
+      ).rejects.toMatchObject({ errors: [{ path: 'avatar.publicId', message: 'Unknown image' }] });
+      expect(t.logged).toEqual([
+        {
+          event: 'profile.avatar',
+          fields: { outcome: 'refused', reason, requestId: 'req1', userId: 'u1' },
+        },
+      ]);
+      expect(t.events).toEqual([]);
     });
   });
 

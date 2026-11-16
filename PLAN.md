@@ -195,6 +195,8 @@ Deck chrome: [`043-deck-header`](specs/043-deck-header/spec.md): one breadcrumb 
 
 Card cover image: [`044-card-avatar`](specs/044-card-avatar/spec.md): an optional image representing the content of text, reminder, event, table and calc cards, shown as a bar below the title (like a link preview) in lists, Browse, the card page and public share previews; added by pick, drag and drop or paste; its own `items.cover` column, counted by the media sweep. Decisions D406–D415; ADR-078.
 
+Member profile and creator avatar: [`046-user-profile`](specs/046-user-profile/spec.md): username, first and last name, location and a cropped photo on the member; cards in shared and communal decks show the creator as an avatar (initials on a stable colour, or the photo) with a label; members are found by exact username for invites, and an email is previewed only for deck mates. Decisions D417–D429; ADR-080; [`docs/design/profile.md`](docs/design/profile.md).
+
 ### 025–027 renames
 
 Mechanical renames with no new behaviour, so they skip spec-kit (constitution, Development Workflow). One branch and PR each:
