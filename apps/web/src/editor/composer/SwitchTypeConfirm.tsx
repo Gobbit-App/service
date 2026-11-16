@@ -1,5 +1,6 @@
 import { useId, useRef, type ReactElement } from 'react';
 import type { ItemType } from '@gobbit/shared';
+import { supportsCover } from '@gobbit/shared/card-cover';
 import { Button } from '../../ui/buttons/Button';
 import { Sheet } from '../../ui/sheet/Sheet';
 import { TYPE_LABELS } from './type-tiles';
@@ -10,11 +11,14 @@ export function SwitchTypeConfirm({
   to,
   onKeep,
   onSwitch,
+  hasCover = false,
 }: {
   from: ItemType;
   to: ItemType;
   onKeep: () => void;
   onSwitch: () => void;
+  /** The card has a cover image (044, D412). */
+  hasCover?: boolean;
 }): ReactElement {
   const keepRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
@@ -26,7 +30,9 @@ export function SwitchTypeConfirm({
         Switch to {TYPE_LABELS[to]}?
       </h2>
       <p id={textId} className="sheet__text">
-        Your {current.toLowerCase()} content will be removed. The title, text and categories stay.
+        Your {current.toLowerCase()} content will be removed
+        {hasCover && !supportsCover(to) ? ', and so will the cover image' : ''}. The title, text and
+        categories stay.
       </p>
       <div className="sheet__actions">
         <Button ref={keepRef} icon="undo" label={`Keep ${current}`} onClick={onKeep} />

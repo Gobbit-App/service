@@ -328,6 +328,7 @@ export function CardEditor(props: CardEditorProps): ReactElement {
               <TypeControl
                 value={draft.type}
                 hasContent={payloadHasContent(draft)}
+                hasCover={!!draft.cover}
                 imagesOff={imagesOff}
                 disabled={saving}
                 onChange={changeType}

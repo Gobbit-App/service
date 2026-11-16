@@ -11,3 +11,8 @@
 - `ImageFields.tsx` is gone; uploads go through `use-image-upload.ts`, which signs per kind. Covers sign as `image`.
 - Constitution IX (reuse before writing): the `item.cover` decision type goes into the existing `apps/api/src/services/media.events.ts` instead of a new `item-cover.events.ts`. There is no drag-and-drop helper in `apps/web/src/editor/`, so `use-drop-image.ts` stays new.
 - The activity-log `changes` entry is `cover` (not `cover image`).
+
+## Decisions made while implementing
+
+- **Per-reason decision levels (T013)**: `decisionLogger` levels could only be keyed by `event` or `event:outcome`, so the plan's "info; warn on `other_deck`" for `item.cover` couldn't be expressed. `lib/decision-event.ts` now also looks up `event:outcome:reason` first (one-line change + unit test); `item.cover:refused:other_deck` is `warn`, the other reasons `info`.
+- **Cover check (T013)**: `createCoverReference` classifies its own refusals (`other_deck` when the asset exists for another deck, else `unknown_image`, incl. rejected and non-image assets) instead of lifting the media check's `recorded()` closure: classifying needs the asset row anyway, so lifting saved nothing. The thrown 422 carries `coverReason` for the service's decision event.

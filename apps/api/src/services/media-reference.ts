@@ -2,6 +2,30 @@ import { MEDIA_FILE_NAME_MAX, type ItemType, type MediaKind } from '@gobbit/shar
 import type { AssetRow } from '@gobbit/db';
 import { unprocessableField } from '../errors/http-errors';
 import type { AssetsRepo } from '../repositories/assets.repo';
+import type { CardCover } from '@gobbit/shared/card-cover';
+import type { HttpError } from '../errors/http-errors';
+
+/** Why a cover was refused (D408); the service logs it, the member always sees "Unknown image". */
+export type CoverRefusalReason = 'unsupported_type' | 'unknown_image' | 'other_deck';
+export type CoverRefusal = HttpError & { coverReason: CoverRefusalReason };
+
+/**
+ * D408: a cover is an image recorded for the card's own deck and not rejected (the D160 rule);
+ * its dimensions come from the asset. Every refusal reads "Unknown image".
+ */
+export function createCoverReference(
+  assets: Pick<AssetsRepo, 'byPublicId'>,
+): (deckId: string, cover: { publicId: string }) => Promise<CardCover> {
+  return async (deckId, cover) => {
+    const asset = await assets.byPublicId(cover.publicId);
+    if (!asset || asset.deckId !== deckId || asset.rejectedAt !== null || asset.kind !== 'image') {
+      const coverReason: CoverRefusalReason =
+        asset && asset.deckId !== deckId ? 'other_deck' : 'unknown_image';
+      throw Object.assign(unprocessableField('cover.publicId', 'Unknown image'), { coverReason });
+    }
+    return { publicId: asset.publicId, ...dimensions(asset) };
+  };
+}
 
 export type MediaReferenceCheck = <P extends Record<string, unknown>>(
   deckId: string,
