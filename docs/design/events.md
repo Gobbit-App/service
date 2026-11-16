@@ -133,6 +133,7 @@ apply to event deliveries unchanged.
 | --- | --- |
 | `event.notice` | `planned`; `skipped` · `started`, `stale`, `muted`, `no_channel`, `ineligible`, `push_off`; delivery `sent`, `retried`, `failed` (warn), `interrupted`, `gone`, `dropped` |
 | `event.mute` | `muted`, `unmuted`, `refused` (warn) · `not_in_audience`, `not_an_event` |
+| `event.roll` | `rolled` · `yearly` (system, per card rolled by `event-roll-sweep`; `years`, job id) |
 | `event.notify_settings` | `changed`, `refused` (warn) · `not_creator` |
 | `event.write` | `refused` · `start_too_far`, `location_too_long`, `too_many_times`, `before_too_long`, `audience_unknown_member`, `type_change` |
 | `ingest.event_extract` | `event_proposed` (`dateSource`, `zoneSource`); `event_fallback` · `no_start`, `start_out_of_range`, `end_before_start`, `several_events`, `invalid_zone`, `invalid_event` |
@@ -140,6 +141,26 @@ apply to event deliveries unchanged.
 Audit rows: `event_notices` (`skip_reason`), `notification_deliveries` (`kind = event`),
 `event_mutes`, `item_events` (`notify` in `changes`), `ingest_jobs.auto_publish`
 (`held_event_unverified`) and `ingest_jobs.dedup`. Ids only.
+
+## Yearly repeats (D402–D405)
+
+- **Model**: `repeat: 'yearly'` in the payload (absent = one-off, no migration). `start`/`end`
+  always hold the current or next occurrence. `nextOccurrence(payload, now)` in
+  `events-cards/recur.ts` shifts whole years on the wall clock in the event's zone (29 Feb → 28
+  Feb); it returns the payload unchanged when not repeating or not yet ended.
+- **Write path**: `event-cards.service` stores `nextOccurrence(payload, now)`, so saving last
+  year's date for a yearly event stores the next one.
+- **Roll**: `event-roll-sweep` (every 15 min, `FOR UPDATE SKIP LOCKED`, batches of 100) rewrites
+  ended yearly cards to their next occurrence as a system write (no `item_events`, ADR-057), syncs
+  notices in the same transaction and purges public decks. One `event.roll` decision event per card.
+- **Reader safety net**: the reader, public when-line and calendar file roll the stored payload
+  themselves, so a lagging sweep never shows "Ended" for a yearly event. Reader shows "Every year";
+  the public line appends "· every year"; the calendar file carries `RRULE:FREQ=YEARLY`.
+- **Editor**: "Repeats every year" next to "All day".
+- **Ingestion**: `eventSchedule` `repeatFrequency` P1Y / yearly / annually (structured data wins),
+  or the model's `repeat: 'yearly'` only when the source says so. The proposal is rolled the same
+  way, so last year's page date becomes this year's proposal. Dedup also matches a yearly card
+  whose month and day equal the proposal's.
 
 ## Deviations from the 042 plan
 

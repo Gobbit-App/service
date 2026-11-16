@@ -45,6 +45,8 @@ export type EventDraftPayload = {
   location: string;
   /** '' = no link. */
   url: string;
+  /** D402: "Repeats every year" (saved as `repeat: 'yearly'`). */
+  repeat: boolean;
   preview?: DraftLinkPreview;
   notify: {
     before: EventNotifyRow[];
@@ -88,6 +90,7 @@ export function newEventPayload(now: Date = new Date()): EventDraftPayload {
     stored: null,
     location: '',
     url: '',
+    repeat: false,
     notify: defaultNotify(),
   };
 }
@@ -117,6 +120,7 @@ export function eventDraftFromPayload(raw: Record<string, unknown>): EventDraftP
     stored: start === null ? null : { allDay, start, end, timeZone },
     location: typeof raw['location'] === 'string' ? raw['location'] : '',
     url: typeof raw['url'] === 'string' ? raw['url'] : '',
+    repeat: raw['repeat'] === 'yearly',
     ...(isRecord(raw['preview'])
       ? { preview: structuredClone(raw['preview']) as DraftLinkPreview }
       : {}),
@@ -187,6 +191,7 @@ export function eventToPayload(p: EventDraftPayload): Record<string, unknown> {
   const out: Record<string, unknown> = { ...eventTimes(p) };
   const location = p.location.trim();
   if (location !== '') out['location'] = location;
+  if (p.repeat) out['repeat'] = 'yearly';
   const url = normalizeUrlInput(p.url);
   if (url !== '') {
     out['url'] = url;

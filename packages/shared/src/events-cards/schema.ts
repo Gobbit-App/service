@@ -14,6 +14,7 @@ import {
   eventAudienceModes,
   eventNoticeStates,
   eventNoticeUnits,
+  eventRepeats,
   type EventNoticeUnit,
 } from './constants';
 
@@ -103,6 +104,8 @@ export const eventPayloadSchema = z
       .optional(),
     url: httpUrlSchema.optional(),
     preview: storedLinkPreviewSchema.optional(),
+    /** D402: `start`/`end` hold the current or next occurrence (see `nextOccurrence`). */
+    repeat: z.enum(eventRepeats).optional(),
     notify: eventNotifySchema.default(defaultNotify),
   })
   .strict()

@@ -127,3 +127,12 @@ describe('icsFileName', () => {
     expect(icsFileName('  ')).toBe('event.ics');
   });
 });
+
+describe('toIcs yearly repeats (D402)', () => {
+  it('adds RRULE:FREQ=YEARLY to a repeating event, and none to a one-off', () => {
+    const yearly = lines(toIcs({ ...timed, repeat: 'yearly' }, { cardUrl, now }));
+    expect(yearly).toContain('RRULE:FREQ=YEARLY');
+    expect(yearly.indexOf('RRULE:FREQ=YEARLY')).toBeLessThan(yearly.indexOf('SUMMARY:School fair'));
+    expect(lines(toIcs(timed, { cardUrl, now }))).not.toContain('RRULE:FREQ=YEARLY');
+  });
+});

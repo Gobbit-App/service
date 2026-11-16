@@ -20,6 +20,8 @@ export const QUEUES = {
   pruneWaitlist: 'prune-waitlist',
   /** D295: every minute, plan and send notifications for reminders past their deadline. */
   reminderSweep: 'reminder-sweep',
+  /** D403: every 15 minutes, yearly event cards move to their next occurrence. */
+  eventRollSweep: 'event-roll-sweep',
 } as const;
 
 export interface EmbedItemJob {

@@ -5,6 +5,7 @@
  */
 export * from './constants';
 export * from './span';
+export * from './recur';
 export * from './moments';
 export * from './audience';
 export * from './public-payload';

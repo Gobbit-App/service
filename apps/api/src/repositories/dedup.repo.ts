@@ -116,10 +116,13 @@ export function createDedupRepo(db: Db) {
     /**
      * D376: live and proposed events in the deck that start on the same date (in each event's own
      * zone) as event proposal `itemId`, whose `event_cards` row the insert trigger already wrote.
+     * D405: a yearly event also matches when its month and day equal the proposal's (next year's
+     * share of a yearly card).
      */
     async eventCandidates(deckId: string, itemId: string): Promise<EventCandidate[]> {
       const startDate = sql`(${eventCards.startsAt} at time zone ${eventCards.timeZone})::date`;
       const proposalDate = sql`(select (e.starts_at at time zone e.time_zone)::date from event_cards e where e.item_id = ${itemId})`;
+      const sameDay = sql`(${startDate} = ${proposalDate} OR (${items.payload}->>'repeat' = 'yearly' AND to_char(${startDate}, 'MM-DD') = to_char(${proposalDate}, 'MM-DD')))`;
       const rows = await db
         .select({
           id: items.id,
@@ -135,7 +138,7 @@ export function createDedupRepo(db: Db) {
             inArray(items.status, ['published', 'proposed']),
             isNull(items.deletedAt),
             ne(items.id, itemId),
-            sql`${startDate} = ${proposalDate}`,
+            sameDay,
           ),
         )
         .orderBy(sql`${items.status} = 'published' desc`, desc(items.createdAt))

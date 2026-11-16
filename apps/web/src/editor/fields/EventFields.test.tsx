@@ -37,6 +37,7 @@ const base: EventDraftPayload = {
   stored: null,
   location: '',
   url: '',
+  repeat: false,
   notify: { before: [{ amount: '1', unit: 'days' }], audience: { mode: 'everyone', userIds: [] } },
 };
 

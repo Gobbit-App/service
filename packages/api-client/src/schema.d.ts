@@ -3439,6 +3439,8 @@ export interface paths {
                                 /** @enum {boolean} */
                                 imageRemoved?: true;
                             };
+                            /** @enum {string} */
+                            repeat?: "yearly";
                             /**
                              * @default {
                              *       "before": [
@@ -7152,6 +7154,7 @@ export interface paths {
                                     endDate: string | null;
                                     location: string | null;
                                     url: string | null;
+                                    yearly?: boolean;
                                 };
                                 structuredEventCount?: number;
                                 imageCandidates?: string[];

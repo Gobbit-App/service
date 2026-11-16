@@ -1,5 +1,5 @@
 import { addDaysToIsoDate, instantOnDate } from '../event-time/zoned';
-import { EVENT_DEFAULT_LENGTH_MS } from './constants';
+import { EVENT_DEFAULT_LENGTH_MS, type EventRepeat } from './constants';
 
 /** The time fields of an event payload (D357). */
 export interface EventTimes {
@@ -7,6 +7,8 @@ export interface EventTimes {
   start: string;
   end?: string;
   timeZone: string;
+  /** D402: absent = one-off. */
+  repeat?: EventRepeat;
 }
 
 export interface EventInstants {

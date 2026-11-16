@@ -6,7 +6,12 @@ import {
   type LinkPreview,
   type StructuredEvent,
 } from '@gobbit/shared';
-import { EVENT_NOTIFY_DEFAULT, eventSpan, parseEventSpan } from '@gobbit/shared/event-constants';
+import {
+  EVENT_NOTIFY_DEFAULT,
+  eventSpan,
+  nextOccurrence,
+  parseEventSpan,
+} from '@gobbit/shared/event-constants';
 import { isTimeZone } from '@gobbit/shared/reminders';
 import type { ProposeCardInput } from './extract-prompt';
 
@@ -84,15 +89,23 @@ export function proposeEvent(
       );
   if (!parsed.ok) return fallback(parsed.reason);
 
-  const span = { ...parsed.span, timeZone: ctx.timeZone };
-  if (eventSpan(span).startsAt.getTime() > ctx.now.getTime() + ctx.startMaxDays * DAY_MS) {
+  // D405: structured data says so, or the model read "every year" in the source (never guessed).
+  const yearly = s?.yearly === true || input.event?.repeat === 'yearly';
+  const span = {
+    ...parsed.span,
+    timeZone: ctx.timeZone,
+    ...(yearly ? { repeat: 'yearly' as const } : {}),
+  };
+  // D403: last year's date becomes this year's (or next year's) occurrence before the range check.
+  const rolled = nextOccurrence(span, ctx.now);
+  if (eventSpan(rolled).startsAt.getTime() > ctx.now.getTime() + ctx.startMaxDays * DAY_MS) {
     return fallback('start_out_of_range');
   }
 
   const location = clipLocation(s?.location ?? input.event?.location, ctx.locationMax);
   const url = s?.url ?? link.url;
   const payload: Record<string, unknown> = {
-    ...span,
+    ...rolled,
     ...(location ? { location } : {}),
     ...(url ? { url } : {}),
     ...(url && link.preview && url === link.url ? { preview: link.preview } : {}),

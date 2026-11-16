@@ -124,3 +124,56 @@ describe('proposeEvent (D370)', () => {
     });
   });
 });
+
+describe('proposeEvent yearly repeats (D405)', () => {
+  it('rolls a yearly event from last year to this year, keeping repeat', () => {
+    const lastYear: StructuredEvent = {
+      ...structured,
+      startDate: '2025-12-03T18:00:00+01:00',
+      endDate: '2025-12-03T21:00:00+01:00',
+      yearly: true,
+    };
+    const r = proposeEvent(
+      input({ start: '2025-12-03T18:00', allDay: false }),
+      ctx({ structured: lastYear }),
+      {},
+    );
+    if (!r.ok) throw new Error('expected an event');
+    expect(r.payload).toMatchObject({
+      start: '2026-12-03T17:00:00.000Z',
+      end: '2026-12-03T20:00:00.000Z',
+      repeat: 'yearly',
+    });
+  });
+
+  it('keeps a one-off structured event unchanged and without repeat', () => {
+    const past: StructuredEvent = {
+      ...structured,
+      startDate: '2025-12-03T18:00:00+01:00',
+      endDate: null,
+    };
+    const r = proposeEvent(
+      input({ start: '2025-12-03T18:00', allDay: false }),
+      ctx({ structured: past }),
+      {},
+    );
+    if (!r.ok) throw new Error('expected an event');
+    expect(r.payload).toMatchObject({ start: '2025-12-03T17:00:00.000Z' });
+    expect(r.payload).not.toHaveProperty('repeat');
+  });
+
+  it('takes yearly from the model when the source says so, with no structured data', () => {
+    const r = proposeEvent(
+      input({ start: '2025-12-21', allDay: true, repeat: 'yearly' }),
+      ctx(),
+      {},
+    );
+    expect(r).toMatchObject({ ok: true, payload: { start: '2026-12-21', repeat: 'yearly' } });
+  });
+
+  it('sets no repeat when the model says null', () => {
+    const r = proposeEvent(input({ start: '2026-12-21', allDay: true, repeat: null }), ctx(), {});
+    if (!r.ok) throw new Error('expected an event');
+    expect(r.payload).not.toHaveProperty('repeat');
+  });
+});

@@ -1,5 +1,5 @@
 import { addDaysToIsoDate } from '../event-time/zoned';
-import { EVENT_DEFAULT_LENGTH_MS } from '../events-cards/constants';
+import { EVENT_DEFAULT_LENGTH_MS, type EventRepeat } from '../events-cards/constants';
 
 /** 042 (D368): what a calendar file needs from an event card (zod-free). */
 export interface IcsEvent {
@@ -12,6 +12,8 @@ export interface IcsEvent {
   /** Timed: an ISO instant. All-day: the last day, inclusive. */
   end?: string;
   timeZone: string;
+  /** D402: a yearly event gets `RRULE:FREQ=YEARLY` (its start is the current occurrence). */
+  repeat?: EventRepeat;
   location?: string;
   /** The event's own link. */
   url?: string;
@@ -107,6 +109,7 @@ export function toIcs(event: IcsEvent, { cardUrl, now }: IcsOptions): string {
     `UID:${event.id}@gobbit`,
     `DTSTAMP:${utcStamp(now)}`,
     ...timeLines(event),
+    ...(event.repeat === 'yearly' ? ['RRULE:FREQ=YEARLY'] : []),
     `SUMMARY:${escapeIcsText(event.title)}`,
   ];
   if (event.location) lines.push(`LOCATION:${escapeIcsText(event.location)}`);
