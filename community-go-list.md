@@ -2,7 +2,7 @@
 
 Everything needed to launch the first communal deck: a public, Hebrew-first knowledge deck for a community living abroad, seeded from a curated Markdown file (plus media) through bulk import and reviewed card by card.
 
-Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`. This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
+Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`; Track I target decided Nov 16. This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
 
 ## Goal and definition of done
 
@@ -11,7 +11,7 @@ Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and regist
 - A stranger on a phone can find a card by searching in Hebrew, English or Greek spelling.
 - Wrong or stale cards have a way back to the curators.
 - Backups, abuse limits and privacy basics are in place before the link is shared.
-- Nothing the public deck depends on runs in the home lab: compute, database, backups and analytics are on external services, and the app answers on a product domain (Track I).
+- Nothing the public deck depends on to serve runs in the home lab: compute, database, backups and analytics are on external services, and the app answers on a product domain (Track I). Deploys may still go through the home-lab Dokploy.
 - The deck is served white-labelled on its own domain (Track J).
 - Each launch stage (curators, invited readers, waitlist cohort, anonymous readers) has a defined way in (Track H).
 
@@ -205,53 +205,77 @@ Its own phase. It must finish before the deck is public: public URLs get indexed
 | Backups | nightly dump to the S3 store on the NAS; restore not yet rehearsed | yes |
 | Analytics | shared Umami in another Dokploy project, proxied at `/stats/*` | yes |
 | Ingress | Cloudflare → tunnel → `cloudflared` → Traefik | tunnel end and Traefik |
+| Deploy | CI calls the Dokploy webhook (ADR-073) | yes |
 | Hostname | a subdomain of the home-lab domain | yes |
 | Images, CI | GHCR, GitHub Actions | no |
 | Images in cards, mail, uptime pings, models | Cloudinary, Resend, Healthchecks.io, OpenRouter | no |
 
 ### Constraints the target must respect
 
-- `api` and `worker` are long-running Node processes. The worker polls pg-boss, the API pings the database every 60 s and the worker sends a heartbeat every 30 s, so the database never goes idle.
+- `api` and `worker` are long-running Node processes.
+- The database is never idle: pg-boss polls every few seconds, `reminder-sweep` and `embed-sweep` run every minute, and the API (60 s) and worker (30 s) heartbeats run `select 1`. A database that suspends when idle does not fit, and changing these is not worth it (reminders would arrive late, alerting would change). The database is always on.
 - The API keeps state in memory (anonymous rate limiter, public page cache), so it runs as one instance.
 - Everything is one origin; Caddy owns the routing, including the cookie-based choice between landing page and app at `/` (ADR-063).
 - CI builds images without a multi-platform setting, so an `arm64` host needs a build change.
 - Sessions, installed PWAs, offline drafts and push subscriptions belong to the origin; magic links, share links, public pages, the mail sender and email-in all carry the hostname.
 
-### Candidate services
+### Target (decided Nov 16)
 
-Free-tier figures were read on Nov 15 from the pages listed under Sources, several of them third-party summaries. Confirm each on the provider's own pricing page before choosing.
+- **Serving:** one small EU VM runs the Compose project: `api`, `worker`, `web`, Postgres (pgvector image, named volume) and `cloudflared`. The tunnel ends on the VM, so the VM opens no web ports.
+- **Deploying:** the home-lab Dokploy deploys to the VM as a [remote server](https://docs.dokploy.com/docs/core/remote-servers) over SSH; it installs only Traefik there. CI keeps calling the Dokploy webhook and `infra/docker-compose.yml` stays the source (ADR-073). Not a Docker Swarm node: Swarm across the internet needs a VPN and stretches the overlay network over the home line.
+- **What still depends on the home lab:** deploys and the Dokploy copy of the env vars, not serving. If the home lab is down, a deploy fails loudly and nothing goes down. Fallback: SSH to the VM and `docker compose pull && docker compose up -d`, with a copy of the env file kept outside Dokploy.
+- **Backups:** nightly `pg_dump` to Cloudflare R2, with a pull copy on the NAS.
+- **Analytics:** Umami Cloud, still proxied same-origin at `/stats/*`.
 
-| Need | Candidate | Free tier as read | Fit |
-|---|---|---|---|
-| Postgres | Neon | 100 CU-hours and 1 GB per project a month; suspends after 5 minutes idle | Compute does not fit as the app stands: an always-awake database at the smallest size uses about 180 CU-hours a month. Works only if the pings and polling let it sleep (I3) or on the paid plan. Confirm pgvector and pg_trgm **(verify)**. |
-| Postgres | another managed free tier | **(verify)** | Check storage, pause policy and both extensions. |
-| Postgres | same VM as the app | n/a | No extra service, no network hop; backups become ours to run (I5). |
-| Always-on compute | Oracle Cloud Always Free (Ampere A1) | reported cut in 2026 to about 2 OCPU / 12 GB; idle instances can be reclaimed | Enough capacity, but `arm64` images are needed, capacity is hard to get and idle instances are reclaimed. Not for the only copy of anything. |
-| Always-on compute | small paid VPS in the EU | not free | The dependable option; the same Compose file runs unchanged. |
-| Compute | Cloud Run, Render, Koyeb free tiers | scale to zero or sleep when idle; an always-on Cloud Run instance is billed | Do not fit a polling worker and in-memory state. |
-| Compute | Cloudflare Containers | needs the Workers Paid plan | Not free; no gain over a VM here. |
-| Ingress, DNS, TLS, CDN | Cloudflare free plan + tunnel | already in use | Keep. The tunnel end moves with the containers, so no ports are opened. |
-| Static web | Cloudflare Workers static assets | static requests free | Possible later; it would move Caddy's routing into a Worker. Not in this phase. |
-| Backups | Cloudflare R2 | 10 GB, no egress fee | Fits nightly dumps for years. |
-| Analytics | Umami Cloud Hobby | free, about 100K events a month; site count unclear | Fits; Caddy proxies `/stats/*` to it so the tracker stays same-origin. |
-| Mail, images, uptime | Resend, Cloudinary, Healthchecks.io | already in use | Re-check limits against launch traffic (I8). |
+### Cost and where to grow
 
-There is no dependable free home for an always-on container. Recommended target: one small EU VM running the committed Compose file behind the existing Cloudflare tunnel, Postgres on a managed service in the same region if the free compute budget can be met and otherwise on the VM, dumps to R2, Umami Cloud. Everything else stays where it is.
+Prices as read Nov 16 from third-party comparisons; 2026 price rises make them disagree. Confirm on the provider's page before ordering.
+
+| Option | About a month | Notes |
+|---|---|---|
+| Hetzner Cloud CAX11 (2 vCPU arm64, 4 GB) or CX23 (x86) | €4.50–6.50 + €0.50 IPv4 | Hourly billing, rescale in place, snapshots, API. Recommended start. |
+| Netcup VPS (2 vCPU, 4 GB) | about €4 | Slightly cheaper; check the minimum contract term **(verify)**. |
+| Contabo (8 GB) | about €5 | Most memory per euro; CPU performance varies. |
+| DigitalOcean managed Postgres, 1 GB | about $15 | The cheapest managed database that never sleeps, if running Postgres stops being worth it. |
+| Neon Launch, always on, 0.25 CU | about $19–23 | Managed, with branches and point-in-time restore. |
+
+Start on one Hetzner VM with Postgres on it, about €5–7 a month in total. Grow in this order, each step invisible to users:
+
+1. Rescale the VM (more CPU and memory, same disk and address).
+2. Move Postgres to a managed service or its own VM: dump and restore, change `DATABASE_URL`.
+3. Change provider: bring the stack up on the new VM from the latest dump, point the tunnel at it, retire the old VM.
+
+Users never see the VM: the hostname, TLS and the tunnel stay at Cloudflare, so sessions (in the database), installed PWAs and push subscriptions survive every one of these moves. Only the short write freeze during a dump and restore is visible. Running a second API instance would need the in-memory state moved first (see Constraints).
+
+### Cloudflare, free plan
+
+| Use | Feature | Note |
+|---|---|---|
+| Ingress, TLS, DNS, DDoS | Tunnel, Universal SSL | Already in use; the tunnel is what makes a provider change invisible. |
+| Backups | R2, 10 GB, no egress fee | Nightly dumps. |
+| Old-hostname 301s | Redirect Rules | Serve the I9 redirects from Cloudflare, so they need nothing in the home lab. |
+| Static assets | CDN cache | Hashed JS, CSS and images are cached by default. Caching public HTML pages would need a cache rule that skips requests with `gobbit_session` and a Cloudflare purge from `purgeDeck`; not now. |
+| Abuse controls (Phase 11.3) | One rate limiting rule (10 s period), WAF custom and managed rules, Turnstile | A first line in front of the in-process `anon-rate-limiter`, not a replacement. Turnstile fits the waitlist form and a later public "suggest a card" form. |
+| Not Bot Fight Mode | | On the free plan it cannot be skipped per path, so it would challenge the iPhone Shortcut, `pnpm import:notes` and the Resend inbound webhook. |
+| Custom domain (Track J) | Cloudflare for SaaS, 100 custom hostnames free | Enough for this deck and many after it. |
+| SSH to the VM | Hetzner firewall | Key-only SSH, limited to the home address if it is static. Cloudflare Access for SSH (free up to 50 users) is possible but needs `cloudflared` on the Dokploy side too; not now. |
+
+Not used: Cloudflare Web Analytics (no custom events, does not follow our consent model), Email Routing (Resend inbound already does email-in), Workers and Hyperdrive (no Worker in this design).
 
 ### Steps
 
-- [ ] **I1. Decide the target** (compute host, database home, deploy tool) and record it as the next ADR, superseding the relevant parts of ADR-038, ADR-039 and ADR-073. Verify: ADR merged with the checked free-tier numbers.
+- [ ] **I1. Record the target** above as the next ADR, superseding the relevant parts of ADR-038, ADR-039 and ADR-073. Verify: ADR merged with the provider and prices checked on the provider's page.
 - [ ] **I2. Product domain.** Register it, put the zone on Cloudflare, decide the app hostname. Verify: DNS resolves; nothing points at it yet.
-- [ ] **I3. Database fit.** Measure database size and connection pattern in production. If a suspend-when-idle database is the aim, change the health pings and worker polling so an idle app lets it sleep, and prove pg-boss works over the provider's direct connection. Verify: a week of metrics under the monthly compute allowance, or the decision to host Postgres on the VM.
-- [ ] **I4. Compute.** Provision the VM, run the Compose file with a second tunnel on a staging hostname. If the host is `arm64`, add it to the CI image build. Keep Dokploy or replace it with a plain pull-and-`up` deploy; either way the repo file stays the source (ADR-073). Verify: e2e smoke green against staging.
-- [ ] **I5. Backups.** Nightly `pg_dump` to R2 with retention, plus the provider's own recovery if managed. Keep a pull copy on the NAS as a second location. Rehearse the restore and write the date in `infra/README.md`. Verify: Phase 11.1 demo.
+- [ ] **I3. Sizing.** Read database size, memory per container and connection count in production, to pick the VM size and pool sizes. Verify: numbers written in `infra/README.md`.
+- [ ] **I4. VM and remote server.** Create the VM and its firewall; add it to Dokploy as a remote server; add Postgres and `cloudflared` to the Compose project with a staging hostname. If the host is `arm64`, add it to the CI image build. Check that `dokploy-network` exists on the remote server **(verify)**. Verify: e2e smoke green against staging.
+- [ ] **I5. Backups.** Nightly `pg_dump` to R2 with retention, either through Dokploy's scheduled database backups (if they run on a remote server, **(verify)**) or a cron container; a Healthchecks ping on each run; a pull copy on the NAS. Rehearse the restore on a scratch VM and write the date in `infra/README.md`. Verify: Phase 11.1 and 11.6 demos (this rehearsal is also the escape hatch).
 - [ ] **I6. Analytics.** Create the site in Umami Cloud, point `ANALYTICS_UPSTREAM` at it, check visitor IP and country still arrive through the proxy. Old history stays behind unless exported. Verify: a landing view shows up; the `landing.render` versus Umami check still holds.
-- [ ] **I7. Host-bound settings.** `API_URL`, `APP_URL`, `CORS_ORIGINS`, `PUBLIC_HOST`, `MAIL_FROM` and the Resend sending domain (SPF, DKIM), `INGEST_EMAIL_DOMAIN` and the inbound webhook, the iPhone Shortcut URL, Healthchecks names, Umami website host. Add a `CHANGELOG.md` entry marked **Action required**.
-- [ ] **I8. Limits check.** Compare launch estimates with the free tiers kept: Resend sends, Cloudinary credits, Healthchecks checks, embedding spend.
-- [ ] **I9. Cut-over.** Announce a short write freeze; dump and restore into the new database (extensions first, pg-boss schema included); switch the tunnel and DNS; the old hostname answers 301 to the new one for `/p/*`, `/s/*` and the app. Members sign in again and re-install the PWA; push subscriptions are re-created on first open; unsynced drafts on the old origin are lost, so say so beforehand. Verify: post-deploy smoke on the new host; a shared link from before the move lands on the same card.
-- [ ] **I10. Escape hatch.** From last night's R2 dump, bring the app up on a scratch VM with the domain pointed at it. Verify: Phase 11.6 demo.
-- [ ] **I11. Decommission.** After two quiet weeks: remove the Dokploy project, the `gobbit` database on the shared instance and the old tunnel; keep the 301s for a year.
-- [ ] **I12. Docs.** `infra/README.md` (layout, backups, monitoring, restore), `docs/design/deployment.md`, `README.md`, one line and one ADR row in `docs/architecture.md`.
+- [ ] **I7. Host-bound settings.** `API_URL`, `APP_URL`, `CORS_ORIGINS`, `PUBLIC_HOST`, `MAIL_FROM` and the Resend sending domain (SPF, DKIM), `INGEST_EMAIL_DOMAIN` and the inbound webhook, the iPhone Shortcut URL, Healthchecks names, Umami website host. Keep a copy of the env file outside Dokploy. Add a `CHANGELOG.md` entry marked **Action required**.
+- [ ] **I8. Limits check.** Compare launch estimates with the free tiers kept: Resend sends, Cloudinary credits, Healthchecks checks, R2 storage, embedding spend.
+- [ ] **I9. Cut-over.** Announce a short write freeze; dump and restore into the VM's database (extensions first, pg-boss schema included); switch the tunnel and DNS; Cloudflare Redirect Rules answer 301 from the old hostname to the new one for `/p/*`, `/s/*` and the app. Members sign in again and re-install the PWA; push subscriptions are re-created on first open; unsynced drafts on the old origin are lost, so say so beforehand. Verify: post-deploy smoke on the new host; a shared link from before the move lands on the same card.
+- [ ] **I10. Fallback deploy.** Deploy once by hand over SSH without Dokploy, from the env file copy. Verify: smoke green after the manual deploy.
+- [ ] **I11. Decommission.** After two quiet weeks: remove the old Dokploy Compose project, the `gobbit` database on the shared instance and the old tunnel. Dokploy itself stays. Keep the Redirect Rules for a year.
+- [ ] **I12. Docs.** `infra/README.md` (layout, remote server, backups, monitoring, restore, manual deploy, how to grow), `docs/design/deployment.md`, `README.md`, one line and one ADR row in `docs/architecture.md`.
 
 E2E tier: smoke — hosts, images and the deploy path change; no new journeys.
 
@@ -275,7 +299,7 @@ Depends on Track I (the hostnames route to the new origin, and the main domain m
 ## Order
 
 1. B2 and C1 now; they shape both the importer and the content.
-2. Track A through spec-kit, in parallel with Track C writing. Track I can run alongside; it touches no application behaviour beyond I3.
+2. Track A through spec-kit, in parallel with Track C writing. Track I can run alongside; it touches no application behaviour.
 3. H1–H3 with B1, B4, B5, then D1.
 4. D2–D6 (the deck stays non-public).
 5. Track I cut-over (I9) at the latest here, so nothing public is ever on the home-lab hostname.
@@ -293,9 +317,8 @@ If Track J slips, the fallback is to go public on the product domain after step 
 - E: how much Hebrew chrome is needed for launch (public pages only, or the reader too).
 - F: whether "suggest a card" is needed at launch rather than after.
 - Whether the import can target an existing card later (G14), should the seed file need a second pass.
-- I1: free but fragile compute (Oracle Always Free) or a small paid VM; managed Postgres or Postgres on the VM; keep Dokploy or deploy with plain Compose.
+- I1: Hetzner or another VM provider (decided: one small paid VM, Postgres on it, deployed by Dokploy as a remote server).
 - I2 and J2: the product domain and the community domain.
-- I3: whether to change the ping and polling pattern to fit a suspend-when-idle database.
 - Track J: whether the custom domain is required for launch or follows it.
 - H2: your own user or a dedicated community user as the deck's owner; who holds its mailbox.
 - Members-only categories on a public deck: stub in `PLAN.md` Phase 17, not urgent.
@@ -306,15 +329,17 @@ If Track J slips, the fallback is to go public on the product domain after step 
 - Whether a phone number in a card body becomes a tappable link on public pages.
 - How the review screen behaves for a proposal with no category before Publish is pressed (the API answers 422).
 - Whether the Cloudinary plan and the media sweep settings fit a few hundred seed images.
-- Every free-tier figure in Track I, on the provider's own page.
-- That pg-boss runs on the chosen managed Postgres (direct connection, schema creation rights).
+- Every price in Track I, on the provider's own page.
+- That `dokploy-network` exists on a Dokploy remote server, and whether Dokploy's database backups run there.
 
 ## Sources
 
-Free-tier figures in Track I, read Nov 15:
+Track I prices and features, read Nov 16 (mostly third-party summaries; confirm on the provider's page):
 
-- Neon free plan: <https://neon.com/faqs/free-plan-limits-and-quotas>
-- Oracle Always Free resources: <https://docs.oracle.com/iaas/Content/FreeTier/resourceref.htm>, and the reported 2026 reduction: <https://linuxiac.com/oracle-quietly-cuts-free-tier-ampere-a1-resources-in-half/>
-- Hosting free tiers side by side: <https://flaviocopes.com/hosting-free-tiers/>, <https://agentdeals.dev/hosting-free-tier-comparison-2026>
-- Cloudflare plans and Workers pricing: <https://www.cloudflare.com/plans/>, <https://developers.cloudflare.com/workers/platform/pricing>
-- Umami Cloud: <https://umami.is/docs/cloud/faq>
+- Dokploy remote servers: <https://docs.dokploy.com/docs/core/remote-servers>
+- Hetzner price adjustment: <https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/>
+- EU VPS comparisons: <https://www.eucloudcost.com/cheapest-vps-europe/>, <https://sliplane.io/blog/top-5-cheap-vps-providers>
+- Managed Postgres prices: <https://dev.to/abhijais1/managed-postgres-pricing-in-2026-eight-providers-compared-3do1>, <https://neon.com/pricing>
+- Cloudflare rate limiting rules: <https://developers.cloudflare.com/waf/rate-limiting-rules/>
+- Cloudflare for SaaS plans: <https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/plans/>
+- Cloudflare free plan summary: <https://costbench.com/software/cdn-edge/cloudflare/free-plan/>
