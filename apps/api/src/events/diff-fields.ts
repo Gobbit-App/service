@@ -5,7 +5,15 @@ import { itemEventFields, type ItemEventField } from '@gobbit/shared';
 /** The card fields D186 compares, with categories as ids. */
 export type ItemFields = Pick<
   ItemRow,
-  'title' | 'body' | 'payload' | 'sourceUrl' | 'cover' | 'entities' | 'verifiedAt' | 'type' | 'status'
+  | 'title'
+  | 'body'
+  | 'payload'
+  | 'sourceUrl'
+  | 'cover'
+  | 'entities'
+  | 'verifiedAt'
+  | 'type'
+  | 'status'
 > & { categoryIds: readonly string[] };
 
 export function itemFields(row: ItemRow, categoryIds: readonly string[]): ItemFields {
