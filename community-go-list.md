@@ -168,7 +168,7 @@ How people get into the communal deck at each stage, what the code does today an
 - [ ] **H1. Decide the open points below** before B1.
 - [ ] **H2. Owning user.** Either your own user or a dedicated community user with a mailbox more than one person can recover. A dedicated one keeps the community deck apart from your personal decks and survives a change of hands; it is a choice, not a safety need (G15 withdrawn). If dedicated: the platform admin invites it from the waitlist screen, it signs in and creates the deck, and your own user gets an `owner` membership. Verify: `GET /decks/<slug>/members` lists exactly the people invited.
 - [ ] **H3. Curators.** `maintainer` for people who review and publish; `owner` only for whoever also manages members. Avoid `editor` on this deck: it publishes without review.
-- [ ] **H4. Soft launch and cohort, with no new code.** Invite readers from deck settings one address at a time. For the waitlist cohort, read confirmed `community` entries in `/admin/waitlist` and send each a deck invite instead of a waitlist invite; the cap is counted by hand and the entries stay `confirmed`. Good for tens of people, not hundreds.
+- [ ] **H4. Soft launch and cohort, with no new code.** Invite readers from deck settings one address at a time (by WhatsApp once H12 exists). For the waitlist cohort, read confirmed `community` entries in `/admin/waitlist` and send each a deck invite instead of a waitlist invite; the cap is counted by hand and the entries stay `confirmed`. Good for tens of people, not hundreds.
 - [ ] **H5. Suggesting on communal decks** (closes G16; to implement, spec-kit). A deck setting, communal decks only, off by default, switched by owners only. When on, readers can suggest: the share and paste paths and a short "suggest a card" form, always `proposed`, never published by the suggester, own proposals visible to them, daily caps, a decision event per accepted and refused suggestion. Model use on a suggestion follows H11. Roles are unchanged; shared and personal decks never have the setting. Needed before stage 3.
 - [ ] **H6. No email addresses in member data** (closes G17; to implement, spec-kit). No API answer about a deck's members carries an email address, for any deck kind and any role, owners included: member list, role change, invite answer, reminder and event audience pickers. People appear by profile name and avatar (spec `046`, user profile). Needed before stage 3.
   - Inviting: by email address or by username (usernames arrive with spec `046`). A username lookup answers with the profile name and avatar, never the address.
@@ -190,8 +190,18 @@ How people get into the communal deck at each stage, what the code does today an
   - With the switch on, today's daily caps stay (50 per channel, 200 combined). The migration switches it on for the platform admins only; everyone else is switched on by hand.
   - To settle in the spec: what best effort contains for each kind of share without the model (link, text, image, email).
   - Verify: an integration test shares as a user without the switch and sees a proposal, no `llm_calls` row, the notice and the decision event; the same share with the switch on is extracted. Needed before stage 3.
+- [ ] **H12. Invite by link** (to implement, spec-kit; fold into H7 if it is specified at the same time). An owner can send a deck invite through WhatsApp or any chat instead of by mail. That is more personal, and it saves an invite mail per person (see Track K, mail headroom).
+  - **Today's invite link must not be copied.** The mailed link is a single-use magic link bound to the invitee's address (`/auth/callback?token=…`, D37, `memberships.service.ts` `sendInvite`). Whoever opens it first is signed in *as that person*, and chats get forwarded and seen by groups. So "copy invite" needs a new kind of link, not a copy button on the old one.
+  - **The new link only invites; it never signs in.** The owner creates an invite with a name for their own reference ("Dana") and a role, with no address needed. They get a link to an invite page in the app. Whoever opens it signs in or registers through the normal door (H7; with L4, Google or password, so no mail at all), then accepts, and the membership is created.
+  - **Personal, so single use:** the first person to accept claims it. It expires (`INVITE_TTL_DAYS`) and the owner can revoke it. In the invites list it shows as "link for Dana: waiting / accepted by <profile name>", so the owner sees who actually came in and can remove them if the wrong person did.
+  - **Sharing:** a "Share invite" action through the existing `ui/ShareButton` (the phone's share sheet, so WhatsApp is one tap; copy as the fallback), with a short prefilled message the owner can edit in the chat. The invite page has its own link preview (deck name, inviter's profile name), so it looks right when pasted. It never shows cards, members or anything private.
+  - **Registration gate:** an invite link lets an unregistered person register while registration is waitlist-only, as a deck invite does today (same open decision as H7). Registration reason `deck_invite`.
+  - **Accountability:** created, shared (client event), accepted, expired, revoked, and refused (used up, expired, already a member) are decision events with the invite id. Owner-side limits on how many open links a deck can have (env-tunable) stop the feature becoming an open door.
+  - **Not now:** a reusable "anyone with this link can join" deck link, like a WhatsApp group link. On a communal deck it would be forwarded beyond the community at once; public reading (stage 5) already serves that audience. Revisit with suggesting (H5) if communities ask for it.
+  - E2E tier: smoke: an owner creates a link invite, a second user opens it, accepts and lands on the deck; a second use of the same link is refused.
+  - Wanted for stage 3 (soft launch invites go out by WhatsApp), needed for stage 4.
 
-Order within the track: H1 → H2, H3 (with Track B) → H5, H6, H11 → stage 3 → H7, H8 → stage 4 → stage 5.
+Order within the track: H1 → H2, H3 (with Track B) → H5, H6, H11, H12 → stage 3 → H7, H8 → stage 4 → stage 5.
 
 ## Track I — Infrastructure out of the home lab
 
@@ -385,7 +395,7 @@ Small changes to do now, before load arrives. L1–L3 are small fixes (no spec-k
 3. H1–H3 with B1, B4, B5, then D1.
 4. D2–D6 (the deck stays non-public).
 5. Track I cut-over (I9) at the latest here, so nothing public is ever on the home-lab hostname.
-6. K3 and K4 done; H5, H6 and H11, then the soft launch (stage 3). H7, H8 and L4 (at least Google sign-in), then the waitlist cohort (stage 4).
+6. K3 and K4 done; H5, H6, H11 and H12, then the soft launch (stage 3). H7, H8 and L4 (at least Google sign-in), then the waitlist cohort (stage 4).
 7. Track E.
 8. Track J, then switch the deck to public and share the custom-domain link (stage 5).
 
@@ -405,6 +415,7 @@ If Track J slips, the fallback is to go public on the product domain after step 
 - H2: your own user or a dedicated community user as the deck's owner; who holds its mailbox.
 - Members-only categories on a public deck: stub in `PLAN.md` Phase 17, not urgent.
 - H7: whether a deck invite skips waitlist approval.
+- H12: whether a reusable deck join link is ever wanted (not now), and the cap on open invite links per deck.
 - L4: Google first, passwords second (recommended), or both together; whether existing users keep a mail-me-a-link fallback; what happens when an invite is accepted with a Google address other than the invited one.
 
 ## To verify
