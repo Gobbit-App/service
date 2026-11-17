@@ -23,6 +23,9 @@ import {
  * with a cover are created through the API with an asset recorded for the deck (D160).
  */
 
+// The service worker answers Cloudinary images itself, past `page.route`; block it so the fake serves.
+test.use({ serviceWorkers: 'block' });
+
 test.beforeEach(() => {
   test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
 });

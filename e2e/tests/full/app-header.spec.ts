@@ -64,9 +64,10 @@ test.describe('app header lead @full', () => {
     expect(gap).toBeGreaterThanOrEqual(8);
     expect(gap).toBeLessThanOrEqual(16);
 
-    // The 44 px hit area reaches past the visible box, so a tap at the screen edge goes Back.
+    // The 44 px hit area reaches 6 px past the visible box (the gutter is 20 px since D383, so its
+    // outer edge sits at x = 2), so a tap just inside that edge goes Back.
     const box = await back.boundingBox();
-    await page.mouse.click(1, (box?.y ?? 0) + (box?.height ?? 0) / 2);
+    await page.mouse.click((box?.x ?? 0) - 5, (box?.y ?? 0) + (box?.height ?? 0) / 2);
     await expect(page).not.toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   });
 });

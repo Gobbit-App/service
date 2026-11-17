@@ -102,6 +102,7 @@ test('a card type is picked from the chooser by keyboard alone (D301) @full', as
   await page.keyboard.press('Home');
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
   await expect(group.getByRole('radio', { name: 'Link' })).toBeFocused();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new$`));
   await page.keyboard.press('Enter');
