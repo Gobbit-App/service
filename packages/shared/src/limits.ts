@@ -9,6 +9,9 @@ export const USERNAME_HOLD_DAYS_DEFAULT = 30;
 /** Profile lookups per member per hour before the limiter answers 429 (env-tunable default). */
 export const PROFILE_LOOKUP_RATE_PER_HOUR_DEFAULT = 30;
 
+/** Profile saves per member per hour before the limiter answers 429 (env-tunable default). */
+export const PROFILE_UPDATE_RATE_PER_HOUR_DEFAULT = 30;
+
 /** Longest first or last name on a profile. */
 export const PROFILE_NAME_MAX = 60;
 

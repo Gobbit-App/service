@@ -56,7 +56,7 @@ export function Card({
    * no bar (Browse puts the actions in its dock, D249).
    */
   actions?: ReactNode;
-  /** D327: `false` hides the chips and age row (Browse shows content only). */
+  /** D327: `false` hides the chips and age row (Browse shows content only); the creator avatar stays (D421). */
   meta?: boolean;
   /** `false` hides the source link button (the full view lists the source in its own section). */
   source?: boolean;
@@ -83,9 +83,9 @@ export function Card({
       <CoverBar cover={item.cover} cloudName={cloudName} loading={coverLoading} />
       <CardBody item={item} cloudName={cloudName} image={image} />
       {source && <CardSourceLink item={item} />}
-      {meta && (chips.length > 0 || age || item.creator) && (
+      {(meta ? chips.length > 0 || age || item.creator : item.creator) && (
         <footer className="card__meta">
-          {chips.length > 0 && (
+          {meta && chips.length > 0 && (
             <ul className="card__chips" aria-label="Categories">
               {chips.map((c) => (
                 <li key={c.id}>
@@ -103,7 +103,7 @@ export function Card({
               ))}
             </ul>
           )}
-          {age && (
+          {meta && age && (
             <time
               className="card__age"
               dateTime={age.at.toISOString()}

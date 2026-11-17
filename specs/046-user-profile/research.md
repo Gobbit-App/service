@@ -109,6 +109,8 @@ members list to people in the same deck, but an avatar appears in communal decks
 that list; spec FR-022 forbids leaking the email, and a local part is most of one. "Member" is a safe,
 honest label and the two-letter initials still distinguish people visually.
 
+**Scope (2026-11-17)**: D422 binds the card creator avatar (`CardCreator` on item DTOs). Rows that already print the display name beside the avatar (Story 5: event rows, the members list, share rows; members already see that name today) use it as the avatar's accessible name.
+
 **Alternatives**: show the email-derived name (the spec's default; judged too revealing); show nothing
 (the avatar would have no accessible name).
 

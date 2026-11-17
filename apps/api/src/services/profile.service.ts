@@ -30,6 +30,7 @@ export interface ProfileServiceDeps {
   logHash: LogHash;
   decisions: DecisionLogger<ProfileDecisions>;
   lookupRatePerHour: number;
+  updateRatePerHour: number;
   rateLimits: Pick<RateLimitService, 'check'>;
   summaries: Pick<MemberSummaries, 'summaries'>;
   findByUsername(lower: string): Promise<{ id: string } | null>;
@@ -188,6 +189,20 @@ export function createProfileService(deps: ProfileServiceDeps) {
     },
 
     async update(user: CurrentUser, patch: ProfilePatch, requestId: string): Promise<Profile> {
+      // Counted before anything is read or written: cycling usernames would grow username_holds.
+      const gate = await deps.rateLimits.check(
+        rateKeys.profileUpdateUser(user.id),
+        deps.updateRatePerHour,
+      );
+      if (!gate.allowed) {
+        decisions.record('profile.update', {
+          outcome: 'refused',
+          reason: 'rate_limited',
+          requestId,
+          userId: user.id,
+        });
+        throw rateLimited(gate.retryAfterSeconds);
+      }
       const next: ProfileColumns = {};
       for (const f of FIELDS) if (patch[f] !== undefined) next[f] = clean(patch[f]);
       for (const f of LIMITS) {

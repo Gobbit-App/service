@@ -59,6 +59,7 @@ export const shareSummarySchema = z
       .nullable(),
     reviewedBy: z
       .object({
+        id: z.string().uuid(),
         displayName: z.string(),
         username: z.string().nullable(),
         initials: z.string(),

@@ -141,7 +141,7 @@ export function ShareDetail({
               <Avatar
                 size="sm"
                 ariaLabel={share.reviewedBy.displayName}
-                member={{ id: null, ...share.reviewedBy, name: share.reviewedBy.displayName }}
+                member={{ ...share.reviewedBy, name: share.reviewedBy.displayName }}
               />{' '}
               <span dir="auto">By {share.reviewedBy.displayName}</span>
             </>

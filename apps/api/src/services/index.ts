@@ -259,6 +259,7 @@ export function buildServices({
       logHash,
       decisions: createProfileDecisions(logger),
       lookupRatePerHour: env.PROFILE_LOOKUP_RATE_PER_HOUR,
+      updateRatePerHour: env.PROFILE_UPDATE_RATE_PER_HOUR,
       rateLimits,
       summaries: memberSummaries,
       findByUsername: (lower) => users.findByUsername(lower),
@@ -338,6 +339,8 @@ export function buildServices({
       summaries: memberSummaries,
       logHash,
       decisions: createProfileDecisions(logger),
+      rateLimits,
+      lookupRatePerHour: env.PROFILE_LOOKUP_RATE_PER_HOUR,
     }),
     decks: createDecksService({
       decks,

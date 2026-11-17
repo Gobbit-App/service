@@ -31315,6 +31315,10 @@
                               "null"
                             ],
                             "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
                               "displayName": {
                                 "type": "string"
                               },
@@ -31349,6 +31353,7 @@
                               }
                             },
                             "required": [
+                              "id",
                               "displayName",
                               "username",
                               "initials",
@@ -31844,6 +31849,10 @@
                         "null"
                       ],
                       "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
                         "displayName": {
                           "type": "string"
                         },
@@ -31878,6 +31887,7 @@
                         }
                       },
                       "required": [
+                        "id",
                         "displayName",
                         "username",
                         "initials",
@@ -32288,6 +32298,10 @@
                         "null"
                       ],
                       "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
                         "displayName": {
                           "type": "string"
                         },
@@ -32322,6 +32336,7 @@
                         }
                       },
                       "required": [
+                        "id",
                         "displayName",
                         "username",
                         "initials",

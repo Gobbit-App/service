@@ -11,7 +11,15 @@ import type { CurrentUser } from '../types';
 import { authorize } from '../access/authorize';
 import { resolveDeck } from '../lib/resolve-deck';
 import { generateToken, hashToken } from '../lib/tokens';
-import { badRequest, conflict, notFound, PERSONAL_DECK_PROBLEM } from '../errors/http-errors';
+import {
+  badRequest,
+  conflict,
+  notFound,
+  PERSONAL_DECK_PROBLEM,
+  rateLimited,
+} from '../errors/http-errors';
+import { rateKeys } from '../lib/rate-window';
+import type { RateLimitService } from './rate-limit.service';
 import type { UsersService } from './users.service';
 import type { DecisionLogger } from '../lib/decision-event';
 import type { LogHash } from '../lib/log-hash';
@@ -57,6 +65,8 @@ export function createMembershipsService(deps: {
   summaries: Pick<MemberSummaries, 'summaries'>;
   logHash: LogHash;
   decisions: DecisionLogger<ProfileDecisions>;
+  rateLimits: Pick<RateLimitService, 'check'>;
+  lookupRatePerHour: number;
 }) {
   const { env, now, mailer, decks, memberships, magicLinks, users, usersService } = deps;
 
@@ -237,6 +247,22 @@ export function createMembershipsService(deps: {
       let email: string;
       const byUsername = 'username' in input;
       if ('username' in input) {
+        // Same budget as /members/lookup, so inviting cannot enumerate usernames past it.
+        const gate = await deps.rateLimits.check(
+          rateKeys.profileLookupUser(user.id),
+          deps.lookupRatePerHour,
+        );
+        if (!gate.allowed) {
+          deps.decisions.record('profile.lookup', {
+            outcome: 'refused',
+            reason: 'rate_limited',
+            kind: 'username',
+            queryHash: deps.logHash('username', input.username),
+            requestId: ctx.requestId,
+            userId: user.id,
+          });
+          throw rateLimited(gate.retryAfterSeconds);
+        }
         // D425: the address stays inside; a miss is the same 404 whatever the reason.
         const found = await users.findByUsername(input.username.toLowerCase());
         if (!found) {

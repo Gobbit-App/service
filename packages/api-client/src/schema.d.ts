@@ -9530,6 +9530,8 @@ export interface paths {
                                     } | null;
                                 } | null;
                                 reviewedBy: {
+                                    /** Format: uuid */
+                                    id: string;
                                     displayName: string;
                                     username: string | null;
                                     initials: string;
@@ -9681,6 +9683,8 @@ export interface paths {
                                 } | null;
                             } | null;
                             reviewedBy: {
+                                /** Format: uuid */
+                                id: string;
                                 displayName: string;
                                 username: string | null;
                                 initials: string;
@@ -9811,6 +9815,8 @@ export interface paths {
                                 } | null;
                             } | null;
                             reviewedBy: {
+                                /** Format: uuid */
+                                id: string;
                                 displayName: string;
                                 username: string | null;
                                 initials: string;

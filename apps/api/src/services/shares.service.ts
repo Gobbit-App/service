@@ -118,6 +118,7 @@ export function reviewerOf(
   s: MemberSummary,
 ): ShareReviewer {
   return {
+    id: s.id,
     displayName: displayNameOf(u),
     username: s.username,
     initials: s.initials,

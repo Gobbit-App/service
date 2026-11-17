@@ -33,7 +33,7 @@ All additive and reversible, no backfill (a null profile means "email-derived na
 
 - `itemSchema.creator: CardCreator | null` = `{ id | null, name | null, username | null, initials, photo | null }`. `createItemDtoMapper` (`services/item-dtos.ts`, the one mapper behind item, list, favorites, category, search and review reads) collects the distinct `createdBy` ids, runs one query through `member-summaries.ts`, and attaches the summary. No N+1.
 - A **personal deck** gets `creator = null` (the deck kind comes from the deck row the mapper has). A removed creator, or a null `createdBy`, gets the placeholder `{ id: null, name: null, username: null, initials: '', photo: null }`.
-- **Label (D422)**: username, else profile name, else "Member"; the accessible name is "Added by …". The email-derived name is never part of a summary. Summaries carry no email and no location.
+- **Label (D422)**: username, else profile name, else "Member"; the accessible name is "Added by …". The email-derived name is never part of a summary. Summaries carry no email and no location. **Scope**: this rule binds the card creator avatar (`CardCreator`). Rows that already print the display name beside the avatar (event rows, members list, share rows; members see that name today) use it as the avatar's accessible name.
 - **Initials and colour (D420)**: `initialsFor` and `avatarColorIndex` in `@gobbit/shared/avatar`. First grapheme of first and last name (`Intl.Segmenter`); with no names, the email local part split on `.`, `-`, `_` (computed server-side, so the address never leaves it). A name with no letter falls back to the email part; a combining mark stays with its letter; no honorific stripping. Colour is an FNV-1a hash of the member id into ten palette pairs (`--avatar-N-bg/fg`, light and dark, 4.5:1 checked by a unit test), so a rename never changes it.
 - **Never public**: `toPublicItem` is untouched; public pages, public search and share previews have no `creator` (asserted by tests).
 - **UI**: `ui/Avatar` (see [ui-system.md](ui-system.md)), a `role="img"`, focusable non-button; the label uses the `data-tip` tooltip with a tap-toggle mode.
@@ -70,7 +70,8 @@ The creator summary is part of the persisted item cache, so seen avatars render 
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `USERNAME_HOLD_DAYS` | `30` | Days a released username stays reserved for its previous owner |
-| `PROFILE_LOOKUP_RATE_PER_HOUR` | `30` | Lookups and availability checks per member per hour |
+| `PROFILE_LOOKUP_RATE_PER_HOUR` | `30` | Lookups, availability checks and username invites per member per hour |
+| `PROFILE_UPDATE_RATE_PER_HOUR` | `30` | Profile saves (`PATCH /me/profile`) per member per hour |
 
 ## Decision events and audit (D426)
 
@@ -82,6 +83,7 @@ Audit: `profile_events` (field names only). Decision events (`profile.events.ts`
 | `profile.username_hold` | `held` |
 | `profile.username_check` | `available`, `unavailable` · `invalid`, `reserved`, `unavailable`; `refused` · `rate_limited` |
 | `profile.lookup` | `found`, `not_found`, `refused` · `rate_limited`; kind `username` or `email` |
+| `profile.update` | `refused` · `rate_limited` |
 | `profile.avatar` | `refused` · `unknown`, `foreign`, `rejected` |
 
 `profile.username:refused:reserved` and `profile.avatar:refused:foreign` log at `warn`.
@@ -93,7 +95,9 @@ Investigate when, per hour:
 - `profile.username` `refused:reserved` is above 10 (impersonation attempts);
 - `profile.username` `refused:taken` plus `refused:held` is above 50 from one member (sniping);
 - `profile.username_check` `refused:rate_limited` is above 20;
-- `profile.lookup` `refused:rate_limited` is above 20, or `found` is above 200 for one member (enumeration).
+- `profile.lookup` `refused:rate_limited` is above 20, or `found` is above 200 for one member (enumeration);
+- `profile.update` `refused:rate_limited` is above 20 for one member (`PROFILE_UPDATE_RATE_PER_HOUR`);
+- `profile.avatar` `refused:foreign` is above 5 (probing another member's photo).
 
 ## Deviations
 

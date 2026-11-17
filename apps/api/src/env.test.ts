@@ -21,6 +21,7 @@ describe('env', () => {
     expect(env.INVITE_TTL_DAYS).toBe(7);
     expect(env.USERNAME_HOLD_DAYS).toBe(30);
     expect(env.PROFILE_LOOKUP_RATE_PER_HOUR).toBe(30);
+    expect(env.PROFILE_UPDATE_RATE_PER_HOUR).toBe(30);
     expect(env.SESSION_TTL_DAYS).toBe(90);
   });
 

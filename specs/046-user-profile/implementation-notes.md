@@ -54,6 +54,7 @@ shared-deck cards: compare a card with many chips at 412 px against `main`.
 - **`displayNameOf` (D419)** lives in `packages/shared/src/schemas/profile.ts`, so importing it loads zod; the web
   must not import it as a value on the main chunk (use the summaries' ready-made `name`, or move it to a
   zod-free subpath if a main-chunk caller needs it).
+- **Small additions no task named**: optional `subject` prop on `editor/use-leave-guard.tsx` and `editor/DiscardChangesDialog.tsx` (so the profile form reuses the guard with its own wording); a `/settings/profile` entry in `analytics/catalogue.ts` (the typed route catalogue must list every route); e2e-only variables `SMOKE_INVITEE_USERNAME`, `E2E_MEMBER_B_TOKEN`, `E2E_MEMBER_C_TOKEN` (see `docs/design/testing.md`).
 
 ## Deviations
 

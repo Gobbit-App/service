@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShareSummary } from '@gobbit/shared';
+import { avatarColorIndex } from '@gobbit/shared/avatar';
 import { ApiError } from '../api/api-error';
 import { makeShare } from '../test/fixtures';
 import { renderWithClient } from '../test/render';
@@ -10,6 +11,7 @@ const { respond, requests } = await import('../test/api-mock');
 const { ShareRow } = await import('./ShareRow');
 
 const NOW = new Date('2026-01-01T00:05:00.000Z');
+const REVIEWER_ID = '00000000-0000-4000-8000-0000000000aa';
 const ITEM_ID = '00000000-0000-4000-8000-000000000001';
 
 function renderRow(share: ShareSummary, online = true, canRestore = false) {
@@ -108,13 +110,23 @@ describe('ShareRow (D198)', () => {
     renderRow(
       makeShare({
         state: 'not_added',
-        reviewedBy: { displayName: 'Dana', username: null, initials: 'D', photo: null },
+        reviewedBy: {
+          id: REVIEWER_ID,
+          displayName: 'Dana',
+          username: null,
+          initials: 'D',
+          photo: null,
+        },
         reviewedAt: '2026-01-01T00:04:00.000Z',
       }),
     );
     expect(screen.getByText('Not added')).toBeInTheDocument();
     expect(screen.getByText('By Dana')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Dana' })).toHaveTextContent('D');
+    const avatar = screen.getByRole('img', { name: 'Dana' });
+    expect(avatar).toHaveTextContent('D');
+    expect(avatar.getAttribute('style')).toContain(
+      `var(--avatar-${avatarColorIndex(REVIEWER_ID) + 1}-bg)`,
+    );
   });
 
   it('explains a failure and retries it', async () => {

@@ -15,6 +15,8 @@ export type ProfileDecisions = {
     outcome: 'available' | 'unavailable' | 'refused';
     reason?: 'invalid' | 'reserved' | 'unavailable' | 'rate_limited';
   };
+  /** A profile save was refused because the member saved too often. */
+  'profile.update': { outcome: 'refused'; reason: 'rate_limited' };
   /** D429: a profile photo was refused; the member only sees "Unknown image". */
   'profile.avatar': { outcome: 'refused'; reason: 'unknown' | 'foreign' | 'rejected' };
   /** A member lookup by username or email; `targetId` only on `found`. */

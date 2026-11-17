@@ -61,6 +61,7 @@ function setup(initial: Partial<ProfileRow> = {}, failWith?: unknown) {
         void logged.push({ event, fields }),
     } as never,
     lookupRatePerHour: 30,
+    updateRatePerHour: 30,
     rateLimits: { check: async () => ({ allowed: !world.limited, retryAfterSeconds: 7 }) },
     summaries: {
       summaries: async (ids) =>
@@ -93,6 +94,10 @@ function setup(initial: Partial<ProfileRow> = {}, failWith?: unknown) {
 const pgErr = (code: string, extra: object) => Object.assign(new Error('pg'), { code, ...extra });
 
 describe('profile.service', () => {
+  beforeEach(() => {
+    world.limited = false;
+  });
+
   it('get returns the DTO with initials and no email', async () => {
     const { svc } = setup({ firstName: 'Ann', lastName: 'Lee' });
     const p = await svc.get(user);
@@ -120,6 +125,20 @@ describe('profile.service', () => {
     });
     await t.update({ [field]: '😀'.repeat(n - 1) });
     expect(t.calls).toContain('update:tx');
+  });
+
+  it('rate limited: 429, a refused decision, and nothing read or written', async () => {
+    const t = setup({ username: 'ann' });
+    world.limited = true;
+    await expect(t.update({ username: 'bob' })).rejects.toMatchObject({ status: 429 });
+    await expect(t.update({})).rejects.toMatchObject({ status: 429 });
+    expect(t.calls).toEqual([]);
+    expect(t.holds).toEqual([]);
+    expect(t.events).toEqual([]);
+    expect(t.logged[0]).toEqual({
+      event: 'profile.update',
+      fields: { outcome: 'refused', reason: 'rate_limited', requestId: 'req1', userId: 'u1' },
+    });
   });
 
   it('writes and logs nothing when nothing changed', async () => {

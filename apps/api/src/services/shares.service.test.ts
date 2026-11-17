@@ -129,9 +129,10 @@ describe('toShareSummary (D196)', () => {
     const summary = toShareSummary(
       job({ status: 'discarded', reviewedBy: 'u-9', reviewedAt }),
       null,
-      { displayName: 'Dana', username: 'dana', initials: 'D', photo: null },
+      { id: 'u-9', displayName: 'Dana', username: 'dana', initials: 'D', photo: null },
     );
     expect(summary.reviewedBy).toEqual({
+      id: 'u-9',
       displayName: 'Dana',
       username: 'dana',
       initials: 'D',
@@ -172,6 +173,7 @@ describe('reviewerOf (D419/D421)', () => {
     expect(
       reviewerOf({ firstName: 'Dana', lastName: 'Lev', displayName: 'dana' }, summary),
     ).toEqual({
+      id: 'u',
       displayName: 'Dana Lev',
       username: 'dd',
       initials: 'DL',

@@ -12,6 +12,7 @@ import {
   createCard,
   dockButton,
   expectCurrent,
+  fullView,
   MAIN,
   seedBrowseDeck,
   skipHint,
@@ -328,6 +329,11 @@ test.describe('creator avatar @full', () => {
     const stage = page.locator('.browse__stage');
     const avatar = stage.locator('article.card .avatar').first();
     await expect(avatar).toBeVisible();
+    await expect(avatar).toHaveAttribute('role', 'img');
+    await expect(avatar).toHaveAttribute('aria-label', /^Added by /);
+    const placed = await box(avatar);
+    await page.waitForLoadState('networkidle');
+    expect(await box(avatar)).toEqual(placed);
     const bar = stage.getByRole('button', { name: 'More actions' }).first();
     await expect(bar).toBeVisible();
 
@@ -338,6 +344,17 @@ test.describe('creator avatar @full', () => {
     await expectCurrent(page, first!);
     await expect(bar).toBeVisible();
     await expect(page).toHaveURL(/\/browse\?/);
+
+    // the full view shows it too, in the same 24 px box
+    await page.getByRole('button', { name: 'Full view', exact: true }).click();
+    const fullAvatar = fullView(page, first!.title).locator('.avatar');
+    await expect(fullAvatar).toBeVisible();
+    await expect(fullAvatar).toHaveAttribute('aria-label', /^Added by /);
+    const fullBox = await box(fullAvatar);
+    await page.waitForLoadState('networkidle');
+    expect(await box(fullAvatar)).toEqual(fullBox);
+    expect({ w: fullBox.width, h: fullBox.height }).toEqual({ w: placed.width, h: placed.height });
+    await page.getByRole('button', { name: 'Close full view' }).click();
 
     // a card by another member is current too: its avatar matches the list's colour
     const titleC = `Browse by C ${tag}`;

@@ -521,6 +521,68 @@ describe('media.service profile uploads (046)', () => {
     expect(enforce).toHaveBeenCalledWith(`media-sign:user:${user.id}`, MEDIA_SIGN_RATE_PER_HOUR);
   });
 
+  const buildLogged = () => {
+    const c = captureLogger();
+    return {
+      ...c,
+      svc: createMediaService({
+        decks: {} as never,
+        memberships: {} as never,
+        rateLimits: { enforce },
+        cloudinary: creds2,
+        assets: { upsert } as unknown as AssetsRepo,
+        store,
+        imageFetch: vi.fn(),
+        now: () => new Date('2026-03-01T10:00:00Z'),
+        log: c.logger,
+      }),
+    };
+  };
+
+  it('logs scope profile and no deckId on sign, accepted confirm and refusals', async () => {
+    const a = buildLogged();
+    await a.svc.signProfileUpload({ user, requestId: 'r1' });
+    await a.svc.confirmProfileUpload({ user, body: body(), requestId: 'r2' });
+    await a.flush();
+    for (const event of ['media.sign', 'media.confirm']) {
+      const line = a.lines.find((l) => l.event === event);
+      expect(line).toMatchObject({ outcome: 'accepted', scope: 'profile' });
+      expect(line).not.toHaveProperty('deckId');
+    }
+
+    const wrongFolder = `gobbit/items/${deckId}/x`;
+    const b = buildLogged();
+    await b.svc
+      .confirmProfileUpload({
+        user,
+        body: body({ publicId: wrongFolder, signature: store.sign(wrongFolder, 1700000000) }),
+      })
+      .catch(() => undefined);
+    store.resources.set(publicId, {
+      resourceType: 'image',
+      bytes: 1,
+      format: 'pdf',
+      width: null,
+      height: null,
+      pages: null,
+      durationMs: null,
+    });
+    await b.svc
+      .confirmProfileUpload({ user, body: body({ format: 'pdf', kind: 'pdf', pages: 2 }) })
+      .catch(() => undefined);
+    await b.flush();
+    const events = b.lines.filter((l) => String(l.event).startsWith('media.'));
+    expect(events.map((l) => [l.event, l.reason ?? l.outcome])).toEqual([
+      ['media.confirm', 'wrong_folder'],
+      ['media.refused_delete', 'deleted'],
+      ['media.confirm', 'format'],
+    ]);
+    for (const l of events) {
+      expect(l).toMatchObject({ scope: 'profile' });
+      expect(l).not.toHaveProperty('deckId');
+    }
+  });
+
   it('records a profile asset with no deck and the caller as owner', async () => {
     const r = await build().confirmProfileUpload({ user, body: body() });
     expect(r.created).toBe(true);

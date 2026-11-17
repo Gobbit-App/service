@@ -1,11 +1,14 @@
 import type { DecisionLevel } from '../lib/decision-event';
 
 /** 045 (plan Accountability table): decisions about signing and recording uploads. */
+/** 046: profile-photo flows log `scope: 'profile'` and no deckId; deck flows log deckId and omit scope. */
+type Scoped = { scope?: 'deck' | 'profile' };
+
 export type MediaDecisions = {
   /** D389: an upload permission was signed for one kind, or refused. */
-  'media.sign': { outcome: 'accepted' | 'refused'; reason?: 'unavailable' };
+  'media.sign': Scoped & { outcome: 'accepted' | 'refused'; reason?: 'unavailable' };
   /** D390: a finished upload was recorded, or refused (and its stored file deleted). */
-  'media.confirm': {
+  'media.confirm': Scoped & {
     outcome: 'accepted' | 'refused';
     reason?:
       | 'format'
@@ -22,7 +25,7 @@ export type MediaDecisions = {
     reason: 'unsupported_type' | 'unknown_image' | 'other_deck';
   };
   /** D390: the stored file of a refused upload was deleted, or the delete failed. */
-  'media.refused_delete': { outcome: 'deleted' | 'failed'; reason?: never };
+  'media.refused_delete': Scoped & { outcome: 'deleted' | 'failed'; reason?: never };
 };
 
 export const MEDIA_DECISION_LEVELS: Partial<Record<string, DecisionLevel>> = {

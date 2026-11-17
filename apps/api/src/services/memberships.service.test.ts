@@ -29,6 +29,7 @@ describe('createMembershipsService', () => {
   let usersService: any;
   let mailer: any;
   let decisions: any;
+  let rateLimits: any;
   let service: ReturnType<typeof createMembershipsService>;
 
   beforeEach(() => {
@@ -47,6 +48,7 @@ describe('createMembershipsService', () => {
     };
     mailer = { send: vi.fn().mockResolvedValue(undefined) };
     decisions = { record: vi.fn() };
+    rateLimits = { check: vi.fn().mockResolvedValue({ allowed: true, retryAfterSeconds: 0 }) };
 
     service = createMembershipsService({
       env: { API_URL: 'https://api.test', INVITE_TTL_DAYS: 7 },
@@ -74,6 +76,8 @@ describe('createMembershipsService', () => {
       },
       logHash: (k: string, v: string) => `${k}:${v}`,
       decisions,
+      rateLimits,
+      lookupRatePerHour: 30,
     });
   });
 
@@ -215,6 +219,39 @@ describe('createMembershipsService', () => {
       });
       expect(usersService.register).not.toHaveBeenCalled();
       expect(mailer.send).not.toHaveBeenCalled();
+    });
+
+    it('counts a username invite against the lookup budget; over it: 429, decision, no mail', async () => {
+      users.findByUsername = vi.fn().mockResolvedValue({ ...invitee, username: 'newbie' });
+      memberships.create.mockResolvedValue(membershipRow());
+      await service.invite(caller, UUID, { username: 'newbie', role: 'reader' }, CTX);
+      expect(rateLimits.check).toHaveBeenCalledWith('profile-lookup:user:caller', 30);
+
+      rateLimits.check.mockResolvedValue({ allowed: false, retryAfterSeconds: 9 });
+      mailer.send.mockClear();
+      usersService.register.mockClear();
+      const err = await service
+        .invite(caller, UUID, { username: 'newbie', role: 'reader' }, CTX)
+        .catch((e) => e);
+      expect(err).toMatchObject({ status: 429 });
+      expect(decisions.record).toHaveBeenCalledWith('profile.lookup', {
+        outcome: 'refused',
+        reason: 'rate_limited',
+        kind: 'username',
+        queryHash: 'username:newbie',
+        requestId: 'req-1',
+        userId: 'caller',
+      });
+      expect(usersService.register).not.toHaveBeenCalled();
+      expect(mailer.send).not.toHaveBeenCalled();
+    });
+
+    it('never limits an invite by email', async () => {
+      rateLimits.check.mockResolvedValue({ allowed: false, retryAfterSeconds: 9 });
+      memberships.create.mockResolvedValue(membershipRow());
+      await service.invite(caller, UUID, input, CTX);
+      expect(rateLimits.check).not.toHaveBeenCalled();
+      expect(mailer.send).toHaveBeenCalled();
     });
 
     it('409s for an accepted member', async () => {

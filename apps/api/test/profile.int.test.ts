@@ -929,7 +929,7 @@ describe('profile (046 part 4: names everywhere)', () => {
     const review = await json(await call('/decks/family/review', OWNER_EMAIL));
     expect(review.data[0].job.sharedBy).not.toHaveProperty('email');
     const share = await json(await call(`/shares/${shareId}`, peer.email));
-    expect(share.reviewedBy).toMatchObject({ username: 'eda-ed' });
+    expect(share.reviewedBy).toMatchObject({ id: ed.id, username: 'eda-ed' });
     expect(JSON.stringify(share.reviewedBy)).not.toContain(ed.email);
   });
 });
@@ -1093,5 +1093,47 @@ describe('profile username hold pruning (046)', () => {
       .from(usernameHolds)
       .where(inArray(usernameHolds.usernameLower, [expired, live]));
     expect(left.map((r) => r.name)).toEqual([live]);
+  });
+});
+
+describe('profile update rate limit (046)', () => {
+  const ctx = setupApiTest();
+
+  it('the 31st save within the hour is 429 and writes no profile event', async () => {
+    const u = await createAccountUser(ctx.t.db);
+    await ctx.sessionFor(u);
+    const save = (i: number) =>
+      ctx.app.request('/me/profile', {
+        method: 'PATCH',
+        headers: ctx.as(u.email),
+        body: JSON.stringify({ firstName: `Name${i}` }),
+      });
+    const events = async () =>
+      (await ctx.t.pool.query('SELECT 1 FROM profile_events WHERE user_id = $1', [u.id])).rowCount;
+    for (let i = 0; i < 30; i++) expect((await save(i)).status).toBe(200);
+    expect(await events()).toBe(30);
+
+    const res = await save(31);
+    expect(res.status).toBe(429);
+    expect(res.headers.get('Retry-After')).not.toBeNull();
+    expect(await events()).toBe(30);
+  });
+});
+
+describe('invite by username rate limit (046)', () => {
+  const ctx = setupApiTest();
+
+  it('the 31st username invite within the hour is 429; email invites are not counted', async () => {
+    const invite = (body: unknown) =>
+      ctx.app.request('/decks/family/invites', {
+        method: 'POST',
+        headers: ctx.as(OWNER_EMAIL),
+        body: JSON.stringify(body),
+      });
+    for (let i = 0; i < 30; i++) {
+      expect((await invite({ username: `ghost-${i}`, role: 'reader' })).status).toBe(404);
+    }
+    expect((await invite({ username: 'ghost-31', role: 'reader' })).status).toBe(429);
+    expect((await invite({ email: 'fresh@example.test', role: 'reader' })).status).toBe(201);
   });
 });

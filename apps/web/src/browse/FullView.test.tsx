@@ -19,20 +19,50 @@ const item = makeItem({
   sourceUrl: 'https://pizza.example/menu',
 });
 
-function renderFull() {
+function renderFull(shown = item) {
   const onClose = vi.fn();
   const onCategory = vi.fn();
-  renderWithClient(
+  const { unmount } = renderWithClient(
     <FullView
-      item={item}
+      item={shown}
       deckSlug="family"
       categories={[food]}
       onClose={onClose}
       onCategory={onCategory}
     />,
   );
-  return { onClose, onCategory, dialog: screen.getByRole('dialog', { name: 'Pizza place' }) };
+  return {
+    unmount,
+    onClose,
+    onCategory,
+    dialog: screen.getByRole('dialog', { name: 'Pizza place' }),
+  };
 }
+
+describe('FullView creator avatar (FR-004)', () => {
+  beforeEach(() => {
+    installIntersectionObserver();
+    respond.mockReturnValue(new Promise(() => undefined));
+  });
+  const creator = {
+    id: '00000000-0000-4000-8000-0000000000a1',
+    name: null,
+    username: 'dana',
+    initials: 'D',
+    photo: null,
+  };
+
+  it('shows the creator, a placeholder when unknown, nothing for a personal deck', () => {
+    const first = renderFull({ ...item, creator });
+    expect(screen.getByRole('img', { name: 'Added by dana' })).toBeInTheDocument();
+    first.unmount();
+    const unknown = renderFull({ ...item, creator: { ...creator, id: null, initials: '' } });
+    expect(screen.getByRole('img', { name: /^Added by/ })).not.toHaveTextContent(/\w/);
+    unknown.unmount();
+    renderFull({ ...item, creator: null });
+    expect(screen.queryByRole('img', { name: /^Added by/ })).toBeNull();
+  });
+});
 
 describe('FullView', () => {
   beforeEach(() => {
