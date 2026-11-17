@@ -313,7 +313,7 @@
         },
         "users_avatar_shape_chk": {
           "name": "users_avatar_shape_chk",
-          "value": "\"users\".\"avatar\" IS NULL OR (jsonb_typeof(\"users\".\"avatar\") = 'object' AND jsonb_typeof(\"users\".\"avatar\"->'publicId') = 'string')"
+          "value": "\"users\".\"avatar\" IS NULL OR (jsonb_typeof(\"users\".\"avatar\") = 'object' AND coalesce(jsonb_typeof(\"users\".\"avatar\"->'publicId'), '') = 'string')"
         }
       },
       "isRLSEnabled": false

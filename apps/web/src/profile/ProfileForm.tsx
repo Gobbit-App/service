@@ -119,6 +119,22 @@ export function ProfileForm({
   const [restored, setRestored] = useState(false);
   const [errors, setErrors] = useState<Errors>(NO_ERRORS);
 
+  // `me` may first come from the persisted cache and be replaced by the fresh fetch: follow it
+  // for every field the user has not touched (edits and a restored draft stay).
+  useEffect(() => {
+    const next = toValues(profile);
+    const prev = savedRef.current;
+    if (FIELDS.every((f) => next[f] === prev[f]) && photoId(next) === photoId(prev)) return;
+    setSaved(next);
+    setValues((v) => ({
+      username: v.username === prev.username ? next.username : v.username,
+      firstName: v.firstName === prev.firstName ? next.firstName : v.firstName,
+      lastName: v.lastName === prev.lastName ? next.lastName : v.lastName,
+      location: v.location === prev.location ? next.location : v.location,
+      avatar: photoId(v) === photoId(prev) ? next.avatar : v.avatar,
+    }));
+  }, [profile]);
+
   const [uploading, setUploading] = useState(false);
   const differs = (a: ProfileValues, b: ProfileValues) =>
     FIELDS.some((f) => a[f] !== b[f]) || photoId(a) !== photoId(b);

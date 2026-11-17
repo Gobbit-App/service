@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/api-error';
@@ -51,6 +52,21 @@ describe('ProfileForm (046)', () => {
     expect(document.body.textContent).not.toContain(EMAIL);
     expect(document.body.textContent).not.toContain('secret');
     expect(screen.getByRole('img', { name: /your avatar/i })).toHaveTextContent('SP');
+  });
+
+  it('fills in when the fresh profile arrives after a stale one, keeping touched fields', async () => {
+    let setProfile: (p: SavedProfile) => void = () => undefined;
+    function Late() {
+      const [profile, set] = useState<SavedProfile>(EMPTY);
+      setProfile = set;
+      return <ProfileForm userId="u1" email={EMAIL} profile={profile} />;
+    }
+    await renderInRouter(<Late />);
+    expect(screen.getByLabelText('First name')).toHaveValue('');
+    type('Location', 'Eilat');
+    act(() => setProfile({ ...EMPTY, firstName: 'Smoke', location: 'Haifa' }));
+    await waitFor(() => expect(screen.getByLabelText('First name')).toHaveValue('Smoke'));
+    expect(screen.getByLabelText('Location')).toHaveValue('Eilat');
   });
 
   it('has labelled fields in order, then Save and Reset', async () => {

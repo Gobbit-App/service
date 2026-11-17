@@ -108,6 +108,20 @@ describe('profile.service', () => {
     expect(t.events[0]!.changes).toEqual(['firstName', 'location']);
   });
 
+  it.each([
+    ['firstName', 61],
+    ['lastName', 61],
+    ['location', 101],
+  ] as const)('refuses %s over its limit (code points) with 422', async (field, n) => {
+    const t = setup();
+    await expect(t.update({ [field]: '😀'.repeat(n) })).rejects.toMatchObject({
+      status: 422,
+      errors: [{ path: field }],
+    });
+    await t.update({ [field]: '😀'.repeat(n - 1) });
+    expect(t.calls).toContain('update:tx');
+  });
+
   it('writes and logs nothing when nothing changed', async () => {
     const t = setup({ username: 'ann', firstName: 'Ann' });
     await t.update({ firstName: ' Ann ', lastName: null, username: 'ann' });

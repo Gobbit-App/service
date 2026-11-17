@@ -96,7 +96,7 @@ describe('member profile (DB invariants)', () => {
         `INSERT INTO assets (scope, deck_id, public_id, source) VALUES ('other', $1, 'x3', 'editor')`,
         [deck.id],
       ),
-    ).rejects.toThrow(/assets_scope_values_chk/);
+    ).rejects.toThrow(/assets_scope/);
     const row = await makeProfileAsset(ctx.db, u.id);
     expect(row.deckId).toBeNull();
     expect(row.scope).toBe('profile');

@@ -78,3 +78,11 @@ notes the same), and the API refuses self-invites. So:
 ## Deviations: email masking (D425; spec Story 5.3 / 7.6, FR-010, FR-022)
 
 Invite-by-username (D425) would let an owner turn a username into an address, and `GET /decks/{id}/members` already returned every member's `email`. Decision: `email` is nullable in `membershipSchema` and `memberSchema`. A `{username}` invite answers `membership.email = null` (the email path is unchanged: the owner typed it). In `GET /decks/{id}/members` and the role-change response, `email` is `null` for any member whose profile has a `username`, except to that member themselves; members without a username keep today's behaviour. The web members list shows `@username` when the email is null.
+
+## CI fixes after the first run
+
+- **Avatar CHECK**: `users_avatar_shape_chk` wraps `jsonb_typeof(avatar->'publicId')` in `coalesce(..., '')`; without it `'{}'` evaluated to NULL, which a CHECK accepts. The other 0027 checks are on nullable columns (NULL passes on purpose) or NOT NULL columns.
+- **422, not 400, for profile fields**: `profilePatchSchema` validates types only; `profile.service.update` trims, enforces the code-point limits (`Use at most N characters.` on `firstName`/`lastName`/`location`) and the username shape, all as `unprocessableField`.
+- **Reload shows stale form**: `ProfileForm` follows a later `profile` (persisted cache first, fresh fetch after) for every untouched field.
+- **Personal deck in e2e**: the smoke bearer session never signs in and the personal deck is created at sign-in; the seed stays deck-free (D49), so the "no avatar in the personal deck" e2e check skips when `GET decks/me` is not 200. The rule is covered at the integration tier (`creator` is `null` for a personal deck, `profile.int.test.ts`) and by the web unit tests.
+- `/s/{id}` of a public card is a 302 to its public page (D181); the payload scans expect that.

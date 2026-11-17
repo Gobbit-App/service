@@ -32,7 +32,7 @@ ALTER TABLE "users" ADD CONSTRAINT "users_username_format_chk" CHECK ("users"."u
 ALTER TABLE "users" ADD CONSTRAINT "users_first_name_chk" CHECK (char_length("users"."first_name") <= 60 AND "users"."first_name" = btrim("users"."first_name"));--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_last_name_chk" CHECK (char_length("users"."last_name") <= 60 AND "users"."last_name" = btrim("users"."last_name"));--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_location_chk" CHECK (char_length("users"."location") <= 100 AND "users"."location" = btrim("users"."location"));--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_avatar_shape_chk" CHECK ("users"."avatar" IS NULL OR (jsonb_typeof("users"."avatar") = 'object' AND jsonb_typeof("users"."avatar"->'publicId') = 'string'));--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_avatar_shape_chk" CHECK ("users"."avatar" IS NULL OR (jsonb_typeof("users"."avatar") = 'object' AND coalesce(jsonb_typeof("users"."avatar"->'publicId'), '') = 'string'));--> statement-breakpoint
 ALTER TABLE "assets" ADD CONSTRAINT "assets_scope_values_chk" CHECK ("assets"."scope" IN ('deck', 'profile'));--> statement-breakpoint
 ALTER TABLE "assets" ADD CONSTRAINT "assets_scope_chk" CHECK (("assets"."scope" = 'deck') = ("assets"."deck_id" IS NOT NULL));
 --> statement-breakpoint

@@ -584,7 +584,8 @@ describe('profile (046 part 2: creator)', () => {
         '/sitemap.xml',
       ]) {
         const res = await anon(path);
-        expect(res.status, path).toBe(200);
+        // D181: a public card's share link redirects to its public page (scanned here too).
+        expect(res.status, path).toBe(path.startsWith('/s/') ? 302 : 200);
         const s = await res.text();
         expect(s, path).not.toContain('Lovelace');
         expect(s, path).not.toMatch(/creator/i);
@@ -950,7 +951,7 @@ describe('profile (046 part 5: location privacy)', () => {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   const scan = async (res: Response, label: string) => {
-    expect(res.status, label).toBe(200);
+    expect(res.status, label).toBe(label.startsWith('/s/') ? 302 : 200); // D181 redirect
     const raw = await res.text();
     expect(raw, label).not.toContain(PLACE);
     expect(raw, label).not.toMatch(/"location"\s*:/);

@@ -95,6 +95,7 @@ test('a card shows the creator avatar in a shared deck, not in the personal deck
   await expect(avatar).toHaveAttribute('data-tip', username);
   expect(await card.innerHTML()).not.toContain(me.user.email);
 
+  // The bearer session never signs in, and the personal deck is created at sign-in; the seed makes no decks (D49).
   const personal = await api.get('decks/me');
   test.skip(personal.status() !== 200, 'the smoke user has no personal deck yet');
   const title = `Personal ${webDeck.slug}`;

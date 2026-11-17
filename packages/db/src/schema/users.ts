@@ -74,7 +74,7 @@ export const users = pgTable(
     ),
     check(
       'users_avatar_shape_chk',
-      sql`${t.avatar} IS NULL OR (jsonb_typeof(${t.avatar}) = 'object' AND jsonb_typeof(${t.avatar}->'publicId') = 'string')`,
+      sql`${t.avatar} IS NULL OR (jsonb_typeof(${t.avatar}) = 'object' AND coalesce(jsonb_typeof(${t.avatar}->'publicId'), '') = 'string')`,
     ),
     index('users_avatar_public_id_idx')
       .on(sql`(${t.avatar}->>'publicId')`)

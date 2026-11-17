@@ -348,6 +348,7 @@ test.describe('creator avatar @full', () => {
   });
 
   test('a personal deck card has no avatar @full', async ({ page, api, tag }) => {
+    // The bearer session never signs in, and the personal deck is created at sign-in; the seed makes no decks (D49).
     const personal = await api.get('decks/me');
     test.skip(personal.status() !== 200, 'the smoke owner has no personal deck yet');
     const title = `Personal ${tag}`;

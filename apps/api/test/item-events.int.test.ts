@@ -1,3 +1,4 @@
+import { initialsFor } from '@gobbit/shared/avatar';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { itemEvents, items, users, type DeckRow, type UserRow } from '@gobbit/db';
@@ -107,6 +108,9 @@ describe('item events (020)', () => {
       expect(lines.find((l) => l.kind === 'restored')?.actor).toEqual({
         userId: maintainer.id,
         displayName: 'Maya Maintainer',
+        username: null,
+        initials: initialsFor({ email: maintainer.email }),
+        photo: null,
       });
     });
 

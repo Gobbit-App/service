@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import { PROFILE_LOCATION_MAX, PROFILE_NAME_MAX } from '../limits';
-import { checkUsernameShape } from '../username';
 
 export const photoSchema = z.object({
   publicId: z.string(),
@@ -17,31 +15,15 @@ export const profileSchema = z.object({
   initials: z.string(),
 });
 
-/** Trim; blank becomes null; limit counted in Unicode code points. */
-const text = (max: number) =>
-  z
-    .string()
-    .transform((s) => s.trim() || null)
-    .refine((s) => s === null || [...s].length <= max, { message: `At most ${max} characters` })
-    .nullable()
-    .optional();
-
-const username = z
-  .string()
-  .transform((s) => s.trim() || null)
-  .superRefine((s, ctx) => {
-    if (s === null) return;
-    const shape = checkUsernameShape(s);
-    if (shape !== 'ok') ctx.addIssue({ code: 'custom', message: shape });
-  })
-  .nullable()
-  .optional();
-
+/**
+ * Types only: the service trims, enforces the limits (code points) and the username shape, and
+ * answers 422 with `errors[{ path, message }]` (D-profile 422 contract), not the validator's 400.
+ */
 export const profilePatchSchema = z.object({
-  username,
-  firstName: text(PROFILE_NAME_MAX),
-  lastName: text(PROFILE_NAME_MAX),
-  location: text(PROFILE_LOCATION_MAX),
+  username: z.string().nullable().optional(),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
   avatar: z
     .object({ publicId: z.string().min(1) })
     .nullable()

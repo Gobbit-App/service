@@ -1,4 +1,5 @@
 import type { MemberSummary, Profile, ProfilePatch } from '@gobbit/shared';
+import { PROFILE_LOCATION_MAX, PROFILE_NAME_MAX } from '@gobbit/shared';
 import { checkUsernameShape } from '@gobbit/shared/username';
 import { initialsFor } from '@gobbit/shared/avatar';
 import type { AssetRow } from '@gobbit/db';
@@ -42,6 +43,12 @@ export interface ProfileServiceDeps {
 
 const DAY_MS = 86_400_000;
 const FIELDS = ['username', 'firstName', 'lastName', 'location'] as const;
+const LIMITS = ['firstName', 'lastName', 'location'] as const;
+const LIMIT_MAX = {
+  firstName: PROFILE_NAME_MAX,
+  lastName: PROFILE_NAME_MAX,
+  location: PROFILE_LOCATION_MAX,
+};
 const PROFILE_FIELDS = [...FIELDS, 'avatar'] as const;
 
 /** The email is read only to compute initials; it never reaches the DTO. */
@@ -183,6 +190,12 @@ export function createProfileService(deps: ProfileServiceDeps) {
     async update(user: CurrentUser, patch: ProfilePatch, requestId: string): Promise<Profile> {
       const next: ProfileColumns = {};
       for (const f of FIELDS) if (patch[f] !== undefined) next[f] = clean(patch[f]);
+      for (const f of LIMITS) {
+        const v = next[f];
+        if (v && [...v].length > LIMIT_MAX[f]) {
+          throw unprocessableField(f, `Use at most ${LIMIT_MAX[f]} characters.`);
+        }
+      }
       if (patch.avatar !== undefined) {
         next.avatar = await resolveAvatar(user, patch.avatar, requestId);
       }
