@@ -271,8 +271,9 @@ test('a proposal gets a cover in review and publishes with it @full', async ({
 
   await page.getByRole('article', { name: title }).getByRole('button', { name: 'Publish' }).click();
   await expect(page.getByRole('article', { name: title })).toHaveCount(0);
+  // The card leaves the queue as soon as Publish is clicked; the server answers a moment later.
+  await expect.poll(async () => (await readItem(api, id)).status).toBe('published');
   const item = await readItem(api, id);
-  expect(item.status).toBe('published');
   expect(item.cover?.publicId).toBe(uploaded);
 });
 
