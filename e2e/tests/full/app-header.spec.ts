@@ -40,8 +40,8 @@ test.describe('app header lead @full', () => {
 
     const logoLeft = await left(logo);
     expect(Math.abs(logoLeft - (await left(card)))).toBeLessThanOrEqual(TOLERANCE);
-    // Title 12 px after the 32 px tile.
-    expect((await titleTextLeft(page)) - logoLeft).toBeCloseTo(44, 0);
+    // Title one --gap (16 px since D383) after the 32 px tile.
+    expect((await titleTextLeft(page)) - logoLeft).toBeCloseTo(48, 0);
   });
 
   test('Back sits on the content edge, close to the title, with a full hit area', async ({
@@ -55,7 +55,8 @@ test.describe('app header lead @full', () => {
 
     const chevron = back.locator('svg path');
     const tip = await left(chevron);
-    expect(Math.abs(tip - 16)).toBeLessThanOrEqual(TOLERANCE);
+    // The phone gutter (20 px since D383).
+    expect(Math.abs(tip - 20)).toBeLessThanOrEqual(TOLERANCE);
     const chevronBox = await chevron.boundingBox();
     const gap = (await titleTextLeft(page)) - ((chevronBox?.x ?? 0) + (chevronBox?.width ?? 0));
     expect(gap).toBeGreaterThanOrEqual(8);

@@ -70,7 +70,7 @@ test.describe('browse rework', () => {
 
   test('PageDown and PageUp move between cards @full', async ({ page }) => {
     const [first, second] = deck.cards;
-    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}`));
+    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${first!.id}`));
     await expectCurrent(page, first!);
     await page.keyboard.press('PageDown');
     await expectCurrent(page, second!);
@@ -90,7 +90,7 @@ test.describe('browse rework', () => {
 
   test('a swipe from the screen edge never changes category @full', async ({ page }) => {
     const [first] = deck.cards;
-    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}`));
+    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${first!.id}`));
     await expectCurrent(page, first!);
     const { width, height } = viewport(page);
 
@@ -119,7 +119,7 @@ test.describe('browse rework', () => {
 
   test('swiping the full view past its end closes it @full', async ({ page }) => {
     const [first] = deck.cards;
-    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}`));
+    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${first!.id}`));
     await expectCurrent(page, first!);
     await page.keyboard.press('f');
     const full = fullView(page, first!.title);
