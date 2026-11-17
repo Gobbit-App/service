@@ -49,7 +49,8 @@ test('a blocked Save says why only after an attempt (D308) @full', async ({ page
   await expect(save).toHaveAttribute('aria-disabled', 'true');
   await expect(page.getByText('Title is required')).toHaveCount(0);
 
-  await save.click();
+  // Playwright treats aria-disabled as not enabled; a blocked Save stays clickable (D308).
+  await save.click({ force: true });
   await expect(page.getByText('Title is required')).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/new\\?type=text$`));
 });
@@ -93,7 +94,7 @@ test('a card type is picked from the chooser by keyboard alone (D301) @full', as
 }) => {
   await page.goto(webUrl(`/d/${webDeck.slug}/new`));
   const group = page.getByRole('radiogroup', { name: 'Card type' });
-  await expect(group.getByRole('radio')).toHaveCount(6);
+  await expect(group.getByRole('radio')).toHaveCount(7);
   await expect(group.getByRole('radio', { name: 'Text' })).toBeFocused();
   // Arrows move focus only (wrapping); Enter picks.
   await page.keyboard.press('ArrowLeft');
@@ -178,7 +179,7 @@ test('the canvas never scrolls sideways from 320 px to 1280 px (US3) @full', asy
 }) => {
   for (const type of ['text', 'link', 'table'] as const) {
     await page.goto(webUrl(`/d/${webDeck.slug}/new?type=${type}`));
-    await expect(page.getByLabel('Title')).toBeVisible();
+    await expect(page.getByLabel('Title', { exact: true })).toBeVisible();
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 800 });
       expect(await sidewaysOverflow(page), `${type} at ${width}px`).toBeLessThanOrEqual(0);
@@ -208,7 +209,7 @@ test('Preview swaps the canvas on a phone, gives focus back; side by side when w
 }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
-  const title = page.getByLabel('Title');
+  const title = page.getByLabel('Title', { exact: true });
   const toggle = page.getByRole('button', { name: 'Preview', exact: true });
   const preview = page.getByRole('region', { name: 'Preview', exact: true });
   await title.fill('Seen in the preview');

@@ -12,9 +12,9 @@ const left = async (locator: Locator): Promise<number> => {
   return box.x;
 };
 
-/** Left edge of the title's text (the h1 box spans the free space). */
-const titleTextLeft = (page: Page): Promise<number> =>
-  page.locator('.app-header__title').evaluate((h1) => {
+/** Left edge of the title's text (the h1 box spans the free space); deck pages (D380) title with the breadcrumb's h1. */
+const titleTextLeft = (page: Page, title = '.app-header__title'): Promise<number> =>
+  page.locator(title).evaluate((h1) => {
     const range = document.createRange();
     range.selectNodeContents(h1);
     return range.getBoundingClientRect().left;
@@ -58,7 +58,9 @@ test.describe('app header lead @full', () => {
     // The phone gutter (20 px since D383).
     expect(Math.abs(tip - 20)).toBeLessThanOrEqual(TOLERANCE);
     const chevronBox = await chevron.boundingBox();
-    const gap = (await titleTextLeft(page)) - ((chevronBox?.x ?? 0) + (chevronBox?.width ?? 0));
+    const gap =
+      (await titleTextLeft(page, '.deck-crumbs__title')) -
+      ((chevronBox?.x ?? 0) + (chevronBox?.width ?? 0));
     expect(gap).toBeGreaterThanOrEqual(8);
     expect(gap).toBeLessThanOrEqual(16);
 

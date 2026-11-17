@@ -1,6 +1,5 @@
-import { expect, test } from '../../fixtures/api';
 import { recordMediaAsset, type FakeMediaFile } from '../../fixtures/cloudinary';
-import { webUrl } from '../../fixtures/web';
+import { expect, test, webUrl } from '../../fixtures/web';
 
 /**
  * 045 US6 (T047, `@full`): a public deck shows each media kind without scripts, and share

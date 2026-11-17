@@ -79,8 +79,15 @@ async function gateDelivery(page: Page): Promise<() => void> {
   return release;
 }
 
-const loaded = (img: Locator) =>
-  expect.poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth > 0)).toBe(true);
+/** D161: `.card__cover` is the CloudImage wrapper; the sharp image inside it is what loads. */
+const loaded = (cover: Locator) =>
+  expect
+    .poll(() =>
+      cover
+        .locator('.cloud-image__img')
+        .evaluate((el) => (el as HTMLImageElement).naturalWidth > 0),
+    )
+    .toBe(true);
 
 /** A drop or paste carrying one image, dispatched on `target`. */
 async function transfer(target: Locator, kind: 'drop' | 'paste') {
@@ -180,10 +187,8 @@ test('switching to a type without a cover warns and drops it @full', async ({ pa
 
   await page.getByRole('button', { name: 'Card type: Link' }).click();
   await page.getByRole('radio', { name: /^Text/ }).click();
-  await page
-    .getByRole('dialog', { name: 'Switch to Text?' })
-    .getByRole('button', { name: 'Switch' })
-    .click();
+  // D303: the Link card is empty, so there is nothing to lose and no confirmation.
+  await expect(page.getByRole('dialog', { name: 'Switch to Text?' })).toHaveCount(0);
   // Back on Text: the cover did not come back.
   await expect(page.getByLabel('Add cover image')).toBeAttached();
   await expect(page.getByRole('button', { name: 'Remove cover image' })).toHaveCount(0);
@@ -254,10 +259,12 @@ test('a proposal gets a cover in review and publishes with it @full', async ({
   await routeFakeCloudinary(page, uploaded);
 
   await page.goto(webUrl(`/d/${webDeck.slug}/review`));
+  // "Edit fully" lives in the card's More actions menu; the bar's Edit edits in place.
   await page
     .getByRole('article', { name: title })
-    .getByRole('link', { name: 'Edit fully' })
+    .getByRole('button', { name: 'More actions' })
     .click();
+  await page.getByRole('menuitem', { name: 'Edit fully' }).click();
   await page.getByLabel('Add cover image').setInputFiles(photoFile);
   await expect(page.getByRole('button', { name: 'Remove cover image' })).toBeVisible();
   await save(page).click();
