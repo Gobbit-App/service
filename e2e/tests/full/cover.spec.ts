@@ -82,15 +82,11 @@ async function gateDelivery(page: Page): Promise<() => void> {
   return release;
 }
 
-/** D161: `.card__cover` is the CloudImage wrapper; the sharp image inside it is what loads. */
-const loaded = (cover: Locator) =>
-  expect
-    .poll(() =>
-      cover
-        .locator('.cloud-image__img')
-        .evaluate((el) => (el as HTMLImageElement).naturalWidth > 0),
-    )
-    .toBe(true);
+/**
+ * D161: `.card__cover` is the CloudImage wrapper; its sharp image's `load` adds `--loaded`.
+ * Not `naturalWidth`: the fake 1×1 PNG answers a `w_1080` srcset candidate, so it reports 0.
+ */
+const loaded = (cover: Locator) => expect(cover).toHaveClass(/\bcloud-image--loaded\b/);
 
 /** A drop or paste carrying one image, dispatched on `target`. */
 async function transfer(target: Locator, kind: 'drop' | 'paste') {
