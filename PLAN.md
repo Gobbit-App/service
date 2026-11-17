@@ -197,6 +197,8 @@ Card cover image: [`044-card-avatar`](specs/044-card-avatar/spec.md): an optiona
 
 Member profile and creator avatar: [`046-user-profile`](specs/046-user-profile/spec.md): username, first and last name, location and a cropped photo on the member; cards in shared and communal decks show the creator as an avatar (initials on a stable colour, or the photo) with a label; members are found by exact username for invites, and an email is previewed only for deck mates. Decisions D417–D429; ADR-080; [`docs/design/profile.md`](docs/design/profile.md).
 
+Dev flow, UI mockups: [`048-ui-mockups`](specs/048-ui-mockups/spec.md): an optional, maintainer-run mockup step after the plan; new UI is shown on a development-only screen built from the real components with made-up data, in every state and in variants, and approved before tasks and implementation; a UX sketch in the spec and a growing "UX sensibilities" section in the UI system. Decisions D430–D439 reserved.
+
 ### 025–027 renames
 
 Mechanical renames with no new behaviour, so they skip spec-kit (constitution, Development Workflow). One branch and PR each:
