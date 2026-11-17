@@ -61,6 +61,7 @@ Tagging: every test title includes `@smoke`
 - `api`: request context carrying `Authorization: Bearer ${SMOKE_SESSION_TOKEN}` (locally the seeded owner session; deployed, a bearer minted with `/auth/token-exchange`)
 - `anon`: request context with no credentials (401 checks)
 - `smokeDeck`: creates a `smoke-<id>` deck before the test; afterwards removes its memberships and soft-deletes it
+- Optional e2e-only variables (046, not app env): `SMOKE_INVITEE_USERNAME` (a standing member's username, enables the invite-by-username smoke journey) and `E2E_MEMBER_B_TOKEN` / `E2E_MEMBER_C_TOKEN` (bearer tokens of extra users on the smoke owner's account, for the cross-member cases in `e2e/tests/full/profile.spec.ts`); without them those cases skip. Photo specs also skip without `CLOUDINARY_API_SECRET`. See [profile.md](profile.md)
 - The members spec invites the single standing user `smoke-invitee@example.test`; only its membership is cleaned up
 
 **Search smoke (Phase 4)**: `search.spec.ts` checks three API cases: a phone number searched as digits without the dash, a query with no results, and the 400 for a blank `q`. `web.spec.ts` checks that a search from the header sheet opens `/search` with highlighted, tagged results, and checks the empty state.

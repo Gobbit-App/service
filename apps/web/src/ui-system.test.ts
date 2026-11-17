@@ -25,7 +25,6 @@ const UNSTYLED_BASELINE = new Set<string>([
   'browse-list',
   'browse-page--state',
   'calc-card__label',
-  'card__age',
   'composer-dock__save',
   'empty-state__action',
   'empty-state__title',

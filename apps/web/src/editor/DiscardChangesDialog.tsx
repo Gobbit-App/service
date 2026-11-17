@@ -11,9 +11,12 @@ import { Sheet } from '../ui/sheet/Sheet';
 export function DiscardChangesDialog({
   onKeep,
   onDiscard,
+  subject = 'this card',
 }: {
   onKeep: () => void;
   onDiscard: () => void;
+  /** What the unsaved changes are to ('this card', 'your profile'). */
+  subject?: string;
 }): ReactElement {
   const keepRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
@@ -25,7 +28,7 @@ export function DiscardChangesDialog({
         Discard changes?
       </h2>
       <p id={descriptionId} className="sheet__text">
-        Your changes to this card haven&apos;t been saved.
+        Your changes to {subject} haven&apos;t been saved.
       </p>
       <div className="sheet__actions">
         <Button ref={keepRef} icon="edit" label="Keep editing" onClick={onKeep} />

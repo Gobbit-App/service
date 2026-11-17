@@ -54,6 +54,7 @@ import type { CoverRefusal, MediaReferenceCheck } from './media-reference';
 import { MEDIA_DECISION_LEVELS } from './media.events';
 import { supportsCover, type CardCover } from '@gobbit/shared/card-cover';
 import { createItemDtoMapper } from './item-dtos';
+import type { MemberSummaries } from './member-summaries';
 import type { LinkChecksService } from './link-checks.service';
 import type { LinkPreviewFields } from './link-preview-fields';
 import type { RateLimitService } from './rate-limit.service';
@@ -96,6 +97,7 @@ export function createItemsService(deps: {
   categories: CategoriesRepo;
   items: ItemsRepo;
   favorites: FavoritesRepo;
+  summaries: MemberSummaries;
   memberships: MembershipLookup;
   /** D72: after each committed write, queue a re-embed when the text changed. */
   embedQueue: EmbedQueue;
@@ -121,6 +123,7 @@ export function createItemsService(deps: {
     categories,
     items,
     favorites,
+    summaries,
     memberships,
     embedQueue,
     mediaReference,
@@ -197,6 +200,8 @@ export function createItemsService(deps: {
     items,
     favorites,
     linkChecks: links.checks,
+    decks,
+    summaries,
     reminderStates: reminders.states,
     eventStates: eventCards.states,
   });

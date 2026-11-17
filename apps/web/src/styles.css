@@ -35,6 +35,27 @@
   --card-accent-soft: light-dark(#d9f2e3, #173b33);
   /* Mint as the line colour: structural edges (header, bottom bar) and dividers inside a card —
      never around repeating items, which separate by fill and spacing. */
+  /* D420: ten avatar colour pairs (light, dark); every pair keeps 4.5:1 (ui/avatar-palette.test.ts). */
+  --avatar-1-bg: light-dark(#eabfb8, #64322b);
+  --avatar-1-fg: light-dark(#161b21, #f4eee2);
+  --avatar-2-bg: light-dark(#eacfb8, #64452b);
+  --avatar-2-fg: light-dark(#161b21, #f4eee2);
+  --avatar-3-bg: light-dark(#eadeb8, #64562b);
+  --avatar-3-fg: light-dark(#161b21, #f4eee2);
+  --avatar-4-bg: light-dark(#d5eab8, #4c642b);
+  --avatar-4-fg: light-dark(#161b21, #f4eee2);
+  --avatar-5-bg: light-dark(#b8ead1, #2b6447);
+  --avatar-5-fg: light-dark(#161b21, #f4eee2);
+  --avatar-6-bg: light-dark(#b8eae6, #2b645f);
+  --avatar-6-fg: light-dark(#161b21, #f4eee2);
+  --avatar-7-bg: light-dark(#b8daea, #2b5164);
+  --avatar-7-fg: light-dark(#161b21, #f4eee2);
+  --avatar-8-bg: light-dark(#b8c4ea, #2b3964);
+  --avatar-8-fg: light-dark(#161b21, #f4eee2);
+  --avatar-9-bg: light-dark(#cdb8ea, #432b64);
+  --avatar-9-fg: light-dark(#161b21, #f4eee2);
+  --avatar-10-bg: light-dark(#eab8da, #642b51);
+  --avatar-10-fg: light-dark(#161b21, #f4eee2);
   --accent-line: rgb(34 227 162 / 55%);
   --accent-hair: rgb(34 227 162 / 30%);
   --card-shadow:
@@ -537,6 +558,58 @@ h2 {
   color: var(--color-accent);
 }
 
+/* 046 (D428): the member avatar, a fixed round box so nothing shifts. The box itself never clips
+   (its data-tip label sits outside it); the photo wrapper does. */
+.avatar {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.avatar--sm {
+  width: 24px;
+  height: 24px;
+  font-size: var(--text-xs);
+}
+
+.avatar--md {
+  width: 40px;
+  height: 40px;
+  font-size: var(--text-md);
+}
+
+.avatar__initials {
+  user-select: none;
+}
+
+.avatar__glyph {
+  width: 60%;
+  height: 60%;
+}
+
+/* `.avatar` in the selector: `.cloud-image` (later in this file) sets `position: relative` at the same weight. */
+.avatar .avatar__photo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.avatar__photo .cloud-image__img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 /* D212: tooltips from data-tip on hover (pointer devices), keyboard focus and long-press. */
 [data-tip] {
   position: relative;
@@ -989,12 +1062,27 @@ h2 {
 
 .card__meta {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
   margin-top: var(--gap);
   color: var(--color-muted);
   font-size: 0.8125rem;
+}
+
+/* D428: the fixed avatar ends the row; chips wrap inside their own box first. */
+.card__meta .avatar {
+  flex: none;
+  margin-inline-start: auto;
+}
+
+.card__meta .card__age {
+  flex: none;
+}
+
+.card__meta .card__chips {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .card__chips {
@@ -2652,6 +2740,13 @@ h2 {
   gap: 8px var(--gap);
 }
 
+.admin-member__id {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 .admin-member__who {
   display: grid;
   min-width: 0;
@@ -2747,4 +2842,57 @@ h2 {
 
 .waitlist-row > .form-error {
   flex-basis: 100%;
+}
+
+/* 046: Settings -> Profile */
+.profile-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.profile-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.profile-preview .muted {
+  margin: 0;
+}
+
+/* 046: avatar crop (inside a Sheet) and the photo field */
+.avatar-cropper {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.avatar-cropper__stage {
+  width: 256px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  background: var(--color-surface);
+}
+
+.avatar-cropper__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.avatar-cropper__zoom {
+  width: 100%;
+  max-width: 256px;
+}
+
+.photo-field {
+  display: grid;
+  gap: var(--space-3);
 }

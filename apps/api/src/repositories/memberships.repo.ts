@@ -1,13 +1,19 @@
 import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
 import type { MemberRole } from '@gobbit/shared';
-import { memberships, users, type DbExecutor, type MembershipRow } from '@gobbit/db';
+import {
+  displayNameSql,
+  memberships,
+  users,
+  type DbExecutor,
+  type MembershipRow,
+} from '@gobbit/db';
 
 export interface MembershipWithUser {
   membership: MembershipRow;
   user: { id: string; email: string; displayName: string };
 }
 
-const userColumns = { id: users.id, email: users.email, displayName: users.displayName };
+const userColumns = { id: users.id, email: users.email, displayName: displayNameSql() };
 
 export function createMembershipsRepo(db: DbExecutor) {
   return {

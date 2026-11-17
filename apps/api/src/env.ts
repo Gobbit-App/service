@@ -2,6 +2,9 @@ import { z } from 'zod';
 import {
   MAGIC_LINK_TTL_MINUTES_DEFAULT,
   INVITE_TTL_DAYS_DEFAULT,
+  PROFILE_LOOKUP_RATE_PER_HOUR_DEFAULT,
+  PROFILE_UPDATE_RATE_PER_HOUR_DEFAULT,
+  USERNAME_HOLD_DAYS_DEFAULT,
   SESSION_TTL_DAYS_DEFAULT,
   DEFAULT_EMBEDDING_MODEL,
   INGEST_DAILY_CAP,
@@ -90,6 +93,12 @@ const baseSchema = z.object({
   ALLOW_CONSOLE_MAIL: bool('false'),
   MAGIC_LINK_TTL_MINUTES: positiveInt(MAGIC_LINK_TTL_MINUTES_DEFAULT),
   INVITE_TTL_DAYS: positiveInt(INVITE_TTL_DAYS_DEFAULT),
+  /** 046: days a released username stays reserved for its previous owner. */
+  USERNAME_HOLD_DAYS: positiveInt(USERNAME_HOLD_DAYS_DEFAULT),
+  /** 046: profile lookups per member per hour. */
+  PROFILE_LOOKUP_RATE_PER_HOUR: positiveInt(PROFILE_LOOKUP_RATE_PER_HOUR_DEFAULT),
+  /** 046: profile saves per member per hour. */
+  PROFILE_UPDATE_RATE_PER_HOUR: positiveInt(PROFILE_UPDATE_RATE_PER_HOUR_DEFAULT),
   SESSION_TTL_DAYS: positiveInt(SESSION_TTL_DAYS_DEFAULT),
   CLIENT_IP_HEADER: z.string().optional(),
   /** Commit the image was built from (Docker build arg); reported by /health so smoke can wait for a deploy. */

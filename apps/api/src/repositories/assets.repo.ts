@@ -1,5 +1,5 @@
 import { and, asc, eq, getTableColumns, inArray, isNull, lt, sql } from 'drizzle-orm';
-import { assets, items, type AssetRow, type DbExecutor, type NewAssetRow } from '@gobbit/db';
+import { assets, items, users, type AssetRow, type DbExecutor, type NewAssetRow } from '@gobbit/db';
 
 export type NewAsset = Omit<NewAssetRow, 'id' | 'createdAt'>;
 
@@ -25,6 +25,9 @@ const unreferenced = sql`NOT EXISTS (
        OR i.payload @> jsonb_build_object('publicId', ${assets.publicId}::text)))
      OR (i.type IN ('link', 'event') AND i.payload #>> '{preview,publicId}' = ${assets.publicId})
      OR (i.cover IS NOT NULL AND (i.cover->>'publicId') = ${assets.publicId})
+) AND NOT EXISTS (
+  SELECT 1 FROM ${users} u
+  WHERE u.avatar IS NOT NULL AND (u.avatar->>'publicId') = ${assets.publicId}
 )`;
 
 /** D156: the registry of every file Gobbit stored (images, and since 045 PDFs, audio and video). */
@@ -50,7 +53,12 @@ export function createAssetsRepo(db: DbExecutor) {
             etag: sql`coalesce(${assets.etag}, excluded.etag)`,
             originalFilename: sql`coalesce(${assets.originalFilename}, excluded.original_filename)`,
           },
-          setWhere: eq(assets.deckId, v.deckId),
+          // Only the recording deck, or the owning member for a profile asset, may repeat it.
+          setWhere: v.deckId
+            ? eq(assets.deckId, v.deckId)
+            : v.ownerUserId
+              ? and(eq(assets.scope, 'profile'), eq(assets.ownerUserId, v.ownerUserId))
+              : sql`false`,
         })
         .returning({ ...getTableColumns(assets), created: sql<boolean>`(xmax = 0)` });
       if (!row) return null;

@@ -1,9 +1,11 @@
 import { expect, test, webUrl } from '../../fixtures/web';
+import { clearProfile, smokeUsername } from './helpers/profile';
 
 const LABEL_PREFIX = 'smoke-token-';
 
 /** D50: leave no smoke tokens behind (the owner may hold at most 5). */
 test.afterEach(async ({ api }) => {
+  await clearProfile(api);
   const res = await api.get('me/ingest-tokens');
   if (!res.ok()) return;
   const { data } = (await res.json()) as { data: { id: string; label: string }[] };
@@ -52,4 +54,62 @@ test('keeps Create disabled without a name and refuses an anonymous token list @
   await expect(create).toBeDisabled();
 
   expect((await anon.get('me/ingest-tokens')).status()).toBe(401);
+});
+
+/** 046 Story 1, 7: the profile form saves and the values survive a reload. */
+test('saves the profile from Settings and keeps it after a reload @smoke', async ({ page }) => {
+  const username = smokeUsername();
+  await page.goto(webUrl('/settings'));
+  await page.getByRole('link', { name: 'Edit your profile' }).click();
+  await expect(page).toHaveURL(/\/settings\/profile$/);
+
+  await page.getByLabel('First name').fill('Smoke');
+  await page.getByLabel('Last name').fill('Tester');
+  await page.getByLabel('Username').fill(username);
+  await expect(page.getByText('Available')).toBeVisible();
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText('Saved.')).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByLabel('First name')).toHaveValue('Smoke');
+  await expect(page.getByLabel('Last name')).toHaveValue('Tester');
+  await expect(page.getByLabel('Username')).toHaveValue(username);
+});
+
+/** 046 Story 2: a card shows its creator's avatar in a shared deck, none in the personal deck. */
+test('a card shows the creator avatar in a shared deck, not in the personal deck @smoke', async ({
+  page,
+  api,
+  webDeck,
+}) => {
+  const username = smokeUsername();
+  expect((await api.patch('me/profile', { data: { username } })).status()).toBe(200);
+  const me = (await (await api.get('me')).json()) as { user: { email: string } };
+
+  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  const card = page.getByRole('article').filter({ hasText: 'Smoke text' });
+  const avatar = card.getByRole('img', { name: `Added by ${username}` });
+  await expect(avatar).toBeVisible();
+  await avatar.focus();
+  // The tooltip is the `data-tip` attribute (CSS), not DOM text.
+  await expect(avatar).toHaveAttribute('data-tip', username);
+  expect(await card.innerHTML()).not.toContain(me.user.email);
+
+  // The bearer session never signs in, and the personal deck is created at sign-in; the seed makes no decks (D49).
+  const personal = await api.get('decks/me');
+  test.skip(personal.status() !== 200, 'the smoke user has no personal deck yet');
+  const title = `Personal ${webDeck.slug}`;
+  const created = await api.post('decks/me/items', {
+    data: { type: 'text', title, body: 'Only me' },
+  });
+  expect(created.status(), 'create personal card').toBe(201);
+  const { id } = (await created.json()) as { id: string };
+  try {
+    await page.goto(webUrl('/d/me'));
+    const mine = page.getByRole('article').filter({ hasText: title });
+    await expect(mine).toBeVisible();
+    await expect(mine.getByRole('img', { name: /^Added by / })).toHaveCount(0);
+  } finally {
+    await api.delete(`items/${id}`);
+  }
 });

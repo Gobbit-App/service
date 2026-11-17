@@ -16,6 +16,14 @@ const { useSetAnalyticsConsent } = await import('./analytics-consent');
 
 const me: Me = {
   user: { id: 'u1', email: 'a@b.c', displayName: 'A' },
+  profile: {
+    username: null,
+    firstName: null,
+    lastName: null,
+    location: null,
+    avatar: null,
+    initials: 'A',
+  },
   decks: [],
   isPlatformAdmin: false,
   analyticsConsent: { value: 'unanswered', at: null, source: null },

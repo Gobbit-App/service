@@ -9,6 +9,8 @@ export type LeaveGuardOptions = {
   onAttempt?: () => void;
   /** Runs before the held navigation continues after Discard (e.g. remove the draft). */
   onDiscard?: () => Promise<void> | void;
+  /** What the dialog says is unsaved (default 'this card'). */
+  subject?: string;
 };
 
 /**
@@ -20,6 +22,7 @@ export function useLeaveGuard({
   when,
   onAttempt,
   onDiscard,
+  subject,
 }: LeaveGuardOptions): ReactElement | null {
   const callbacks = useRef({ onAttempt, onDiscard });
   useEffect(() => {
@@ -55,5 +58,11 @@ export function useLeaveGuard({
     }
   };
 
-  return <DiscardChangesDialog onKeep={blocker.reset} onDiscard={() => void discard()} />;
+  return (
+    <DiscardChangesDialog
+      subject={subject}
+      onKeep={blocker.reset}
+      onDiscard={() => void discard()}
+    />
+  );
 }

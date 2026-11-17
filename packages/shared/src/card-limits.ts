@@ -10,5 +10,7 @@ export {
   TABLE_MAX_COLUMNS,
   CALC_MAX_FIELDS,
   NAME_MAX,
+  PROFILE_NAME_MAX,
+  PROFILE_LOCATION_MAX,
 } from './limits';
 export { codePointLength, utf8Bytes } from './utils/utf8-bytes';

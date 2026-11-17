@@ -109,3 +109,7 @@ Text, reminder, event, table and calc cards take an optional cover image (`link`
 - **`item.cover` lives in `media.events.ts`** (constitution IX), not a new events file; `decision-event` gained the `event:outcome:reason` level key (one line plus a unit test).
 - **No PATCH type change**: a card's type never changes (D12), so "type change with a cover" cannot arise on PATCH; the switch-type warning (D412) applies to the new-card composer only.
 - **Covers sign as `image`** through `use-image-upload.ts`; `use-drop-image.ts` is new (no drop helper existed).
+
+## Profile photos (046, D423)
+
+A member's profile photo is an `assets` row with `scope = 'profile'`, `owner_user_id` set and no deck. It is signed and recorded through `POST /me/avatar/sign` and `/me/avatar/assets` (same limits and rate keys as deck uploads), in folder `gobbit/profiles/<userId>` with tags `profile`, `user:<userId>`. `PATCH /me/profile` accepts only a profile asset owned by the caller and not rejected. The `media-sweep` predicate also counts `users.avatar->>'publicId'` (partial index `users_avatar_public_id_idx`), so a replaced or removed photo is deleted after the 7-day grace. Detail: [profile.md](profile.md).

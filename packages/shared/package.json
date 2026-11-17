@@ -33,7 +33,9 @@
     "./event-constants": "./src/events-cards/client.ts",
     "./event-time": "./src/event-time/index.ts",
     "./ics": "./src/ics/index.ts",
-    "./card-cover": "./src/card-cover/index.ts"
+    "./card-cover": "./src/card-cover/index.ts",
+    "./avatar": "./src/avatar/index.ts",
+    "./username": "./src/username/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

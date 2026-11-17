@@ -216,6 +216,14 @@ a rollback neither fails nor truncates bodies already longer than 600.
 - `items_cover_chk`: `cover` is null, or the type is one of text, reminder, event, table, calc and the value is an object with a string `publicId` (1-255 chars) and numeric `width`/`height` when present.
 - `items_cover_public_id_idx`: partial btree on `cover->>'publicId'` where `cover IS NOT NULL`, used by the media sweep's reference check.
 
+### Member profile: 0027_member_profile (D417, D418, D423)
+
+Additive, reversible, no backfill. Detail: [profile.md](profile.md).
+
+- `users`: nullable `username` (CHECK `users_username_format_chk`, unique index `users_username_lower_uq` on `lower(username)`, trigger `users_username_hold_guard`), `first_name`, `last_name` (≤ 60), `location` (≤ 100) and `avatar` jsonb (partial index `users_avatar_public_id_idx`).
+- `username_holds` (`username_lower` PK, `released_by` FK cascade, `hold_until`) and the append-only `profile_events` (`user_id` set null, `changes text[]` of field names).
+- `assets`: `scope` (`deck` | `profile`), `owner_user_id` (FK set null), `deck_id` nullable, CHECKs `assets_scope_values_chk` and `assets_scope_chk`.
+
 ### Journal & rollback
 
 - `migrations/meta/_journal.json`: drizzle-kit maintains this; each entry: `{ idx, when, tag }`

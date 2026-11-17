@@ -19,6 +19,8 @@ export * from './ingest-tokens';
 export * from './assets';
 export * from './link-checks';
 export * from './item-events';
+export * from './username-holds';
+export * from './profile-events';
 export * from './waitlist-entries';
 export * from './waitlist-events';
 export * from './analytics-consent-events';

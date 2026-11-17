@@ -2,6 +2,8 @@ import type { ItemRow } from '@gobbit/db';
 import type { Item, MemberRole, ReminderState } from '@gobbit/shared';
 import type { EventState } from '@gobbit/shared/events-cards';
 import { isLinkBearing } from '@gobbit/shared/links';
+import type { DecksRepo } from '../repositories/decks.repo';
+import type { MemberSummaries } from './member-summaries';
 import type { FavoritesRepo } from '../repositories/favorites.repo';
 import type { ItemsRepo } from '../repositories/items.repo';
 import type { LinkChecksRepo } from '../repositories/link-checks.repo';
@@ -36,12 +38,15 @@ export function createItemDtoMapper(deps: {
   items: Pick<ItemsRepo, 'categoryIdsFor'>;
   favorites: Pick<FavoritesRepo, 'favoritedAmong'>;
   linkChecks: Pick<LinkChecksRepo, 'flagsFor'>;
+  /** D421: one batched deck-kind lookup per call. */
+  decks: Pick<DecksRepo, 'kindsByIds'>;
+  summaries: Pick<MemberSummaries, 'summaries' | 'cardCreator'>;
   /** D291: the `reminder` field of reminder cards (omitted in tests that don't need it). */
   reminderStates?: ReminderStates;
   /** 042: the `event` field of event cards (omitted in tests that don't need it). */
   eventStates?: EventStates;
 }): ItemDtoMapper {
-  const { items, favorites, linkChecks, reminderStates, eventStates } = deps;
+  const { items, favorites, linkChecks, decks, summaries, reminderStates, eventStates } = deps;
 
   return async (user, rows, role) => {
     if (rows.length === 0) return [];
@@ -62,6 +67,11 @@ export function createItemDtoMapper(deps: {
         ? await eventStates(user, eventRows, role)
         : new Map<string, EventState>();
 
+    const [kinds, people] = await Promise.all([
+      decks.kindsByIds([...new Set(rows.map((r) => r.deckId))]),
+      summaries.summaries(rows.flatMap((r) => r.createdBy ?? [])),
+    ]);
+
     return rows.map((row) => {
       const flag = flags.get(row.id);
       return toItemDto(
@@ -71,6 +81,8 @@ export function createItemDtoMapper(deps: {
         flag ? { status: flag.status, checkedAt: flag.checkedAt.toISOString() } : null,
         reminders.get(row.id) ?? null,
         events.get(row.id) ?? null,
+        // unknown deck: treat as shared so the placeholder shows rather than hiding a creator
+        summaries.cardCreator(row.createdBy, kinds.get(row.deckId) ?? 'shared', people),
       );
     });
   };

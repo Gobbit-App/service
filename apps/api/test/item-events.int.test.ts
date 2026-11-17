@@ -1,3 +1,4 @@
+import { initialsFor } from '@gobbit/shared/avatar';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { itemEvents, items, users, type DeckRow, type UserRow } from '@gobbit/db';
@@ -5,6 +6,7 @@ import { addMember, createAccountUser, createCategory, createDeck } from '@gobbi
 import { itemEventPageSchema, type ItemEvent } from '@gobbit/shared';
 import { buildServices } from '../src/services';
 import { createItemsRepo } from '../src/repositories/items.repo';
+import { createProfileRepo } from '../src/repositories/profile.repo';
 import { createPruneDeletedItems } from '../src/jobs/prune-deleted-items';
 import { json, OTHER_EMAIL, setupApiTest } from './helpers';
 
@@ -106,6 +108,9 @@ describe('item events (020)', () => {
       expect(lines.find((l) => l.kind === 'restored')?.actor).toEqual({
         userId: maintainer.id,
         displayName: 'Maya Maintainer',
+        username: null,
+        initials: initialsFor({ email: maintainer.email }),
+        photo: null,
       });
     });
 
@@ -259,7 +264,11 @@ describe('item events (020)', () => {
         .update(items)
         .set({ deletedAt: new Date(Date.now() - 31 * DAY_MS) })
         .where(eq(items.id, card.id));
-      await createPruneDeletedItems({ items: createItemsRepo(ctx.t.db), log: () => undefined })();
+      await createPruneDeletedItems({
+        items: createItemsRepo(ctx.t.db),
+        profile: createProfileRepo(ctx.t.db),
+        log: () => undefined,
+      })();
 
       const lines = await log();
       expect(lines.map((l) => [l.kind, l.itemId, l.title])).toEqual([

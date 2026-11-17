@@ -5,6 +5,8 @@ import { createPruneDeletedItems } from './prune-deleted-items';
 const DAY_MS = 86_400_000;
 const NOW = new Date('2026-10-18T05:00:00.000Z');
 
+const profile = () => ({ pruneExpiredHolds: vi.fn(async (_now: Date) => 0) });
+
 function repo(purged = 0) {
   return { purgeDeletedBefore: vi.fn(async (_cutoff: Date) => purged) };
 }
@@ -12,7 +14,7 @@ function repo(purged = 0) {
 describe('createPruneDeletedItems (D132)', () => {
   it('purges rows deleted before now minus the undo window (30 days)', async () => {
     const items = repo();
-    await createPruneDeletedItems({ items, now: () => NOW, log: vi.fn() })();
+    await createPruneDeletedItems({ items, profile: profile(), now: () => NOW, log: vi.fn() })();
 
     const cutoff = items.purgeDeletedBefore.mock.calls[0]?.[0] as Date;
     expect(ITEM_UNDELETE_DAYS).toBe(30);
@@ -21,7 +23,12 @@ describe('createPruneDeletedItems (D132)', () => {
 
   it('returns and logs the purged count', async () => {
     const log = vi.fn();
-    const purged = await createPruneDeletedItems({ items: repo(3), now: () => NOW, log })();
+    const purged = await createPruneDeletedItems({
+      items: repo(3),
+      profile: profile(),
+      now: () => NOW,
+      log,
+    })();
 
     expect(purged).toBe(3);
     expect(log).toHaveBeenCalledWith(expect.stringContaining('purged 3 deleted items'));
@@ -29,9 +36,24 @@ describe('createPruneDeletedItems (D132)', () => {
 
   it('honours a custom window', async () => {
     const items = repo();
-    await createPruneDeletedItems({ items, now: () => NOW, undeleteDays: 7, log: vi.fn() })();
+    await createPruneDeletedItems({
+      items,
+      profile: profile(),
+      now: () => NOW,
+      undeleteDays: 7,
+      log: vi.fn(),
+    })();
 
     const cutoff = items.purgeDeletedBefore.mock.calls[0]?.[0] as Date;
     expect(cutoff.getTime()).toBe(NOW.getTime() - 7 * DAY_MS);
+  });
+
+  it('prunes expired username holds and logs the count', async () => {
+    const holds = { pruneExpiredHolds: vi.fn(async (_now: Date) => 2) };
+    const log = vi.fn();
+    await createPruneDeletedItems({ items: repo(), profile: holds, now: () => NOW, log })();
+
+    expect(holds.pruneExpiredHolds).toHaveBeenCalledWith(NOW);
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('profile.holds_pruned {"count":2}'));
   });
 });

@@ -11,8 +11,20 @@ import type { CurrentUser } from '../types';
 import { authorize } from '../access/authorize';
 import { resolveDeck } from '../lib/resolve-deck';
 import { generateToken, hashToken } from '../lib/tokens';
-import { badRequest, conflict, notFound, PERSONAL_DECK_PROBLEM } from '../errors/http-errors';
+import {
+  badRequest,
+  conflict,
+  notFound,
+  PERSONAL_DECK_PROBLEM,
+  rateLimited,
+} from '../errors/http-errors';
+import { rateKeys } from '../lib/rate-window';
+import type { RateLimitService } from './rate-limit.service';
 import type { UsersService } from './users.service';
+import type { DecisionLogger } from '../lib/decision-event';
+import type { LogHash } from '../lib/log-hash';
+import type { MemberSummaries } from './member-summaries';
+import type { ProfileDecisions } from './profile.events';
 
 const DAY_MS = 86_400_000;
 
@@ -50,8 +62,28 @@ export function createMembershipsService(deps: {
   magicLinks: MagicLinksRepo;
   users: UsersRepo;
   usersService: UsersService;
+  summaries: Pick<MemberSummaries, 'summaries'>;
+  logHash: LogHash;
+  decisions: DecisionLogger<ProfileDecisions>;
+  rateLimits: Pick<RateLimitService, 'check'>;
+  lookupRatePerHour: number;
 }) {
   const { env, now, mailer, decks, memberships, magicLinks, users, usersService } = deps;
+
+  /** Profile fields of a member list, from the shared summary builder (no email, initials via initialsFor). */
+  async function profileOf(ids: string[]) {
+    const map = await deps.summaries.summaries(ids);
+    return (id: string, email: string, viewerId: string) => {
+      const s = map.get(id);
+      return {
+        // Spec 7.6: a member with a username is known by it; their email shows only to themselves.
+        email: s?.username && viewerId !== id ? null : email,
+        username: s?.username ?? null,
+        initials: s?.initials ?? '',
+        photo: s?.photo ?? null,
+      };
+    };
+  }
 
   /** D37: a fresh single-use link bound to the membership, landing on the deck. */
   async function sendInvite(
@@ -92,11 +124,13 @@ export function createMembershipsService(deps: {
       const owners = await users.listByAccount(deck.ownerAccountId);
       const rows = await memberships.listByDeck(deck.id);
 
+      const profile = await profileOf([...owners.map((o) => o.id), ...rows.map((r) => r.user.id)]);
+
       return [
         ...owners.map((o) => ({
           userId: o.id,
-          email: o.email,
           displayName: o.displayName,
+          ...profile(o.id, o.email, user.id),
           role: 'owner' as const,
           invitedAt: null,
           acceptedAt: null,
@@ -104,8 +138,8 @@ export function createMembershipsService(deps: {
         })),
         ...rows.map(({ membership, user: u }) => ({
           userId: u.id,
-          email: u.email,
           displayName: u.displayName,
+          ...profile(u.id, u.email, user.id),
           role: membership.role,
           invitedAt: membership.invitedAt.toISOString(),
           acceptedAt: membership.acceptedAt?.toISOString() ?? null,
@@ -161,10 +195,11 @@ export function createMembershipsService(deps: {
         }
         updated = result;
       }
+      const profile = await profileOf([target.id]);
       return {
         userId: target.id,
-        email: target.email,
         displayName: target.displayName,
+        ...profile(target.id, target.email, user.id),
         role: updated.role,
         invitedAt: updated.invitedAt.toISOString(),
         acceptedAt: updated.acceptedAt?.toISOString() ?? null,
@@ -209,7 +244,42 @@ export function createMembershipsService(deps: {
         throw conflict("The personal deck can't be shared", PERSONAL_DECK_PROBLEM);
       }
 
-      const { user: invitee } = await usersService.register(input.email, 'deck_invite', {
+      let email: string;
+      const byUsername = 'username' in input;
+      if ('username' in input) {
+        // Same budget as /members/lookup, so inviting cannot enumerate usernames past it.
+        const gate = await deps.rateLimits.check(
+          rateKeys.profileLookupUser(user.id),
+          deps.lookupRatePerHour,
+        );
+        if (!gate.allowed) {
+          deps.decisions.record('profile.lookup', {
+            outcome: 'refused',
+            reason: 'rate_limited',
+            kind: 'username',
+            queryHash: deps.logHash('username', input.username),
+            requestId: ctx.requestId,
+            userId: user.id,
+          });
+          throw rateLimited(gate.retryAfterSeconds);
+        }
+        // D425: the address stays inside; a miss is the same 404 whatever the reason.
+        const found = await users.findByUsername(input.username.toLowerCase());
+        if (!found) {
+          deps.decisions.record('profile.lookup', {
+            outcome: 'not_found',
+            kind: 'username',
+            queryHash: deps.logHash('username', input.username),
+            requestId: ctx.requestId,
+            userId: user.id,
+          });
+          throw notFound('Member not found');
+        }
+        email = found.email;
+      } else {
+        email = input.email;
+      }
+      const { user: invitee } = await usersService.register(email, 'deck_invite', {
         requestId: ctx.requestId,
         actorId: user.id,
       });
@@ -244,7 +314,9 @@ export function createMembershipsService(deps: {
       }
 
       await sendInvite(user, deck, membership, invitee);
-      return { membership: toMembershipDto(membership, invitee), created: !existing };
+      const dto = toMembershipDto(membership, invitee);
+      // Spec 5.3/7.6: an invite by username never echoes the address.
+      return { membership: byUsername ? { ...dto, email: null } : dto, created: !existing };
     },
   };
 }

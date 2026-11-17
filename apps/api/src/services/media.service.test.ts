@@ -469,3 +469,185 @@ describe('media.service signUpload', () => {
     });
   });
 });
+
+describe('media.service profile uploads (046)', () => {
+  const creds2 = { cloudName: 'test-cloud', apiKey: 'test-key', apiSecret: 'test-secret' };
+  const folder = `gobbit/profiles/${user.id}`;
+  const publicId = `${folder}/me1`;
+  let store: MemoryMediaStore;
+  let upsert: Mock<AssetsRepo['upsert']>;
+  const enforce = vi.fn(async () => undefined);
+  const build = () =>
+    createMediaService({
+      decks: {} as never,
+      memberships: {} as never,
+      rateLimits: { enforce },
+      cloudinary: creds2,
+      assets: { upsert } as unknown as AssetsRepo,
+      store,
+      imageFetch: vi.fn(),
+      now: () => new Date('2026-03-01T10:00:00Z'),
+    });
+  const body = (over: Partial<MediaAssetConfirmRequest> = {}): MediaAssetConfirmRequest => ({
+    publicId,
+    version: 1700000000,
+    signature: store.sign(publicId, 1700000000),
+    width: 400,
+    height: 400,
+    bytes: 2048,
+    format: 'jpg',
+    kind: 'image',
+    resourceType: 'image',
+    ...over,
+  });
+
+  beforeEach(() => {
+    enforce.mockClear();
+    store = new MemoryMediaStore();
+    upsert = vi.fn<AssetsRepo['upsert']>(async (v: NewAsset) => ({
+      row: { ...v, id: 'asset-1', createdAt: new Date() } as AssetRow,
+      created: true,
+    }));
+  });
+
+  it('signs an image upload into the member folder with profile tags and the shared rate key', async () => {
+    const signed = await build().signProfileUpload({ user });
+    expect(signed).toMatchObject({
+      kind: 'image',
+      folder,
+      tags: `profile,user:${user.id}`,
+      maxBytes: MEDIA_MAX_BYTES_DEFAULTS.image,
+    });
+    expect(enforce).toHaveBeenCalledWith(`media-sign:user:${user.id}`, MEDIA_SIGN_RATE_PER_HOUR);
+  });
+
+  const buildLogged = () => {
+    const c = captureLogger();
+    return {
+      ...c,
+      svc: createMediaService({
+        decks: {} as never,
+        memberships: {} as never,
+        rateLimits: { enforce },
+        cloudinary: creds2,
+        assets: { upsert } as unknown as AssetsRepo,
+        store,
+        imageFetch: vi.fn(),
+        now: () => new Date('2026-03-01T10:00:00Z'),
+        log: c.logger,
+      }),
+    };
+  };
+
+  it('logs scope profile and no deckId on sign, accepted confirm and refusals', async () => {
+    const a = buildLogged();
+    await a.svc.signProfileUpload({ user, requestId: 'r1' });
+    await a.svc.confirmProfileUpload({ user, body: body(), requestId: 'r2' });
+    await a.flush();
+    for (const event of ['media.sign', 'media.confirm']) {
+      const line = a.lines.find((l) => l.event === event);
+      expect(line).toMatchObject({ outcome: 'accepted', scope: 'profile' });
+      expect(line).not.toHaveProperty('deckId');
+    }
+
+    const wrongFolder = `gobbit/items/${deckId}/x`;
+    const b = buildLogged();
+    await b.svc
+      .confirmProfileUpload({
+        user,
+        body: body({ publicId: wrongFolder, signature: store.sign(wrongFolder, 1700000000) }),
+      })
+      .catch(() => undefined);
+    store.resources.set(publicId, {
+      resourceType: 'image',
+      bytes: 1,
+      format: 'pdf',
+      width: null,
+      height: null,
+      pages: null,
+      durationMs: null,
+    });
+    await b.svc
+      .confirmProfileUpload({ user, body: body({ format: 'pdf', kind: 'pdf', pages: 2 }) })
+      .catch(() => undefined);
+    await b.flush();
+    const events = b.lines.filter((l) => String(l.event).startsWith('media.'));
+    expect(events.map((l) => [l.event, l.reason ?? l.outcome])).toEqual([
+      ['media.confirm', 'wrong_folder'],
+      ['media.refused_delete', 'deleted'],
+      ['media.confirm', 'format'],
+    ]);
+    for (const l of events) {
+      expect(l).toMatchObject({ scope: 'profile' });
+      expect(l).not.toHaveProperty('deckId');
+    }
+  });
+
+  it('records a profile asset with no deck and the caller as owner', async () => {
+    const r = await build().confirmProfileUpload({ user, body: body() });
+    expect(r.created).toBe(true);
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        deckId: null,
+        scope: 'profile',
+        ownerUserId: user.id,
+        uploadedBy: user.id,
+      }),
+    );
+    expect(enforce).toHaveBeenCalledWith(
+      `media-confirm:user:${user.id}`,
+      MEDIA_CONFIRM_RATE_PER_HOUR,
+    );
+  });
+
+  it("refuses another member's folder and a deck folder without deleting", async () => {
+    for (const id of ['gobbit/profiles/someone-else/x', `gobbit/items/${deckId}/x`]) {
+      const err = await build()
+        .confirmProfileUpload({
+          user,
+          body: body({ publicId: id, signature: store.sign(id, 1700000000) }),
+        })
+        .catch((e: unknown) => e as HttpError);
+      expect((err as HttpError).status).toBe(422);
+    }
+    expect(upsert).not.toHaveBeenCalled();
+    expect(store.deleteCalls).toEqual([]);
+  });
+
+  it('refuses a PDF, deleting the stored file', async () => {
+    store.resources.set(publicId, {
+      resourceType: 'image',
+      bytes: 1,
+      format: 'pdf',
+      width: null,
+      height: null,
+      pages: null,
+      durationMs: null,
+    });
+    const status = await statusOf(
+      build().confirmProfileUpload({
+        user,
+        body: body({ format: 'pdf', kind: 'pdf', pages: 2 }),
+      }),
+    );
+    expect(status).toBe(422);
+    expect(store.deleteCalls).toContainEqual([publicId]);
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it('refuses an over-limit photo and deletes it', async () => {
+    const status = await statusOf(
+      build().confirmProfileUpload({
+        user,
+        body: body({ bytes: MEDIA_MAX_BYTES_DEFAULTS.image + 1 }),
+      }),
+    );
+    expect(status).toBe(422);
+    expect(store.deleteCalls).toContainEqual([publicId]);
+  });
+
+  it('refuses a profile asset already recorded for someone else', async () => {
+    upsert.mockResolvedValueOnce(null);
+    expect(await statusOf(build().confirmProfileUpload({ user, body: body() }))).toBe(422);
+  });
+});

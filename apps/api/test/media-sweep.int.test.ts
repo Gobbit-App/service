@@ -1,9 +1,15 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
-import { assets, items, type AssetRow, type DeckRow } from '@gobbit/db';
+import { assets, items, users, type AssetRow, type DeckRow } from '@gobbit/db';
 import type { ItemStatus } from '@gobbit/shared';
 import { MEDIA_ORPHAN_GRACE_DAYS } from '@gobbit/shared';
-import { createAsset, createDeck, createItem } from '@gobbit/db/test';
+import {
+  createAccountUser,
+  createAsset,
+  createDeck,
+  createItem,
+  makeProfileAsset,
+} from '@gobbit/db/test';
 import { MemoryMediaStore } from '../src/media/media-store';
 import { createAssetsRepo } from '../src/repositories/assets.repo';
 import { createOrphanSweeper } from '../src/services/media-sweep';
@@ -291,5 +297,92 @@ describe('deck delete drops its stored images (D158)', () => {
       `gobbit/ingest/${deck.id}/`,
       `gobbit/links/${deck.id}/`,
     ]);
+  });
+});
+
+/** 046 (D423, FR-011): profile photos are kept while referenced and freed like any orphan afterwards. */
+describe('media sweep of profile photos (046)', () => {
+  const ctx = setupApiTest();
+  const store = new MemoryMediaStore();
+  let sweeper: ReturnType<typeof createOrphanSweeper>;
+
+  beforeAll(() => {
+    sweeper = createOrphanSweeper({
+      assets: createAssetsRepo(ctx.t.db),
+      store,
+      log: captureLogger().logger,
+    });
+  });
+
+  beforeEach(async () => {
+    await ctx.t.db.delete(assets);
+    store.images.clear();
+    store.deleteCalls.length = 0;
+    store.resources.clear();
+  });
+
+  async function photo(userId: string): Promise<AssetRow> {
+    const asset = await makeProfileAsset(ctx.t.db, userId, { createdAt: old });
+    store.images.set(asset.publicId, {
+      publicId: asset.publicId,
+      width: 1,
+      height: 1,
+      bytes: 1,
+      format: 'jpg',
+      tags: [],
+    });
+    return asset;
+  }
+
+  const setAvatar = (userId: string, a: AssetRow | null) =>
+    ctx.t.db
+      .update(users)
+      .set({ avatar: a ? { publicId: a.publicId, width: 256, height: 256 } : null })
+      .where(eq(users.id, userId));
+
+  const remaining = async (ids: string[]) =>
+    (await ctx.t.db.select().from(assets).where(inArray(assets.id, ids))).map((a) => a.publicId);
+
+  it('never sweeps a referenced avatar, however old', async () => {
+    const user = await createAccountUser(ctx.t.db);
+    const asset = await photo(user.id);
+    await setAvatar(user.id, asset);
+
+    expect(await sweeper.sweepOrphans({ now })).toMatchObject({ deleted: 0, failed: 0 });
+    expect(await remaining([asset.id])).toEqual([asset.publicId]);
+  });
+
+  it('frees a replaced and a removed avatar after the grace period, not before', async () => {
+    const user = await createAccountUser(ctx.t.db);
+    const other = await createAccountUser(ctx.t.db);
+    const first = await photo(user.id);
+    const second = await photo(user.id);
+    const removed = await photo(other.id);
+    await setAvatar(user.id, first);
+    await setAvatar(other.id, removed);
+    await setAvatar(user.id, second);
+    await setAvatar(other.id, null);
+
+    // Inside the grace period nothing is freed.
+    await ctx.t.db.update(assets).set({ createdAt: recent });
+    expect(await sweeper.sweepOrphans({ now })).toMatchObject({ deleted: 0 });
+
+    await ctx.t.db.update(assets).set({ createdAt: old });
+    expect(await sweeper.sweepOrphans({ now })).toMatchObject({ deleted: 2, failed: 0 });
+    expect(await remaining([first.id, second.id, removed.id])).toEqual([second.publicId]);
+  });
+
+  it('removing the user row nulls the asset owner, then the asset is swept as an orphan', async () => {
+    const user = await createAccountUser(ctx.t.db);
+    const asset = await photo(user.id);
+    await setAvatar(user.id, asset);
+    await ctx.t.pool.query('DELETE FROM users WHERE id = $1', [user.id]);
+
+    const [row] = await ctx.t.db.select().from(assets).where(eq(assets.id, asset.id));
+    expect(row!.ownerUserId).toBeNull();
+
+    expect(await sweeper.sweepOrphans({ now })).toMatchObject({ deleted: 1, failed: 0 });
+    expect(await remaining([asset.id])).toEqual([]);
+    expect(store.images.has(asset.publicId)).toBe(false);
   });
 });

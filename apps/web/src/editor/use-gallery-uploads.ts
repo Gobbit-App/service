@@ -21,7 +21,11 @@ export type PendingPhoto = {
   | { status: 'failed'; message: string; canRetry: boolean }
 );
 
-export type UseGalleryUploadsOptions = Omit<UseImageUploadOptions, 'onUploaded'> & {
+export type UseGalleryUploadsOptions = Omit<
+  UseImageUploadOptions,
+  'onUploaded' | 'deckId' | 'target'
+> & {
+  deckId: string;
   /** Called once per confirmed photo, in the order they finish. */
   onUploaded: (asset: MediaAsset) => void;
 };

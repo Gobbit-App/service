@@ -50,6 +50,12 @@ export interface CreateAccountUserOptions {
   email?: string;
   displayName?: string;
   accountName?: string;
+  /** 046 profile fields. */
+  username?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  location?: string | null;
+  avatar?: UserRow['avatar'];
 }
 
 /** Creates an account and its single user (Phase 2 keeps account ↔ user 1:1). */
@@ -67,7 +73,17 @@ export async function createAccountUser(
     .returning();
   const [user] = await db
     .insert(users)
-    .values({ id: opts.id, accountId: account.id, email, displayName })
+    .values({
+      id: opts.id,
+      accountId: account.id,
+      email,
+      displayName,
+      username: opts.username,
+      firstName: opts.firstName,
+      lastName: opts.lastName,
+      location: opts.location,
+      avatar: opts.avatar,
+    })
     .returning();
   return user;
 }
@@ -255,6 +271,32 @@ export async function createAsset(
       originalFilename: opts.originalFilename ?? null,
       rejectedAt: opts.rejectedAt ?? null,
       createdAt: opts.createdAt,
+    })
+    .returning();
+  return row!;
+}
+
+/** 046: records an avatar image owned by a member (profile scope, no deck; D423). */
+export async function makeProfileAsset(
+  db: Db,
+  userId: string,
+  overrides: Partial<typeof assets.$inferInsert> = {},
+): Promise<AssetRow> {
+  const [row] = await db
+    .insert(assets)
+    .values({
+      scope: 'profile',
+      ownerUserId: userId,
+      deckId: null,
+      publicId: `gobbit/avatars/${userId}/${randomBytes(6).toString('hex')}`,
+      source: 'editor',
+      kind: 'image',
+      resourceType: 'image',
+      width: 256,
+      height: 256,
+      bytes: 1024,
+      format: 'jpg',
+      ...overrides,
     })
     .returning();
   return row!;

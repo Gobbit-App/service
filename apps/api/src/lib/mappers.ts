@@ -1,5 +1,6 @@
 import {
   RESERVED_DECK_SLUG,
+  type CardCreator,
   type Category,
   type Item,
   type LinkHealth,
@@ -48,6 +49,7 @@ export function toItemDto(
   linkHealth: LinkHealth | null = null,
   reminder: ReminderState | null = null,
   event: EventState | null = null,
+  creator: CardCreator | null = null,
 ): Item {
   return {
     id: r.id,
@@ -63,6 +65,7 @@ export function toItemDto(
     sourceKind: r.sourceKind,
     verifiedAt: r.verifiedAt?.toISOString() ?? null,
     createdBy: r.createdBy ?? null,
+    creator,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
     categoryIds,

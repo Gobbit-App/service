@@ -1,5 +1,11 @@
 import { and, count, desc, eq, isNull } from 'drizzle-orm';
-import { ingestTokens, users, type DbExecutor, type IngestTokenRow } from '@gobbit/db';
+import {
+  displayNameSql,
+  ingestTokens,
+  users,
+  type DbExecutor,
+  type IngestTokenRow,
+} from '@gobbit/db';
 import type { CurrentUser } from '../types';
 
 export interface NewIngestTokenValues {
@@ -61,7 +67,7 @@ export function createIngestTokensRepo(db: DbExecutor) {
             id: users.id,
             accountId: users.accountId,
             email: users.email,
-            displayName: users.displayName,
+            displayName: displayNameSql(),
           },
         })
         .from(ingestTokens)

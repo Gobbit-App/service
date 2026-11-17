@@ -1,6 +1,6 @@
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import type { SessionKind } from '@gobbit/shared';
-import { sessions, users, type DbExecutor, type SessionRow } from '@gobbit/db';
+import { displayNameSql, sessions, users, type DbExecutor, type SessionRow } from '@gobbit/db';
 import type { CurrentUser } from '../types';
 
 export interface NewSession {
@@ -41,7 +41,7 @@ export function createSessionsRepo(db: DbExecutor) {
             id: users.id,
             accountId: users.accountId,
             email: users.email,
-            displayName: users.displayName,
+            displayName: displayNameSql(),
           },
         })
         .from(sessions)

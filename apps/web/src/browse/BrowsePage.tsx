@@ -19,7 +19,7 @@ export interface BrowsePageProps {
 const OWN_PRESS = 'a, button, input, textarea, select, [data-detect]';
 
 /**
- * D325/D327: one page of the vertical track — the card surface only (no meta row, no bar; its
+ * D325/D327: one page of the vertical track — the card surface only (no chips or age row, no bar, only the creator avatar; its
  * actions live in the dock). Short cards are centred, tall ones scroll inside the page. The
  * strips at both sides allow only vertical pans, so an edge swipe never changes category (D333).
  */

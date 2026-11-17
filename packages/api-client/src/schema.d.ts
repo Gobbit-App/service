@@ -575,6 +575,18 @@ export interface paths {
                                 email: string;
                                 displayName: string;
                             };
+                            profile: {
+                                username: string | null;
+                                firstName: string | null;
+                                lastName: string | null;
+                                location: string | null;
+                                avatar: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                                initials: string;
+                            };
                             decks: {
                                 id: string;
                                 /** @enum {string} */
@@ -743,6 +755,592 @@ export interface paths {
             };
         };
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        username?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                        location?: string | null;
+                        avatar?: {
+                            publicId: string;
+                        } | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description The updated profile (046). Absent fields stay; null or blank clears. 422 on username (invalid, reserved, unavailable) or a field over its limit */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            username: string | null;
+                            firstName: string | null;
+                            lastName: string | null;
+                            location: string | null;
+                            avatar: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
+                            } | null;
+                            initials: string;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/me/username/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        username: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Advisory availability (D425): a taken and a held name both answer `unavailable`; the save decides. Rate limited per member, shared with member lookup */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            available: boolean;
+                            /** @enum {string} */
+                            reason?: "invalid" | "reserved" | "unavailable";
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/avatar/sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Signed permission to upload the caller's own profile photo (046, D423) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Signed image upload parameters for `gobbit/profiles/<userId>`; the API secret is never included */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            kind: "image" | "pdf" | "audio" | "video";
+                            eager?: string;
+                            eagerAsync?: boolean;
+                            uploadUrl: string;
+                            apiKey: string;
+                            timestamp: number;
+                            signature: string;
+                            folder: string;
+                            tags: string;
+                            allowedFormats: string;
+                            maxBytes: number;
+                            expiresAt: string;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/avatar/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a finished profile-photo upload from its signed Cloudinary response (046) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        publicId: string;
+                        version: number;
+                        signature: string;
+                        width?: number;
+                        height?: number;
+                        bytes: number;
+                        format: string;
+                        /**
+                         * @default image
+                         * @enum {string}
+                         */
+                        kind?: "image" | "pdf" | "audio" | "video";
+                        /**
+                         * @default image
+                         * @enum {string}
+                         */
+                        resourceType?: "image" | "video";
+                        durationMs?: number;
+                        pages?: number;
+                        etag?: string;
+                        originalFilename?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Already recorded (idempotent) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            publicId: string;
+                            /** @enum {string} */
+                            kind: "image" | "pdf" | "audio" | "video";
+                            /** @enum {string} */
+                            resourceType: "image" | "video";
+                            width: number | null;
+                            height: number | null;
+                            bytes: number | null;
+                            format: string | null;
+                            durationMs: number | null;
+                            pages: number | null;
+                            originalFilename: string | null;
+                            /** @enum {string} */
+                            source: "editor" | "ingest" | "link_snapshot" | "remote";
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description Recorded */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            publicId: string;
+                            /** @enum {string} */
+                            kind: "image" | "pdf" | "audio" | "video";
+                            /** @enum {string} */
+                            resourceType: "image" | "video";
+                            width: number | null;
+                            height: number | null;
+                            bytes: number | null;
+                            format: string | null;
+                            durationMs: number | null;
+                            pages: number | null;
+                            originalFilename: string | null;
+                            /** @enum {string} */
+                            source: "editor" | "ingest" | "link_snapshot" | "remote";
+                            createdAt: string;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1927,8 +2525,15 @@ export interface paths {
                         "application/json": {
                             data: {
                                 userId: string;
-                                email: string;
+                                email: string | null;
                                 displayName: string;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
                                 /** @enum {string} */
                                 role: "owner" | "maintainer" | "editor" | "reader";
                                 invitedAt: string | null;
@@ -2162,8 +2767,15 @@ export interface paths {
                     content: {
                         "application/json": {
                             userId: string;
-                            email: string;
+                            email: string | null;
                             displayName: string;
+                            username: string | null;
+                            initials: string;
+                            photo: {
+                                publicId: string;
+                                width?: number;
+                                height?: number;
+                            } | null;
                             /** @enum {string} */
                             role: "owner" | "maintainer" | "editor" | "reader";
                             invitedAt: string | null;
@@ -2314,6 +2926,13 @@ export interface paths {
                          * @enum {string}
                          */
                         role?: "owner" | "maintainer" | "editor" | "reader";
+                    } | {
+                        username: string;
+                        /**
+                         * @default reader
+                         * @enum {string}
+                         */
+                        role?: "owner" | "maintainer" | "editor" | "reader";
                     };
                 };
             };
@@ -2329,7 +2948,7 @@ export interface paths {
                                 id: string;
                                 deckId: string;
                                 userId: string;
-                                email: string;
+                                email: string | null;
                                 displayName: string;
                                 /** @enum {string} */
                                 role: "owner" | "maintainer" | "editor" | "reader";
@@ -2350,7 +2969,7 @@ export interface paths {
                                 id: string;
                                 deckId: string;
                                 userId: string;
-                                email: string;
+                                email: string | null;
                                 displayName: string;
                                 /** @enum {string} */
                                 role: "owner" | "maintainer" | "editor" | "reader";
@@ -2450,6 +3069,126 @@ export interface paths {
                 };
                 /** @description Conflict */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        query: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact username, or exact email for a member who shares a deck with the caller (D424). A miss is `{ member: null }` whatever the reason; never returns an email */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            member: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2975,6 +3714,18 @@ export interface paths {
                                 sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                 verifiedAt: string | null;
                                 createdBy: string | null;
+                                creator: {
+                                    /** Format: uuid */
+                                    id: string | null;
+                                    name: string | null;
+                                    username: string | null;
+                                    initials: string;
+                                    photo: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
+                                    } | null;
+                                } | null;
                                 createdAt: string;
                                 updatedAt: string;
                                 categoryIds: string[];
@@ -3556,6 +4307,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -3796,6 +4559,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4077,6 +4852,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4315,6 +5102,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4513,6 +5312,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4718,6 +5529,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -4960,6 +5783,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -5180,6 +6015,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -5833,6 +6680,18 @@ export interface paths {
                                     sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
+                                    creator: {
+                                        /** Format: uuid */
+                                        id: string | null;
+                                        name: string | null;
+                                        username: string | null;
+                                        initials: string;
+                                        photo: {
+                                            publicId: string;
+                                            width?: number;
+                                            height?: number;
+                                        } | null;
+                                    } | null;
                                     createdAt: string;
                                     updatedAt: string;
                                     categoryIds: string[];
@@ -7694,6 +8553,18 @@ export interface paths {
                                     sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
+                                    creator: {
+                                        /** Format: uuid */
+                                        id: string | null;
+                                        name: string | null;
+                                        username: string | null;
+                                        initials: string;
+                                        photo: {
+                                            publicId: string;
+                                            width?: number;
+                                            height?: number;
+                                        } | null;
+                                    } | null;
                                     createdAt: string;
                                     updatedAt: string;
                                     categoryIds: string[];
@@ -7748,6 +8619,14 @@ export interface paths {
                                     sharedBy: {
                                         /** Format: uuid */
                                         id: string;
+                                        name: string | null;
+                                        username: string | null;
+                                        initials: string;
+                                        photo: {
+                                            publicId: string;
+                                            width?: number;
+                                            height?: number;
+                                        } | null;
                                         displayName: string;
                                     } | null;
                                     clientLabel: string | null;
@@ -7796,6 +8675,18 @@ export interface paths {
                                     sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                                     verifiedAt: string | null;
                                     createdBy: string | null;
+                                    creator: {
+                                        /** Format: uuid */
+                                        id: string | null;
+                                        name: string | null;
+                                        username: string | null;
+                                        initials: string;
+                                        photo: {
+                                            publicId: string;
+                                            width?: number;
+                                            height?: number;
+                                        } | null;
+                                    } | null;
                                     createdAt: string;
                                     updatedAt: string;
                                     categoryIds: string[];
@@ -8115,6 +9006,18 @@ export interface paths {
                             sourceKind: "manual" | "link" | "share" | "email" | "telegram" | "import" | "mcp";
                             verifiedAt: string | null;
                             createdBy: string | null;
+                            creator: {
+                                /** Format: uuid */
+                                id: string | null;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
                             createdAt: string;
                             updatedAt: string;
                             categoryIds: string[];
@@ -8627,7 +9530,16 @@ export interface paths {
                                     } | null;
                                 } | null;
                                 reviewedBy: {
+                                    /** Format: uuid */
+                                    id: string;
                                     displayName: string;
+                                    username: string | null;
+                                    initials: string;
+                                    photo: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
+                                    } | null;
                                 } | null;
                                 reviewedAt: string | null;
                             }[];
@@ -8771,7 +9683,16 @@ export interface paths {
                                 } | null;
                             } | null;
                             reviewedBy: {
+                                /** Format: uuid */
+                                id: string;
                                 displayName: string;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
                             } | null;
                             reviewedAt: string | null;
                         };
@@ -8894,7 +9815,16 @@ export interface paths {
                                 } | null;
                             } | null;
                             reviewedBy: {
+                                /** Format: uuid */
+                                id: string;
                                 displayName: string;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
                             } | null;
                             reviewedAt: string | null;
                         };
@@ -9277,6 +10207,13 @@ export interface paths {
                                 actor: {
                                     userId: string;
                                     displayName: string;
+                                    username: string | null;
+                                    initials: string;
+                                    photo: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
+                                    } | null;
                                 } | null;
                                 changes: string[];
                                 createdAt: string;

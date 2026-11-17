@@ -1,11 +1,13 @@
 import type { IngestJobRow } from '@gobbit/db';
 import {
   RETRYABLE_FAILURES,
+  displayNameOf,
   SHARE_MAX_RETRIES,
   SHARES_LIST_LIMIT,
   shareChannels,
   type IngestChannel,
   type IngestJobStatus,
+  type MemberSummary,
   type ShareChannel,
   type ShareState,
   type ShareSummary,
@@ -19,6 +21,7 @@ import type { IngestJobsRepo } from '../repositories/ingest-jobs.repo';
 import type { ItemRef, ItemsRepo } from '../repositories/items.repo';
 import type { UsersRepo } from '../repositories/users.repo';
 import type { CurrentUser } from '../types';
+import type { MemberSummaries } from './member-summaries';
 
 /** D196: how far back "Your shares" looks. */
 export const SHARES_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
@@ -26,6 +29,7 @@ export const SHARES_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 const SHARE_NOT_FOUND = 'Share not found';
 
 export type ShareItemRef = ItemRef;
+export type ShareReviewer = ShareSummary['reviewedBy'] & object;
 
 const STATE_BY_STATUS: Record<IngestJobStatus, ShareState> = {
   queued: 'processing',
@@ -83,7 +87,7 @@ function toShareItem(item: ShareItemRef): NonNullable<ShareSummary['item']> {
 export function toShareSummary(
   job: IngestJobRow & { channel: ShareChannel },
   item: ShareItemRef | null,
-  reviewerName: string | null,
+  reviewer: ShareReviewer | null,
 ): ShareSummary {
   const raw = job.raw;
   return {
@@ -103,8 +107,22 @@ export function toShareSummary(
     canRetry: canRetryJob(job),
     autoPublish: job.autoPublish ?? null,
     item: item ? toShareItem(item) : null,
-    reviewedBy: reviewerName === null ? null : { displayName: reviewerName },
+    reviewedBy: reviewer,
     reviewedAt: job.reviewedAt?.toISOString() ?? null,
+  };
+}
+
+/** D419/D421: computed display name plus the summary's username/initials/photo. */
+export function reviewerOf(
+  u: Parameters<typeof displayNameOf>[0],
+  s: MemberSummary,
+): ShareReviewer {
+  return {
+    id: s.id,
+    displayName: displayNameOf(u),
+    username: s.username,
+    initials: s.initials,
+    photo: s.photo,
   };
 }
 
@@ -114,28 +132,35 @@ export function createSharesService(deps: {
   jobs: Pick<IngestJobsRepo, 'findById' | 'listForSharer' | 'resetForRetry'>;
   items: Pick<ItemsRepo, 'findRefsByIds'>;
   users: Pick<UsersRepo, 'findById'>;
+  summaries: MemberSummaries;
   queue: IngestQueue;
   /** D110: the same caps as `POST /ingest` (bound `createCapGuard`). */
   assertWithinCaps: (userId: string, channel: IngestChannel) => Promise<void>;
   now: () => Date;
 }) {
-  const { decks, memberships, jobs, items, users, queue, now } = deps;
+  const { decks, memberships, jobs, items, users, summaries, queue, now } = deps;
 
   /** One query for the cards, one lookup per distinct reviewer. */
   async function summarize(rows: (IngestJobRow & { channel: ShareChannel })[]) {
     const itemIds = [...new Set(rows.flatMap((j) => j.resultItemId ?? []))];
     const reviewerIds = [...new Set(rows.flatMap((j) => j.reviewedBy ?? []))];
-    const [refs, reviewers] = await Promise.all([
+    const [refs, reviewers, people] = await Promise.all([
       items.findRefsByIds(itemIds),
       Promise.all(reviewerIds.map((id) => users.findById(id))),
+      summaries.summaries(reviewerIds),
     ]);
     const itemById = new Map(refs.map((r) => [r.id, r]));
-    const nameById = new Map(reviewers.flatMap((u) => (u ? [[u.id, u.displayName] as const] : [])));
+    const reviewerById = new Map(
+      reviewers.flatMap((u) => {
+        const s = u && people.get(u.id);
+        return u && s ? [[u.id, reviewerOf(u, s)] as const] : [];
+      }),
+    );
     return rows.map((job) =>
       toShareSummary(
         job,
         job.resultItemId ? (itemById.get(job.resultItemId) ?? null) : null,
-        job.reviewedBy ? (nameById.get(job.reviewedBy) ?? null) : null,
+        job.reviewedBy ? (reviewerById.get(job.reviewedBy) ?? null) : null,
       ),
     );
   }

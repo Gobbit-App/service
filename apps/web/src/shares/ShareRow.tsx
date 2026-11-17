@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { isApiError } from '../api/api-error';
 import { relativeTime } from '../lib/relative-time';
 import { deckHref } from '../ui/chip-order';
+import { Avatar } from '../ui/Avatar';
 import { NavLink } from '../ui/NavLink';
 import { failureCopy, pasteAgainCopy } from './failure-copy';
 import { deviceTimeZone } from '../lib/device-time-zone';
@@ -135,7 +136,16 @@ export function ShareDetail({
     case 'not_added':
       return (
         <p className="share-row__hint">
-          {share.reviewedBy && <span dir="auto">By {share.reviewedBy.displayName}</span>}
+          {share.reviewedBy && (
+            <>
+              <Avatar
+                size="sm"
+                ariaLabel={share.reviewedBy.displayName}
+                member={{ ...share.reviewedBy, name: share.reviewedBy.displayName }}
+              />{' '}
+              <span dir="auto">By {share.reviewedBy.displayName}</span>
+            </>
+          )}
           {share.reviewedBy && share.reviewedAt && ' · '}
           {share.reviewedAt && (
             <time dateTime={share.reviewedAt}>{relativeTime(new Date(share.reviewedAt), now)}</time>

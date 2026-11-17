@@ -10,6 +10,14 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-16 — Member profile and creator avatar (046, D417–D429)
+
+- Members can set a username, first and last name, location and a cropped profile photo (new migration `0027_member_profile`, additive). Cards in shared and communal decks show who added them as an avatar, and a deck owner can invite a member by username. A member with a username no longer shows an email address in the members list.
+- New optional environment variables (no action needed): `USERNAME_HOLD_DAYS` (default `30`, days a
+  released username stays reserved for its previous owner) and `PROFILE_LOOKUP_RATE_PER_HOUR`
+  (default `30`, profile lookups and username invites per member per hour) and
+  `PROFILE_UPDATE_RATE_PER_HOUR` (default `30`, profile saves per member per hour).
+
 ### 2026-11-16 — Card cover image (044, D406–D415)
 
 - Text, reminder, event, table and calc cards can carry an optional cover image, shown as a bar below

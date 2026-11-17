@@ -21,6 +21,7 @@ import { reviewTransaction } from '../review/publish-proposal';
 import { createSharesService } from './shares.service';
 import { createCapGuard } from '../ingest/caps';
 import type { ItemDtoMapper } from './item-dtos';
+import type { MemberSummaries } from './member-summaries';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import { createCategoriesRepo } from '../repositories/categories.repo';
@@ -58,6 +59,7 @@ export function buildIngestServices(deps: {
   memberships: MembershipLookup;
   items: ItemsRepo;
   users: Pick<UsersRepo, 'findById'>;
+  summaries: MemberSummaries;
   toDtos: ItemDtoMapper;
   embedQueue: EmbedQueue;
   linkSnapshotQueue: LinkSnapshotQueue;
@@ -123,6 +125,7 @@ export function buildIngestServices(deps: {
       jobs,
       items: deps.items,
       users: deps.users,
+      summaries: deps.summaries,
       queue,
       assertWithinCaps: createCapGuard({
         jobs,
@@ -136,6 +139,7 @@ export function buildIngestServices(deps: {
       decks,
       memberships,
       users: deps.users,
+      summaries: deps.summaries,
       items: deps.items,
       jobs,
       toDtos: deps.toDtos,

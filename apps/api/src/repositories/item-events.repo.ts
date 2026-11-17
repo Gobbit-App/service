@@ -1,5 +1,5 @@
 import { and, desc, eq, isNull, sql, type SQL } from 'drizzle-orm';
-import { itemEvents, users, type DbExecutor, type ItemEventRow } from '@gobbit/db';
+import { displayNameSql, itemEvents, users, type DbExecutor, type ItemEventRow } from '@gobbit/db';
 import type { CursorData } from '@gobbit/shared';
 import { toEventRow, type ItemEventInput } from '../events/item-event';
 
@@ -53,7 +53,7 @@ export function createItemEventsRepo(db: DbExecutor) {
           title: itemEvents.title,
           changes: itemEvents.changes,
           createdAt: itemEvents.createdAt,
-          actorName: users.displayName,
+          actorName: displayNameSql(),
         })
         .from(itemEvents)
         .leftJoin(users, and(eq(users.id, itemEvents.actorUserId), isNull(users.deletedAt)))

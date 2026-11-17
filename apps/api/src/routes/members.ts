@@ -4,6 +4,8 @@ import {
   inviteResponseSchema,
   memberListSchema,
   memberRolePatchSchema,
+  memberLookupRequest,
+  memberLookupResponse,
   memberSchema,
 } from '@gobbit/shared';
 import type { AppEnv } from '../types';
@@ -125,5 +127,32 @@ export function registerMembersRoutes(app: OpenAPIHono<AppEnv>, services: Servic
       requestId: c.get('requestId'),
     });
     return created ? c.json({ membership }, 201) : c.json({ membership }, 200);
+  });
+
+  const lookupRoute = createRoute({
+    method: 'post',
+    path: '/members/lookup',
+    tags: ['members'],
+    security: AUTH_SECURITY,
+    request: {
+      body: { content: { 'application/json': { schema: memberLookupRequest } }, required: true },
+    },
+    responses: {
+      200: {
+        content: { 'application/json': { schema: memberLookupResponse } },
+        description:
+          'Exact username, or exact email for a member who shares a deck with the caller (D424). A miss is `{ member: null }` whatever the reason; never returns an email',
+      },
+      ...problems('bad-request', 'validation', 'unauthorized', 'rate-limited'),
+    },
+  });
+
+  app.openapi(lookupRoute, async (c) => {
+    const result = await services.profile.lookup(
+      getUser(c),
+      c.req.valid('json').query,
+      c.get('requestId'),
+    );
+    return c.json(result, 200);
   });
 }

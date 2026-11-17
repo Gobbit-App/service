@@ -10,6 +10,7 @@ import {
   payloadWithinBudget,
 } from './payloads';
 import { reminderPayloadSchema, reminderStateSchema } from '../reminders/schema';
+import { cardCreatorSchema } from './profile';
 import { eventPayloadSchema, eventStateSchema } from '../events-cards/schema';
 import { pageSchema, limitSchema } from './pagination';
 import { CARD_BODY_MAX, CARD_TITLE_MAX, PAYLOAD_MAX_BYTES } from '../limits';
@@ -206,6 +207,8 @@ export const itemSchema = z.object({
   sourceKind: z.enum(sourceKinds),
   verifiedAt: z.string().nullable(),
   createdBy: z.string().nullable(),
+  /** D421: who made it; null in personal decks, placeholder when unknown. */
+  creator: cardCreatorSchema.nullable(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
   categoryIds: z.array(z.string()),

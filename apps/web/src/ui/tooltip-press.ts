@@ -8,6 +8,10 @@
  * (`contextmenu` during a touch; Android fires it at ~400 ms and then cancels the touch),
  * whichever comes first. The tooltip stays while the finger is down and hides 1.5 s after the
  * release. A mouse right-click keeps the browser's context menu.
+ *
+ * 046 (D428): a control that also has `data-tip-tap` (the avatar) toggles its tooltip on a click
+ * or tap. It closes on a second tap, a click outside, Escape or the mouse leaving. Hover and
+ * keyboard focus open it through CSS alone. Other callers are unaffected.
  */
 export const PRESS_MS = 500;
 export const MOVE_TOLERANCE_PX = 10;
@@ -81,6 +85,31 @@ export function installTooltipPress(root: Document | HTMLElement = document): ()
     event.stopPropagation();
   };
 
+  const closeTapped = () =>
+    root
+      .querySelectorAll('[data-tip-tap][data-tip-open]')
+      .forEach((el) => el.removeAttribute('data-tip-open'));
+
+  const onTapToggle = (event: Event) => {
+    if (event.defaultPrevented) return; // the swallowed click of a long press
+    const found = tipTarget(event);
+    const target = found?.hasAttribute('data-tip-tap') ? found : null;
+    const wasOpen = target?.hasAttribute('data-tip-open') ?? false;
+    closeTapped();
+    if (target && !wasOpen) target.setAttribute('data-tip-open', '');
+  };
+
+  const onKeyDown = (event: Event) => {
+    if ((event as KeyboardEvent).key === 'Escape') closeTapped();
+  };
+
+  const onPointerLeave = (event: Event) => {
+    const el = event.target as Element | null;
+    if (el?.hasAttribute?.('data-tip-tap') && (event as PointerEvent).pointerType !== 'touch') {
+      el.removeAttribute('data-tip-open');
+    }
+  };
+
   const onContextMenu = (event: Event) => {
     // Only a touch long press: a mouse right-click keeps the browser menu.
     if (!touching) return;
@@ -98,6 +127,9 @@ export function installTooltipPress(root: Document | HTMLElement = document): ()
   root.addEventListener('touchcancel', onTouchEnd, passive);
   root.addEventListener('click', onClick, true);
   root.addEventListener('contextmenu', onContextMenu);
+  root.addEventListener('click', onTapToggle, true);
+  root.addEventListener('keydown', onKeyDown);
+  root.addEventListener('pointerleave', onPointerLeave, true);
 
   return () => {
     cancelPress();
@@ -108,5 +140,8 @@ export function installTooltipPress(root: Document | HTMLElement = document): ()
     root.removeEventListener('touchcancel', onTouchEnd);
     root.removeEventListener('click', onClick, true);
     root.removeEventListener('contextmenu', onContextMenu);
+    root.removeEventListener('click', onTapToggle, true);
+    root.removeEventListener('keydown', onKeyDown);
+    root.removeEventListener('pointerleave', onPointerLeave, true);
   };
 }

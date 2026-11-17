@@ -13,6 +13,7 @@ import {
   type DbExecutor,
   type WaitlistEntryRow,
   type WaitlistEventRow,
+  displayNameSql,
 } from '@gobbit/db';
 
 export interface NewPendingEntry {
@@ -85,7 +86,7 @@ function adminOrder(q: AdminListQuery): { where?: SQL; orderBy: SQL[] } {
 export function createWaitlistRepo(db: DbExecutor) {
   const selectForAdmin = () =>
     db
-      .select({ entry: waitlistEntries, invitedByName: users.displayName })
+      .select({ entry: waitlistEntries, invitedByName: displayNameSql() })
       .from(waitlistEntries)
       .leftJoin(users, eq(users.id, waitlistEntries.invitedBy))
       .$dynamic();

@@ -3,6 +3,21 @@ import { ingestChannels, type IngestChannel } from './ingest/constants';
 /** Maximum character count (Unicode code points) for card body. */
 export const CARD_BODY_MAX = 2000;
 
+/** Days a released username stays held for its previous owner (env-tunable default). */
+export const USERNAME_HOLD_DAYS_DEFAULT = 30;
+
+/** Profile lookups per member per hour before the limiter answers 429 (env-tunable default). */
+export const PROFILE_LOOKUP_RATE_PER_HOUR_DEFAULT = 30;
+
+/** Profile saves per member per hour before the limiter answers 429 (env-tunable default). */
+export const PROFILE_UPDATE_RATE_PER_HOUR_DEFAULT = 30;
+
+/** Longest first or last name on a profile. */
+export const PROFILE_NAME_MAX = 60;
+
+/** Longest free-text location on a profile. */
+export const PROFILE_LOCATION_MAX = 100;
+
 /** Maximum character count for card title. */
 export const CARD_TITLE_MAX = 120;
 

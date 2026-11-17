@@ -38,3 +38,4 @@ export * from './analytics/consent';
 export * from './schemas/analytics-consent';
 export * from './reminders';
 export * from './card-cover';
+export * from './schemas/profile';

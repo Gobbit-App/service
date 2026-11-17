@@ -50,6 +50,14 @@ export function SettingsScreen(): ReactElement {
 
   return (
     <>
+      <SettingsSection title="Profile">
+        <ButtonLink
+          href="/settings/profile"
+          icon="user"
+          label="Edit your profile"
+          variant="ghost"
+        />
+      </SettingsSection>
       {me.data?.isPlatformAdmin && (
         <SettingsSection title="Platform">
           <ButtonLink href="/admin/waitlist" icon="list" label="Waitlist" variant="ghost" />

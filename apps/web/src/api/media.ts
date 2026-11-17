@@ -53,3 +53,13 @@ export async function reportUploadFailure(
     }),
   );
 }
+
+/** 046 (D423): the member's own profile-photo permission, same shape as a deck photo's. */
+export function signAvatarUpload(): Promise<MediaSignResponse> {
+  return unwrap(api.POST('/me/avatar/sign'));
+}
+
+/** 046: records a finished profile-photo upload (the asset belongs to the member, not a deck). */
+export function confirmAvatarAsset(uploaded: MediaAssetConfirmRequest): Promise<MediaAsset> {
+  return unwrap(api.POST('/me/avatar/assets', { body: uploaded }));
+}

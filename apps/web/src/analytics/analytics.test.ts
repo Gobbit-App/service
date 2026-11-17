@@ -23,6 +23,14 @@ const appConfig = (analytics: AppConfig['analytics']): AppConfig => ({
 
 const me = (id: string, value: AnalyticsConsentValue = 'allowed'): Me => ({
   user: { id, email: 'a@b.c', displayName: 'A' },
+  profile: {
+    username: null,
+    firstName: null,
+    lastName: null,
+    location: null,
+    avatar: null,
+    initials: 'A',
+  },
   decks: [],
   isPlatformAdmin: false,
   analyticsConsent:

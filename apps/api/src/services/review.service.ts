@@ -1,6 +1,7 @@
 import type { IngestJobRow, ItemRow } from '@gobbit/db';
 import {
   can,
+  displayNameOf,
   REVIEW_LIMIT,
   type BulkPublishResult,
   type Item,
@@ -38,6 +39,7 @@ import type { Actor, CurrentUser } from '../types';
 import { diffFields, itemFields } from '../events/diff-fields';
 import { eventFrom } from '../events/item-event';
 import type { ItemDtoMapper } from './item-dtos';
+import type { MemberSummaries } from './member-summaries';
 import { childLogger } from '../lib/logger';
 
 const log = childLogger('review');
@@ -50,6 +52,7 @@ export function createReviewService(deps: {
   decks: DecksRepo;
   memberships: MembershipLookup;
   users: Pick<UsersRepo, 'findById'>;
+  summaries: Pick<MemberSummaries, 'summaries'>;
   items: Pick<ItemsRepo, 'list' | 'findById' | 'countByStatus'>;
   jobs: Pick<IngestJobsRepo, 'findByResultItem' | 'findByResultItems'>;
   toDtos: ItemDtoMapper;
@@ -66,7 +69,18 @@ export function createReviewService(deps: {
   /** D180: a publish changes the deck's public pages; drop them after commit. */
   purgeDeck?: (deckId: string) => void;
 }) {
-  const { decks, memberships, users, items, jobs, toDtos, transaction, embedQueue, now } = deps;
+  const {
+    decks,
+    memberships,
+    users,
+    summaries,
+    items,
+    jobs,
+    toDtos,
+    transaction,
+    embedQueue,
+    now,
+  } = deps;
   const publishProposal = createPublishProposal(deps);
 
   async function reviewerDeck(user: CurrentUser, idOrSlug: string) {
@@ -87,10 +101,19 @@ export function createReviewService(deps: {
     return { item, deck, role, job };
   }
 
-  async function displayNames(ids: string[]): Promise<Map<string, string>> {
+  /** D419/D421: the sharer's summary plus the computed display name. */
+  async function sharers(ids: string[]) {
     const unique = [...new Set(ids)];
-    const found = await Promise.all(unique.map((id) => users.findById(id)));
-    return new Map(found.flatMap((u) => (u ? [[u.id, u.displayName] as const] : [])));
+    const [found, people] = await Promise.all([
+      Promise.all(unique.map((id) => users.findById(id))),
+      summaries.summaries(unique),
+    ]);
+    return new Map(
+      found.flatMap((u) => {
+        const s = u && people.get(u.id);
+        return u && s ? [[u.id, { ...s, displayName: displayNameOf(u) }] as const] : [];
+      }),
+    );
   }
 
   /** Targets of possible-duplicate/update verdicts that are still published in the same deck. */
@@ -211,7 +234,7 @@ export function createReviewService(deps: {
       const jobRows = await jobs.findByResultItems(rows.map((r) => r.id));
       const jobByItem = new Map(jobRows.map((j) => [j.resultItemId, j]));
       const [names, targets, itemDtos] = await Promise.all([
-        displayNames(jobRows.flatMap((j) => j.userId ?? [])),
+        sharers(jobRows.flatMap((j) => j.userId ?? [])),
         loadTargets(deck.id, jobRows),
         toDtos(user, rows, role),
       ]);
@@ -228,10 +251,7 @@ export function createReviewService(deps: {
             ? {
                 id: job.id,
                 channel: job.channel,
-                sharedBy:
-                  job.userId && names.has(job.userId)
-                    ? { id: job.userId, displayName: names.get(job.userId)! }
-                    : null,
+                sharedBy: (job.userId && names.get(job.userId)) || null,
                 clientLabel: job.clientLabel ?? null,
                 createdAt: job.createdAt.toISOString(),
                 dedup: job.dedup ?? null,

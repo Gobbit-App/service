@@ -49,3 +49,5 @@ Indexes: `(deck_id, created_at desc, id desc)` for the deck log, `(item_id, crea
 - **Header link instead of a deck menu**: the PWA has no deck menu, so "Activity" sits in the header actions.
 - **Empty state** says the log starts "from the day the activity log was turned on" instead of a deploy date.
 - **E2E (`e2e/tests/full/activity-log.spec.ts`)**: the owner makes both writes; a second admin can't sign in from e2e (an invite needs the emailed magic link). Names of other admins are covered by `apps/api/test/item-events.int.test.ts`.
+
+**Names and photos (046, D419)**: the actor's `displayName` is the computed name (profile first and last name, else the email-derived one), so a rename shows on past lines. The actor also carries `initials`, `username` and `photo` for the avatar; never an email. Review `sharedBy` and share `reviewedBy` follow the same rule. See [profile.md](profile.md).
