@@ -539,6 +539,9 @@ test.describe('profile photo @full', () => {
   // Saving a photo needs the API to find the recorded asset: the UI flow only records it through the
   // real signed confirm, so these tests need the Cloudinary secret (the third-party host is still faked).
   test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is needed to record the profile asset');
+  // The service worker answers Cloudinary images itself, past `page.route`; block it so the fake serves.
+  // Only here: the offline test in this file needs the worker.
+  test.use({ serviceWorkers: 'block' });
 
   test.beforeEach(async ({ page }) => {
     await page.goto(webUrl('/settings/profile'));

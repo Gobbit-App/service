@@ -22,6 +22,18 @@ with the stack running (`pnpm compose:up`) before merge; the palette (T020) and 
 avatar stay fixed) so the avatar never drops onto the action bar. This touches the footer of every card, not only
 shared-deck cards: compare a card with many chips at 412 px against `main`.
 
+## Full e2e stability (CI, 2026-11-17)
+
+- **Photo spec fell back to initials after the first deck visit**: the PWA service worker answers Cloudinary
+  images itself, past Playwright's `page.route`, so the fake delivery stopped serving once the worker took over
+  (the trace showed `_serviceWorkerRef` requests getting a real 404 from Cloudinary, and `Avatar` correctly fell
+  back to initials). The photo describe now sets `serviceWorkers: 'block'`, as `cover.spec.ts` does; the
+  offline test in the same file keeps the worker.
+- **Cover spec flaked at 360 px (2 of 2 runs on this branch, none before)**: the new 24 px avatar made the
+  `.card__meta` row tight, so a one-character longer relative age ("Added 9 seconds ago" to "10 seconds ago") made
+  every card's chips wrap at once and shifted the cards below by about 150 px. The age label now takes all the
+  shrinking (`flex-shrink` ratio, ellipsis, one line) so the footer height no longer depends on its text.
+
 ## Decisions
 
 - **Hold trigger error (D418)**: the trigger raises `P0001` with the message `username_held`, matching the other
