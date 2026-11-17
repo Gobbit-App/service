@@ -56,7 +56,7 @@ jobs:
       - run: pnpm --filter e2e exec playwright install --with-deps chromium
 
       # By folder, not --grep @full: not every spec under tests/full carries the tag.
-      - run: pnpm --filter e2e exec playwright test tests/full
+      - run: pnpm --filter e2e exec playwright test tests/full --trace retain-on-failure
         env:
           BASE_URL: http://localhost:8080/api
           CI: 'true'
