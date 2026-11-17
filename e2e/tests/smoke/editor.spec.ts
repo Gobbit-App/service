@@ -283,11 +283,12 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   // The smoke session is shared by the suite: answer the logout call locally so the server
   // session survives, while the app still runs its sign-out cleanup (drafts included).
   await page.route('**/auth/logout', (route) => route.fulfill({ status: 204 }));
-  // D276: Sign out lives in the bottom bar's ⋯ menu, which the editor doesn't show; the draft
-  // stays stored when the editor is left without saving.
+  // Sign out lives on the profile page (⋯ menu → Profile), which the editor doesn't show; the
+  // draft stays stored when the editor is left without saving.
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('menuitem', { name: 'Sign out' }).click();
+  await page.getByRole('menuitem', { name: 'Profile' }).click();
+  await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/sign-in/);
   // The app leaves for /sign-in first and clears local data afterwards; navigating away before
   // that finishes would abort it.

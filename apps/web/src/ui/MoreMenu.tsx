@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { Avatar, type AvatarMember } from './Avatar';
 import { classNames, tipText } from './buttons/button-props';
 import { Icon, type IconName } from './icons/Icon';
 import { isPlainClick, useNavigateHref } from './NavLink';
@@ -19,6 +20,8 @@ export interface MenuAction {
   label: string;
   /** Required for plain actions; a `checked` choice draws a check mark instead. */
   icon?: IconName;
+  /** Draws this member's avatar in the icon slot (the Profile item). */
+  avatar?: AvatarMember;
   /** 043 (D381): a choice among the menu's options (`menuitemradio`); true = the current one. */
   checked?: boolean;
   /** Run on select; or `href` to navigate in-app. */
@@ -209,7 +212,11 @@ export function MoreMenu({
               const content = (
                 <>
                   {action.checked === undefined ? (
-                    action.icon && <Icon name={action.icon} />
+                    action.avatar ? (
+                      <Avatar member={action.avatar} decorative />
+                    ) : (
+                      action.icon && <Icon name={action.icon} />
+                    )
                   ) : (
                     <span className="menu__check" aria-hidden="true">
                       {action.checked && <Icon name="check" />}

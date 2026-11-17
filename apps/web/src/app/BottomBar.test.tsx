@@ -17,6 +17,7 @@ function answer({ admin = false } = {}) {
     if (request.startsWith('GET /me')) {
       return Promise.resolve({
         user: { id: 'u1', email: 'me@example.com' },
+        profile: { username: null, firstName: null, lastName: null, location: null, avatar: null },
         isPlatformAdmin: admin,
       });
     }
@@ -85,15 +86,15 @@ describe('BottomBar (D274–D279)', () => {
     }
   });
 
-  it('lists the ⋯ items by role, with the email under Sign out', async () => {
+  it('lists the ⋯ items by role, with the email under Profile', async () => {
     await renderInRouter(<BottomBar deck={deck('owner')} />, { context: { signOut: vi.fn() } });
     await vi.waitFor(() => expect(respond).toHaveBeenCalledWith('GET /me'));
     await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
     const items = screen
       .getAllByRole('menuitem')
       .map((el) => el.getAttribute('aria-label') ?? el.textContent);
-    expect(items).toEqual(['Settings', 'Upcoming', 'Activity', 'About', 'Sign out']);
-    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveAccessibleDescription(
+    expect(items).toEqual(['Profile', 'Settings', 'Upcoming', 'Activity', 'About']);
+    expect(screen.getByRole('menuitem', { name: 'Profile' })).toHaveAccessibleDescription(
       'me@example.com',
     );
   });
@@ -106,17 +107,6 @@ describe('BottomBar (D274–D279)', () => {
     expect(about).toHaveTextContent('Version');
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog', { name: 'Gobbit' })).toBeNull();
-  });
-
-  it('signs out from the ⋯ menu', async () => {
-    const signOut = vi.fn(() => Promise.resolve());
-    const { location } = await renderInRouter(<BottomBar deck={deck('reader')} />, {
-      context: { signOut },
-    });
-    await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }));
-    await vi.waitFor(() => expect(signOut).toHaveBeenCalledOnce());
-    expect(location()).toBe('/sign-in');
   });
 
   it('shows New deck on the deck list and nothing deck-specific', async () => {

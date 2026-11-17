@@ -1,4 +1,5 @@
 import type { Deck } from '@gobbit/shared';
+import { initialsFor } from '@gobbit/shared/avatar';
 import { can } from '@gobbit/shared/authz';
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
@@ -15,7 +16,6 @@ import { useNavigateHref } from '../ui/NavLink';
 import { createActions } from './create-actions';
 import { menuActions } from './deck-menu-actions';
 import { usePendingUpdate } from './sw-update-store';
-import { useSignOut } from './use-sign-out';
 
 type BarDeck = Pick<Deck, 'slug' | 'role' | 'isDefault'>;
 
@@ -36,7 +36,6 @@ export function BottomBar({
   onNewDeck?: () => void;
 }): ReactElement {
   const me = useQuery(meQuery());
-  const signOut = useSignOut();
   const navigate = useNavigateHref();
   const [aboutOpen, setAboutOpen] = useState(false);
   const applyUpdate = usePendingUpdate();
@@ -46,8 +45,13 @@ export function BottomBar({
     isPlatformAdmin: me.data?.isPlatformAdmin ?? false,
     email: me.data?.user.email,
     onAbout: () => setAboutOpen(true),
-    onSignOut: signOut.signOut,
-    signingOut: signOut.signingOut,
+    me: me.data && {
+      id: me.data.user.id,
+      initials: initialsFor({ ...me.data.profile, email: me.data.user.email }),
+      name: [me.data.profile.firstName, me.data.profile.lastName].filter(Boolean).join(' ') || null,
+      username: me.data.profile.username,
+      photo: me.data.profile.avatar,
+    },
     onUpdate: applyUpdate,
   });
   const create = deck ? createActions(deck) : [];
