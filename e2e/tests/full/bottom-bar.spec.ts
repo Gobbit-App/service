@@ -84,7 +84,7 @@ test('the ⋯ menu leads to Activity and Settings, whose back returns to the dec
   const menu = bar(page).getByRole('button', { name: 'Menu' });
 
   await menu.click();
-  await expect(page.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Profile' })).toBeVisible();
   await page.getByRole('menuitem', { name: 'Activity' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/log$`));
 

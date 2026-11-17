@@ -27,6 +27,7 @@ export function Avatar({
   size = 'sm',
   label,
   ariaLabel,
+  decorative = false,
 }: {
   member: AvatarMember;
   size?: 'sm' | 'md';
@@ -34,6 +35,8 @@ export function Avatar({
   label?: string;
   /** Overrides the accessible name (default "Added by <label>"). */
   ariaLabel?: string;
+  /** Inside a control that already names it (a menu item): no role, focus stop or tooltip. */
+  decorative?: boolean;
 }): ReactElement {
   const cloudName = useCloudName();
   const [failed, setFailed] = useState<string | null>(null);
@@ -49,11 +52,15 @@ export function Avatar({
     <span
       className={`avatar avatar--${size}`}
       style={style}
-      role="img"
-      tabIndex={0}
-      aria-label={ariaLabel ?? `Added by ${text}`}
-      data-tip={text}
-      data-tip-tap=""
+      {...(decorative
+        ? { 'aria-hidden': true }
+        : {
+            role: 'img',
+            tabIndex: 0,
+            'aria-label': ariaLabel ?? `Added by ${text}`,
+            'data-tip': text,
+            'data-tip-tap': '',
+          })}
     >
       {photo && cloudName ? (
         <CloudImage

@@ -1660,6 +1660,7 @@ h2 {
 .card-editor input,
 .card-editor textarea,
 .card-editor select,
+.profile-form input,
 .admin-form__row > input,
 .admin-form__row > select,
 .admin-member > select {
@@ -1674,6 +1675,7 @@ h2 {
 
 .card-editor input:not([type='radio']):not([type='checkbox']),
 .card-editor select,
+.profile-form input,
 .admin-form__row > input,
 .admin-form__row > select,
 .admin-member > select {
@@ -1682,6 +1684,7 @@ h2 {
 
 /* Fields draw focus on their own edge (2 px, over the border) instead of a halo 3 px outside it. */
 .card-editor input:not([type='radio'], [type='checkbox']):focus-visible,
+.profile-form input:focus-visible,
 .card-editor textarea:focus-visible,
 .card-editor select:focus-visible {
   outline: 2px solid var(--color-accent);
