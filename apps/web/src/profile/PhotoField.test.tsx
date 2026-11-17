@@ -65,7 +65,10 @@ const pick = async (label: string, file = picture()) =>
 // The cropper is a lazy chunk: under a loaded machine its first import takes longer than the 1 s default.
 const SLOW = { timeout: 10_000 };
 const crop = async () => {
-  fireEvent.click(await screen.findByRole('button', { name: 'Use photo' }, SLOW));
+  const use = await screen.findByRole('button', { name: 'Use photo' }, SLOW);
+  // The button stays disabled until the photo has decoded; a click before that does nothing.
+  await waitFor(() => expect(use).toBeEnabled(), SLOW);
+  fireEvent.click(use);
   await waitFor(() => expect(calls).toHaveLength(1), SLOW);
 };
 
