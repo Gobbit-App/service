@@ -204,7 +204,7 @@ or just one tier:
 
 ```bash
 pnpm test:e2e --grep @smoke
-pnpm test:e2e --grep @full   # nightly tier; run by hand until specs/011-e2e-nightly adds the workflow
+pnpm test:e2e tests/full   # full tier (by folder: not every spec carries @full); in CI, label the PR `e2e:full`
 ```
 
 ### Deployed
@@ -561,7 +561,7 @@ uvx --from specify-cli==1.2.2 specify init --here --force --non-interactive --in
 | Integration | Vitest + Testcontainers | `*.int.test.ts` in `test/` | Docker (PostgreSQL) |
 | Search eval | Vitest + Testcontainers | `*.search.test.ts` in `apps/api/test` | Docker (PostgreSQL) |
 | E2E / Smoke | Playwright `@smoke` | `e2e/tests/smoke/` — critical journeys | Compose stack built from the PR (CI `e2e` job), then the live API post-deploy |
-| E2E / Full | Playwright `@full` | `e2e/tests/full/` — everything else | Live API (nightly once 011 lands) |
+| E2E / Full | Playwright `@full` | `e2e/tests/full/` — everything else | Compose stack built from the PR when it carries the `e2e:full` label (`e2e-full.yml`); nightly once 011 lands |
 
 Run with `pnpm test`, `pnpm test:unit`, `pnpm test:int`, `pnpm test:search`, or `pnpm test:e2e`.
 

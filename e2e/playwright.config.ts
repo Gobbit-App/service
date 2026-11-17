@@ -5,7 +5,7 @@ const { baseURL, token } = resolveE2eEnv();
 
 /** Specs that drive the browser against the web origin (D62); the rest are API-only. */
 const WEB_SPECS =
-  /\/(web|share|editor|review|settings|lifecycle|browse|browse-rework|links|activity-log|deck-admin|import|editor-navigation|editor-inputs|shares|card-actions|waitlist-admin|mobile-fit|rich-text|app-header|paste-image)\.spec\.ts$/;
+  /\/(web|share|editor|review|settings|lifecycle|browse|browse-rework|links|activity-log|deck-admin|import|editor-navigation|editor-inputs|shares|card-actions|waitlist-admin|mobile-fit|rich-text|app-header|paste-image|about|analytics-consent|app-analytics|appearance|bottom-bar|composer|cover|deck-chrome|events|full\/landing|media-public|media|new-deck|registration-gate|reminders)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: './tests',
