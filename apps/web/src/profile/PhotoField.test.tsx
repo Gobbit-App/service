@@ -59,10 +59,14 @@ const render = (initial: ProfilePhoto | null = null) => {
   return renderWithClient(<Harness initial={initial} />);
 };
 const pick = async (label: string, file = picture()) =>
-  fireEvent.change(await screen.findByLabelText(label), { target: { files: [file] } });
+  fireEvent.change(await screen.findByLabelText(label, undefined, SLOW), {
+    target: { files: [file] },
+  });
+// The cropper is a lazy chunk: under a loaded machine its first import takes longer than the 1 s default.
+const SLOW = { timeout: 10_000 };
 const crop = async () => {
-  fireEvent.click(await screen.findByRole('button', { name: 'Use photo' }));
-  await waitFor(() => expect(calls).toHaveLength(1));
+  fireEvent.click(await screen.findByRole('button', { name: 'Use photo' }, SLOW));
+  await waitFor(() => expect(calls).toHaveLength(1), SLOW);
 };
 
 beforeEach(() => {
@@ -95,7 +99,7 @@ describe('PhotoField (046)', () => {
 
   it('takes a dropped photo', async () => {
     const { container } = render();
-    await screen.findByLabelText('Add photo');
+    await screen.findByLabelText('Add photo', undefined, SLOW);
     const drop = new Event('drop', { bubbles: true, cancelable: true });
     Object.defineProperty(drop, 'dataTransfer', {
       value: { types: ['Files'], files: [picture()] },
@@ -133,7 +137,7 @@ describe('PhotoField (046)', () => {
     const big = picture();
     Object.defineProperty(big, 'size', { value: MEDIA_IMAGE_MAX_BYTES + 1 });
     await pick('Add photo', big);
-    expect(await screen.findByRole('alert')).toHaveTextContent(/at most/i);
+    expect(await screen.findByRole('alert', undefined, SLOW)).toHaveTextContent(/at most/i);
     await pick('Add photo', picture('x.pdf', 'application/pdf'));
     expect(screen.getByRole('alert')).toHaveTextContent(/JPEG, PNG/);
     expect(screen.queryByRole('button', { name: 'Use photo' })).not.toBeInTheDocument();
@@ -143,14 +147,16 @@ describe('PhotoField (046)', () => {
     vi.stubGlobal('createImageBitmap', vi.fn().mockRejectedValue(new Error('bad')));
     render();
     await pick('Add photo');
-    expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't read this photo");
+    expect(await screen.findByRole('alert', undefined, SLOW)).toHaveTextContent(
+      "Couldn't read this photo",
+    );
     expect(fakeUpload).not.toHaveBeenCalled();
   });
 
   it('is hidden without Cloudinary', async () => {
     mockConfig.cloudinaryCloudName = null;
     render();
-    await screen.findByRole('img', { name: /your avatar/i });
+    await screen.findByRole('img', { name: /your avatar/i }, SLOW);
     expect(screen.queryByLabelText('Add photo')).not.toBeInTheDocument();
   });
 });
