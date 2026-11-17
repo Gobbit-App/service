@@ -93,6 +93,8 @@ test('search sheet: Escape closes without searching, recent searches come back @
 
 test('/ opens the search sheet on a card list @full', async ({ page, webDeck }) => {
   await page.goto(webUrl(`/d/${webDeck.slug}`));
+  // The shortcut is armed once the list (and its Search button) has rendered.
+  await expect(searchButton(page)).toBeVisible();
   await page.keyboard.press('/');
   await expect(searchBox(page)).toBeFocused();
 });

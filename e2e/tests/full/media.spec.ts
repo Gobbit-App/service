@@ -85,7 +85,9 @@ test('a failed photo stays out of the gallery until it is retried @full', async 
   await page.getByLabel('Title', { exact: true }).fill('Retry');
   await page.getByLabel('Choose photos').setInputFiles(photos(1));
   await expect(page.getByRole('button', { name: 'Retry upload' })).toBeVisible();
-  await expect(page.getByText('Add a photo')).toBeVisible();
+  // The failed upload shows its own alert, not the gallery, and Save stays blocked.
+  await expect(page.getByRole('list', { name: 'Photos', exact: true })).toHaveCount(0);
+  await expect(save(page)).toBeDisabled();
   await page.getByRole('button', { name: 'Retry upload' }).click();
   await expect(page.getByRole('button', { name: 'Remove photo' })).toBeVisible();
   await expect(save(page)).toBeEnabled();

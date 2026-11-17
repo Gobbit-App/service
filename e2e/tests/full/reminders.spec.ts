@@ -38,7 +38,7 @@ test('a reminder created in the editor shows its due line on the deck @full', as
 }) => {
   const title = `Reminder ${webDeck.slug}`;
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=reminder`));
-  await expect(page.getByRole('radio', { name: 'Reminder' })).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Card type: Reminder' })).toBeVisible();
   await page.getByLabel('Title', { exact: true }).fill(title);
   // Default deadline: tomorrow 09:00; two days' notice makes it show straight away.
   await expect(page.getByLabel('Deadline')).not.toHaveValue('');

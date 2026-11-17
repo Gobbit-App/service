@@ -161,6 +161,11 @@
   min-width: 0;
 }
 
+/* D309: the class sets display, so `hidden` (Preview on a phone) needs its own rule. */
+.composer__write[hidden] {
+  display: none;
+}
+
 .composer__preview {
   min-width: 0;
 }

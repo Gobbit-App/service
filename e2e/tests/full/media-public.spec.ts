@@ -1,6 +1,5 @@
-import { expect, test } from '../../fixtures/api';
 import { recordMediaAsset, type FakeMediaFile } from '../../fixtures/cloudinary';
-import { webUrl } from '../../fixtures/web';
+import { expect, test, webUrl } from '../../fixtures/web';
 
 /**
  * 045 US6 (T047, `@full`): a public deck shows each media kind without scripts, and share
@@ -73,10 +72,12 @@ test('public pages and share previews show every media kind @full', async ({
   expect(await page(ids.video)).toContain('<video controls playsinline preload="none"');
   expect(await page(ids.audio)).toContain('<audio controls preload="none"');
 
+  // D181: a public card's share link redirects to its public page, which carries the preview tags.
   const ogImage = async (id: string) => {
-    const res = await anon.get(webUrl(`/s/${id}`), { maxRedirects: 0 });
-    expect(res.status()).toBe(200);
-    return /property="og:image" content="([^"]+)"/.exec(await res.text())?.[1] ?? '';
+    const share = await anon.get(webUrl(`/s/${id}`), { maxRedirects: 0 });
+    expect(share.status()).toBe(302);
+    expect(share.headers().location).toContain(`/p/${smokeDeck.slug}/i/${id}`);
+    return /property="og:image" content="([^"]+)"/.exec(await page(id))?.[1] ?? '';
   };
   expect(await ogImage(ids.gallery)).toContain(`/image/upload/c_fill,w_1200,h_630,f_jpg/${cover}`);
   expect(await ogImage(ids.video)).toContain(
