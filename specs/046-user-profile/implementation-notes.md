@@ -112,6 +112,6 @@ Invite-by-username (D425) would let an owner turn a username into an address, an
 
 ## Follow-up
 
-- **E2E isolation** (per-test users, disposable stack everywhere, no pre-provisioned tokens): handed off in
-  [follow-up-e2e-isolation.md](follow-up-e2e-isolation.md). It would remove the skipped cross-member cases and the
-  `PROFILE_UPDATE_RATE_PER_HOUR` override above.
+- **E2E isolation** (per-test users, a disposable stack everywhere, no environment variables or user tokens in
+  e2e) is a separate feature, specced after this PR merges (branch `047-e2e-isolation`). It would remove the
+  skipped cross-member cases and the `PROFILE_UPDATE_RATE_PER_HOUR` override above.
