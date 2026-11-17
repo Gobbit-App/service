@@ -109,3 +109,9 @@ Invite-by-username (D425) would let an owner turn a username into an address, an
 - **Reload shows stale form**: `ProfileForm` follows a later `profile` (persisted cache first, fresh fetch after) for every untouched field.
 - **Personal deck in e2e**: the smoke bearer session never signs in and the personal deck is created at sign-in; the seed stays deck-free (D49), so the "no avatar in the personal deck" e2e check skips when `GET decks/me` is not 200. The rule is covered at the integration tier (`creator` is `null` for a personal deck, `profile.int.test.ts`) and by the web unit tests.
 - `/s/{id}` of a public card is a 302 to its public page (D181); the payload scans expect that.
+
+## Follow-up
+
+- **E2E isolation** (per-test users, disposable stack everywhere, no pre-provisioned tokens): handed off in
+  [follow-up-e2e-isolation.md](follow-up-e2e-isolation.md). It would remove the skipped cross-member cases and the
+  `PROFILE_UPDATE_RATE_PER_HOUR` override above.
