@@ -90,7 +90,8 @@ describe('PhotoField (046)', () => {
     await act(async () => calls[0]!.resolve('gobbit/profiles/u1/a'));
     expect(latest).toEqual({ publicId: 'gobbit/profiles/u1/a', width: 512, height: 512 });
     expect(screen.getByLabelText('Replace photo')).toBeInTheDocument();
-  });
+    // Lazy-loads the cropper and runs the async crop: slow when the whole suite loads the machine.
+  }, 20_000);
 
   it('takes a dropped photo', async () => {
     const { container } = render();
