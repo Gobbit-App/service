@@ -43,7 +43,7 @@ Every feature and fix decides where its end-to-end coverage lives, records it in
 | Tier | Put it here when | Runs |
 |------|------------------|------|
 | `@smoke` (`e2e/tests/smoke/`) | It is on a critical journey (sign-in, reading a deck, creating or editing a card, photo upload, search, share/ingest submit, review publish), a regression would block core use, or it crosses a deployment boundary (proxy, CSP, env/secret, third-party call) | Every PR (planned, 010) and after every deploy; ≤ 5 min |
-| `@full` (`e2e/tests/full/`) | Secondary paths, role variants, extra negatives and edge cases, async or costly third-party work, cross-browser and offline variants | Nightly (planned, 011); until then `pnpm test:e2e --grep @full` |
+| `@full` (`e2e/tests/full/`) | Secondary paths, role variants, extra negatives and edge cases, async or costly third-party work, cross-browser and offline variants | Nightly (planned, 011); until then on demand: the `e2e:full` PR label runs `e2e-full.yml`, or `pnpm test:e2e tests/full` locally |
 | none | Pure logic with no new UI or flow | Unit / integration tests only |
 
 A bug that reached production gets its regression test at the tier and in the environment that would have caught it. Smoke tests are being rewritten as real-usage journeys (magic-link sign-in through a test mailbox, real `media/sign`, real worker; only third-party hosts faked on the PR stack): see [`specs/010-e2e-journeys`](../../specs/010-e2e-journeys/plan.md). The nightly full suite is outlined in [`specs/011-e2e-nightly`](../../specs/011-e2e-nightly/plan.md).

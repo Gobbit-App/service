@@ -12,9 +12,9 @@ const left = async (locator: Locator): Promise<number> => {
   return box.x;
 };
 
-/** Left edge of the title's text (the h1 box spans the free space). */
-const titleTextLeft = (page: Page): Promise<number> =>
-  page.locator('.app-header__title').evaluate((h1) => {
+/** Left edge of the title's text (the h1 box spans the free space); deck pages (D380) title with the breadcrumb's h1. */
+const titleTextLeft = (page: Page, title = '.app-header__title'): Promise<number> =>
+  page.locator(title).evaluate((h1) => {
     const range = document.createRange();
     range.selectNodeContents(h1);
     return range.getBoundingClientRect().left;
@@ -40,8 +40,8 @@ test.describe('app header lead @full', () => {
 
     const logoLeft = await left(logo);
     expect(Math.abs(logoLeft - (await left(card)))).toBeLessThanOrEqual(TOLERANCE);
-    // Title 12 px after the 32 px tile.
-    expect((await titleTextLeft(page)) - logoLeft).toBeCloseTo(44, 0);
+    // Title one --gap (16 px since D383) after the 32 px tile.
+    expect((await titleTextLeft(page)) - logoLeft).toBeCloseTo(48, 0);
   });
 
   test('Back sits on the content edge, close to the title, with a full hit area', async ({
@@ -55,15 +55,19 @@ test.describe('app header lead @full', () => {
 
     const chevron = back.locator('svg path');
     const tip = await left(chevron);
-    expect(Math.abs(tip - 16)).toBeLessThanOrEqual(TOLERANCE);
+    // The phone gutter (20 px since D383).
+    expect(Math.abs(tip - 20)).toBeLessThanOrEqual(TOLERANCE);
     const chevronBox = await chevron.boundingBox();
-    const gap = (await titleTextLeft(page)) - ((chevronBox?.x ?? 0) + (chevronBox?.width ?? 0));
+    const gap =
+      (await titleTextLeft(page, '.deck-crumbs__title')) -
+      ((chevronBox?.x ?? 0) + (chevronBox?.width ?? 0));
     expect(gap).toBeGreaterThanOrEqual(8);
     expect(gap).toBeLessThanOrEqual(16);
 
-    // The 44 px hit area reaches past the visible box, so a tap at the screen edge goes Back.
+    // The 44 px hit area reaches 6 px past the visible box (the gutter is 20 px since D383, so its
+    // outer edge sits at x = 2), so a tap just inside that edge goes Back.
     const box = await back.boundingBox();
-    await page.mouse.click(1, (box?.y ?? 0) + (box?.height ?? 0) / 2);
+    await page.mouse.click((box?.x ?? 0) - 5, (box?.y ?? 0) + (box?.height ?? 0) / 2);
     await expect(page).not.toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   });
 });

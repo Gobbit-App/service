@@ -1,0 +1,75 @@
+name: E2E full
+
+# On demand until specs/011-e2e-nightly adds the nightly run: add the `e2e:full` label to a PR to
+# run e2e/tests/full against a Compose stack built from its head; later pushes re-run it while the
+# label stays. Labels need triage rights, so outside contributors can't trigger it.
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-full-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full:
+    # A `labeled` event counts only for this label, so adding any other label doesn't re-run it.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.action == 'labeled' && github.event.label.name == 'e2e:full') ||
+      (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'e2e:full'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Same stack, dummy credentials and steps as the `e2e` job in ci.yml; keep them in sync.
+    env:
+      COMPOSE: docker compose -p gobbit-e2e -f infra/docker-compose.yml -f infra/docker-compose.local.yml
+      CLOUDINARY_URL: cloudinary://e2e-key:e2e-secret@e2e-cloud
+      CLOUDINARY_API_SECRET: e2e-secret
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Start the stack
+        run: |
+          docker network create dokploy-network
+          $COMPOSE up -d --build --wait --wait-timeout 300
+
+      - name: Seed the owner and smoke session
+        env:
+          DATABASE_URL: postgres://gobbit:gobbit@localhost:5432/gobbit
+          SEED_OWNER_EMAIL: owner@example.test
+        run: |
+          token=$(openssl rand -hex 32)
+          echo "::add-mask::$token"
+          echo "SMOKE_SESSION_TOKEN=$token" >> "$GITHUB_ENV"
+          SMOKE_SESSION_TOKEN="$token" pnpm db:seed
+
+      - run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      # By folder, not --grep @full: not every spec under tests/full carries the tag.
+      - run: pnpm --filter e2e exec playwright test tests/full --trace retain-on-failure
+        env:
+          BASE_URL: http://localhost:8080/api
+          CI: 'true'
+
+      - name: Collect stack logs
+        if: failure()
+        run: $COMPOSE logs --no-color api worker web > e2e/stack.log 2>&1
+
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-full-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+            e2e/stack.log

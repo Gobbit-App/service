@@ -31,6 +31,10 @@ test('Add to calendar saves the event as <title>.ics, offline too @full', async 
   expect(res.status(), 'create event').toBe(201);
   const { id } = (await res.json()) as { id: string };
 
+  // First visit installs the service worker; a second load is controlled by it, so the lazy .ics
+  // chunk comes from the precache offline.
+  await page.goto(webUrl(`/i/${id}`));
+  await page.evaluate(() => navigator.serviceWorker?.ready);
   await page.goto(webUrl(`/i/${id}`));
   await expect(page.getByText('Town hall, room 2')).toBeVisible();
   await context.setOffline(true);
@@ -138,7 +142,9 @@ test('an event proposal is edited fully from review, keeps its notify time and p
   await page.goto(webUrl(`/d/${webDeck.slug}/review`));
   const card = page.getByRole('article', { name: title });
   await expect(card).toContainText('Town hall');
-  await card.getByRole('link', { name: 'Edit fully' }).click();
+  // D213: "Edit fully" lives in the card's "More actions" menu.
+  await card.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Edit fully' }).click();
   await expect(page).toHaveURL(new RegExp(`/i/${id}/edit\\?from=review$`));
 
   await page.getByText('Notifications', { exact: true }).click();

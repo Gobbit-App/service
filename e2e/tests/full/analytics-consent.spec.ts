@@ -185,7 +185,7 @@ test('Do Not Track does not switch analytics off for a member who allowed it @fu
 test('the prompt never covers the card editor @full', async ({ page, webDeck }) => {
   const tracker = await stubTracker(page);
   await stubMember(page);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new`));
+  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
   await expect(page.getByLabel('Title', { exact: true })).toBeVisible();
   await expect(page.getByRole('dialog', { name: QUESTION })).toHaveCount(0);
   expect(tracker.loads).toBe(0);

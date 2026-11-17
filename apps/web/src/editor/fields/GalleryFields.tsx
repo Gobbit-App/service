@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
 import { MEDIA_GALLERY_MAX } from '@gobbit/shared/media-constants';
 import type { MediaAsset } from '@gobbit/shared';
 import { ImageCard } from '../../cards/ImageCard';
@@ -71,9 +71,11 @@ export function GalleryFields({
   const [notice, setNotice] = useState<string | null>(null);
   const photos = uploadedPhotos(payload);
 
-  // Uploads finish one by one; each adds to the gallery as it is by then.
+  // Uploads finish one by one; each adds to the gallery as it is by then. Synced at commit
+  // (layout effect): a passive effect could run after another upload had already moved the ref
+  // on, putting back an older gallery and dropping that photo.
   const latest = useRef<MediaPayload>(payload);
-  useEffect(() => {
+  useLayoutEffect(() => {
     latest.current = payload;
   }, [payload]);
   const uploads = useGalleryUploads({
