@@ -1076,17 +1076,8 @@ h2 {
   margin-inline-start: auto;
 }
 
-/*
- * The relative age ("Added 9 seconds ago") is the only footer part whose width changes over time, so it
- * takes all the shrinking (ellipsis, one line) and the chips keep a negligible share: a longer age text
- * must never wrap the chips and make the card taller.
- */
 .card__meta .card__age {
-  flex: 0 100000 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: none;
 }
 
 .card__meta .card__chips {

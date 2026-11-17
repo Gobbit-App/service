@@ -24,15 +24,19 @@ shared-deck cards: compare a card with many chips at 412 px against `main`.
 
 ## Full e2e stability (CI, 2026-11-17)
 
-- **Photo spec fell back to initials after the first deck visit**: the PWA service worker answers Cloudinary
-  images itself, past Playwright's `page.route`, so the fake delivery stopped serving once the worker took over
-  (the trace showed `_serviceWorkerRef` requests getting a real 404 from Cloudinary, and `Avatar` correctly fell
-  back to initials). The photo describe now sets `serviceWorkers: 'block'`, as `cover.spec.ts` does; the
-  offline test in the same file keeps the worker.
-- **Cover spec flaked at 360 px (2 of 2 runs on this branch, none before)**: the new 24 px avatar made the
-  `.card__meta` row tight, so a one-character longer relative age ("Added 9 seconds ago" to "10 seconds ago") made
-  every card's chips wrap at once and shifted the cards below by about 150 px. The age label now takes all the
-  shrinking (`flex-shrink` ratio, ellipsis, one line) so the footer height no longer depends on its text.
+- **Photo spec, two causes**: (1) the PWA service worker answers Cloudinary images itself, past Playwright's
+  `page.route`, so the fake delivery stopped serving once the worker took over (the trace showed
+  `_serviceWorkerRef` requests getting a real 404 from Cloudinary, and `Avatar` correctly fell back to
+  initials); the photo describe now sets `serviceWorkers: 'block'`, as `cover.spec.ts` does, and the offline test
+  keeps the worker. (2) a real CSS bug: `.cloud-image { position: relative }` (later in the file) overrode
+  `.avatar__photo { position: absolute }`, so the photo wrapper collapsed (`sizes="1px"` in the failing locator);
+  the rule is now `.avatar .avatar__photo`.
+- **Tooltip spec flake**: the list first renders from the persisted cache and then re-renders on the fresh fetch;
+  the test now waits for the network to settle before the click sequence.
+- **Cover spec** (`at 360px a covered card keeps its box…`): it raced the calc card's lazily loaded result block
+  (about 150 px) between its two measurements, unrelated to images or to this feature's code. It now waits for the
+  calc result before measuring. (An earlier guess that the relative age text made the footer wrap was wrong
+  and its CSS change was reverted.)
 
 ## Decisions
 

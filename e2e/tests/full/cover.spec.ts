@@ -365,23 +365,14 @@ test('at 360px a covered card keeps its box while the image loads @full', async 
   const plainCard = page.getByRole('article').filter({ hasText: plain });
   const cover = coveredCard.locator('.card__cover');
   await expect(cover).toBeAttached();
+  // The calc card above the plain one shows its result block (about 150 px) only once the lazily loaded
+  // calc code arrives. Wait for it, or that growth lands between the two measurements and moves the plain card.
+  await expect(page.getByText('Total grams')).toBeVisible();
   const before = { covered: await coveredCard.boundingBox(), plain: await plainCard.boundingBox() };
   expect(before.covered).not.toBeNull();
 
-  // TEMP (046 diagnosis): heights of every card before and after the image arrives.
-  const heights = () =>
-    page
-      .getByRole('article')
-      .evaluateAll((els) =>
-        els.map(
-          (el) => `${el.querySelector('h2')?.textContent}:${el.getBoundingClientRect().height}`,
-        ),
-      );
-  const heightsBefore = await heights();
   release();
   await loaded(cover);
-  console.log('CARDS BEFORE', JSON.stringify(heightsBefore));
-  console.log('CARDS AFTER', JSON.stringify(await heights()));
   expect(await coveredCard.boundingBox()).toEqual(before.covered);
   expect(await plainCard.boundingBox()).toEqual(before.plain);
 });
