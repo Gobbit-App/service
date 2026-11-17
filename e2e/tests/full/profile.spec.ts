@@ -394,6 +394,8 @@ test.describe('creator avatar @full', () => {
 
     // keyboard focus opens it without any click
     await page.locator('body').click({ position: { x: 1, y: 1 } });
+    // `:focus-visible` follows the last input: after a click a script focus() does not match, after a key it does.
+    await page.keyboard.press('Shift');
     await avatar.focus();
     await expect.poll(() => tipShown(avatar)).toBe(true);
   });
@@ -530,7 +532,8 @@ async function pickAndCrop(page: Page, label: 'Add photo' | 'Replace photo') {
   await expect(sheet).toBeHidden();
 }
 
-const photoOn = (page: Page, title: string) => card(page, title).locator('.avatar img');
+const photoOn = (page: Page, title: string) =>
+  card(page, title).locator('.avatar img.cloud-image__img');
 
 test.describe('profile photo @full', () => {
   // Saving a photo needs the API to find the recorded asset: the UI flow only records it through the
