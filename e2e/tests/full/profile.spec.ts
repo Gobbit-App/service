@@ -376,6 +376,9 @@ test.describe('creator avatar @full', () => {
     await page.goto(webUrl(`/d/${webDeck.slug}`));
     const avatar = page.locator('article.card .avatar').first();
     await expect(avatar).toHaveAttribute('data-tip', `lab${tag}`);
+    // The persisted list shows first and the fresh fetch re-renders it: let that settle so the clicks
+    // below always land on the element that keeps its open state.
+    await page.waitForLoadState('networkidle');
 
     await avatar.click();
     await expect(avatar).toHaveAttribute('data-tip-open', '');

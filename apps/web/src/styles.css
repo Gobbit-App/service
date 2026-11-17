@@ -594,7 +594,8 @@ h2 {
   height: 60%;
 }
 
-.avatar__photo {
+/* `.avatar` in the selector: `.cloud-image` (later in this file) sets `position: relative` at the same weight. */
+.avatar .avatar__photo {
   position: absolute;
   inset: 0;
   overflow: hidden;
