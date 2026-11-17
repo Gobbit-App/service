@@ -38,6 +38,12 @@ shared-deck cards: compare a card with many chips at 412 px against `main`.
   calc result before measuring. (An earlier guess that the relative age text made the footer wrap was wrong
   and its CSS change was reverted.)
 
+- **Profile update limit vs e2e**: the T077 limit (`PROFILE_UPDATE_RATE_PER_HOUR`, default 30) refused the full tier's
+  profile saves with 429 (one shared owner account saves its profile in many specs). `infra/docker-compose.local.yml`
+  (used by the local and both e2e stacks, never deployed) now defaults the API to 1000; the lookup limit keeps its
+  default because a spec drives it to a 429 on purpose. Setting it in the workflow files was not possible from this
+  environment (the push token has no `workflow` scope).
+
 ## Decisions
 
 - **Hold trigger error (D418)**: the trigger raises `P0001` with the message `username_held`, matching the other

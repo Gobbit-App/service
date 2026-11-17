@@ -42,6 +42,9 @@ services:
       ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-true}
       MAIL_FROM: ${MAIL_FROM:-}
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
+      # Local and e2e stacks share one owner account that saves its profile in many specs, so the
+      # production default of 30 an hour would refuse them (the lookup limit keeps its default).
+      PROFILE_UPDATE_RATE_PER_HOUR: ${PROFILE_UPDATE_RATE_PER_HOUR:-1000}
 
   worker:
     image: gobbit-api:local
