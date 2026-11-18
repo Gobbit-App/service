@@ -67,7 +67,7 @@ specs/           — spec-kit features `NNN-name/` (spec, plan, tasks); README.m
 - **Numbering**: sequential from `006` (Phases 0–5 are recorded in `specs/005-phases-0-5`); a phase may span several features; `PLAN.md` stays the roadmap and links each feature
 - **Decisions**: `research.md` continues the `D` series (next free number across `docs/` and `specs/*/research.md`; reservations are listed in `specs/README.md`, add yours there); durable ones become the next ADR in `docs/adr.md` plus a one-line row in the `docs/architecture.md` index
 - **E2E tier**: decide it in `/speckit-plan` (Technical Context "E2E tier" line) and tag tasks `[e2e:smoke]` / `[e2e:full]`; small fixes state it in the PR template
-- **Implementing**: log decisions the plan didn't make and deviations in `specs/NNN-*/implementation-notes.md` (committed with the feature); at close-out copy deviations into the "Deviations" list of the matching `docs/design/<area>.md`
+- **Implementing**: log decisions the plan didn't make and deviations in `specs/NNN-*/implementation-notes.md` (committed with the feature); at close-out copy deviations into the "Deviations" list of the matching `docs/design/<area>.md`; work from `community-go-list.md` also updates its Tracking section (start, tick on merge, deviations and additions in the progress log)
 - **Public repo**: specs are committed and public — no personal data, private notes, costs or secrets (ADR-023, ADR-049). Private scratch still goes in gitignored `plans/`
 - **spec-kit version**: pinned 1.2.2 (`uvx --from specify-cli==1.2.2 specify …`); upgrade deliberately and review the diff
 

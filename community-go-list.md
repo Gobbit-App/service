@@ -4,6 +4,24 @@ Everything needed to launch the first communal deck: a public, Hebrew-first know
 
 Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`; Track I target decided Nov 16; monitoring (Track K) and early wins (Track L) added Nov 16; launch order by importance, alpha first, decided Nov 16 (see Order). This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
 
+## Tracking
+
+This file is the launch tracker. Keep it current as work lands:
+
+- **Starts**: when an item is specified or picked up, add `→ <spec or PR>` to the track's intro line or the item.
+- **Done**: tick `[x]` an item only when its PR is merged and its Verify step has passed, and add the PR, e.g. `- [x] **A1. …** (049, #170)`.
+- **Deviations**: when the built thing differs from the item (a different choice, a dropped part, a moved item), add a row to the log below and link the spec's `implementation-notes.md`. Edit the item text only to point at the row; keep the original wording.
+- **Additions**: work the list did not foresee (a new gap, a new item, a finding that makes an item stale) gets a log row and, if it is work, a new item in the matching track with the next free number.
+
+### Progress log
+
+| Date | Item | Kind | What | Where |
+|---|---|---|---|---|
+| 2026-11-18 | A1–A6, A8–A11 | start | Track A specified as one feature, `049-import-v2`; A7 stays a separate small fix ahead of it. A5 and A8 open for `/speckit-clarify`. | [`specs/049-import-v2`](specs/049-import-v2/spec.md), #169 |
+| 2026-11-18 | A1 | deviation | A note that uses `##` as a group heading now imports as one card, not one card per list item (the `##` trigger changes 021 behaviour); such notes use `#` for groups. | `049` spec, Edge Cases |
+| 2026-11-18 | A2 | deviation | Reading to confirm in clarify: `cover` sets a cover on any card, `image` names the file of a media card (`type: media`). The parser recognises both everywhere; only the CLI acts on them. | `049` spec, FR-004, Assumptions |
+| 2026-11-18 | H6 | addition | Stale: `046-user-profile` has merged (usernames, exact-match member lookup), so "an amendment to 046" no longer applies. Re-read H6 against main; likely its own small spec. | Stage 3 item 5 |
+
 ## Goal and definition of done
 
 - A communal deck is live at `/p/<slug>`, indexable, with public categories.
@@ -66,7 +84,7 @@ Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and regist
 
 ## Track A — Import v2 (blocks seeding)
 
-One spec-kit feature, next free number (`046` is the user profile spec). Split into small PRs per stream. E2E tier: smoke for the import journey (it exists for 021; extend it), full for the edge cases.
+One spec-kit feature → [`049-import-v2`](specs/049-import-v2/spec.md) (#169; A1–A6, A8–A11). Split into small PRs per stream. E2E tier: smoke for the import journey (it exists for 021; extend it), full for the edge cases.
 
 - [ ] **A1. Card-per-section Markdown.** `# Heading` sets the category; `## Heading` starts a card and is its title; everything up to the next heading is the body, kept as rich text (line breaks, bold, lists, links). The 021 behaviour stays for files without `##` headings. Verify: a fixture with a three-paragraph Hebrew card imports as one card with the same body.
 - [ ] **A2. Per-card fields.** A small set of `key: value` lines directly under the card heading: `source` (URL), `categories` (extra names or slugs), `image` or `cover` (relative path), `type` (text, link, media). Unknown keys are a row error, not silently dropped. Verify: parser unit tests per key.
