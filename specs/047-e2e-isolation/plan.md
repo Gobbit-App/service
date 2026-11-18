@@ -226,8 +226,8 @@ it). No runbook change.
 
 ## Settle before starting
 
-- [ ] Confirm the constitution V amendment (D442) and the one-sentence wording in research D442 — the
-      handoff asks for an owner decision; proceeding assumes yes.
+- [x] Confirm the constitution V amendment (D442) and the one-sentence wording in research D442 — owner
+      confirmed 2026-11-18; applied by the amendment task in tasks.md (constitution 1.6.0).
 - [ ] A token with `workflow` scope for the workflow edits (steps 2, 5, 6).
 - [ ] Docker Compose ≥ 2.24 on developer machines (for `!reset`); runners have it.
 
