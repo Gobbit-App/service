@@ -142,7 +142,7 @@ The existing smoke and full specs, starting with the 046 profile specs, run on t
 - **FR-009**: A fixture MUST provide, for a given deck and role, a fresh member who was invited by email, accepted the invite, and is signed in in an isolated browser context.
 - **FR-010**: Tests MUST read only the messages addressed to their own users.
 - **FR-011**: The e2e stack MUST NOT run the development seed; each test creates its own owner and data.
-- **FR-012**: The stack's configuration for e2e (open registration, a readable mailbox, sign-in and invite limits with headroom) MUST be checked in, and MUST NOT require raising any per-feature limit solely for e2e.
+- **FR-012**: The stack's configuration for e2e (open registration, a readable mailbox, sign-in and invite limits with headroom) MUST be checked in. Per-user and per-address limits keep their production values (no per-feature limit is raised for e2e); only the per-client-address sign-in limits are raised, because every test in a run comes from one address.
 - **FR-013**: The dummy secret that the stack and the tests share for faked third-party uploads MUST be one constant in checked-in code imported by both sides, not a variable.
 - **FR-014**: Retries, parallelism and reporting MUST be set by explicit configuration or command-line flags from the stack runner, not from environment variables.
 - **FR-015**: Specs that previously skipped because member credentials were not provisioned MUST run and assert; the suite MUST report no skips for provisioning reasons.
