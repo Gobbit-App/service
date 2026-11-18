@@ -1,0 +1,48 @@
+# E2E overlay (specs/047-e2e-isolation/contracts/compose-overlay.md): layered after
+# docker-compose.yml and docker-compose.local.yml by the e2e runner only. ${...} values come from
+# the runner's generated e2e/.stack/compose.env. Open sign-up, a Mailpit mailbox, no fixed host
+# ports except web and the mailbox. Deliberately unset: AI keys, ANALYTICS_SITE_ID, VAPID keys,
+# INGEST_EMAIL_DOMAIN, PROFILE_UPDATE_RATE_PER_HOUR.
+x-e2e-mail: &e2e-mail
+  REGISTRATION_MODE: open
+  MAIL_PROVIDER: smtp
+  SMTP_URL: smtp://mailpit:1025
+  MAIL_FROM: Gobbit E2E <e2e@example.test>
+  ALLOW_CONSOLE_MAIL: 'false'
+
+services:
+  db:
+    ports: !reset []
+
+  api:
+    ports: !reset []
+    environment:
+      <<: *e2e-mail
+      API_URL: ${API_URL}
+      APP_URL: ${APP_URL}
+      CLOUDINARY_URL: ${CLOUDINARY_URL}
+      PLATFORM_ADMINS: ${PLATFORM_ADMINS}
+      LOG_HASH_KEY: ${LOG_HASH_KEY}
+      MAGIC_LINK_PER_IP_PER_HOUR: 100000
+      CALLBACK_PER_IP_PER_HOUR: 100000
+    depends_on:
+      mailpit:
+        condition: service_healthy
+
+  worker:
+    environment:
+      <<: *e2e-mail
+
+  web:
+    ports: !override
+      - 127.0.0.1:${WEB_PORT}:80
+    networks: !override [default]
+
+  mailpit:
+    # Pinned like umami; upgrade deliberately (v1.34.0 was the latest release when added).
+    image: axllent/mailpit:v1.34.0
+    ports:
+      - 127.0.0.1:${MAILBOX_PORT}:8025
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s

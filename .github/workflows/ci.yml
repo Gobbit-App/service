@@ -200,6 +200,39 @@ jobs:
             e2e/test-results
             e2e/stack.log
 
+  # Self-contained e2e (047): the runner builds and starts its own stack; no seed, token or env.
+  # Runs next to `e2e` until that job is removed.
+  e2e-isolated:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      - run: pnpm test:e2e --grep @smoke --retries=1
+
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-isolated-report
+          if-no-files-found: ignore
+          path: |
+            e2e/.stack/stack.log
+            e2e/playwright-report
+            e2e/test-results
+
   image:
     # Main deploys only what passed both the test suites and the e2e smoke run.
     needs: [test, e2e]

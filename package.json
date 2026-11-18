@@ -26,7 +26,7 @@
     "links:snapshot-backfill": "pnpm --filter @gobbit/api links:snapshot-backfill",
     "import:notes": "tsx --env-file-if-exists=.env apps/api/scripts/import-notes.ts",
     "test:coverage": "vitest run --coverage --project unit --project web --project integration",
-    "test:e2e": "pnpm --filter e2e test",
+    "test:e2e": "tsx e2e/run.ts",
     "db:generate": "pnpm --filter @gobbit/db db:generate",
     "db:migrate": "pnpm --filter @gobbit/db db:migrate",
     "db:rollback": "pnpm --filter @gobbit/db db:rollback",
