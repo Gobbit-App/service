@@ -10,6 +10,12 @@
 
 **E2E tier**: none — this is test infrastructure. It changes how the `@smoke` and `@full` tiers run (constitution V) but adds no product behaviour.
 
+## Clarifications
+
+### Session 2026-11-18
+
+- Q: After a deploy, should the safety net be a no-identity probe, or should we keep one signed-in smoke test against the live site? → A: No-identity probe only (option A); no signed-in post-deploy test, so requirement 2 needs no exception.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - One command runs e2e on a throwaway stack (Priority: P1)
@@ -82,7 +88,7 @@ A reviewer can confirm by inspection that nothing under `e2e/` reads the process
 
 After each deploy, a small separate check, given one address on the command line, confirms the instance is healthy, reports the expected commit, serves its public landing page, and refuses anonymous access to private data. It creates no users and writes no data, and it is not part of the e2e suite. Real journeys are proven on the disposable stack before deploy.
 
-**Why this priority**: Replacing the authenticated post-deploy smoke keeps a deploy safety net without breaking the "no environment, no tokens" rule. It depends on the owner confirming the decision (see Assumptions).
+**Why this priority**: Replacing the authenticated post-deploy smoke keeps a deploy safety net without breaking the "no environment, no tokens" rule (owner decision recorded in Clarifications).
 
 **Independent Test**: Run the check against a running stack with the right commit: it passes; against one reporting a different commit or an unhealthy one: it fails with a clear reason.
 
@@ -170,7 +176,7 @@ The existing smoke and full specs, starting with the 046 profile specs, run on t
 
 ## Assumptions
 
-- **Post-deploy** (owner decision pending, confirm in `/speckit-clarify`): the authenticated smoke against the deployed instance is replaced by the no-identity check in User Story 5 (recommended in the handoff). The alternative, keeping one authenticated exception and amending the requirement, is out of scope unless the owner chooses it.
+- **Post-deploy** (decided in clarification, 2026-11-18): the authenticated smoke against the deployed instance is replaced by the no-identity check in User Story 5. No signed-in check runs against a deployed instance, and the no-credential rule has no exception.
 - **Mailbox** (technical choice, decided in `/speckit-plan`): any approach is acceptable if the product's real sign-in and invite emails are what the tests read and nothing inside Gobbit is faked; the plan weighs a test-readable mailer against a separate mailbox container.
 - **Constitution**: the self-contained rule is added to constitution V as a versioned amendment, subject to owner confirmation.
 - A container runtime is the only prerequisite for running e2e; the authoring sandbox has none, so verification of the stack happens in CI in small steps.

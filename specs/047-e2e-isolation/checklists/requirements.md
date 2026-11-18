@@ -31,4 +31,4 @@
 
 ## Notes
 
-- Three owner decisions from the handoff (post-deploy check, mailbox, constitution V amendment) are carried as Assumptions; confirm in `/speckit-clarify`.
+- Post-deploy check decided in clarification (no-identity probe only). Mailbox is a plan-level choice; the constitution V amendment stays an Assumption to confirm in `/speckit-plan`.
