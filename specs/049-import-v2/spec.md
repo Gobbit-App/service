@@ -8,7 +8,7 @@
 
 **Input**: User description: "Import v2: seed a communal, Hebrew-first deck from curated Markdown files (one per category) through bulk import, so every card arrives as a proposal with its categories set and a curator reviews it. Card-per-section Markdown, per-card fields, several categories per card, Hebrew category names, strict category mode, a tunable import cap, dry-run lint, bulk discard by import label, and media from the command line."
 
-Roadmap: the first communal deck launch, stage 3 (alpha), "usable information" — `PLAN.md`, and the launch checklist's Import v2 track. Builds on [`021-bulk-import`](../021-bulk-import/spec.md) (parser shared by the app and the command line, direct proposals on the `import` channel, review filter per import label, bulk publish), [`020-item-events`](../020-item-events/spec.md) (activity log), [`038-rich-text-body`](../038-rich-text-body/spec.md) (card bodies are rich text) and [`045-media-cards`](../045-media-cards/spec.md) (media cards and cover images).
+Roadmap: the first communal deck launch, stage 3 (alpha), "usable information" — [`community-go-list.md`](../../community-go-list.md) Track A (A1–A6, A8–A11). Builds on [`021-bulk-import`](../021-bulk-import/spec.md) (parser shared by the app and the command line, direct proposals on the `import` channel, review filter per import label, bulk publish), [`020-item-events`](../020-item-events/spec.md) (activity log), [`038-rich-text-body`](../038-rich-text-body/spec.md) (card bodies are rich text) and [`045-media-cards`](../045-media-cards/spec.md) (media cards and cover images).
 
 ## Background
 
@@ -143,6 +143,7 @@ The curator keeps images in `media/health/` next to the file. Under a card headi
 
 ### Edge Cases
 
+- **Change from 021**: a note that uses `##` as a group heading (for example `## Plumbers` over ten list items) imports today as ten cards in a "Plumbers" category; under this spec it becomes one card titled "Plumbers" with the list as its body. Such notes must use `#` for groups. The preview makes the result visible before anything is imported.
 - `#` headings at deeper levels (`###` and below) inside a section are body text in card-per-section files; only `#` sets the category and `##` starts a card.
 - A `#` heading with no `##` sections under it creates nothing.
 - The same card title twice in one file is flagged as a possible duplicate in review, as repeats are today.
@@ -164,7 +165,7 @@ The curator keeps images in `media/health/` next to the file. Under a card headi
 - **FR-001**: A Markdown file containing at least one `##` heading MUST be parsed card-per-section: `#` sets the current category, each `##` starts a card titled by the heading, and the text up to the next `#` or `##` heading is the card body.
 - **FR-002**: A card-per-section body MUST keep its rich-text formatting (paragraphs, single line breaks, lists, emphasis, links, quotes) as a card body written in the editor would, within the existing card limits.
 - **FR-003**: A Markdown file with no `##` headings, and plain-text and CSV input, MUST parse exactly as in 021.
-- **FR-004**: The parser MUST accept these per-card fields as `key: value` lines directly under a card heading, before the body: `source` (web address), `categories` (comma-separated names or addresses), `type` (`text`, `link`, `media`), and in the command-line tool `cover` and `image` (relative file paths). Any other key, an empty or malformed value, or a repeated key MUST make the row an error naming the key and line.
+- **FR-004**: The parser MUST accept these per-card fields as `key: value` lines directly under a card heading, before the body: `source` (web address), `categories` (comma-separated names or addresses), `type` (`text`, `link`, `media`), `cover` and `image` (relative file paths). The shared parser recognises every key in the app and the command line alike; only the command-line tool acts on `cover` and `image` (FR-013, FR-014). Any other key, an empty or malformed value, or a repeated key MUST make the row an error naming the key and line.
 - **FR-005**: A card MUST be able to carry several categories: its `#` category plus those in `categories`, without repeats. The preview, the dry run and the proposal MUST show all of them.
 - **FR-006**: The app and the command-line tool MUST keep using one shared parser, so the same file gives the same rows in both.
 
@@ -229,7 +230,8 @@ Decisions about a person's content this feature makes, each recorded (constituti
 
 - **Dependency**: bulk publish continuing past a card that cannot be published (reporting it as skipped with its reason) ships first as a separate small fix; this spec relies on it for reviewing seeds.
 - Seed files are written by hand by curators and live outside this repository; fixtures here use made-up content only.
-- Card-per-section is triggered by the presence of a `##` heading; no switch is needed.
+- Card-per-section is triggered by the presence of a `##` heading; no switch is needed (the launch checklist chose this trigger; see the 021 change in Edge Cases).
+- `cover` sets a cover image on any card; `image` names the file of a media card (`type: media`: an image, PDF, audio or video file). This reading of the checklist's "`image` or `cover`" is to be confirmed in clarify.
 - The `#` heading names a category in the current file; files are expected to hold one category each, but several `#` headings in one file are allowed.
 - In the app's import screen, strict mode is an option (off by default) rather than a separate screen.
 - Only `text`, `link` and `media` cards (plus a cover on any of them) are importable; table, calc, reminder and event cards are out of scope.
