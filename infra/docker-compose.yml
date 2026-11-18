@@ -32,6 +32,9 @@ x-api-env: &api-env
   CORS_ORIGINS: ${CORS_ORIGINS:-}
   # With console the API refuses to boot in production unless ALLOW_CONSOLE_MAIL=true.
   MAIL_PROVIDER: ${MAIL_PROVIDER:-resend}
+  SMTP_URL: ${SMTP_URL:-}
+  MAGIC_LINK_PER_IP_PER_HOUR: ${MAGIC_LINK_PER_IP_PER_HOUR:-20}
+  CALLBACK_PER_IP_PER_HOUR: ${CALLBACK_PER_IP_PER_HOUR:-30}
   ALLOW_CONSOLE_MAIL: ${ALLOW_CONSOLE_MAIL:-false}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
   MAIL_FROM: ${MAIL_FROM:-Gobbit <hello@gobbit.niranhome.win>}

@@ -23,15 +23,15 @@ description: "Task list for 047 self-contained e2e"
 
 **Purpose**: the two small product changes the stack needs. Defaults unchanged, so deploy order is free.
 
-- [ ] T001 Rename `RATE_MAGIC_LINK_PER_IP` / `RATE_CALLBACK_PER_IP` to `*_DEFAULT` (20 and 30 per hour, values unchanged) in packages/shared/src/limits.ts and update every importer (`grep -rn "RATE_MAGIC_LINK_PER_IP\|RATE_CALLBACK_PER_IP" apps packages`)
-- [ ] T002 Add optional env `MAGIC_LINK_PER_IP_PER_HOUR` and `CALLBACK_PER_IP_PER_HOUR` (positive int, defaults from T001) and `MAIL_PROVIDER=smtp` with `SMTP_URL` (required when `smtp`, otherwise ignored) in apps/api/src/env.ts
-- [ ] T003 Read the two per-IP limits from env in apps/api/src/services/auth.service.ts (per-email limit stays 5/hour; per-user limits untouched)
-- [ ] T004 [P] [unit] Env parsing: defaults, overrides, `smtp` requires `SMTP_URL` in apps/api/src/env.test.ts
-- [ ] T005 [P] [unit] Per-IP limit is read from env (small value trips 429, default unchanged) in apps/api/src/services/auth.service.test.ts
-- [ ] T006 Add dependency `nodemailer` (+ `@types/nodemailer`) to apps/api/package.json (justified in research D433)
-- [ ] T007 Implement SMTP mailer sending the existing `signInEmail`/invite templates in apps/api/src/mail/smtp-mailer.ts and wire `MAIL_PROVIDER=smtp` in apps/api/src/mail/create-mailer.ts (the worker builds its mailer from the same env)
-- [ ] T008 [P] [unit] SMTP mailer delivers to an in-process fake SMTP server, and `create-mailer` selects it in apps/api/src/mail/smtp-mailer.test.ts
-- [ ] T009 [P] Add `MAIL_PROVIDER`, `SMTP_URL`, `MAGIC_LINK_PER_IP_PER_HOUR`, `CALLBACK_PER_IP_PER_HOUR` to `x-api-env` in infra/docker-compose.yml, the README env table, and a CHANGELOG.md entry (none is a deploy blocker)
+- [X] T001 Rename `RATE_MAGIC_LINK_PER_IP` / `RATE_CALLBACK_PER_IP` to `*_DEFAULT` (20 and 30 per hour, values unchanged) in packages/shared/src/limits.ts and update every importer (`grep -rn "RATE_MAGIC_LINK_PER_IP\|RATE_CALLBACK_PER_IP" apps packages`)
+- [X] T002 Add optional env `MAGIC_LINK_PER_IP_PER_HOUR` and `CALLBACK_PER_IP_PER_HOUR` (positive int, defaults from T001) and `MAIL_PROVIDER=smtp` with `SMTP_URL` (required when `smtp`, otherwise ignored) in apps/api/src/env.ts
+- [X] T003 Read the two per-IP limits from env in apps/api/src/services/auth.service.ts (per-email limit stays 5/hour; per-user limits untouched)
+- [X] T004 [P] [unit] Env parsing: defaults, overrides, `smtp` requires `SMTP_URL` in apps/api/src/env.test.ts
+- [X] T005 [P] [unit] Per-IP limit is read from env (small value trips 429, default unchanged) in apps/api/src/services/auth.service.test.ts
+- [X] T006 Add dependency `nodemailer` (+ `@types/nodemailer`) to apps/api/package.json (justified in research D433)
+- [X] T007 Implement SMTP mailer sending the existing `signInEmail`/invite templates in apps/api/src/mail/smtp-mailer.ts and wire `MAIL_PROVIDER=smtp` in apps/api/src/mail/create-mailer.ts (the worker builds its mailer from the same env)
+- [X] T008 [P] [unit] SMTP mailer delivers to an in-process fake SMTP server, and `create-mailer` selects it in apps/api/src/mail/smtp-mailer.test.ts
+- [X] T009 [P] Add `MAIL_PROVIDER`, `SMTP_URL`, `MAGIC_LINK_PER_IP_PER_HOUR`, `CALLBACK_PER_IP_PER_HOUR` to `x-api-env` in infra/docker-compose.yml, the README env table, and a CHANGELOG.md entry (none is a deploy blocker)
 
 **Checkpoint**: `pnpm typecheck` and `pnpm test:unit` pass; production behaviour unchanged.
 

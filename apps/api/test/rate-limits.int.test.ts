@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  RATE_CALLBACK_PER_IP,
+  RATE_CALLBACK_PER_IP_DEFAULT,
   RATE_MAGIC_LINK_PER_EMAIL,
-  RATE_MAGIC_LINK_PER_IP,
+  RATE_MAGIC_LINK_PER_IP_DEFAULT,
 } from '@gobbit/shared';
 import { createRateLimitsRepo } from '../src/repositories/rate-limits.repo';
 import { createRateLimitService } from '../src/services/rate-limit.service';
@@ -51,7 +51,7 @@ describe('rate limits (P2.3, D39)', () => {
   it('other emails from the same IP pass until the per-IP limit', async () => {
     await exhaustEmail('limit-ip-0@example.test');
 
-    for (let i = RATE_MAGIC_LINK_PER_EMAIL; i < RATE_MAGIC_LINK_PER_IP; i++) {
+    for (let i = RATE_MAGIC_LINK_PER_EMAIL; i < RATE_MAGIC_LINK_PER_IP_DEFAULT; i++) {
       expect((await requestLink(`limit-ip-${i}@example.test`)).status).toBe(200);
     }
     expect((await requestLink('limit-ip-last@example.test')).status).toBe(429);
@@ -78,7 +78,7 @@ describe('rate limits (P2.3, D39)', () => {
   });
 
   it('callbacks with garbage tokens are limited per IP', async () => {
-    for (let i = 0; i < RATE_CALLBACK_PER_IP; i++) {
+    for (let i = 0; i < RATE_CALLBACK_PER_IP_DEFAULT; i++) {
       const res = await ctx.app.request(`/auth/callback?token=garbage${i}`, {
         headers: { 'x-test-ip': ip },
       });

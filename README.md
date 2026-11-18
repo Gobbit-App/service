@@ -92,8 +92,10 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `COOKIE_DOMAIN` | — (host-only) | Session cookie domain |
 | `COOKIE_SECURE` | `true` | `Secure` cookie flag; set `false` on plain-HTTP local dev |
 | `CORS_ORIGINS` | — | Comma-separated origins allowed for credentialed CORS and CSRF |
-| `MAIL_PROVIDER` | `console` | `console` (links logged) or `resend` |
-| `RESEND_API_KEY` / `MAIL_FROM` | — | Required when `MAIL_PROVIDER=resend` |
+| `MAIL_PROVIDER` | `console` | `console` (links logged), `resend` or `smtp` (the e2e stack's mailbox, 047) |
+| `RESEND_API_KEY` / `MAIL_FROM` | — | Required when `MAIL_PROVIDER=resend`; `smtp` also needs `MAIL_FROM` |
+| `SMTP_URL` | — | Required when `MAIL_PROVIDER=smtp`, e.g. `smtp://mailpit:1025` |
+| `MAGIC_LINK_PER_IP_PER_HOUR` / `CALLBACK_PER_IP_PER_HOUR` | `20` / `30` | Magic-link requests and callbacks per client IP per hour (the e2e stack raises them, D435) |
 | `ALLOW_CONSOLE_MAIL` | `false` | Must be `true` to use the console mailer in production |
 | `LINK_IMAGE_TRIES` | `3` | Preview image candidates the `link-snapshot` job tries per card before dropping the image (D349) |
 | `LINK_ARTICLE_IMAGE_MIN_PX` | `300` | Smallest stated width of an in-article image used as a link preview (D344) |

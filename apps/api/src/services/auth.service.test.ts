@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   RATE_MAGIC_LINK_PER_EMAIL,
-  RATE_MAGIC_LINK_PER_IP,
+  RATE_CALLBACK_PER_IP_DEFAULT,
+  RATE_MAGIC_LINK_PER_IP_DEFAULT,
   SESSION_TOUCH_INTERVAL_MS,
 } from '@gobbit/shared';
 import type { RegistrationMode } from '@gobbit/shared/auth';
@@ -59,9 +60,19 @@ describe('createAuthService', () => {
   let capture: ReturnType<typeof captureLogger>;
   let service: ReturnType<typeof createAuthService>;
 
-  const build = (mode: RegistrationMode) =>
+  const build = (
+    mode: RegistrationMode,
+    limits: { MAGIC_LINK_PER_IP_PER_HOUR?: number; CALLBACK_PER_IP_PER_HOUR?: number } = {},
+  ) =>
     createAuthService({
-      env: { API_URL: 'https://api.test', MAGIC_LINK_TTL_MINUTES: 15, SESSION_TTL_DAYS: 30 },
+      env: {
+        API_URL: 'https://api.test',
+        MAGIC_LINK_TTL_MINUTES: 15,
+        SESSION_TTL_DAYS: 30,
+        MAGIC_LINK_PER_IP_PER_HOUR: RATE_MAGIC_LINK_PER_IP_DEFAULT,
+        CALLBACK_PER_IP_PER_HOUR: RATE_CALLBACK_PER_IP_DEFAULT,
+        ...limits,
+      },
       now: () => NOW,
       mailer,
       sessions,
@@ -222,8 +233,17 @@ describe('createAuthService', () => {
       expect(rateLimits.check).toHaveBeenNthCalledWith(
         2,
         'magic-link:ip:1.2.3.4',
-        RATE_MAGIC_LINK_PER_IP,
+        RATE_MAGIC_LINK_PER_IP_DEFAULT,
       );
+    });
+
+    it('reads the per-IP limit from env', async () => {
+      await build('waitlist', { MAGIC_LINK_PER_IP_PER_HOUR: 2 }).requestMagicLink({
+        email: 'a@b.co',
+        ip: '1.2.3.4',
+        requestId: 'r',
+      });
+      expect(rateLimits.check).toHaveBeenNthCalledWith(2, 'magic-link:ip:1.2.3.4', 2);
     });
 
     it('stores a hashed link and mails the callback URL', async () => {
@@ -283,6 +303,20 @@ describe('createAuthService', () => {
 
       expect(err).toBeInstanceOf(MagicLinkFailure);
       expect(err.reason).toBe('used');
+    });
+
+    it('reads the per-IP callback limit from env and propagates a 429', async () => {
+      const err = new Error('limited');
+      rateLimits.enforce.mockRejectedValueOnce(err);
+      await expect(
+        build('waitlist', { CALLBACK_PER_IP_PER_HOUR: 2 }).consumeMagicLink({
+          token: 't',
+          ip: '1.2.3.4',
+          userAgent: null,
+          requestId: 'r',
+        }),
+      ).rejects.toBe(err);
+      expect(rateLimits.enforce).toHaveBeenCalledWith('callback:ip:1.2.3.4', 2);
     });
 
     it('opens a cookie session for a sign-in link', async () => {

@@ -89,10 +89,10 @@ export const SESSION_TOUCH_INTERVAL_MS = 3_600_000;
 export const RATE_MAGIC_LINK_PER_EMAIL = 5;
 
 /** Magic-link requests allowed per client IP per hour. */
-export const RATE_MAGIC_LINK_PER_IP = 20;
+export const RATE_MAGIC_LINK_PER_IP_DEFAULT = 20;
 
 /** Magic-link callbacks allowed per client IP per hour. */
-export const RATE_CALLBACK_PER_IP = 30;
+export const RATE_CALLBACK_PER_IP_DEFAULT = 30;
 
 /** Random bytes in a magic-link or session token. */
 export const TOKEN_BYTES = 32;

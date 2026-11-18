@@ -2,6 +2,8 @@ import { z } from 'zod';
 import {
   MAGIC_LINK_TTL_MINUTES_DEFAULT,
   INVITE_TTL_DAYS_DEFAULT,
+  RATE_MAGIC_LINK_PER_IP_DEFAULT,
+  RATE_CALLBACK_PER_IP_DEFAULT,
   PROFILE_LOOKUP_RATE_PER_HOUR_DEFAULT,
   PROFILE_UPDATE_RATE_PER_HOUR_DEFAULT,
   USERNAME_HOLD_DAYS_DEFAULT,
@@ -87,8 +89,12 @@ const baseSchema = z.object({
   COOKIE_DOMAIN: z.string().optional(),
   COOKIE_SECURE: bool('true'),
   CORS_ORIGINS: commaList,
-  MAIL_PROVIDER: z.enum(['resend', 'console']).default('console'),
+  MAIL_PROVIDER: z.enum(['resend', 'console', 'smtp']).default('console'),
   RESEND_API_KEY: z.string().optional(),
+  /** D435: required when MAIL_PROVIDER=smtp, ignored otherwise. */
+  SMTP_URL: z.string().optional(),
+  MAGIC_LINK_PER_IP_PER_HOUR: positiveInt(RATE_MAGIC_LINK_PER_IP_DEFAULT),
+  CALLBACK_PER_IP_PER_HOUR: positiveInt(RATE_CALLBACK_PER_IP_DEFAULT),
   MAIL_FROM: z.string().optional(),
   ALLOW_CONSOLE_MAIL: bool('false'),
   MAGIC_LINK_TTL_MINUTES: positiveInt(MAGIC_LINK_TTL_MINUTES_DEFAULT),
@@ -222,6 +228,8 @@ export const envSchema = baseSchema
       require('RESEND_API_KEY', 'RESEND_API_KEY is required when MAIL_PROVIDER=resend');
       require('MAIL_FROM', 'MAIL_FROM is required when MAIL_PROVIDER=resend');
     }
+    if (data.MAIL_PROVIDER === 'smtp')
+      require('SMTP_URL', 'SMTP_URL is required when MAIL_PROVIDER=smtp');
     const vapid = [data.VAPID_PUBLIC_KEY, data.VAPID_PRIVATE_KEY, data.VAPID_SUBJECT];
     if (vapid.some(Boolean) && !vapid.every(Boolean)) {
       ctx.addIssue({

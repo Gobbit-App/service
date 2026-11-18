@@ -38,6 +38,7 @@
     "linkedom": "^0.18.13",
     "lru-cache": "^11.5.3",
     "mdast-util-to-string": "^4.0.0",
+    "nodemailer": "^10.6.0",
     "openai": "^7.32.0",
     "pg": "^8.23.0",
     "pg-boss": "^12.37.1",
@@ -60,6 +61,7 @@
   "devDependencies": {
     "@apidevtools/swagger-parser": "^13.1.0",
     "@types/mdast": "^4.0.4",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "@types/web-push": "^3.6.4",
     "mdast-util-directive": "^3.2.0"
