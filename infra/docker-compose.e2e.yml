@@ -50,6 +50,9 @@ services:
       ANALYTICS_SITE_ID: 2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90
       MAGIC_LINK_PER_IP_PER_HOUR: 100000
       CALLBACK_PER_IP_PER_HOUR: 100000
+      # Every test reaches the stack from one loopback address; the in-process anonymous limit
+      # would otherwise trip under parallel workers (D435).
+      WAITLIST_JOIN_PER_IP_PER_HOUR: 100000
     depends_on:
       mailpit:
         condition: service_healthy

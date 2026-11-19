@@ -102,10 +102,14 @@ test('an oversized video is refused before any upload (FR-008) @full', async ({
     if (req.url().includes('/media/sign')) signed += 1;
   });
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
-  await page.getByLabel('Choose file').setInputFiles({
-    name: 'concert.mp4',
-    mimeType: 'video/mp4',
-    buffer: Buffer.alloc(26 * 1024 * 1024),
+  // Built in the page: sending 26 MB through setInputFiles is slow when several workers run.
+  await page.getByLabel('Choose file').evaluate((input: HTMLInputElement) => {
+    const files = new DataTransfer();
+    files.items.add(
+      new File([new ArrayBuffer(26 * 1024 * 1024)], 'concert.mp4', { type: 'video/mp4' }),
+    );
+    input.files = files.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
   });
   await expect(page.getByText(/The video must be at most 25 MB/)).toBeVisible();
   expect(uploads).toHaveLength(0);

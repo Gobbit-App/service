@@ -494,6 +494,8 @@ test.describe('profile photo @full', () => {
     webDeck,
     tag,
   }) => {
+    // Three full journeys (add, replace, remove) with six page loads: more than the 15 s default under load.
+    test.setTimeout(45_000);
     await setProfile(user, { firstName: 'Pho', lastName: `To${tag}` });
     await page.reload();
     const title = `Photo card ${tag}`;
