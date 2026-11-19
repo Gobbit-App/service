@@ -51,6 +51,7 @@ export function buildIngestServices(deps: {
     | 'ANTHROPIC_API_KEY'
     | 'CLOUDINARY_URL'
     | 'INGEST_DAILY_CAP'
+    | 'INGEST_IMPORT_DAILY_CAP'
     | 'INGEST_MAX_BYTES_PDF'
     | 'INGEST_MAX_BYTES_AUDIO'
     | 'INGEST_MAX_BYTES_VIDEO'
@@ -83,7 +84,10 @@ export function buildIngestServices(deps: {
         : null;
 
   const queue = wiring.queue ?? noopIngestQueue;
-  const dailyCaps = ingestDailyCaps(env.INGEST_DAILY_CAP);
+  const dailyCaps = {
+    ...ingestDailyCaps(env.INGEST_DAILY_CAP),
+    import: env.INGEST_IMPORT_DAILY_CAP,
+  };
 
   return {
     ingest: createIngestService({

@@ -16,7 +16,7 @@ export function ImportPreviewRow({
   onEdit: (edit: RowEdit) => void;
 }): ReactElement {
   const [editing, setEditing] = useState(false);
-  const status = categoryStatus(row.category, categories);
+  const status = categoryStatus(row.categories[0] ?? null, categories);
   const at = `line ${row.line}`;
 
   return (
@@ -55,7 +55,7 @@ export function ImportPreviewRow({
           <label className="field">
             <span className="field__label">Category</span>
             <input
-              value={row.category ?? ''}
+              value={row.categories[0] ?? ''}
               dir="auto"
               aria-label={`Category, ${at}`}
               onChange={(event) => onEdit({ category: event.currentTarget.value })}
@@ -74,10 +74,10 @@ export function ImportPreviewRow({
             </p>
           )}
           {row.sourceUrl && <p className="import-row__url">{row.sourceUrl}</p>}
-          {row.category && (
+          {row.categories[0] && (
             <p className="import-row__category">
               <span className="chip chip--small" dir="auto">
-                {row.category}
+                {row.categories[0]}
               </span>{' '}
               {status === 'new' ? 'new category' : 'existing category'}
             </p>

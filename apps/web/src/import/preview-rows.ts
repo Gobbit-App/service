@@ -1,5 +1,6 @@
 import {
   matchCategory,
+  categoriesOf,
   rowError,
   toImportDraft,
   type ImportCategory,
@@ -10,7 +11,7 @@ import {
 /** D189: a parsed row in the preview; invalid rows start unticked and can't be ticked. */
 export type PreviewRow = ImportRow & { key: number; included: boolean };
 
-export type RowEdit = Partial<Pick<ImportRow, 'title' | 'body' | 'category'>>;
+export type RowEdit = Partial<Pick<ImportRow, 'title' | 'body'>> & { category?: string | null };
 
 /** The label imports are shown under in review (and `?source=`): the file name or this. */
 export const PASTED_LABEL = 'Pasted notes';
@@ -21,8 +22,9 @@ export function previewRows(rows: readonly ImportRow[]): PreviewRow[] {
 
 /** Applies an edit and re-checks the card limits; a row fixed by the edit is ticked again. */
 export function editRow(row: PreviewRow, edit: RowEdit): PreviewRow {
-  const next = { ...row, ...edit };
-  if (edit.category !== undefined) next.category = edit.category?.trim() ? edit.category : null;
+  const { category, ...rest } = edit;
+  const next = { ...row, ...rest };
+  if (category !== undefined) next.categories = categoriesOf(category?.trim() ? category : null);
   const error = rowError(next);
   return { ...next, error, included: error === null && (row.error !== null || row.included) };
 }

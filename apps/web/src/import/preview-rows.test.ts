@@ -16,7 +16,9 @@ const row = (overrides: Partial<ImportRow> = {}): ImportRow => ({
   title: 'Clinic',
   body: '',
   sourceUrl: null,
-  category: null,
+  categories: [],
+  cover: null,
+  image: null,
   error: null,
   ...overrides,
 });
@@ -51,13 +53,13 @@ describe('preview rows (D189)', () => {
   });
 
   it('clears an emptied category', () => {
-    const [withCategory] = previewRows([row({ category: 'Health' })]);
-    expect(editRow(withCategory!, { category: '  ' }).category).toBeNull();
+    const [withCategory] = previewRows([row({ categories: ['Health'] })]);
+    expect(editRow(withCategory!, { category: '  ' }).categories).toEqual([]);
   });
 
   it('sends an existing category by id and a new one by name', () => {
     const drafts = rowsToDrafts(
-      previewRows([row({ category: 'health' }), row({ category: 'Schools' })]),
+      previewRows([row({ categories: ['health'] }), row({ categories: ['Schools'] })]),
       [health],
     );
     expect(drafts[0]).toMatchObject({ categoryIds: [health.id] });

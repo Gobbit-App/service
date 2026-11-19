@@ -9,13 +9,13 @@ const fixture = (name: string): string =>
   readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
 const brief = (rows: ImportRow[]) =>
-  rows.map(({ line, type, title, body, sourceUrl, category, error }) => ({
+  rows.map(({ line, type, title, body, sourceUrl, categories, error }) => ({
     line,
     type,
     title,
     body,
     sourceUrl,
-    category,
+    category: categories[0] ?? null,
     error,
   }));
 
@@ -165,7 +165,7 @@ describe('parseNotes csv (D189)', () => {
       line: 2,
       title: 'Clinic',
       body: 'Open Sun–Thu, 8–14',
-      category: 'Health',
+      categories: ['Health'],
     });
     expect(rows[1]).toMatchObject({
       line: 3,
@@ -192,7 +192,15 @@ describe('parseNotes csv (D189)', () => {
     expect(parseNotes('name,phone\nDan,050', 'csv')).toEqual({
       rows: [],
       problem: 'The first CSV row needs a title or body column',
+      ignored: [],
     });
+  });
+
+  it('reports categories as an array: one entry from the column, [] without a column', () => {
+    expect(rows[0]!.categories).toEqual(['Health']);
+    expect(rows[1]!.categories).toEqual(['Sport']);
+    expect(parseNotes('body\nClinic: open at 8', 'csv').rows[0]!.categories).toEqual([]);
+    expect(parseNotes(fixture('street-notes.csv'), 'csv').ignored).toEqual([]);
   });
 
   it('works with only a body column', () => {
@@ -200,6 +208,15 @@ describe('parseNotes csv (D189)', () => {
       title: 'Clinic',
       body: 'open at 8',
     });
+  });
+});
+
+describe('parseNotes markdown categories', () => {
+  it('gives a # heading as a one-entry categories array and [] without a heading', () => {
+    const { rows, ignored } = parseNotes('Loose card\n\n# Health\n- Clinic: open', 'markdown');
+    expect(rows[0]!.categories).toEqual([]);
+    expect(rows[1]!.categories).toEqual(['Health']);
+    expect(ignored).toEqual([]);
   });
 });
 
@@ -227,7 +244,9 @@ describe('toImportDraft (D190)', () => {
     title: ' Clinic ',
     body: 'Open',
     sourceUrl: null,
-    category,
+    categories: category ? [category] : [],
+    cover: null,
+    image: null,
     error: null,
     ...extra,
   });

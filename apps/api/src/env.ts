@@ -10,6 +10,7 @@ import {
   SESSION_TTL_DAYS_DEFAULT,
   DEFAULT_EMBEDDING_MODEL,
   INGEST_DAILY_CAP,
+  IMPORT_DAILY_CAP_DEFAULT,
   WAITLIST_JOIN_PER_IP_PER_HOUR,
   WAITLIST_JOIN_PER_EMAIL_PER_HOUR,
   WAITLIST_INVITE_TTL_DAYS_DEFAULT,
@@ -134,6 +135,8 @@ const baseSchema = z.object({
   EXTRACT_ESCALATION_MODEL: z.string().optional(),
   /** D101: ingest jobs per user per rolling day. */
   INGEST_DAILY_CAP: positiveInt(INGEST_DAILY_CAP),
+  /** D447: import rows per user per rolling day (the `import` channel counts rows, D190). */
+  INGEST_IMPORT_DAILY_CAP: positiveInt(IMPORT_DAILY_CAP_DEFAULT),
   /** D104: email-in is on only when the domain, the webhook secret and RESEND_API_KEY are set. */
   INGEST_EMAIL_DOMAIN: z.string().optional(),
   /** D104: Svix signing secret of the Resend inbound webhook. Never logged. */

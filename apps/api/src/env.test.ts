@@ -359,4 +359,15 @@ describe('env', () => {
       ).not.toThrow();
     });
   });
+
+  describe('import daily cap (D447)', () => {
+    it('defaults to 500, accepts an override, rejects an invalid value', () => {
+      expect(parseEnv({ DATABASE_URL: validUrl }).INGEST_IMPORT_DAILY_CAP).toBe(500);
+      expect(
+        parseEnv({ DATABASE_URL: validUrl, INGEST_IMPORT_DAILY_CAP: '50' }).INGEST_IMPORT_DAILY_CAP,
+      ).toBe(50);
+      for (const bad of ['0', '-1', 'abc'])
+        expect(() => parseEnv({ DATABASE_URL: validUrl, INGEST_IMPORT_DAILY_CAP: bad })).toThrow();
+    });
+  });
 });

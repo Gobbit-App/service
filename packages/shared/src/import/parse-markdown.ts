@@ -1,6 +1,6 @@
 import type { ImportRow } from './constants';
 import { LIST_MARKER } from './parse-lines';
-import { noteRow, titleForUrl, withError } from './note-row';
+import { categoriesOf, noteRow, titleForUrl, withError } from './note-row';
 
 const HEADING = /^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$/;
 const FENCE = /^\s{0,3}(```|~~~)/;
@@ -42,7 +42,7 @@ export function parseMarkdown(text: string): ImportRow[] {
           title: link[1].trim() || titleForUrl(link[2]),
           body: '',
           sourceUrl: link[2],
-          category,
+          categories: categoriesOf(category),
         }),
       );
       return;

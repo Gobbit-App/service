@@ -17,5 +17,5 @@ export function detectFormat(text: string, fileName?: string | null): ImportForm
 export function parseNotes(text: string, format: ImportFormat): ImportParseResult {
   if (format === 'csv') return parseCsv(text);
   const rows = format === 'markdown' ? parseMarkdown(text) : parseLines(text);
-  return { rows, problem: null };
+  return { rows, problem: null, ignored: [] };
 }

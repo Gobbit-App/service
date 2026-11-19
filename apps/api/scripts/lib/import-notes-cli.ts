@@ -73,7 +73,7 @@ const describeRow = (row: ImportRow): string =>
     `line ${row.line}`,
     `[${row.type}]`,
     row.title,
-    row.category ? `(${row.category})` : '',
+    row.categories.length ? `(${row.categories.join(', ')})` : '',
     row.error ? `— ${row.error}` : '',
   ]
     .filter(Boolean)

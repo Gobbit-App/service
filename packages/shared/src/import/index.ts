@@ -2,7 +2,7 @@
 export * from './constants';
 export { detectFormat, parseNotes } from './parse-notes';
 export { matchCategory, toImportDraft, type ImportCategory, type ImportRowDraft } from './to-draft';
-export { rowError } from './note-row';
+export { categoriesOf, rowError } from './note-row';
 export {
   importInChunks,
   type DescribeImportError,

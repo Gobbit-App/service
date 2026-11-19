@@ -14,7 +14,9 @@ const note = (line: number, overrides: Partial<ImportRow> = {}): ImportRow => ({
   title: `Note ${line}`,
   body: '',
   sourceUrl: null,
-  category: null,
+  categories: [],
+  cover: null,
+  image: null,
   error: null,
   ...overrides,
 });
@@ -70,7 +72,7 @@ describe('ImportPreview (D189)', () => {
   });
 
   it('marks a category the deck has as existing and any other as new', () => {
-    renderPreview([note(1, { category: 'recipes' }), note(2, { category: 'Garden' })]);
+    renderPreview([note(1, { categories: ['recipes'] }), note(2, { categories: ['Garden'] })]);
     const [existing, created] = screen.getAllByRole('listitem');
     expect(existing).toHaveTextContent('existing category');
     expect(created).toHaveTextContent('new category');
