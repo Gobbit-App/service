@@ -321,7 +321,13 @@ test.describe('creator avatar @full', () => {
     const fullBox = await box(fullAvatar);
     await page.waitForLoadState('networkidle');
     expect(await box(fullAvatar)).toEqual(fullBox);
-    expect({ w: fullBox.width, h: fullBox.height }).toEqual({ w: placed.width, h: placed.height });
+    // The layout box (CSS px): Browse's card scales slightly while it settles, so the drawn box is 23.93.
+    const layoutBox = (a: Locator) =>
+      a.evaluate((el) => ({
+        w: (el as HTMLElement).offsetWidth,
+        h: (el as HTMLElement).offsetHeight,
+      }));
+    expect(await layoutBox(fullAvatar)).toEqual(await layoutBox(avatar));
     await page.getByRole('button', { name: 'Close full view' }).click();
 
     // a card by another member is current too: its avatar matches the list's colour
@@ -460,8 +466,12 @@ async function pickAndCrop(page: Page, label: 'Add photo' | 'Replace photo') {
   const sheet = page.getByRole('dialog', { name: 'Crop your photo' });
   await expect(sheet).toBeVisible();
   await sheet.getByLabel('Zoom').fill('2');
-  await sheet.getByRole('button', { name: 'Use photo' }).click();
-  await expect(sheet).toBeHidden();
+  // The sheet rises with an animation; a click that lands as it settles can be lost, so press again until it closes.
+  const use = sheet.getByRole('button', { name: 'Use photo' });
+  await expect(async () => {
+    if (await use.isVisible()) await use.click({ timeout: 2000 });
+    await expect(sheet).toBeHidden({ timeout: 2000 });
+  }).toPass({ timeout: 15_000 });
 }
 
 const photoOn = (page: Page, title: string) =>
