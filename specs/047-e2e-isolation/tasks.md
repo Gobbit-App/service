@@ -99,7 +99,7 @@ description: "Task list for 047 self-contained e2e"
 
 ### Batch A — 046 profile specs (the reason for this work)
 
-- [X] T028 [US6] [e2e:full] Convert e2e/tests/full/profile.spec.ts (replace `E2E_MEMBER_B_TOKEN`/`E2E_MEMBER_C_TOKEN` with `member()`; rate-limit cases use `newUser`) and e2e/tests/full/helpers/profile.ts
+- [ ] T028 [US6] [e2e:full] Convert e2e/tests/full/profile.spec.ts (replace `E2E_MEMBER_B_TOKEN`/`E2E_MEMBER_C_TOKEN` with `member()`; rate-limit cases use `newUser`) and e2e/tests/full/helpers/profile.ts
 
 ### Batch B — `tests/full` (independent files, run as parallel tasks)
 

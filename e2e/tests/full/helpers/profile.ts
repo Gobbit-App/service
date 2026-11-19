@@ -139,9 +139,20 @@ export async function routeFakeAvatar(
   const folder = `gobbit/profiles/${me.user.id}`;
   const publicId = `${folder}/e2e-${name}`;
   const version = Math.floor(Date.now() / 1000);
-  const signature = createHash('sha1')
-    .update(`public_id=${publicId}&version=${version}${CLOUDINARY_DUMMY.apiSecret}`)
-    .digest('hex');
+  // Every upload gets its own id (`-2`, `-3`, ...): a replace must differ from the saved photo.
+  const answer = (id: string) => ({
+    public_id: id,
+    version,
+    signature: createHash('sha1')
+      .update(`public_id=${id}&version=${version}${CLOUDINARY_DUMMY.apiSecret}`)
+      .digest('hex'),
+    resource_type: 'image',
+    bytes: TINY_PNG.length,
+    format: 'png',
+    width: 1,
+    height: 1,
+  });
+  let uploads = 0;
 
   await page.route('**/api/config', async (route) => {
     const response = await route.fetch();
@@ -161,20 +172,10 @@ export async function routeFakeAvatar(
       },
     }),
   );
-  await page.route('https://api.cloudinary.com/**', (route) =>
-    route.fulfill({
-      json: {
-        public_id: publicId,
-        version,
-        signature,
-        resource_type: 'image',
-        bytes: TINY_PNG.length,
-        format: 'png',
-        width: 1,
-        height: 1,
-      },
-    }),
-  );
+  await page.route('https://api.cloudinary.com/**', (route) => {
+    uploads += 1;
+    return route.fulfill({ json: answer(uploads === 1 ? publicId : `${publicId}-${uploads}`) });
+  });
   await page.route('https://res.cloudinary.com/**', (route) =>
     route.fulfill({ contentType: 'image/png', body: TINY_PNG }),
   );

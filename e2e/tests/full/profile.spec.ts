@@ -291,7 +291,7 @@ test.describe('creator avatar @full', () => {
     const deck = await seedBrowseDeck(api, smokeDeck);
     const [first, second] = deck.cards;
     await skipHint(page);
-    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}`));
+    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${first!.id}`));
     await expectCurrent(page, first!);
 
     const stage = page.locator('.browse__stage');
@@ -454,6 +454,8 @@ test.describe('creator avatar @full', () => {
 
 /** Pick, crop in the sheet (zoom, "Use photo") and close it; the upload then runs. */
 async function pickAndCrop(page: Page, label: 'Add photo' | 'Replace photo') {
+  // The persisted `me` gives way to the fresh fetch: let it settle so the pick lands on the live form.
+  await page.waitForLoadState('networkidle');
   await page.getByLabel(label).setInputFiles(photoFile);
   const sheet = page.getByRole('dialog', { name: 'Crop your photo' });
   await expect(sheet).toBeVisible();
