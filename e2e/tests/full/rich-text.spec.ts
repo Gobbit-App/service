@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /** 038: the rich body editor (US2, T019) and styled text on the card and public page (US3, T030). */
 

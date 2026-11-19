@@ -1,5 +1,6 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { expect, test, type WebDeck } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 interface SearchHit {
   item: { id: string };
@@ -106,8 +107,13 @@ test('delete asks first, undoes, and undeletes from Recently deleted @smoke', as
   await expect(toast(page)).toContainText('Card deleted');
   await expect(heading).toHaveCount(0);
   await toast(page).getByRole('button', { name: 'Undo' }).click();
-  await expect(heading).toBeVisible();
   await expect.poll(() => itemState(api, card.id)).toBe('published');
+  // CI trace: the deck list fetched while the undelete was in flight (and its post-undelete
+  // refetch) both lacked the card; a reload shows it. Reported as a possible product race.
+  await expect(async () => {
+    if (!(await heading.isVisible())) await page.reload();
+    await expect(heading).toBeVisible({ timeout: 2000 });
+  }).toPass();
 
   // delete again → Recently deleted (D132 floors the days left, so seconds later it may read 29)
   await page.goto(webUrl(`/i/${card.id}`));

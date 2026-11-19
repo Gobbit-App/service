@@ -1,6 +1,7 @@
 import type { Page, Route } from '@playwright/test';
-import { cloudinaryApiSecret, photoFile, routeFakeCloudinary } from '../../fixtures/cloudinary';
-import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { photoFile, routeFakeCloudinary } from '../../fixtures/cloudinary';
+import { expect, test, type WebDeck } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 import { viewSwitcher } from '../smoke/helpers/deck-header';
 
 /**
@@ -135,8 +136,7 @@ test('Add photo on a locked-host link is saved; Remove photo takes it off @full'
   page,
   webDeck,
 }) => {
-  // Saving needs the asset recorded by the real API (D160), so the upload answer must verify.
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
+  // Saving needs the asset recorded by the real API (D160); the fake answer is signed with the dummy secret.
   const title = `Locked photo ${webDeck.slug}`;
   const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-link-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=link`));

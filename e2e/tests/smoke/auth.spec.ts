@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures/api';
+import { test, expect } from '../../fixtures/identity';
 
 test('requests without credentials get 401 problem+json @smoke', async ({ anon }) => {
   const response = await anon.get('decks');
@@ -16,7 +16,7 @@ test('a garbage bearer is 401 @smoke', async ({ anon }) => {
   expect((await response.json()).type).toBe('/problems/session-invalid');
 });
 
-test('the smoke session is the owner @smoke', async ({ api }) => {
+test('a signed-in session answers /me @smoke', async ({ api }) => {
   const response = await api.get('me');
   expect(response.status()).toBe(200);
   const body = await response.json();

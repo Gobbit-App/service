@@ -1,7 +1,8 @@
-import { expect, SMOKE_CATEGORY, test, webUrl } from '../../fixtures/web';
+import { expect, SMOKE_CATEGORY, test } from '../../fixtures/identity';
+import { EMAIL_DOMAIN } from '../../lib/stack-config';
 
-/** The one standing invitee user on the deployed DB (shared with `smoke/members.spec.ts`). */
-const INVITEE = 'smoke-invitee@example.test';
+/** A fresh address per test: the stack is shared by parallel tests. */
+const inviteeEmail = () => `invitee-${Math.random().toString(36).slice(2, 10)}@${EMAIL_DOMAIN}`;
 
 /**
  * D184/D185 deck settings (019, `@full`). The owner sets a category to Everyone, makes the deck
@@ -14,7 +15,8 @@ test('the owner makes the deck public and invites a co-owner from Settings @full
   api,
   webDeck,
 }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  const invitee = inviteeEmail();
+  await page.goto(`/d/${webDeck.slug}`);
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('menuitem', { name: 'Settings' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/settings$`));
@@ -40,11 +42,11 @@ test('the owner makes the deck public and invites a co-owner from Settings @full
   expect(((await deck.json()) as { isPublic: boolean }).isPublic, 'deck is public').toBe(true);
 
   const invite = page.getByRole('form', { name: 'Invite someone' });
-  await invite.getByLabel('Email').fill(INVITEE);
+  await invite.getByLabel('Email').fill(invitee);
   await invite.getByLabel('Role').selectOption('owner');
   await invite.getByRole('button', { name: 'Send invite' }).click();
-  await expect(invite.getByRole('status')).toContainText(`Invite sent to ${INVITEE}`);
-  const row = page.getByRole('listitem').filter({ hasText: INVITEE });
+  await expect(invite.getByRole('status')).toContainText(`Invite sent to ${invitee}`);
+  const row = page.getByRole('listitem').filter({ hasText: invitee });
   await expect(row).toContainText('Invited · Co-owner');
   await expect(row.getByRole('button', { name: /^Cancel invite/ })).toBeVisible();
 });
@@ -59,7 +61,7 @@ test('the owner turns on publishing shares directly and it persists @full', asyn
   api,
   webDeck,
 }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}/settings`));
+  await page.goto(`/d/${webDeck.slug}/settings`);
   const toggle = page.getByRole('switch', { name: 'Publish shares from publishers directly' });
   await expect(toggle).not.toBeChecked();
 

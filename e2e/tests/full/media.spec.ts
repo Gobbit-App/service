@@ -1,12 +1,12 @@
 import type { Page } from '@playwright/test';
 import {
-  cloudinaryApiSecret,
   photoFile,
   recordMediaAsset,
   routeFakeCloudinary,
   routeImageDelivery,
 } from '../../fixtures/cloudinary';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * 045 (T043, `@full`): the media editor and reader beyond the smoke journeys — gallery editing
@@ -22,7 +22,6 @@ test('a gallery is reordered and trimmed before saving, in that order @full', as
   page,
   webDeck,
 }) => {
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const base = `gobbit/items/${webDeck.id}/e2e-order`;
   await routeFakeCloudinary(page, base);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
@@ -103,10 +102,14 @@ test('an oversized video is refused before any upload (FR-008) @full', async ({
     if (req.url().includes('/media/sign')) signed += 1;
   });
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
-  await page.getByLabel('Choose file').setInputFiles({
-    name: 'concert.mp4',
-    mimeType: 'video/mp4',
-    buffer: Buffer.alloc(26 * 1024 * 1024),
+  // Built in the page: sending 26 MB through setInputFiles is slow when several workers run.
+  await page.getByLabel('Choose file').evaluate((input: HTMLInputElement) => {
+    const files = new DataTransfer();
+    files.items.add(
+      new File([new ArrayBuffer(26 * 1024 * 1024)], 'concert.mp4', { type: 'video/mp4' }),
+    );
+    input.files = files.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
   });
   await expect(page.getByText(/The video must be at most 25 MB/)).toBeVisible();
   expect(uploads).toHaveLength(0);
@@ -142,7 +145,6 @@ test('video and audio cards load no media until Play (D400) @full', async ({
     height: 1280,
     durationMs: 65_000,
   });
-  test.skip(video === null, 'needs CLOUDINARY_API_SECRET to sign confirms');
   const audio = await recordMediaAsset(api, webDeck.id, {
     kind: 'audio',
     format: 'm4a',

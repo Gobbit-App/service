@@ -1,7 +1,5 @@
 import {
-  RATE_CALLBACK_PER_IP,
   RATE_MAGIC_LINK_PER_EMAIL,
-  RATE_MAGIC_LINK_PER_IP,
   SESSION_TOUCH_INTERVAL_MS,
   type SessionKind,
 } from '@gobbit/shared';
@@ -54,7 +52,14 @@ export function classifyMagicLinkFailure(
   return row.usedAt ? 'used' : 'expired';
 }
 
-export type AuthEnv = Pick<Env, 'API_URL' | 'MAGIC_LINK_TTL_MINUTES' | 'SESSION_TTL_DAYS'>;
+export type AuthEnv = Pick<
+  Env,
+  | 'API_URL'
+  | 'MAGIC_LINK_TTL_MINUTES'
+  | 'SESSION_TTL_DAYS'
+  | 'MAGIC_LINK_PER_IP_PER_HOUR'
+  | 'CALLBACK_PER_IP_PER_HOUR'
+>;
 
 /** The repositories a magic-link callback reads and writes, bound to one transaction (Phase 3B). */
 export interface CallbackRepos {
@@ -260,7 +265,7 @@ export function createAuthService(deps: {
       };
       const limits = [
         ['per_email', rateKeys.magicLinkEmail(hashToken(email)), RATE_MAGIC_LINK_PER_EMAIL],
-        ['per_ip', rateKeys.magicLinkIp(input.ip), RATE_MAGIC_LINK_PER_IP],
+        ['per_ip', rateKeys.magicLinkIp(input.ip), env.MAGIC_LINK_PER_IP_PER_HOUR],
       ] as const;
       for (const [reason, key, limit] of limits) {
         const result = await deps.rateLimits.check(key, limit);
@@ -317,7 +322,7 @@ export function createAuthService(deps: {
       userAgent: string | null;
       requestId: string;
     }): Promise<{ token: string; next: string | null; user: CurrentUser }> {
-      await deps.rateLimits.enforce(rateKeys.callbackIp(input.ip), RATE_CALLBACK_PER_IP);
+      await deps.rateLimits.enforce(rateKeys.callbackIp(input.ip), env.CALLBACK_PER_IP_PER_HOUR);
 
       const subject = { requestId: input.requestId, ipHash: logHash('ip', input.ip) };
       try {

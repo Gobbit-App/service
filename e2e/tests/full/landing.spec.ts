@@ -1,24 +1,29 @@
 import { devices, type Browser, type Page } from '@playwright/test';
-import { expect, test, webUrl } from '../../fixtures/web';
-import { resolveE2eEnv } from '../../lib/env';
-
-const { webBaseURL } = resolveE2eEnv();
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 const { defaultBrowserType: _ignored, ...PIXEL_7 } = devices['Pixel 7'];
 
 const uniqueEmail = () =>
   `landing-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@example.test`;
 
-/** A visitor with no session cookie (the fixture's `page` carries the smoke session). */
+/** A visitor with no session cookie (the fixtures' `page` carries a session). */
 async function stranger(browser: Browser, run: (page: Page) => Promise<void>): Promise<void> {
   const context = await browser.newContext(PIXEL_7);
   try {
+    // The stack has analytics on, so a first visit shows the modal consent wall; answer it as a visitor would.
+    await context.addInitScript(() =>
+      window.localStorage.setItem(
+        'gobbit.analytics.consent',
+        JSON.stringify({ value: 'declined', at: new Date().toISOString() }),
+      ),
+    );
     await run(await context.newPage());
   } finally {
     await context.close();
   }
 }
 
-/** D228 (030, `@full`): the no-JS form on a phone. Writes waitlist rows, so local stack only. */
+/** D228 (030, `@full`): the no-JS form on a phone. */
 test.describe('landing form @full', () => {
   test('a visitor joins and sees "check your email"', async ({ browser }) => {
     await stranger(browser, async (page) => {
@@ -94,7 +99,7 @@ test.describe('landing navigation @full', () => {
     const context = await browser.newContext(PIXEL_7);
     try {
       await context.addCookies([
-        { name: 'gobbit_session', value: 'stale-session', url: webBaseURL, sameSite: 'Lax' },
+        { name: 'gobbit_session', value: 'stale-session', url: webUrl(), sameSite: 'Lax' },
       ]);
       const page = await context.newPage();
       await page.goto(webUrl('/'));

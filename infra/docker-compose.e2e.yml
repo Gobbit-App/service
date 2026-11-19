@@ -1,0 +1,79 @@
+# E2E overlay (specs/047-e2e-isolation/contracts/compose-overlay.md): layered after
+# docker-compose.yml and docker-compose.local.yml by the e2e runner only. ${...} values come from
+# the runner's generated e2e/.stack/compose.env. Open sign-up, a Mailpit mailbox, no fixed host
+# ports except web and the mailbox. Deliberately unset: AI keys, VAPID keys, the email-in domain
+# and every rate-limit override except the two per-IP sign-in limits below.
+x-e2e-mail: &e2e-mail
+  REGISTRATION_MODE: open
+  MAIL_PROVIDER: smtp
+  SMTP_URL: smtp://mailpit:1025
+  MAIL_FROM: Gobbit E2E <e2e@example.test>
+  ALLOW_CONSOLE_MAIL: 'false'
+
+services:
+  db:
+    ports: !reset []
+    # Replaces the local overlay's read-only ./db-init directory mount (a file cannot be mounted
+    # inside it) with its one file plus the umami database script.
+    volumes: !override
+      - pgdata:/var/lib/postgresql/data
+      - ./db-init/01-extensions.sql:/docker-entrypoint-initdb.d/01-extensions.sql:ro
+      - ./db-init-e2e/02-umami.sql:/docker-entrypoint-initdb.d/02-umami.sql:ro
+
+  umami:
+    # The real tracker host (docker-compose.local.yml's analytics profile, own database in the
+    # stack's Postgres) so smoke serves /stats/script.js without faking anything.
+    profiles: !reset []
+    ports: !reset []
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/heartbeat').then((r)=>process.exit(r.ok?0:1),()=>process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  api:
+    ports: !reset []
+    environment:
+      <<: *e2e-mail
+      API_URL: ${API_URL}
+      APP_URL: ${APP_URL}
+      CLOUDINARY_URL: ${CLOUDINARY_URL}
+      PLATFORM_ADMINS: ${PLATFORM_ADMINS}
+      LOG_HASH_KEY: ${LOG_HASH_KEY}
+      # A dummy Umami website id (a UUID) so the landing renders its tag and consent banner; the real
+      # umami service below serves /stats/script.js (it has no such website, which a script fetch ignores).
+      ANALYTICS_SITE_ID: 2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90
+      MAGIC_LINK_PER_IP_PER_HOUR: 100000
+      CALLBACK_PER_IP_PER_HOUR: 100000
+      # Every test reaches the stack from one loopback address; the in-process anonymous limit
+      # would otherwise trip under parallel workers (D435).
+      WAITLIST_JOIN_PER_IP_PER_HOUR: 100000
+    depends_on:
+      mailpit:
+        condition: service_healthy
+
+  worker:
+    environment:
+      <<: *e2e-mail
+
+  web:
+    depends_on:
+      umami:
+        condition: service_healthy
+    ports: !override
+      - 127.0.0.1:${WEB_PORT}:80
+    networks: !override [default]
+
+  mailpit:
+    # Pinned like umami; upgrade deliberately (v1.34.0 was the latest release when added).
+    image: axllent/mailpit:v1.34.0
+    ports:
+      - 127.0.0.1:${MAILBOX_PORT}:8025
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s

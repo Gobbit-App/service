@@ -10,6 +10,7 @@ is missing (so `playwright test` run by hand without a stack fails clearly).
   "webUrl": "http://127.0.0.1:18080",
   "apiUrl": "http://127.0.0.1:18080/api",
   "mailboxUrl": "http://127.0.0.1:18025",
+  "commit": "f958de2…",
   "startedAt": "2026-11-18T10:00:00.000Z"
 }
 ```
@@ -20,6 +21,7 @@ is missing (so `playwright test` run by hand without a stack fails clearly).
 | `webUrl` | web origin (Caddy): app, `/welcome`, `/version.json`; no trailing slash |
 | `apiUrl` | `webUrl` + `/api`; the origin Playwright uses for API requests; the API's own `API_URL` equals it |
 | `mailboxUrl` | Mailpit HTTP origin (REST `/api/v1/…`) |
+| `commit` | git HEAD the images were built from (`e2e` when git is unavailable); `/health` and `/version.json` must report it |
 | `startedAt` | ISO time; informational |
 
 `e2e/lib/stack.ts` exports `stack` (the parsed object, loaded once per process) and helpers `webUrl(path)`

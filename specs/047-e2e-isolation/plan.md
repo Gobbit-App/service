@@ -228,8 +228,8 @@ it). No runbook change.
 
 - [x] Confirm the constitution V amendment (D442) and the one-sentence wording in research D442 — owner
       confirmed 2026-11-18; applied by the amendment task in tasks.md (constitution 1.6.0).
-- [ ] A token with `workflow` scope for the workflow edits (steps 2, 5, 6).
-- [ ] Docker Compose ≥ 2.24 on developer machines (for `!reset`); runners have it.
+- [x] A token with `workflow` scope for the workflow edits (steps 2, 5, 6).
+- [x] Docker Compose ≥ 2.24 on developer machines (for `!reset`); runners have it. The runner checks it and exits 2 with a message.
 
 ## Complexity Tracking
 

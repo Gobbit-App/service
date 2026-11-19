@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
-import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { expect, test, type WebDeck } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * D198 "Your shares" (022 T016, `@full`). Shares need an extraction provider to run, so the list,

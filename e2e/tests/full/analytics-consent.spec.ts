@@ -1,14 +1,14 @@
-import type { Browser, Page } from '@playwright/test';
-import { expect, signIn, test, webUrl } from '../../fixtures/web';
+import type { APIRequestContext, Browser, Page } from '@playwright/test';
+import { expect, test, type Identity } from '../../fixtures/identity';
+import { stack, webUrl } from '../../lib/stack';
 
 /**
  * 035 analytics consent (D262–D266, opt-in wall D281, `@full`). Analytics is switched on by
  * answering `/config` with a site id, and Umami's tracker is a stub that records each request
  * for `/stats/script.js` and every payload the before-send hook lets through.
  *
- * The member's stored answer is held in the page (GET `/me` patched, PUT answered from it): the
- * smoke owner is shared by every spec running in parallel, and a real "declined" would silence
- * `app-analytics.spec.ts`. The PUT itself is covered by `analytics-consent.int.test.ts`.
+ * Every test has its own member, so the answers are real: the page's PUTs are recorded and the API
+ * keeps the answer (a second device of the same account reads it back).
  */
 
 const SITE_ID = '2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90';
@@ -31,8 +31,6 @@ const TRACKER_STUB = `
 })();
 `;
 
-type Consent = { value: string; at: string | null; source: string | null };
-
 /** Counts tracker loads; never lets a beacon reach the real collector. */
 async function stubTracker(page: Page): Promise<{ loads: number }> {
   const counter = { loads: 0 };
@@ -44,20 +42,11 @@ async function stubTracker(page: Page): Promise<{ loads: number }> {
   return counter;
 }
 
-type MemberState = { consent: Consent; puts: unknown[] };
+type Puts = { value: string; source: string }[];
 
-const unanswered = (): MemberState => ({
-  consent: { value: 'unanswered', at: null, source: null },
-  puts: [],
-});
-
-const allowed = (): MemberState => ({
-  consent: { value: 'allowed', at: '2026-11-01T10:00:00.000Z', source: 'prompt' },
-  puts: [],
-});
-
-/** Pass the same `state` to several pages to play one account on several devices. */
-async function stubMember(page: Page, state: MemberState = unanswered()): Promise<MemberState> {
+/** Answers `/config` with analytics on and records the consent PUTs the page makes. */
+async function stubMember(page: Page): Promise<Puts> {
+  const puts: Puts = [];
   await page.route('**/api/config', async (route) => {
     const res = await route.fetch();
     const config = (await res.json()) as Record<string, unknown>;
@@ -67,19 +56,20 @@ async function stubMember(page: Page, state: MemberState = unanswered()): Promis
       json: { ...config, analytics: { siteId: SITE_ID, host } },
     });
   });
-  await page.route('**/api/me', async (route) => {
-    const res = await route.fetch();
-    const me = (await res.json()) as Record<string, unknown>;
-    await route.fulfill({ response: res, json: { ...me, analyticsConsent: state.consent } });
+  page.on('request', (req) => {
+    if (req.method() === 'PUT' && req.url().endsWith('/api/me/analytics-consent'))
+      puts.push(req.postDataJSON() as Puts[number]);
   });
-  await page.route('**/api/me/analytics-consent', async (route) => {
-    const body = route.request().postDataJSON() as { value: string; source: string };
-    state.puts.push(body);
-    state.consent = { value: body.value, at: new Date().toISOString(), source: body.source };
-    await route.fulfill({ json: state.consent });
-  });
-  return state;
+  return puts;
 }
+
+const allow = async (api: APIRequestContext) =>
+  expect(
+    (
+      await api.put('me/analytics-consent', { data: { value: 'allowed', source: 'prompt' } })
+    ).status(),
+    'record Allow',
+  ).toBe(200);
 
 const sentCount = (page: Page) =>
   page.evaluate(
@@ -88,12 +78,25 @@ const sentCount = (page: Page) =>
 
 const QUESTION = 'Help improve Gobbit?';
 
+/** A member who has not answered (the fixture answers by default), with a deck of their own and a page on it. */
+async function unansweredMember(
+  newUser: (tag?: string, opts?: { consent?: 'unanswered' }) => Promise<Identity>,
+) {
+  const u = await newUser('consent', { consent: 'unanswered' });
+  const res = await u.api.post('decks', {
+    data: { name: 'Consent', slug: `consent-${u.userId.slice(0, 8)}`, kind: 'shared' },
+  });
+  expect(res.status(), 'create deck').toBe(201);
+  const webDeck = (await res.json()) as { slug: string };
+  return { page: await u.page(), webDeck };
+}
+
 test('an unanswered member sends nothing; "No thanks" keeps it off and Settings shows it @full', async ({
-  page,
-  webDeck,
+  newUser,
 }) => {
+  const { page, webDeck } = await unansweredMember(newUser);
   const tracker = await stubTracker(page);
-  const member = await stubMember(page);
+  const puts = await stubMember(page);
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   const prompt = page.getByRole('dialog', { name: QUESTION });
@@ -106,7 +109,7 @@ test('an unanswered member sends nothing; "No thanks" keeps it off and Settings 
 
   await prompt.getByRole('button', { name: 'No thanks' }).click();
   await expect(prompt).toBeHidden();
-  expect(member.puts).toEqual([{ value: 'declined', source: 'prompt' }]);
+  expect(puts).toEqual([{ value: 'declined', source: 'prompt' }]);
 
   await page.goto(webUrl(`/d/${webDeck.slug}/search?q=anything`));
   await page.waitForLoadState('networkidle');
@@ -120,39 +123,45 @@ test('an unanswered member sends nothing; "No thanks" keeps it off and Settings 
   await expect(page.getByRole('dialog', { name: QUESTION })).toHaveCount(0);
 });
 
-test('"Allow" on the wall starts counting without a reload @full', async ({ page, webDeck }) => {
+test('"Allow" on the wall starts counting without a reload @full', async ({ newUser }) => {
+  const { page, webDeck } = await unansweredMember(newUser);
   const tracker = await stubTracker(page);
-  const member = await stubMember(page);
+  const puts = await stubMember(page);
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   const prompt = page.getByRole('dialog', { name: QUESTION });
   await prompt.getByRole('button', { name: 'Allow' }).click();
   await expect(prompt).toBeHidden();
-  expect(member.puts).toEqual([{ value: 'allowed', source: 'prompt' }]);
+  expect(puts).toEqual([{ value: 'allowed', source: 'prompt' }]);
   await expect.poll(() => sentCount(page), { timeout: 15_000 }).toBeGreaterThan(0);
   expect(tracker.loads).toBe(1);
 });
 
 test('a "No thanks" from one device silences the other once it refreshes @full', async ({
   page,
+  api,
+  user,
   browser,
   webDeck,
 }) => {
-  const member = await stubMember(page, allowed());
+  await allow(api);
+  const puts = await stubMember(page);
   await stubTracker(page);
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   await expect.poll(() => sentCount(page), { timeout: 15_000 }).toBeGreaterThan(0);
   await page.goto(webUrl('/settings'));
   await page.getByRole('switch', { name: 'Usage analytics' }).click();
-  await expect.poll(() => member.puts).toEqual([{ value: 'declined', source: 'settings' }]);
+  await expect.poll(() => puts).toEqual([{ value: 'declined', source: 'settings' }]);
 
   // SC-002: a second device of the same account (own storage, same stored answer).
-  const other = await browser.newContext({ extraHTTPHeaders: {} });
+  const other = await browser.newContext({
+    baseURL: stack.webUrl,
+    storageState: await user.api.storageState(),
+  });
   try {
-    await signIn(other);
     const second = await other.newPage();
     const tracker = await stubTracker(second);
-    await stubMember(second, member);
+    await stubMember(second);
     const me = second.waitForResponse((res) => res.url().endsWith('/api/me'));
     await second.goto(webUrl(`/d/${webDeck.slug}`));
     await me;
@@ -167,22 +176,25 @@ test('a "No thanks" from one device silences the other once it refreshes @full',
 
 test('Do Not Track does not switch analytics off for a member who allowed it @full', async ({
   page,
+  api,
   webDeck,
 }) => {
+  await allow(api);
   // SC-001: the browser says DNT, consent decides (D261).
   await page.addInitScript(() => {
     Object.defineProperty(Navigator.prototype, 'doNotTrack', { get: () => '1' });
     Object.defineProperty(Navigator.prototype, 'globalPrivacyControl', { get: () => true });
   });
   const tracker = await stubTracker(page);
-  await stubMember(page, allowed());
+  await stubMember(page);
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   expect(await page.evaluate(() => navigator.doNotTrack)).toBe('1');
   await expect.poll(() => sentCount(page), { timeout: 15_000 }).toBeGreaterThan(0);
   expect(tracker.loads).toBe(1);
 });
 
-test('the prompt never covers the card editor @full', async ({ page, webDeck }) => {
+test('the prompt never covers the card editor @full', async ({ newUser }) => {
+  const { page, webDeck } = await unansweredMember(newUser);
   const tracker = await stubTracker(page);
   await stubMember(page);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
@@ -191,10 +203,9 @@ test('the prompt never covers the card editor @full', async ({ page, webDeck }) 
   expect(tracker.loads).toBe(0);
 });
 
-/** A visitor with no session cookie (the fixture's `page` carries the smoke session). */
+/** A visitor with no session cookie (the landing renders its banner: the stack sets `ANALYTICS_SITE_ID`). */
 async function stranger(browser: Browser, run: (page: Page) => Promise<void>): Promise<void> {
-  // No project headers: in `api-smoke` a new context would inherit the owner's bearer token.
-  const context = await browser.newContext({ extraHTTPHeaders: {} });
+  const context = await browser.newContext();
   try {
     await run(await context.newPage());
   } finally {
@@ -202,13 +213,7 @@ async function stranger(browser: Browser, run: (page: Page) => Promise<void>): P
   }
 }
 
-test('a visitor is asked before anything loads; "No thanks" sticks @full', async ({
-  anon,
-  browser,
-}) => {
-  const html = await (await anon.get(webUrl('/welcome'))).text();
-  test.skip(!html.includes('src="/analytics/page.js"'), 'analytics is off on this server');
-
+test('a visitor is asked before anything loads; "No thanks" sticks @full', async ({ browser }) => {
   await stranger(browser, async (page) => {
     const tracker = await stubTracker(page);
     await page.goto(webUrl('/welcome'));
@@ -237,10 +242,7 @@ test('a visitor is asked before anything loads; "No thanks" sticks @full', async
   });
 });
 
-test('a visitor "Allow" loads the tracker at once @full', async ({ anon, browser }) => {
-  const html = await (await anon.get(webUrl('/welcome'))).text();
-  test.skip(!html.includes('src="/analytics/page.js"'), 'analytics is off on this server');
-
+test('a visitor "Allow" loads the tracker at once @full', async ({ browser }) => {
   await stranger(browser, async (page) => {
     const tracker = await stubTracker(page);
     await page.goto(webUrl('/welcome'));

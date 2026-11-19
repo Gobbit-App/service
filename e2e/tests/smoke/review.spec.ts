@@ -1,5 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
-import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { expect, test, type WebDeck } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /** D106: a proposal created over the API (the ingest pipeline produces the same shape). */
 async function propose(api: APIRequestContext, deck: WebDeck, title: string): Promise<string> {

@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /** A small but common phone width; narrower than the Pixel 7 project default. */
 const PHONE = { width: 360, height: 780 };

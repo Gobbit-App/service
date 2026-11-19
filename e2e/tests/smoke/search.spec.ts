@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures/api';
+import { test, expect } from '../../fixtures/identity';
 
 interface SearchHit {
   item: { id: string; title: string };

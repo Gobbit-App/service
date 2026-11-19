@@ -316,4 +316,47 @@ describe('env', () => {
       );
     });
   });
+
+  describe('sign-in rate limits and smtp mail (047)', () => {
+    it('defaults the per-IP limits', () => {
+      const env = parseEnv({ DATABASE_URL: validUrl });
+      expect(env.MAGIC_LINK_PER_IP_PER_HOUR).toBe(20);
+      expect(env.CALLBACK_PER_IP_PER_HOUR).toBe(30);
+    });
+
+    it('accepts overrides', () => {
+      const env = parseEnv({
+        DATABASE_URL: validUrl,
+        MAGIC_LINK_PER_IP_PER_HOUR: '500',
+        CALLBACK_PER_IP_PER_HOUR: '600',
+      });
+      expect(env.MAGIC_LINK_PER_IP_PER_HOUR).toBe(500);
+      expect(env.CALLBACK_PER_IP_PER_HOUR).toBe(600);
+    });
+
+    it.each(['MAGIC_LINK_PER_IP_PER_HOUR', 'CALLBACK_PER_IP_PER_HOUR'])(
+      'rejects non-positive %s',
+      (key) => {
+        for (const v of ['0', '-1']) {
+          expect(() => parseEnv({ DATABASE_URL: validUrl, [key]: v })).toThrow(new RegExp(key));
+        }
+      },
+    );
+
+    it('requires SMTP_URL when MAIL_PROVIDER=smtp', () => {
+      expect(() => parseEnv({ DATABASE_URL: validUrl, MAIL_PROVIDER: 'smtp' })).toThrow(/SMTP_URL/);
+      const env = parseEnv({
+        DATABASE_URL: validUrl,
+        MAIL_PROVIDER: 'smtp',
+        SMTP_URL: 'smtp://localhost:1025',
+      });
+      expect(env.SMTP_URL).toBe('smtp://localhost:1025');
+    });
+
+    it('ignores SMTP_URL for other providers', () => {
+      expect(() =>
+        parseEnv({ DATABASE_URL: validUrl, MAIL_PROVIDER: 'console', SMTP_URL: 'smtp://x:1' }),
+      ).not.toThrow();
+    });
+  });
 });

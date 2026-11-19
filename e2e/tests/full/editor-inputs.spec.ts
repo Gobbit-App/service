@@ -1,5 +1,5 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import { expect, SMOKE_CATEGORY, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { expect, SMOKE_CATEGORY, test, type WebDeck } from '../../fixtures/identity';
 
 /**
  * 023 editor inputs (`@full`): the URL rule on every URL input (D205), Undo, refusal and failure
@@ -24,7 +24,7 @@ const chip = (page: Page, name: string) => page.getByRole('button', { name, exac
 test('Undo puts the categories back on the server @full', async ({ page, api, webDeck }) => {
   const card = textCard(webDeck);
   const before = await categoryIdsOf(api, card.id);
-  await page.goto(webUrl(`/i/${card.id}/edit`));
+  await page.goto(`/i/${card.id}/edit`);
 
   await chip(page, SMOKE_CATEGORY.name).click();
   await expect(page.getByText('Categories saved')).toBeVisible();
@@ -42,7 +42,7 @@ test('Undo puts the categories back on the server @full', async ({ page, api, we
 test("a published card's last category can't be removed @full", async ({ page, api, webDeck }) => {
   const card = textCard(webDeck);
   const [only] = await categoryIdsOf(api, card.id);
-  await page.goto(webUrl(`/i/${card.id}/edit`));
+  await page.goto(`/i/${card.id}/edit`);
   // Text cards without categories land in the deck default, General (0002_invariants).
   const general = chip(page, 'General');
   await expect(general).toHaveAttribute('aria-pressed', 'true');
@@ -75,7 +75,7 @@ test('a failed category save puts the chips back and says so @full', async ({
         })
       : route.fallback(),
   );
-  await page.goto(webUrl(`/i/${card.id}/edit`));
+  await page.goto(`/i/${card.id}/edit`);
 
   await chip(page, SMOKE_CATEGORY.name).click();
   await expect(
@@ -89,7 +89,7 @@ test('the source URL field prefills https:// and normalises what is typed @full'
   page,
   webDeck,
 }) => {
-  await page.goto(webUrl(`/i/${textCard(webDeck).id}/edit`));
+  await page.goto(`/i/${textCard(webDeck).id}/edit`);
   const source = page.getByLabel('Source URL', { exact: true });
 
   await source.focus();
@@ -113,7 +113,7 @@ test('the source URL field prefills https:// and normalises what is typed @full'
 });
 
 test('a full address pasted over the prefill is not doubled @full', async ({ page, webDeck }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=link`));
+  await page.goto(`/d/${webDeck.slug}/new?type=link`);
   const url = page.getByLabel('URL', { exact: true });
   await url.focus();
   await expect(url).toHaveValue('https://');
@@ -122,7 +122,7 @@ test('a full address pasted over the prefill is not doubled @full', async ({ pag
 });
 
 test('the share form adds https:// to a bare link @full', async ({ page, webDeck }) => {
-  await page.goto(webUrl(`/share?deck=${webDeck.slug}`));
+  await page.goto(`/share?deck=${webDeck.slug}`);
   const link = page.getByLabel('Link', { exact: true });
   await link.focus();
   await expect(link).toHaveValue('https://');
@@ -136,7 +136,7 @@ test('a new table starts from a sample that is not unsaved work; Clear empties i
   page,
   webDeck,
 }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=table`));
+  await page.goto(`/d/${webDeck.slug}/new?type=table`);
   await expect(page.getByLabel('Column 1 heading')).toHaveValue('Item');
   await expect(page.getByLabel('Row 1, Item')).toHaveValue('Milk');
 
@@ -145,7 +145,7 @@ test('a new table starts from a sample that is not unsaved work; Clear empties i
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
   await expect(page.getByRole('dialog', { name: 'Discard changes?' })).toHaveCount(0);
 
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=table`));
+  await page.goto(`/d/${webDeck.slug}/new?type=table`);
   await page.getByRole('button', { name: 'Clear table' }).click();
   await expect(page.getByLabel('Column 1 heading')).toHaveValue('');
   await expect(page.getByLabel('Column 2 heading')).toHaveValue('');
@@ -161,7 +161,7 @@ test('a new calc starts from a working sample; Clear empties it @full', async ({
   page,
   webDeck,
 }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=calc`));
+  await page.goto(`/d/${webDeck.slug}/new?type=calc`);
   await expect(page.getByText('Total: 30').first()).toBeVisible();
 
   await page.getByRole('button', { name: 'Clear calculation' }).click();

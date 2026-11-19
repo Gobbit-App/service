@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
-import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { expect, test, type WebDeck } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * 024 card actions (D210–D216, `@full`): accessible names and contrast in both themes, labels

@@ -1,13 +1,14 @@
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
+import { expect, test, type WebDeck } from '../../fixtures/identity';
+import { CLOUDINARY_DUMMY } from '../../lib/stack-config';
+import { webUrl } from '../../lib/stack';
 import {
-  cloudinaryApiSecret,
   photoFile,
-  recordMediaAsset,
+  recordImageAsset,
   routeCloudName,
   routeFakeCloudinary,
   TINY_PNG,
-} from '../../fixtures/cloudinary';
-import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+} from './helpers/cover-media';
 import {
   browseUrl,
   expectCurrent,
@@ -26,24 +27,12 @@ import {
 // The service worker answers Cloudinary images itself, past `page.route`; block it so the fake serves.
 test.use({ serviceWorkers: 'block' });
 
-test.beforeEach(() => {
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
-});
-
 const save = (page: Page) => page.getByRole('button', { name: 'Save' });
 const coverField = (page: Page) => page.locator('.cover-field');
 const closeLink = (page: Page) => page.getByRole('link', { name: 'Close' });
 
-async function recordCover(api: APIRequestContext, deck: WebDeck): Promise<string> {
-  const publicId = await recordMediaAsset(api, deck.id, {
-    kind: 'image',
-    format: 'png',
-    width: 1200,
-    height: 675,
-  });
-  if (!publicId) throw new Error('recording the cover asset needs CLOUDINARY_API_SECRET');
-  return publicId;
-}
+const recordCover = (api: APIRequestContext, deck: { id: string }): Promise<string> =>
+  recordImageAsset(api, deck.id, { format: 'png', width: 1200, height: 675 });
 
 async function createCovered(
   api: APIRequestContext,
@@ -210,7 +199,7 @@ test('Browse and the full view show the cover without the card moving @full', as
 }) => {
   const deck = await seedBrowseDeck(api, smokeDeck);
   const title = `Browse cover ${deck.slug}`;
-  const publicId = await recordCover(api, { ...smokeDeck, items: [] });
+  const publicId = await recordCover(api, smokeDeck);
   const res = await api.post(`decks/${deck.slug}/items`, {
     data: { type: 'text', title, body: 'Covered', categoryIds: [deck.mainId], cover: { publicId } },
   });
@@ -218,7 +207,7 @@ test('Browse and the full view show the cover without the card moving @full', as
   const card = { id: ((await res.json()) as { id: string }).id, title };
 
   await skipHint(page);
-  await routeCloudName(page, 'e2e-cloud');
+  await routeCloudName(page, CLOUDINARY_DUMMY.cloudName);
   const release = await gateDelivery(page);
   await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${card.id}`));
   await expectCurrent(page, card);
@@ -339,7 +328,7 @@ test('a broken cover image leaves the card without the bar @full', async ({
 }) => {
   const title = `Broken cover ${webDeck.slug}`;
   await createCovered(api, webDeck, title);
-  await routeCloudName(page, 'e2e-cloud');
+  await routeCloudName(page, CLOUDINARY_DUMMY.cloudName);
   await page.route('https://res.cloudinary.com/**', (route) => route.abort());
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));
@@ -358,7 +347,7 @@ test('at 360px a covered card keeps its box while the image loads @full', async 
   const covered = `Covered ${webDeck.slug}`;
   const plain = webDeck.items.find((item) => item.type === 'text')!.title;
   await createCovered(api, webDeck, covered);
-  await routeCloudName(page, 'e2e-cloud');
+  await routeCloudName(page, CLOUDINARY_DUMMY.cloudName);
   const release = await gateDelivery(page);
 
   await page.goto(webUrl(`/d/${webDeck.slug}`));

@@ -10,6 +10,11 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-18 — Self-contained e2e: SMTP mail and per-IP limits (047, D433–D435)
+
+- `MAIL_PROVIDER` accepts a third value, `smtp`, which also needs `SMTP_URL` and `MAIL_FROM`. Production keeps `resend`; nothing changes unless you set it.
+- New optional environment variables (no action needed): `SMTP_URL` (default empty, only read when `MAIL_PROVIDER=smtp`), `MAGIC_LINK_PER_IP_PER_HOUR` (default `20`) and `CALLBACK_PER_IP_PER_HOUR` (default `30`), the per-IP sign-in link and callback limits that were fixed before.
+
 ### 2026-11-16 — Member profile and creator avatar (046, D417–D429)
 
 - Members can set a username, first and last name, location and a cropped profile photo (new migration `0027_member_profile`, additive). Cards in shared and communal decks show who added them as an avatar, and a deck owner can invite a member by username. A member with a username no longer shows an email address in the members list.

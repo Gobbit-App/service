@@ -1,4 +1,5 @@
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 import {
   banner,
   browseUrl,

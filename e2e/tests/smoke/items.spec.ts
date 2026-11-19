@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures/api';
+import { test, expect } from '../../fixtures/identity';
 
 test('items lifecycle @smoke', async ({ api, smokeDeck }) => {
   const title = `smoke ${Date.now()}`;

@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * D354 About (`@full`): opened from the bottom bar's ⋯ menu, it shows the build's version and
