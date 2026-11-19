@@ -9244,7 +9244,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                reason: "needs-decision" | "already-handled";
+                                reason: "needs-decision" | "already-handled" | "publish-failed";
                             }[];
                         };
                     };

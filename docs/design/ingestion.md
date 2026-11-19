@@ -111,7 +111,7 @@ Non-session tokens are listed in `lib/token-prefixes.ts` (today `ing_`; Phase 13
 - **Parser rules beyond the research list**: a spaced hyphen ` - ` also splits; list markers are stripped in `lines`; a URL-only title drops the scheme and `www.`, and a URL is removed from the title when it becomes the source; Markdown link-only list items become link cards; a CSV `url` column makes a link card, CSV `line` is the spreadsheet row number, and a CSV needs a `title` or `body` column.
 - **A bad row refuses the whole request** (400 naming "Row N"); only cap hits give a partial result.
 - **Link payload URL = `sourceUrl`** for imported link cards.
-- **Bulk publish**: a 409 race on one card counts as `already-handled`; any other error aborts the rest of the batch (already published cards stay published).
+- **Bulk publish**: a 409 race on one card counts as `already-handled`; any other error skips that card as `publish-failed` (logged with the request and card id) and the batch continues; one `review.bulk_publish` decision event per request carries the failure count (ids and counts only). Already published cards stay published. Errors before the loop (deck not visible, role) still fail the request.
 - **Skipped-cards "toast" is an inline status notice** (stays until dismissed, lists each card with its reason), not the global undo toast.
 - **Optimistic review cache updates cover every cached queue variant** (whole queue and per source) via `reviewListsFilter`.
 - **Invalid preview rows start unticked** and can only be ticked once an edit fixes them; the import label is the file name, or "Pasted notes".

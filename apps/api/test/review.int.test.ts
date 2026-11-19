@@ -435,6 +435,33 @@ describe('review queue (D106, D107)', () => {
       expect(created).toBeDefined();
     });
 
+    it('keeps publishing past a card that cannot be published', async () => {
+      const extraction = (newCategory: string) => ({
+        model: 'direct' as const,
+        escalated: false,
+        type: 'text' as const,
+        confidence: 1,
+        language: 'und',
+        categoryIds: [],
+        newCategory,
+      });
+      const first = await proposal();
+      // A suggested category with no usable name makes publish throw a 400.
+      const broken = await proposal({ extraction: extraction('!!!') });
+      const last = await proposal();
+
+      const res = await post(`/decks/${deck.id}/review/publish`, {
+        ids: [first.item.id, broken.item.id, last.item.id],
+      });
+
+      expect(res.status).toBe(200);
+      expect(await json(res)).toEqual({
+        published: [first.item.id, last.item.id],
+        skipped: [{ id: broken.item.id, reason: 'publish-failed' }],
+      });
+      expect((await itemRow(broken.item.id)).status).toBe('proposed');
+    });
+
     it('refuses more than 50 ids and non-publishers', async () => {
       const ids = Array.from({ length: 51 }, () => crypto.randomUUID());
       expect((await post(`/decks/${deck.id}/review/publish`, { ids })).status).toBe(400);

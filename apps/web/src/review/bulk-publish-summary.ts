@@ -3,6 +3,7 @@ import type { BulkPublishResult, BulkPublishSkipReason, ReviewEntry } from '@gob
 const SKIP_LABELS: Record<BulkPublishSkipReason, string> = {
   'needs-decision': 'needs a decision',
   'already-handled': 'already handled',
+  'publish-failed': 'could not be published',
 };
 
 export type SkippedCard = { id: string; title: string; reason: string };

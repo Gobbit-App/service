@@ -41,8 +41,17 @@ import { eventFrom } from '../events/item-event';
 import type { ItemDtoMapper } from './item-dtos';
 import type { MemberSummaries } from './member-summaries';
 import { childLogger } from '../lib/logger';
+import { decisionLogger } from '../lib/decision-event';
 
 const log = childLogger('review');
+
+/** D191 (Accountability, constitution VIII): one event per bulk publish that skipped cards that failed. */
+type ReviewDecisions = {
+  'review.bulk_publish': { outcome: 'skipped'; reason: 'publish_failed' };
+};
+const decisions = decisionLogger<ReviewDecisions>('review', {
+  levels: { 'review.bulk_publish': 'warn' },
+});
 
 const ITEM_NOT_FOUND = 'Item not found';
 
@@ -347,9 +356,27 @@ export function createReviewService(deps: {
           result.published.push(id);
         } catch (err) {
           // Reviewed by someone else in the meantime.
-          if (!(err instanceof HttpError) || err.status !== 409) throw err;
-          result.skipped.push({ id, reason: 'already-handled' });
+          if (err instanceof HttpError && err.status === 409) {
+            result.skipped.push({ id, reason: 'already-handled' });
+            continue;
+          }
+          // One bad card must not stop the rest; the client only learns the reason.
+          log.error(
+            { err, requestId: actor.requestId, itemId: id },
+            'bulk publish of a card failed',
+          );
+          result.skipped.push({ id, reason: 'publish-failed' });
         }
+      }
+      const failed = result.skipped.filter((s) => s.reason === 'publish-failed').length;
+      if (failed > 0) {
+        decisions.record('review.bulk_publish', {
+          outcome: 'skipped',
+          reason: 'publish_failed',
+          requestId: actor.requestId ?? 'internal',
+          deckId: deck.id,
+          count: failed,
+        });
       }
       return result;
     },
