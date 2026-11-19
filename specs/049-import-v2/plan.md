@@ -227,9 +227,9 @@ Notes:
 
 ## Settle before starting
 
-- [ ] Confirm the two resolutions in research (D445 derived address `c-<hex>`; D447 env-tunable cap, no owner exemption) — both are reversible and cheap to change before tasks.
-- [ ] Confirm `cover` / `image` reading (spec Assumptions): `cover` on any card, `image` = the file of a `type: media` card.
-- [ ] The bulk-publish "continue past failures" fix (spec dependency) is on `main` before PR 1 is used on a real seed.
+- [x] Confirm the two resolutions in research (D445 derived address `c-<hex>`; D447 env-tunable cap, no owner exemption) — confirmed 2026-11-19.
+- [x] Confirm `cover` / `image` reading (spec Assumptions): `cover` on any card, `image` = the file of a `type: media` card — confirmed 2026-11-19.
+- [x] The bulk-publish "continue past failures" fix (spec dependency) is on `main` (#174, 2026-11-19).
 
 ## Complexity Tracking
 

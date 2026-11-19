@@ -104,7 +104,7 @@ A curator imports 400 cards across a dozen files in one evening. The import limi
 **Acceptance Scenarios**:
 
 1. **Given** a seeding session, **When** an owner or maintainer imports 400 rows in one day, **Then** all are proposed. (Resolved in the plan, D447: an operator-tunable daily limit for everyone, default 500; no role exemption; the per-request limit is kept.)
-2. **Given** the preview, **When** a file has more rows than the preview limit, **Then** the person is told to split the file; the preview limit rises with the import limit.
+2. **Given** the preview, **When** a file has more rows than the preview limit, **Then** the person is told to split the file; the preview limit is raised to the new default import limit (a build-time constant, D447; an operator raising the limit above it helps the command line, the seeding path).
 3. **Given** the limit is reached mid-import, **When** rows are refused, **Then** rows already proposed stay, the rest are reported as not imported, and the refusal is recorded as a decision.
 
 ---
@@ -228,10 +228,10 @@ Decisions about a person's content this feature makes, each recorded (constituti
 
 ## Assumptions
 
-- **Dependency**: bulk publish continuing past a card that cannot be published (reporting it as skipped with its reason) ships first as a separate small fix; this spec relies on it for reviewing seeds.
+- **Dependency**: bulk publish continuing past a card that cannot be published (reporting it as skipped with its reason) shipped first as a separate small fix (#174, skip reason `publish-failed`); this spec relies on it for reviewing seeds.
 - Seed files are written by hand by curators and live outside this repository; fixtures here use made-up content only.
 - Card-per-section is triggered by the presence of a `##` heading; no switch is needed (the launch checklist chose this trigger; see the 021 change in Edge Cases).
-- `cover` sets a cover image on any card; `image` names the file of a media card (`type: media`: an image, PDF, audio or video file). This reading of the checklist's "`image` or `cover`" is to be confirmed in clarify.
+- `cover` sets a cover image on any card; `image` names the file of a media card (`type: media`: an image, PDF, audio or video file). This reading of the checklist's "`image` or `cover`" was confirmed by the author (2026-11-19).
 - The `#` heading names a category in the current file; files are expected to hold one category each, but several `#` headings in one file are allowed.
 - In the app's import screen, strict mode is an option (off by default) rather than a separate screen.
 - Only `text`, `link` and `media` cards (plus a cover on any of them) are importable; table, calc, reminder and event cards are out of scope.
