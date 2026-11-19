@@ -3,4 +3,5 @@ export const CONVERTED_SPECS: string[] = [
   'smoke/sign-in.spec.ts',
   'full/isolation.spec.ts',
   'full/members-roles.spec.ts',
+  'full/profile.spec.ts',
 ];

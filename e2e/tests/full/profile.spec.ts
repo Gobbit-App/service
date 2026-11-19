@@ -1,12 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import {
-  devices,
-  type APIRequestContext,
-  type Browser,
-  type Locator,
-  type Page,
-} from '@playwright/test';
-import { expect, test as base, webUrl } from '../../fixtures/web';
+import { type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import { expect, test as base, type Identity } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
+import { swipeCard } from '../smoke/helpers/swipe';
 import {
   browseUrl,
   createCard,
@@ -14,78 +10,38 @@ import {
   expectCurrent,
   fullView,
   MAIN,
+  phoneContext,
+  photoFile,
+  routeFakeAvatar,
   seedBrowseDeck,
   skipHint,
-} from '../smoke/helpers/browse-deck';
-import { cloudinaryApiSecret, photoFile, routeFakeCloudinary } from '../../fixtures/cloudinary';
-import { swipeCard } from '../smoke/helpers/swipe';
+} from './helpers/profile';
 
 /**
- * 046 member profile (`@full`). NOT executed when written: the authoring environment had no
- * Postgres or browser stack, so these specs are checked by typecheck, ESLint and Prettier only.
- *
- * Two more members are needed, so the stack must provide sessions for two extra users who belong
- * to the SAME account as the smoke owner (they are then implicit owners of every smoke deck, so no
- * invite acceptance is needed): `E2E_MEMBER_B_TOKEN` and `E2E_MEMBER_C_TOKEN` (bearer tokens, like
- * `SMOKE_SESSION_TOKEN`). Without them the tests skip. Each test uses unique usernames (a
- * released name is held, so they are never reused) and resets all three profiles afterwards.
+ * 046 member profile (`@full`). Every test has its own signed-in owner (`user`/`page`, a Pixel 7
+ * context) and, where two more members are needed, `b` and `c`: editors invited to the test's deck
+ * through the real invite link. Users are fresh per test, so nothing is reset afterwards.
  */
-
-const { defaultBrowserType: _ignored, ...PIXEL_7 } = devices['Pixel 7'];
-const TOKEN_B = process.env.E2E_MEMBER_B_TOKEN?.trim() ?? '';
-const TOKEN_C = process.env.E2E_MEMBER_C_TOKEN?.trim() ?? '';
-const SESSION_COOKIE = 'gobbit_session';
 
 const NOT_AVAILABLE = "That name isn't available";
 const BAD_SHAPE = 'Use 3–30 letters, digits, ., _ or -';
-const CLEARED = { username: null, firstName: null, lastName: null, location: null, avatar: null };
 
-const test = base.extend<{ tag: string; b: APIRequestContext; c: APIRequestContext }>({
-  // A short unique suffix for names, so a held username from an earlier run never collides.
+const test = base.extend<{ tag: string; b: Identity; c: Identity }>({
+  // A short unique suffix for names.
   tag: async ({ browserName: _b }, use) => use(randomUUID().slice(0, 6).replace(/-/g, 'x')),
-  b: async ({ playwright, baseURL }, use) => {
-    test.skip(!TOKEN_B, 'E2E_MEMBER_B_TOKEN is not set');
-    await use(await member(playwright.request, baseURL, TOKEN_B));
-  },
-  c: async ({ playwright, baseURL }, use) => {
-    test.skip(!TOKEN_C, 'E2E_MEMBER_C_TOKEN is not set');
-    await use(await member(playwright.request, baseURL, TOKEN_C));
-  },
-  // Every test leaves the three profiles empty (the owner's is also the page's session).
-  api: async ({ api }, use) => {
-    await use(api);
-    await api.patch('me/profile', { data: CLEARED });
+  b: async ({ member, smokeDeck }, use) => use(await member(smokeDeck, 'editor')),
+  c: async ({ member, smokeDeck }, use) => use(await member(smokeDeck, 'editor')),
+  // The owner's page is a phone, like the project this spec ran in before.
+  context: async ({ browser, user, serviceWorkers }, use) => {
+    const context = await phoneContext(browser, user, serviceWorkers);
+    await use(context);
+    await context.close();
   },
 });
 
-async function member(
-  request: { newContext: (o: object) => Promise<APIRequestContext> },
-  baseURL: string | undefined,
-  token: string,
-): Promise<APIRequestContext> {
-  return request.newContext({ baseURL, extraHTTPHeaders: { Authorization: `Bearer ${token}` } });
-}
-
-async function setProfile(who: APIRequestContext, data: Record<string, unknown>): Promise<void> {
-  const res = await who.patch('me/profile', { data });
+async function setProfile(who: Identity, data: Record<string, unknown>): Promise<void> {
+  const res = await who.api.patch('me/profile', { data });
   expect(res.status(), 'set profile').toBe(200);
-}
-
-/** Another member's browser, signed in with their bearer token as the session cookie (D62). */
-async function asMemberPage(
-  browser: Browser,
-  token: string,
-  run: (page: Page) => Promise<void>,
-): Promise<void> {
-  const context = await browser.newContext(PIXEL_7);
-  try {
-    await context.addCookies([
-      { name: SESSION_COOKIE, value: token, url: webUrl('/'), httpOnly: true, sameSite: 'Lax' },
-    ]);
-    await run(await context.newPage());
-  } finally {
-    await context.close();
-  }
 }
 
 const username = (page: Page) => page.getByLabel('Username');
@@ -129,7 +85,7 @@ test.describe('profile form @full', () => {
     await saveButton(page).click();
     await expect.poll(async () => (await (await api.get('me')).json()).profile.username).toBeNull();
 
-    const refused = await b.patch('me/profile', { data: { username: held } });
+    const refused = await b.api.patch('me/profile', { data: { username: held } });
     expect(refused.status(), 'another member takes a held name').toBe(422);
 
     await username(page).fill(held);
@@ -209,7 +165,7 @@ test.describe('member lookup @full', () => {
     tag,
   }) => {
     await setProfile(b, { firstName: 'Dana', lastName: `L${tag}` });
-    const email = ((await (await b.get('me')).json()) as { email: string }).email;
+    const email = b.email;
 
     const hit = lookedUp(page);
     await field(page).fill(email);
@@ -229,28 +185,41 @@ test.describe('member lookup @full', () => {
     await field(page).fill(`neverused${tag}`);
     await expect(invite(page).getByRole('status')).toHaveText('No member found');
   });
+});
 
-  // Last in the file: it spends the owner's whole hourly lookup budget (PROFILE_LOOKUP_RATE_PER_HOUR).
-  test('the 31st lookup is limited quietly @full', async ({ page, api, tag }) => {
-    const errors: Error[] = [];
-    page.on('pageerror', (e) => errors.push(e));
-
-    let limited = 0;
-    for (let n = 0; n < 40 && !limited; n += 1) {
-      const res = await api.post('members/lookup', { data: { query: `burst${tag}${n}` } });
-      if (res.status() === 429) limited = n + 1;
-      else expect(res.status()).toBe(200);
-    }
-    expect(limited, 'a 429 within 40 lookups').toBeGreaterThan(0);
-
-    const answer = lookedUp(page);
-    await field(page).fill(`limited${tag}`);
-    expect((await answer).status()).toBe(429);
-    await expect(invite(page).locator('.avatar')).toHaveCount(0);
-    await expect(invite(page)).not.toContainText('No member found');
-    await expect(field(page)).toBeEnabled();
-    expect(errors).toEqual([]);
+// A fresh member of its own: the test spends that member's whole hourly lookup budget
+// (PROFILE_LOOKUP_RATE_PER_HOUR, default 30; the loop stops at the first 429 within 40).
+test('the 31st lookup is limited quietly @full', async ({ newUser, tag }) => {
+  const limitedUser = await newUser('limit');
+  const created = await limitedUser.api.post('decks', {
+    data: { name: `Limit ${tag}`, slug: `smoke-lim-${tag}`, kind: 'shared' },
   });
+  expect(created.status(), 'create deck').toBe(201);
+  const page = await limitedUser.page();
+  const errors: Error[] = [];
+  page.on('pageerror', (e) => errors.push(e));
+  await page.goto(webUrl(`/d/smoke-lim-${tag}/settings`));
+  const invite = page.getByRole('form', { name: 'Invite someone' });
+  const field = invite.getByLabel('Email or username');
+  await expect(field).toBeVisible();
+
+  let limited = 0;
+  for (let n = 0; n < 40 && !limited; n += 1) {
+    const res = await limitedUser.api.post('members/lookup', {
+      data: { query: `burst${tag}${n}` },
+    });
+    if (res.status() === 429) limited = n + 1;
+    else expect(res.status()).toBe(200);
+  }
+  expect(limited, 'a 429 within 40 lookups').toBeGreaterThan(0);
+
+  const answer = page.waitForResponse((res) => res.url().endsWith('/members/lookup'));
+  await field.fill(`limited${tag}`);
+  expect((await answer).status()).toBe(429);
+  await expect(invite.locator('.avatar')).toHaveCount(0);
+  await expect(invite).not.toContainText('No member found');
+  await expect(field).toBeEnabled();
+  expect(errors).toEqual([]);
 });
 
 /* ------------------------------------------------------------------------------------------ */
@@ -287,24 +256,23 @@ const box = async (avatar: Locator) => {
 test.describe('creator avatar @full', () => {
   test('two members see the same initials and colour for a third @full', async ({
     page,
-    browser,
     webDeck,
+    b,
     c,
     tag,
   }) => {
     await setProfile(c, { firstName: 'Cee', lastName: `Cr${tag}`, username: `cee${tag}` });
     const title = `By C ${tag}`;
-    await addCard(c, webDeck, title);
+    await addCard(c.api, webDeck, title);
 
     await page.goto(webUrl(`/d/${webDeck.slug}`));
     const mine = await look(card(page, title).locator('.avatar'));
     expect(mine.initials).toBe('CC');
     expect(mine.background).not.toBe('rgba(0, 0, 0, 0)');
 
-    await asMemberPage(browser, TOKEN_B, async (other) => {
-      await other.goto(webUrl(`/d/${webDeck.slug}`));
-      expect(await look(card(other, title).locator('.avatar'))).toEqual(mine);
-    });
+    const other = await b.page();
+    await other.goto(webUrl(`/d/${webDeck.slug}`));
+    expect(await look(card(other, title).locator('.avatar'))).toEqual(mine);
 
     // members list (settings): same colour and initials on the member's row
     await page.goto(webUrl(`/d/${webDeck.slug}/settings`));
@@ -358,16 +326,15 @@ test.describe('creator avatar @full', () => {
 
     // a card by another member is current too: its avatar matches the list's colour
     const titleC = `Browse by C ${tag}`;
-    const idC = await createCard(c, deck.slug, { title: titleC, categoryIds: [deck.mainId] });
+    const idC = await createCard(c.api, deck.slug, { title: titleC, categoryIds: [deck.mainId] });
     await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${idC}`));
     await expect(stage.getByRole('heading', { name: titleC })).toBeVisible();
     expect((await look(stage.locator('article.card .avatar').first())).initials).toBe('CC');
   });
 
   test('a personal deck card has no avatar @full', async ({ page, api, tag }) => {
-    // The bearer session never signs in, and the personal deck is created at sign-in; the seed makes no decks (D49).
-    const personal = await api.get('decks/me');
-    test.skip(personal.status() !== 200, 'the smoke owner has no personal deck yet');
+    // The personal deck is created at sign-in.
+    expect((await api.get('decks/me')).status()).toBe(200);
     const title = `Personal ${tag}`;
     const id = await addCard(api, { slug: 'me' }, title);
     try {
@@ -379,17 +346,16 @@ test.describe('creator avatar @full', () => {
     }
   });
 
-  // A creator can only be removed by deleting the user row (no route does): covered by
-  // apps/api/test/profile.int.test.ts ("is the placeholder after the creator is removed").
-  test.fixme('a removed creator shows the placeholder glyph @full', () => {});
+  // A removed creator's placeholder glyph is covered by apps/api/test/profile.int.test.ts
+  // ("is the placeholder after the creator is removed"): no route deletes a user.
 
   test('the label opens on tap and closes on second tap, outside tap and Escape @full', async ({
     page,
-    api,
+    user,
     webDeck,
     tag,
   }) => {
-    await setProfile(api, { username: `lab${tag}` });
+    await setProfile(user, { username: `lab${tag}` });
     await page.goto(webUrl(`/d/${webDeck.slug}`));
     const avatar = page.locator('article.card .avatar').first();
     await expect(avatar).toHaveAttribute('data-tip', `lab${tag}`);
@@ -449,7 +415,7 @@ test.describe('creator avatar @full', () => {
   test('a communal deck reader sees creators @full', async ({ page, api, tag }) => {
     const slug = `smoke-com-${tag}`;
     const created = await api.post('decks', { data: { name: slug, slug, kind: 'communal' } });
-    test.skip(created.status() !== 201, `communal deck not creatable here (${created.status()})`);
+    expect(created.status(), 'create communal deck').toBe(201);
     const { id } = (await created.json()) as { id: string };
     try {
       const title = `Communal ${tag}`;
@@ -486,62 +452,6 @@ test.describe('creator avatar @full', () => {
 /* Part 3: profile photo (Story 3)                                                             */
 /* ------------------------------------------------------------------------------------------ */
 
-const AVATAR_SIGN = {
-  kind: 'image',
-  uploadUrl: 'https://api.cloudinary.com/v1_1/e2e-cloud/image/upload',
-  apiKey: 'e2e-key',
-  signature: 'e2e-signature',
-  tags: 'profile',
-  allowedFormats: 'jpg,png,webp,heic,heif',
-  maxBytes: 8 * 1024 * 1024,
-};
-
-/**
- * Cloudinary and the profile-photo permission, answered locally (D133). `routeFakeCloudinary` does
- * the upload answer, cloud name and delivery; the member's own sign and confirm routes are added
- * here. With the API's secret the real confirm verifies the signed answer (the id must sit in the
- * member's folder), otherwise it is stubbed too.
- */
-async function routeFakeAvatar(page: Page, api: APIRequestContext, name: string): Promise<string> {
-  const me = (await (await api.get('me')).json()) as { user: { id: string } };
-  const folder = `gobbit/profiles/${me.user.id}`;
-  const publicId = `${folder}/e2e-${name}`;
-  await routeFakeCloudinary(page, publicId);
-  await page.route('**/api/me/avatar/sign', (route) =>
-    route.fulfill({
-      json: {
-        ...AVATAR_SIGN,
-        timestamp: Math.floor(Date.now() / 1000),
-        folder,
-        expiresAt: new Date(Date.now() + 50 * 60_000).toISOString(),
-      },
-    }),
-  );
-  if (!cloudinaryApiSecret) {
-    await page.route('**/api/me/avatar/assets', (route) => {
-      const sent = route.request().postDataJSON() as { publicId?: string };
-      return route.fulfill({
-        status: 201,
-        json: {
-          publicId: sent.publicId ?? publicId,
-          kind: 'image',
-          resourceType: 'image',
-          width: 1,
-          height: 1,
-          bytes: photoFile.buffer.length,
-          format: 'png',
-          durationMs: null,
-          pages: null,
-          originalFilename: null,
-          source: 'editor',
-          createdAt: new Date().toISOString(),
-        },
-      });
-    });
-  }
-  return publicId;
-}
-
 /** Pick, crop in the sheet (zoom, "Use photo") and close it; the upload then runs. */
 async function pickAndCrop(page: Page, label: 'Add photo' | 'Replace photo') {
   await page.getByLabel(label).setInputFiles(photoFile);
@@ -556,9 +466,7 @@ const photoOn = (page: Page, title: string) =>
   card(page, title).locator('.avatar img.cloud-image__img');
 
 test.describe('profile photo @full', () => {
-  // Saving a photo needs the API to find the recorded asset: the UI flow only records it through the
-  // real signed confirm, so these tests need the Cloudinary secret (the third-party host is still faked).
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is needed to record the profile asset');
+  // The UI flow records the asset through the real signed confirm (the dummy secret); only Cloudinary is faked.
   // The service worker answers Cloudinary images itself, past `page.route`; block it so the fake serves.
   // Only here: the offline test in this file needs the worker.
   test.use({ serviceWorkers: 'block' });
@@ -571,10 +479,11 @@ test.describe('profile photo @full', () => {
   test('upload, crop, save shows the photo on a card; replace; remove brings initials back @full', async ({
     page,
     api,
+    user,
     webDeck,
     tag,
   }) => {
-    await setProfile(api, { firstName: 'Pho', lastName: `To${tag}` });
+    await setProfile(user, { firstName: 'Pho', lastName: `To${tag}` });
     await page.reload();
     const title = `Photo card ${tag}`;
     await addCard(api, webDeck, title);
@@ -673,7 +582,6 @@ test.describe('profile photo @full', () => {
   });
 
   test('a broken photo falls back to initials @full', async ({ page, api, webDeck, tag }) => {
-    test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is needed to record the profile asset');
     await routeFakeAvatar(page, api, `broken-${tag}`);
     await page.goto(webUrl('/settings/profile'));
     await page.getByLabel('First name').fill('Bro');
