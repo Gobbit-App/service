@@ -31,6 +31,6 @@
 
 ## Notes
 
-- No open markers. Two choices differ from the launch checklist's wording and are recorded as deviations: the duplicate-check embedding stays (it becomes the card's own embedding), and platform admins count as switched on instead of being set by a migration. Both can be revisited in `/speckit-clarify`.
+- No open markers. Two choices differ from the launch checklist's wording and are recorded as deviations: the duplicate-check embedding stays (it becomes the card's own embedding), and platform admins count as switched on instead of being set by a migration. Both can be revisited in `/speckit-clarify`; the embedding one is put to the owner as an explicit question with the default stated (the sweep embeds proposals regardless, so the default adds no spend).
 - Project terms that name existing behaviour (decision event, review queue, Your shares, page preview, platform admin) are kept, as in earlier specs; no file, function or route names appear.
 - Model-free sharing on a deployment with no model provider at all is out of scope (unchanged: sharing stays unavailable).
