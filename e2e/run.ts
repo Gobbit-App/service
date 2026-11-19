@@ -113,10 +113,12 @@ async function start(): Promise<{ webPort: number; mailboxPort: number }> {
 
 function runPlaywright(): Promise<number> {
   return new Promise((resolve) => {
+    // The package's own binary, not `pnpm exec`: pnpm's pre-run dependency check needs a tty
+    // when the environment is empty (T047 runs this under `env -i`).
     current = spawn(
-      'pnpm',
-      ['--filter', 'e2e', 'exec', 'playwright', 'test', '-c', PLAYWRIGHT_CONFIG, ...passthrough],
-      { cwd: root, stdio: 'inherit' },
+      `${root}/e2e/node_modules/.bin/playwright`,
+      ['test', '-c', PLAYWRIGHT_CONFIG, ...passthrough],
+      { cwd: `${root}/e2e`, stdio: 'inherit' },
     );
     current.on('error', () => resolve(1));
     current.on('close', (code) => resolve(code ?? 1));
