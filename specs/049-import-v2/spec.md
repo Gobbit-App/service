@@ -70,7 +70,7 @@ Before importing, the deck's maintainer creates the agreed categories from the a
 
 **Acceptance Scenarios**:
 
-1. **Given** a category name in Hebrew (or another non-Latin script, or mixed), **When** a maintainer creates it in the app, **Then** it is created with a usable, stable address. [NEEDS CLARIFICATION: how a non-Latin name gets its address — transliterate automatically when the name yields none, or have the person (and import) supply the address explicitly?]
+1. **Given** a category name in Hebrew (or another non-Latin script, or mixed), **When** a maintainer creates it in the app, **Then** it is created with a usable, stable address. (Resolved in the plan, D445: when the name yields no address, one is derived automatically as `c-` plus a short hash of the name; an explicit address still wins.)
 2. **Given** a proposal suggesting a new Hebrew category, **When** a publisher publishes it, **Then** the category is created with a usable address and the card is filed in it.
 3. **Given** strict category mode, **When** a row names a category (heading or `categories:`) that matches no existing category by name or address, **Then** the row is refused and the result lists the unmatched names; no suggestion is created.
 4. **Given** the command-line tool, **When** no mode is given, **Then** strict mode is on; the app's import screen keeps today's behaviour (unmatched names become suggestions) unless strict mode is chosen.
@@ -103,7 +103,7 @@ A curator imports 400 cards across a dozen files in one evening. The import limi
 
 **Acceptance Scenarios**:
 
-1. **Given** a seeding session, **When** an owner or maintainer imports 400 rows in one day, **Then** all are proposed. [NEEDS CLARIFICATION: how the limit is lifted — an operator-tunable daily limit for everyone, or deck owners and maintainers exempt from the daily limit (with a per-request limit kept)?]
+1. **Given** a seeding session, **When** an owner or maintainer imports 400 rows in one day, **Then** all are proposed. (Resolved in the plan, D447: an operator-tunable daily limit for everyone, default 500; no role exemption; the per-request limit is kept.)
 2. **Given** the preview, **When** a file has more rows than the preview limit, **Then** the person is told to split the file; the preview limit rises with the import limit.
 3. **Given** the limit is reached mid-import, **When** rows are refused, **Then** rows already proposed stay, the rest are reported as not imported, and the refusal is recorded as a decision.
 
