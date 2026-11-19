@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CARD_BODY_MAX } from '@gobbit/shared/card-limits';
-import type { ImportRow } from '@gobbit/shared/import';
+import { parseNotes, type ImportRow } from '@gobbit/shared/import';
 import {
   categoryStatus,
   editRow,
@@ -67,5 +67,17 @@ describe('preview rows (D189)', () => {
     expect(categoryStatus('Health', [health])).toBe('existing');
     expect(categoryStatus('Schools', [health])).toBe('new');
     expect(categoryStatus(null, [health])).toBeNull();
+  });
+
+  it('maps a card-per-section file to one ticked row per ## section (049)', () => {
+    const { rows } = parseNotes(
+      '# Health\n\n## Clinic\nOpen 9-5\n\n## Dentist\nCall first\n',
+      'markdown',
+    );
+    const preview = previewRows(rows);
+    expect(preview.map((r) => [r.title, r.body, r.categories, r.included])).toEqual([
+      ['Clinic', 'Open 9-5', ['Health'], true],
+      ['Dentist', 'Call first', ['Health'], true],
+    ]);
   });
 });

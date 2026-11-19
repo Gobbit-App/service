@@ -13,7 +13,7 @@ const TASK_BOX = /^\[[ xX]\]\s+/;
 const QUOTE = /^\s*>\s?/;
 
 /** Inline Markdown → plain text; the first link's URL is returned for `sourceUrl`. */
-function plain(text: string): { text: string; url: string | null } {
+export function plain(text: string): { text: string; url: string | null } {
   let url: string | null = null;
   const replaced = text.replace(INLINE_LINK, (_m, label: string, href: string) => {
     url ??= href;

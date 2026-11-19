@@ -16,6 +16,12 @@ export type RowEdit = Partial<Pick<ImportRow, 'title' | 'body'>> & { category?: 
 /** The label imports are shown under in review (and `?source=`): the file name or this. */
 export const PASTED_LABEL = 'Pasted notes';
 
+/** The first part of a card's body for the preview; the full text is in the editor. */
+export function bodyExcerpt(body: string, max = 200): string {
+  const chars = [...body];
+  return chars.length > max ? `${chars.slice(0, max).join('').trimEnd()}…` : body;
+}
+
 export function previewRows(rows: readonly ImportRow[]): PreviewRow[] {
   return rows.map((row, key) => ({ ...row, key, included: row.error === null }));
 }

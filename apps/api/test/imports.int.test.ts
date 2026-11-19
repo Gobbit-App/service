@@ -96,6 +96,28 @@ describe('POST /decks/{id}/imports (D190)', () => {
     expect(llmAfter[0]!.n).toBe(llmBefore[0]!.n);
   });
 
+  it('stores a card-per-section body verbatim as a proposed card with no LLM call', async () => {
+    const body = [
+      'פסקה ראשונה על **הרישום** בקליניקה.',
+      '',
+      'פסקה שנייה, עם [הטפסים](https://example.org/forms) לקריאה.',
+      '',
+      '- להביא תעודת זהות',
+      '- להביא **כרטיס קופת חולים**',
+    ].join('\n');
+    const llmBefore = await ctx.t.db.select({ n: sql<number>`count(*)::int` }).from(llmCalls);
+
+    const res = await importRows([{ type: 'text', title: 'קליניקה', body }]);
+
+    expect(res.status).toBe(200);
+    expect(await json(res)).toEqual({ imported: 1, duplicates: 0, failed: [] });
+    const [row] = await ctx.t.db.select().from(items).where(eq(items.deckId, deck.id));
+    expect(row!.body).toBe(body);
+    expect(row!.status).toBe('proposed');
+    const llmAfter = await ctx.t.db.select({ n: sql<number>`count(*)::int` }).from(llmCalls);
+    expect(llmAfter[0]!.n).toBe(llmBefore[0]!.n);
+  });
+
   it('counts a row flagged as a duplicate and still imports it', async () => {
     await createItem(ctx.t.db, deck, {
       card: { type: 'link', title: 'Forms', payload: { url: 'https://example.org/forms' } },

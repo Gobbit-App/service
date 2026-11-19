@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { IMPORT_ROWS_PER_PREVIEW } from '@gobbit/shared/ingest-constants';
 import type { ImportCategory, ImportRow } from '@gobbit/shared/import';
+import { ImportInput } from './ImportInput';
 import { ImportPreview } from './ImportPreview';
 import { importableRows, previewRows, type PreviewRow } from './preview-rows';
 
@@ -22,13 +23,18 @@ const note = (line: number, overrides: Partial<ImportRow> = {}): ImportRow => ({
 });
 
 /** A controlled preview: edits flow back in, the last rows are readable through `latest`. */
-function renderPreview(rows: ImportRow[], onImport = vi.fn()) {
+function renderPreview(
+  rows: ImportRow[],
+  onImport = vi.fn(),
+  ignored: { line: number; text: string }[] = [],
+) {
   const latest: { rows: PreviewRow[] } = { rows: previewRows(rows) };
   function Harness() {
     const [current, setCurrent] = useState(latest.rows);
     return (
       <ImportPreview
         rows={current}
+        ignored={ignored}
         categories={CATEGORIES}
         busy={false}
         onChange={(next) => {
@@ -90,5 +96,28 @@ describe('ImportPreview (D189)', () => {
     renderPreview([note(1)]);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Import line 1' }));
     expect(screen.getByRole('button', { name: 'Import 0 cards' })).toBeDisabled();
+  });
+
+  it('shows a section row with its title and body excerpt (049)', () => {
+    renderPreview([note(3, { title: 'Clinic', body: 'Open 9-5 on weekdays' })]);
+    expect(screen.getByText('Clinic')).toBeInTheDocument();
+    expect(screen.getByText(/Open 9-5 on weekdays/)).toBeInTheDocument();
+  });
+
+  it('lists text outside any section as ignored, with its line (049)', () => {
+    renderPreview([note(3)], vi.fn(), [{ line: 1, text: 'stray words' }]);
+    const notice = screen.getByText(/ignored/i).closest('*:not(span)')!;
+    expect(notice).toHaveTextContent(/line 1/i);
+    expect(notice).toHaveTextContent('stray words');
+  });
+
+  it('shows no ignored notice when nothing was ignored (049)', () => {
+    renderPreview([note(1)]);
+    expect(screen.queryByText(/ignored/i)).not.toBeInTheDocument();
+  });
+
+  it('the input explains that ## starts a card and # groups (049)', () => {
+    render(<ImportInput initial={null} onPreview={vi.fn()} />);
+    expect(screen.getByText(/##.*starts a card/)).toHaveTextContent(/#.*groups/);
   });
 });

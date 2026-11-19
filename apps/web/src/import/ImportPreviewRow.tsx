@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import type { ImportCategory } from '@gobbit/shared/import';
-import { categoryStatus, type PreviewRow, type RowEdit } from './preview-rows';
+import { bodyExcerpt, categoryStatus, type PreviewRow, type RowEdit } from './preview-rows';
 import { Button } from '../ui/buttons/Button';
 
 /** D189: one parsed note: tick, read, edit; an invalid row shows why and can't be ticked. */
@@ -70,7 +70,7 @@ export function ImportPreviewRow({
           </p>
           {row.body && (
             <p className="import-row__body" dir="auto">
-              {row.body}
+              {bodyExcerpt(row.body)}
             </p>
           )}
           {row.sourceUrl && <p className="import-row__url">{row.sourceUrl}</p>}

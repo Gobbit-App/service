@@ -1,4 +1,6 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import { detectFormat, parseNotes, toImportDraft } from '@gobbit/shared/import';
 import { IMPORT_ROWS_PER_REQUEST } from '@gobbit/shared/ingest-constants';
 import { ApiCliError, type ApiRequest } from './api-cli';
 import {
@@ -133,4 +135,24 @@ describe('runImportNotes (D190)', () => {
     }) as unknown as ApiRequest;
     await expect(runImportNotes('One', options(), request, vi.fn())).rejects.toThrow(/403/);
   });
+});
+
+describe('CLI and shared parser agree (FR-006)', () => {
+  const dir = new URL('../../../../packages/shared/src/import/fixtures/', import.meta.url);
+  const categories = [{ id: 'c-recipes', name: 'Recipes', slug: 'recipes' }];
+
+  for (const name of readdirSync(dir).filter((f) => f.endsWith('.md'))) {
+    it(`sends the rows parseNotes yields for ${name}`, async () => {
+      const text = readFileSync(new URL(name, dir), 'utf8');
+      const { request, calls } = fakeApi();
+      await runImportNotes(text, options({ file: name }), request, vi.fn());
+      const sent = calls
+        .filter((c) => c.method === 'POST')
+        .flatMap((c) => (c.body as { rows: unknown[] }).rows);
+      const expected = parseNotes(text, detectFormat(text, name))
+        .rows.filter((row) => row.error === null)
+        .map((row) => toImportDraft(row, categories as never));
+      expect(sent).toEqual(expected);
+    });
+  }
 });

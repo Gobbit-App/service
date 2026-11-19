@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CARD_BODY_MAX } from '../limits';
 import { detectFormat, parseNotes } from './parse-notes';
+import { parseMarkdown } from './parse-markdown';
 import { matchCategory, toImportDraft } from './to-draft';
 import type { ImportRow } from './constants';
 
@@ -269,5 +270,27 @@ describe('toImportDraft (D190)', () => {
     expect(
       toImportDraft(row(null, { type: 'link', sourceUrl: 'https://example.org' }), categories),
     ).toEqual({ type: 'link', title: 'Clinic', body: 'Open', sourceUrl: 'https://example.org' });
+  });
+});
+
+describe('parseNotes mode switch on `##` (049)', () => {
+  it('a file with no `##` parses exactly as the 021 markdown path', () => {
+    const text = fixture('no-h2.md');
+    const { rows, problem } = parseNotes(text, 'markdown');
+    expect(problem).toBeNull();
+    expect(rows).toEqual(parseMarkdown(text));
+  });
+
+  it('a file with `##` switches mode: one card per `##`, filed under the `#`', () => {
+    const { rows } = parseNotes(fixture('legacy-h2-group.md'), 'markdown');
+    expect(brief(rows).map((r) => [r.title, r.category])).toEqual([
+      ['Recycling', 'Neighbourhood'],
+      ['Bulky waste', 'Neighbourhood'],
+    ]);
+  });
+
+  it('a `##` only inside a code fence does not switch mode', () => {
+    const text = '# Notes\n\n```\n## not a heading\n```\n\n- Water the beans\n';
+    expect(parseNotes(text, 'markdown').rows).toEqual(parseMarkdown(text));
   });
 });

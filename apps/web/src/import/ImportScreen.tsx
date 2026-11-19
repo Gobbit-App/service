@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { can } from '@gobbit/shared/authz';
-import { parseNotes, type ImportRunResult } from '@gobbit/shared/import';
+import { parseNotes, type ImportParseResult, type ImportRunResult } from '@gobbit/shared/import';
 import { problemMessages } from '../api/problem-messages';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
@@ -27,6 +27,7 @@ export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
   const categories = useQuery(categoriesQuery(deckSlug));
   const importNotes = useImportNotes(deckSlug);
   const [source, setSource] = useState<ImportSource | null>(null);
+  const [ignored, setIgnored] = useState<ImportParseResult['ignored']>([]);
   const [rows, setRows] = useState<PreviewRow[] | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [done, setDone] = useState<Done | null>(null);
@@ -49,6 +50,7 @@ export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
     const parsed = parseNotes(next.text, next.format);
     setSource(next);
     setProblem(parsed.problem);
+    setIgnored(parsed.ignored);
     setRows(parsed.problem ? null : previewRows(parsed.rows));
   };
 
@@ -89,6 +91,7 @@ export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
           )}
           <ImportPreview
             rows={rows}
+            ignored={ignored}
             categories={categoryList}
             busy={importNotes.isPending}
             onChange={setRows}

@@ -51,19 +51,19 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 
 > Write first; they must FAIL before implementation.
 
-- [ ] T011 [P] [US1] [unit] Made-up fixtures `packages/shared/src/import/fixtures/{hebrew-health,english-city,greek-mixed,legacy-h2-group,no-h2}.md` (Hebrew/English/Greek; paragraphs, single line breaks, list, bold, link, a fenced code block holding a `## ` line, `###` inside a body, text outside any section, a section before any `#`)
-- [ ] T012 [P] [US1] [unit] Parser cases in `packages/shared/src/import/parse-sections.test.ts`: `#` = category, `##` = card, body is the raw text up to the next `#`/`##` with blank edge lines trimmed and the interior kept (no whitespace collapse), `###` and deeper are body, `##` inside a code fence is body (D443), text outside any section → `ignored` with its line, section before any `#` → no category (reported), over-limit title/body → row error with the `##` line (FR-001, FR-002); RTL body line after the fields stays body
-- [ ] T013 [P] [US1] [unit] A file with no `##` parses exactly as 021 (the legacy fixtures) and a file with `##` switches mode, in `packages/shared/src/import/parse-notes.test.ts`
-- [ ] T014 [P] [US1] [unit] CLI and shared parser agree: `apps/api/scripts/lib/import-notes-cli.test.ts` parses the same fixtures as T012 and compares rows (FR-006)
+- [X] T011 [P] [US1] [unit] Made-up fixtures `packages/shared/src/import/fixtures/{hebrew-health,english-city,greek-mixed,legacy-h2-group,no-h2}.md` (Hebrew/English/Greek; paragraphs, single line breaks, list, bold, link, a fenced code block holding a `## ` line, `###` inside a body, text outside any section, a section before any `#`)
+- [X] T012 [P] [US1] [unit] Parser cases in `packages/shared/src/import/parse-sections.test.ts`: `#` = category, `##` = card, body is the raw text up to the next `#`/`##` with blank edge lines trimmed and the interior kept (no whitespace collapse), `###` and deeper are body, `##` inside a code fence is body (D443), text outside any section → `ignored` with its line, section before any `#` → no category (reported), over-limit title/body → row error with the `##` line (FR-001, FR-002); RTL body line after the fields stays body
+- [X] T013 [P] [US1] [unit] A file with no `##` parses exactly as 021 (the legacy fixtures) and a file with `##` switches mode, in `packages/shared/src/import/parse-notes.test.ts`
+- [X] T014 [P] [US1] [unit] CLI and shared parser agree: `apps/api/scripts/lib/import-notes-cli.test.ts` parses the same fixtures as T012 and compares rows (FR-006)
 - [ ] T015 [P] [US1] [int] A card-per-section row reaches `proposeDirect` with body verbatim (paragraphs, list, bold, link survive; stored as proposed; `llm_calls` empty) in `apps/api/test/imports.int.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Create `packages/shared/src/import/parse-sections.ts` (zod-free, line-based, linear): fence tracking, `#` / `##` detection, section body capture, `ignored` collection; reuse `rowError`, `withError`, `matchCategory` helpers (plan Reuse check); no Markdown library
-- [ ] T017 [US1] In `packages/shared/src/import/parse-notes.ts` detect "a `##` heading outside a code fence" and route to `parse-sections.ts`, else the existing 021 path; export from the `@gobbit/shared/import` subpath
-- [ ] T018 [US1] `toImportDraft` in `packages/shared/src/import/to-draft.ts` passes `title` and the raw `body` through (no stripping) for section rows
+- [X] T016 [US1] Create `packages/shared/src/import/parse-sections.ts` (zod-free, line-based, linear): fence tracking, `#` / `##` detection, section body capture, `ignored` collection; reuse `rowError`, `withError`, `matchCategory` helpers (plan Reuse check); no Markdown library
+- [X] T017 [US1] In `packages/shared/src/import/parse-notes.ts` detect "a `##` heading outside a code fence" and route to `parse-sections.ts`, else the existing 021 path; export from the `@gobbit/shared/import` subpath
+- [X] T018 [US1] `toImportDraft` in `packages/shared/src/import/to-draft.ts` passes `title` and the raw `body` through (no stripping) for section rows
 - [ ] T019 [US1] Preview rows: show title, body excerpt and "ignored text" notice with its line in `apps/web/src/import/preview-rows.ts` and `ImportPreviewRow.tsx`; add one help-text line on `ImportInput.tsx` saying `##` now starts a card and `#` groups (spec Edge Cases, plan Rollout). UI reference: the invalid-row state and category chip text in `ImportPreviewRow.tsx`; screenshots: phone 412 px + desktop 1280 px, light + dark, compared with the existing import preview
-- [ ] T020 [P] [US1] [unit] Preview mapping and ignored-text notice in `apps/web/src/import/preview-rows.test.ts` and `ImportPreview.test.tsx`
+- [X] T020 [P] [US1] [unit] Preview mapping and ignored-text notice in `apps/web/src/import/preview-rows.test.ts` and `ImportPreview.test.tsx`
 
 **Checkpoint**: US1 works and is demoable on its own (one category per file, no fields yet).
 
