@@ -142,6 +142,27 @@ describe('runLifecycle', () => {
     );
   });
 
+  it('sends an Undo only after the action it undoes has finished', async () => {
+    const qc = seed();
+    const order: string[] = [];
+    let finishDelete!: () => void;
+    unwrap.mockImplementationOnce(
+      () =>
+        new Promise<void>(
+          (resolve) => (finishDelete = () => (order.push('delete done'), resolve())),
+        ),
+    );
+    unwrap.mockImplementationOnce(async () => void order.push('undelete sent'));
+
+    const first = runLifecycle(qc, { item: card, deckSlug: 'family', action: 'delete' });
+    const undo = runLifecycle(qc, { item: card, deckSlug: 'family', action: 'undelete' });
+    await new Promise((r) => setTimeout(r, 10));
+    expect(order).toEqual([]);
+    finishDelete();
+    await Promise.all([first, undo]);
+    expect(order).toEqual(['delete done', 'undelete sent']);
+  });
+
   it('delete uses DELETE', async () => {
     const qc = seed();
     unwrap.mockResolvedValue(undefined);

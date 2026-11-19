@@ -178,7 +178,21 @@ function trackLifecycle({ item, action }: LifecycleChange): void {
  * to a component) so the toast's Undo still works after the card view has unmounted.
  * Rethrows the request error for the caller's message.
  */
-export async function runLifecycle(qc: QueryClient, change: LifecycleChange): Promise<void> {
+export function runLifecycle(qc: QueryClient, change: LifecycleChange): Promise<void> {
+  // The toast's Undo can fire while the first request is still in flight; sent in parallel the
+  // undelete would reach the server first (a no-op on a live card) and the delete would win.
+  const id = change.item.id;
+  const result = (inFlight.get(id) ?? Promise.resolve()).then(() => runNow(qc, change));
+  const tail = result.catch(() => undefined);
+  inFlight.set(id, tail);
+  void tail.then(() => inFlight.get(id) === tail && inFlight.delete(id));
+  return result;
+}
+
+/** The latest action per card, so the next one for the same card waits for it. */
+const inFlight = new Map<string, Promise<void>>();
+
+async function runNow(qc: QueryClient, change: LifecycleChange): Promise<void> {
   const snapshot = await applyLifecycle(qc, change);
   try {
     await sendLifecycle(change);
