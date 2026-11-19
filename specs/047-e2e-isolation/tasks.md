@@ -63,11 +63,11 @@ description: "Task list for 047 self-contained e2e"
 
 **Independent Test**: `smoke/sign-in.spec.ts` and `full/isolation.spec.ts` pass; two parallel users never see each other's changes and never hit a limit.
 
-- [ ] T019 [P] [US2] Mailpit REST client: latest message for a recipient (FR-010), first `/auth/callback?token=…` link, waits up to `TIMEOUTS` mail in e2e/lib/mailbox.ts
-- [ ] T020 [P] [US2] [unit] Link extraction and recipient filtering (other users' mail is never returned) in e2e/lib/mailbox.test.ts
-- [ ] T021 [US2] Create the `user` fixture (address `<tag>-<8 random>@example.test`, tag defaults to `user`, sign-in through the request context with `Origin` set to the API origin, `GET /me`, `storageState`), plus `api` (cookie), `anon`, `context`, `newUser(tag?)`, and the `Identity` shape in contracts/fixtures.md, in e2e/fixtures/identity.ts
-- [ ] T022 [P] [US2] [e2e:smoke] Real UI journey: request link on the sign-in page, read it from the mailbox, follow it, land signed in with a personal deck in e2e/tests/smoke/sign-in.spec.ts (010 S1)
-- [ ] T023 [US2] [e2e:full] Two users in parallel each save their profile dozens of times: no 429, no cross-talk, no raised limit in e2e/tests/full/isolation.spec.ts
+- [X] T019 [P] [US2] Mailpit REST client: latest message for a recipient (FR-010), first `/auth/callback?token=…` link, waits up to `TIMEOUTS` mail in e2e/lib/mailbox.ts
+- [X] T020 [P] [US2] [unit] Link extraction and recipient filtering (other users' mail is never returned) in e2e/lib/mailbox.test.ts
+- [X] T021 [US2] Create the `user` fixture (address `<tag>-<8 random>@example.test`, tag defaults to `user`, sign-in through the request context with `Origin` set to the API origin, `GET /me`, `storageState`), plus `api` (cookie), `anon`, `context`, `newUser(tag?)`, and the `Identity` shape in contracts/fixtures.md, in e2e/fixtures/identity.ts
+- [X] T022 [P] [US2] [e2e:smoke] Real UI journey: request link on the sign-in page, read it from the mailbox, follow it, land signed in with a personal deck in e2e/tests/smoke/sign-in.spec.ts (010 S1)
+- [X] T023 [US2] [e2e:full] Two users in parallel each save their profile dozens of times: no 429, no cross-talk, no raised limit in e2e/tests/full/isolation.spec.ts
 - [ ] T024 [US2] Register `sign-in.spec.ts` and `isolation.spec.ts` in e2e/playwright.isolated.config.ts and measure smoke time; if another per-IP limit trips, make it env-tunable like T002 (D435) instead of disabling it
 
 **Checkpoint**: `e2e-isolated` passes with a real user per test.
