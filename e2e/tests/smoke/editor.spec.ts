@@ -484,6 +484,10 @@ test('a PDF card is uploaded and read page by page @smoke', async ({ page, webDe
     height: 800,
     pages: 2,
   });
+  // The viewer's counter follows the page that is >= 60% in view. The fake serves 1x1 (square)
+  // images, so on the default 1280x720 viewport no page reaches 60% once loaded and the counter
+  // depended on load timing. At 600x650 one page fills the viewer and the next is out of view.
+  await page.setViewportSize({ width: 600, height: 650 });
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Choose file').setInputFiles(pdfFile);

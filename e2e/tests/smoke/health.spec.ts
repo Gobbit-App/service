@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { test, expect } from '../../fixtures/identity';
-import { webUrl } from '../../lib/stack';
+import { stack, webUrl } from '../../lib/stack';
 
 const getLatestMigrationTag = (): string | null => {
   try {
@@ -30,8 +30,9 @@ test('GET /health reports ok and the latest migration @smoke', async ({ api, ano
   expect(typeof body.db_ms).toBe('number');
   expect(body.migration).toBe(latestTag);
 
-  // No env: the API and the web image are built from the same commit, so they must agree.
+  // The runner builds both images from stack.commit.
   const version = await anon.get(webUrl('version.json'));
   expect(version.status()).toBe(200);
-  expect(body.commit ?? null).toBe(((await version.json()) as { commit?: string }).commit ?? null);
+  expect(body.commit).toBe(stack.commit);
+  expect(((await version.json()) as { commit?: string }).commit).toBe(stack.commit);
 });

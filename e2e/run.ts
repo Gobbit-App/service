@@ -1,5 +1,5 @@
 // Self-contained e2e runner (047, contracts/runner.md): stack up, Playwright, logs, teardown.
-import { spawn, type ChildProcess } from 'node:child_process';
+import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -61,6 +61,18 @@ for (const sig of ['SIGINT', 'SIGTERM'] as const) {
   });
 }
 
+/** The commit both images are built from, so /health and /version.json can be checked against it. */
+function currentCommit(): string {
+  try {
+    return (
+      execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() || 'e2e'
+    );
+  } catch {
+    return 'e2e';
+  }
+}
+const commit = currentCommit();
+
 function writeEnv(webPort: number, mailboxPort: number): void {
   const webUrl = `http://127.0.0.1:${webPort}`;
   const { cloudName, apiKey, apiSecret } = CLOUDINARY_DUMMY;
@@ -72,6 +84,7 @@ function writeEnv(webPort: number, mailboxPort: number): void {
     CLOUDINARY_URL: `cloudinary://${apiKey}:${encodeURIComponent(apiSecret)}@${cloudName}`,
     PLATFORM_ADMINS: ADMIN_EMAIL,
     LOG_HASH_KEY: randomBytes(32).toString('hex'),
+    GIT_SHA: commit,
   };
   writeFileSync(
     files.envFile,
@@ -138,6 +151,7 @@ async function main(): Promise<number> {
           webUrl,
           apiUrl: `${webUrl}/api`,
           mailboxUrl: `http://127.0.0.1:${mailboxPort}`,
+          commit,
           startedAt: new Date().toISOString(),
         },
         null,

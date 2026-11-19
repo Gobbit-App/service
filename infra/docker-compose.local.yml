@@ -24,6 +24,8 @@ services:
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-}
     image: gobbit-api:local
     pull_policy: build
     ports:
@@ -60,6 +62,8 @@ services:
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
     image: gobbit-web:local
     pull_policy: build
     ports:

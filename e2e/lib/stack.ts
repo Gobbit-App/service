@@ -5,6 +5,7 @@ export interface Stack {
   webUrl: string;
   apiUrl: string;
   mailboxUrl: string;
+  commit: string;
   startedAt: string;
 }
 
@@ -37,7 +38,14 @@ function load(): Stack {
   }
   if (apiUrl !== `${webUrl}/api`)
     throw new Error('stack file: "apiUrl" must equal webUrl + "/api"');
-  return { project, webUrl, apiUrl, mailboxUrl, startedAt: str('startedAt') };
+  return {
+    project,
+    webUrl,
+    apiUrl,
+    mailboxUrl,
+    commit: str('commit'),
+    startedAt: str('startedAt'),
+  };
 }
 
 export const stack: Stack = load();

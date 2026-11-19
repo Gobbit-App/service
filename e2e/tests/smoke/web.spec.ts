@@ -1,5 +1,5 @@
 import { SMOKE_CATEGORY, expect, test } from '../../fixtures/identity';
-import { webUrl } from '../../lib/stack';
+import { stack, webUrl } from '../../lib/stack';
 import { searchDeck, switchView, viewSwitcher } from './helpers/deck-header';
 
 const NARROW = { width: 360, height: 780 };
@@ -11,7 +11,7 @@ test('shell loads and /version.json reports the deployed commit @smoke', async (
   const res = await request.get(webUrl('/version.json'));
   expect(res.status()).toBe(200);
   const { commit } = (await res.json()) as { commit: string };
-  expect(commit).toBeTruthy();
+  expect(commit).toBe(stack.commit);
 
   await page.goto(webUrl('/?all=true'));
   await expect(page.getByRole('banner')).toBeVisible();
