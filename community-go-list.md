@@ -25,6 +25,7 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-19 | A5, A8 | decision | Planned for 049: a non-Latin category name gets an automatic `c-` + hash address, a typed address wins (D445); the import limit is an operator-tunable daily limit, default 500, no role exemption (D447). | [`049` research](specs/049-import-v2/research.md) |
 | 2026-11-19 | H11 | start | Specified as `050-model-spend-guard`; best effort per share kind settled in the spec (FR-005). | [`specs/050-model-spend-guard`](specs/050-model-spend-guard/spec.md) |
 | 2026-11-19 | H11 | deviation | Verify reads "no extraction call", not "no `llm_calls` row": the duplicate-check embedding is saved as the card's own embedding, which stays open under H11. | `050` spec, Assumptions |
+| 2026-11-20 | H11 | plan | Planned for 050: `users.smart_share` column, a gate in the ingest handler, best effort through the existing `validateProposal`; D452–D458; the deploy needs the curators switched on by hand (Action required). | [`specs/050-model-spend-guard/plan.md`](specs/050-model-spend-guard/plan.md) |
 | 2026-11-19 | H11 | deviation | Platform admins count as switched on in code instead of a migration setting it: the admin list is deployment config a migration cannot read. | `050` spec, FR-003 |
 
 ## Goal and definition of done
