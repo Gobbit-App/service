@@ -144,7 +144,7 @@ description: "Task list for 047 self-contained e2e"
 - [X] T044 [US4] Remove the seed/export steps, `SMOKE_SESSION_TOKEN`, `E2E_*`, `BASE_URL`, `EXPECTED_SHA`, `CLOUDINARY_API_SECRET` and the `e2e` job in favour of `e2e-isolated` (renamed `e2e`) from .github/workflows/ci.yml and .github/workflows/e2e-full.yml
 - [X] T045 [US4] Remove the `PROFILE_UPDATE_RATE_PER_HOUR` override from infra/docker-compose.local.yml (the production default in docker-compose.yml stays)
 - [X] T046 [P] [US4] [unit] Repo-scan guard: no `process.env`, `import.meta.env`, `Deno.env` under e2e/; and, from this task on, none of `SMOKE_SESSION_TOKEN`, `E2E_MEMBER_B_TOKEN`, `E2E_MEMBER_C_TOKEN`, `SMOKE_INVITEE_USERNAME`, `BASE_URL`, `WEB_BASE_URL`, `EXPECTED_SHA`, `CLOUDINARY_API_SECRET`, or the e2e profile rate-limit override with word-bounded patterns (so `API_BASE_URL` is not matched), scanning only e2e/, .github/workflows/, infra/docker-compose*.yml and package.json scripts, never docs/adr.md, specs/ or CHANGELOG.md, in e2e/lib/no-env.test.ts
-- [ ] T047 [US4] Verify `env -i HOME="$HOME" PATH="$PATH" pnpm test:e2e --grep @smoke` passes and that no `test.skip` for provisioning remains (`grep -rn "test.skip" e2e/tests`)
+- [X] T047 [US4] Verify `env -i HOME="$HOME" PATH="$PATH" pnpm test:e2e --grep @smoke` passes and that no `test.skip` for provisioning remains (`grep -rn "test.skip" e2e/tests`)
 
 ---
 
