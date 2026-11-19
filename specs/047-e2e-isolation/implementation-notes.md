@@ -28,8 +28,8 @@ On PR #171, the smoke tier (74 tests passed) and the full tier (150 tests passed
 
 ## T038 timings
 
-To be recorded.
+Smoke tier on the isolated stack (CI, run under `env -i`): 74 tests passed in 1.1 min; the whole `e2e` job, including the image build and stack start, took 4 min 41 s (SC-006: 5 min). No provisioning skips remain (`grep -rn "test.skip\|test.fixme" e2e/tests` is empty, SC-003) and no 429 appeared (SC-004).
 
 ## T039 repeated full runs
 
-To be recorded.
+Full tier with `--workers=4 --repeat-each=3 --retries=0` on one stack: first run 447 of 453 passed; the six failures were the waitlist join per-IP limit (every test shares one loopback address, now `WAITLIST_JOIN_PER_IP_PER_HOUR` in the overlay), a 26 MB buffer sent over the Playwright protocol (now built in the page) and a three-journey photo test that needs a 45 s budget. After those fixes: 453 of 453 passed in 5.7 min, zero 429s (SC-004, SC-005). The nightly full job now runs `--workers=4` with no retries (FR-014); the smoke job keeps `--retries=1` against runner network flakes.

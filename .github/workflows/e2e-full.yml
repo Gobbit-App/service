@@ -34,7 +34,7 @@ jobs:
 
       - run: pnpm --filter e2e exec playwright install --with-deps chromium
 
-      - run: pnpm test:e2e tests/full --workers=4 --repeat-each=3 --retries=0
+      - run: pnpm test:e2e tests/full --workers=4
 
       - if: always()
         uses: actions/upload-artifact@v7

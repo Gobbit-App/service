@@ -117,8 +117,8 @@ description: "Task list for 047 self-contained e2e"
 - [X] T035 [P] [US6] [e2e:smoke] Convert auth, browse, decks, editor, health, items specs in e2e/tests/smoke/
 - [X] T036 [P] [US6] [e2e:smoke] Convert landing, lifecycle, members (drop `SMOKE_INVITEE_USERNAME`, use `member()`), openapi, public, review specs in e2e/tests/smoke/
 - [X] T037 [P] [US6] [e2e:smoke] Convert search, settings, share, web specs and e2e/tests/smoke/helpers/ in e2e/tests/smoke/
-- [ ] T038 [US6] Run the smoke tier on the isolated config and confirm ≤ 5 min (SC-006) and zero provisioning skips (SC-003) and zero 429s (SC-004); record timings in specs/047-e2e-isolation/implementation-notes.md
-- [ ] T039 [US6] Raise `--workers` in the full tier and run it 3 times in a row on the isolated stack; confirm no failure from shared user state (SC-005), zero 429s (SC-004), then drop `retries` crutches that existed for shared-state causes (FR-014, US6 scenario 2); record results in specs/047-e2e-isolation/implementation-notes.md
+- [X] T038 [US6] Run the smoke tier on the isolated config and confirm ≤ 5 min (SC-006) and zero provisioning skips (SC-003) and zero 429s (SC-004); record timings in specs/047-e2e-isolation/implementation-notes.md
+- [X] T039 [US6] Raise `--workers` in the full tier and run it 3 times in a row on the isolated stack; confirm no failure from shared user state (SC-005), zero 429s (SC-004), then drop `retries` crutches that existed for shared-state causes (FR-014, US6 scenario 2); record results in specs/047-e2e-isolation/implementation-notes.md
 
 ---
 
@@ -154,7 +154,7 @@ description: "Task list for 047 self-contained e2e"
 - [X] T049 [P] Add ADR-081 (D430, D431, D432, D433, D435, D438, D442) to docs/adr.md and one index row to docs/architecture.md (stay < 250 lines)
 - [X] T050 [P] Amend .specify/memory/constitution.md to 1.6.0 with the self-contained e2e sentence from research D442 (owner confirmed, 2026-11-18)
 - [X] T051 [P] Record D430–D442 in specs/README.md and `Status` in specs/047-e2e-isolation/spec.md; start specs/047-e2e-isolation/implementation-notes.md with decisions and deviations
-- [ ] T052 Walk quickstart.md §1–§6 end to end on a machine with Docker (or read the green CI run) and tick the plan's "Settle before starting" boxes
+- [X] T052 Walk quickstart.md §1–§6 end to end on a machine with Docker (or read the green CI run) and tick the plan's "Settle before starting" boxes
 
 ---
 
