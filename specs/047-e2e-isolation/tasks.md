@@ -176,3 +176,11 @@ description: "Task list for 047 self-contained e2e"
 ## Implementation strategy
 
 MVP = Phases 1–3 (runner + real user per test, proven by `sign-in.spec.ts` and `isolation.spec.ts`), merged as 3 small PRs. Then Phase 4, convert (Phase 5) in batches, probe (Phase 6), and finish with removal and docs (Phases 7–8). Each phase ends green in CI; old and new configs coexist until T043.
+
+---
+
+## Phase 9: Convergence
+
+- [ ] T053 [e2e:smoke] Run the post-deploy probe against the live e2e stack: spec e2e/tests/smoke/post-deploy-probe.spec.ts spawns `tsx infra/post-deploy-check.ts <stack.webUrl> --sha <stack.commit>` and asserts exit 0 with five `ok` lines and no accounts created; plus bad arguments exit 2 per FR-017, SC-008 (partial: the probe was only tested with an injected fetch)
+- [X] T054 Record the overlay's raised `WAITLIST_JOIN_PER_IP_PER_HOUR` (in-process, per-IP; found by the stress run) as decision I9 in specs/047-e2e-isolation/implementation-notes.md, in docs/design/testing.md and in ADR-081 per FR-012, SC-004 (partial: undocumented override)
+- [ ] T055 Verify cleanup in CI: an `if: always()` step after the e2e run in .github/workflows/ci.yml fails the job when any `gobbit-e2e-*` container, volume or network remains per FR-001, SC-001 (partial: no check that a run leaves nothing behind)

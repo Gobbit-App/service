@@ -37,6 +37,12 @@ jobs:
       - run: pnpm test:e2e tests/full --workers=4
 
       - if: always()
+        name: Fail if the run left containers, volumes or networks behind
+        run: |
+          left=$( { docker ps -a --filter name=gobbit-e2e- -q; docker volume ls --filter name=gobbit-e2e- -q; docker network ls --filter name=gobbit-e2e- -q; } )
+          if [ -n "$left" ]; then echo "left behind:"; echo "$left"; exit 1; fi
+
+      - if: always()
         uses: actions/upload-artifact@v7
         with:
           name: e2e-full-isolated-report

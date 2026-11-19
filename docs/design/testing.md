@@ -63,7 +63,7 @@ Tagging: every smoke test title includes `@smoke`
 - Exit codes: 0 passed, 1 tests failed, 2 prerequisite missing (Docker, Compose version), 3 stack did not start (logs in `e2e/.stack/stack.log`).
 - Image builds get the real commit (`GIT_SHA`), recorded in the stack file; `health.spec` and `web.spec` assert `/health` and `/version.json` equal it.
 - **Stack file**: `e2e/.stack/stack.json` (project, `webUrl`, `apiUrl`, `mailboxUrl`, `commit`, `startedAt`) is how specs find the stack (`e2e/lib/stack.ts`); it is deleted on teardown. Run Playwright by hand only against a stack kept with `--keep`.
-- **Overlay** `infra/docker-compose.e2e.yml`: open registration, Mailpit as the SMTP mailbox, the real `umami` on the stack's Postgres with a dummy site id, dummy Cloudinary credentials (specs fake the Cloudinary hosts, signing with the same dummy secret), no AI, push or email-in keys, and no rate-limit overrides except the two per-IP sign-in limits. See [infra/README.md](../../infra/README.md).
+- **Overlay** `infra/docker-compose.e2e.yml`: open registration, Mailpit as the SMTP mailbox, the real `umami` on the stack's Postgres with a dummy site id, dummy Cloudinary credentials (specs fake the Cloudinary hosts, signing with the same dummy secret), no AI, push or email-in keys, and no rate-limit overrides except the two per-IP sign-in limits and the per-IP waitlist join limit (per-user and per-email limits keep production values). See [infra/README.md](../../infra/README.md).
 
 **Fixtures** (`e2e/fixtures/identity.ts`):
 
@@ -118,6 +118,7 @@ Decisions the plan did not make:
 - Once every spec was converted, the token-based `e2e` job (`ci.yml`) and `full` job (`e2e-full.yml`) were removed and the new jobs took their names, so required-check names stay stable. The post-deploy probe takes `DEPLOY_SHA` (the no-env guard forbids the old name) and aborts each request after 10 s.
 - `e2e/fixtures/api.ts` and `web.ts` were deleted rather than updated; `fixtures/cloudinary.ts` stays, env-free.
 - Playwright keeps traces on failure (`retain-on-failure`).
+- The overlay also raises `WAITLIST_JOIN_PER_IP_PER_HOUR` to 100000: every e2e request comes from one loopback address and the 4-worker x 3-repeat stress run got 429 on waitlist joins (I9).
 
 Coverage changes and known issues:
 
