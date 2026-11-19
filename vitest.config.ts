@@ -11,7 +11,7 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
-          include: ['{apps,packages,e2e}/**/*.test.ts'],
+          include: ['{apps,packages,e2e,infra}/**/*.test.ts'],
           exclude: [
             '**/*.int.test.ts',
             '**/*.search.test.ts',
