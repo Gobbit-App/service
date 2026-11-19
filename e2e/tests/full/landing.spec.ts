@@ -10,6 +10,13 @@ const uniqueEmail = () =>
 async function stranger(browser: Browser, run: (page: Page) => Promise<void>): Promise<void> {
   const context = await browser.newContext(PIXEL_7);
   try {
+    // The stack has analytics on, so a first visit shows the modal consent wall; answer it as a visitor would.
+    await context.addInitScript(() =>
+      window.localStorage.setItem(
+        'gobbit.analytics.consent',
+        JSON.stringify({ value: 'declined', at: new Date().toISOString() }),
+      ),
+    );
     await run(await context.newPage());
   } finally {
     await context.close();
