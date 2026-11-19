@@ -289,16 +289,22 @@ test.describe('creator avatar @full', () => {
   }) => {
     await setProfile(c, { firstName: 'Cee', lastName: `Cr${tag}` });
     const deck = await seedBrowseDeck(api, smokeDeck);
-    const [first, second] = deck.cards;
+    // A card by another member is the newest, so it is the first one Browse shows (created before the
+    // first visit: a reload would otherwise show the persisted list without it).
+    const titleC = `Browse by C ${tag}`;
+    const idC = await createCard(c.api, deck.slug, { title: titleC, categoryIds: [deck.mainId] });
+    const first = { id: idC, title: titleC };
+    const second = deck.cards[0]!;
     await skipHint(page);
-    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${first!.id}`));
-    await expectCurrent(page, first!);
+    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${first.id}`));
+    await expectCurrent(page, first);
 
     const stage = page.locator('.browse__stage');
     const avatar = stage.locator('article.card .avatar').first();
     await expect(avatar).toBeVisible();
     await expect(avatar).toHaveAttribute('role', 'img');
     await expect(avatar).toHaveAttribute('aria-label', /^Added by /);
+    expect((await look(avatar)).initials).toBe('CC');
     const placed = await box(avatar);
     await page.waitForLoadState('networkidle');
     expect(await box(avatar)).toEqual(placed);
@@ -306,16 +312,16 @@ test.describe('creator avatar @full', () => {
     await expect(bar).toBeVisible();
 
     await swipeCard(page, 'next');
-    await expectCurrent(page, second!);
+    await expectCurrent(page, second);
     await expect(stage.locator('article.card .avatar').first()).toBeVisible();
     await dockButton(page, 'Previous card').click();
-    await expectCurrent(page, first!);
+    await expectCurrent(page, first);
     await expect(bar).toBeVisible();
     await expect(page).toHaveURL(/\/browse\?/);
 
     // the full view shows it too, in the same 24 px box
     await page.getByRole('button', { name: 'Full view', exact: true }).click();
-    const fullAvatar = fullView(page, first!.title).locator('.avatar');
+    const fullAvatar = fullView(page, first.title).locator('.avatar');
     await expect(fullAvatar).toBeVisible();
     await expect(fullAvatar).toHaveAttribute('aria-label', /^Added by /);
     const fullBox = await box(fullAvatar);
@@ -329,13 +335,6 @@ test.describe('creator avatar @full', () => {
       }));
     expect(await layoutBox(fullAvatar)).toEqual(await layoutBox(avatar));
     await page.getByRole('button', { name: 'Close full view' }).click();
-
-    // a card by another member is current too: its avatar matches the list's colour
-    const titleC = `Browse by C ${tag}`;
-    const idC = await createCard(c.api, deck.slug, { title: titleC, categoryIds: [deck.mainId] });
-    await page.goto(browseUrl(deck.slug, `c=${MAIN.slug}&i=${idC}`));
-    await expect(stage.getByRole('heading', { name: titleC })).toBeVisible();
-    expect((await look(stage.locator('article.card .avatar').first())).initials).toBe('CC');
   });
 
   test('a personal deck card has no avatar @full', async ({ page, api, tag }) => {
