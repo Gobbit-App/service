@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-import { test, expect } from '../../fixtures/api';
-import { resolveE2eEnv } from '../../lib/env';
+import { test, expect } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 const getLatestMigrationTag = (): string | null => {
   try {
@@ -19,7 +19,7 @@ const getLatestMigrationTag = (): string | null => {
   }
 };
 
-test('GET /health reports ok and the latest migration @smoke', async ({ api }) => {
+test('GET /health reports ok and the latest migration @smoke', async ({ api, anon }) => {
   const latestTag = getLatestMigrationTag();
 
   const response = await api.get('health');
@@ -30,6 +30,8 @@ test('GET /health reports ok and the latest migration @smoke', async ({ api }) =
   expect(typeof body.db_ms).toBe('number');
   expect(body.migration).toBe(latestTag);
 
-  const { expectedSha } = resolveE2eEnv();
-  if (expectedSha) expect(body.commit).toBe(expectedSha);
+  // No env: the API and the web image are built from the same commit, so they must agree.
+  const version = await anon.get(webUrl('version.json'));
+  expect(version.status()).toBe(200);
+  expect(body.commit ?? null).toBe(((await version.json()) as { commit?: string }).commit ?? null);
 });

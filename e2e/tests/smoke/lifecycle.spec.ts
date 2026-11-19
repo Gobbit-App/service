@@ -1,5 +1,6 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import { expect, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { expect, test, type WebDeck } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 interface SearchHit {
   item: { id: string };

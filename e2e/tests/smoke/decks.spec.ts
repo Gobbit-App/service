@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures/api';
+import { test, expect } from '../../fixtures/identity';
 
 test('@smoke - a new deck is listed and gets the general category', async ({ api, smokeDeck }) => {
   const list = await api.get('decks');
@@ -24,7 +24,7 @@ test('@smoke - DELETE /decks/:id hides the deck', async ({ api }) => {
 
 test('@smoke - DELETE /decks/me is never a success (Phase 3B)', async ({ api }) => {
   const res = await api.delete('decks/me');
-  // 404 when the smoke user has no personal deck yet, 409 when it has one.
+  // 404 when the new user has no personal deck yet, 409 when it has one.
   expect([404, 409]).toContain(res.status());
 });
 

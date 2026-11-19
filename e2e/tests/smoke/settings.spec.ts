@@ -1,18 +1,8 @@
-import { expect, test, webUrl } from '../../fixtures/web';
-import { clearProfile, smokeUsername } from './helpers/profile';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
+import { smokeUsername } from './helpers/profile';
 
 const LABEL_PREFIX = 'smoke-token-';
-
-/** D50: leave no smoke tokens behind (the owner may hold at most 5). */
-test.afterEach(async ({ api }) => {
-  await clearProfile(api);
-  const res = await api.get('me/ingest-tokens');
-  if (!res.ok()) return;
-  const { data } = (await res.json()) as { data: { id: string; label: string }[] };
-  for (const t of data.filter((t) => t.label.startsWith(LABEL_PREFIX))) {
-    await api.delete(`me/ingest-tokens/${t.id}`);
-  }
-});
 
 test('creates an ingest token, shows it once and revokes it from settings @smoke', async ({
   page,
@@ -95,9 +85,7 @@ test('a card shows the creator avatar in a shared deck, not in the personal deck
   await expect(avatar).toHaveAttribute('data-tip', username);
   expect(await card.innerHTML()).not.toContain(me.user.email);
 
-  // The bearer session never signs in, and the personal deck is created at sign-in; the seed makes no decks (D49).
-  const personal = await api.get('decks/me');
-  test.skip(personal.status() !== 200, 'the smoke user has no personal deck yet');
+  // A magic-link sign-in creates the personal deck.
   const title = `Personal ${webDeck.slug}`;
   const created = await api.post('decks/me/items', {
     data: { type: 'text', title, body: 'Only me' },

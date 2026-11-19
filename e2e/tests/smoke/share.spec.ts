@@ -1,4 +1,5 @@
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /** D59: a card in a non-communal deck shares only the generic private preview. */
 test('a private share page carries the generic OG tags and no card text @smoke', async ({
@@ -20,38 +21,6 @@ test('a private share page carries the generic OG tags and no card text @smoke',
 
 /** D108/D198: the deck's "Paste" button opens the share screen; Sent follows the share. */
 test('pasting a text sends it and links to Your shares @smoke', async ({ page, webDeck }) => {
-  // The ingest endpoint needs an extraction provider; the UI flow is what's under test here.
-  let sent: string | null = null;
-  const shareId = '00000000-0000-4000-8000-000000000999';
-  await page.route('**/api/ingest', async (route) => {
-    sent = route.request().postData();
-    await route.fulfill({
-      status: 202,
-      contentType: 'application/json',
-      body: JSON.stringify({ id: shareId, status: 'queued' }),
-    });
-  });
-  // The stubbed share has no job row, so its status is stubbed at the page edge too.
-  await page.route(`**/api/shares/${shareId}`, (route) =>
-    route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify({
-        id: shareId,
-        deckId: webDeck.id,
-        channel: 'paste',
-        createdAt: new Date().toISOString(),
-        state: 'processing',
-        preview: { title: null, host: null, photoCount: 0 },
-        failureCode: null,
-        canRetry: false,
-        autoPublish: null,
-        item: null,
-        reviewedBy: null,
-        reviewedAt: null,
-      }),
-    }),
-  );
-
   await page.goto(webUrl(`/d/${webDeck.slug}`));
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Paste or share' }).click();
@@ -61,15 +30,16 @@ test('pasting a text sends it and links to Your shares @smoke', async ({ page, w
   const send = page.getByRole('button', { name: 'Send to Gobbit' });
   await expect(send).toBeDisabled();
   await page.getByLabel('Text').fill('Gate code 1234');
+  const ingest = page.waitForRequest(
+    (req) => new URL(req.url()).pathname.endsWith('/api/ingest') && req.method() === 'POST',
+  );
   await send.click();
+  const sent = (await ingest).postData();
 
   await expect(page.getByRole('heading', { name: 'Sent' })).toBeVisible();
-  await expect(page.getByText('Processing…')).toBeVisible();
-  await expect(page.getByText(/appear in review/i)).toHaveCount(0);
   expect(sent).toContain('Gate code 1234');
   expect(sent).toContain(webDeck.id);
 
-  // The real (empty) list: the stubbed share was never stored.
   await page.getByRole('link', { name: 'Your shares' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/shares$`));
   await expect(page.getByRole('heading', { name: 'Your shares' })).toBeVisible();

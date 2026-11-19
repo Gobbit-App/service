@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures/api';
+import { test, expect } from '../../fixtures/identity';
 
 test('openapi.json lists core paths @smoke', async ({ api }) => {
   const response = await api.get('openapi.json');

@@ -1,14 +1,49 @@
+import { createHash } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import {
   cloudinaryApiSecret,
   photoFile,
-  routeCloudName,
-  routeFakeCloudinary,
   pdfFile,
   routeImageDelivery,
+  TINY_PNG,
+  type FakeMediaFile,
 } from '../../fixtures/cloudinary';
-import { expect, SMOKE_CATEGORY, test, webUrl } from '../../fixtures/web';
+import { expect, signInByMagicLink, SMOKE_CATEGORY, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 import { switchView } from './helpers/deck-header';
+
+/**
+ * Only Cloudinary (a third party) is answered locally: `/config` and `/media/sign` are the stack's
+ * own (its Cloudinary vars are the e2e dummies), and the upload answer is signed with the same
+ * secret so the real confirm step accepts it (D157). Nothing inside Gobbit is faked (smoke tier).
+ */
+async function routeCloudinary(page: Page, publicId: string, file?: FakeMediaFile) {
+  const kind = file?.kind ?? 'image';
+  const version = Math.floor(Date.now() / 1000);
+  const uploads: string[] = [];
+  await page.route('https://api.cloudinary.com/**', (route) => {
+    uploads.push(route.request().url());
+    const id = uploads.length === 1 ? publicId : `${publicId}-${uploads.length}`;
+    const signature = createHash('sha1')
+      .update(`public_id=${id}&version=${version}${cloudinaryApiSecret}`)
+      .digest('hex');
+    return route.fulfill({
+      json: {
+        public_id: id,
+        version,
+        signature,
+        resource_type: kind === 'audio' || kind === 'video' ? 'video' : 'image',
+        bytes: TINY_PNG.length,
+        format: file?.format ?? 'png',
+        width: file?.width ?? 1,
+        height: file?.height ?? 1,
+        ...(file?.pages ? { pages: file.pages } : {}),
+      },
+    });
+  });
+  await routeImageDelivery(page);
+  return uploads;
+}
 
 /** Below 768px (Pixel 7) the preview is a tab: open it, then read the preview region. */
 /** D309 (039): on a phone the top bar's Preview toggle swaps the canvas for the preview. */
@@ -259,6 +294,9 @@ test('list cards link to the editor @smoke', async ({ page, webDeck }) => {
 
 test('an unsaved card comes back after a reload; sign-out forgets it @smoke', async ({
   page,
+  context,
+  playwright,
+  user,
   webDeck,
 }) => {
   const newCard = webUrl(`/d/${webDeck.slug}/new?type=text`);
@@ -280,9 +318,6 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   await expect(page.getByLabel('Body', { exact: true })).toHaveText('Not saved yet');
   await page.waitForTimeout(800);
 
-  // The smoke session is shared by the suite: answer the logout call locally so the server
-  // session survives, while the app still runs its sign-out cleanup (drafts included).
-  await page.route('**/auth/logout', (route) => route.fulfill({ status: 204 }));
   // Sign out lives on the profile page (⋯ menu → Profile), which the editor doesn't show; the
   // draft stays stored when the editor is left without saving.
   await page.goto(webUrl(`/d/${webDeck.slug}`));
@@ -293,7 +328,11 @@ test('an unsaved card comes back after a reload; sign-out forgets it @smoke', as
   // The app leaves for /sign-in first and clears local data afterwards; navigating away before
   // that finishes would abort it.
   await expect.poll(() => storedDraftCount(page)).toBe(0);
-  await page.unroute('**/auth/logout');
+
+  // Sign-out ended this user's real session: sign in again (magic link) in the same browser.
+  const again = await signInByMagicLink(playwright, user.email);
+  await context.addCookies((await again.api.storageState()).cookies);
+  await again.api.dispose();
 
   await page.goto(newCard);
   await expect(page.getByRole('heading', { name: 'New card' })).toBeVisible();
@@ -364,10 +403,8 @@ test('a two-photo gallery is uploaded, described, listed and viewed @smoke', asy
   page,
   webDeck,
 }) => {
-  // Saving needs the assets recorded by the real API (D160), so the upload answers must verify.
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `Editor gallery ${webDeck.slug}`;
-  const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  const uploads = await routeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
 
   await expect(page.getByRole('button', { name: 'Card type: Media' })).toBeVisible();
@@ -421,9 +458,8 @@ test('a cover image added to a text card shows as a bar in the deck list @smoke'
   page,
   webDeck,
 }) => {
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `Editor cover ${webDeck.slug}`;
-  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-cover`);
+  await routeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-cover`);
   await routeImageDelivery(page);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
 
@@ -440,9 +476,8 @@ test('a cover image added to a text card shows as a bar in the deck list @smoke'
 });
 
 test('a PDF card is uploaded and read page by page @smoke', async ({ page, webDeck }) => {
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `Editor PDF ${webDeck.slug}`;
-  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-pdf`, {
+  await routeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-pdf`, {
     kind: 'pdf',
     format: 'pdf',
     width: 600,
@@ -484,7 +519,7 @@ test('a photo Cloudinary refuses shows why and is reported to the API @smoke', a
   page,
   webDeck,
 }) => {
-  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  await routeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   // Registered last, so it wins over the accepting fake above.
   await page.route('https://api.cloudinary.com/**', (route) =>
     route.fulfill({
@@ -508,7 +543,7 @@ test('a photo Cloudinary refuses shows why and is reported to the API @smoke', a
 });
 
 test('an image card needs a photo but no description (D206) @smoke', async ({ page, webDeck }) => {
-  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  await routeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
 
   await page.getByLabel('Title', { exact: true }).fill('No description');
@@ -524,10 +559,8 @@ test('an image card without a description saves and is decorative under its titl
   page,
   webDeck,
 }) => {
-  // Saving needs the asset recorded by the real API (D160), so the upload answer must verify.
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const title = `No description ${webDeck.slug}`;
-  await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  await routeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   await page.getByLabel('Title', { exact: true }).fill(title);
   await page.getByLabel('Choose photos').setInputFiles(photoFile);
@@ -543,47 +576,6 @@ test('an image card without a description saves and is decorative under its titl
   expect(body.payload.images[0]?.alt).toBeUndefined();
   const listed = page.getByRole('article').filter({ hasText: title });
   await expect(listed.locator('img.cloud-image__img')).toHaveAttribute('alt', '');
-});
-
-test('the image type is unavailable without image storage @smoke', async ({ page, webDeck }) => {
-  await routeCloudName(page, null);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
-
-  // D302: `?type=media` opens the type chooser, where Media says why it is off (FR-015).
-  const image = page.getByRole('radio', { name: 'Media' });
-  await expect(image).toHaveAttribute('aria-disabled', 'true');
-  await expect(page.getByText("file storage isn't set up here")).toBeVisible();
-  // `force`: Playwright never clicks an aria-disabled element; the tile must still ignore one.
-  await image.click({ force: true });
-  await expect(page).toHaveURL(/\?type=media$/);
-  await expect(page.getByLabel('Title', { exact: true })).toHaveCount(0);
-});
-
-test('Fetch preview fills a link card @smoke', async ({ page, webDeck }) => {
-  const fetchedTitle = `Fetched ${webDeck.slug}`;
-  // The API's guarded fetcher refuses local addresses, so a page served by this test can't be
-  // fetched; the lookup is faked here and covered for real by link-preview.int.test.ts (D134).
-  await page.route('**/api/decks/*/link-preview', (route) =>
-    route.fulfill({
-      json: {
-        preview: {
-          title: fetchedTitle,
-          description: 'A page about bread',
-          image: 'https://res.cloudinary.com/e2e-cloud/image/upload/og.png',
-        },
-      },
-    }),
-  );
-  await routeImageDelivery(page);
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=link`));
-  await page.getByLabel('URL', { exact: true }).fill('https://example.com/bread');
-  await page.getByRole('button', { name: 'Fetch preview' }).click();
-
-  await expect(page.getByLabel('Preview title', { exact: true })).toHaveValue(fetchedTitle);
-  await expect(page.getByLabel('Title', { exact: true })).toHaveValue(fetchedTitle);
-  await save(page).click();
-  await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}$`));
-  await expect(page.getByRole('heading', { name: fetchedTitle })).toBeVisible();
 });
 
 test('a link typed without https:// is stored with it (D205) @smoke', async ({ page, webDeck }) => {

@@ -1,11 +1,7 @@
-import { expect, test } from '../../fixtures/api';
-import { webUrl } from '../../fixtures/web';
-import { resolveE2eEnv } from '../../lib/env';
+import { expect, test } from '../../fixtures/identity';
+import { stack, webUrl } from '../../lib/stack';
 
-const { token, webBaseURL } = resolveE2eEnv();
-
-/** Caddy owns the cookieless `/` rule (D226); the Vite dev server does not emulate it. */
-const BEHIND_CADDY = !/:5173$/.test(webBaseURL);
+const webBaseURL = stack.webUrl;
 
 const meta = (html: string, property: string) =>
   new RegExp(`<meta property="${property}" content="([^"]*)">`).exec(html)?.[1];
@@ -26,8 +22,7 @@ const hasTracker = (html: string) => html.includes('src="/analytics/page.js"');
 test('@smoke - strangers get the landing page with its preview tags and image', async ({
   anon,
 }) => {
-  const paths = BEHIND_CADDY ? ['/', '/welcome'] : ['/welcome'];
-  for (const path of paths) {
+  for (const path of ['/', '/welcome']) {
     const res = await anon.get(webUrl(path), { maxRedirects: 0 });
     expect(res.status(), path).toBe(200);
     expect(res.headers()['content-type']).toMatch(/^text\/html/);
@@ -45,20 +40,12 @@ test('@smoke - strangers get the landing page with its preview tags and image', 
   expect(image.headers()['content-type']).toBe('image/png');
 });
 
-test('@smoke - a member opening / gets the app, not the landing page', async ({ playwright }) => {
-  test.skip(!BEHIND_CADDY, 'the cookie rule for / lives in Caddy');
-  const member = await playwright.request.newContext({
-    extraHTTPHeaders: { Cookie: `gobbit_session=${token}` },
-  });
-  try {
-    const res = await member.get(webUrl('/'), { maxRedirects: 0 });
-    expect(res.status()).toBe(200);
-    const html = await res.text();
-    expect(html).toContain('<div id="root">');
-    expect(html).not.toContain('action="/welcome"');
-  } finally {
-    await member.dispose();
-  }
+test('@smoke - a member opening / gets the app, not the landing page', async ({ api }) => {
+  const res = await api.get(webUrl('/'), { maxRedirects: 0 });
+  expect(res.status()).toBe(200);
+  const html = await res.text();
+  expect(html).toContain('<div id="root">');
+  expect(html).not.toContain('action="/welcome"');
 });
 
 /**
@@ -77,7 +64,6 @@ test('@smoke - the landing tracker is same-origin and allowed by the CSP, or abs
     expect(html).not.toContain('data-consent-banner');
     return;
   }
-  test.skip(!BEHIND_CADDY, 'the /stats proxy lives in Caddy');
 
   const script = await anon.get(webUrl('/stats/script.js'));
   expect(script.status()).toBe(200);
