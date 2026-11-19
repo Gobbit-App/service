@@ -68,7 +68,7 @@ description: "Task list for 047 self-contained e2e"
 - [X] T021 [US2] Create the `user` fixture (address `<tag>-<8 random>@example.test`, tag defaults to `user`, sign-in through the request context with `Origin` set to the API origin, `GET /me`, `storageState`), plus `api` (cookie), `anon`, `context`, `newUser(tag?)`, and the `Identity` shape in contracts/fixtures.md, in e2e/fixtures/identity.ts
 - [X] T022 [P] [US2] [e2e:smoke] Real UI journey: request link on the sign-in page, read it from the mailbox, follow it, land signed in with a personal deck in e2e/tests/smoke/sign-in.spec.ts (010 S1)
 - [X] T023 [US2] [e2e:full] Two users in parallel each save their profile dozens of times: no 429, no cross-talk, no raised limit in e2e/tests/full/isolation.spec.ts
-- [ ] T024 [US2] Register `sign-in.spec.ts` and `isolation.spec.ts` in e2e/playwright.isolated.config.ts and measure smoke time; if another per-IP limit trips, make it env-tunable like T002 (D435) instead of disabling it
+- [X] T024 [US2] Register `sign-in.spec.ts` and `isolation.spec.ts` in e2e/playwright.isolated.config.ts and measure smoke time; if another per-IP limit trips, make it env-tunable like T002 (D435) instead of disabling it
 
 **Checkpoint**: `e2e-isolated` passes with a real user per test.
 
@@ -80,8 +80,8 @@ description: "Task list for 047 self-contained e2e"
 
 **Independent Test**: owner + two members of different roles on one deck, each asserts what their role allows; no skip.
 
-- [ ] T025 [US3] Add `member(deck, role)` (invite by email through `POST /decks/{id}/members`, follow the invite mail link in a separate context and cookie jar) and the `smokeDeck`/`webDeck` fixtures (`smoke-<id>`, no cleanup) to e2e/fixtures/identity.ts
-- [ ] T026 [US3] [e2e:full] Owner plus editor and reader on one deck: each sees exactly what their role allows (extend e2e/tests/full/isolation.spec.ts or add e2e/tests/full/members-roles.spec.ts and register it in the isolated config)
+- [X] T025 [US3] Add `member(deck, role)` (invite by email through `POST /decks/{id}/members`, follow the invite mail link in a separate context and cookie jar) and the `smokeDeck`/`webDeck` fixtures (`smoke-<id>`, no cleanup) to e2e/fixtures/identity.ts
+- [X] T026 [US3] [e2e:full] Owner plus editor and reader on one deck: each sees exactly what their role allows (extend e2e/tests/full/isolation.spec.ts or add e2e/tests/full/members-roles.spec.ts and register it in the isolated config)
 
 **Checkpoint**: multi-member specs can be written without tokens.
 
@@ -95,7 +95,7 @@ description: "Task list for 047 self-contained e2e"
 
 ### Batch 0 — run converted full specs in CI
 
-- [ ] T027 [US6] Add a runner-based full job (`e2e-full-isolated`) to .github/workflows/e2e-full.yml running `pnpm test:e2e tests/full --retries=1` with no seed, token or `env:` block (same `e2e:full` label trigger), so converted full specs run in CI before the old config is removed; T044 deletes the old job
+- [X] T027 [US6] Add a runner-based full job (`e2e-full-isolated`) to .github/workflows/e2e-full.yml running `pnpm test:e2e tests/full --retries=1` with no seed, token or `env:` block (same `e2e:full` label trigger), so converted full specs run in CI before the old config is removed; T044 deletes the old job
 
 ### Batch A — 046 profile specs (the reason for this work)
 
