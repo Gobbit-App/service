@@ -10,6 +10,10 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-19 — Bulk publish continues past a card that cannot be published
+
+- `POST /decks/{id}/review/publish` no longer aborts on the first unexpected error: that card is reported in `skipped` with the new reason `publish-failed` and the rest are published. No environment variable changes.
+
 ### 2026-11-18 — Self-contained e2e: SMTP mail and per-IP limits (047, D433–D435)
 
 - `MAIL_PROVIDER` accepts a third value, `smtp`, which also needs `SMTP_URL` and `MAIL_FROM`. Production keeps `resend`; nothing changes unless you set it.

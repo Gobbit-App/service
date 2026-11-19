@@ -85,7 +85,11 @@ export const bulkPublishSchema = z.object({
 });
 export type BulkPublishRequest = z.infer<typeof bulkPublishSchema>;
 
-export const bulkPublishSkipReasons = ['needs-decision', 'already-handled'] as const;
+export const bulkPublishSkipReasons = [
+  'needs-decision',
+  'already-handled',
+  'publish-failed',
+] as const;
 export type BulkPublishSkipReason = (typeof bulkPublishSkipReasons)[number];
 
 export const bulkPublishResultSchema = z.object({

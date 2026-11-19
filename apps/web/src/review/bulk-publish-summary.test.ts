@@ -17,6 +17,7 @@ describe('bulkPublishSummary (D191)', () => {
         skipped: [
           { id: 'b', reason: 'needs-decision' },
           { id: 'gone', reason: 'already-handled' },
+          { id: 'c', reason: 'publish-failed' },
         ],
       },
       [entry('a', 'Clinic'), entry('b', 'Pharmacy')],
@@ -27,6 +28,7 @@ describe('bulkPublishSummary (D191)', () => {
       skipped: [
         { id: 'b', title: 'Pharmacy', reason: 'needs a decision' },
         { id: 'gone', title: 'A card', reason: 'already handled' },
+        { id: 'c', title: 'A card', reason: 'could not be published' },
       ],
     });
   });
