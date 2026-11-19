@@ -221,7 +221,8 @@ jobs:
 
       - run: pnpm --filter e2e exec playwright install --with-deps chromium
 
-      - run: pnpm test:e2e --grep @smoke --retries=1
+      # --pass-with-no-tests until T022 registers the first converted spec (drop it in T024)
+      - run: pnpm test:e2e --grep @smoke --retries=1 --pass-with-no-tests
 
       - if: always()
         uses: actions/upload-artifact@v7
