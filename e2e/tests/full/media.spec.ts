@@ -1,12 +1,12 @@
 import type { Page } from '@playwright/test';
 import {
-  cloudinaryApiSecret,
   photoFile,
   recordMediaAsset,
   routeFakeCloudinary,
   routeImageDelivery,
 } from '../../fixtures/cloudinary';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * 045 (T043, `@full`): the media editor and reader beyond the smoke journeys — gallery editing
@@ -22,7 +22,6 @@ test('a gallery is reordered and trimmed before saving, in that order @full', as
   page,
   webDeck,
 }) => {
-  test.skip(!cloudinaryApiSecret, 'CLOUDINARY_API_SECRET is not set (012 confirm step)');
   const base = `gobbit/items/${webDeck.id}/e2e-order`;
   await routeFakeCloudinary(page, base);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
@@ -142,7 +141,6 @@ test('video and audio cards load no media until Play (D400) @full', async ({
     height: 1280,
     durationMs: 65_000,
   });
-  test.skip(video === null, 'needs CLOUDINARY_API_SECRET to sign confirms');
   const audio = await recordMediaAsset(api, webDeck.id, {
     kind: 'audio',
     format: 'm4a',

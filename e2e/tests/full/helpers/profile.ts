@@ -11,7 +11,7 @@ import { CLOUDINARY_DUMMY } from '../../../lib/stack-config';
 import { stack, webUrl } from '../../../lib/stack';
 
 // Helpers of profile.spec.ts. The browse and Cloudinary pieces mirror smoke/helpers/browse-deck.ts and
-// fixtures/cloudinary.ts, which still read process.env through the old fixtures; dedupe when T030/T032
+// fixtures/cloudinary.ts, which still read the environment through the old fixtures; dedupe when T030/T032
 // convert those.
 
 const { defaultBrowserType: _ignored, ...PIXEL_7 } = devices['Pixel 7'];

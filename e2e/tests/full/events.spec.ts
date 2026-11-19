@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
 
 /**
  * 042 events (`@full`): the calendar file, Coming up and mute. Creating an event in the editor is a smoke journey
@@ -33,9 +33,9 @@ test('Add to calendar saves the event as <title>.ics, offline too @full', async 
 
   // First visit installs the service worker; a second load is controlled by it, so the lazy .ics
   // chunk comes from the precache offline.
-  await page.goto(webUrl(`/i/${id}`));
+  await page.goto(`/i/${id}`);
   await page.evaluate(() => navigator.serviceWorker?.ready);
-  await page.goto(webUrl(`/i/${id}`));
+  await page.goto(`/i/${id}`);
   await expect(page.getByText('Town hall, room 2')).toBeVisible();
   await context.setOffline(true);
 
@@ -86,7 +86,7 @@ test('an event in its notify window is on Coming up until muted @full', async ({
     scope.getByRole('link', { name: new RegExp(title) });
 
   const comingUp = page.getByRole('region', { name: 'Coming up' });
-  await page.goto(webUrl('/notifications'));
+  await page.goto('/notifications');
   await expect(entry(comingUp)).toContainText('Town hall');
 
   await entry(comingUp).click();
@@ -95,15 +95,15 @@ test('an event in its notify window is on Coming up until muted @full', async ({
   await page.getByRole('menuitem', { name: 'Mute notifications' }).click();
   await expect(page.getByText('Notifications muted')).toBeVisible();
 
-  await page.goto(webUrl('/notifications'));
+  await page.goto('/notifications');
   await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible();
   await expect(entry(page)).toHaveCount(0);
 
-  await page.goto(webUrl(`/i/${id}`));
+  await page.goto(`/i/${id}`);
   await page.getByRole('button', { name: 'More actions' }).click();
   await page.getByRole('menuitem', { name: 'Unmute notifications' }).click();
   await expect(page.getByText('Notifications on')).toBeVisible();
-  await page.goto(webUrl('/notifications'));
+  await page.goto('/notifications');
   await expect(entry(comingUp)).toBeVisible();
 });
 
@@ -139,7 +139,7 @@ test('an event proposal is edited fully from review, keeps its notify time and p
   expect(res.status(), 'create proposal').toBe(201);
   const { id } = (await res.json()) as { id: string };
 
-  await page.goto(webUrl(`/d/${webDeck.slug}/review`));
+  await page.goto(`/d/${webDeck.slug}/review`);
   const card = page.getByRole('article', { name: title });
   await expect(card).toContainText('Town hall');
   // D213: "Edit fully" lives in the card's "More actions" menu.

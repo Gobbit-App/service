@@ -1,9 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto';
 import type { APIRequestContext, Page } from '@playwright/test';
-import { resolveE2eEnv } from '../lib/env';
+import { CLOUDINARY_DUMMY } from '../lib/stack-config';
 
 /** Fake Cloudinary for e2e (D133): tests never reach the real service. */
-export const { cloudinaryApiSecret } = resolveE2eEnv();
+/** The stack's Cloudinary secret is the fixed dummy, so fake upload answers always verify (FR-013). */
+export const cloudinaryApiSecret = CLOUDINARY_DUMMY.apiSecret;
 
 export const TINY_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -58,13 +59,12 @@ const resourceTypeOf = (kind: FakeMediaFile['kind']) =>
 
 /**
  * 008: a fake upload permission and Cloudinary; tests never reach the real service (D133).
- * The upload answer is signed when the secret is known; otherwise the confirm step (012) is
- * answered locally too, which is enough for journeys that never save. 045: every upload gets its
+ * The upload answer is signed with the stack's dummy secret, so the real confirm step (012) accepts it. 045: every upload gets its
  * own public id (`publicId`, then `publicId-2`, …) so a gallery holds distinct photos, and the
  * permission and the answer follow the kind asked for (`file` describes a non-photo upload).
  */
 export async function routeFakeCloudinary(page: Page, publicId: string, file?: FakeMediaFile) {
-  const cloud = 'e2e-cloud';
+  const cloud = CLOUDINARY_DUMMY.cloudName;
   const kind = file?.kind ?? 'image';
   await routeCloudName(page, cloud);
   await page.route('**/api/decks/*/media/sign', (route) =>
@@ -72,7 +72,7 @@ export async function routeFakeCloudinary(page: Page, publicId: string, file?: F
       json: {
         kind,
         uploadUrl: `https://api.cloudinary.com/v1_1/${cloud}/${resourceTypeOf(kind)}/upload`,
-        apiKey: 'e2e-key',
+        apiKey: CLOUDINARY_DUMMY.apiKey,
         timestamp: Math.floor(Date.now() / 1000),
         signature: 'e2e-signature',
         folder: 'gobbit/items/e2e',
@@ -87,9 +87,7 @@ export async function routeFakeCloudinary(page: Page, publicId: string, file?: F
   const answerFor = (id: string) => ({
     public_id: id,
     version,
-    signature: cloudinaryApiSecret
-      ? signUploadAnswer(id, version, cloudinaryApiSecret)
-      : 'e2e-signature',
+    signature: signUploadAnswer(id, version, cloudinaryApiSecret),
     resource_type: resourceTypeOf(kind),
     bytes: TINY_PNG.length,
     format: file?.format ?? 'png',
@@ -105,28 +103,6 @@ export async function routeFakeCloudinary(page: Page, publicId: string, file?: F
     ids.push(id);
     return route.fulfill({ json: answerFor(id) });
   });
-  if (!cloudinaryApiSecret) {
-    await page.route('**/api/decks/*/media/assets', (route) => {
-      const sent = route.request().postDataJSON() as { publicId?: string };
-      return route.fulfill({
-        status: 201,
-        json: {
-          publicId: sent.publicId ?? publicId,
-          kind,
-          resourceType: resourceTypeOf(kind),
-          width: kind === 'audio' ? null : (file?.width ?? 1),
-          height: kind === 'audio' ? null : (file?.height ?? 1),
-          bytes: TINY_PNG.length,
-          format: file?.format ?? 'png',
-          durationMs: file?.durationMs ?? null,
-          pages: file?.pages ?? null,
-          originalFilename: null,
-          source: 'editor',
-          createdAt: new Date().toISOString(),
-        },
-      });
-    });
-  }
   await routeImageDelivery(page);
   return uploads;
 }
@@ -134,14 +110,13 @@ export async function routeFakeCloudinary(page: Page, publicId: string, file?: F
 /**
  * 045: records a file for `deckId` through the real API confirm step, with Cloudinary's answer
  * signed by the API's secret as the editor's upload would be (D157, D390). Nothing reaches
- * Cloudinary. Null when the e2e run has no `CLOUDINARY_API_SECRET` (the caller skips).
+ * Cloudinary.
  */
 export async function recordMediaAsset(
   api: APIRequestContext,
   deckId: string,
   file: FakeMediaFile,
-): Promise<string | null> {
-  if (!cloudinaryApiSecret) return null;
+): Promise<string> {
   const publicId = `gobbit/items/${deckId}/e2e-${file.kind}-${randomUUID().slice(0, 8)}`;
   const version = Math.floor(Date.now() / 1000);
   const res = await api.post(`decks/${deckId}/media/assets`, {

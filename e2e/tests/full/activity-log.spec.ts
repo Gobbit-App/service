@@ -1,8 +1,8 @@
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
- * D186–D188 activity log (020 T013, `@full`). A second admin cannot sign in from e2e (an invite
- * needs the emailed magic link), so the owner does both writes; the integration suite covers
+ * D186–D188 activity log (020 T013, `@full`). The owner does both writes; the integration suite covers
  * names of other admins and the role gates.
  */
 test('the owner sees a publish and an archive in Activity and a card history @full', async ({

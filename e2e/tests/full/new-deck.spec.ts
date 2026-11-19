@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * D269/D279 "New deck" (the bottom bar's + on the deck list, `@full`). The created deck is shared (its settings offer the

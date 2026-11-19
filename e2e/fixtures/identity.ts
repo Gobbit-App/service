@@ -55,14 +55,30 @@ export async function signInByMagicLink(
   }
 }
 
+/** `unanswered` keeps the first-visit analytics wall ("Help improve Gobbit?"); the default answers No thanks. */
+export interface IdentityOptions {
+  consent?: 'unanswered';
+}
+
+/** Answers the analytics question as the settings toggle would (PUT /me/analytics-consent), so the wall never shows. */
+async function declineAnalytics(api: APIRequestContext, opts?: IdentityOptions): Promise<void> {
+  if (opts?.consent === 'unanswered') return;
+  const res = await api.put('me/analytics-consent', {
+    data: { value: 'declined', source: 'settings' },
+  });
+  expect(res.status(), 'record analytics answer').toBe(200);
+}
+
 /** A fresh `<tag>-<8 random>@example.test` user, signed in with its own API and browser contexts. */
 export async function createIdentity(
   playwright: Playwright,
   browser: Browser,
   tag = 'user',
+  opts?: IdentityOptions,
 ): Promise<Identity> {
   const email = `${tag}-${randomUUID().slice(0, 8)}@${EMAIL_DOMAIN}`;
   const { api, userId } = await signInByMagicLink(playwright, email);
+  await declineAnalytics(api, opts);
   const context = await browser.newContext({
     baseURL: stack.webUrl,
     storageState: await api.storageState(),
@@ -145,6 +161,7 @@ export async function createMember(
     expect(cb.status(), 'invite link callback').toBe(303);
     const me = await api.get('me');
     expect(me.status(), 'GET /me after accepting the invite').toBe(200);
+    await declineAnalytics(api);
     const { user } = (await me.json()) as { user: { id: string } };
     const context = await browser.newContext({
       baseURL: stack.webUrl,
@@ -166,7 +183,7 @@ export const test = base.extend<{
   user: Identity;
   api: APIRequestContext;
   anon: APIRequestContext;
-  newUser: (tag?: string) => Promise<Identity>;
+  newUser: (tag?: string, opts?: IdentityOptions) => Promise<Identity>;
   member: (deck: { id: string }, role: InviteRole) => Promise<Identity>;
   smokeDeck: SmokeDeck;
   webDeck: WebDeck;
@@ -220,8 +237,8 @@ export const test = base.extend<{
   },
   newUser: async ({ playwright, browser }, use) => {
     const made: Identity[] = [];
-    await use(async (tag) => {
-      const identity = await createIdentity(playwright, browser, tag);
+    await use(async (tag, opts) => {
+      const identity = await createIdentity(playwright, browser, tag, opts);
       made.push(identity);
       return identity;
     });

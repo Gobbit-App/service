@@ -1,6 +1,6 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import type { SmokeDeck } from '../../../fixtures/api';
-import { expect, webUrl } from '../../../fixtures/web';
+import { expect, type SmokeDeck } from '../../../fixtures/identity';
+import { webUrl } from '../../../lib/stack';
 
 /** Data-model §6 key; set before every page load except in the first-run hint test. */
 export const HINT_KEY = 'gobbit:browse-hint:v3';

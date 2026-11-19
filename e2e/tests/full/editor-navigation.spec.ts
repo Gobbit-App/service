@@ -1,5 +1,5 @@
 import type { APIRequestContext, Page } from '@playwright/test';
-import { expect, SMOKE_CATEGORY, test, webUrl, type WebDeck } from '../../fixtures/web';
+import { expect, SMOKE_CATEGORY, test, type WebDeck } from '../../fixtures/identity';
 
 /**
  * 022 editor navigation (`@full`): the header back matrix (D200), the unsaved-changes guard
@@ -45,7 +45,7 @@ test('the header back goes one level up, and the deck list has none @full', asyn
     [`/d/${webDeck.slug}`, '/?all=true'],
   ];
   for (const [from, to] of cases) {
-    await page.goto(webUrl(from));
+    await page.goto(from);
     await expect(upLink(page, from), from).toHaveAttribute('href', to);
   }
 
@@ -62,7 +62,7 @@ test('browser back from a changed editor asks; Keep editing stays, Discard leave
 }) => {
   const card = textCard(webDeck);
   const editUrl = new RegExp(`/i/${card.id}/edit$`);
-  await page.goto(webUrl(`/i/${card.id}`));
+  await page.goto(`/i/${card.id}`);
   await page.getByRole('link', { name: 'Edit', exact: true }).click();
   await page.getByLabel('Title', { exact: true }).fill(`Changed ${webDeck.slug}`);
 
@@ -83,7 +83,7 @@ test('asking writes the draft at once; Escape keeps editing; a reload offers it 
   webDeck,
 }) => {
   page.on('dialog', (dialog) => void dialog.accept());
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
+  await page.goto(`/d/${webDeck.slug}/new?type=text`);
   await page.getByLabel('Title', { exact: true }).fill('Kept text');
   // No wait for the 500 ms autosave: the attempt to leave writes the draft (D204).
   await closeLink(page).click();
@@ -107,7 +107,7 @@ test('closing a changed editor triggers the browser prompt; unchanged does not @
     prompts.push(dialog.type());
     void dialog.dismiss();
   });
-  await page.goto(webUrl(`/i/${card.id}/edit`));
+  await page.goto(`/i/${card.id}/edit`);
   // Chromium shows "leave site?" only after a user interaction with the page.
   await page.getByLabel('Title', { exact: true }).click();
   await page.close({ runBeforeUnload: true });
@@ -119,7 +119,7 @@ test('closing a changed editor triggers the browser prompt; unchanged does not @
     prompts.push(dialog.type());
     void dialog.dismiss();
   });
-  await changed.goto(webUrl(`/i/${card.id}/edit`));
+  await changed.goto(`/i/${card.id}/edit`);
   await changed.getByLabel('Title', { exact: true }).fill(`Changed ${card.title}`);
   await changed.close({ runBeforeUnload: true });
   await expect.poll(() => prompts).toEqual(['beforeunload']);
@@ -128,7 +128,7 @@ test('closing a changed editor triggers the browser prompt; unchanged does not @
 
 test('switching the type of a new card and saving never ask @full', async ({ page, webDeck }) => {
   const title = `No prompt ${webDeck.slug}`;
-  await page.goto(webUrl(`/d/${webDeck.slug}/new?type=text`));
+  await page.goto(`/d/${webDeck.slug}/new?type=text`);
   await page.getByLabel('Title', { exact: true }).fill(title);
   // D303: nothing type-specific yet, so the type control switches without asking.
   await page.getByRole('button', { name: 'Card type: Text' }).click();
@@ -152,7 +152,7 @@ test('the review inline edit asks before dropping changes @full', async ({
 }) => {
   const title = `Inline ${webDeck.slug}`;
   await propose(api, webDeck, title);
-  await page.goto(webUrl(`/d/${webDeck.slug}/review`));
+  await page.goto(`/d/${webDeck.slug}/review`);
   await page.getByRole('article', { name: title }).getByRole('button', { name: 'Edit' }).click();
   // In edit mode the card has no heading, so it has no name: it is the only proposal here.
   const proposal = page.getByRole('region', { name: 'Proposals' });
@@ -184,7 +184,7 @@ test('the editor goes back to the page that opened it: Browse or the list (D320)
   await page.addInitScript(() => localStorage.setItem('gobbit:browse-hint:v3', 'dismissed'));
 
   // Browse → Edit → Close: the same card in Browse, not its standalone page.
-  await page.goto(webUrl(`/d/${webDeck.slug}/browse?c=all&i=${card.id}`));
+  await page.goto(`/d/${webDeck.slug}/browse?c=all&i=${card.id}`);
   await expect(page.getByRole('heading', { name: card.title })).toBeVisible();
   await editLink.click();
   await expect(page.getByRole('heading', { name: 'Edit card' })).toBeVisible();
@@ -201,7 +201,7 @@ test('the editor goes back to the page that opened it: Browse or the list (D320)
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 
   // The deck list → Edit → Close: the list.
-  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.goto(`/d/${webDeck.slug}`);
   await page
     .getByRole('article', { name: title })
     .getByRole('link', { name: 'Edit', exact: true })

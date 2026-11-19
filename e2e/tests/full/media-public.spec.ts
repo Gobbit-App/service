@@ -1,5 +1,6 @@
 import { recordMediaAsset, type FakeMediaFile } from '../../fixtures/cloudinary';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * 045 US6 (T047, `@full`): a public deck shows each media kind without scripts, and share
@@ -13,7 +14,6 @@ test('public pages and share previews show every media kind @full', async ({
 }) => {
   const record = (file: FakeMediaFile) => recordMediaAsset(api, smokeDeck.id, file);
   const cover = await record({ kind: 'image', format: 'png', width: 30, height: 40 });
-  test.skip(cover === null, 'needs CLOUDINARY_API_SECRET to sign confirms');
   const second = await record({ kind: 'image', format: 'png', width: 30, height: 40 });
   const pdf = await record({ kind: 'pdf', format: 'pdf', width: 595, height: 842, pages: 3 });
   const video = await record({
@@ -67,7 +67,7 @@ test('public pages and share previews show every media kind @full', async ({
   };
 
   const gallery = await page(ids.gallery);
-  expect(gallery.indexOf(cover!)).toBeLessThan(gallery.indexOf(second!));
+  expect(gallery.indexOf(cover)).toBeLessThan(gallery.indexOf(second));
   expect(await page(ids.pdf)).toContain(`${pdf}.pdf"`);
   expect(await page(ids.video)).toContain('<video controls playsinline preload="none"');
   expect(await page(ids.audio)).toContain('<audio controls preload="none"');

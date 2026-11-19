@@ -1,5 +1,7 @@
 import { devices, type Browser, type Page } from '@playwright/test';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { EMAIL_DOMAIN } from '../../lib/stack-config';
+import { webUrl } from '../../lib/stack';
 
 const { defaultBrowserType: _ignored, ...PIXEL_7 } = devices['Pixel 7'];
 
@@ -12,12 +14,12 @@ async function stranger(browser: Browser, run: (page: Page) => Promise<void>): P
   }
 }
 
-/** D222–D224 (029, `@full`; its UI links ship with 030). Writes a waitlist row: local stack only. */
+/** D222–D224 (029, `@full`; its UI links ship with 030). Runs on the open-mode e2e stack, so only cases that hold in both modes. */
 test.describe('registration gate @full', () => {
   test('an unknown address gets the shared "check your inbox" message', async ({ browser }) => {
     await stranger(browser, async (page) => {
       await page.goto(webUrl('/sign-in'));
-      await page.getByLabel(/email/i).fill(`gate-${Date.now().toString(36)}@example.test`);
+      await page.getByLabel(/email/i).fill(`gate-${Date.now().toString(36)}@${EMAIL_DOMAIN}`);
       await page.getByRole('button', { name: /sign-in link/i }).click();
       await expect(page.getByRole('status')).toContainText('Check your inbox');
     });

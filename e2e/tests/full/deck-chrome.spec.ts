@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
 import {
   breadcrumb,
   searchBox,
@@ -21,14 +21,14 @@ test('view switcher and Search show on the card lists, not on Your shares or Rev
   webDeck,
 }) => {
   for (const path of ['', '/favorites', '/search?q=card']) {
-    await page.goto(webUrl(`/d/${webDeck.slug}${path}`));
+    await page.goto(`/d/${webDeck.slug}${path}`);
     await expect(breadcrumb(page)).toContainText(`Smoke ${webDeck.slug}`);
     await expect(searchButton(page)).toBeVisible();
     await expect(viewSwitcher(page)).toBeVisible();
   }
 
   for (const path of ['/shares', '/review']) {
-    await page.goto(webUrl(`/d/${webDeck.slug}${path}`));
+    await page.goto(`/d/${webDeck.slug}${path}`);
     await expect(breadcrumb(page)).toContainText(`Smoke ${webDeck.slug}`);
     await expect(page.getByRole('button', { name: 'Switch deck' })).toBeVisible();
     await expect(searchButton(page)).toHaveCount(0);
@@ -39,7 +39,7 @@ test('view switcher and Search show on the card lists, not on Your shares or Rev
 
 test('the header is a single row at phone width @full', async ({ page, webDeck }) => {
   await page.setViewportSize({ width: 360, height: 780 });
-  await page.goto(webUrl(`/d/${webDeck.slug}/favorites`));
+  await page.goto(`/d/${webDeck.slug}/favorites`);
   const header = await page.getByRole('banner').boundingBox();
   expect(header?.height ?? 0).toBeLessThan(80);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
@@ -49,7 +49,7 @@ test('the deck switcher lists the deck checked and leads to all decks @full', as
   page,
   webDeck,
 }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}/favorites`));
+  await page.goto(`/d/${webDeck.slug}/favorites`);
   await page.getByRole('button', { name: 'Switch deck' }).click();
   await expect(
     page.getByRole('menuitemradio', { name: `Smoke ${webDeck.slug}`, exact: true }),
@@ -59,7 +59,7 @@ test('the deck switcher lists the deck checked and leads to all decks @full', as
 });
 
 test('the deck name goes to the deck main page @full', async ({ page, webDeck }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}/favorites`));
+  await page.goto(`/d/${webDeck.slug}/favorites`);
   await breadcrumb(page)
     .getByRole('link', { name: `Smoke ${webDeck.slug}` })
     .click();
@@ -71,7 +71,7 @@ test('search sheet: Escape closes without searching, recent searches come back @
   page,
   webDeck,
 }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.goto(`/d/${webDeck.slug}`);
   await searchButton(page).click();
   await expect(searchBox(page)).toBeFocused();
   await expect(page.getByRole('region', { name: 'Recent searches' })).toHaveCount(0);
@@ -92,7 +92,7 @@ test('search sheet: Escape closes without searching, recent searches come back @
 });
 
 test('/ opens the search sheet on a card list @full', async ({ page, webDeck }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.goto(`/d/${webDeck.slug}`);
   // The shortcut is armed once the list (and its Search button) has rendered.
   await expect(searchButton(page)).toBeVisible();
   await page.keyboard.press('/');
@@ -103,7 +103,7 @@ test('an open sheet stops the page behind it from scrolling, closing frees it @f
   page,
   webDeck,
 }) => {
-  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.goto(`/d/${webDeck.slug}`);
   await expect(searchButton(page)).toBeVisible();
   expect(await rootOverflow(page)).not.toBe('hidden');
 

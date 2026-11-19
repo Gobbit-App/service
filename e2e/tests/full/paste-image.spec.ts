@@ -1,6 +1,7 @@
 import type { Locator } from '@playwright/test';
-import { routeFakeCloudinary, TINY_PNG } from '../../fixtures/cloudinary';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
+import { routeFakeUpload, TINY_PNG } from './helpers/paste-image';
 
 /**
  * Pasting an image (`@full`): a screenshot pasted anywhere in the image editor uploads like a
@@ -23,7 +24,7 @@ async function paste(target: Locator, { text }: { text?: string } = {}) {
 }
 
 test('a pasted image becomes the photo of an image card @full', async ({ page, webDeck }) => {
-  const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  const uploads = await routeFakeUpload(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   await expect(page.getByText('Or paste a photo.')).toBeVisible();
 
@@ -36,7 +37,7 @@ test('text pasted into a field with a picture on the clipboard is not an upload 
   page,
   webDeck,
 }) => {
-  const uploads = await routeFakeCloudinary(page, `gobbit/items/${webDeck.id}/e2e-photo`);
+  const uploads = await routeFakeUpload(page, `gobbit/items/${webDeck.id}/e2e-photo`);
   await page.goto(webUrl(`/d/${webDeck.slug}/new?type=media`));
   const title = page.getByLabel('Title', { exact: true });
 

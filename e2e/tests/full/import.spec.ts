@@ -1,4 +1,4 @@
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
 
 const NOTES = ['Plumber', 'Pharmacy hours', 'School office', 'Recycling day', 'Bike shop'];
 
@@ -14,7 +14,7 @@ test('the owner imports pasted notes and bulk-publishes them from review @full',
 }) => {
   const titles = NOTES.map((note) => `${note} ${webDeck.slug}`);
 
-  await page.goto(webUrl(`/d/${webDeck.slug}`));
+  await page.goto(`/d/${webDeck.slug}`);
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Import' }).click();
   await expect(page).toHaveURL(new RegExp(`/d/${webDeck.slug}/import$`));

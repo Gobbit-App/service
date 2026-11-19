@@ -1,4 +1,5 @@
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * D383 Appearance (`@full`): the theme picked in Settings applies at once, survives a reload

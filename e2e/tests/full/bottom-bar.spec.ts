@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /**
  * 036 bottom bar (D274–D280, ADR-067, `@full`): fixed while scrolling and clear of the last card,

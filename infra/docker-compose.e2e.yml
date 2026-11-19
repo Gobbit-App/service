@@ -1,7 +1,7 @@
 # E2E overlay (specs/047-e2e-isolation/contracts/compose-overlay.md): layered after
 # docker-compose.yml and docker-compose.local.yml by the e2e runner only. ${...} values come from
 # the runner's generated e2e/.stack/compose.env. Open sign-up, a Mailpit mailbox, no fixed host
-# ports except web and the mailbox. Deliberately unset: AI keys, ANALYTICS_SITE_ID, VAPID keys,
+# ports except web and the mailbox. Deliberately unset: AI keys, VAPID keys,
 # INGEST_EMAIL_DOMAIN, PROFILE_UPDATE_RATE_PER_HOUR.
 x-e2e-mail: &e2e-mail
   REGISTRATION_MODE: open
@@ -23,6 +23,9 @@ services:
       CLOUDINARY_URL: ${CLOUDINARY_URL}
       PLATFORM_ADMINS: ${PLATFORM_ADMINS}
       LOG_HASH_KEY: ${LOG_HASH_KEY}
+      # A dummy Umami website id (a UUID) so the landing renders its tag and consent banner; there is
+      # no umami service, and the specs that need the tracker stub /stats/*.
+      ANALYTICS_SITE_ID: 2f1c7a52-8f0e-4c3e-9b8a-0d6f2c4e1a90
       MAGIC_LINK_PER_IP_PER_HOUR: 100000
       CALLBACK_PER_IP_PER_HOUR: 100000
     depends_on:

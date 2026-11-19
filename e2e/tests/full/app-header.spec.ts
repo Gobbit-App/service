@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect, test, webUrl } from '../../fixtures/web';
+import { expect, test } from '../../fixtures/identity';
+import { webUrl } from '../../lib/stack';
 
 /** A small but common phone width (the header tightens at ≤ 400 px, D198). */
 const PHONE = { width: 360, height: 780 };
