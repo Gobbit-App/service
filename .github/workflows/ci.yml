@@ -157,7 +157,8 @@ jobs:
 
       - run: pnpm --filter e2e exec playwright install --with-deps chromium
 
-      - run: pnpm test:e2e --grep @smoke --retries=1
+      # env -i proves the suite needs no environment (047 FR-001/SC-002).
+      - run: env -i HOME="$HOME" PATH="$PATH" pnpm test:e2e --grep @smoke --retries=1
 
       - if: always()
         uses: actions/upload-artifact@v7

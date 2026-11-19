@@ -105,18 +105,18 @@ description: "Task list for 047 self-contained e2e"
 
 > Each task covers 5–6 spec files. Delegate it as one worker task; if the worker reports blocked or too large, split it by file and keep the `[P]` marker.
 
-- [ ] T029 [P] [US6] [e2e:full] Convert about, activity-log, analytics-consent, app-analytics, app-header, appearance specs in e2e/tests/full/
-- [ ] T030 [P] [US6] [e2e:full] Convert bottom-bar, browse-rework, card-actions, composer, cover specs (+ helpers/browse-deck.ts, helpers/swipe.ts) in e2e/tests/full/
-- [ ] T031 [P] [US6] [e2e:full] Convert deck-admin, deck-chrome, editor-inputs, editor-navigation, events, import specs (+ helpers/deck-header.ts) in e2e/tests/full/
-- [ ] T032 [P] [US6] [e2e:full] Convert landing, links, media-public, media, mobile-fit, new-deck specs in e2e/tests/full/ (media: signed fake Cloudinary answer uses `CLOUDINARY_DUMMY` from `stack-config.ts` via e2e/fixtures/cloudinary.ts, FR-013)
-- [ ] T033 [P] [US6] [e2e:full] Convert paste-image, registration-gate, reminders, rich-text, shares, waitlist-admin specs in e2e/tests/full/ (registration-gate and waitlist-admin must not rely on global state other tests change; use `ADMIN_EMAIL` user for admin cases)
-- [ ] T034 [US6] Update e2e/fixtures/api.ts, e2e/fixtures/web.ts and e2e/fixtures/cloudinary.ts to the cookie `api` and shared constant (same exported names) once Batch B files are converted
+- [X] T029 [P] [US6] [e2e:full] Convert about, activity-log, analytics-consent, app-analytics, app-header, appearance specs in e2e/tests/full/
+- [X] T030 [P] [US6] [e2e:full] Convert bottom-bar, browse-rework, card-actions, composer, cover specs (+ helpers/browse-deck.ts, helpers/swipe.ts) in e2e/tests/full/
+- [X] T031 [P] [US6] [e2e:full] Convert deck-admin, deck-chrome, editor-inputs, editor-navigation, events, import specs (+ helpers/deck-header.ts) in e2e/tests/full/
+- [X] T032 [P] [US6] [e2e:full] Convert landing, links, media-public, media, mobile-fit, new-deck specs in e2e/tests/full/ (media: signed fake Cloudinary answer uses `CLOUDINARY_DUMMY` from `stack-config.ts` via e2e/fixtures/cloudinary.ts, FR-013)
+- [X] T033 [P] [US6] [e2e:full] Convert paste-image, registration-gate, reminders, rich-text, shares, waitlist-admin specs in e2e/tests/full/ (registration-gate and waitlist-admin must not rely on global state other tests change; use `ADMIN_EMAIL` user for admin cases)
+- [X] T034 [US6] Update e2e/fixtures/api.ts, e2e/fixtures/web.ts and e2e/fixtures/cloudinary.ts to the cookie `api` and shared constant (same exported names) once Batch B files are converted
 
 ### Batch C — `tests/smoke`
 
-- [ ] T035 [P] [US6] [e2e:smoke] Convert auth, browse, decks, editor, health, items specs in e2e/tests/smoke/
-- [ ] T036 [P] [US6] [e2e:smoke] Convert landing, lifecycle, members (drop `SMOKE_INVITEE_USERNAME`, use `member()`), openapi, public, review specs in e2e/tests/smoke/
-- [ ] T037 [P] [US6] [e2e:smoke] Convert search, settings, share, web specs and e2e/tests/smoke/helpers/ in e2e/tests/smoke/
+- [X] T035 [P] [US6] [e2e:smoke] Convert auth, browse, decks, editor, health, items specs in e2e/tests/smoke/
+- [X] T036 [P] [US6] [e2e:smoke] Convert landing, lifecycle, members (drop `SMOKE_INVITEE_USERNAME`, use `member()`), openapi, public, review specs in e2e/tests/smoke/
+- [X] T037 [P] [US6] [e2e:smoke] Convert search, settings, share, web specs and e2e/tests/smoke/helpers/ in e2e/tests/smoke/
 - [ ] T038 [US6] Run the smoke tier on the isolated config and confirm ≤ 5 min (SC-006) and zero provisioning skips (SC-003) and zero 429s (SC-004); record timings in specs/047-e2e-isolation/implementation-notes.md
 - [ ] T039 [US6] Raise `--workers` in the full tier and run it 3 times in a row on the isolated stack; confirm no failure from shared user state (SC-005), zero 429s (SC-004), then drop `retries` crutches that existed for shared-state causes (FR-014, US6 scenario 2); record results in specs/047-e2e-isolation/implementation-notes.md
 
@@ -128,9 +128,9 @@ description: "Task list for 047 self-contained e2e"
 
 **Independent Test**: quickstart §4 — passes on matching commit, fails naming `api-commit` on a wrong one.
 
-- [ ] T040 [P] [US5] [unit] Healthy, wrong commit, down, `/api/decks` or `/api/me` answering 200, missing join form, bad arguments (exit 2) in infra/post-deploy-check.test.ts
-- [ ] T041 [US5] Implement the checks `api-commit`, `web-commit`, `landing`, `anonymous-refused`, `public-health` per contracts/post-deploy-check.md (GET only, CLI args only, no env, polling every 2 s up to `--timeout-minutes`) in infra/post-deploy-check.ts and add root script `post-deploy-check` in package.json
-- [ ] T042 [US5] Switch .github/workflows/smoke.yml to run `pnpm post-deploy-check "<origin from vars.API_BASE_URL minus /api>" --sha ${{ github.sha }}` with no secret
+- [X] T040 [P] [US5] [unit] Healthy, wrong commit, down, `/api/decks` or `/api/me` answering 200, missing join form, bad arguments (exit 2) in infra/post-deploy-check.test.ts
+- [X] T041 [US5] Implement the checks `api-commit`, `web-commit`, `landing`, `anonymous-refused`, `public-health` per contracts/post-deploy-check.md (GET only, CLI args only, no env, polling every 2 s up to `--timeout-minutes`) in infra/post-deploy-check.ts and add root script `post-deploy-check` in package.json
+- [X] T042 [US5] Switch .github/workflows/smoke.yml to run `pnpm post-deploy-check "<origin from vars.API_BASE_URL minus /api>" --sha ${{ github.sha }}` with no secret
 
 ---
 
@@ -140,20 +140,20 @@ description: "Task list for 047 self-contained e2e"
 
 **Independent Test**: quickstart §3 — guard passes; suite passes under `env -i`.
 
-- [ ] T043 [US4] Promote the isolated config to e2e/playwright.config.ts and delete e2e/playwright.isolated.config.ts, e2e/global-setup.ts, e2e/lib/env.ts, e2e/lib/env.test.ts; point the runner at the final config name
-- [ ] T044 [US4] Remove the seed/export steps, `SMOKE_SESSION_TOKEN`, `E2E_*`, `BASE_URL`, `EXPECTED_SHA`, `CLOUDINARY_API_SECRET` and the `e2e` job in favour of `e2e-isolated` (renamed `e2e`) from .github/workflows/ci.yml and .github/workflows/e2e-full.yml
-- [ ] T045 [US4] Remove the `PROFILE_UPDATE_RATE_PER_HOUR` override from infra/docker-compose.local.yml (the production default in docker-compose.yml stays)
-- [ ] T046 [P] [US4] [unit] Repo-scan guard: no `process.env`, `import.meta.env`, `Deno.env` under e2e/; and, from this task on, none of `SMOKE_SESSION_TOKEN`, `E2E_MEMBER_B_TOKEN`, `E2E_MEMBER_C_TOKEN`, `SMOKE_INVITEE_USERNAME`, `BASE_URL`, `WEB_BASE_URL`, `EXPECTED_SHA`, `CLOUDINARY_API_SECRET`, or the e2e profile rate-limit override with word-bounded patterns (so `API_BASE_URL` is not matched), scanning only e2e/, .github/workflows/, infra/docker-compose*.yml and package.json scripts, never docs/adr.md, specs/ or CHANGELOG.md, in e2e/lib/no-env.test.ts
+- [X] T043 [US4] Promote the isolated config to e2e/playwright.config.ts and delete e2e/playwright.isolated.config.ts, e2e/global-setup.ts, e2e/lib/env.ts, e2e/lib/env.test.ts; point the runner at the final config name
+- [X] T044 [US4] Remove the seed/export steps, `SMOKE_SESSION_TOKEN`, `E2E_*`, `BASE_URL`, `EXPECTED_SHA`, `CLOUDINARY_API_SECRET` and the `e2e` job in favour of `e2e-isolated` (renamed `e2e`) from .github/workflows/ci.yml and .github/workflows/e2e-full.yml
+- [X] T045 [US4] Remove the `PROFILE_UPDATE_RATE_PER_HOUR` override from infra/docker-compose.local.yml (the production default in docker-compose.yml stays)
+- [X] T046 [P] [US4] [unit] Repo-scan guard: no `process.env`, `import.meta.env`, `Deno.env` under e2e/; and, from this task on, none of `SMOKE_SESSION_TOKEN`, `E2E_MEMBER_B_TOKEN`, `E2E_MEMBER_C_TOKEN`, `SMOKE_INVITEE_USERNAME`, `BASE_URL`, `WEB_BASE_URL`, `EXPECTED_SHA`, `CLOUDINARY_API_SECRET`, or the e2e profile rate-limit override with word-bounded patterns (so `API_BASE_URL` is not matched), scanning only e2e/, .github/workflows/, infra/docker-compose*.yml and package.json scripts, never docs/adr.md, specs/ or CHANGELOG.md, in e2e/lib/no-env.test.ts
 - [ ] T047 [US4] Verify `env -i HOME="$HOME" PATH="$PATH" pnpm test:e2e --grep @smoke` passes and that no `test.skip` for provisioning remains (`grep -rn "test.skip" e2e/tests`)
 
 ---
 
 ## Phase 8: Polish & cross-cutting (docs, ADR, constitution)
 
-- [ ] T048 [P] Update docs/design/testing.md (self-contained rule, runner, fixtures, probe; move 046/047 deviations into its Deviations list), infra/README.md, README.md, CLAUDE.md Testing line
-- [ ] T049 [P] Add ADR-081 (D430, D431, D432, D433, D435, D438, D442) to docs/adr.md and one index row to docs/architecture.md (stay < 250 lines)
-- [ ] T050 [P] Amend .specify/memory/constitution.md to 1.6.0 with the self-contained e2e sentence from research D442 (owner confirmed, 2026-11-18)
-- [ ] T051 [P] Record D430–D442 in specs/README.md and `Status` in specs/047-e2e-isolation/spec.md; start specs/047-e2e-isolation/implementation-notes.md with decisions and deviations
+- [X] T048 [P] Update docs/design/testing.md (self-contained rule, runner, fixtures, probe; move 046/047 deviations into its Deviations list), infra/README.md, README.md, CLAUDE.md Testing line
+- [X] T049 [P] Add ADR-081 (D430, D431, D432, D433, D435, D438, D442) to docs/adr.md and one index row to docs/architecture.md (stay < 250 lines)
+- [X] T050 [P] Amend .specify/memory/constitution.md to 1.6.0 with the self-contained e2e sentence from research D442 (owner confirmed, 2026-11-18)
+- [X] T051 [P] Record D430–D442 in specs/README.md and `Status` in specs/047-e2e-isolation/spec.md; start specs/047-e2e-isolation/implementation-notes.md with decisions and deviations
 - [ ] T052 Walk quickstart.md §1–§6 end to end on a machine with Docker (or read the green CI run) and tick the plan's "Settle before starting" boxes
 
 ---

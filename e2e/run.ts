@@ -18,7 +18,7 @@ import {
 import { ADMIN_EMAIL, CLOUDINARY_DUMMY } from './lib/stack-config';
 
 /** Single place to switch the Playwright config (T043). */
-const PLAYWRIGHT_CONFIG = 'playwright.isolated.config.ts';
+const PLAYWRIGHT_CONFIG = 'playwright.config.ts';
 const MIN_COMPOSE = [2, 24] as const;
 
 const root = fileURLToPath(new URL('..', import.meta.url)).replace(/\/$/, '');

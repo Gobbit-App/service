@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-18
 
-**Status**: Draft
+**Status**: Implemented — pending final verification (2026-11-19)
 
 **Input**: User description: "for 047" — the goal and hard requirements in [handoff.md](./handoff.md): an e2e run brings up its own stack with an empty database, every test gets its own users and data created through the product, and nothing in e2e reads the environment or uses a pre-made credential.
 

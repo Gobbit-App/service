@@ -31,7 +31,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
    pnpm db:migrate
    pnpm db:seed
    ```
-   The seed creates only the owner account and user from `SEED_OWNER_EMAIL` (no sample decks). If `SMOKE_SESSION_TOKEN` is set it also upserts a 365-day owner bearer session with that token (for the smoke suite and `api.http`).
+   The seed creates only the owner account and user from `SEED_OWNER_EMAIL` (no sample decks). If `SMOKE_SESSION_TOKEN` is set it also upserts a 365-day owner bearer session with that token (for `api.http`; e2e does not use it).
 
 5. **Start the development server:**
    ```bash
@@ -116,10 +116,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `CLIENT_IP_HEADER` | — (socket address) | Header with the real client IP behind a proxy (e.g. `cf-connecting-ip`) |
 | `SEED_OWNER_EMAIL` / `SEED_OWNER_NAME` | — | Owner created by `pnpm db:seed` (email required; local development only) |
 | `GIT_SHA` | — | Commit the image was built from (set by the Docker build in CI); reported by `/health` as `commit` |
-| `SMOKE_SESSION_TOKEN` | — | Local: optional ≥32-char owner bearer the seed creates (`openssl rand -base64 32`). Smoke suite: the bearer it authenticates with |
-| `EXPECTED_SHA` | — | Smoke suite only: wait until `/health` reports this commit (CI sets it) |
-| `BASE_URL` | `http://localhost:3000` | API base URL for e2e tests |
-| `WEB_BASE_URL` | `BASE_URL` without `/api`, else `http://localhost:5173` | Web origin for the `web-smoke` e2e project |
+| `SMOKE_SESSION_TOKEN` | — | Local: optional ≥32-char owner bearer the seed creates (`openssl rand -base64 32`), for `apps/api/api.http`. e2e does not read it |
 | `DB_PORT` | `5432` | Mapped database port in Compose |
 | `API_PORT` | `3000` | Mapped API port in Compose |
 | `WEB_PORT` | `8080` | Mapped web port in Compose (local overlay) |
@@ -143,7 +140,8 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm test:unit` | Unit tests only |
 | `pnpm test:int` | Integration tests (requires Docker) |
 | `pnpm test:coverage` | Coverage report (unit + api layers) |
-| `pnpm test:e2e` | Playwright smoke tests |
+| `pnpm test:e2e` | Playwright e2e on a throwaway Compose stack (needs Docker, Compose ≥ 2.24; flags `--no-build --keep --clean`) |
+| `pnpm post-deploy-check <origin> --sha <commit>` | No-identity probe of a deployed instance (GET only) |
 | `pnpm test:search` | Search recall eval over the fixture deck (requires Docker; hybrid part needs the committed embedding cache) |
 | `pnpm test:search:update` | Same, filling missing vectors in `search-embeddings.json` with the real API (needs `OPENROUTER_API_KEY` or `OPENAI_API_KEY`; commit the file) |
 | `pnpm media:reconcile` | List Cloudinary images tagged `editor`/`ingest` that have no `assets` row (dry run; `-- --delete` removes them). Needs `CLOUDINARY_URL` and `DATABASE_URL` |
@@ -180,65 +178,38 @@ The `web` service carries the Traefik labels for the deployed setup (router `gob
 
 The app is at `http://localhost:8080`; the API is also published directly at `http://localhost:3000`.
 
-## Smoke Tests
+## End-to-end tests
+
+E2E is self-contained (047): it needs Docker with Compose ≥ 2.24 and nothing else — no running stack, no seed, no token, no environment variable. `pnpm test:e2e` builds both images from the working tree, starts a throwaway Compose project (`gobbit-e2e-<ts>-<rand>`: Postgres, API, worker, web, a Mailpit mailbox, Umami) on free loopback ports, runs Playwright, and removes the project and its volumes afterwards (also on Ctrl-C). Every test signs in as its own fresh user through the real magic link, so tests run in parallel and share nothing.
+
+```bash
+pnpm test:e2e                          # whole suite
+pnpm test:e2e --grep @smoke            # smoke tier
+pnpm test:e2e tests/full               # full tier (by folder: not every spec carries @full)
+pnpm test:e2e --no-build               # reuse already built images
+pnpm test:e2e --keep                   # leave the stack up for debugging
+pnpm test:e2e --clean                  # remove every gobbit-e2e-* project and exit
+```
+
+Other arguments go to Playwright. Exit codes: 0 passed, 1 tests failed, 2 Docker or Compose version missing, 3 the stack did not start (`e2e/.stack/stack.log`). Install the browser once with `pnpm --filter e2e exec playwright install chromium`. Details: [docs/design/testing.md](docs/design/testing.md) and [infra/README.md](infra/README.md).
 
 ### On every PR (CI)
 
-The `e2e` job in `ci.yml` builds both images from the PR and starts the local Compose stack (Postgres, API, worker, web on `:8080`). The API gets dummy Cloudinary credentials (the specs fake every Cloudinary host and sign the fake upload answer with that secret). It seeds the owner with a fresh `SMOKE_SESSION_TOKEN` and runs `playwright test --grep @smoke` against `http://localhost:8080/api`. It runs whenever `test` runs (docs-only changes skip both), and on `main` the image and deploy jobs wait for it. On failure the run uploads `e2e-report`: the Playwright report, traces and the `api`/`worker`/`web` logs.
+The `e2e` job in `ci.yml` runs `pnpm test:e2e --grep @smoke --retries=1` with an empty environment; the `full` job in `e2e-full.yml` (PR label `e2e:full`) runs `tests/full`. On `main` the image and deploy jobs wait for `e2e`. On failure the run uploads `e2e-isolated-report` (`e2e-full-isolated-report` for the full job): the Playwright report, traces and the stack logs.
 
-To reproduce it locally (stop anything already on ports 5432/3000/8080 first):
+### After a deploy
 
-```bash
-CLOUDINARY_URL=cloudinary://e2e-key:e2e-secret@e2e-cloud pnpm compose:up
-TOKEN=$(openssl rand -hex 32)
-DATABASE_URL=postgres://gobbit:gobbit@localhost:5432/gobbit SEED_OWNER_EMAIL=owner@example.test SMOKE_SESSION_TOKEN=$TOKEN pnpm db:seed
-BASE_URL=http://localhost:8080/api SMOKE_SESSION_TOKEN=$TOKEN CLOUDINARY_API_SECRET=e2e-secret pnpm test:e2e --grep @smoke
-```
-
-### Locally
-
-With the dev server running and the seed run with `SMOKE_SESSION_TOKEN` set:
-
-```bash
-SMOKE_SESSION_TOKEN=<token> pnpm test:e2e
-```
-
-Each spec creates its own `smoke-<id>` deck and removes it (and any memberships) afterwards. The members spec invites the one standing user `smoke-invitee@example.test`; its user row stays, only the membership is removed.
-
-or just one tier:
-
-```bash
-pnpm test:e2e --grep @smoke
-pnpm test:e2e tests/full   # full tier (by folder: not every spec carries @full); in CI, label the PR `e2e:full`
-```
-
-### Deployed
-
-Set environment variables and run:
-
-```bash
-BASE_URL=https://gobbit.niranhome.win/api SMOKE_SESSION_TOKEN=<token> pnpm test:e2e
-```
-
-Tests poll `/health` on startup to verify migrations are complete (and `/version.json` on the web origin when `EXPECTED_SHA` is set).
-
-### Browser smoke (web-smoke)
-
-`web.spec.ts` and `share.spec.ts` run in Chromium (Pixel 7 viewport) against `WEB_BASE_URL` — by default `BASE_URL` without its `/api` suffix, or `http://localhost:5173` locally. Install the browser once:
-
-```bash
-pnpm --filter e2e exec playwright install chromium
-```
+`smoke.yml` runs `pnpm post-deploy-check <origin> --sha <commit>`: GET requests only, no identity and no secret. It waits for `/health` and `/version.json` to report the commit, then checks the landing form and an anonymous refusal. Run it by hand the same way against any instance.
 
 ## Deployment
 
 ### How a push reaches the box
 
 ```
-push to main → CI (tests, client drift, web build + budget; e2e: @smoke against the Compose stack built from the commit)
+push to main → CI (tests, client drift, web build + budget; e2e: @smoke against a throwaway Compose stack built from the commit)
              → image job (matrix api, web): build with GIT_SHA, push ghcr.io/gobbit-app/service/{api,web}:{latest,<sha>}
              → deploy job: POST $DOKPLOY_DEPLOY_WEBHOOK (titled "<commit subject> — <sha7>") → Dokploy pulls both images, restarts the Compose project
-             → smoke.yml waits until /api/health and /version.json report commit = <sha>, then runs the API and web-smoke projects
+             → smoke.yml waits until /api/health and /version.json report commit = <sha>, then runs `pnpm post-deploy-check`
 ```
 
 - **Manual deploy:** Actions → **CI** → **Run workflow** on `main` (or `gh workflow run ci.yml --ref main`). It runs the same pipeline for the current `main` head: tests, images, Dokploy webhook, then smoke. Run on any other branch, it only runs the tests.
@@ -250,7 +221,7 @@ push to main → CI (tests, client drift, web build + budget; e2e: @smoke agains
 - **Database:** a shared Postgres outside the Compose project (see [Shared database](#shared-database-d67) below).
 - **Migrations:** Automatic on container startup via `docker-entrypoint.sh`, against `DATABASE_URL`. The container exits if it's unset or the database is unreachable, and Docker restarts it.
 - **Networking:** only `web` joins Dokploy's external `dokploy-network` (label `traefik.docker.network=dokploy-network`), where Traefik and the shared `cloudflared` Compose service run. The tunnel's public hostname `gobbit.niranhome.win` points at Traefik; Traefik sends the whole host to `web:80`, and Caddy forwards `/api`, `/s`, `/p`, `/sitemap.xml` and `/robots.txt` to `api:3000` on the project network (D51).
-- **No seed on the box:** the deployed database starts empty. Sign in by magic link as the owner (the first sign-in creates the user), then mint the smoke token (below).
+- **No seed on the box:** the deployed database starts empty. Sign in by magic link as the owner (the first sign-in creates the user), then, if you want `api.http`, mint a bearer (below).
 - **Logs:** the `api` container logs one line per request (`[api] GET /decks/… 200 12ms <requestId>`; no query strings, `/health` skipped). Embedding activity is in the separate `worker` container: `[worker] embed <itemId> → embedded (Nms)` per job, plus failures and sweep counts.
 - **Backups:** see `infra/README.md`.
 
@@ -295,21 +266,16 @@ Optional overrides: `LOG_LEVEL`, `API_IMAGE_TAG`, `WEB_IMAGE_TAG`, `PUBLIC_HOST`
 
 ### GitHub Actions
 
-`.github/workflows/smoke.yml` runs:
+`.github/workflows/smoke.yml` runs `pnpm post-deploy-check` after each deploy (no secret; see End-to-end tests above):
 
 ```yaml
-- name: Run e2e smoke tests
-  env:
-    BASE_URL: ${{ vars.API_BASE_URL }}
-    WEB_BASE_URL: ${{ vars.WEB_BASE_URL }}
-    SMOKE_SESSION_TOKEN: ${{ secrets.SMOKE_SESSION_TOKEN }}
-  run: pnpm test:e2e --grep @smoke
+- run: pnpm post-deploy-check "${API_BASE_URL%/api}" --sha "$DEPLOY_SHA"
 ```
 
-Required secrets: `SMOKE_SESSION_TOKEN` (an owner bearer on the deployed instance — see "Smoke token" below). Optional: `CLOUDINARY_API_SECRET` (the API secret from the deployed `CLOUDINARY_URL`; the photo smoke signs its faked Cloudinary answer with it so the real API accepts the save — without it that step is skipped), `DOKPLOY_DEPLOY_WEBHOOK` (the Compose service's deploy webhook URL; without it the image is pushed but Dokploy is not told). The Dokploy Compose service must have **Autodeploy** enabled, otherwise the webhook answers 400 "Automatic deployments are disabled for this compose" and the deploy job fails.  
-Required variables: `API_BASE_URL` (`https://gobbit.niranhome.win/api`). Optional: `WEB_BASE_URL` (defaults to `API_BASE_URL` without `/api`), `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
+Optional secret: `DOKPLOY_DEPLOY_WEBHOOK` (the Compose service's deploy webhook URL; without it the image is pushed but Dokploy is not told). The Dokploy Compose service must have **Autodeploy** enabled, otherwise the webhook answers 400 "Automatic deployments are disabled for this compose" and the deploy job fails.
+Required variable: `API_BASE_URL` (`https://gobbit.niranhome.win/api`). Optional: `SMOKE_RUNNER` (defaults to `ubuntu-latest`; set to `self-hosted` if the API is only reachable privately).
 
-The smoke job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists. When run locally or in CI, a blank `BASE_URL` falls back to local defaults (`e2e/lib/env.ts`), except that CI fails fast if `BASE_URL` or `SMOKE_SESSION_TOKEN` is missing.
+The post-deploy job is **skipped until `API_BASE_URL` is set**, so the workflow stays green before a deployment exists.
 
 CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`, so pull requests from forks never execute on private machines. Workflows take the pnpm version from `packageManager` in `package.json` and the Node version from `.nvmrc`.
 
@@ -474,17 +440,17 @@ Every account has one personal deck, created on sign-in and addressed as `me` (`
 
 Everything else (categories, cards) is created through the API; there is no sample data (D49).
 
-### Smoke token: mint and rotate
+### Bearer for `api.http`: mint and rotate
 
 - **Local:** `openssl rand -base64 32` → `SMOKE_SESSION_TOKEN` in `.env` → `pnpm db:seed` (re-running with a new value rotates it; the seeded session lasts 365 days).
-- **Deployed:** there is no seed. Sign in as the owner in a browser, copy the `gobbit_session` cookie, then mint a bearer and store it as the `SMOKE_SESSION_TOKEN` GitHub secret:
+- **Deployed:** there is no seed. Sign in as the owner in a browser, copy the `gobbit_session` cookie, then mint a bearer and use it as `SMOKE_SESSION_TOKEN` in your `.env`:
 
   ```bash
   curl -s -X POST https://gobbit.niranhome.win/api/auth/token-exchange \
        -H 'Cookie: gobbit_session=<value>' | jq -r .token
   ```
 
-  It is a 90-day sliding session, so smoke runs keep it alive; after 90 idle days mint a new one.
+  It is a 90-day sliding session; after 90 idle days mint a new one.
 
 Either kind dies with `POST /auth/logout-all` (and with `POST /auth/logout` sent with that token, e.g. from `api.http`) — mint or seed again.
 
@@ -499,7 +465,7 @@ service/
 │   ├── api-client/   # Generated OpenAPI types + typed fetch/query client
 │   ├── shared/       # Zod schemas, types, utilities
 │   └── db/           # Drizzle ORM, migrations, seeding
-├── e2e/              # Playwright smoke tests
+├── e2e/              # Playwright e2e (own Compose stack per run)
 ├── infra/            # Docker Compose (deployed + local overlay), DB init, backups (README)
 ├── docs/             # Architecture & design decisions
 ├── specs/            # spec-kit feature specs, plans and tasks (Phase 6 on)
@@ -565,8 +531,8 @@ uvx --from specify-cli==1.2.2 specify init --here --force --non-interactive --in
 | Unit | Vitest | `*.test.ts` next to code | Node |
 | Integration | Vitest + Testcontainers | `*.int.test.ts` in `test/` | Docker (PostgreSQL) |
 | Search eval | Vitest + Testcontainers | `*.search.test.ts` in `apps/api/test` | Docker (PostgreSQL) |
-| E2E / Smoke | Playwright `@smoke` | `e2e/tests/smoke/` — critical journeys | Compose stack built from the PR (CI `e2e` job), then the live API post-deploy |
-| E2E / Full | Playwright `@full` | `e2e/tests/full/` — everything else | Compose stack built from the PR when it carries the `e2e:full` label (`e2e-full.yml`); nightly once 011 lands |
+| E2E / Smoke | Playwright `@smoke` | `e2e/tests/smoke/` — critical journeys | Throwaway Compose stack built from the PR (CI `e2e` job); after a deploy, `pnpm post-deploy-check` |
+| E2E / Full | Playwright `@full` | `e2e/tests/full/` — everything else | Throwaway Compose stack when the PR carries the `e2e:full` label (`e2e-full.yml`); nightly once 011 lands |
 
 Run with `pnpm test`, `pnpm test:unit`, `pnpm test:int`, `pnpm test:search`, or `pnpm test:e2e`.
 

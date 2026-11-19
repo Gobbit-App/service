@@ -1,8 +1,8 @@
 # E2E overlay (specs/047-e2e-isolation/contracts/compose-overlay.md): layered after
 # docker-compose.yml and docker-compose.local.yml by the e2e runner only. ${...} values come from
 # the runner's generated e2e/.stack/compose.env. Open sign-up, a Mailpit mailbox, no fixed host
-# ports except web and the mailbox. Deliberately unset: AI keys, VAPID keys,
-# INGEST_EMAIL_DOMAIN, PROFILE_UPDATE_RATE_PER_HOUR.
+# ports except web and the mailbox. Deliberately unset: AI keys, VAPID keys, the email-in domain
+# and every rate-limit override except the two per-IP sign-in limits below.
 x-e2e-mail: &e2e-mail
   REGISTRATION_MODE: open
   MAIL_PROVIDER: smtp
