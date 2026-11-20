@@ -26,6 +26,7 @@ function job(
     sourcePreview: null,
     autoPublish: null,
     extractionFallback: null,
+    extractionBodyCut: false,
     ...fields,
   };
 }

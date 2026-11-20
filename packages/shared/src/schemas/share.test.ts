@@ -7,6 +7,7 @@ const validShare = {
   channel: 'pwa',
   createdAt: '2026-10-25T10:00:00.000Z',
   state: 'failed',
+  savedAsSent: false,
   preview: { title: null, host: null, photoCount: 1, fileKind: null, unusedFiles: [] },
   failureCode: 'image_unavailable',
   canRetry: true,
@@ -17,6 +18,12 @@ const validShare = {
 };
 
 describe('shareSummarySchema (D196)', () => {
+  it('requires savedAsSent and rejects unknown keys', () => {
+    const { savedAsSent: _omit, ...without } = validShare;
+    expect(shareSummarySchema.safeParse(without).success).toBe(false);
+    expect(shareSummarySchema.safeParse({ ...validShare, extra: 1 }).success).toBe(false);
+  });
+
   it('accepts a failed photo share', () => {
     expect(shareSummarySchema.safeParse(validShare).success).toBe(true);
   });

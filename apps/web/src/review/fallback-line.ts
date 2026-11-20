@@ -5,6 +5,10 @@ import type { ReviewEntry } from '@gobbit/shared';
  * page's preview instead; null for an ordinary proposal.
  */
 export function fallbackLine(job: ReviewEntry['job']): string | null {
+  if (job?.extractionFallback === 'no_smart_share') {
+    const base = 'Saved as the sharer sent it, without smart share. Check it before publishing.';
+    return job.extractionBodyCut ? `${base} The text was cut at the limit.` : base;
+  }
   if (job?.extractionFallback !== 'preview') return null;
   return "The assistant couldn't read this share; filled in from the page preview. Check it before publishing.";
 }

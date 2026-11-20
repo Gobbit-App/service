@@ -134,3 +134,45 @@ Non-session tokens are listed in `lib/token-prefixes.ts` (today `ing_`; Phase 13
 - **E2E** (`review`, `share`, `settings` specs) runs in CI's `e2e` job (Compose stack, every PR) and the post-deploy smoke workflow.
 - **P5.9 (MCP readiness) is migration `0010_mcp_readiness`**, not part of `0009_ingest`: 0009 was already merged and deployed when the addendum landed. The down file recreates `source_kind` and `ingest_channel` without `mcp` (existing `mcp` items become `share`, `mcp` jobs are deleted).
 - **`propose_card` accepts `null`** for its optional fields (`link`, `entities` and each list, `categoryIds`, `newCategory`): models send `"link": null` on photo cards, which failed both the call and its corrective retry (`unreadable_answer`). The `ingest job failed` line logs an invalid answer's zod issues as `detail` (paths and messages, never values), and extraction calls allow 2048 output tokens.
+
+## Smart share and best effort
+
+Spec `specs/050-model-spend-guard` (D452–D458). A share is turned into a card by the model ("smart share") only for members who have it on. Everyone else gets a best-effort card built from what was sent and the page's own data, with no model call.
+
+**Gate (D452, D453).** `users.smart_share` (boolean, default false) or platform admin (`admins.is`, always on). The worker reads it at processing time (`smartShareOf`), not at submit, so a switch takes effect for queued jobs. File shares (PDF, audio, video) never use the model and are unaffected. Nothing in the API writes the setting; the operator does (below). `POST /ingest`, retry, the email webhook and every cap are unchanged.
+
+**Kinds (`ingest/best-effort.ts`).** Input is the raw share and channel, never a file. The card is always `proposed`, in no category (the default holds it), no `autoPublish`, no event card, checked by `validateProposal`.
+
+| Channel | Share has | Kind | Title | Body |
+|---------|-----------|------|-------|------|
+| app, paste, Shortcut | web address | link | page title, else share title, else site name | sender's text without the address, else page description, else none |
+| app, paste, Shortcut | photos, no address | media (all photos) | share title, else first line, else "Shared image" | rest of the text |
+| app, paste, Shortcut | text only | text | share title, else first line | rest of the text |
+| email | photo attachments | media | subject, else first line, else "Shared image" | the body |
+| email | body is only a web address | link | page title, else subject, else site name | page description, else none |
+| email | any other body | text | subject, else first line | the body as written |
+| any | nothing usable | none: the share fails (`unknown`, message `best_effort_empty`) | | |
+
+**Marker.** The job's `extraction.fallback = 'no_smart_share'` (the enum is `'preview' | 'no_smart_share'`) and optional `extraction.bodyCut` (the body was cut at the limit). The review card shows "Saved as the sharer sent it, without smart share" (plus "The text was cut at the limit." when cut); `ShareSummary.savedAsSent` drives the share row hint.
+
+**Decision event.** `ingest.extraction_skipped` (component `ingest`, ids and counts only): `outcome` `proposed` or `failed`, `reason` `smart_share_off`, `jobId`, `deckId`, `userId`, `channel`, `kind` (`link`, `media`, `text` or null), `itemId` (when proposed), `cut`, `unusedPhotos`. Never titles, text, addresses, file names or emails.
+
+**Operator runbook** (SQL on the production database; use the member's sign-in address):
+
+```sql
+-- switch on
+UPDATE users SET smart_share = true WHERE email = 'member@example.com';
+-- switch off
+UPDATE users SET smart_share = false WHERE email = 'member@example.com';
+-- who is on (platform admins are always on and need no flag)
+SELECT email, smart_share FROM users WHERE smart_share;
+-- verify a job made no model call (expect 0)
+SELECT count(*) FROM llm_calls WHERE job_id = '<job id>' AND purpose LIKE 'extract%';
+```
+
+### Deviations from the plan
+
+- T022: the "saved as you sent it" line renders only inside `ShareRow`'s `card()` block, so a `not_added` share (no item) shows no line, although `savedAsSentLine` itself allows that state. Screenshots (phone/desktop, light/dark) were not produced; T022 stays unticked until someone supplies them.
+- Docker was unavailable while implementing (no `docker` group access): the int and e2e tests T002, T006, T011, T015 (suites), T019, T024 and T027 are written but unrun.
+- T013: a share that builds no best-effort card fails with `best_effort_empty` and code `unknown`, which is retryable, so a retry fails the same way (nothing changes the input); accepted rather than adding a non-retryable code.
+- T013: the stored `extraction.categoryIds` of a best-effort card is the default category id (as for direct file proposals), because `proposeItem` records the category it filed the card in.

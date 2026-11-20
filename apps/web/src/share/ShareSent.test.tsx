@@ -47,6 +47,19 @@ describe('ShareSent (D108, D198)', () => {
     expect(screen.getByText('Published')).toBeInTheDocument();
   });
 
+  it('says a share was saved as sent when smart share is off', async () => {
+    answer({
+      state: 'published',
+      autoPublish: 'published',
+      item: { id: ITEM_ID, title: 'Gate code', deleted: false, type: 'text', event: null },
+      savedAsSent: true,
+    });
+    renderSent();
+    expect(
+      await screen.findByText('Saved as you sent it. Smart share is coming soon.'),
+    ).toBeInTheDocument();
+  });
+
   it('shows a share waiting for review with the held reason', async () => {
     answer({
       state: 'in_review',

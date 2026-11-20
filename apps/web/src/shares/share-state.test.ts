@@ -6,6 +6,7 @@ import {
   anyProcessing,
   autoPublishCopy,
   heldReason,
+  savedAsSentLine,
   shareEventLine,
   shareTitle,
   stateLabel,
@@ -162,5 +163,21 @@ describe('shareEventLine (D377)', () => {
     expect(autoPublishCopy('held_event_unverified')).toBe(
       'check the date and time before publishing',
     );
+  });
+});
+
+describe('savedAsSentLine (FR-008)', () => {
+  const LINE = 'Saved as you sent it. Smart share is coming soon.';
+
+  it.each(['in_review', 'published', 'not_added'] as const)('shows the notice for %s', (state) => {
+    expect(savedAsSentLine(makeShare({ state, savedAsSent: true }))).toBe(LINE);
+  });
+
+  it.each(['processing', 'failed'] as const)('hides the notice while %s', (state) => {
+    expect(savedAsSentLine(makeShare({ state, savedAsSent: true }))).toBeNull();
+  });
+
+  it('says nothing for an extracted share', () => {
+    expect(savedAsSentLine(makeShare({ state: 'in_review', savedAsSent: false }))).toBeNull();
   });
 });

@@ -52,6 +52,7 @@ describe('ingesting shared files (045)', () => {
     const db = ctx.t.db;
     const extractor = createFakeExtractor();
     const run = createIngestHandler({
+      smartShare: async () => true,
       jobs: createIngestJobsRepo(db),
       categories: createCategoriesRepo(db),
       items: createItemsRepo(db),

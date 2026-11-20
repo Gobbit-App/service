@@ -18,7 +18,7 @@ export function hasPreviewDetails(ctx: ValidateContext): boolean {
   return Boolean(ctx.sourceUrl && (preview?.title || preview?.description || preview?.image));
 }
 
-function hostOf(url: string): string {
+export function hostOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./u, '');
   } catch {

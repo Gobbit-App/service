@@ -18,6 +18,7 @@ function makeJob(overrides: Partial<ReviewJob>): ReviewJob {
     sourcePreview: null,
     autoPublish: null,
     extractionFallback: null,
+    extractionBodyCut: false,
     ...overrides,
   };
 }

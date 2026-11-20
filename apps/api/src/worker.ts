@@ -47,6 +47,7 @@ import { createDecksRepo } from './repositories/decks.repo';
 import { createItemsRepo } from './repositories/items.repo';
 import { createMembershipsRepo } from './repositories/memberships.repo';
 import { createUsersRepo } from './repositories/users.repo';
+import { createPlatformAdmins } from './access/platform-admin';
 import { createEmbedItemHandler } from './jobs/embed-item';
 import { withEmbedItemLog } from './jobs/embed-item-log';
 import { createEmbedSweep } from './jobs/embed-sweep';
@@ -230,8 +231,10 @@ async function main() {
   if (extract) {
     const ingestJobs = createIngestJobsRepo(db);
     const decks = createDecksRepo(db);
+    const usersRepo = createUsersRepo(db);
+    const admins = createPlatformAdmins({ admins: env.PLATFORM_ADMINS });
     const roleOf = createSharerRole({
-      users: createUsersRepo(db),
+      users: usersRepo,
       decks,
       memberships: createMembershipsRepo(db),
     });
@@ -257,6 +260,11 @@ async function main() {
       embedQueue: workerEmbedQueue,
       linkSnapshotQueue: ingestLinkSnapshotQueue,
       assets: createAssetsRepo(db),
+      // FR-003: a member's smart-share flag, or a platform admin; a missing user is off.
+      smartShare: async (userId) => {
+        const u = await usersRepo.smartShareOf(userId);
+        return u !== null && (u.smartShare || admins.is({ email: u.email }));
+      },
       // D370/D374: shares recognised as events become event proposals.
       events: {
         defaultTimeZone: env.INGEST_DEFAULT_TIME_ZONE,

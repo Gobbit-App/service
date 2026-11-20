@@ -19,6 +19,7 @@ function share(deck: WebDeck, n: number, fields: Partial<Share>): Share {
     preview: { title: null, host: null, photoCount: 0 },
     failureCode: null,
     canRetry: false,
+    savedAsSent: false,
     autoPublish: null,
     item: null,
     reviewedBy: null,
@@ -121,4 +122,31 @@ test('an expired share offers Paste it again @full', async ({ page, webDeck }) =
   await row.getByRole('button', { name: 'Try again' }).click();
   await row.getByRole('link', { name: 'Paste it again' }).click();
   await expect(page).toHaveURL(new RegExp(`/share\\?deck=${webDeck.slug}$`));
+});
+
+test('only a share saved as sent says smart share is coming soon @full', async ({
+  page,
+  webDeck,
+}) => {
+  const [first, second] = webDeck.items;
+  if (!first || !second) throw new Error('the web deck needs two cards');
+  await stubShares(page, () => [
+    share(webDeck, 5, {
+      state: 'in_review',
+      savedAsSent: true,
+      item: { id: first.id, title: first.title, deleted: false },
+    }),
+    share(webDeck, 6, {
+      state: 'in_review',
+      item: { id: second.id, title: second.title, deleted: false },
+    }),
+  ]);
+
+  await page.goto(webUrl(`/d/${webDeck.slug}/shares`));
+  await expect(page.getByRole('listitem').filter({ hasText: first.title })).toContainText(
+    'Smart share is coming soon',
+  );
+  await expect(page.getByRole('listitem').filter({ hasText: second.title })).not.toContainText(
+    'Smart share is coming soon',
+  );
 });

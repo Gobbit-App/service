@@ -41,6 +41,8 @@ export const users = pgTable(
     analyticsConsentSource: analyticsConsentSourceEnum(),
     /** FR-012 (D297): email when a reminder the user may dismiss is due. */
     reminderEmails: boolean().notNull().default(true),
+    /** D452: set only by an operator in SQL; platform admins count as on in code. */
+    smartShare: boolean().notNull().default(false),
     /** D417: public handle, unique case-insensitively; null until chosen. */
     username: text(),
     firstName: text(),

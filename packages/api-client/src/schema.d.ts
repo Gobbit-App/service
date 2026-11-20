@@ -8113,7 +8113,8 @@ export interface paths {
                                 categoryIds: string[];
                                 newCategory: string | null;
                                 /** @enum {string} */
-                                fallback?: "preview";
+                                fallback?: "preview" | "no_smart_share";
+                                bodyCut?: boolean;
                                 event?: {
                                     /** @enum {string} */
                                     dateSource: "structured" | "model";
@@ -8645,7 +8646,8 @@ export interface paths {
                                     /** @enum {string|null} */
                                     autoPublish: "published" | "held_not_publisher" | "held_needs_category" | "held_duplicate" | "held_duplicate_check_failed" | "held_publish_failed" | "held_event_unverified" | null;
                                     /** @enum {string|null} */
-                                    extractionFallback: "preview" | null;
+                                    extractionFallback: "preview" | "no_smart_share" | null;
+                                    extractionBodyCut: boolean;
                                 } | null;
                                 target: {
                                     /** Format: uuid */
@@ -9637,6 +9639,7 @@ export interface paths {
                                 createdAt: string;
                                 /** @enum {string} */
                                 state: "processing" | "failed" | "in_review" | "published" | "not_added";
+                                savedAsSent: boolean;
                                 preview: {
                                     title: string | null;
                                     host: string | null;
@@ -9790,6 +9793,7 @@ export interface paths {
                             createdAt: string;
                             /** @enum {string} */
                             state: "processing" | "failed" | "in_review" | "published" | "not_added";
+                            savedAsSent: boolean;
                             preview: {
                                 title: string | null;
                                 host: string | null;
@@ -9922,6 +9926,7 @@ export interface paths {
                             createdAt: string;
                             /** @enum {string} */
                             state: "processing" | "failed" | "in_review" | "published" | "not_added";
+                            savedAsSent: boolean;
                             preview: {
                                 title: string | null;
                                 host: string | null;
