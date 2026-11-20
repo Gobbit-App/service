@@ -14,9 +14,11 @@ export interface ImportRowDraft {
   sourceUrl?: string;
   categoryIds?: string[];
   newCategory?: string;
+  unmatched?: string[];
 }
 
-const normalise = (s: string): string => s.trim().toLocaleLowerCase().replace(/\s+/g, '-');
+export const normalise = (s: string): string =>
+  s.trim().normalize('NFC').toLocaleLowerCase().replace(/\s+/g, '-');
 
 /** A category name → an existing category (by name or slug), else null. */
 export function matchCategory(
@@ -27,10 +29,11 @@ export function matchCategory(
   return categories.find((c) => normalise(c.name) === key || c.slug === key) ?? null;
 }
 
-/** D190: a valid row → its draft; the category maps to an existing id, else `newCategory`. */
+/** Always a draft (T035): categories map to ids; unmatched names become `newCategory` (one, non-strict) or `unmatched`. */
 export function toImportDraft(
   row: ImportRow,
   categories: readonly ImportCategory[],
+  opts: { strict?: boolean } = {},
 ): ImportRowDraft {
   const draft: ImportRowDraft = {
     type: row.type === 'media' ? 'text' : row.type,
@@ -38,11 +41,18 @@ export function toImportDraft(
     body: row.body,
   };
   if (row.sourceUrl) draft.sourceUrl = row.sourceUrl;
-  const [name] = row.categories;
-  if (name) {
+  const ids = new Set<string>();
+  const unmatched = new Map<string, string>();
+  for (const raw of row.categories) {
+    const name = raw.trim();
+    if (!name) continue;
     const found = matchCategory(name, categories);
-    if (found) draft.categoryIds = [found.id];
-    else draft.newCategory = name.trim();
+    if (found) ids.add(found.id);
+    else if (!unmatched.has(normalise(name))) unmatched.set(normalise(name), name);
   }
+  if (ids.size) draft.categoryIds = [...ids];
+  const names = [...unmatched.values()];
+  if (names.length === 1 && !opts.strict) draft.newCategory = names[0];
+  else if (names.length) draft.unmatched = names;
   return draft;
 }

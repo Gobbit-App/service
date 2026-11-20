@@ -53,15 +53,18 @@ export function importableRows(rows: readonly PreviewRow[]): PreviewRow[] {
 export function rowsToDrafts(
   rows: readonly PreviewRow[],
   categories: readonly ImportCategory[],
+  strict = false,
 ): ImportRowDraft[] {
-  return rows.map((row) => toImportDraft(row, categories));
+  return rows.map((row) => toImportDraft(row, categories, { strict }));
 }
 
-/** "existing" when the category maps to one the deck has, "new" when publishing would add it. */
+/** "existing" when the category maps to one the deck has, "new" when publishing would add it, "refused" when strict. */
 export function categoryStatus(
   name: string | null,
   categories: readonly ImportCategory[],
-): 'existing' | 'new' | null {
+  strict = false,
+): 'existing' | 'new' | 'refused' | null {
   if (!name) return null;
-  return matchCategory(name, categories) ? 'existing' : 'new';
+  if (matchCategory(name, categories)) return 'existing';
+  return strict ? 'refused' : 'new';
 }

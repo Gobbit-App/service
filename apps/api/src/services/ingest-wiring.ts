@@ -16,6 +16,7 @@ import { createIngestTokensRepo } from '../repositories/ingest-tokens.repo';
 import type { ResendInbound } from '../ingest/resend-inbound';
 import { createIngestService } from './ingest.service';
 import { createIngestTokensService } from './ingest-tokens.service';
+import type { Logger } from '../lib/logger';
 import { createReviewService } from './review.service';
 import { reviewTransaction } from '../review/publish-proposal';
 import { createSharesService } from './shares.service';
@@ -43,6 +44,7 @@ export interface IngestWiring {
 }
 
 export function buildIngestServices(deps: {
+  logger?: Logger;
   db: Db;
   env: Pick<
     Env,
@@ -155,6 +157,7 @@ export function buildIngestServices(deps: {
       noticeHook: deps.noticeHook,
       now,
       purgeDeck: deps.purgeDeck,
+      logger: deps.logger,
     }),
   };
 }

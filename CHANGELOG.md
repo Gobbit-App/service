@@ -10,6 +10,12 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-20 — Import v2: card per section, fields, several categories, strict mode (049, D443–D451)
+
+- **Behaviour change:** in a Markdown import, a `##` heading outside a code fence now starts a card (`#` still groups cards under a category); files without a `##` import as before. Lines directly under a `##` can set `source:`, `categories:` (several, comma-separated) and `type:`; `cover`, `image` and `type: media` are refused as row errors until media import lands.
+- `pnpm import:notes` is now strict by default: a card naming a category the deck does not have is refused and reported; pass `--no-strict` for the old behaviour. `POST /decks/{id}/imports` takes an optional `strict` and a draft's `unmatched` names (additive; old clients unchanged).
+- Category names with no Latin letters (e.g. Hebrew) now get a derived address `c-` + 8 hex characters instead of a 400; a clash asks for an explicit `slug`. No environment variable changes, no migration, no action required.
+
 ### 2026-11-19 — Bulk publish continues past a card that cannot be published
 
 - `POST /decks/{id}/review/publish` no longer aborts on the first unexpected error: that card is reported in `skipped` with the new reason `publish-failed` and the rest are published. No environment variable changes.

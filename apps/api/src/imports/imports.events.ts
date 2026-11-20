@@ -9,7 +9,7 @@ export type ImportDecisions = {
   /** `count` rows refused; `cap` only for `daily_cap`. */
   'imports.rows_refused': {
     outcome: 'refused';
-    reason: 'daily_cap' | 'unmatched_category' | 'invalid_row';
+    reason: 'daily_cap' | 'unmatched_category' | 'too_many_new_categories' | 'invalid_row';
     count: number;
     cap?: number;
   };
@@ -27,12 +27,6 @@ export type ImportDecisions = {
     skipped: number;
   };
   'imports.discard_refused': { outcome: 'refused'; reason: 'forbidden' | 'no_pending' };
-  /** A category address fell back to a hash of its name (D445). */
-  'categories.slug_derived': {
-    outcome: 'accepted';
-    reason: 'hash_fallback';
-    categoryId: string;
-  };
 };
 
 export const IMPORT_DECISION_LEVELS: Partial<Record<string, DecisionLevel>> = {

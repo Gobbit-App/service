@@ -2618,6 +2618,17 @@ h2 {
   justify-self: start;
 }
 
+.import-input__strict {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+}
+
+.import-input__strict .import-input__help {
+  grid-column: 2;
+}
+
 .import-input__help {
   margin: 0;
   color: var(--color-muted);
@@ -2677,6 +2688,16 @@ h2 {
   display: grid;
   gap: 4px;
   justify-items: start;
+}
+
+.import-row__category {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.import-row__cat {
+  white-space: nowrap;
 }
 
 .import-row__edit {

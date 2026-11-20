@@ -26,7 +26,6 @@ export const importFormatSchema = z.enum(importFormats);
 /** D190: one row of POST /decks/{id}/imports. A link row needs `sourceUrl` (its payload URL). */
 export const importDraftSchema = z
   .object({
-    // shortcut: no `media`, `cover` or `unmatched` until T035/T036 (the server must act on them)
     type: z.enum(['text', 'link']),
     title: itemTitleSchema,
     body: itemBodySchema.default(''),
@@ -38,6 +37,8 @@ export const importDraftSchema = z
       })
       .optional(),
     newCategory: z.string().trim().max(NAME_MAX).nullable().optional(),
+    /** D446: category names the parser could not match; refused when strict, else at most one is suggested. */
+    unmatched: z.array(z.string().trim().min(1).max(NAME_MAX)).max(20).optional(),
   })
   .strict()
   .refine((d) => d.type !== 'link' || d.sourceUrl !== undefined, {
@@ -51,7 +52,8 @@ export const importRequestSchema = z
   .object({
     /** Shown as the source in review and used by `?source=` (the file name or "Pasted notes"). */
     label: z.string().trim().min(1).max(IMPORT_LABEL_MAX),
-    // `strict` returns with T035/T036; until then it is rejected, not ignored.
+    /** D446: refuse rows naming an unmatched category (the CLI default); default false. */
+    strict: z.boolean().optional(),
     rows: z.array(importDraftSchema).min(1).max(IMPORT_ROWS_PER_REQUEST),
   })
   .strict();

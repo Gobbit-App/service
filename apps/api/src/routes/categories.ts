@@ -130,7 +130,9 @@ export function registerCategoriesRoutes(app: OpenAPIHono<AppEnv>, services: Ser
     const user = getUser(c);
     const { id } = c.req.valid('param');
     const input = c.req.valid('json');
-    const category = await services.categories.create(user, id, input);
+    const category = await services.categories.create(user, id, input, {
+      requestId: c.get('requestId'),
+    });
     return c.json(category, 201);
   });
 
