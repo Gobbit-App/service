@@ -8,11 +8,13 @@ describe('importRequestSchema', () => {
   it('accepts an old body', () => {
     expect(parse(row).success).toBe(true);
   });
-  it('rejects options the server does not act on yet (until T035/T036)', () => {
+  it('accepts strict and unmatched names (049)', () => {
     expect(importRequestSchema.safeParse({ label: 'x', rows: [row], strict: true }).success).toBe(
-      false,
+      true,
     );
-    expect(parse({ ...row, unmatched: ['a'] }).success).toBe(false);
+    expect(parse({ ...row, unmatched: ['a'] }).success).toBe(true);
+  });
+  it('rejects media options until US7', () => {
     expect(parse({ ...row, cover: {} }).success).toBe(false);
     expect(parse({ ...row, type: 'media' }).success).toBe(false);
   });
