@@ -358,8 +358,9 @@ describe('ingest spend guard: smart share on (050)', () => {
 
 /** 050 FR-010: the switch buys no extra volume; the existing caps still bind an unswitched user. */
 describe.each([
-  // Low per-channel cap: one channel full (the 51st by default).
-  { name: 'per-channel cap', cap: 5, channels: ['pwa'] as IngestChannel[], each: 5 },
+  // Low per-channel cap: one channel full (the 51st by default). A text POST with no `channel`
+  // lands on `paste` (channelFor), so that is the channel to fill.
+  { name: 'per-channel cap', cap: 5, channels: ['paste'] as IngestChannel[], each: 5 },
   // Per-channel cap raised past 50: four channels at 50 fill the combined 200, none is full.
   {
     name: 'combined cap (the 201st)',
