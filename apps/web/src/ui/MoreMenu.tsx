@@ -27,7 +27,7 @@ export interface MenuAction {
   /** Run on select; or `href` to navigate in-app. */
   onSelect?: () => void;
   href?: string;
-  tone?: 'danger';
+  tone?: 'danger' | 'accent';
   /** Shown in the item's tooltip; the item stays focusable but does nothing. */
   disabledReason?: string | null;
   /** D276: a muted second line (e.g. the signed-in email under "Sign out"). */
@@ -208,6 +208,7 @@ export function MoreMenu({
               const itemClass = classNames(
                 'menu__item',
                 action.tone === 'danger' && 'menu__item--danger',
+                action.tone === 'accent' && 'menu__item--accent',
               );
               const content = (
                 <>
