@@ -1,23 +1,31 @@
 import { useState, type ReactElement } from 'react';
-import type { ImportCategory } from '@gobbit/shared/import';
-import { categoryStatus, type PreviewRow, type RowEdit } from './preview-rows';
+import { matchCategory, type ImportCategory } from '@gobbit/shared/import';
+import { bodyExcerpt, categoryStatus, type PreviewRow, type RowEdit } from './preview-rows';
 import { Button } from '../ui/buttons/Button';
+
+const CATEGORY_LABEL = {
+  existing: 'existing category',
+  new: 'new category',
+  refused: 'not found, card refused',
+} as const;
 
 /** D189: one parsed note: tick, read, edit; an invalid row shows why and can't be ticked. */
 export function ImportPreviewRow({
   row,
   categories,
+  strict = false,
   onToggle,
   onEdit,
 }: {
   row: PreviewRow;
   categories: readonly ImportCategory[];
+  strict?: boolean;
   onToggle: () => void;
   onEdit: (edit: RowEdit) => void;
 }): ReactElement {
   const [editing, setEditing] = useState(false);
-  const status = categoryStatus(row.category, categories);
   const at = `line ${row.line}`;
+  const unmatched = row.categories.filter((name) => !matchCategory(name, categories)).length;
 
   return (
     <li className={row.error ? 'import-row import-row--invalid' : 'import-row'}>
@@ -55,7 +63,7 @@ export function ImportPreviewRow({
           <label className="field">
             <span className="field__label">Category</span>
             <input
-              value={row.category ?? ''}
+              value={row.categories[0] ?? ''}
               dir="auto"
               aria-label={`Category, ${at}`}
               onChange={(event) => onEdit({ category: event.currentTarget.value })}
@@ -70,16 +78,23 @@ export function ImportPreviewRow({
           </p>
           {row.body && (
             <p className="import-row__body" dir="auto">
-              {row.body}
+              {bodyExcerpt(row.body)}
             </p>
           )}
           {row.sourceUrl && <p className="import-row__url">{row.sourceUrl}</p>}
-          {row.category && (
+          {row.categories.length > 0 && (
             <p className="import-row__category">
-              <span className="chip chip--small" dir="auto">
-                {row.category}
-              </span>{' '}
-              {status === 'new' ? 'new category' : 'existing category'}
+              {row.categories.map((name) => (
+                <span key={name} className="import-row__cat">
+                  <span className="chip chip--small" dir="auto">
+                    {name}
+                  </span>{' '}
+                  {CATEGORY_LABEL[categoryStatus(name, categories, strict) ?? 'existing']}
+                </span>
+              ))}
+              {!strict && unmatched > 1 && (
+                <span className="import-row__cat">only one new category per card</span>
+              )}
             </p>
           )}
           <Button icon="edit" label="Edit" variant="ghost" onClick={() => setEditing(true)} />

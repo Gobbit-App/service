@@ -1,6 +1,6 @@
 import type { ImportRow } from './constants';
 import { LIST_MARKER } from './parse-lines';
-import { noteRow, titleForUrl, withError } from './note-row';
+import { categoriesOf, noteRow, titleForUrl, withError } from './note-row';
 
 const HEADING = /^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$/;
 const FENCE = /^\s{0,3}(```|~~~)/;
@@ -13,7 +13,7 @@ const TASK_BOX = /^\[[ xX]\]\s+/;
 const QUOTE = /^\s*>\s?/;
 
 /** Inline Markdown → plain text; the first link's URL is returned for `sourceUrl`. */
-function plain(text: string): { text: string; url: string | null } {
+export function plain(text: string): { text: string; url: string | null } {
   let url: string | null = null;
   const replaced = text.replace(INLINE_LINK, (_m, label: string, href: string) => {
     url ??= href;
@@ -42,7 +42,7 @@ export function parseMarkdown(text: string): ImportRow[] {
           title: link[1].trim() || titleForUrl(link[2]),
           body: '',
           sourceUrl: link[2],
-          category,
+          categories: categoriesOf(category),
         }),
       );
       return;

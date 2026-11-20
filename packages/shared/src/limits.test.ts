@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { ingestChannels } from './ingest/constants';
+import {
+  ingestChannels,
+  IMPORT_DAILY_CAP_DEFAULT,
+  IMPORT_DISCARD_MAX,
+  IMPORT_ROWS_PER_PREVIEW,
+  IMPORT_ROWS_PER_REQUEST,
+  IMPORT_UNMATCHED_MAX,
+} from './ingest/constants';
 import {
   ingestDailyCaps,
   INGEST_CHANNEL_DAILY_CAPS,
@@ -59,8 +66,17 @@ describe('ingestDailyCaps (D110)', () => {
     }
   });
 
-  it('caps imported rows at 150 a day whatever the default (D190)', () => {
-    expect(ingestDailyCaps(7).import).toBe(150);
+  it('caps imported rows at 500 a day whatever the default (D190)', () => {
+    expect(ingestDailyCaps(7).import).toBe(500);
     expect(ingestDailyCaps(7).paste).toBe(7);
+  });
+
+  it('import values (D447): cap 500, preview = cap, request 100, discard 1000, unmatched 5', () => {
+    expect(IMPORT_DAILY_CAP_DEFAULT).toBe(500);
+    expect(INGEST_CHANNEL_DAILY_CAPS.import).toBe(IMPORT_DAILY_CAP_DEFAULT);
+    expect(IMPORT_ROWS_PER_PREVIEW).toBe(IMPORT_DAILY_CAP_DEFAULT);
+    expect(IMPORT_ROWS_PER_REQUEST).toBe(100);
+    expect(IMPORT_DISCARD_MAX).toBe(1000);
+    expect(IMPORT_UNMATCHED_MAX).toBe(5);
   });
 });

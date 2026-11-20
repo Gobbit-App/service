@@ -779,6 +779,28 @@ h2 {
   color: var(--color-danger);
 }
 
+/* A pending update stands out like the primary button (fill, glow on hover/focus). */
+.menu__item.menu__item--accent {
+  background: var(--color-accent-fill);
+  color: var(--color-accent-text);
+  font-weight: 650;
+}
+
+.menu__item--accent:focus-visible {
+  box-shadow: var(--glow-accent);
+}
+
+@media (hover: hover) {
+  .menu__item--accent:hover {
+    box-shadow: var(--glow-accent);
+  }
+}
+
+.menu__item--accent .menu__detail {
+  color: inherit;
+  font-weight: 400;
+}
+
 .menu__text {
   display: grid;
   min-width: 0;
@@ -1043,6 +1065,48 @@ h2 {
   display: grid;
   gap: var(--gap);
   min-width: 0;
+}
+
+/* A list card stays near 60% of the screen: its cover + body get 60% of the small viewport less
+   ~15rem for title, meta and bar, 16rem at least (landscape); svh, not dvh, so cards don't resize
+   as the toolbar hides. Images and video shrink to fit rather than being cut. */
+.card__clip {
+  --card-clip: max(16rem, 60svh - 15rem);
+  max-height: var(--card-clip);
+  overflow: hidden;
+}
+
+.card__clip--open {
+  max-height: none;
+}
+
+.card__clip--more {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 4rem), transparent);
+}
+
+.card__clip .cloud-image__img,
+.card__clip .media-player__video {
+  max-height: min(var(--card-clip), 640px);
+}
+
+.card__clip-content {
+  display: grid;
+}
+
+.card__clamp-toggle {
+  margin-top: var(--space-2);
+}
+
+.card__clamp-toggle[aria-expanded='true'] .icon {
+  transform: rotate(180deg);
+}
+
+/* Show more keeps its words on phones, like the source link. */
+.card__clamp-toggle .button__label {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
 }
 
 .card__source {
@@ -2554,6 +2618,32 @@ h2 {
   justify-self: start;
 }
 
+.import-input__strict {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+}
+
+.import-input__strict .import-input__help {
+  grid-column: 2;
+}
+
+.import-input__help {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.import-preview__ignored {
+  margin: 0;
+}
+
+.import-preview__ignored span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
 .import-preview__summary {
   margin: 0;
 }
@@ -2598,6 +2688,16 @@ h2 {
   display: grid;
   gap: 4px;
   justify-items: start;
+}
+
+.import-row__category {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.import-row__cat {
+  white-space: nowrap;
 }
 
 .import-row__edit {

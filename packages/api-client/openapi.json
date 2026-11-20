@@ -32984,6 +32984,9 @@
                     "minLength": 1,
                     "maxLength": 60
                   },
+                  "strict": {
+                    "type": "boolean"
+                  },
                   "rows": {
                     "type": "array",
                     "items": {
@@ -33022,6 +33025,15 @@
                             "null"
                           ],
                           "maxLength": 80
+                        },
+                        "unmatched": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 80
+                          },
+                          "maxItems": 20
                         }
                       },
                       "required": [
@@ -33037,7 +33049,8 @@
                 "required": [
                   "label",
                   "rows"
-                ]
+                ],
+                "additionalProperties": false
               }
             }
           }
@@ -33055,6 +33068,10 @@
                       "minimum": 0
                     },
                     "duplicates": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "refused": {
                       "type": "integer",
                       "minimum": 0
                     },
@@ -33084,6 +33101,7 @@
                   "required": [
                     "imported",
                     "duplicates",
+                    "refused",
                     "failed"
                   ]
                 }

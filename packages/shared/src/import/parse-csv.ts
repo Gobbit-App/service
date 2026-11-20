@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
 import type { ImportParseResult, ImportRow } from './constants';
-import { findUrl, noteRow, titleForUrl, withError } from './note-row';
+import { categoriesOf, findUrl, noteRow, titleForUrl, withError } from './note-row';
 
 type CsvRecord = Record<string, string | undefined>;
 
@@ -23,7 +23,9 @@ function recordRow(record: CsvRecord, line: number): ImportRow | null {
       title: title || body,
       body,
       sourceUrl: null,
-      category,
+      categories: categoriesOf(category),
+      cover: null,
+      image: null,
       error: 'The url is not an http(s) address',
     };
   }
@@ -34,11 +36,18 @@ function recordRow(record: CsvRecord, line: number): ImportRow | null {
       title: title || titleForUrl(url),
       body,
       sourceUrl: url,
-      category,
+      categories: categoriesOf(category),
     });
   }
   if (!title) return noteRow(body, { line, category });
-  return withError({ line, type: 'text', title, body, sourceUrl: findUrl(body), category });
+  return withError({
+    line,
+    type: 'text',
+    title,
+    body,
+    sourceUrl: findUrl(body),
+    categories: categoriesOf(category),
+  });
 }
 
 /**
@@ -54,7 +63,7 @@ export function parseCsv(text: string): ImportParseResult {
   });
   const fields = parsed.meta.fields ?? [];
   if (!fields.includes('title') && !fields.includes('body')) {
-    return { rows: [], problem: 'The first CSV row needs a title or body column' };
+    return { rows: [], problem: 'The first CSV row needs a title or body column', ignored: [] };
   }
   const broken = new Set(parsed.errors.filter((e) => e.type === 'Quotes').map((e) => e.row));
   const rows = parsed.data.flatMap((record, i) => {
@@ -62,5 +71,5 @@ export function parseCsv(text: string): ImportParseResult {
     if (!row) return [];
     return [broken.has(i) ? { ...row, error: 'A quote in this row is not closed' } : row];
   });
-  return { rows, problem: null };
+  return { rows, problem: null, ignored: [] };
 }

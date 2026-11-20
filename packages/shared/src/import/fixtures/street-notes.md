@@ -4,7 +4,7 @@
 - [Pharmacy rota](https://example.org/pharmacy)
 - [ ] Pharmacy **night** hours: see the rota
 
-## Recycling
+# Recycling
 
 Bins are emptied on Tuesday mornings.
 Glass goes to the green bin by the park.

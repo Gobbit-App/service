@@ -88,16 +88,24 @@ export function rowError(row: Omit<ImportRow, 'error'>): string | null {
   if (bodyLength > CARD_BODY_MAX) {
     return `Longer than ${CARD_BODY_MAX} characters (${bodyLength})`;
   }
-  if (row.category && codePointLength(row.category) > NAME_MAX) {
+  if (row.categories.some((name) => codePointLength(name) > NAME_MAX)) {
     return `Category name is longer than ${NAME_MAX} characters`;
   }
   if (row.type === 'link' && !row.sourceUrl) return 'A link needs a URL';
+  if (row.type === 'media' && !row.image) return 'A media card needs an image';
   return null;
 }
 
-export function withError(row: Omit<ImportRow, 'error'>): ImportRow {
+type RowInput = Omit<ImportRow, 'error' | 'cover' | 'image'> &
+  Partial<Pick<ImportRow, 'cover' | 'image'>>;
+
+export function withError(input: RowInput): ImportRow {
+  const row = { ...input, cover: input.cover ?? null, image: input.image ?? null };
   return { ...row, error: rowError(row) };
 }
+
+/** A single optional category name → the row's `categories`. */
+export const categoriesOf = (name: string | null): string[] => (name ? [name] : []);
 
 export interface NoteContext {
   line: number;
@@ -118,7 +126,7 @@ export function noteRow(raw: string, ctx: NoteContext): ImportRow | null {
       title: titleForUrl(url),
       body: '',
       sourceUrl: url,
-      category: ctx.category,
+      categories: categoriesOf(ctx.category),
     });
   }
   const split = splitNote(text);
@@ -130,6 +138,6 @@ export function noteRow(raw: string, ctx: NoteContext): ImportRow | null {
     title,
     body,
     sourceUrl: url,
-    category: ctx.category,
+    categories: categoriesOf(ctx.category),
   });
 }

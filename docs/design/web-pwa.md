@@ -87,7 +87,7 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 ## Offline model (D56)
 
 - The service worker (`src/sw.ts`, vite-plugin-pwa `injectManifest`, typechecked with `tsconfig.sw.json`) precaches the app shell and caches Cloudinary images `CacheFirst` (30 days, 600 entries: the blurred placeholders share it, D162). It never caches API responses, and `og/**` is not precached.
-- Updates: a waiting new version shows a compact glass prompt (Reload / ✕) above the bottom bar, checked hourly. ✕ only hides the prompt; the update stays pending (`app/sw-update-store.ts`) and is offered as "Update Gobbit" at the top of the ⋯ menu and as Reload in About until applied.
+- Updates: a waiting new version shows a compact glass prompt (Reload / ✕) above the bottom bar, checked hourly. ✕ only hides the prompt; the update stays pending (`app/sw-update-store.ts`) and is offered as "Update Gobbit" at the bottom of the ⋯ menu (on the accent fill) and as Reload in About until applied.
 - Share target (D108, Phase 5): the manifest's `share_target` posts `multipart/form-data` to `/share`. The SW stores `{title, text, url, images}` in IndexedDB (`gobbit-share` store, one pending record, 1 h TTL) and answers `303 /share?pending=<id>`. The confirm screen reads it, picks a deck (`item.create` roles; requested → last opened → personal) and sends `POST /api/ingest` (`channel: pwa`). Without a SW, Caddy answers a `POST /share` with `303 /share?failed=1`. The deck's "Paste" button opens the same screen as a paste box (`channel: paste`).
 - API data persists through TanStack Query's persister to IndexedDB (`idb-keyval`, `maxAge` 7 days, `buster` = commit).
 - After the restore, every query is invalidated (`revalidateRestored`): restored data renders at once and offline, but active queries refetch. IndexedDB writes are throttled (1 s), so without this a reload right after a save could show the pre-save copy as fresh.
@@ -99,6 +99,12 @@ The "house of know-how" mark: two leaning roof cards on an upright card carrying
 - Nothing pushes card changes to an open deck. Its item list (`itemsQuery`, shared by the list and Browse) refetches every `DECK_REFETCH_MS` (60 s) while the page is visible. TanStack pauses the interval in the background and offline. Focus, remount, reconnect and the user's own edits still refetch as before.
 - A refetch must not move the reader: `items/use-keep-place.ts` remembers where the reader's card sits on screen (the first visible card in the list, the current card in Browse) and, after the new data renders but before the browser paints, scrolls by exactly as far as that card moved. A card added above shows only as a changed scroll position (and Browse's "n of N"). Chromium's own scroll anchoring already corrects the list during the hook's forced layout, so the hook then measures 0 and does nothing. The hook is there for Safari (no `overflow-anchor`) and Browse's snap track. If the reader's card itself was removed, nothing is adjusted.
 - E2E tier: none. The behaviour is layout timing over a 60 s interval. Unit tests cover the hook with stubbed geometry.
+
+## Long cards in lists
+
+- Cards in the item list (`ItemList` passes `clamp` to `Card`) keep a long card to about 60% of the screen. `cards/CardClamp.tsx` wraps the cover and body in `.card__clip`, capped at `max(16rem, 60svh - 15rem)`. The 15rem is roughly the title, meta row and action bar, and the 16rem floor is for landscape phones. It uses `svh`, not `dvh`, so cards don't resize while the mobile toolbar hides. The title, meta and action bar always show.
+- A card whose content overflows gets a fade and a Show more / Show less toggle (`aria-expanded`, the card title in its accessible name). The toggle is per card and not remembered, so a reload shows every card capped again. Collapsing a card whose top has scrolled off screen brings it back into view. Focus or find-in-page scrolling the clipped part opens the card.
+- Images and video inside a capped card shrink to the cap instead of being cut. Search results, `/i/:id`, Browse and the editor preview are not capped.
 
 ## Category order (D402)
 

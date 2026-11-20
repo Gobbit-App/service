@@ -16,6 +16,7 @@ import { createIngestTokensRepo } from '../repositories/ingest-tokens.repo';
 import type { ResendInbound } from '../ingest/resend-inbound';
 import { createIngestService } from './ingest.service';
 import { createIngestTokensService } from './ingest-tokens.service';
+import type { Logger } from '../lib/logger';
 import { createReviewService } from './review.service';
 import { reviewTransaction } from '../review/publish-proposal';
 import { createSharesService } from './shares.service';
@@ -43,6 +44,7 @@ export interface IngestWiring {
 }
 
 export function buildIngestServices(deps: {
+  logger?: Logger;
   db: Db;
   env: Pick<
     Env,
@@ -51,6 +53,7 @@ export function buildIngestServices(deps: {
     | 'ANTHROPIC_API_KEY'
     | 'CLOUDINARY_URL'
     | 'INGEST_DAILY_CAP'
+    | 'INGEST_IMPORT_DAILY_CAP'
     | 'INGEST_MAX_BYTES_PDF'
     | 'INGEST_MAX_BYTES_AUDIO'
     | 'INGEST_MAX_BYTES_VIDEO'
@@ -83,7 +86,10 @@ export function buildIngestServices(deps: {
         : null;
 
   const queue = wiring.queue ?? noopIngestQueue;
-  const dailyCaps = ingestDailyCaps(env.INGEST_DAILY_CAP);
+  const dailyCaps = {
+    ...ingestDailyCaps(env.INGEST_DAILY_CAP),
+    import: env.INGEST_IMPORT_DAILY_CAP,
+  };
 
   return {
     ingest: createIngestService({
@@ -151,6 +157,7 @@ export function buildIngestServices(deps: {
       noticeHook: deps.noticeHook,
       now,
       purgeDeck: deps.purgeDeck,
+      logger: deps.logger,
     }),
   };
 }

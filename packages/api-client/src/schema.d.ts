@@ -10019,6 +10019,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         label: string;
+                        strict?: boolean;
                         rows: {
                             /** @enum {string} */
                             type: "text" | "link";
@@ -10032,6 +10033,7 @@ export interface paths {
                             sourceUrl?: string;
                             categoryIds?: string[];
                             newCategory?: string | null;
+                            unmatched?: string[];
                         }[];
                     };
                 };
@@ -10046,6 +10048,7 @@ export interface paths {
                         "application/json": {
                             imported: number;
                             duplicates: number;
+                            refused: number;
                             failed: {
                                 index: number;
                                 problem: string;

@@ -16,8 +16,8 @@ describe('ingest caps (D110, D190)', () => {
   it('stops a channel at its own cap', () => {
     expect(check('paste', 49, 0)).toBe(true);
     expect(check('paste', 50, 0)).toBe(false);
-    expect(check('import', 149, null)).toBe(true);
-    expect(check('import', 150, null)).toBe(false);
+    expect(check('import', 499, null)).toBe(true);
+    expect(check('import', 500, null)).toBe(false);
   });
 
   it('stops counted channels at the combined cap, never imports', () => {

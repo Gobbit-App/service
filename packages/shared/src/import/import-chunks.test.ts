@@ -72,6 +72,7 @@ describe('importInChunks (D190)', () => {
     expect(result).toEqual({
       imported: 2,
       duplicates: 0,
+      refused: 0,
       failed: [{ index: 2, problem: '/problems/x', detail: 'offline' }],
     });
   });

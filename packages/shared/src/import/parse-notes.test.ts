@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CARD_BODY_MAX } from '../limits';
 import { detectFormat, parseNotes } from './parse-notes';
+import { parseMarkdown } from './parse-markdown';
 import { matchCategory, toImportDraft } from './to-draft';
 import type { ImportRow } from './constants';
 
@@ -9,13 +10,13 @@ const fixture = (name: string): string =>
   readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
 const brief = (rows: ImportRow[]) =>
-  rows.map(({ line, type, title, body, sourceUrl, category, error }) => ({
+  rows.map(({ line, type, title, body, sourceUrl, categories, error }) => ({
     line,
     type,
     title,
     body,
     sourceUrl,
-    category,
+    category: categories[0] ?? null,
     error,
   }));
 
@@ -165,7 +166,7 @@ describe('parseNotes csv (D189)', () => {
       line: 2,
       title: 'Clinic',
       body: 'Open Sun–Thu, 8–14',
-      category: 'Health',
+      categories: ['Health'],
     });
     expect(rows[1]).toMatchObject({
       line: 3,
@@ -192,7 +193,15 @@ describe('parseNotes csv (D189)', () => {
     expect(parseNotes('name,phone\nDan,050', 'csv')).toEqual({
       rows: [],
       problem: 'The first CSV row needs a title or body column',
+      ignored: [],
     });
+  });
+
+  it('reports categories as an array: one entry from the column, [] without a column', () => {
+    expect(rows[0]!.categories).toEqual(['Health']);
+    expect(rows[1]!.categories).toEqual(['Sport']);
+    expect(parseNotes('body\nClinic: open at 8', 'csv').rows[0]!.categories).toEqual([]);
+    expect(parseNotes(fixture('street-notes.csv'), 'csv').ignored).toEqual([]);
   });
 
   it('works with only a body column', () => {
@@ -200,6 +209,15 @@ describe('parseNotes csv (D189)', () => {
       title: 'Clinic',
       body: 'open at 8',
     });
+  });
+});
+
+describe('parseNotes markdown categories', () => {
+  it('gives a # heading as a one-entry categories array and [] without a heading', () => {
+    const { rows, ignored } = parseNotes('Loose card\n\n# Health\n- Clinic: open', 'markdown');
+    expect(rows[0]!.categories).toEqual([]);
+    expect(rows[1]!.categories).toEqual(['Health']);
+    expect(ignored).toEqual([]);
   });
 });
 
@@ -227,7 +245,9 @@ describe('toImportDraft (D190)', () => {
     title: ' Clinic ',
     body: 'Open',
     sourceUrl: null,
-    category,
+    categories: category ? [category] : [],
+    cover: null,
+    image: null,
     error: null,
     ...extra,
   });
@@ -250,5 +270,27 @@ describe('toImportDraft (D190)', () => {
     expect(
       toImportDraft(row(null, { type: 'link', sourceUrl: 'https://example.org' }), categories),
     ).toEqual({ type: 'link', title: 'Clinic', body: 'Open', sourceUrl: 'https://example.org' });
+  });
+});
+
+describe('parseNotes mode switch on `##` (049)', () => {
+  it('a file with no `##` parses exactly as the 021 markdown path', () => {
+    const text = fixture('no-h2.md');
+    const { rows, problem } = parseNotes(text, 'markdown');
+    expect(problem).toBeNull();
+    expect(rows).toEqual(parseMarkdown(text));
+  });
+
+  it('a file with `##` switches mode: one card per `##`, filed under the `#`', () => {
+    const { rows } = parseNotes(fixture('legacy-h2-group.md'), 'markdown');
+    expect(brief(rows).map((r) => [r.title, r.category])).toEqual([
+      ['Recycling', 'Neighbourhood'],
+      ['Bulky waste', 'Neighbourhood'],
+    ]);
+  });
+
+  it('a `##` only inside a code fence does not switch mode', () => {
+    const text = '# Notes\n\n```\n## not a heading\n```\n\n- Water the beans\n';
+    expect(parseNotes(text, 'markdown').rows).toEqual(parseMarkdown(text));
   });
 });

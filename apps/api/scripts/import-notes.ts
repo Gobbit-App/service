@@ -3,9 +3,10 @@ import { createApiClient } from './lib/api-cli';
 import { parseImportNotesArgs, runImportNotes } from './lib/import-notes-cli';
 
 /**
- * D190: `pnpm import:notes <file> --deck <slug> [--dry-run]` turns a notes file into proposed
- * cards through `POST /decks/{id}/imports` (same parser as the web import screen); they wait
- * in the review queue under the file name. Needs `GOBBIT_API_URL` and `GOBBIT_TOKEN`.
+ * D190: `pnpm import:notes <file> --deck <slug> [--dry-run] [--no-strict]` turns a notes file
+ * into proposed cards through `POST /decks/{id}/imports` (same parser as the web import screen);
+ * they wait in the review queue under the file name. Strict by default (D446): rows naming a
+ * category the deck lacks are refused unless `--no-strict`. Needs `GOBBIT_API_URL` and `GOBBIT_TOKEN`.
  */
 async function main(): Promise<number> {
   const opts = parseImportNotesArgs(process.argv.slice(2));

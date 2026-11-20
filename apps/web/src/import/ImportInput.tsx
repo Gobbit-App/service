@@ -8,7 +8,13 @@ const FORMAT_LABELS: Record<ImportFormat, string> = {
   csv: 'CSV (title, body, url, category columns)',
 };
 
-export type ImportSource = { text: string; fileName: string | null; format: ImportFormat };
+export type ImportSource = {
+  text: string;
+  fileName: string | null;
+  format: ImportFormat;
+  /** D446: refuse cards whose category does not exist. */
+  strict: boolean;
+};
 
 /** D189: paste notes or pick a .txt/.md/.csv file; the format is detected and can be changed. */
 export function ImportInput({
@@ -21,6 +27,7 @@ export function ImportInput({
   const [text, setText] = useState(initial?.text ?? '');
   const [fileName, setFileName] = useState<string | null>(initial?.fileName ?? null);
   const [format, setFormat] = useState<ImportFormat | null>(initial?.format ?? null);
+  const [strict, setStrict] = useState(initial?.strict ?? false);
   const [fileError, setFileError] = useState<string | null>(null);
   const shownFormat = format ?? detectFormat(text, fileName);
 
@@ -41,9 +48,12 @@ export function ImportInput({
       className="import-input"
       onSubmit={(event) => {
         event.preventDefault();
-        onPreview({ text, fileName, format: shownFormat });
+        onPreview({ text, fileName, format: shownFormat, strict });
       }}
     >
+      <p className="import-input__help">
+        In Markdown, ## starts a card and # groups cards under a category.
+      </p>
       <label className="field">
         <span className="field__label">Paste your notes</span>
         <textarea
@@ -77,6 +87,15 @@ export function ImportInput({
             </option>
           ))}
         </select>
+      </label>
+      <label className="import-input__strict">
+        <input
+          type="checkbox"
+          checked={strict}
+          onChange={(event) => setStrict(event.currentTarget.checked)}
+        />
+        <span>Strict categories</span>
+        <span className="import-input__help">Refuse cards whose category does not exist</span>
       </label>
       <Button type="submit" icon="eye" label="Preview" disabled={text.trim() === ''} />
     </form>

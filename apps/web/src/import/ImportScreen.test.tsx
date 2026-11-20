@@ -93,4 +93,24 @@ describe('ImportScreen (D189/D190)', () => {
     ).toBeInTheDocument();
     expect(screen.queryByLabelText('Paste your notes')).not.toBeInTheDocument();
   });
+
+  it('sends strict only when ticked and shows the refused count (049)', async () => {
+    answer('owner', {
+      imported: 0,
+      duplicates: 0,
+      refused: 1,
+      failed: [{ index: 0, problem: '/problems/unmatched-category' }],
+    });
+    renderWithClient(<ImportScreen deckSlug="family" />);
+    await screen.findByLabelText('Paste your notes');
+    fireEvent.click(screen.getByRole('checkbox', { name: /Strict categories/ }));
+    paste('# Soups\n- Minestrone');
+    expect(await screen.findByText(/not found, card refused/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Import 1 card' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('1 refused by rule');
+    const call = requests.mock.calls.find(([r]) => r === 'POST /decks/{id}/imports');
+    const body = (call?.[1] as { body: { strict?: boolean; rows: unknown[] } }).body;
+    expect(body.strict).toBe(true);
+    expect(body.rows).toEqual([expect.objectContaining({ unmatched: ['Soups'] })]);
+  });
 });

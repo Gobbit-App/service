@@ -29,6 +29,7 @@ export function registerImportsRoutes(app: OpenAPIHono<AppEnv>, services: Servic
 
   app.openapi(importRoute, async (c) => {
     const { id } = c.req.valid('param');
-    return c.json(await services.imports.importRows(getUser(c), id, c.req.valid('json')), 200);
+    const ctx = { requestId: c.get('requestId') };
+    return c.json(await services.imports.importRows(getUser(c), id, c.req.valid('json'), ctx), 200);
   });
 }

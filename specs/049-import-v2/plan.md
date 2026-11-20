@@ -21,7 +21,7 @@ Two PRs: **PR 1** = US1–US6 (text, categories, limits, dry run, bulk discard);
 
 ## Starting point
 
-`main @ 30206e3` (047 tasks merged; the spec is `449549a`). Latest migration `0027_member_profile`. Builds on 021 (`importRows`, `proposeDirect`, `import` channel, bulk publish), 038 (rich-text bodies), 045 (media cards, covers). The "bulk publish continues past a card that cannot be published" fix is a prerequisite shipped separately (spec Assumptions); this plan does not change `publishMany`. Next free ids: D443, ADR-081. No migration is needed (see [data-model.md](./data-model.md)).
+`main @ 30206e3` (047 tasks merged; the spec is `449549a`). Latest migration `0027_member_profile`. Builds on 021 (`importRows`, `proposeDirect`, `import` channel, bulk publish), 038 (rich-text bodies), 045 (media cards, covers). The "bulk publish continues past a card that cannot be published" fix is a prerequisite shipped separately (spec Assumptions); this plan does not change `publishMany`. Next free ids: D443, ADR-082. No migration is needed (see [data-model.md](./data-model.md)).
 
 ## Technical Context
 
@@ -88,9 +88,9 @@ Full reasoning in [research.md](./research.md). Continues the D series (highest 
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D443 | Card-per-section is triggered by a `##` heading outside a code fence; `#` sets the category, `##` starts a card, deeper headings are body; the body is the raw section text, trimmed (blank edge lines removed, interior kept); text outside any `##` section is reported ignored with its line; line-based, no Markdown library | yes → ADR-081 |
+| D443 | Card-per-section is triggered by a `##` heading outside a code fence; `#` sets the category, `##` starts a card, deeper headings are body; the body is the raw section text, trimmed (blank edge lines removed, interior kept); text outside any `##` section is reported ignored with its line; line-based, no Markdown library | yes → ADR-082 |
 | D444 | Fields: `key: value` lines directly under the `##` line, ended by the first non-field line; keys `source`, `categories`, `type`, `cover`, `image`; unknown / empty / malformed / repeated key = row error with line; `type` ∈ `text`, `link`, `media`; a `link` card takes its URL from `source`; `categories` split on commas (also `،` and `，`), trimmed, de-duplicated by the same key `matchCategory` uses | no |
-| D445 | Category address for a name `slugify` reduces to nothing: `c-` + the first 8 hex of SHA-256 of the NFC-normalised, lower-cased name; an explicit `slug` in create still wins; names that slugify partly (mixed scripts) keep today's result; a clash is the existing 409 asking for an explicit address. Resolves the spec's first NEEDS CLARIFICATION | yes → ADR-081 |
+| D445 | Category address for a name `slugify` reduces to nothing: `c-` + the first 8 hex of SHA-256 of the NFC-normalised, lower-cased name; an explicit `slug` in create still wins; names that slugify partly (mixed scripts) keep today's result; a clash is the existing 409 asking for an explicit address. Resolves the spec's first NEEDS CLARIFICATION | yes → ADR-082 |
 | D446 | Strict category mode: `strict: boolean` on `POST /decks/{id}/imports` (default false); the CLI sends true unless `--no-strict`; a row naming an unmatched category is refused (`failed` with problem `/problems/import-unmatched-category`, names in `detail`); the app's non-strict mode allows one unmatched name per card (the model has one suggestion per proposal), else the row is a preview error | no |
 | D447 | `import` daily cap = `INGEST_IMPORT_DAILY_CAP` (env, default 500 rows per user per rolling day), per-request cap unchanged at 100; preview limit = the same default (500); owners and maintainers are not exempt. Resolves the spec's second NEEDS CLARIFICATION | no |
 | D448 | The CLI dry run (`--dry-run`) reads the deck's real categories when `--deck` and a token are given, else checks only what the file says; it exits 1 when it finds problems; it never calls a write route or uploads | no |
@@ -98,7 +98,7 @@ Full reasoning in [research.md](./research.md). Continues the D series (highest 
 | D450 | Media rows in import: `cover` is a cover on any card, `image` is the file of a `type: media` card; the CLI uploads (`media/sign` → Cloudinary → `media/assets`), the app never does; media rows travel as drafts with `cover` / a media `payload` built from the recorded asset; unreferenced uploads are left to `media-sweep` | no |
 | D451 | Import decision events (`imports.*`, table below) are written by `imports.service`; one event per refusal reason per request, with the count, never per row | no |
 
-Durable decisions (D443, D445) become ADR-081 with a one-line row in `docs/architecture.md`.
+Durable decisions (D443, D445) become ADR-082 with a one-line row in `docs/architecture.md`.
 
 ## Project Structure
 
@@ -154,7 +154,7 @@ apps/web/src/
 
 packages/api-client/                   # regenerated
 e2e/tests/full/import-sections.spec.ts # NEW: the nightly journey
-docs/design/ingestion.md               # import v2 section; docs/adr.md ADR-081; docs/architecture.md one row
+docs/design/ingestion.md               # import v2 section; docs/adr.md ADR-082; docs/architecture.md one row
 README.md, apps/api/api.http, CHANGELOG.md
 ```
 
@@ -195,7 +195,7 @@ Constitution VIII, ADR-060, [decision events](../../docs/design/api-conventions.
 | An import request finishes | `imports.completed` | accepted · `ok` (imported, duplicates, refused counts) | requestId, actorId, deckId, imported, duplicates, refused | info | aggregate per window; average size | none | same |
 | Proposals discarded by bulk discard | audit row: one `item_events` `discarded` per card (ADR-057), plus event `imports.discarded` | accepted · `bulk_discard` (count, skipped) | requestId, actorId, deckId, discarded, skipped | info | per instance when discarded > 200; aggregate | one action > 200 cards | `review.int.test.ts`, int |
 | Bulk discard refused | `imports.discard_refused` | refused · `forbidden`, `no_pending` | requestId, actorId, deckId | info | aggregate | none | `review.service.test.ts`, unit |
-| Hebrew/non-Latin category address derived | `categories.slug_derived` | accepted · `hash_fallback` | requestId, actorId, deckId, categoryId | info | aggregate (count per window) | none | `categories.service.test.ts`, unit |
+| Hebrew/non-Latin category address derived | `categories.slug_derived` | derived · `hash_fallback` | requestId, userId, deckId, categoryId | info | aggregate (count per window) | none | `categories.service.test.ts`, unit |
 
 Notes:
 

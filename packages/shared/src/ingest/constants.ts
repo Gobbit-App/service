@@ -166,8 +166,14 @@ export const REVIEW_LIMIT = 50;
 
 /** D189–D191: bulk import of notes and bulk publish. */
 export const IMPORT_ROWS_PER_REQUEST = 100;
+/** Rows an import counts per user per rolling day (D447). */
+export const IMPORT_DAILY_CAP_DEFAULT = 500;
 /** Rows the import screen parses before asking to split the notes (= the daily cap). */
-export const IMPORT_ROWS_PER_PREVIEW = 150;
+export const IMPORT_ROWS_PER_PREVIEW = IMPORT_DAILY_CAP_DEFAULT;
+/** Most rows one import may discard in a request (D447). */
+export const IMPORT_DISCARD_MAX = 1000;
+/** Most unmatched values listed back to the user (D447). */
+export const IMPORT_UNMATCHED_MAX = 5;
 /** Longest title taken from the start of a note line. */
 export const IMPORT_TITLE_SPLIT_MAX = 80;
 export const IMPORT_LABEL_MAX = INGEST_CLIENT_LABEL_MAX;

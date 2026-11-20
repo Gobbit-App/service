@@ -1,0 +1,17 @@
+# Implementation notes — 049 import v2
+
+- T010: ADR-081 was already taken by 047 (self-contained e2e); this feature reserves ADR-082. Spec, plan and tasks updated.
+- T003: `importDraftSchema.type` kept `text|link` (media excluded) to avoid OpenAPI drift; `toImportDraft` maps a media row to text. T005 widens it and regenerates the api-client.
+- T011: 021 treated every heading level as a category; in v2 any `##` outside a fence switches the file to card-per-section. `legacy-h2-group.md` documents the change (2 categories+items in 021 → 2 cards in v2). Only files with no `##` keep the 021 path.
+- Env: Docker is unavailable in the implementing session (permission denied on the socket), so every `[int]` and `[e2e:full]` task is written and typechecked but NOT run; they are left unchecked in tasks.md and need a run in CI or locally. T015 is the first.
+- T016: one test in parse-sections.test.ts ("keeps an RTL body line after the fields as body") needs field parsing and passes only after T024.
+- T017: existing 021 fixture street-notes.md line 7 changed from `## Recycling` to `# Recycling` (its `##` now switches to card-per-section, the intended 021 change).
+- T019: code + unit tests done; screenshots taken in the US2+US3 PR (Vite dev server, API mocked in Playwright; Docker unavailable).
+- T021/T024/T027a: while media is out of scope, `cover`, `image` and `type: media` give the row error `Line N: <key>: media is not supported yet`; D444's "media without image" / "image without media" errors are deferred to T064/T066.
+- T025/T035: `toImportDraft(row, categories, { strict })` always returns a draft (T035 overrides D446's "or a refusal"): unmatched names go in `unmatched`; non-strict with exactly one → `newCategory`. `normalise` is now NFC-normalised and exported (D446). Server precedence: `newCategory` + `unmatched` are counted together as distinct names, more than one fails the row (`/problems/import-too-many-new-categories`, also logged as `imports.rows_refused` reason `too_many_new_categories`).
+- T026: no code change; `importRowDraft` already passed `categoryIds`, `type` and `sourceUrl` (verified, covered by the T023 int test).
+- T034: `categories.slug_derived` is `{ outcome: 'derived', reason: 'hash_fallback', deckId, userId, categoryId, requestId }`, replacing T009's `accepted`/`actorId` shape; plan.md Accountability row aligned. `review.service` takes an optional parent logger so tests can capture it. A clash on a derived address answers 409 asking for an explicit `slug`.
+- T035: `daily_cap` refusals still count `refused: 0` and write no `imports.rows_refused` event until T045/T048 (US5). `strict` and `unmatched` are re-added to the schemas; `pnpm api:openapi` regenerated the client.
+- T039: strict is the CLI default (`--no-strict` to opt out); `importInChunks` sums the server's optional `refused`.
+- T023/T032 are `[int]` and were written and typechecked but not run here (no Docker); they run in CI.
+- T027/T037: code and unit tests done; screenshots taken against the Vite dev server with the API mocked in Playwright (no Docker/Postgres here), see the PR.

@@ -16,7 +16,8 @@ import { badRequest, conflict, HttpError, notFound } from '../errors/http-errors
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import { resolveDeck } from '../lib/resolve-deck';
-import { toSlug } from '../lib/slug';
+import { toCategorySlug, toSlug } from '../lib/slug';
+import type { CategoryDecisions } from './categories.events';
 import type { IngestUploadStore } from '../media/ingest-uploads';
 import type { EventNoticeHook } from './event-cards.service';
 import type { MediaReferenceCheck } from './media-reference';
@@ -40,7 +41,7 @@ import { diffFields, itemFields } from '../events/diff-fields';
 import { eventFrom } from '../events/item-event';
 import type { ItemDtoMapper } from './item-dtos';
 import type { MemberSummaries } from './member-summaries';
-import { childLogger } from '../lib/logger';
+import { childLogger, type Logger } from '../lib/logger';
 import { decisionLogger } from '../lib/decision-event';
 
 const log = childLogger('review');
@@ -77,7 +78,12 @@ export function createReviewService(deps: {
   noticeHook?: EventNoticeHook;
   /** D180: a publish changes the deck's public pages; drop them after commit. */
   purgeDeck?: (deckId: string) => void;
+  /** Parent for the `categories` decision logger (tests capture it). */
+  logger?: Logger;
 }) {
+  const categoryDecisions = decisionLogger<CategoryDecisions>('categories', {
+    parent: deps.logger,
+  });
   const {
     decks,
     memberships,
@@ -140,9 +146,9 @@ export function createReviewService(deps: {
     deckId: string,
     role: MemberRole,
     name: string,
+    actor: Actor,
   ): Promise<string> {
-    const slug = toSlug(name);
-    if (slug === '') throw badRequest('The suggested category has no usable name');
+    const slug = toCategorySlug(name);
     const existing = await tx.categories.findBySlug(deckId, slug, role);
     if (existing) return existing.id;
     const created = await tx.categories.create({
@@ -152,6 +158,16 @@ export function createReviewService(deps: {
       visibility: 'shared',
       position: (await tx.categories.maxPosition(deckId)) + 1,
     });
+    if (toSlug(name) === '') {
+      categoryDecisions.record('categories.slug_derived', {
+        outcome: 'derived',
+        reason: 'hash_fallback',
+        deckId,
+        userId: actor.user.id,
+        categoryId: created.id,
+        requestId: actor.requestId ?? 'internal',
+      });
+    }
     return created.id;
   }
 
@@ -299,7 +315,7 @@ export function createReviewService(deps: {
       }
       const ensureSuggested = suggested
         ? async (tx: ReviewTxRepos) => [
-            await ensureNewCategory(tx, loaded.item.deckId, role, suggested),
+            await ensureNewCategory(tx, loaded.item.deckId, role, suggested, actor),
           ]
         : undefined;
 
