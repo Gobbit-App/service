@@ -1045,6 +1045,48 @@ h2 {
   min-width: 0;
 }
 
+/* A list card stays near 60% of the screen: its cover + body get 60% of the small viewport less
+   ~15rem for title, meta and bar, 16rem at least (landscape); svh, not dvh, so cards don't resize
+   as the toolbar hides. Images and video shrink to fit rather than being cut. */
+.card__clip {
+  --card-clip: max(16rem, 60svh - 15rem);
+  max-height: var(--card-clip);
+  overflow: hidden;
+}
+
+.card__clip--open {
+  max-height: none;
+}
+
+.card__clip--more {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 4rem), transparent);
+}
+
+.card__clip .cloud-image__img,
+.card__clip .media-player__video {
+  max-height: min(var(--card-clip), 640px);
+}
+
+.card__clip-content {
+  display: grid;
+}
+
+.card__clamp-toggle {
+  margin-top: var(--space-2);
+}
+
+.card__clamp-toggle[aria-expanded='true'] .icon {
+  transform: rotate(180deg);
+}
+
+/* Show more keeps its words on phones, like the source link. */
+.card__clamp-toggle .button__label {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+}
+
 .card__source {
   max-width: 100%;
   margin-top: var(--gap);

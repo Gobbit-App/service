@@ -6,6 +6,7 @@ import { NavLink } from '../ui/NavLink';
 import { CardBar, ReaderActions } from './CardBar';
 import { CoverBar } from './CoverBar';
 import { CardBody } from './CardBody';
+import { CardClamp } from './CardClamp';
 import { CreatorAvatar } from './CreatorAvatar';
 import { CardSourceLink } from './CardSourceLink';
 import type { ImageLoading } from './ImageCard';
@@ -36,6 +37,7 @@ export function Card({
   meta = true,
   source = true,
   titleId = `card-title-${item.id}`,
+  clamp = false,
 }: {
   item: Item;
   deckSlug: string;
@@ -62,10 +64,18 @@ export function Card({
   source?: boolean;
   /** The heading id; a second copy of a card on screen (the full view) needs its own. */
   titleId?: string;
+  /** Lists cap the cover + body at a share of the screen, with a per-card Show more. */
+  clamp?: boolean;
 }): ReactElement {
   const cloudName = useCloudName();
   const chips = useMemo(() => itemCategories(item, categories), [item, categories]);
   const age = cardAge(item, now);
+  const content = (
+    <>
+      <CoverBar cover={item.cover} cloudName={cloudName} loading={coverLoading} />
+      <CardBody item={item} cloudName={cloudName} image={image} />
+    </>
+  );
 
   return (
     <article className="card" aria-labelledby={titleId}>
@@ -80,8 +90,7 @@ export function Card({
           )}
         </h2>
       </header>
-      <CoverBar cover={item.cover} cloudName={cloudName} loading={coverLoading} />
-      <CardBody item={item} cloudName={cloudName} image={image} />
+      {clamp ? <CardClamp title={item.title}>{content}</CardClamp> : content}
       {source && <CardSourceLink item={item} />}
       {(meta ? chips.length > 0 || age || item.creator : item.creator) && (
         <footer className="card__meta">

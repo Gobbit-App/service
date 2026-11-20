@@ -120,6 +120,7 @@ export function ItemList({
               deckSlug={deckSlug}
               categories={categories}
               actions={renderActions?.(item)}
+              clamp
             />
           </li>
         ))}
