@@ -111,7 +111,7 @@ apps/api/src/
 ├── ingest/best-effort.events.ts                 # NEW: `ingest.extraction_skipped` catalogue
 ├── jobs/ingest.ts (+ .test.ts)                  # the gate, proposeBestEffort, event
 ├── worker.ts                                    # bind `smartShare` (users repo + createPlatformAdmins)
-├── repositories/users.repo.ts                   # smartShare lookup (or findById already returns it)
+├── repositories/users.repo.ts                   # smartShareOf(id): { email, smartShare } (CurrentUser stays lean)
 ├── services/{shares,review}.service.ts          # map the new flags
 └── test/ingest-spend-guard.int.test.ts          # NEW
 
