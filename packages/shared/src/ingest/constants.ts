@@ -203,7 +203,7 @@ export const autoPublishOutcomes = [
 export type AutoPublishOutcome = (typeof autoPublishOutcomes)[number];
 
 /** D355: how a proposal was made when the model's answer was unusable (`preview` = page preview). */
-export const extractionFallbacks = ['preview'] as const;
+export const extractionFallbacks = ['preview', 'no_smart_share'] as const;
 export type ExtractionFallback = (typeof extractionFallbacks)[number];
 
 /** D196: channels a person shares through; listed in Your shares and auto-published (FR-015). */

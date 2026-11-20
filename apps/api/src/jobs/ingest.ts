@@ -33,6 +33,9 @@ import { logEventExtract, resolveEventZone } from '../ingest/event-extract';
 import { classifyFailure, failureDetail, type IngestStage } from '../ingest/failure-code';
 import { logPreviewFallback, previewFallback } from '../ingest/preview-fallback';
 import { childLogger, lineSink, type Logger } from '../lib/logger';
+import { bestEffort, bestEffortContext } from '../ingest/best-effort';
+import { logExtractionSkipped } from '../ingest/best-effort.events';
+import { validateProposal } from '../ai/extract-validate';
 
 /**
  * D346: a source normalized by the preview builder carries its preview (or none, when a locked
@@ -64,6 +67,11 @@ export interface IngestHandlerDeps {
   events?: IngestEventDeps;
   /** D167: dimensions of the shared image for a locked-host preview; omitted → none. */
   assets?: Pick<AssetsRepo, 'byPublicId'>;
+  /**
+   * D453: whether the sharer has smart share on (`users.smart_share`); off → the share is saved
+   * as sent, no model call. Read per job, so a change applies to the next share.
+   */
+  smartShare: (userId: string) => Promise<boolean>;
   now?: () => Date;
   /** Line sink handed to `proposeItem`. */
   log?: (message: string) => void;
@@ -135,7 +143,7 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
 
   async function propose(
     jobRef: JobRef,
-    ctx: ExtractContext,
+    ctx: { source?: Pick<NormalizedSource, 'imageCandidates'>; validate: ValidateContext },
     item: ItemCreateResolved,
     summary: ExtractionSummary,
     signal: AbortSignal | undefined,
@@ -155,7 +163,7 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         job: jobRef,
         item,
         summary,
-        ...(ctx.source.imageCandidates ? { imageCandidates: ctx.source.imageCandidates } : {}),
+        ...(ctx.source?.imageCandidates ? { imageCandidates: ctx.source.imageCandidates } : {}),
         signal,
       },
     );
@@ -274,6 +282,97 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
     return asset?.width && asset.height ? { width: asset.width, height: asset.height } : null;
   }
 
+  /** The validate context both paths share: the address, its preview and the locked-host photo. */
+  async function validateBase(raw: IngestRaw, source?: NormalizedSource): Promise<ValidateContext> {
+    const sourceUrl = raw.url ?? source?.url;
+    const linkPreview = source ? previewOf(source) : null;
+    const lockedHost = sourceUrl ? lockedHostOf(sourceUrl) : null;
+    const imagePublicId = raw.images[0]?.publicId;
+    const morePublicIds = raw.images.slice(1).map((img) => img.publicId);
+    const imageDimensions =
+      lockedHost && imagePublicId ? await assetDimensions(imagePublicId) : null;
+    return {
+      ...(sourceUrl ? { sourceUrl } : {}),
+      ...(linkPreview ? { linkPreview } : {}),
+      ...(imagePublicId ? { imagePublicId } : {}),
+      ...(morePublicIds.length > 0 ? { morePublicIds } : {}),
+      ...(lockedHost ? { lockedHost, imageDimensions } : {}),
+      ...(raw.text ? { sharedText: raw.text } : {}),
+      categoryIds: [],
+    };
+  }
+
+  /**
+   * D454/D455: smart share is off; the share becomes a card as sent, never auto-published.
+   * Only a link needs the page (a fetch error keeps the normal retry). Nothing built fails with
+   * `best_effort_empty`, coded `unknown` (retryable; a retry fails the same way).
+   */
+  async function proposeBestEffort(
+    job: IngestJobRow,
+    jobRef: JobRef,
+    raw: IngestRaw,
+    signal: AbortSignal | undefined,
+    setStage: (stage: IngestStage | undefined) => void,
+  ): Promise<IngestOutcome> {
+    const fields = {
+      jobId: job.id,
+      deckId: job.deckId,
+      userId: jobRef.userId,
+      channel: job.channel,
+    };
+    let built = bestEffort(raw, job.channel);
+    let source: NormalizedSource | undefined;
+    if (built?.needsPreview) {
+      setStage('normalize');
+      source = job.normalized ?? (await deps.normalize(raw, { jobId: job.id, deckId: job.deckId }));
+      if (!job.normalized) await jobs.update(job.id, { normalized: source });
+      setStage(undefined);
+      built = bestEffort(raw, job.channel, raw.url ?? source.url);
+    }
+    const base = await validateBase(raw, source);
+    const validate = built ? bestEffortContext(built.kind, raw, base) : undefined;
+    let input = built?.input;
+    if (built?.needsPreview && input && base.linkPreview) {
+      // The page title wins over the share's; the page description stands in for absent text.
+      const { title, description } = base.linkPreview;
+      input = { ...input, title: title || input.title, body: input.body || description || '' };
+    }
+    const validated = input && validate ? validateProposal(input, validate) : null;
+    if (!built || !validate || !validated?.ok) {
+      logExtractionSkipped(logger as Logger, {
+        ...fields,
+        outcome: 'failed',
+        kind: built?.kind ?? null,
+        cut: built?.cut ?? false,
+        unusedPhotos: built?.unusedPhotos ?? 0,
+      });
+      return fail(job, 'best_effort_empty', 'unknown');
+    }
+    const summary: ExtractionSummary = {
+      model: DIRECT_PROPOSAL_MODEL,
+      escalated: false,
+      fallback: 'no_smart_share',
+      ...(built.cut ? { bodyCut: true } : {}),
+      ...validated.summary,
+    };
+    const proposed = await propose(
+      jobRef,
+      { ...(source ? { source } : {}), validate },
+      validated.item,
+      summary,
+      signal,
+    );
+    logExtractionSkipped(logger as Logger, {
+      ...fields,
+      outcome: 'proposed',
+      kind: built.kind,
+      itemId: proposed.item.id,
+      cut: built.cut,
+      unusedPhotos: built.unusedPhotos,
+    });
+    return 'proposed';
+  }
+
   return async function ingest(
     jobId: string,
     opts?: { signal?: AbortSignal },
@@ -299,6 +398,10 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
       // D395: a PDF, audio or video share is proposed as is: no fetch, no model call.
       if (job.raw.file) return await proposeFile(jobRef, job.raw, opts?.signal);
 
+      if (!(await deps.smartShare(job.userId))) {
+        return await proposeBestEffort(job, jobRef, job.raw, opts?.signal, (s) => (stage = s));
+      }
+
       stage = 'normalize';
       const source =
         job.normalized ?? (await deps.normalize(job.raw, { jobId: job.id, deckId: job.deckId }));
@@ -315,20 +418,8 @@ export function createIngestHandler(deps: IngestHandlerDeps) {
         }),
       ]);
 
-      const sourceUrl = job.raw.url ?? source.url;
-      const linkPreview = previewOf(source);
-      const lockedHost = sourceUrl ? lockedHostOf(sourceUrl) : null;
-      const imagePublicId = job.raw.images[0]?.publicId;
-      const morePublicIds = job.raw.images.slice(1).map((img) => img.publicId);
-      const imageDimensions =
-        lockedHost && imagePublicId ? await assetDimensions(imagePublicId) : null;
       const validate: ValidateContext = {
-        ...(sourceUrl ? { sourceUrl } : {}),
-        ...(linkPreview ? { linkPreview } : {}),
-        ...(imagePublicId ? { imagePublicId } : {}),
-        ...(morePublicIds.length > 0 ? { morePublicIds } : {}),
-        ...(lockedHost ? { lockedHost, imageDimensions } : {}),
-        ...(job.raw.text ? { sharedText: job.raw.text } : {}),
+        ...(await validateBase(job.raw, source)),
         categoryIds: deckCategories.map((c) => c.id),
         ...(deps.events
           ? { event: await eventContext(deps.events, job.deckId, job.raw, source) }

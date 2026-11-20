@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizedSourceSchema } from './ingest';
+import { extractionSummarySchema, normalizedSourceSchema } from './ingest';
 import { linkPreviewSchema } from './media';
 import { LINK_IMAGE_CANDIDATES_MAX } from '../links/constants';
 
@@ -36,5 +36,28 @@ describe('linkPreviewSchema (D350)', () => {
   it('does not accept the server-owned markers', () => {
     expect(linkPreviewSchema.safeParse({ title: 'T', imageLookup: 1 }).success).toBe(false);
     expect(linkPreviewSchema.safeParse({ title: 'T', imageRemoved: true }).success).toBe(false);
+  });
+});
+
+describe('extractionSummarySchema fallback and bodyCut (050)', () => {
+  const summary = {
+    model: 'm',
+    escalated: false,
+    type: 'text' as const,
+    confidence: 0.5,
+    language: 'en',
+    categoryIds: [],
+    newCategory: null,
+  };
+
+  it('accepts no_smart_share and bodyCut', () => {
+    expect(
+      extractionSummarySchema.safeParse({ ...summary, fallback: 'no_smart_share', bodyCut: true })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects an unknown fallback', () => {
+    expect(extractionSummarySchema.safeParse({ ...summary, fallback: 'nope' }).success).toBe(false);
   });
 });

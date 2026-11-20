@@ -10,6 +10,10 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-20 — Smart share is per person (050)
+
+- **Action required**: new migration `0028_smart_share`. After it runs, smart share (model-written cards from a share) is off for every user except platform admins, who stay on. Right after the migration, switch your curators on with the SQL in the runbook, [`docs/design/ingestion.md`](docs/design/ingestion.md#smart-share-and-best-effort); until then their shares get best-effort cards. No environment variable changes.
+
 ### 2026-11-19 — Bulk publish continues past a card that cannot be published
 
 - `POST /decks/{id}/review/publish` no longer aborts on the first unexpected error: that card is reported in `skipped` with the new reason `publish-failed` and the rest are published. No environment variable changes.

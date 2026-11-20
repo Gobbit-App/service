@@ -104,6 +104,7 @@ describe('ingest pipeline (D93, D102, D105, D109, D110)', () => {
     const extractor = createFakeExtractor(script ? { script } : undefined);
     const embedQueue = new RecordingEmbedQueue();
     const run = createIngestHandler({
+      smartShare: async () => true,
       jobs: createIngestJobsRepo(db),
       categories: createCategoriesRepo(db),
       items: createItemsRepo(db),

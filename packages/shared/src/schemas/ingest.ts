@@ -166,6 +166,8 @@ export const extractionSummarySchema = z.object({
   newCategory: z.string().nullable(),
   /** D355: the model's answer was unusable; the card was built from the page preview. */
   fallback: z.enum(extractionFallbacks).optional(),
+  /** D456: the shared text was cut to fit the model's input. */
+  bodyCut: z.boolean().optional(),
   /** D375: for an event proposal, where its date came from and which zone read it. */
   event: z
     .object({ dateSource: z.enum(eventDateSources), zoneSource: z.enum(eventZoneSources) })
@@ -229,6 +231,8 @@ export const reviewEntrySchema = z.object({
       autoPublish: z.enum(autoPublishOutcomes).nullable(),
       /** D355: `preview` → the assistant couldn't read the share; filled from the page preview. */
       extractionFallback: z.enum(extractionFallbacks).nullable(),
+      /** D456: the shared text was cut before extraction. */
+      extractionBodyCut: z.boolean(),
     })
     .nullable(),
   /** The card a `possible_duplicate` / `update` verdict points at, when still visible. */

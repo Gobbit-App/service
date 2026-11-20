@@ -7,7 +7,7 @@ import { Avatar } from '../ui/Avatar';
 import { NavLink } from '../ui/NavLink';
 import { failureCopy, pasteAgainCopy } from './failure-copy';
 import { deviceTimeZone } from '../lib/device-time-zone';
-import { heldReason, shareEventLine, shareTitle, stateLabel } from './share-state';
+import { heldReason, savedAsSentLine, shareEventLine, shareTitle, stateLabel } from './share-state';
 import { useRetryShare } from './shares-queries';
 import { Button } from '../ui/buttons/Button';
 import { ButtonLink } from '../ui/buttons/ButtonLink';
@@ -110,10 +110,12 @@ export function ShareDetail({
   viewerTimeZone?: string;
 }): ReactElement | null {
   const eventLine = shareEventLine(share, viewerTimeZone, now);
+  const savedLine = savedAsSentLine(share);
   const card = (label: string) =>
     share.item ? (
       <>
         {eventLine && <p className="share-row__hint">{eventLine}</p>}
+        {savedLine && <p className="share-row__hint">{savedLine}</p>}
         <CardLink item={share.item} label={label} deckSlug={deckSlug} canRestore={canRestore} />
       </>
     ) : null;

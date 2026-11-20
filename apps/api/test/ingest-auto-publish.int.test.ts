@@ -74,6 +74,7 @@ describe('ingest auto-publish (D193)', () => {
               input,
             )));
     const run = createIngestHandler({
+      smartShare: async () => true,
       jobs,
       categories: createCategoriesRepo(db),
       items: createItemsRepo(db),

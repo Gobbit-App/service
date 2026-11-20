@@ -61,6 +61,7 @@ describe('ingest events (D370, D374–D376)', () => {
       memberships: createMembershipsRepo(db),
     });
     return createIngestHandler({
+      smartShare: async () => true,
       jobs,
       categories: createCategoriesRepo(db),
       items: createItemsRepo(db),

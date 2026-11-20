@@ -268,6 +268,7 @@ export function createReviewService(deps: {
                 sourcePreview: sourcePreview(job),
                 autoPublish: job.autoPublish ?? null,
                 extractionFallback: job.extraction?.fallback ?? null,
+                extractionBodyCut: job.extraction?.bodyCut === true,
               }
             : null,
           target: (targetId && targetDtos.get(targetId)) || null,

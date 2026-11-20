@@ -147,6 +147,18 @@ describe('toShareSummary (D196)', () => {
         .autoPublish,
     ).toBe('held_duplicate');
   });
+
+  it('sets savedAsSent only for the no_smart_share fallback', () => {
+    const sent = (
+      extraction: IngestJobRow['extraction'],
+      status: IngestJobRow['status'] = 'proposed',
+    ) => toShareSummary(job({ status, extraction }), null, null).savedAsSent;
+    expect(sent({ fallback: 'no_smart_share' } as never)).toBe(true);
+    expect(sent({ fallback: 'preview' } as never)).toBe(false);
+    expect(sent({} as never)).toBe(false);
+    expect(sent(null, 'queued')).toBe(false);
+    expect(sent(null, 'failed')).toBe(false);
+  });
 });
 
 describe('canRetryJob (D197)', () => {
