@@ -467,18 +467,9 @@ describe('review queue (D106, D107)', () => {
     });
 
     it('keeps publishing past a card that cannot be published', async () => {
-      const extraction = (newCategory: string) => ({
-        model: 'direct' as const,
-        escalated: false,
-        type: 'text' as const,
-        confidence: 1,
-        language: 'und',
-        categoryIds: [],
-        newCategory,
-      });
       const first = await proposal();
-      // A suggested category with no usable name makes publish throw a 400.
-      const broken = await proposal({ extraction: extraction('!!!') });
+      // A card with no category cannot be published (D95 trigger), so publish throws.
+      const broken = await proposal({}, undefined, []);
       const last = await proposal();
 
       const res = await post(`/decks/${deck.id}/review/publish`, {
