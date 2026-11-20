@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CARD_BODY_MAX } from '@gobbit/shared/card-limits';
-import type { ImportRow } from '@gobbit/shared/import';
+import { parseNotes, type ImportRow } from '@gobbit/shared/import';
 import {
   categoryStatus,
   editRow,
@@ -16,7 +16,9 @@ const row = (overrides: Partial<ImportRow> = {}): ImportRow => ({
   title: 'Clinic',
   body: '',
   sourceUrl: null,
-  category: null,
+  categories: [],
+  cover: null,
+  image: null,
   error: null,
   ...overrides,
 });
@@ -50,14 +52,19 @@ describe('preview rows (D189)', () => {
     expect(editRow(toggleRow(valid!), { title: 'Dentist' }).included).toBe(false);
   });
 
+  it('edits only the first category and keeps the rest', () => {
+    const [two] = previewRows([row({ categories: ['Health', 'City'] })]);
+    expect(editRow(two!, { category: 'Care' }).categories).toEqual(['Care', 'City']);
+  });
+
   it('clears an emptied category', () => {
-    const [withCategory] = previewRows([row({ category: 'Health' })]);
-    expect(editRow(withCategory!, { category: '  ' }).category).toBeNull();
+    const [withCategory] = previewRows([row({ categories: ['Health'] })]);
+    expect(editRow(withCategory!, { category: '  ' }).categories).toEqual([]);
   });
 
   it('sends an existing category by id and a new one by name', () => {
     const drafts = rowsToDrafts(
-      previewRows([row({ category: 'health' }), row({ category: 'Schools' })]),
+      previewRows([row({ categories: ['health'] }), row({ categories: ['Schools'] })]),
       [health],
     );
     expect(drafts[0]).toMatchObject({ categoryIds: [health.id] });
@@ -65,5 +72,17 @@ describe('preview rows (D189)', () => {
     expect(categoryStatus('Health', [health])).toBe('existing');
     expect(categoryStatus('Schools', [health])).toBe('new');
     expect(categoryStatus(null, [health])).toBeNull();
+  });
+
+  it('maps a card-per-section file to one ticked row per ## section (049)', () => {
+    const { rows } = parseNotes(
+      '# Health\n\n## Clinic\nOpen 9-5\n\n## Dentist\nCall first\n',
+      'markdown',
+    );
+    const preview = previewRows(rows);
+    expect(preview.map((r) => [r.title, r.body, r.categories, r.included])).toEqual([
+      ['Clinic', 'Open 9-5', ['Health'], true],
+      ['Dentist', 'Call first', ['Health'], true],
+    ]);
   });
 });

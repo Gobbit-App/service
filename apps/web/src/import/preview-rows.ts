@@ -1,5 +1,6 @@
 import {
   matchCategory,
+  categoriesOf,
   rowError,
   toImportDraft,
   type ImportCategory,
@@ -10,10 +11,16 @@ import {
 /** D189: a parsed row in the preview; invalid rows start unticked and can't be ticked. */
 export type PreviewRow = ImportRow & { key: number; included: boolean };
 
-export type RowEdit = Partial<Pick<ImportRow, 'title' | 'body' | 'category'>>;
+export type RowEdit = Partial<Pick<ImportRow, 'title' | 'body'>> & { category?: string | null };
 
 /** The label imports are shown under in review (and `?source=`): the file name or this. */
 export const PASTED_LABEL = 'Pasted notes';
+
+/** The first part of a card's body for the preview; the full text is in the editor. */
+export function bodyExcerpt(body: string, max = 200): string {
+  const chars = [...body];
+  return chars.length > max ? `${chars.slice(0, max).join('').trimEnd()}…` : body;
+}
 
 export function previewRows(rows: readonly ImportRow[]): PreviewRow[] {
   return rows.map((row, key) => ({ ...row, key, included: row.error === null }));
@@ -21,8 +28,14 @@ export function previewRows(rows: readonly ImportRow[]): PreviewRow[] {
 
 /** Applies an edit and re-checks the card limits; a row fixed by the edit is ticked again. */
 export function editRow(row: PreviewRow, edit: RowEdit): PreviewRow {
-  const next = { ...row, ...edit };
-  if (edit.category !== undefined) next.category = edit.category?.trim() ? edit.category : null;
+  const { category, ...rest } = edit;
+  const next = { ...row, ...rest };
+  // Edits the first category only; a second one (US2) is kept.
+  if (category !== undefined)
+    next.categories = [
+      ...categoriesOf(category?.trim() ? category : null),
+      ...row.categories.slice(1),
+    ];
   const error = rowError(next);
   return { ...next, error, included: error === null && (row.error !== null || row.included) };
 }

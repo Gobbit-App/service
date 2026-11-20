@@ -58,7 +58,7 @@ export function createImportsService(deps: {
           failed.push(failureOf(err, index, deck.id));
         }
       }
-      return { imported, duplicates, failed };
+      return { imported, duplicates, refused: 0, failed };
     },
   };
 }

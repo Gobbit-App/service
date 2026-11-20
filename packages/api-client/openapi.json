@@ -33016,7 +33016,8 @@
                 "required": [
                   "label",
                   "rows"
-                ]
+                ],
+                "additionalProperties": false
               }
             }
           }
@@ -33034,6 +33035,10 @@
                       "minimum": 0
                     },
                     "duplicates": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "refused": {
                       "type": "integer",
                       "minimum": 0
                     },
@@ -33063,6 +33068,7 @@
                   "required": [
                     "imported",
                     "duplicates",
+                    "refused",
                     "failed"
                   ]
                 }

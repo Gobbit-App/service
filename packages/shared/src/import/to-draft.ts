@@ -8,7 +8,7 @@ export interface ImportCategory {
 
 /** The body of one `POST /decks/{id}/imports` row (`importDraftSchema`). */
 export interface ImportRowDraft {
-  type: ImportRow['type'];
+  type: 'text' | 'link';
   title: string;
   body: string;
   sourceUrl?: string;
@@ -32,12 +32,17 @@ export function toImportDraft(
   row: ImportRow,
   categories: readonly ImportCategory[],
 ): ImportRowDraft {
-  const draft: ImportRowDraft = { type: row.type, title: row.title.trim(), body: row.body };
+  const draft: ImportRowDraft = {
+    type: row.type === 'media' ? 'text' : row.type,
+    title: row.title.trim(),
+    body: row.body,
+  };
   if (row.sourceUrl) draft.sourceUrl = row.sourceUrl;
-  if (row.category) {
-    const found = matchCategory(row.category, categories);
+  const [name] = row.categories;
+  if (name) {
+    const found = matchCategory(name, categories);
     if (found) draft.categoryIds = [found.id];
-    else draft.newCategory = row.category.trim();
+    else draft.newCategory = name.trim();
   }
   return draft;
 }

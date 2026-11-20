@@ -44,6 +44,9 @@ export function ImportInput({
         onPreview({ text, fileName, format: shownFormat });
       }}
     >
+      <p className="import-input__help">
+        In Markdown, ## starts a card and # groups cards under a category.
+      </p>
       <label className="field">
         <span className="field__label">Paste your notes</span>
         <textarea

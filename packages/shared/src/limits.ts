@@ -1,4 +1,4 @@
-import { ingestChannels, type IngestChannel } from './ingest/constants';
+import { IMPORT_DAILY_CAP_DEFAULT, ingestChannels, type IngestChannel } from './ingest/constants';
 
 /** Maximum character count (Unicode code points) for card body. */
 export const CARD_BODY_MAX = 2000;
@@ -105,7 +105,7 @@ export const MIN_SEEDED_TOKEN_LENGTH = 32;
  * listed use INGEST_DAILY_CAP (env-overridable); Phase 13 sets `mcp` here. `import` counts rows (D190).
  */
 export const INGEST_CHANNEL_DAILY_CAPS: Partial<Record<IngestChannel, number>> = {
-  import: 150,
+  import: IMPORT_DAILY_CAP_DEFAULT,
 };
 
 /** The daily cap of every channel: its override, else `defaultCap`. */

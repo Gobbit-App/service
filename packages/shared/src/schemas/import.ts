@@ -13,8 +13,9 @@ export const importRowSchema = z.object({
   title: z.string(),
   body: z.string(),
   sourceUrl: z.string().nullable(),
-  /** Category name from a heading or the CSV column. */
-  category: z.string().nullable(),
+  categories: z.array(z.string()),
+  cover: z.string().nullable(),
+  image: z.string().nullable(),
   /** Why the row can't be imported; invalid rows are never sent. */
   error: z.string().nullable(),
 });
@@ -25,7 +26,8 @@ export const importFormatSchema = z.enum(importFormats);
 /** D190: one row of POST /decks/{id}/imports. A link row needs `sourceUrl` (its payload URL). */
 export const importDraftSchema = z
   .object({
-    type: z.enum(importCardTypes),
+    // shortcut: no `media`, `cover` or `unmatched` until T035/T036 (the server must act on them)
+    type: z.enum(['text', 'link']),
     title: itemTitleSchema,
     body: itemBodySchema.default(''),
     sourceUrl: httpUrlSchema.optional(),
@@ -45,11 +47,14 @@ export const importDraftSchema = z
 export type ImportDraft = z.infer<typeof importDraftSchema>;
 export type ImportDraftInput = z.input<typeof importDraftSchema>;
 
-export const importRequestSchema = z.object({
-  /** Shown as the source in review and used by `?source=` (the file name or "Pasted notes"). */
-  label: z.string().trim().min(1).max(IMPORT_LABEL_MAX),
-  rows: z.array(importDraftSchema).min(1).max(IMPORT_ROWS_PER_REQUEST),
-});
+export const importRequestSchema = z
+  .object({
+    /** Shown as the source in review and used by `?source=` (the file name or "Pasted notes"). */
+    label: z.string().trim().min(1).max(IMPORT_LABEL_MAX),
+    // `strict` returns with T035/T036; until then it is rejected, not ignored.
+    rows: z.array(importDraftSchema).min(1).max(IMPORT_ROWS_PER_REQUEST),
+  })
+  .strict();
 export type ImportRequest = z.infer<typeof importRequestSchema>;
 
 export const importFailureSchema = z.object({
@@ -65,6 +70,8 @@ export const importResultSchema = z.object({
   imported: z.number().int().nonnegative(),
   /** Imported rows flagged `possible_duplicate` or `update` (in the queue with the flag). */
   duplicates: z.number().int().nonnegative(),
+  /** Rows refused by rule (cap, strict, invalid); each is also in `failed`. */
+  refused: z.number().int().nonnegative(),
   failed: z.array(importFailureSchema),
 });
 export type ImportResult = z.infer<typeof importResultSchema>;
@@ -97,3 +104,15 @@ export const bulkPublishResultSchema = z.object({
   skipped: z.array(z.object({ id: uuidSchema, reason: z.enum(bulkPublishSkipReasons) })),
 });
 export type BulkPublishResult = z.infer<typeof bulkPublishResultSchema>;
+
+/** D191: POST /decks/{id}/review/discard. */
+export const discardImportRequestSchema = z.object({
+  source: z.string().trim().min(1).max(IMPORT_LABEL_MAX),
+});
+export type DiscardImportRequest = z.infer<typeof discardImportRequestSchema>;
+
+export const discardImportResultSchema = z.object({
+  discarded: z.number().int().nonnegative(),
+  skipped: z.number().int().nonnegative(),
+});
+export type DiscardImportResult = z.infer<typeof discardImportResultSchema>;

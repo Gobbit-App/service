@@ -10041,6 +10041,7 @@ export interface paths {
                         "application/json": {
                             imported: number;
                             duplicates: number;
+                            refused: number;
                             failed: {
                                 index: number;
                                 problem: string;
