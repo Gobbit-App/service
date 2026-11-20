@@ -73,7 +73,7 @@ describe('POST /decks/{id}/imports (D190)', () => {
     ]);
 
     expect(res.status).toBe(200);
-    expect(await json(res)).toEqual({ imported: 2, duplicates: 0, failed: [] });
+    expect(await json(res)).toEqual({ imported: 2, duplicates: 0, failed: [], refused: 0 });
 
     const jobs = await ctx.t.db.select().from(ingestJobs).where(eq(ingestJobs.deckId, deck.id));
     expect(jobs).toHaveLength(2);
@@ -110,7 +110,7 @@ describe('POST /decks/{id}/imports (D190)', () => {
     const res = await importRows([{ type: 'text', title: 'קליניקה', body }]);
 
     expect(res.status).toBe(200);
-    expect(await json(res)).toEqual({ imported: 1, duplicates: 0, failed: [] });
+    expect(await json(res)).toEqual({ imported: 1, duplicates: 0, failed: [], refused: 0 });
     const [row] = await ctx.t.db.select().from(items).where(eq(items.deckId, deck.id));
     expect(row!.body).toBe(body);
     expect(row!.status).toBe('proposed');
@@ -127,7 +127,7 @@ describe('POST /decks/{id}/imports (D190)', () => {
       { type: 'link', title: 'Forms again', sourceUrl: 'https://example.org/forms' },
     ]);
 
-    expect(await json(res)).toEqual({ imported: 1, duplicates: 1, failed: [] });
+    expect(await json(res)).toEqual({ imported: 1, duplicates: 1, failed: [], refused: 0 });
     const [job] = await ctx.t.db.select().from(ingestJobs).where(eq(ingestJobs.deckId, deck.id));
     expect(job!.dedup?.action).not.toBe('new');
   });
@@ -158,6 +158,7 @@ describe('POST /decks/{id}/imports (D190)', () => {
     expect(await json(res)).toEqual({
       imported: 1,
       duplicates: 0,
+      refused: 0,
       failed: [
         expect.objectContaining({ index: 1, problem: '/problems/rate-limited' }),
         expect.objectContaining({ index: 2, problem: '/problems/rate-limited' }),
