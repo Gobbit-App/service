@@ -6,7 +6,13 @@ import {
   type QueryFilters,
   type QueryKey,
 } from '@tanstack/react-query';
-import type { BulkPublishResult, PublishRequest, ReviewCount, ReviewList } from '@gobbit/shared';
+import type {
+  BulkPublishResult,
+  DiscardImportResult,
+  PublishRequest,
+  ReviewCount,
+  ReviewList,
+} from '@gobbit/shared';
 import { deckIdFromCache, trackContent } from '../analytics/analytics';
 import { decrementCount, removeReviewEntries } from '../review/review-cache';
 import { api, unwrap } from './client';
@@ -153,6 +159,21 @@ export function useBulkPublish(deckSlug: string) {
       }
       return removeFromReview(qc, deckSlug, result.published);
     },
+    onSettled: () => refreshAfterReview(qc, deckSlug),
+  });
+}
+
+/** D191: discards every still-proposed card of one import label; the set is server-side, so refetch. */
+export function useDiscardImport(deckSlug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (source: string): Promise<DiscardImportResult> =>
+      unwrap(
+        api.POST('/decks/{id}/review/discard', {
+          params: { path: { id: deckSlug } },
+          body: { source },
+        }),
+      ),
     onSettled: () => refreshAfterReview(qc, deckSlug),
   });
 }

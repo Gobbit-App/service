@@ -11,6 +11,7 @@ export function ReviewSelectBar({
   onToggleMode,
   onSelectAll,
   onPublish,
+  onDiscardImport,
 }: {
   selecting: boolean;
   selectedCount: number;
@@ -19,6 +20,8 @@ export function ReviewSelectBar({
   onToggleMode: () => void;
   onSelectAll: () => void;
   onPublish: () => void;
+  /** Only with a source filter on (D191). */
+  onDiscardImport?: () => void;
 }): ReactElement {
   const tooMany = selectedCount > BULK_PUBLISH_MAX;
   return (
@@ -29,6 +32,15 @@ export function ReviewSelectBar({
         variant="ghost"
         onClick={onToggleMode}
       />
+      {onDiscardImport && (
+        <Button
+          icon="trash"
+          label="Discard all from this import"
+          variant="ghost"
+          disabled={busy}
+          onClick={onDiscardImport}
+        />
+      )}
       {selecting && (
         <>
           <Button

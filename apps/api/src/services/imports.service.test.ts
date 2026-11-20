@@ -1,7 +1,8 @@
 import type { ImportDraft } from '@gobbit/shared';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { captureLogger, expectDecision } from '../../test/capture-logger';
 import type { ImportDecisions } from '../imports/imports.events';
+import { rateLimited } from '../errors/http-errors';
 import { decisionLogger } from '../lib/decision-event';
 import type { CurrentUser } from '../types';
 import { createImportsService } from './imports.service';
@@ -143,5 +144,86 @@ describe('imports.service strict and unmatched categories (D446, D451)', () => {
     await t.run([row('a')]);
     await t.flush();
     expect(t.lines.some((l) => l.event === 'imports.rows_refused')).toBe(false);
+  });
+});
+
+describe('imports.service daily cap and invalid rows (D447, D451)', () => {
+  const RATE_LIMITED = '/problems/rate-limited';
+  const NOW = new Date('2026-06-01T10:00:00.000Z');
+  const RETRY_AFTER = 5400; // the oldest counted row ages out 90 minutes from now
+  const agesOutAt = new Date(NOW.getTime() + RETRY_AFTER * 1000).toISOString();
+  let t: ReturnType<typeof setup>;
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+    t = setup();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  const capAfter = (ok: number) => {
+    for (let i = 0; i < ok; i += 1) t.ingest.proposeDirect.mockResolvedValueOnce({ dedup: null });
+    t.ingest.proposeDirect.mockRejectedValue(rateLimited(RETRY_AFTER));
+  };
+
+  it('lists the rest as rate-limited with the age-out time, keeps proposed rows, counts refused', async () => {
+    capAfter(2);
+    const res = await t.run([row('a'), row('b'), row('c'), row('d'), row('e')]);
+    expect(res).toMatchObject({ imported: 2, refused: 3 });
+    expect(res.failed.map((f) => f.index)).toEqual([2, 3, 4]);
+    for (const f of res.failed) {
+      expect(f.problem).toBe(RATE_LIMITED);
+      expect(f.detail).toContain('Daily import limit reached');
+      expect(f.detail).toContain(agesOutAt);
+    }
+  });
+
+  it('writes one daily_cap event with count and cap, not one per row', async () => {
+    capAfter(1);
+    await t.run([row('a'), row('b'), row('c'), row('d')]);
+    await t.flush();
+    const events = t.lines.filter(
+      (l) => l.event === 'imports.rows_refused' && l.reason === 'daily_cap',
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      outcome: 'refused',
+      count: 3,
+      cap: expect.any(Number),
+      requestId: 'r1',
+      deckId: 'd1',
+    });
+    expect(expectDecision(t.lines, 'imports.completed', { outcome: 'accepted' })).toMatchObject({
+      imported: 1,
+      refused: 3,
+    });
+  });
+
+  it('nothing imported yet: keeps the 429 with Retry-After', async () => {
+    capAfter(0);
+    await expect(t.run([row('a'), row('b')])).rejects.toMatchObject({
+      status: 429,
+      type: RATE_LIMITED,
+      headers: { 'Retry-After': String(RETRY_AFTER) },
+    });
+    await t.flush();
+    expect(
+      expectDecision(t.lines, 'imports.rows_refused', { outcome: 'refused', reason: 'daily_cap' }),
+    ).toMatchObject({ count: 2, requestId: 'r1' });
+    expect(expectDecision(t.lines, 'imports.completed', { outcome: 'accepted' })).toMatchObject({
+      imported: 0,
+      refused: 2,
+    });
+  });
+
+  it('records invalid_row once per request with the count for server-invalid rows', async () => {
+    const bad = row('bad', { body: 'x'.repeat(2001) });
+    // T048 may fail the row or the request; either way the decision is recorded.
+    await t.run([row('ok'), bad, row('bad2', { body: 'y'.repeat(2001) })]).catch(() => undefined);
+    await t.flush();
+    const events = t.lines.filter(
+      (l) => l.event === 'imports.rows_refused' && l.reason === 'invalid_row',
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ outcome: 'refused', count: 2, requestId: 'r1' });
   });
 });

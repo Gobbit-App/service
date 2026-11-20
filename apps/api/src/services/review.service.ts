@@ -2,6 +2,7 @@ import type { IngestJobRow, ItemRow } from '@gobbit/db';
 import {
   can,
   displayNameOf,
+  IMPORT_DISCARD_MAX,
   REVIEW_LIMIT,
   type BulkPublishResult,
   type Item,
@@ -18,6 +19,7 @@ import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import { resolveDeck } from '../lib/resolve-deck';
 import { toCategorySlug, toSlug } from '../lib/slug';
 import type { CategoryDecisions } from './categories.events';
+import type { ImportDecisions } from '../imports/imports.events';
 import type { IngestUploadStore } from '../media/ingest-uploads';
 import type { EventNoticeHook } from './event-cards.service';
 import type { MediaReferenceCheck } from './media-reference';
@@ -33,6 +35,7 @@ import {
 } from '../review/review-helpers';
 import {
   createPublishProposal,
+  NOT_PROPOSED,
   type ReviewTransaction,
   type ReviewTxRepos,
 } from '../review/publish-proposal';
@@ -84,6 +87,7 @@ export function createReviewService(deps: {
   const categoryDecisions = decisionLogger<CategoryDecisions>('categories', {
     parent: deps.logger,
   });
+  const importDecisions = decisionLogger<ImportDecisions>('imports', { parent: deps.logger });
   const {
     decks,
     memberships,
@@ -111,7 +115,7 @@ export function createReviewService(deps: {
     const deck = await decks.findById(item.deckId);
     if (!deck) throw notFound(ITEM_NOT_FOUND);
     const role = await authorize(user, deck, 'item.publish', memberships, ITEM_NOT_FOUND);
-    if (item.status !== 'proposed') throw conflict('Only proposed items can be reviewed');
+    if (item.status !== 'proposed') throw conflict(NOT_PROPOSED);
     const job = await jobs.findByResultItem(item.id);
     return { item, deck, role, job };
   }
@@ -190,6 +194,7 @@ export function createReviewService(deps: {
     const item = { ...proposal, payload };
     const at = now();
     return transaction(async (tx) => {
+      if (!(await tx.items.lockProposal(item.id))) throw conflict(NOT_PROPOSED);
       const extra = ensureSuggested ? await ensureSuggested(tx) : [];
       const own = (await tx.items.categoryIdsFor([item.id], 'owner')).get(item.id) ?? [];
       const categoryIds = [...new Set([...own, ...extra])];
@@ -403,6 +408,7 @@ export function createReviewService(deps: {
       const { item, job } = await loadProposal(user, itemId);
       const at = now();
       await transaction(async (tx) => {
+        if (!(await tx.items.lockProposal(item.id))) throw conflict(NOT_PROPOSED);
         await tx.items.softDelete(item.id, at, [eventFrom(actor, 'discarded')]);
         if (job) {
           await tx.jobs.update(job.id, {
@@ -419,6 +425,76 @@ export function createReviewService(deps: {
           log.error({ err, jobId: job.id }, 'deleting job uploads failed');
         });
       }
+    },
+
+    /**
+     * D449: discards every pending card of one import (client label), one `discard` per card so
+     * the log entry, upload release and actor path are the single-discard ones. A card handled
+     * meanwhile (409) counts as skipped.
+     */
+    async discardImport(
+      actor: Actor,
+      idOrSlug: string,
+      source: string,
+    ): Promise<{ discarded: number; skipped: number }> {
+      const base = { requestId: actor.requestId ?? 'internal', actorId: actor.user.id };
+      const deck = await resolveDeck(decks, idOrSlug, actor.user);
+      let role: MemberRole;
+      try {
+        role = await authorize(actor.user, deck, 'item.publish', memberships);
+      } catch (err) {
+        if (err instanceof HttpError && err.status === 403) {
+          importDecisions.record('imports.discard_refused', {
+            outcome: 'refused',
+            reason: 'forbidden',
+            ...base,
+            deckId: deck.id,
+          });
+        }
+        throw err;
+      }
+      const pending = await items.list({
+        role,
+        deckId: deck.id,
+        status: 'proposed',
+        clientLabel: source,
+        limit: IMPORT_DISCARD_MAX,
+      });
+      if (pending.length === 0) {
+        importDecisions.record('imports.discard_refused', {
+          outcome: 'refused',
+          reason: 'no_pending',
+          ...base,
+          deckId: deck.id,
+        });
+        return { discarded: 0, skipped: 0 };
+      }
+      let discarded = 0;
+      let skipped = 0;
+      const record = (reason?: 'partial') =>
+        importDecisions.record('imports.discarded', {
+          outcome: 'accepted',
+          ...(reason ? { reason } : {}),
+          discarded,
+          skipped,
+          ...base,
+          deckId: deck.id,
+        });
+      for (const { id } of pending) {
+        try {
+          await service.discard(actor, id);
+          discarded++;
+        } catch (err) {
+          if (!(err instanceof HttpError && err.status === 409)) {
+            // Cards already discarded stay discarded: log them before the error goes out.
+            if (discarded > 0) record('partial');
+            throw err;
+          }
+          skipped++;
+        }
+      }
+      record();
+      return { discarded, skipped };
     },
   };
   return service;

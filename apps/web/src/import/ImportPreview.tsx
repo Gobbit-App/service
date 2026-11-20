@@ -2,7 +2,14 @@ import type { ReactElement } from 'react';
 import { IMPORT_ROWS_PER_PREVIEW } from '@gobbit/shared/ingest-constants';
 import type { ImportCategory } from '@gobbit/shared/import';
 import { ImportPreviewRow } from './ImportPreviewRow';
-import { bodyExcerpt, editRow, importableRows, toggleRow, type PreviewRow } from './preview-rows';
+import {
+  bodyExcerpt,
+  editRow,
+  importableRows,
+  toggleRow,
+  tooManyRows,
+  type PreviewRow,
+} from './preview-rows';
 import { Button } from '../ui/buttons/Button';
 
 /** D189: the parsed notes before anything is sent; too many rows must be split first. */
@@ -28,7 +35,7 @@ export function ImportPreview({
 }): ReactElement {
   const count = importableRows(rows).length;
   const invalid = rows.filter((row) => row.error !== null).length;
-  const tooMany = rows.length > IMPORT_ROWS_PER_PREVIEW;
+  const tooMany = tooManyRows(rows.length);
   const update = (key: number, change: (row: PreviewRow) => PreviewRow) =>
     onChange(rows.map((row) => (row.key === key ? change(row) : row)));
 

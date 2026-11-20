@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { INGEST_CLIENT_LABEL_MAX } from '../ingest/constants';
 import { discardImportRequestSchema, importRequestSchema } from './import';
 
 const row = { type: 'text', title: 'A', body: 'b' };
@@ -27,5 +28,10 @@ describe('discardImportRequestSchema', () => {
   it('rejects an empty source and trims', () => {
     expect(discardImportRequestSchema.safeParse({ source: '  ' }).success).toBe(false);
     expect(discardImportRequestSchema.parse({ source: ' a ' }).source).toBe('a');
+    // Stored labels are cut at INGEST_CLIENT_LABEL_MAX, so a longer source can never match: refuse it.
+    expect(
+      discardImportRequestSchema.safeParse({ source: 'x'.repeat(INGEST_CLIENT_LABEL_MAX + 1) })
+        .success,
+    ).toBe(false);
   });
 });

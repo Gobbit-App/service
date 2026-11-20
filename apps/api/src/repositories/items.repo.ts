@@ -527,6 +527,19 @@ export function createItemsRepo(db: DbExecutor) {
       });
     },
 
+    /**
+     * Row-locks a live proposal for the rest of the transaction; false when it is no longer one,
+     * so a concurrent publish and discard of one card cannot both win (T052).
+     */
+    async lockProposal(id: string): Promise<boolean> {
+      const rows = await db
+        .select({ id: items.id })
+        .from(items)
+        .where(and(eq(items.id, id), eq(items.status, 'proposed'), isNull(items.deletedAt)))
+        .for('update');
+      return rows.length > 0;
+    },
+
     /** Live items in the deck with `status` (the review pill counts proposals, D107). */
     async countByStatus(deckId: string, status: ItemStatus): Promise<number> {
       const [row] = await db

@@ -18,11 +18,14 @@ import {
 } from '@gobbit/db/test';
 import {
   INGEST_CHANNEL_DAILY_CAPS,
+  INGEST_CAP_WINDOW_MS,
   INGEST_COMBINED_DAILY_CAP,
   IMPORT_ROWS_PER_REQUEST,
   type IngestChannel,
 } from '@gobbit/shared';
+import { createIngestJobsRepo } from '../src/repositories/ingest-jobs.repo';
 import { buildServices } from '../src/services';
+import { captureLogger, expectDecision } from './capture-logger';
 import { json, setupApiTest } from './helpers';
 
 const IMPORT_CAP = INGEST_CHANNEL_DAILY_CAPS.import!;
@@ -330,3 +333,160 @@ describe('POST /decks/{id}/imports (D190)', () => {
     await earlierJobs('import', 1);
   });
 });
+
+const HOUR = 60 * 60 * 1000;
+
+/** US5: rows over the cap are listed, counted and recorded (FR-009, FR-010). */
+function describeImportCaps(name: string, env: Record<string, string>, cap: number) {
+  describe(name, () => {
+    const capture = captureLogger();
+    const ctx = setupApiTest({ env, logger: capture.logger });
+    let owner: UserRow;
+    let deck: DeckRow;
+
+    beforeAll(() => {
+      owner = ctx.world.owner;
+    });
+
+    beforeEach(async () => {
+      await ctx.t.db.delete(ingestJobs).where(eq(ingestJobs.userId, owner.id));
+      deck = await createDeck(ctx.t.db, owner);
+      capture.lines.length = 0;
+    });
+
+    const importRows = (rows: unknown[]) =>
+      ctx.app.request(`/decks/${deck.id}/imports`, {
+        method: 'POST',
+        headers: ctx.as(),
+        body: JSON.stringify({ label: LABEL, rows }),
+      });
+    const textRows = (from: number, count: number) =>
+      Array.from({ length: count }, (_, i) => ({
+        type: 'text',
+        title: `Note ${from + i}`,
+        body: `Note ${from + i} body`,
+      }));
+    const jobsAgo = async (ages: number[]) => {
+      await ctx.t.db.insert(ingestJobs).values(
+        ages.map((age) => ({
+          userId: owner.id,
+          deckId: deck.id,
+          channel: 'import' as const,
+          status: 'published' as const,
+          raw: { images: [] },
+          createdAt: new Date(ctx.clock.now().getTime() - age),
+        })),
+      );
+    };
+
+    if (cap === IMPORT_CAP) {
+      it('proposes 400 rows over four requests in one day', async () => {
+        for (let r = 0; r < 4; r++) {
+          const res = await importRows(textRows(r * 100, 100));
+          expect(await json(res)).toEqual({ imported: 100, duplicates: 0, failed: [], refused: 0 });
+        }
+        const rows = await ctx.t.db.select().from(items).where(eq(items.deckId, deck.id));
+        expect(rows).toHaveLength(400);
+        expect(rows.every((r) => r.status === 'proposed')).toBe(true);
+      });
+
+      it('imports 100 card-per-section rows within a generous time guard (SC-004)', async () => {
+        const body = Array.from(
+          { length: 20 },
+          (_, i) => `Paragraph ${i} with **bold** text.`,
+        ).join('\n\n');
+        const rows = Array.from({ length: 100 }, (_, i) => ({
+          type: 'text',
+          title: `S${i}`,
+          body,
+        }));
+        const started = Date.now();
+        const res = await importRows(rows);
+        expect(Date.now() - started).toBeLessThan(60_000);
+        expect(await json(res)).toMatchObject({ imported: 100, refused: 0 });
+      });
+
+      it('records invalid_row for a row the server rejects', async () => {
+        const res = await importRows([...textRows(0, 1), { type: 'link', title: 'No URL' }]);
+        expect(res.status).toBe(400);
+        await capture.flush();
+        expect(
+          expectDecision(capture.lines, 'imports.rows_refused', {
+            outcome: 'refused',
+            reason: 'invalid_row',
+          }),
+        ).toMatchObject({ count: 1 });
+      });
+    } else {
+      it('lists the rows over a low cap, counts them and records one daily_cap event', async () => {
+        await jobsAgo([HOUR, 2 * HOUR, 3 * HOUR]);
+
+        const res = await importRows(textRows(0, 5));
+
+        expect(res.status).toBe(200);
+        const body = await json(res);
+        expect(body).toMatchObject({ imported: cap - 3, duplicates: 0, refused: 5 - (cap - 3) });
+        expect(body.failed).toHaveLength(5 - (cap - 3));
+        const first = body.failed[0];
+        expect(first).toMatchObject({ index: cap - 3, problem: '/problems/rate-limited' });
+        expect(first.detail).toMatch(/^Daily import limit reached/);
+        // The oldest counted job (3 h old) frees a slot in 21 h.
+        const at = Date.parse(first.detail.match(/\d{4}-\d\d-\d\dT[\d:.]+Z/)[0]);
+        expect(Math.abs(at - (Date.now() + INGEST_CAP_WINDOW_MS - 3 * HOUR))).toBeLessThan(60_000);
+
+        await capture.flush();
+        expect(
+          expectDecision(capture.lines, 'imports.rows_refused', {
+            outcome: 'refused',
+            reason: 'daily_cap',
+          }),
+        ).toMatchObject({ count: body.refused, cap });
+        const rows = await ctx.t.db.select().from(items).where(eq(items.deckId, deck.id));
+        expect(rows).toHaveLength(cap - 3);
+      });
+
+      it('answers 429 with Retry-After when nothing could be imported', async () => {
+        await jobsAgo([HOUR, 2 * HOUR, 3 * HOUR, 4 * HOUR, 5 * HOUR].slice(0, cap));
+
+        const res = await importRows(textRows(0, 2));
+
+        expect(res.status).toBe(429);
+        const expected = (INGEST_CAP_WINDOW_MS - cap * HOUR) / 1000;
+        expect(Math.abs(Number(res.headers.get('Retry-After')) - expected)).toBeLessThanOrEqual(60);
+      });
+
+      it('oldestCountedAt finds the oldest counted job, a retry restarting its clock', async () => {
+        const repo = createIngestJobsRepo(ctx.t.db);
+        const now = ctx.clock.now().getTime();
+        const since = new Date(now - INGEST_CAP_WINDOW_MS);
+        expect(await repo.oldestCountedAt(owner.id, since)).toBeNull();
+
+        await jobsAgo([30 * HOUR, 3 * HOUR, HOUR]);
+        // Created 26 h ago but retried 30 min ago: counts from the retry.
+        await ctx.t.db.insert(ingestJobs).values({
+          userId: owner.id,
+          deckId: deck.id,
+          channel: 'pwa',
+          status: 'published',
+          raw: { images: [] },
+          createdAt: new Date(now - 26 * HOUR),
+          retriedAt: new Date(now - HOUR / 2),
+        });
+
+        const all = await repo.oldestCountedAt(owner.id, since);
+        expect(Math.abs(all!.getTime() - (now - 3 * HOUR))).toBeLessThan(5_000);
+        const onlyPwa = await repo.oldestCountedAt(owner.id, since, 'pwa');
+        expect(Math.abs(onlyPwa!.getTime() - (now - HOUR / 2))).toBeLessThan(5_000);
+        const noImport = await repo.oldestCountedAt(owner.id, since, undefined, ['import']);
+        expect(Math.abs(noImport!.getTime() - (now - HOUR / 2))).toBeLessThan(5_000);
+      });
+    }
+  });
+}
+
+describeImportCaps('import caps, default (US5)', {}, IMPORT_CAP);
+describeImportCaps(
+  'import caps, low INGEST_IMPORT_DAILY_CAP (US5)',
+  { INGEST_IMPORT_DAILY_CAP: '5' },
+  5,
+);

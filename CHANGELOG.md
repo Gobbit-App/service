@@ -14,6 +14,7 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 - **Behaviour change:** in a Markdown import, a `##` heading outside a code fence now starts a card (`#` still groups cards under a category); files without a `##` import as before. Lines directly under a `##` can set `source:`, `categories:` (several, comma-separated) and `type:`; `cover`, `image` and `type: media` are refused as row errors until media import lands.
 - `pnpm import:notes` is now strict by default: a card naming a category the deck does not have is refused and reported; pass `--no-strict` for the old behaviour. `POST /decks/{id}/imports` takes an optional `strict` and a draft's `unmatched` names (additive; old clients unchanged).
+- New optional `INGEST_IMPORT_DAILY_CAP` (default `500`): bulk-import rows per user per rolling day, previously a fixed constant. Rows over it are reported refused (`/problems/rate-limited`, with when a slot frees up) and the 429 `Retry-After` is now the real time until the oldest counted job ages out, not a fixed hour. Not a deploy blocker.
 - Category names with no Latin letters (e.g. Hebrew) now get a derived address `c-` + 8 hex characters instead of a 400; a clash asks for an explicit `slug`. No environment variable changes, no migration, no action required.
 
 ### 2026-11-19 — Bulk publish continues past a card that cannot be published
