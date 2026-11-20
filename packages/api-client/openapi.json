@@ -26516,8 +26516,12 @@
                         "fallback": {
                           "type": "string",
                           "enum": [
-                            "preview"
+                            "preview",
+                            "no_smart_share"
                           ]
+                        },
+                        "bodyCut": {
+                          "type": "boolean"
                         },
                         "event": {
                           "type": "object",
@@ -28326,8 +28330,12 @@
                                 ],
                                 "enum": [
                                   "preview",
+                                  "no_smart_share",
                                   null
                                 ]
+                              },
+                              "extractionBodyCut": {
+                                "type": "boolean"
                               }
                             },
                             "required": [
@@ -28340,7 +28348,8 @@
                               "newCategory",
                               "sourcePreview",
                               "autoPublish",
-                              "extractionFallback"
+                              "extractionFallback",
+                              "extractionBodyCut"
                             ]
                           },
                           "target": {
@@ -31162,6 +31171,9 @@
                               "not_added"
                             ]
                           },
+                          "savedAsSent": {
+                            "type": "boolean"
+                          },
                           "preview": {
                             "type": "object",
                             "properties": {
@@ -31375,6 +31387,7 @@
                           "channel",
                           "createdAt",
                           "state",
+                          "savedAsSent",
                           "preview",
                           "failureCode",
                           "canRetry",
@@ -31696,6 +31709,9 @@
                         "not_added"
                       ]
                     },
+                    "savedAsSent": {
+                      "type": "boolean"
+                    },
                     "preview": {
                       "type": "object",
                       "properties": {
@@ -31909,6 +31925,7 @@
                     "channel",
                     "createdAt",
                     "state",
+                    "savedAsSent",
                     "preview",
                     "failureCode",
                     "canRetry",
@@ -32145,6 +32162,9 @@
                         "not_added"
                       ]
                     },
+                    "savedAsSent": {
+                      "type": "boolean"
+                    },
                     "preview": {
                       "type": "object",
                       "properties": {
@@ -32358,6 +32378,7 @@
                     "channel",
                     "createdAt",
                     "state",
+                    "savedAsSent",
                     "preview",
                     "failureCode",
                     "canRetry",

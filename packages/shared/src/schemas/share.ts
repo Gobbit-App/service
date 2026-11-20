@@ -24,6 +24,8 @@ export const shareSummarySchema = z
     channel: z.enum(shareChannels),
     createdAt: isoDateTimeSchema,
     state: z.enum(shareStates),
+    /** True when the share was saved as sent because smart share is off for the sharer. */
+    savedAsSent: z.boolean(),
     /** Enough to recognise the share: the card or page title, the link's host, photo count. */
     preview: z
       .object({

@@ -52,6 +52,12 @@ export function anyProcessing(shares: readonly Pick<ShareSummary, 'state'>[] | u
   return shares?.some((s) => s.state === 'processing') ?? false;
 }
 
+/** FR-008: the note on a share saved without smart share; null while processing or failed. */
+export function savedAsSentLine(share: Pick<ShareSummary, 'state' | 'savedAsSent'>): string | null {
+  if (!share.savedAsSent || share.state === 'processing' || share.state === 'failed') return null;
+  return 'Saved as you sent it. Smart share is coming soon.';
+}
+
 /**
  * D377: "Proposed as an event: Thu 3 Dec, 18:00" for a share that became an event card (times in
  * the viewer's zone, all-day dates as written); null for any other card.

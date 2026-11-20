@@ -45,6 +45,7 @@ function entry(
       sourcePreview: 'https://dentist.example/',
       autoPublish: null,
       extractionFallback: null,
+      extractionBodyCut: false,
       ...job,
     },
   };

@@ -203,4 +203,18 @@ describe('ShareRow (D198)', () => {
     expect(screen.getByText("You're no longer a member of this deck.")).toBeInTheDocument();
     expect(screen.queryByRole('button')).toBeNull();
   });
+
+  it('says a smart-share-off share was saved as sent, and only that one', () => {
+    const published = {
+      state: 'published',
+      autoPublish: 'published',
+      item: { id: ITEM_ID, title: 'Gate code', deleted: false, type: 'text', event: null },
+    } as const;
+    const line = 'Saved as you sent it. Smart share is coming soon.';
+    const { unmount } = renderRow(makeShare({ ...published, savedAsSent: true }));
+    expect(screen.getByText(line)).toBeInTheDocument();
+    unmount();
+    renderRow(makeShare({ ...published, savedAsSent: false }));
+    expect(screen.queryByText(line)).toBeNull();
+  });
 });

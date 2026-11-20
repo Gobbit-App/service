@@ -83,6 +83,16 @@ export function createUsersRepo(db: DbExecutor) {
       return row ?? null;
     },
 
+    /** Worker-only: the smart-share setting plus the email for the admin check; never returned to clients. */
+    async smartShareOf(id: string): Promise<{ email: string; smartShare: boolean } | null> {
+      const [row] = await db
+        .select({ email: users.email, smartShare: users.smartShare })
+        .from(users)
+        .where(and(eq(users.id, id), isNull(users.deletedAt)))
+        .limit(1);
+      return row ?? null;
+    },
+
     async profileById(id: string): Promise<ProfileRow | null> {
       const [row] = await db
         .select(profileColumns)

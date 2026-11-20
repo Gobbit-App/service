@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "smart_share" boolean DEFAULT false NOT NULL;

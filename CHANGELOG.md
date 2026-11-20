@@ -10,6 +10,10 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-20 — Smart share is per person (050)
+
+- **Action required**: new migration `0028_smart_share`. After it runs, smart share (model-written cards from a share) is off for every user except platform admins, who stay on. Right after the migration, switch your curators on with the SQL in the runbook, [`docs/design/ingestion.md`](docs/design/ingestion.md#smart-share-and-best-effort); until then their shares get best-effort cards. No environment variable changes.
+
 ### 2026-11-20 — Import v2: card per section, fields, several categories, strict mode (049, D443–D451)
 
 - **Behaviour change:** in a Markdown import, a `##` heading outside a code fence now starts a card (`#` still groups cards under a category); files without a `##` import as before. Lines directly under a `##` can set `source:`, `categories:` (several, comma-separated) and `type:`; `cover`, `image` and `type: media` are refused as row errors until media import lands.

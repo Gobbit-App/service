@@ -96,6 +96,7 @@ export function toShareSummary(
     channel: job.channel,
     createdAt: job.createdAt.toISOString(),
     state: STATE_BY_STATUS[job.status],
+    savedAsSent: job.extraction?.fallback === 'no_smart_share',
     preview: {
       title: item?.title ?? raw?.title ?? null,
       host: hostOf(raw?.url),
