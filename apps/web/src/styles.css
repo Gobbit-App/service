@@ -779,6 +779,28 @@ h2 {
   color: var(--color-danger);
 }
 
+/* A pending update stands out like the primary button (fill, glow on hover/focus). */
+.menu__item.menu__item--accent {
+  background: var(--color-accent-fill);
+  color: var(--color-accent-text);
+  font-weight: 650;
+}
+
+.menu__item--accent:focus-visible {
+  box-shadow: var(--glow-accent);
+}
+
+@media (hover: hover) {
+  .menu__item--accent:hover {
+    box-shadow: var(--glow-accent);
+  }
+}
+
+.menu__item--accent .menu__detail {
+  color: inherit;
+  font-weight: 400;
+}
+
 .menu__text {
   display: grid;
   min-width: 0;

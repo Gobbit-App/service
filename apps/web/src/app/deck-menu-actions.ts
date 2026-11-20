@@ -19,10 +19,10 @@ export interface MenuActionsInput {
 }
 
 /**
- * D276: the bottom bar's ⋯ menu, in order: Update Gobbit (only while a new version waits),
- * Profile (avatar + email; Sign out lives on the profile page), Settings (one page, D278), Upcoming reminders
- * (`item.update`, 037), Activity (`event.list`, D188), Waitlist (platform admins, 032), About
- * (D354).
+ * D276: the bottom bar's ⋯ menu, in order: Profile (avatar + email; Sign out lives on the
+ * profile page), Settings (one page, D278), Upcoming reminders (`item.update`, 037), Activity
+ * (`event.list`, D188), Waitlist (platform admins, 032), About (D354), and last, on an accent
+ * fill, Update Gobbit (only while a new version waits).
  */
 export function menuActions({
   deck,
@@ -33,15 +33,6 @@ export function menuActions({
   onUpdate,
 }: MenuActionsInput): MenuAction[] {
   const actions: MenuAction[] = [];
-  if (onUpdate) {
-    actions.push({
-      key: 'update',
-      label: 'Update Gobbit',
-      icon: 'refresh',
-      detail: 'A new version is ready',
-      onSelect: onUpdate,
-    });
-  }
   actions.push({
     key: 'profile',
     label: 'Profile',
@@ -76,5 +67,15 @@ export function menuActions({
     actions.push({ key: 'waitlist', label: 'Waitlist', icon: 'list', href: '/admin/waitlist' });
   }
   actions.push({ key: 'about', label: 'About', icon: 'info', onSelect: onAbout });
+  if (onUpdate) {
+    actions.push({
+      key: 'update',
+      label: 'Update Gobbit',
+      icon: 'refresh',
+      detail: 'A new version is ready',
+      tone: 'accent',
+      onSelect: onUpdate,
+    });
+  }
   return actions;
 }

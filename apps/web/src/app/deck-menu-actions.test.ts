@@ -54,7 +54,7 @@ describe('menuActions (D276)', () => {
     expect(actions.some((a) => a.key === 'sign-out')).toBe(false);
   });
 
-  it('opens About last (D354)', () => {
+  it('opens About last without a pending update (D354)', () => {
     const onAbout = vi.fn();
     const about = menuActions({ ...base, onAbout }).at(-1);
     expect(about).toMatchObject({ key: 'about', label: 'About', icon: 'info' });
@@ -62,12 +62,17 @@ describe('menuActions (D276)', () => {
     expect(onAbout).toHaveBeenCalledOnce();
   });
 
-  it('puts Update Gobbit first only while a new version is pending', () => {
+  it('puts Update Gobbit last, on the accent, only while a new version is pending', () => {
     expect(menuActions(base).some((a) => a.key === 'update')).toBe(false);
     const onUpdate = vi.fn();
-    const [first] = menuActions({ ...base, onUpdate });
-    expect(first).toMatchObject({ key: 'update', label: 'Update Gobbit', icon: 'refresh' });
-    first?.onSelect?.();
+    const last = menuActions({ ...base, onUpdate }).at(-1);
+    expect(last).toMatchObject({
+      key: 'update',
+      label: 'Update Gobbit',
+      icon: 'refresh',
+      tone: 'accent',
+    });
+    last?.onSelect?.();
     expect(onUpdate).toHaveBeenCalledOnce();
   });
 });
