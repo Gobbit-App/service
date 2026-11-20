@@ -14,6 +14,8 @@ export interface ImportRunFailure {
 export interface ImportRunResult {
   imported: number;
   duplicates: number;
+  /** Rows the server refused by rule (D446); also in `failed`. */
+  refused?: number;
   failed: ImportRunFailure[];
 }
 
@@ -63,6 +65,7 @@ export async function importInChunks(
     }
     total.imported += result.imported;
     total.duplicates += result.duplicates;
+    total.refused = (total.refused ?? 0) + (result.refused ?? 0);
     total.failed.push(...result.failed.map((f) => ({ ...f, index: f.index + offset })));
     const capHit = result.failed.find((f) => f.problem === RATE_LIMITED);
     if (capHit && end < drafts.length) {

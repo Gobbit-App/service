@@ -32963,6 +32963,9 @@
                     "minLength": 1,
                     "maxLength": 60
                   },
+                  "strict": {
+                    "type": "boolean"
+                  },
                   "rows": {
                     "type": "array",
                     "items": {
@@ -33001,6 +33004,15 @@
                             "null"
                           ],
                           "maxLength": 80
+                        },
+                        "unmatched": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 80
+                          },
+                          "maxItems": 20
                         }
                       },
                       "required": [

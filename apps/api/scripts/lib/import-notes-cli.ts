@@ -21,13 +21,16 @@ export interface ImportNotesOptions {
   format: ImportFormat | null;
   label: string;
   dryRun: boolean;
+  /** D446: refuse rows naming a category the deck lacks (default on). */
+  strict: boolean;
   /** Only needed to send; a dry run never calls the API. */
   baseUrl: string | null;
   token: string | null;
 }
 
 export const IMPORT_NOTES_USAGE =
-  'Usage: pnpm import:notes <file> --deck <slug> [--format lines|markdown|csv] [--label <text>] [--dry-run]';
+  'Usage: pnpm import:notes <file> --deck <slug> [--format lines|markdown|csv] [--label <text>] [--dry-run] [--no-strict]\n' +
+  'Strict by default: a row naming a category the deck does not have is refused, not imported; --no-strict suggests one new category per row instead.';
 
 const isFormat = (value: string): value is ImportFormat =>
   (importFormats as readonly string[]).includes(value);
@@ -45,6 +48,7 @@ export function parseImportNotesArgs(
       format: { type: 'string' },
       label: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
+      'no-strict': { type: 'boolean', default: false },
     },
   });
   const file = positionals[0];
@@ -63,7 +67,17 @@ export function parseImportNotesArgs(
   }
   const label = (values.label ?? basename(file)).trim().slice(0, IMPORT_LABEL_MAX);
   if (!label) throw new Error('--label must not be empty');
-  return { file, deck: values.deck, format: values.format ?? null, label, dryRun, baseUrl, token };
+  const strict = !values['no-strict'];
+  return {
+    file,
+    deck: values.deck,
+    format: values.format ?? null,
+    label,
+    dryRun,
+    strict,
+    baseUrl,
+    token,
+  };
 }
 
 export type Log = (line: string) => void;
@@ -109,19 +123,40 @@ export async function runImportNotes(
   const invalid = parsed.rows.filter((row) => row.error !== null);
   for (const row of invalid) log(`skipped ${describeRow(row)}`);
 
+  // Without a request (dry run, no credentials) the deck's categories are unknown: nothing to compare.
+  const categories = request
+    ? (await request<{ data: Category[] }>('GET', `/decks/${opts.deck}/categories`)).data
+    : [];
+  const drafts = valid.map((row) => toImportDraft(row, categories, { strict: opts.strict }));
+  let unmatched = 0;
+  if (request) {
+    valid.forEach((row, i) => {
+      const names = drafts[i]?.unmatched;
+      if (!names?.length) return;
+      unmatched += 1;
+      log(`unmatched categories line ${row.line}: ${names.join(', ')}`);
+    });
+    if (unmatched > 0 && opts.strict) {
+      log(
+        `strict mode refuses ${unmatched} row(s) with unmatched categories (--no-strict allows one new category per row)`,
+      );
+    }
+  }
+
   if (opts.dryRun || !request) {
     for (const row of valid) log(describeRow(row));
     log(`dry run (${format}): ${valid.length} to import, ${invalid.length} invalid`);
     return invalid.length > 0 ? 1 : 0;
   }
 
-  const categories = (await request<{ data: Category[] }>('GET', `/decks/${opts.deck}/categories`))
-    .data;
-  const drafts = valid.map((row) => toImportDraft(row, categories));
   const result: ImportRunResult = await importInChunks(
     drafts,
     (rows) =>
-      request<ImportRunResult>('POST', `/decks/${opts.deck}/imports`, { label: opts.label, rows }),
+      request<ImportRunResult>('POST', `/decks/${opts.deck}/imports`, {
+        label: opts.label,
+        strict: opts.strict,
+        rows,
+      }),
     { describeError },
   );
   for (const failure of result.failed) {
@@ -132,6 +167,7 @@ export async function runImportNotes(
   }
   log(
     `imported ${result.imported}, duplicates ${result.duplicates}, failed ${result.failed.length}` +
+      (result.refused ? `, refused ${result.refused}` : '') +
       (invalid.length > 0 ? `, invalid ${invalid.length}` : ''),
   );
   if (result.imported > 0) log(`review them under "${opts.label}" in /d/${opts.deck}/review`);

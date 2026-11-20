@@ -6,7 +6,11 @@ import { api, unwrap } from '../api/client';
 import { problemMessages } from '../api/problem-messages';
 import { queryKeys } from '../api/query-keys';
 
-export type ImportNotesVars = { label: string; drafts: readonly ImportRowDraft[] };
+export type ImportNotesVars = {
+  label: string;
+  strict?: boolean;
+  drafts: readonly ImportRowDraft[];
+};
 
 /** A failed later chunk: its rows are reported with the problem the API (or network) gave. */
 function describeError(err: unknown) {
@@ -23,14 +27,14 @@ function describeError(err: unknown) {
 export function useImportNotes(deckSlug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ label, drafts }: ImportNotesVars): Promise<ImportRunResult> =>
+    mutationFn: ({ label, strict, drafts }: ImportNotesVars): Promise<ImportRunResult> =>
       importInChunks(
         drafts,
         (rows) =>
           unwrap(
             api.POST('/decks/{id}/imports', {
               params: { path: { id: deckSlug } },
-              body: { label, rows },
+              body: { label, ...(strict ? { strict } : {}), rows },
             }),
           ),
         { describeError },

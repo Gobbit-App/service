@@ -195,7 +195,7 @@ Constitution VIII, ADR-060, [decision events](../../docs/design/api-conventions.
 | An import request finishes | `imports.completed` | accepted · `ok` (imported, duplicates, refused counts) | requestId, actorId, deckId, imported, duplicates, refused | info | aggregate per window; average size | none | same |
 | Proposals discarded by bulk discard | audit row: one `item_events` `discarded` per card (ADR-057), plus event `imports.discarded` | accepted · `bulk_discard` (count, skipped) | requestId, actorId, deckId, discarded, skipped | info | per instance when discarded > 200; aggregate | one action > 200 cards | `review.int.test.ts`, int |
 | Bulk discard refused | `imports.discard_refused` | refused · `forbidden`, `no_pending` | requestId, actorId, deckId | info | aggregate | none | `review.service.test.ts`, unit |
-| Hebrew/non-Latin category address derived | `categories.slug_derived` | accepted · `hash_fallback` | requestId, actorId, deckId, categoryId | info | aggregate (count per window) | none | `categories.service.test.ts`, unit |
+| Hebrew/non-Latin category address derived | `categories.slug_derived` | derived · `hash_fallback` | requestId, userId, deckId, categoryId | info | aggregate (count per window) | none | `categories.service.test.ts`, unit |
 
 Notes:
 

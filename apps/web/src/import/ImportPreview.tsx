@@ -10,6 +10,7 @@ export function ImportPreview({
   rows,
   ignored = [],
   categories,
+  strict = false,
   busy,
   onChange,
   onImport,
@@ -19,6 +20,7 @@ export function ImportPreview({
   /** Text outside any `##` section, left out of the rows (D443). */
   ignored?: readonly { line: number; text: string }[];
   categories: readonly ImportCategory[];
+  strict?: boolean;
   busy: boolean;
   onChange: (rows: PreviewRow[]) => void;
   onImport: () => void;
@@ -57,6 +59,7 @@ export function ImportPreview({
               key={row.key}
               row={row}
               categories={categories}
+              strict={strict}
               onToggle={() => update(row.key, toggleRow)}
               onEdit={(edit) => update(row.key, (r) => editRow(r, edit))}
             />

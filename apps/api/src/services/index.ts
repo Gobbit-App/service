@@ -43,6 +43,7 @@ import { createPageCache } from '../public/page-cache';
 import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
 import { createCategoriesService } from './categories.service';
+import type { CategoryDecisions } from './categories.events';
 import { createPublicDeckService } from './public-deck.service';
 import { createPublicPagesService } from './public-pages.service';
 import { createItemsService } from './items.service';
@@ -66,6 +67,7 @@ import {
 } from './search-wiring';
 import { buildIngestServices, type IngestWiring } from './ingest-wiring';
 import { createImportsService } from './imports.service';
+import { IMPORT_DECISION_LEVELS, type ImportDecisions } from '../imports/imports.events';
 import { createWaitlistService } from './waitlist.service';
 import { createMemberSummaries } from './member-summaries';
 import { createProfileService } from './profile.service';
@@ -207,6 +209,7 @@ export function buildServices({
     wiring: search,
   });
   const ingestServices = buildIngestServices({
+    logger,
     db,
     env,
     decks,
@@ -349,7 +352,13 @@ export function buildServices({
       deleteMedia: mediaServices.media.deleteForDeck,
       purgeDeck,
     }),
-    categories: createCategoriesService({ decks, categories, memberships, purgeDeck }),
+    categories: createCategoriesService({
+      decks,
+      categories,
+      memberships,
+      purgeDeck,
+      decisions: decisionLogger<CategoryDecisions>('categories', { parent: logger }),
+    }),
     publicDecks,
     publicPages: createPublicPagesService({
       publicDecks,
@@ -405,7 +414,15 @@ export function buildServices({
     ingestTokens: ingestServices.ingestTokens,
     review: ingestServices.review,
     shares: ingestServices.shares,
-    imports: createImportsService({ decks, memberships, ingest: ingestServices.ingest }),
+    imports: createImportsService({
+      decks,
+      memberships,
+      ingest: ingestServices.ingest,
+      decisions: decisionLogger<ImportDecisions>('imports', {
+        parent: logger,
+        levels: IMPORT_DECISION_LEVELS,
+      }),
+    }),
     media: mediaServices.media,
     linkPreview: mediaServices.linkPreview,
   };

@@ -84,6 +84,15 @@ describe('ImportPreview (D189)', () => {
     expect(created).toHaveTextContent('new category');
   });
 
+  it('shows every category of a row as its own chip (049)', () => {
+    renderPreview([note(1, { categories: ['Fitness', 'recipes', 'Health'] })]);
+    const row = screen.getByRole('listitem');
+    expect(row.querySelectorAll('.chip')).toHaveLength(3);
+    expect(row).toHaveTextContent('Fitness new category');
+    expect(row).toHaveTextContent('recipes existing category');
+    expect(row).toHaveTextContent('Health new category');
+  });
+
   it('refuses more than a preview holds and asks to split the file', () => {
     const rows = Array.from({ length: IMPORT_ROWS_PER_PREVIEW + 1 }, (_, i) => note(i + 1));
     renderPreview(rows);
@@ -119,5 +128,45 @@ describe('ImportPreview (D189)', () => {
   it('the input explains that ## starts a card and # groups (049)', () => {
     render(<ImportInput initial={null} onPreview={vi.fn()} />);
     expect(screen.getByText(/##.*starts a card/)).toHaveTextContent(/#.*groups/);
+  });
+
+  it('the input has a strict checkbox, off by default, passed to onPreview (049)', () => {
+    const onPreview = vi.fn();
+    render(<ImportInput initial={null} onPreview={onPreview} />);
+    const box = screen.getByRole('checkbox', { name: /Strict categories/ });
+    expect(box).not.toBeChecked();
+    fireEvent.change(screen.getByLabelText('Paste your notes'), { target: { value: 'a' } });
+    fireEvent.click(box);
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }));
+    expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ strict: true }));
+  });
+
+  it('shows unmatched names as new, refused when strict, with a hint for several (049)', () => {
+    const rows = previewRows([note(1, { categories: ['Recipes', 'Soups', 'Salads'] })]);
+    const { rerender } = render(
+      <ImportPreview
+        rows={rows}
+        categories={CATEGORIES}
+        busy={false}
+        onChange={vi.fn()}
+        onImport={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByText(/^new category$/)).toHaveLength(2);
+    expect(screen.getByText('only one new category per card')).toBeInTheDocument();
+    rerender(
+      <ImportPreview
+        rows={rows}
+        categories={CATEGORIES}
+        strict
+        busy={false}
+        onChange={vi.fn()}
+        onImport={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByText(/not found, card refused/)).toHaveLength(2);
+    expect(screen.queryByText(/only one new category/)).not.toBeInTheDocument();
   });
 });

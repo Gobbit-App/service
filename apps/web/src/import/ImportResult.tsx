@@ -26,7 +26,8 @@ export function ImportResult({
       <p role="status">
         Imported {result.imported}
         {result.duplicates > 0 && `, ${result.duplicates} flagged as possible duplicates`}
-        {result.failed.length > 0 && `, ${result.failed.length} failed`}.
+        {result.failed.length > 0 && `, ${result.failed.length} failed`}
+        {!!result.refused && ` (${result.refused} refused by rule)`}.
       </p>
       {result.failed.length > 0 && (
         <ul className="import-result__failed">

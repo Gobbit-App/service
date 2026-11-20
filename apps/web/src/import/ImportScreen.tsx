@@ -57,8 +57,9 @@ export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
   const runImport = (current: PreviewRow[]) => {
     const sent = importableRows(current);
     const label = source?.fileName ?? PASTED_LABEL;
+    const strict = source?.strict ?? false;
     importNotes.mutate(
-      { label, drafts: rowsToDrafts(sent, categoryList) },
+      { label, strict, drafts: rowsToDrafts(sent, categoryList, strict) },
       { onSuccess: (result) => setDone({ result, sent, label }) },
     );
   };
@@ -93,6 +94,7 @@ export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
             rows={rows}
             ignored={ignored}
             categories={categoryList}
+            strict={source?.strict}
             busy={importNotes.isPending}
             onChange={setRows}
             onImport={() => runImport(rows)}

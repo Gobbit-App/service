@@ -18,6 +18,7 @@ const options = (overrides: Partial<ImportNotesOptions> = {}): ImportNotesOption
   format: null,
   label: 'notes.txt',
   dryRun: false,
+  strict: true,
   baseUrl: 'http://api.test',
   token: 'tok',
   ...overrides,
@@ -49,9 +50,16 @@ describe('parseImportNotesArgs (D190)', () => {
       format: 'csv',
       label: 'notes.csv',
       dryRun: false,
+      strict: true,
       baseUrl: 'http://api.test',
       token: 'tok',
     });
+  });
+
+  it('is strict unless --no-strict (D446)', () => {
+    expect(parseImportNotesArgs(['a.txt', '--deck', 'd'], ENV).strict).toBe(true);
+    expect(parseImportNotesArgs(['a.txt', '--deck', 'd', '--no-strict'], ENV).strict).toBe(false);
+    expect(IMPORT_NOTES_USAGE).toMatch(/--no-strict/);
   });
 
   it('explains the missing env unless it is a dry run', () => {
@@ -95,6 +103,31 @@ describe('runImportNotes (D190)', () => {
     expect((post?.body as { rows: unknown[] }).rows).toEqual([
       expect.objectContaining({ title: 'Hummus', categoryIds: ['c-recipes'] }),
     ]);
+  });
+
+  it.each([true, false])('sends strict: %s in the request body', async (strict) => {
+    const { request, calls } = fakeApi();
+    await runImportNotes('Milk', options({ strict }), request, vi.fn());
+    const post = calls.find((c) => c.method === 'POST');
+    expect((post?.body as { strict: boolean }).strict).toBe(strict);
+  });
+
+  it('reports unmatched category names per line and the server refusals', async () => {
+    const { request } = fakeApi((rows) => ({
+      imported: 0,
+      duplicates: 0,
+      refused: rows.length,
+      failed: [{ index: 0, problem: '/problems/import-refused', detail: 'Unknown category' }],
+    }));
+    const log = vi.fn();
+    const code = await runImportNotes('# Games\n- Chess', options({ file: 'n.md' }), request, log);
+    expect(code).toBe(1);
+    expect(log).toHaveBeenCalledWith(
+      expect.stringMatching(/^unmatched categories line \d+: Games/),
+    );
+    expect(log).toHaveBeenCalledWith(expect.stringMatching(/^strict mode refuses 1 row/));
+    expect(log).toHaveBeenCalledWith(expect.stringMatching(/^failed .*Unknown category/));
+    expect(log).toHaveBeenCalledWith('imported 0, duplicates 0, failed 1, refused 1');
   });
 
   it('prints the rows on a dry run without calling the API', async () => {
@@ -151,7 +184,7 @@ describe('CLI and shared parser agree (FR-006)', () => {
         .flatMap((c) => (c.body as { rows: unknown[] }).rows);
       const expected = parseNotes(text, detectFormat(text, name))
         .rows.filter((row) => row.error === null)
-        .map((row) => toImportDraft(row, categories as never));
+        .map((row) => toImportDraft(row, categories as never, { strict: true }));
       expect(sent).toEqual(expected);
     });
   }

@@ -14,6 +14,8 @@ import { addMember, createAccountUser, createAsset, createDeck, createItem } fro
 import type { DedupVerdict } from '@gobbit/shared';
 import type { EmbedQueue } from '../src/jobs/embed-queue';
 import type { IngestUploadStore, StoredUpload } from '../src/media/ingest-uploads';
+import { toCategorySlug } from '../src/lib/slug';
+import { captureLogger, expectDecision } from './capture-logger';
 import { json, setupApiTest } from './helpers';
 
 class RecordingEmbedQueue implements EmbedQueue {
@@ -51,7 +53,9 @@ const NEW_VERDICT: DedupVerdict = { action: 'new', itemId: null, similarity: nul
 describe('review queue (D106, D107)', () => {
   const embedQueue = new RecordingEmbedQueue();
   const uploads = new RecordingUploads();
+  const capture = captureLogger();
   const ctx = setupApiTest({
+    logger: capture.logger,
     search: { embedQueue },
     ingest: { enabled: true, uploads, queue: { enqueue: async () => undefined } },
   });
@@ -251,6 +255,33 @@ describe('review queue (D106, D107)', () => {
         .from(categories)
         .where(and(eq(categories.deckId, deck.id), eq(categories.slug, 'home-services')));
       expect(after).toHaveLength(1);
+    });
+
+    it('creates a Hebrew suggested category with its derived address and logs it (D445)', async () => {
+      const { item } = await proposal({
+        extraction: {
+          model: 'm',
+          escalated: false,
+          type: 'text',
+          confidence: 0.9,
+          language: 'he',
+          categoryIds: [],
+          newCategory: 'בריאות',
+        },
+      });
+      const res = await post(`/items/${item.id}/publish`, { createCategory: true });
+      expect(res.status).toBe(200);
+      const created = await ctx.t.db
+        .select()
+        .from(categories)
+        .where(and(eq(categories.deckId, deck.id), eq(categories.slug, toCategorySlug('בריאות'))));
+      expect(created).toHaveLength(1);
+      expect(created[0]!.slug).toMatch(/^c-[0-9a-f]{8}$/);
+      await capture.flush();
+      const line = expectDecision(capture.lines, 'categories.slug_derived', {
+        outcome: 'derived',
+      });
+      expect(line.categoryId).toBe(created[0]!.id);
     });
 
     it('createCategory without a suggestion is a 400', async () => {

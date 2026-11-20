@@ -19,8 +19,13 @@ export function importRowDraft(row: ImportDraft): DirectDraft {
  * D190: the whole request is refused when a row fails the card rules, so nothing is half
  * imported because of a bad row. The problem names the row index.
  */
-export function assertImportRows(rows: readonly ImportDraft[]): DirectDraft[] {
-  return rows.map((row, index) => {
+export function assertImportRows(
+  rows: readonly ImportDraft[],
+  /** Request index of each row when some were refused first (error text names the request row). */
+  indexes?: readonly number[],
+): DirectDraft[] {
+  return rows.map((row, position) => {
+    const index = indexes?.[position] ?? position;
     const draft = importRowDraft(row);
     try {
       parseDirectDraft(draft);
