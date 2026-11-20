@@ -32963,10 +32963,6 @@
                     "minLength": 1,
                     "maxLength": 60
                   },
-                  "strict": {
-                    "type": "boolean",
-                    "default": false
-                  },
                   "rows": {
                     "type": "array",
                     "items": {
@@ -32976,8 +32972,7 @@
                           "type": "string",
                           "enum": [
                             "text",
-                            "link",
-                            "media"
+                            "link"
                           ]
                         },
                         "title": {
@@ -33006,214 +33001,6 @@
                             "null"
                           ],
                           "maxLength": 80
-                        },
-                        "unmatched": {
-                          "type": "array",
-                          "items": {
-                            "type": "string",
-                            "maxLength": 80
-                          },
-                          "maxItems": 5
-                        },
-                        "cover": {
-                          "type": "object",
-                          "properties": {
-                            "publicId": {
-                              "type": "string",
-                              "minLength": 1,
-                              "maxLength": 255
-                            }
-                          },
-                          "required": [
-                            "publicId"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "payload": {
-                          "oneOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "kind": {
-                                  "type": "string",
-                                  "enum": [
-                                    "image"
-                                  ]
-                                },
-                                "images": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "object",
-                                    "properties": {
-                                      "publicId": {
-                                        "type": "string",
-                                        "minLength": 1
-                                      },
-                                      "alt": {
-                                        "type": "string"
-                                      },
-                                      "width": {
-                                        "type": "integer",
-                                        "minimum": 1,
-                                        "maximum": 20000
-                                      },
-                                      "height": {
-                                        "type": "integer",
-                                        "minimum": 1,
-                                        "maximum": 20000
-                                      }
-                                    },
-                                    "required": [
-                                      "publicId"
-                                    ],
-                                    "additionalProperties": false
-                                  },
-                                  "minItems": 1,
-                                  "maxItems": 8
-                                }
-                              },
-                              "required": [
-                                "kind",
-                                "images"
-                              ],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "kind": {
-                                  "type": "string",
-                                  "enum": [
-                                    "pdf"
-                                  ]
-                                },
-                                "publicId": {
-                                  "type": "string",
-                                  "minLength": 1
-                                },
-                                "alt": {
-                                  "type": "string"
-                                },
-                                "width": {
-                                  "type": "integer",
-                                  "minimum": 1,
-                                  "maximum": 20000
-                                },
-                                "height": {
-                                  "type": "integer",
-                                  "minimum": 1,
-                                  "maximum": 20000
-                                },
-                                "durationMs": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0
-                                },
-                                "pages": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0
-                                },
-                                "fileName": {
-                                  "type": "string",
-                                  "maxLength": 200
-                                }
-                              },
-                              "required": [
-                                "kind",
-                                "publicId"
-                              ],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "kind": {
-                                  "type": "string",
-                                  "enum": [
-                                    "audio"
-                                  ]
-                                },
-                                "publicId": {
-                                  "type": "string",
-                                  "minLength": 1
-                                },
-                                "alt": {
-                                  "type": "string"
-                                },
-                                "width": {
-                                  "type": "integer",
-                                  "minimum": 1,
-                                  "maximum": 20000
-                                },
-                                "height": {
-                                  "type": "integer",
-                                  "minimum": 1,
-                                  "maximum": 20000
-                                },
-                                "durationMs": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0
-                                },
-                                "pages": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0
-                                },
-                                "fileName": {
-                                  "type": "string",
-                                  "maxLength": 200
-                                }
-                              },
-                              "required": [
-                                "kind",
-                                "publicId"
-                              ],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "kind": {
-                                  "type": "string",
-                                  "enum": [
-                                    "video"
-                                  ]
-                                },
-                                "publicId": {
-                                  "type": "string",
-                                  "minLength": 1
-                                },
-                                "alt": {
-                                  "type": "string"
-                                },
-                                "width": {
-                                  "type": "integer",
-                                  "minimum": 1,
-                                  "maximum": 20000
-                                },
-                                "height": {
-                                  "type": "integer",
-                                  "minimum": 1,
-                                  "maximum": 20000
-                                },
-                                "durationMs": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0
-                                },
-                                "pages": {
-                                  "type": "integer",
-                                  "exclusiveMinimum": 0
-                                },
-                                "fileName": {
-                                  "type": "string",
-                                  "maxLength": 200
-                                }
-                              },
-                              "required": [
-                                "kind",
-                                "publicId"
-                              ],
-                              "additionalProperties": false
-                            }
-                          ]
                         }
                       },
                       "required": [
@@ -33229,7 +33016,8 @@
                 "required": [
                   "label",
                   "rows"
-                ]
+                ],
+                "additionalProperties": false
               }
             }
           }

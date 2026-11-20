@@ -6,16 +6,6 @@ const FENCE = /^\s{0,3}(```|~~~)/;
 /** Exactly one or two `#` (ATX); `###` and deeper stay body text. */
 const HEADING = /^ {0,3}(#{1,2})[ \t]+(.*?)[ \t]*#*[ \t]*$/;
 
-/** True when a `##` heading sits outside a code fence: the cue for section parsing (D443). */
-export function hasSectionHeading(text: string): boolean {
-  let inFence = false;
-  for (const raw of text.split(/\r?\n/)) {
-    if (FENCE.test(raw)) inFence = !inFence;
-    else if (!inFence && /^ {0,3}##[ \t]+/.test(raw)) return true;
-  }
-  return false;
-}
-
 /** D443: `#` sets the category, each `##` opens a card whose body is the raw text up to the next heading. */
 export function parseSections(text: string): ImportParseResult {
   const rows: ImportRow[] = [];

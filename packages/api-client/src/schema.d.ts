@@ -10014,11 +10014,9 @@ export interface paths {
                 content: {
                     "application/json": {
                         label: string;
-                        /** @default false */
-                        strict?: boolean;
                         rows: {
                             /** @enum {string} */
-                            type: "text" | "link" | "media";
+                            type: "text" | "link";
                             title: string;
                             /**
                              * @description Card body, max 2000 characters (Unicode code points)
@@ -10029,50 +10027,6 @@ export interface paths {
                             sourceUrl?: string;
                             categoryIds?: string[];
                             newCategory?: string | null;
-                            unmatched?: string[];
-                            cover?: {
-                                publicId: string;
-                            };
-                            payload?: {
-                                /** @enum {string} */
-                                kind: "image";
-                                images: {
-                                    publicId: string;
-                                    alt?: string;
-                                    width?: number;
-                                    height?: number;
-                                }[];
-                            } | {
-                                /** @enum {string} */
-                                kind: "pdf";
-                                publicId: string;
-                                alt?: string;
-                                width?: number;
-                                height?: number;
-                                durationMs?: number;
-                                pages?: number;
-                                fileName?: string;
-                            } | {
-                                /** @enum {string} */
-                                kind: "audio";
-                                publicId: string;
-                                alt?: string;
-                                width?: number;
-                                height?: number;
-                                durationMs?: number;
-                                pages?: number;
-                                fileName?: string;
-                            } | {
-                                /** @enum {string} */
-                                kind: "video";
-                                publicId: string;
-                                alt?: string;
-                                width?: number;
-                                height?: number;
-                                durationMs?: number;
-                                pages?: number;
-                                fileName?: string;
-                            };
                         }[];
                     };
                 };

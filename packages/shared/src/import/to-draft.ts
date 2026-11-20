@@ -8,7 +8,7 @@ export interface ImportCategory {
 
 /** The body of one `POST /decks/{id}/imports` row (`importDraftSchema`). */
 export interface ImportRowDraft {
-  type: ImportRow['type'];
+  type: 'text' | 'link';
   title: string;
   body: string;
   sourceUrl?: string;

@@ -52,6 +52,11 @@ describe('preview rows (D189)', () => {
     expect(editRow(toggleRow(valid!), { title: 'Dentist' }).included).toBe(false);
   });
 
+  it('edits only the first category and keeps the rest', () => {
+    const [two] = previewRows([row({ categories: ['Health', 'City'] })]);
+    expect(editRow(two!, { category: 'Care' }).categories).toEqual(['Care', 'City']);
+  });
+
   it('clears an emptied category', () => {
     const [withCategory] = previewRows([row({ categories: ['Health'] })]);
     expect(editRow(withCategory!, { category: '  ' }).categories).toEqual([]);

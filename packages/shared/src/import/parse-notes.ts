@@ -2,7 +2,7 @@ import type { ImportFormat, ImportParseResult } from './constants';
 import { parseCsv } from './parse-csv';
 import { parseLines } from './parse-lines';
 import { parseMarkdown } from './parse-markdown';
-import { hasSectionHeading, parseSections } from './parse-sections';
+import { parseSections } from './parse-sections';
 
 const MARKDOWN_HEADING = /^\s{0,3}#{1,6}\s+\S/m;
 
@@ -17,7 +17,10 @@ export function detectFormat(text: string, fileName?: string | null): ImportForm
 /** Notes → rows in the given format; deterministic, offline and free (D189). */
 export function parseNotes(text: string, format: ImportFormat): ImportParseResult {
   if (format === 'csv') return parseCsv(text);
-  if (format === 'markdown' && hasSectionHeading(text)) return parseSections(text);
+  if (format === 'markdown') {
+    const sections = parseSections(text);
+    if (sections.rows.length > 0) return sections;
+  }
   const rows = format === 'markdown' ? parseMarkdown(text) : parseLines(text);
   return { rows, problem: null, ignored: [] };
 }

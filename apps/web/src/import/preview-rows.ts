@@ -30,7 +30,12 @@ export function previewRows(rows: readonly ImportRow[]): PreviewRow[] {
 export function editRow(row: PreviewRow, edit: RowEdit): PreviewRow {
   const { category, ...rest } = edit;
   const next = { ...row, ...rest };
-  if (category !== undefined) next.categories = categoriesOf(category?.trim() ? category : null);
+  // Edits the first category only; a second one (US2) is kept.
+  if (category !== undefined)
+    next.categories = [
+      ...categoriesOf(category?.trim() ? category : null),
+      ...row.categories.slice(1),
+    ];
   const error = rowError(next);
   return { ...next, error, included: error === null && (row.error !== null || row.included) };
 }

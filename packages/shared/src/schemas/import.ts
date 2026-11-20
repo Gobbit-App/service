@@ -1,13 +1,7 @@
 import { z } from 'zod';
 import { httpUrlSchema, uuidSchema } from './common';
-import { coverInputSchema, itemBodySchema, itemTitleSchema } from './item';
-import { mediaPayloadSchema } from './payloads';
-import {
-  BULK_PUBLISH_MAX,
-  IMPORT_LABEL_MAX,
-  IMPORT_ROWS_PER_REQUEST,
-  IMPORT_UNMATCHED_MAX,
-} from '../ingest/constants';
+import { itemBodySchema, itemTitleSchema } from './item';
+import { BULK_PUBLISH_MAX, IMPORT_LABEL_MAX, IMPORT_ROWS_PER_REQUEST } from '../ingest/constants';
 import { NAME_MAX } from '../limits';
 import { importCardTypes, importFormats } from '../import/constants';
 
@@ -32,7 +26,8 @@ export const importFormatSchema = z.enum(importFormats);
 /** D190: one row of POST /decks/{id}/imports. A link row needs `sourceUrl` (its payload URL). */
 export const importDraftSchema = z
   .object({
-    type: z.enum(['text', 'link', 'media']),
+    // shortcut: no `media`, `cover` or `unmatched` until T035/T036 (the server must act on them)
+    type: z.enum(['text', 'link']),
     title: itemTitleSchema,
     body: itemBodySchema.default(''),
     sourceUrl: httpUrlSchema.optional(),
@@ -43,17 +38,8 @@ export const importDraftSchema = z
       })
       .optional(),
     newCategory: z.string().trim().max(NAME_MAX).nullable().optional(),
-    /** D446: category names the client could not match. */
-    unmatched: z.array(z.string().max(NAME_MAX)).max(IMPORT_UNMATCHED_MAX).optional(),
-    cover: coverInputSchema.optional(),
-    /** `type: media` only. */
-    payload: mediaPayloadSchema.optional(),
   })
   .strict()
-  .refine((d) => d.type === 'media' || d.payload === undefined, {
-    path: ['payload'],
-    message: 'Only a media row has a payload',
-  })
   .refine((d) => d.type !== 'link' || d.sourceUrl !== undefined, {
     path: ['sourceUrl'],
     message: 'A link row needs a sourceUrl',
@@ -61,13 +47,14 @@ export const importDraftSchema = z
 export type ImportDraft = z.infer<typeof importDraftSchema>;
 export type ImportDraftInput = z.input<typeof importDraftSchema>;
 
-export const importRequestSchema = z.object({
-  /** Shown as the source in review and used by `?source=` (the file name or "Pasted notes"). */
-  label: z.string().trim().min(1).max(IMPORT_LABEL_MAX),
-  /** Refuse rows with unmatched categories instead of filing them without. */
-  strict: z.boolean().default(false),
-  rows: z.array(importDraftSchema).min(1).max(IMPORT_ROWS_PER_REQUEST),
-});
+export const importRequestSchema = z
+  .object({
+    /** Shown as the source in review and used by `?source=` (the file name or "Pasted notes"). */
+    label: z.string().trim().min(1).max(IMPORT_LABEL_MAX),
+    // `strict` returns with T035/T036; until then it is rejected, not ignored.
+    rows: z.array(importDraftSchema).min(1).max(IMPORT_ROWS_PER_REQUEST),
+  })
+  .strict();
 export type ImportRequest = z.infer<typeof importRequestSchema>;
 
 export const importFailureSchema = z.object({
@@ -118,7 +105,7 @@ export const bulkPublishResultSchema = z.object({
 });
 export type BulkPublishResult = z.infer<typeof bulkPublishResultSchema>;
 
-/** D191: POST /decks/{id}/imports/discard. */
+/** D191: POST /decks/{id}/review/discard. */
 export const discardImportRequestSchema = z.object({
   source: z.string().trim().min(1).max(IMPORT_LABEL_MAX),
 });
