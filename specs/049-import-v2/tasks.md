@@ -227,7 +227,7 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 - [X] T074 [P] `CLAUDE.md` ground rules: Ingestion line mentions card-per-section import, strict mode and bulk discard (one line)
 - [X] T075 `PLAN.md`: link this spec under its phase; `community-go-list.md` Track A tracking (start, tick on merge, deviations in the progress log)
 - [X] T076 Run `quickstart.md` validation against a local stack (made-up Hebrew file: dry run → strict import → filter → discard)
-- [ ] T077 `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review` before each PR (CLAUDE.md "Before a PR")
+- [X] T077 `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review` before each PR (CLAUDE.md "Before a PR")
 
 ---
 
