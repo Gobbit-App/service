@@ -418,6 +418,7 @@ export function buildServices({
       decks,
       memberships,
       ingest: ingestServices.ingest,
+      dailyCap: env.INGEST_IMPORT_DAILY_CAP,
       decisions: decisionLogger<ImportDecisions>('imports', {
         parent: logger,
         levels: IMPORT_DECISION_LEVELS,

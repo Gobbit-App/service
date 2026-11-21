@@ -7,6 +7,7 @@ import {
   type ImportRow,
   type ImportRowDraft,
 } from '@gobbit/shared/import';
+import { IMPORT_ROWS_PER_PREVIEW } from '@gobbit/shared/ingest-constants';
 
 /** D189: a parsed row in the preview; invalid rows start unticked and can't be ticked. */
 export type PreviewRow = ImportRow & { key: number; included: boolean };
@@ -21,6 +22,9 @@ export function bodyExcerpt(body: string, max = 200): string {
   const chars = [...body];
   return chars.length > max ? `${chars.slice(0, max).join('').trimEnd()}…` : body;
 }
+
+/** More rows than the daily cap: the file has to be split (T047). */
+export const tooManyRows = (count: number): boolean => count > IMPORT_ROWS_PER_PREVIEW;
 
 export function previewRows(rows: readonly ImportRow[]): PreviewRow[] {
   return rows.map((row, key) => ({ ...row, key, included: row.error === null }));

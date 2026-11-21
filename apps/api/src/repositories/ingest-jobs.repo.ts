@@ -145,6 +145,29 @@ export function createIngestJobsRepo(db: DbExecutor) {
       return row?.n ?? 0;
     },
 
+    /** When the oldest job counted by `countByUserSince` stops counting (a retry restarts its clock). */
+    async oldestCountedAt(
+      userId: string,
+      since: Date,
+      channel?: IngestChannel,
+      exclude: readonly IngestChannel[] = [],
+    ): Promise<Date | null> {
+      const [row] = await db
+        .select({
+          at: sql<Date | null>`min(greatest(${ingestJobs.createdAt}, ${ingestJobs.retriedAt}))`,
+        })
+        .from(ingestJobs)
+        .where(
+          and(
+            eq(ingestJobs.userId, userId),
+            or(gte(ingestJobs.createdAt, since), gte(ingestJobs.retriedAt, since)),
+            channel ? eq(ingestJobs.channel, channel) : undefined,
+            exclude.length > 0 ? notInArray(ingestJobs.channel, [...exclude]) : undefined,
+          ),
+        );
+      return row?.at ? new Date(row.at) : null;
+    },
+
     async update(id: string, patch: IngestJobPatch): Promise<void> {
       await db.update(ingestJobs).set(patch).where(eq(ingestJobs.id, id));
     },

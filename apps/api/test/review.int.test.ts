@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import {
   categories,
   ingestJobs,
@@ -492,6 +492,115 @@ describe('review queue (D106, D107)', () => {
       const res = await post(`/decks/${deck.id}/review/publish`, { ids: [item.id] }, editor.email);
       expect(res.status).toBe(403);
       expect((await itemRow(item.id)).status).toBe('proposed');
+    });
+  });
+
+  describe('POST /decks/{id}/review/discard (D449)', () => {
+    const LABEL = 'Street notes.md';
+    const discardImport = (source: string, email?: string, deckId = deck.id) =>
+      post(`/decks/${deckId}/review/discard`, { source }, email);
+
+    /** A proposal whose job is an import row carrying `LABEL`, with one upload to release. */
+    async function importRow() {
+      const made = await proposal({
+        raw: { images: [{ publicId: 'ingest/a', bytes: 10, mime: 'image/jpeg' }] },
+      });
+      await ctx.t.db
+        .update(ingestJobs)
+        .set({ channel: 'import', clientLabel: LABEL })
+        .where(eq(ingestJobs.id, made.job.id));
+      return made;
+    }
+
+    it('discards the pending rows of one label and leaves published cards alone', async () => {
+      const rows = [];
+      for (let i = 0; i < 10; i++) rows.push(await importRow());
+      const kept = rows.slice(0, 2);
+      const gone = rows.slice(2);
+      await ctx.t.db
+        .update(items)
+        .set({ status: 'published' })
+        .where(
+          inArray(
+            items.id,
+            kept.map((r) => r.item.id),
+          ),
+        );
+
+      const res = await discardImport(LABEL);
+      expect(res.status).toBe(200);
+      expect(await json(res)).toEqual({ discarded: 8, skipped: 0 });
+
+      const events = await ctx.t.db
+        .select()
+        .from(itemEvents)
+        .where(and(eq(itemEvents.deckId, deck.id), eq(itemEvents.kind, 'discarded')));
+      expect(events.map((e) => e.itemId).sort()).toEqual(gone.map((r) => r.item.id).sort());
+      expect(events.every((e) => e.actorUserId === ctx.world.owner.id)).toBe(true);
+      expect(uploads.deleted.sort()).toEqual(gone.map((r) => r.job.id).sort());
+      for (const { item } of kept) {
+        expect(await itemRow(item.id)).toMatchObject({ status: 'published', deletedAt: null });
+      }
+      for (const { item, job } of gone) {
+        expect((await itemRow(item.id)).deletedAt).not.toBeNull();
+        expect((await jobRow(job.id)).status).toBe('discarded');
+      }
+
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'imports.discarded', { outcome: 'accepted' }),
+      ).toMatchObject({
+        discarded: 8,
+        skipped: 0,
+        actorId: ctx.world.owner.id,
+        deckId: deck.id,
+      });
+
+      const again = await discardImport(LABEL);
+      expect(await json(again)).toEqual({ discarded: 0, skipped: 0 });
+      await capture.flush();
+      expectDecision(capture.lines, 'imports.discard_refused', {
+        outcome: 'refused',
+        reason: 'no_pending',
+      });
+    });
+
+    it('is forbidden below publisher (reader, editor), hidden from strangers, and needs a source', async () => {
+      const { item } = await importRow();
+      const reader = await createAccountUser(ctx.t.db);
+      await ctx.sessionFor(reader);
+      await addMember(ctx.t.db, deck, reader, 'reader');
+
+      expect((await discardImport(LABEL, reader.email)).status).toBe(403);
+      expect((await discardImport(LABEL, editor.email)).status).toBe(403);
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'imports.discard_refused', {
+          outcome: 'refused',
+          reason: 'forbidden',
+        }),
+      ).toMatchObject({ actorId: editor.id, deckId: deck.id });
+      expect((await discardImport(LABEL, ctx.world.other.email)).status).toBe(404);
+      expect((await discardImport('')).status).toBe(400);
+      expect((await itemRow(item.id)).deletedAt).toBeNull();
+    });
+
+    it('a publish racing a discard of the same card ends in one outcome', async () => {
+      const { item } = await importRow();
+      const [published, discarded] = await Promise.all([
+        post(`/items/${item.id}/publish`, {}),
+        post(`/items/${item.id}/discard`),
+      ]);
+      const row = await itemRow(item.id);
+      const publishWon = published.status === 200;
+      const discardWon = discarded.status === 204;
+      expect(publishWon).not.toBe(discardWon);
+      if (publishWon) {
+        expect(row).toMatchObject({ status: 'published', deletedAt: null });
+      } else {
+        expect(row.deletedAt).not.toBeNull();
+        expect(row.status).toBe('proposed');
+      }
     });
   });
 });
