@@ -131,13 +131,13 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 
 ### Tests for User Story 4
 
-- [ ] T041 [P] [US4] [unit] `packages/shared/src/import/dry-run.test.ts`: fixture with one of each problem (title over limit, body over limit, no category, unmatched category in strict mode, unknown field, malformed web address, repeated field) → all reported with correct lines; clean fixture → no problems and counts equal what `toImportDraft` would produce (SC-003); counts per category include second categories
-- [ ] T042 [P] [US4] [unit] CLI dry run in `apps/api/scripts/lib/import-notes-cli.test.ts`: fake request records no POST (only `GET /decks/{id}/categories`), exit code 1 with problems, 0 when clean, without `--deck`/token it skips deck checks and says so (D448)
+- [X] T041 [P] [US4] [unit] `packages/shared/src/import/dry-run.test.ts`: fixture with one of each problem (title over limit, body over limit, no category, unmatched category in strict mode, unknown field, malformed web address, repeated field) → all reported with correct lines; clean fixture → no problems and counts equal what `toImportDraft` would produce (SC-003); counts per category include second categories
+- [X] T042 [P] [US4] [unit] CLI dry run in `apps/api/scripts/lib/import-notes-cli.test.ts`: fake request records no POST (only `GET /decks/{id}/categories`), exit code 1 with problems, 0 when clean, without `--deck`/token it skips deck checks and says so (D448)
 
 ### Implementation for User Story 4
 
-- [ ] T043 [US4] Create `packages/shared/src/import/dry-run.ts`: `report(rows, categories, { strict })` → per-category counts + problems with lines; zod-free; exported from `@gobbit/shared/import`
-- [ ] T044 [US4] Wire `--dry-run` in `apps/api/scripts/lib/import-notes-cli.ts` to `report` using the deck's real categories when `--deck` and a token are given; print the shape in contracts/import-v2-api.md "Dry-run output"; exit 1 on problems; no write route, no upload (media file existence/kind checks arrive in T064)
+- [X] T043 [US4] Create `packages/shared/src/import/dry-run.ts`: `report(rows, categories, { strict })` → per-category counts + problems with lines; zod-free; exported from `@gobbit/shared/import`
+- [X] T044 [US4] Wire `--dry-run` in `apps/api/scripts/lib/import-notes-cli.ts` to `report` using the deck's real categories when `--deck` and a token are given; print the shape in contracts/import-v2-api.md "Dry-run output"; exit 1 on problems; no write route, no upload (media file existence/kind checks arrive in T064)
 
 **Checkpoint**: curators can lint files before importing.
 
@@ -151,15 +151,15 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 
 ### Tests for User Story 5
 
-- [ ] T045 [P] [US5] [unit] `daily_cap` refusal writes one `imports.rows_refused` event with `count` and `cap` (not per row) and rows already proposed stay, in `apps/api/src/services/imports.service.test.ts`
+- [X] T045 [P] [US5] [unit] `daily_cap` refusal writes one `imports.rows_refused` event with `count` and `cap` (not per row) and rows already proposed stay, in `apps/api/src/services/imports.service.test.ts`
 - [ ] T046 [P] [US5] [int] 400 rows over four requests in one day all proposed with the default cap; then a low `INGEST_IMPORT_DAILY_CAP`: remaining rows listed `/problems/rate-limited`, `refused` counts them, event recorded; nothing imported yet → `429` with `Retry-After`; result counts imported/duplicates/refused/failed; also an invalid-on-server row records `invalid_row`; and a 100-row card-per-section request completes under a generous timing guard (SC-004) — in `apps/api/test/imports.int.test.ts`
-- [ ] T047 [P] [US5] [unit] Preview limit follows the cap (file with 500 rows previews, 501 asks to split) in `apps/web/src/import/preview-rows.test.ts`
+- [X] T047 [P] [US5] [unit] Preview limit follows the cap (file with 500 rows previews, 501 asks to split) in `apps/web/src/import/preview-rows.test.ts`
 
 ### Implementation for User Story 5
 
-- [ ] T048 [US5] In `apps/api/src/services/imports.service.ts`: on cap refusal list the remaining rows with `/problems/rate-limited` and `detail "Daily import limit reached"` plus when the oldest counted row ages out of the rolling day (ISO time; the same value as `Retry-After` in the 429 case), count them in `refused`, write `imports.rows_refused` (`daily_cap`), keep the existing `429` + `Retry-After` when no row was imported; record `invalid_row` for server-side row rejects (T035 already wrote `imports.completed`)
-- [ ] T049 [US5] Web: preview limit uses `IMPORT_ROWS_PER_PREVIEW` from `@gobbit/shared/ingest` subpath in `apps/web/src/import/preview-rows.ts`, and the result panel in `ImportScreen.tsx` shows imported / duplicates / refused / failed with the "not imported" rows and unmatched names (UI reference: the result notice pattern of `BulkPublishNotice.tsx`); screenshots: phone 412 px + desktop 1280 px, light + dark, compared with that sibling
-- [ ] T050 [P] [US5] CLI prints imported / duplicates / refused / failed and refusal reasons (chunks of 100) in `apps/api/scripts/lib/import-notes-cli.ts`, with a unit test in `import-notes-cli.test.ts`
+- [X] T048 [US5] In `apps/api/src/services/imports.service.ts`: on cap refusal list the remaining rows with `/problems/rate-limited` and `detail "Daily import limit reached"` plus when the oldest counted row ages out of the rolling day (ISO time; the same value as `Retry-After` in the 429 case), count them in `refused`, write `imports.rows_refused` (`daily_cap`), keep the existing `429` + `Retry-After` when no row was imported; record `invalid_row` for server-side row rejects (T035 already wrote `imports.completed`)
+- [X] T049 [US5] Web: preview limit uses `IMPORT_ROWS_PER_PREVIEW` from `@gobbit/shared/ingest` subpath in `apps/web/src/import/preview-rows.ts`, and the result panel in `ImportScreen.tsx` shows imported / duplicates / refused / failed with the "not imported" rows and unmatched names (UI reference: the result notice pattern of `BulkPublishNotice.tsx`); screenshots: phone 412 px + desktop 1280 px, light + dark, compared with that sibling
+- [X] T050 [P] [US5] CLI prints imported / duplicates / refused / failed and refusal reasons (chunks of 100) in `apps/api/scripts/lib/import-notes-cli.ts`, with a unit test in `import-notes-cli.test.ts`
 
 **Checkpoint**: a 400-card seed fits one evening.
 
@@ -173,16 +173,16 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 
 ### Tests for User Story 6
 
-- [ ] T051 [P] [US6] [unit] `review.service.discardImport` in `apps/api/src/services/review.service.test.ts`: success writes `imports.discarded` with `discarded` and `skipped`; forbidden for non-publishers writes `imports.discard_refused` (`forbidden`); no pending → `{0,0}` and `no_pending`; caps at `IMPORT_DISCARD_MAX`; a card that left `proposed` meanwhile counts as `skipped`
+- [X] T051 [P] [US6] [unit] `review.service.discardImport` in `apps/api/src/services/review.service.test.ts`: success writes `imports.discarded` with `discarded` and `skipped`; forbidden for non-publishers writes `imports.discard_refused` (`forbidden`); no pending → `{0,0}` and `no_pending`; caps at `IMPORT_DISCARD_MAX`; a card that left `proposed` meanwhile counts as `skipped`
 - [ ] T052 [P] [US6] [int] 10 import rows, 2 published, discard by label → `{ discarded: 8, skipped: 0 }`, 8 `item_events` `discarded` rows attributed to the actor, uploads released, published cards untouched, second call `{0,0}`; reader/contributor → 403; unseen deck → 404; empty `source` → 400; concurrent publish of one id ends published-or-discarded, never both — in `apps/api/test/review.int.test.ts`
-- [ ] T053 [P] [US6] [unit] Select-bar action visible only with a source filter, confirm sheet, result notice in `apps/web/src/review/ReviewSelectBar.test.tsx`
+- [X] T053 [P] [US6] [unit] Select-bar action visible only with a source filter, confirm sheet, result notice in `apps/web/src/review/ReviewSelectBar.test.tsx`
 
 ### Implementation for User Story 6
 
-- [ ] T054 [US6] Repository: ids of pending proposals by `client_label` and deck, ordered, limited to `IMPORT_DISCARD_MAX` — reuse the `GET /decks/{id}/review?source=` query (id-only variant if it pages) in `apps/api/src/repositories/items.repo.ts` (or `jobs.repo.ts`)
-- [ ] T055 [US6] `discardImport(actor, deckId, source)` in `apps/api/src/services/review.service.ts`: `authorize(…, 'item.publish')`, loop `review.service.discard` one transaction per card (per-card log entry and upload release are the single-discard ones), skip cards handled meanwhile, write `imports.discarded` (or `imports.discard_refused`); returns `{ discarded, skipped }` (D449)
-- [ ] T056 [US6] Route `POST /decks/{id}/review/discard` (tag `review`, `discardImportRequestSchema`/`…ResultSchema`) in `apps/api/src/routes/review.ts`, then `pnpm api:openapi`; add an example to `apps/api/api.http`
-- [ ] T057 [US6] "Discard all from this import" action in `apps/web/src/review/ReviewSelectBar.tsx` / `ReviewQueue.tsx` shown when a source filter is on: `ui/buttons` + icon from `ui/icons`, confirm in `ui/sheet`, result like `BulkPublishNotice.tsx`, invalidate the review queries on success. UI reference: the bulk "Publish" action in `ReviewSelectBar.tsx`; screenshots: phone 412 px + desktop 1280 px, light + dark, compared with that action
+- [X] T054 [US6] Repository: ids of pending proposals by `client_label` and deck, ordered, limited to `IMPORT_DISCARD_MAX` — reuse the `GET /decks/{id}/review?source=` query (id-only variant if it pages) in `apps/api/src/repositories/items.repo.ts` (or `jobs.repo.ts`)
+- [X] T055 [US6] `discardImport(actor, deckId, source)` in `apps/api/src/services/review.service.ts`: `authorize(…, 'item.publish')`, loop `review.service.discard` one transaction per card (per-card log entry and upload release are the single-discard ones), skip cards handled meanwhile, write `imports.discarded` (or `imports.discard_refused`); returns `{ discarded, skipped }` (D449)
+- [X] T056 [US6] Route `POST /decks/{id}/review/discard` (tag `review`, `discardImportRequestSchema`/`…ResultSchema`) in `apps/api/src/routes/review.ts`, then `pnpm api:openapi`; add an example to `apps/api/api.http`
+- [X] T057 [US6] "Discard all from this import" action in `apps/web/src/review/ReviewSelectBar.tsx` / `ReviewQueue.tsx` shown when a source filter is on: `ui/buttons` + icon from `ui/icons`, confirm in `ui/sheet`, result like `BulkPublishNotice.tsx`, invalidate the review queries on success. UI reference: the bulk "Publish" action in `ReviewSelectBar.tsx`; screenshots: phone 412 px + desktop 1280 px, light + dark, compared with that action
 - [ ] T058 [US6] [e2e:full] Journey `e2e/tests/full/import-sections.spec.ts`: paste a card-per-section file → preview shows cards and categories → import → filter by import → "Discard all from this import" → queue empty; tagged `@full`, own `smoke-`-style deck created and deleted by the test
 
 **Checkpoint (end of PR 1)**: US1–US6 complete; run Close-out for PR 1 (Phase 9) before opening it.

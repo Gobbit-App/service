@@ -397,6 +397,13 @@ Content-Type: application/json
 
 { "ids": ["<proposedItemId>"] }
 
+### Discard every pending proposal of one import (D191; ≤ 1000 per call, publishers)
+POST {{baseUrl}}/decks/family/review/discard
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "source": "health.md" }
+
 ### Resend inbound webhook (D104; 404 unless email-in is configured)
 # Signed by Resend (Svix headers), so it can't be sent by hand: an unsigned request is a 401.
 POST {{baseUrl}}/webhooks/resend/inbound

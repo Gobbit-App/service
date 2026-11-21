@@ -66,6 +66,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `HEALTHCHECK_API_URL` / `HEALTHCHECK_WORKER_URL` | — | Healthchecks.io ping URLs (secrets, `https://`), one per process: each heartbeat pings, silence or a `/fail` ping alerts (D342, `infra/README.md` → *Monitoring*). Unset → no pings |
 | `EXTRACT_MODEL` / `EXTRACT_ESCALATION_MODEL` | provider Haiku / provider Sonnet | Ingestion models (API + worker). Ingestion is on when an extraction provider is set (`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`); otherwise `POST /ingest` answers 503 and the PWA hides sharing. Low-confidence proposals are re-run once on the escalation model |
 | `INGEST_DAILY_CAP` | `50` | Shares per user and channel per rolling 24 h (429 beyond; all channels together stop at 200) |
+| `INGEST_IMPORT_DAILY_CAP` | `500` | Bulk-import rows per user per rolling 24 h (own cap, outside the combined 200); rows beyond are reported refused with the time a slot frees up. Raise it for a seeding session, restart, put it back |
 | `SHORTCUT_URL` | — | iCloud link of the published "Share to Gobbit" Shortcut; shown in Settings (`docs/shortcut/README.md`) |
 | `LOG_HASH_KEY` | dev key | Key (≥ 32 characters) for the keyed hashes in decision events (`emailHash`, `ipHash`); **required in production**. Rotating it only breaks matching against older logs |
 | `REGISTRATION_MODE` | `waitlist` | `waitlist` closes sign-up: an unknown address asking for a sign-in link joins the waitlist instead; invitees still get accounts. `open` lets anyone sign up (logged at `warn` in production) |
@@ -149,7 +150,7 @@ A collaborative, categorizable knowledge repository supporting multiple item typ
 | `pnpm links:snapshot-backfill` | Enqueue `link-snapshot` for existing link cards whose preview image isn't stored yet (run once after deploying 014; needs `DATABASE_URL`, the worker needs `CLOUDINARY_URL`) |
 | `pnpm links:image-backfill [--dry-run] [--host-spacing 60]` | Enqueue `link-snapshot` for existing link cards with text but no picture, spaced per host (run once after deploying 041; needs `DATABASE_URL` and, unless `--dry-run`, `CLOUDINARY_URL`) |
 | `pnpm search:load` | Create/fill a `search-demo` deck with the fixture cards through the API (`--deck`, `--base-url`/`BASE_URL`, `--token`/`SMOKE_SESSION_TOKEN`) |
-| `pnpm import:notes <file> --deck <slug>` | Import a notes file (`.txt` lines, `.md`, `.csv`) as proposed cards through the API (`--format`, `--label`, `--dry-run`); needs `GOBBIT_API_URL` and `GOBBIT_TOKEN` (an owner or maintainer session) unless `--dry-run` |
+| `pnpm import:notes <file> --deck <slug>` | Import a notes file (`.txt` lines, `.md`, `.csv`) as proposed cards through the API (`--format`, `--label`, `--no-strict`, `--dry-run`: per-category counts and problems, exit 1 on any, writes nothing; `--deck`/token then optional); needs `GOBBIT_API_URL` and `GOBBIT_TOKEN` (an owner or maintainer session) unless `--dry-run` |
 | `pnpm search:query "<q>"` | Print search hits (why, score) for a deck, same options |
 | `pnpm db:generate` | Generate migrations with drizzle-kit |
 | `pnpm db:migrate` | Run pending migrations |

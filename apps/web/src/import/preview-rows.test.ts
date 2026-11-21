@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CARD_BODY_MAX } from '@gobbit/shared/card-limits';
+import { IMPORT_ROWS_PER_PREVIEW } from '@gobbit/shared/ingest-constants';
 import { parseNotes, type ImportRow } from '@gobbit/shared/import';
 import {
   categoryStatus,
@@ -7,6 +8,7 @@ import {
   importableRows,
   previewRows,
   rowsToDrafts,
+  tooManyRows,
   toggleRow,
 } from './preview-rows';
 
@@ -24,6 +26,14 @@ const row = (overrides: Partial<ImportRow> = {}): ImportRow => ({
 });
 
 const health = { id: '5f2b8a4e-1c0d-4d8e-9a6b-2f1e3c4d5a6b', name: 'Health', slug: 'health' };
+
+describe('preview limit follows the cap', () => {
+  it('previews 500 rows and asks to split at 501', () => {
+    expect(IMPORT_ROWS_PER_PREVIEW).toBe(500);
+    expect(tooManyRows(500)).toBe(false);
+    expect(tooManyRows(501)).toBe(true);
+  });
+});
 
 describe('preview rows (D189)', () => {
   it('ticks valid rows and leaves invalid ones unticked', () => {

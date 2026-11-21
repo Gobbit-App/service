@@ -147,8 +147,46 @@ describe('runImportNotes (D190)', () => {
     const log = vi.fn();
     const code = await runImportNotes('One\nTwo\nThree', options(), request, log);
     expect(code).toBe(1);
-    expect(log).toHaveBeenCalledWith('failed line 2 [text] Two: Daily limit');
+    expect(log).toHaveBeenCalledWith(
+      expect.stringMatching(/import limit reached: Daily limit; 1 row/),
+    );
     expect(log).toHaveBeenCalledWith('imported 2, duplicates 1, failed 1');
+  });
+
+  it('adds counts across chunks and stops at the cap with exit 1', async () => {
+    let n = 0;
+    const { request, calls } = fakeApi((rows) =>
+      ++n === 1
+        ? { imported: rows.length, duplicates: 0, failed: [] }
+        : {
+            imported: 0,
+            duplicates: 0,
+            failed: [
+              { index: 0, problem: '/problems/rate-limited', detail: 'until 2026-11-21T00:00:00Z' },
+            ],
+          },
+    );
+    const log = vi.fn();
+    const code = await runImportNotes(
+      lines(IMPORT_ROWS_PER_REQUEST * 2 + 5),
+      options(),
+      request,
+      log,
+    );
+    expect(code).toBe(1);
+    expect(calls.filter((c) => c.method === 'POST')).toHaveLength(2);
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('2026-11-21T00:00:00Z'));
+    expect(log).toHaveBeenCalledWith(`imported ${IMPORT_ROWS_PER_REQUEST}, duplicates 0, failed 6`);
+  });
+
+  it('stops cleanly with exit 1 when the first request answers 429', async () => {
+    const request = vi.fn(async (method: string, path: string) => {
+      if (method === 'GET') return { data: [] };
+      throw new ApiCliError(429, `POST ${path}`, 'Daily import limit reached');
+    }) as unknown as ApiRequest;
+    const log = vi.fn();
+    expect(await runImportNotes('One', options(), request, log)).toBe(1);
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('Daily import limit reached'));
   });
 
   it('skips invalid rows, reports them and exits 1', async () => {
@@ -167,6 +205,55 @@ describe('runImportNotes (D190)', () => {
       throw new ApiCliError(403, `POST ${path}`, 'forbidden');
     }) as unknown as ApiRequest;
     await expect(runImportNotes('One', options(), request, vi.fn())).rejects.toThrow(/403/);
+  });
+});
+
+describe('runImportNotes --dry-run (D448)', () => {
+  const dry = options({ dryRun: true });
+
+  it('reads the deck categories, never POSTs, and exits 0 when clean', async () => {
+    const { request, calls } = fakeApi();
+    const log = vi.fn();
+    const code = await runImportNotes(
+      '# Recipes\n- Hummus',
+      { ...dry, file: 'n.md' },
+      request,
+      log,
+    );
+    expect(code).toBe(0);
+    expect(calls.map((c) => `${c.method} ${c.path}`)).toEqual(['GET /decks/family/categories']);
+    const out = log.mock.calls.map((c) => c[0]).join('\n');
+    expect(out).toMatch(/1 card/);
+    expect(out).toMatch(/Recipes\s+1/);
+    expect(out).not.toMatch(/problems:/);
+  });
+
+  it('lists each problem with its line, exits 1 and still writes nothing', async () => {
+    const { request, calls } = fakeApi();
+    const log = vi.fn();
+    const text = '# Games\n## Chess\n\n## Go\ncolour: red\n';
+    const code = await runImportNotes(text, { ...dry, file: 'n.md' }, request, log);
+    expect(code).toBe(1);
+    expect(calls.every((c) => c.method === 'GET')).toBe(true);
+    const out = log.mock.calls.map((c) => c[0]).join('\n');
+    expect(out).toMatch(/problems:/);
+    expect(out).toMatch(/line 2:.*Games/);
+    expect(out).toMatch(/line 5:.*colour/);
+  });
+
+  it('without a deck or token skips the deck checks and says so', async () => {
+    const log = vi.fn();
+    const code = await runImportNotes('Milk', { ...dry, baseUrl: null, token: null }, null, log);
+    expect(code).toBe(0);
+    expect(log.mock.calls.map((c) => c[0]).join('\n')).toMatch(/skipp\w* .*categor/i);
+  });
+
+  it('parses --dry-run without --deck or env', () => {
+    expect(parseImportNotesArgs(['a.txt', '--dry-run'], {})).toMatchObject({
+      dryRun: true,
+      deck: null,
+      token: null,
+    });
   });
 });
 

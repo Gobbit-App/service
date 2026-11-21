@@ -1,9 +1,6 @@
 import { INGEST_CAP_WINDOW_MS, type IngestChannel } from '@gobbit/shared';
 import { rateLimited } from '../errors/http-errors';
 
-/** Retry-After for the daily cap: the window is rolling, so an hour is a fair hint. */
-const CAP_RETRY_AFTER_SECONDS = 3600;
-
 /**
  * D190: channels outside the combined cap. Their jobs don't count toward it, and they aren't
  * held back by it, so one big import never blocks a day of normal sharing.
@@ -36,6 +33,12 @@ export interface CapCounts {
     channel?: IngestChannel,
     exclude?: readonly IngestChannel[],
   ): Promise<number>;
+  oldestCountedAt(
+    userId: string,
+    since: Date,
+    channel?: IngestChannel,
+    exclude?: readonly IngestChannel[],
+  ): Promise<Date | null>;
 }
 
 /**
@@ -49,7 +52,8 @@ export function createCapGuard(deps: {
   now: () => Date;
 }) {
   return async function assertWithinCaps(userId: string, channel: IngestChannel): Promise<void> {
-    const since = new Date(deps.now().getTime() - INGEST_CAP_WINDOW_MS);
+    const now = deps.now().getTime();
+    const since = new Date(now - INGEST_CAP_WINDOW_MS);
     const [own, combined] = await Promise.all([
       deps.jobs.countByUserSince(userId, since, channel),
       countsTowardCombinedCap(channel)
@@ -63,6 +67,16 @@ export function createCapGuard(deps: {
       dailyCaps: deps.dailyCaps,
       combinedCap: deps.combinedCap,
     });
-    if (!ok) throw rateLimited(CAP_RETRY_AFTER_SECONDS);
+    if (ok) return;
+    // Rolling window: a slot frees when the oldest counted job ages out, so say exactly when.
+    const ownFull = own >= deps.dailyCaps[channel];
+    const oldest = await deps.jobs.oldestCountedAt(
+      userId,
+      since,
+      ownFull ? channel : undefined,
+      ownFull ? undefined : OUTSIDE_COMBINED_CAP,
+    );
+    const freeAt = (oldest?.getTime() ?? now) + INGEST_CAP_WINDOW_MS;
+    throw rateLimited(Math.max(1, Math.ceil((freeAt - now) / 1000)));
   };
 }
