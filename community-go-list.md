@@ -28,8 +28,9 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-20 | H11 | plan | Planned for 050: `users.smart_share` column, a gate in the ingest handler, best effort through the existing `validateProposal`; D452–D458; the deploy needs the curators switched on by hand (Action required). | [`specs/050-model-spend-guard/plan.md`](specs/050-model-spend-guard/plan.md) |
 | 2026-11-19 | H11 | deviation | Platform admins count as switched on in code instead of a migration setting it: the admin list is deployment config a migration cannot read. | `050` spec, FR-003 |
 | 2026-11-20 | H11 | deviation | Implementing 050: a share that builds no best-effort card fails `best_effort_empty` (retryable `unknown`); the "saved as you sent it" line shows only when a card exists; Docker was unavailable, so the int and e2e tests are written but unrun and the T022 screenshots are outstanding. | [`specs/050-model-spend-guard/implementation-notes.md`](specs/050-model-spend-guard/implementation-notes.md) |
-| 2026-11-21 | H6 | start | Specified as `051-member-email-privacy`. Settled in the spec: the typed address shows to the inviter only, while the invite is pending; lookup limits and events stay as 046 made them (D424); same-name members differ by avatar colour, username, role and date. The fallback name is open for `/speckit-clarify`. | [`specs/051-member-email-privacy`](specs/051-member-email-privacy/spec.md) |
+| 2026-11-21 | H6 | start | Specified as `051-member-email-privacy`. Settled in the spec: the typed address shows to the inviter only, while the invite is pending; lookup limits and events stay as 046 made them (D424); same-name members differ by avatar colour, username, role and date. Members with no name show as "Member"; whether anything goes on top is open for `/speckit-clarify`. | [`specs/051-member-email-privacy`](specs/051-member-email-privacy/spec.md), #183 |
 | 2026-11-21 | H6 | deviation | A new feature, not an amendment to `046`: 046 merged first, and merged specs are not edited (`specs/README.md`). Avatar initials no longer come from the address either (they did under D420). | `051` spec, Assumptions |
+| 2026-11-21 | H6 | addition | The H6 note "Spec `046` as drafted has no username…" is stale: 046 shipped usernames and hid addresses for members who have one. Also added in 051: the username comes before "Member" as a shown name, and owners see who sent each pending invite. | `051` spec, Assumptions |
 
 ## Goal and definition of done
 
@@ -445,7 +446,7 @@ Mandatory items (backups, privacy) come first in their simplest compliant form a
 2. **Reads right, moves fluently.** D7 with its E2a fixes; E4.
 3. **Off the home lab.** I1–I10, so testers never meet the old hostname and never have to sign in again or reinstall.
 4. **Monitoring.** K2–K4 on the VM, alerting from logs and exporters (decision events are already log lines). K1 (spec) follows in stage 4, unless mail sends cannot be counted from logs **(verify)**; then K1 comes here, since sign-in stops at the mail cap.
-5. **Getting in.** H11 (spec); H6 (spec, `051`); H12 (spec; assumed to ride on today's deck-invite registration, to check in its spec); H8a (spec).
+5. **Getting in.** H11 (spec); H6 as an amendment to `046-user-profile` (spec only so far); H12 (spec; assumed to ride on today's deck-invite registration, to check in its spec); H8a (spec).
 6. **Mandatory basics.** E5 (I5 restore rehearsed), E7a, E9, E3a.
 7. Invite the testers.
 

@@ -16,7 +16,7 @@ Before alpha testers are invited (stage 3), people who do not know each other sh
 
 - Every role can list a deck's members. A member who has no username has their address in that list, shown to every other member, readers included. 046 hid the address only for members with a username.
 - A role change and an invite made by email answer with the member's address.
-- A member's name, when they have not typed one, is made from the first part of their address ("dana.levi" for `dana.levi@example.test`). That name is shown to other members in the members list, the activity log, the review queue, share rows, reminder and event notices, and invite mails. Their avatar initials come from the same part ("DL").
+- A member's name, when they have not typed one, is made from the first part of their address ("dana.levi" for `dana.levi@example.test`). That name is shown to other members in the members list, the activity log, the review queue, share rows and the invite mail ("Dana invited you…"). Their avatar initials come from the same part ("DL").
 
 Already settled by 046 and kept as is:
 
@@ -46,7 +46,7 @@ A reader invited to the communal deck opens the deck's members. They see each pe
 
 ### User Story 2 - A name that does not give away the address (Priority: P1)
 
-A member who has never typed a name joins a deck. Wherever other people see them (members list, activity log, review queue, share rows, reminder and event notices, the inviter's name in an invite mail), the name and avatar shown say nothing about their address.
+A member who has never typed a name joins a deck. Wherever other people see them (members list, activity log, review queue, share rows, the inviter's name in an invite mail), the name and avatar shown say nothing about their address.
 
 **Why this priority**: hiding the address field is not enough while the name is the address's first part; for most people that part is their real name or a handle they use elsewhere.
 
@@ -54,7 +54,7 @@ A member who has never typed a name joins a deck. Wherever other people see them
 
 **Acceptance Scenarios**:
 
-1. **Given** a member with no profile name and no username, **When** other members see them anywhere, **Then** the name shown comes from [NEEDS CLARIFICATION: where the name comes from when a member has typed none. The address's first part is ruled out. Options: a generic "Member" with a neutral avatar; asking for a name at first sign-in; a name the inviter typed when inviting.], never from their address.
+1. **Given** a member with no profile name and no username, **When** other members see them anywhere, **Then** the name shown is never built from their address. Anyone with nothing else to show, a pending invitee who has never signed in included, is shown as "Member", the label 046 already uses on cards (D422). [NEEDS CLARIFICATION: is anything added on top of the "Member" floor? Options: nothing; asking for a name at first sign-in; a name the inviter types when inviting, shown until the person sets their own.]
 2. **Given** that member's avatar, **When** it is shown to others, **Then** its initials come from the same name source as the name shown, never from the address; with no letters to use, the neutral person glyph from 046 is shown on the member's own colour.
 3. **Given** a member who sets a profile name or a username, **When** others next see them, **Then** they see that name, as 046 does today.
 4. **Given** the member themselves, **When** they look at their own profile, **Then** nothing changes for them; they can still see their own address in their settings.
@@ -63,7 +63,7 @@ A member who has never typed a name joins a deck. Wherever other people see them
 
 ### User Story 3 - The inviter keeps track of the invites they sent (Priority: P2)
 
-An owner invites `noa@example.test` by typing the address. Until Noa accepts, the owner sees the pending invite with the address they typed, so they know who it is for and can resend or cancel it. A co-owner sees the same pending invite as "invited by" the first owner, with its role and date, without the address. Once Noa accepts, the row is an ordinary member row for everyone, the inviter included.
+An owner invites `noa@example.test` by typing the address. Until Noa accepts, the owner sees the pending invite with the address they typed, so they know who it is for and can resend or cancel it. A co-owner sees the same pending invite as "invited by" the first owner, with its role and date, without the address. Readers and others who cannot manage members see the pending row as today, without the address and without "invited by". Once Noa accepts, the row is an ordinary member row for everyone, the inviter included.
 
 **Why this priority**: without it an owner cannot manage their own invites, but it is a narrow exception to the rule and comes after it.
 
@@ -72,7 +72,7 @@ An owner invites `noa@example.test` by typing the address. Until Noa accepts, th
 **Acceptance Scenarios**:
 
 1. **Given** an invite made by typing an address, **When** the inviter lists members while it is pending, **Then** the pending row shows the address they typed.
-2. **Given** the same invite, **When** any other member lists members, co-owners included, **Then** the pending row shows who invited, the role and the date, and no address.
+2. **Given** the same invite, **When** another owner lists members, **Then** the pending row shows who invited, the role and the date, and no address; any other member sees the row without the address and without who invited.
 3. **Given** an invite made by username, **When** anyone lists members, the inviter included, **Then** the pending row shows the username and never the address.
 4. **Given** a pending invite that is accepted, **When** anyone lists members, **Then** it is a member row without an address.
 5. **Given** an inviter who invites by address, **When** the invite answer comes back, **Then** it may contain the address they typed and nothing else of the invitee's.
@@ -82,8 +82,8 @@ An owner invites `noa@example.test` by typing the address. Until Noa accepts, th
 ### Edge Cases
 
 - **Two members with the same name** (or two members with no name at all): their rows differ by avatar colour (fixed per person, 046), username when set, role and joined or invited date. Pending invites also differ by who invited and, for the inviter, the address they typed. No address is shown to break the tie.
-- **The inviter leaves the deck or is removed** while their invite is pending: no one sees the typed address any more; the row keeps "invited by" with the departed member's placeholder name (046).
-- **Re-inviting a pending member** (which replaces the invite, `CLAUDE.md` Roles): the new inviter becomes the one who sees the typed address.
+- **The inviter leaves the deck or is removed** while their invite is pending: no one sees the typed address any more; owners see "invited by" with the departed member's placeholder name (046).
+- **Re-inviting a pending member** (which replaces the invite): the address shows only to whoever sent the current invite, and only if they typed the address for it. An earlier inviter stops seeing it. Re-inviting by username shows the address to no one.
 - **An owner invites an address that belongs to an existing member of another deck**: the answer and the members list behave as for any typed address; the existing person's profile name or username shows once they accept.
 - **Member data already stored on a device for offline reading** (persisted from before this feature): replaced by the next successful refresh; nothing on the device keeps an address after that. Signing out already clears it.
 - **An account owner listed without a membership** (the implicit owner row): follows the same rules, no address.
@@ -97,14 +97,14 @@ An owner invites `noa@example.test` by typing the address. Until Noa accepts, th
 **No addresses in member data**
 
 - **FR-001**: No answer that describes a deck's members or invites MUST contain any member's email address, for any deck kind (personal, shared, communal) and any role, owners included. This covers at least the members list, the role-change answer, the invite answer and every member picker (reminder and event audiences).
-- **FR-002**: The only exception MUST be an invite made by typing an address: while it is pending, the address MUST be shown to the member who sent it, in the members list and in the invite answer, and to no one else.
+- **FR-002**: The only exception MUST be an invite made by typing an address: while it is pending, the address MUST be shown to the member who typed it for the current invite, in the members list and in the invite answer, and to no one else.
 - **FR-003**: An invite made by username MUST NOT expose the invitee's address to anyone on the deck, at the time or later.
 - **FR-004**: A member's own row MUST follow the same rules as everyone else's; their own address remains available only in their own settings.
-- **FR-005**: Pending invites MUST show who sent them, their role and their date to every member who can list members.
+- **FR-005**: Pending invites MUST show who sent them to the deck's owners (the people who manage members). Other roles see the pending row as today, without the address.
 
 **Names and avatars that do not come from the address**
 
-- **FR-006**: Wherever a member is shown to someone else (members list, activity log, review queue, share rows, reminder and event notices in the app, push and mail, invite mails), their name MUST be their profile name, else their username, else a name from the source settled in User Story 2, and MUST NOT be built from their email address.
+- **FR-006**: Wherever a member is shown to someone else (members list, activity log, review queue, share rows, member pickers, the invite mail), their name MUST be their profile name, else their username, else "Member" (or the addition settled in User Story 2, scenario 1), and MUST NOT be built from their email address.
 - **FR-007**: Avatar initials shown to others MUST come from the same name; with no usable letters, the neutral person glyph from 046 MUST show on the member's own colour.
 - **FR-008**: A member's own view of themselves (their profile and settings) MUST be unchanged.
 
@@ -122,7 +122,7 @@ This feature makes no new decision about a person, their content or their experi
 
 - **Member row**: a person on a deck as other members see them: name, avatar (initials or photo, colour), username when set, role, joined or invited date, and who invited them while pending. No address.
 - **Pending invite**: a member row not yet accepted; carries the inviter and, for the inviter only, the address they typed.
-- **Shown name**: the one name others see for a member: profile name, else username, else the fallback settled in User Story 2.
+- **Shown name**: the one name others see for a member: profile name, else username, else "Member" (plus any addition settled in User Story 2).
 
 ## Success Criteria *(mandatory)*
 
@@ -137,6 +137,8 @@ This feature makes no new decision about a person, their content or their experi
 
 - **The typed address shows to the inviter only**, not to every owner, as the go-list assumed. A co-owner sees who sent the invite and can ask them.
 - **After acceptance the address is gone for everyone**, the inviter included: the go-list's exception is about the invites list, and an accepted invite is a member.
+- **Username joins the name chain.** In 046 the shown name is the profile name, else the email-derived name; the username only appears beside it. With the email-derived name gone, a username is a better name than "Member", so it comes second.
+- **"Invited by" shows to owners only.** H6 does not ask for it; it is the smallest way for a co-owner to tell pending invites apart without the address, and owners are the ones who manage invites.
 - **Own row shows no address.** The rule is simpler with no exception for oneself, and a member's own address is already in their settings.
 - **Lookup limits and events are 046's** (D424): exact match, uniform miss, an email lookup answered only between deck mates, a per-member hourly limit and an enumeration alert. Nothing new is needed for H6.
 - **Initials follow the shown name.** 046 made initials from the address when no name was set (D420); this feature changes that, since two letters of the address are part of it.

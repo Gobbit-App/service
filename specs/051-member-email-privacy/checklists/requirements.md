@@ -31,5 +31,5 @@
 
 ## Notes
 
-- One marker remains (User Story 2, scenario 1; FR-006 refers to it): where a member's shown name comes from when they have typed none. Resolve in `/speckit-clarify` before `/speckit-plan`.
+- One marker remains (User Story 2, scenario 1; FR-006 refers to it): whether anything goes on top of the "Member" floor for members who typed no name (nothing, ask at first sign-in, or an inviter-typed name). Resolve in `/speckit-clarify` before `/speckit-plan`.
 - References to 046 decisions (D420, D422, D424, D425, D427) point at what is kept; they are not design for this feature.
