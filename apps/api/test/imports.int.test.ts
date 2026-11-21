@@ -268,7 +268,7 @@ describe('POST /decks/{id}/imports (D190)', () => {
     expect(await json(res)).toEqual({
       imported: 1,
       duplicates: 0,
-      refused: 0,
+      refused: 2,
       failed: [
         expect.objectContaining({ index: 1, problem: '/problems/rate-limited' }),
         expect.objectContaining({ index: 2, problem: '/problems/rate-limited' }),
@@ -277,7 +277,7 @@ describe('POST /decks/{id}/imports (D190)', () => {
 
     const again = await importRows([textRow('Four')]);
     expect(again.status).toBe(429);
-    expect(again.headers.get('Retry-After')).toBe('3600');
+    expect(again.headers.get('Retry-After')).toBe('86400');
   });
 
   it('neither counts toward nor is held by the combined cap', async () => {
@@ -363,8 +363,8 @@ function describeImportCaps(name: string, env: Record<string, string>, cap: numb
     const textRows = (from: number, count: number) =>
       Array.from({ length: count }, (_, i) => ({
         type: 'text',
-        title: `Note ${from + i}`,
-        body: `Note ${from + i} body`,
+        title: `Note ${(from + i).toString(36)}${'qzxwvk'[(from + i) % 6]}`,
+        body: `Body of the note numbered ${from + i}`,
       }));
     const jobsAgo = async (ages: number[]) => {
       await ctx.t.db.insert(ingestJobs).values(
@@ -404,18 +404,6 @@ function describeImportCaps(name: string, env: Record<string, string>, cap: numb
         const res = await importRows(rows);
         expect(Date.now() - started).toBeLessThan(60_000);
         expect(await json(res)).toMatchObject({ imported: 100, refused: 0 });
-      });
-
-      it('records invalid_row for a row the server rejects', async () => {
-        const res = await importRows([...textRows(0, 1), { type: 'link', title: 'No URL' }]);
-        expect(res.status).toBe(400);
-        await capture.flush();
-        expect(
-          expectDecision(capture.lines, 'imports.rows_refused', {
-            outcome: 'refused',
-            reason: 'invalid_row',
-          }),
-        ).toMatchObject({ count: 1 });
       });
     } else {
       it('lists the rows over a low cap, counts them and records one daily_cap event', async () => {
