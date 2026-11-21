@@ -24,6 +24,12 @@ Already settled by 046 and kept as is:
 - The avatar's label on a card is the username, else the profile name, else "Member" (D422).
 - Card creator summaries never carry an address (D427).
 
+## Clarifications
+
+### Session 2026-11-21
+
+- Q: Is anything added on top of the "Member" name for someone who typed no name? → A: Nothing, for now. A later call to action to finish one's profile (`PLAN.md` Phase 16, item 6) is what will nudge people to set a name and username; it is not part of this feature.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Members never see each other's addresses (Priority: P1)
@@ -54,7 +60,7 @@ A member who has never typed a name joins a deck. Wherever other people see them
 
 **Acceptance Scenarios**:
 
-1. **Given** a member with no profile name and no username, **When** other members see them anywhere, **Then** the name shown is never built from their address. Anyone with nothing else to show, a pending invitee who has never signed in included, is shown as "Member", the label 046 already uses on cards (D422). [NEEDS CLARIFICATION: is anything added on top of the "Member" floor? Options: nothing; asking for a name at first sign-in; a name the inviter types when inviting, shown until the person sets their own.]
+1. **Given** a member with no profile name and no username, **When** other members see them anywhere, **Then** the name shown is never built from their address. Anyone with nothing else to show, a pending invitee who has never signed in included, is shown as "Member", the label 046 already uses on cards (D422). Nothing is added on top in this feature.
 2. **Given** that member's avatar, **When** it is shown to others, **Then** its initials come from the same name source as the name shown, never from the address; with no letters to use, the neutral person glyph from 046 is shown on the member's own colour.
 3. **Given** a member who sets a profile name or a username, **When** others next see them, **Then** they see that name, as 046 does today.
 4. **Given** the member themselves, **When** they look at their own profile, **Then** nothing changes for them; they can still see their own address in their settings.
@@ -138,6 +144,7 @@ This feature makes no new decision about a person, their content or their experi
 - **The typed address shows to the inviter only**, not to every owner, as the go-list assumed. A co-owner sees who sent the invite and can ask them.
 - **After acceptance the address is gone for everyone**, the inviter included: the go-list's exception is about the invites list, and an accepted invite is a member.
 - **Username joins the name chain.** In 046 the shown name is the profile name, else the email-derived name; the username only appears beside it. With the email-derived name gone, a username is a better name than "Member", so it comes second.
+- **Nothing nudges people to set a name here.** Getting people to set a name and username is the profile-completion call to action stubbed in `PLAN.md` Phase 16, item 6.
 - **"Invited by" shows to owners only.** H6 does not ask for it; it is the smallest way for a co-owner to tell pending invites apart without the address, and owners are the ones who manage invites.
 - **Own row shows no address.** The rule is simpler with no exception for oneself, and a member's own address is already in their settings.
 - **Lookup limits and events are 046's** (D424): exact match, uniform miss, an email lookup answered only between deck mates, a per-member hourly limit and an enumeration alert. Nothing new is needed for H6.

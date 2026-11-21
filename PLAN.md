@@ -330,7 +330,7 @@ Open decisions (TBD):
 
 ## Phase 16 — Community membership and onboarding
 
-Nov 16: stub, not planned. Decisions are TBD and get D numbers when each feature goes through `/speckit-specify`. Found while planning the first communal deck ([`community-go-list.md`](community-go-list.md), Track H). Five separate features.
+Nov 16: stub, not planned. Decisions are TBD and get D numbers when each feature goes through `/speckit-specify`. Found while planning the first communal deck ([`community-go-list.md`](community-go-list.md), Track H). Six separate features.
 
 Rules already decided:
 - **Suggesting is a communal-deck setting.** Off by default; only owners switch it on. When on, readers can suggest cards, which are always proposals. Shared and personal decks never have it.
@@ -344,13 +344,15 @@ Open decisions (TBD):
 - **Member data:** whether a typed invite address shows to the inviter only or to every owner; a fallback display name that is not derived from the email address; limits on username lookups; telling apart two people with the same name.
 - **Invites:** whether a deck invite skips waitlist approval; when the account is created; waitlist invites that carry a deck and role, in batches with a cohort size.
 - **Onboarding:** what a new user sees first when they came in through a communal or shared deck, and how they learn about their personal deck and their own decks.
+- **Profile completion:** which steps the checklist has and how much each counts (for example add your name and location, pick a username, add a photo, create your first card, start a shared deck, invite someone); what the reward is (progress bar and percentage, badges, a finished state) without becoming noisy; where it shows (a card on the home deck, the profile page, a small progress ring on the avatar) and when it stops showing (completed or dismissed); whether steps are checked from existing data only (no new tracking); how it fits with onboarding for invited users (item 4); analytics events under the consent rules.
 - **Accountability:** decision events for suggestions, invites, acceptances, expiries and refusals (constitution VIII).
 
 - [ ] **1. Suggest a card** — TBD with the feature spec.
-- [ ] **2. Member list without email addresses** — TBD with the feature spec.
+- [ ] **2. Member list without email addresses** — no member answer carries an address, apart from a typed invite address shown to its inviter while pending; members with no name or username show as "Member". Spec: [`specs/051-member-email-privacy/spec.md`](specs/051-member-email-privacy/spec.md).
 - [ ] **3. Invites through registration** — TBD with the feature spec.
 - [ ] **4. Onboarding for invited users** — TBD with the feature spec.
 - [ ] **5. Model spend guard** — a user without the extraction switch causes no model call when sharing: the share is saved best effort with a notice that smart share is coming soon, and the skip shows as a decision event; with the switch on, the share is extracted under today's caps. Plan: [`specs/050-model-spend-guard/plan.md`](specs/050-model-spend-guard/plan.md).
+- [ ] **6. Finish your profile** — stub. A gamified, multi-step call to action with a completion percentage that encourages a member to finish setting up: names and location, username, photo, first card, first shared deck, and so on. Each step done raises the percentage; completing all of them gives a clear finished state. It also gives people a reason to replace the "Member" name (spec `051`). TBD with the feature spec.
 
 ## Phase 17 — Members-only categories on public decks
 

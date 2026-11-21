@@ -28,9 +28,10 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-20 | H11 | plan | Planned for 050: `users.smart_share` column, a gate in the ingest handler, best effort through the existing `validateProposal`; D452–D458; the deploy needs the curators switched on by hand (Action required). | [`specs/050-model-spend-guard/plan.md`](specs/050-model-spend-guard/plan.md) |
 | 2026-11-19 | H11 | deviation | Platform admins count as switched on in code instead of a migration setting it: the admin list is deployment config a migration cannot read. | `050` spec, FR-003 |
 | 2026-11-20 | H11 | deviation | Implementing 050: a share that builds no best-effort card fails `best_effort_empty` (retryable `unknown`); the "saved as you sent it" line shows only when a card exists; Docker was unavailable, so the int and e2e tests are written but unrun and the T022 screenshots are outstanding. | [`specs/050-model-spend-guard/implementation-notes.md`](specs/050-model-spend-guard/implementation-notes.md) |
-| 2026-11-21 | H6 | start | Specified as `051-member-email-privacy`. Settled in the spec: the typed address shows to the inviter only, while the invite is pending; lookup limits and events stay as 046 made them (D424); same-name members differ by avatar colour, username, role and date. Members with no name show as "Member"; whether anything goes on top is open for `/speckit-clarify`. | [`specs/051-member-email-privacy`](specs/051-member-email-privacy/spec.md), #183 |
+| 2026-11-21 | H6 | start | Specified as `051-member-email-privacy`. Settled in the spec: the typed address shows to the inviter only, while the invite is pending; lookup limits and events stay as 046 made them (D424); same-name members differ by avatar colour, username, role and date. Members with no name show as "Member". | [`specs/051-member-email-privacy`](specs/051-member-email-privacy/spec.md), #183 |
 | 2026-11-21 | H6 | deviation | A new feature, not an amendment to `046`: 046 merged first, and merged specs are not edited (`specs/README.md`). Avatar initials no longer come from the address either (they did under D420). | `051` spec, Assumptions |
 | 2026-11-21 | H6 | addition | The H6 note "Spec `046` as drafted has no username…" is stale: 046 shipped usernames and hid addresses for members who have one. Also added in 051: the username comes before "Member" as a shown name, and owners see who sent each pending invite. | `051` spec, Assumptions |
+| 2026-11-21 | H6 | decision | Clarified: nothing goes on top of "Member" in 051. A gamified "finish your profile" call to action (multi-step, with a percentage: names and location, username, first card, shared deck, …) will nudge people to set a name; new item H13, `PLAN.md` Phase 16 item 6. | `051` spec, Clarifications |
 
 ## Goal and definition of done
 
@@ -231,6 +232,8 @@ How people get into the communal deck at each stage, what the code does today an
   - **Not now:** a reusable "anyone with this link can join" deck link, like a WhatsApp group link. On a communal deck it would be forwarded beyond the community at once; public reading (stage 5) already serves that audience. Revisit with suggesting (H5) if communities ask for it.
   - E2E tier: smoke: an owner creates a link invite, a second user opens it, accepts and lands on the deck; a second use of the same link is refused.
   - Wanted for stage 3 (soft launch invites go out by WhatsApp), needed for stage 4.
+
+- [ ] **H13. Finish your profile** (stub, `PLAN.md` Phase 16 item 6; spec-kit later). A gamified multi-step call to action with a completion percentage: add names and location, pick a username, create a first card, start a shared deck, and more. It gives members with no name (shown as "Member" since H6) a reason to set one. After launch, alongside H8.
 
 Order within the track: H1 → H2, H3 (with Track B) → H6, H11, H12, H8a → stage 3 → H7, H8 → stage 4 → stage 5 → H5.
 
