@@ -721,6 +721,20 @@ Revises D167/D168 (015's locked-host rules).
 
 **Rationale**: The API's public URL (magic links, CSRF origin check) must contain the final port, so ports are chosen before Compose starts, and teardown has to survive failure and interruption; a runner with `try/finally` guarantees both and is unit-testable. Concurrent runs get distinct names, ports and volumes, and the reaper never removes a live one. A user per test removes shared state, the seed and every stored token, and exercises the real front door; raising only the per-IP limits fixes a property of a one-address environment without hiding limit regressions. A real mailbox keeps the mail host the only replaced boundary, for the API and the worker alike. An authenticated post-deploy smoke is gone because real journeys are proven on the disposable stack before the image is pushed. Accepted loss: "unknown address joins the waitlist" cannot run on an open stack and stays covered by unit and integration tests. Details: `docs/design/testing.md`, `specs/047-e2e-isolation/research.md`.
 
+## ADR-082: Import v2: card-per-section files, fields, strict categories, a tunable daily cap, media from the CLI (D443–D447, D449, D450)
+
+**Decision**: Bulk import grows to carry a whole hand-written seed, still through `POST /decks/{id}/imports` and the shared `@gobbit/shared/import` parser.
+
+- **Format**: a Markdown file with a `##` heading outside a fence is parsed card-per-section: `#` sets the category, each `##` opens a card whose body is the raw Markdown below it (D443). Files without one keep the line-based path untouched.
+- **Fields**: the lines directly under the `##` (`source`, `categories`, `type`, `cover`, `image`) are `key: value` fields; a blank line ends them. Row-level errors name the field's line (D444).
+- **Categories**: a card may name several; the address of a category name that slugs to nothing (Hebrew) is `c-` plus 8 hex of SHA-256 over the NFC, lower-cased name, used by create and by publishing a suggestion; an explicit slug still wins (D445).
+- **Strict mode**: `strict` on the request makes the server refuse any row whose names the client could not match, with a decision event; without it one unmatched name becomes `newCategory` (D446).
+- **Cap**: `INGEST_IMPORT_DAILY_CAP` (default 500, per person, rolling 24 h) replaces the constant for the `import` channel; the per-request cap is unchanged (D447).
+- **Bulk discard**: `POST /decks/{id}/review/discard` `{ source }` loops the existing `discard` over a label's pending proposals, so each keeps its event and upload release (D449).
+- **Media**: `cover` and `image` files are resolved by the CLI only, inside the file's folder: sign, upload to Cloudinary, record through the editor's `media/sign` and `media/assets` routes, and the server resolves the recorded asset for the deck (D160). The app preview refuses such rows (D450).
+
+**Rationale**: The line parser, fence toggle and Markdown card bodies already exist, so one extra rule avoids a parse tree in the lazy chunk. Hashing gives non-Latin names a stable address with no dependency or new address syntax. Strict checking belongs on the server so a refusal is recorded, not trusted to the client. A tunable cap follows constitution VIII without a role exemption. Reusing `discard` and the editor's upload routes keeps access, size and sweep rules in one place, and an injected uploader keeps tests off Cloudinary. Details: `specs/049-import-v2/research.md`.
+
 ## ADR-083: Model extraction is a per-person setting, gated at processing time (D452–D454)
 
 **Decision**: `users.smart_share boolean NOT NULL DEFAULT false` says whether a person's shares may use the model; an operator flips it with SQL, and platform admins (`createPlatformAdmins.is`) count as on in code (D452).

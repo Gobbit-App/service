@@ -20,7 +20,9 @@ export function parseSections(text: string): ImportParseResult {
     body: string[];
     fields: boolean;
     seen: Set<string>;
-    type: 'text' | 'link';
+    type: 'text' | 'link' | 'media';
+    cover: string | null;
+    image: string | null;
     sourceUrl: string | null;
     error: string | null;
   } | null = null;
@@ -33,17 +35,16 @@ export function parseSections(text: string): ImportParseResult {
     if (c.seen.has(key)) return fail('repeated');
     c.seen.add(key);
     if (value === '') return fail('empty value');
-    if (key === 'cover' || key === 'image' || (key === 'type' && value.toLowerCase() === 'media')) {
-      return fail('media is not supported yet');
-    }
-    if (key === 'source') {
+    if (key === 'cover') c.cover = value;
+    else if (key === 'image') c.image = value;
+    else if (key === 'source') {
       const ok = /^https?:\/\//i.test(value) && URL.canParse(value);
       if (ok) c.sourceUrl = value;
       else fail('not an http(s) address');
     } else if (key === 'type') {
       const t = value.toLowerCase();
-      if (t === 'text' || t === 'link') c.type = t;
-      else fail('must be text or link');
+      if (t === 'text' || t === 'link' || t === 'media') c.type = t;
+      else fail('must be text, link or media');
     } else if (key === 'categories') {
       for (const name of value.split(/[,،，]/).map((n) => n.trim())) {
         if (name && !c.categories.some((x) => normalise(x) === normalise(name))) {
@@ -64,11 +65,20 @@ export function parseSections(text: string): ImportParseResult {
       body: body.trim() === '' ? '' : body,
       sourceUrl: card.sourceUrl,
       categories: card.categories,
+      cover: card.cover,
+      image: card.image,
     });
     const missing = card.type === 'link' && !card.sourceUrl ? 'type: link needs a source' : null;
+    const media =
+      card.type === 'media' && !card.image
+        ? 'type: media needs an image'
+        : card.type !== 'media' && card.image
+          ? 'image needs type: media'
+          : null;
     rows.push({
       ...row,
-      error: card.error ?? (missing && `Line ${card.line}: ${missing}`) ?? row.error,
+      error:
+        card.error ?? ((missing ?? media) && `Line ${card.line}: ${missing ?? media}`) ?? row.error,
     });
     card = null;
   };
@@ -91,6 +101,8 @@ export function parseSections(text: string): ImportParseResult {
           fields: true,
           seen: new Set(),
           type: 'text',
+          cover: null,
+          image: null,
           sourceUrl: null,
           error: null,
         };

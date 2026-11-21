@@ -1,3 +1,4 @@
+import type { CardCover } from '@gobbit/shared/card-cover';
 import { randomUUID } from 'node:crypto';
 import {
   can,
@@ -88,6 +89,8 @@ export interface DirectProposal {
   channel: IngestChannel;
   /** Propose an edit of this published card instead of a new card (dedup via `explicit`). */
   targetItemId?: string;
+  /** D406: a resolved cover, written on the proposal. */
+  cover?: CardCover;
   /** The app's name for the review source line, e.g. "Claude". */
   clientLabel?: string;
 }
@@ -441,6 +444,7 @@ export function createIngestService(deps: {
           {
             job: { id, deckId: deck.id, userId: p.user.id, channel: p.channel },
             item: card,
+            ...(p.cover ? { cover: p.cover } : {}),
             summary: {
               model: DIRECT_PROPOSAL_MODEL,
               escalated: false,

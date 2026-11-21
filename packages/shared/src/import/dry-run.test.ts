@@ -89,3 +89,40 @@ describe('report (dry run, US4)', () => {
     expect(Object.fromEntries(out.categories.map((c) => [c.name, c.count]))).toEqual(expected);
   });
 });
+
+describe('report media checks (T060)', () => {
+  const lines = [
+    '# Health',
+    '## A',
+    'cover: ok.png',
+    '',
+    '## B',
+    'cover: gone.png',
+    '',
+    '## C',
+    'type: media',
+    'image: x.xyz',
+    '',
+  ];
+  const media = {
+    fileExists: (p: string) => p !== 'gone.png',
+    kindOf: (p: string) => (p.endsWith('.png') ? 'image' : null),
+  };
+
+  it('flags missing and unaccepted files with their line and path', () => {
+    const r = report(parse(lines), cats, { media });
+    expect(r.cards).toBe(1);
+    expect(r.problems).toEqual([
+      { line: 5, message: 'file "gone.png" not found' },
+      { line: 8, message: 'file "x.xyz" is not an accepted kind' },
+    ]);
+  });
+
+  it('only calls the injected checks (nothing uploaded)', () => {
+    const calls: string[] = [];
+    report(parse(lines), cats, {
+      media: { fileExists: (p) => (calls.push(p), true), kindOf: () => 'image' },
+    });
+    expect(calls).toEqual(['ok.png', 'gone.png', 'x.xyz']);
+  });
+});

@@ -12,6 +12,7 @@ import {
 import {
   addMember,
   createAccountUser,
+  createAsset,
   createCategory,
   createDeck,
   createItem,
@@ -478,3 +479,82 @@ describeImportCaps(
   { INGEST_IMPORT_DAILY_CAP: '5' },
   5,
 );
+
+/** 049 US7: cover and media rows reference assets recorded for the deck (D160), no Cloudinary call. */
+describe('POST /decks/{id}/imports with files (US7)', () => {
+  const ctx = setupApiTest();
+  let deck: DeckRow;
+  let other: DeckRow;
+
+  beforeEach(async () => {
+    await ctx.t.db.delete(ingestJobs).where(eq(ingestJobs.userId, ctx.world.owner.id));
+    deck = await createDeck(ctx.t.db, ctx.world.owner);
+    other = await createDeck(ctx.t.db, ctx.world.owner);
+  });
+
+  const send = (rows: unknown[]) =>
+    ctx.app.request(`/decks/${deck.id}/imports`, {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({ label: LABEL, rows }),
+    });
+  const mediaRow = (title: string, publicId: string) => ({
+    type: 'media',
+    title,
+    body: '',
+    payload: { kind: 'image', images: [{ publicId, alt: 'x', width: 1, height: 1 }] },
+  });
+
+  it('imports a cover row and a media row, taking dimensions from the assets', async () => {
+    const cover = await createAsset(ctx.t.db, deck, { width: 1200, height: 1600 });
+    const photo = await createAsset(ctx.t.db, deck, { width: 800, height: 600 });
+
+    const res = await send([
+      { type: 'text', title: 'With cover', body: 'b', cover: { publicId: cover.publicId } },
+      mediaRow('Photo', photo.publicId),
+    ]);
+
+    expect(res.status).toBe(200);
+    expect(await json(res)).toEqual({ imported: 2, duplicates: 0, failed: [], refused: 0 });
+    const rows = await ctx.t.db.select().from(items).where(eq(items.deckId, deck.id));
+    expect(rows.every((r) => r.status === 'proposed')).toBe(true);
+    expect(rows.find((r) => r.type === 'text')?.cover).toEqual({
+      publicId: cover.publicId,
+      width: 1200,
+      height: 1600,
+    });
+    expect(rows.find((r) => r.type === 'media')?.payload).toMatchObject({
+      kind: 'image',
+      images: [{ publicId: photo.publicId, width: 800, height: 600 }],
+    });
+  });
+
+  it("refuses another deck's or unknown file for cover and media; other rows still import", async () => {
+    const foreign = await createAsset(ctx.t.db, other);
+
+    const res = await send([
+      textRow('Ok'),
+      { type: 'text', title: 'Bad cover', body: 'b', cover: { publicId: foreign.publicId } },
+      { type: 'text', title: 'Unknown cover', body: 'b', cover: { publicId: 'nope/none' } },
+      mediaRow('Bad media', foreign.publicId),
+      mediaRow('Unknown media', 'nope/none'),
+    ]);
+
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body).toMatchObject({ imported: 1, duplicates: 0, refused: 4 });
+    expect(body.failed).toEqual(
+      [1, 2, 3, 4].map((index) => ({
+        index,
+        problem: '/problems/import-unknown-file',
+        detail: expect.any(String),
+      })),
+    );
+    const rows = await ctx.t.db.select().from(items).where(eq(items.deckId, deck.id));
+    expect(rows.map((r) => r.title)).toEqual(['Ok']);
+  });
+});
+
+function textRow(title: string) {
+  return { type: 'text', title, body: `${title} body` };
+}

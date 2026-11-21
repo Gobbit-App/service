@@ -1,6 +1,7 @@
-import { basename } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import type { Category } from '@gobbit/shared';
+import { MEDIA_MAX_BYTES_DEFAULTS, type Category } from '@gobbit/shared';
 import { IMPORT_LABEL_MAX } from '@gobbit/shared/ingest-constants';
 import {
   detectFormat,
@@ -11,9 +12,20 @@ import {
   toImportDraft,
   type ImportFormat,
   type ImportRow,
+  type ImportRowDraft,
+  type MediaCheck,
   type ImportRunResult,
 } from '@gobbit/shared/import';
+import { classifyShareFiles } from '../../src/ingest/classify-files';
 import { ApiCliError, type ApiRequest } from './api-cli';
+import { cloudinaryUploader, createMediaImporter, type MediaUploader } from './import-media';
+
+/** Injectable for tests: the file reader (sync, also used by the dry-run check) and the uploader. */
+export interface ImportNotesDeps {
+  readFile: (absPath: string) => Uint8Array;
+  uploader: MediaUploader;
+}
+const defaultDeps: ImportNotesDeps = { readFile: readFileSync, uploader: cloudinaryUploader };
 
 /** D190: `pnpm import:notes <file> --deck <slug> [--format] [--label] [--dry-run]`. */
 export interface ImportNotesOptions {
@@ -32,6 +44,7 @@ export interface ImportNotesOptions {
 
 export const IMPORT_NOTES_USAGE =
   'Usage: pnpm import:notes <file> --deck <slug> [--format lines|markdown|csv] [--label <text>] [--dry-run] [--no-strict]\n' +
+  'A row may name a cover or (type: media) an image/file by a path relative to the notes file; each is uploaded before the import, --dry-run only checks the files exist and are accepted.\n' +
   'Strict by default: a row naming a category the deck does not have is refused, not imported; --no-strict suggests one new category per row instead.\n' +
   '--dry-run reports cards per category and problems (exit 1 if any) and writes nothing; --deck and a token are then optional (without them deck checks are skipped).';
 
@@ -109,6 +122,30 @@ const deckCategories = async (request: ApiRequest, deck: string) =>
   (await request<{ data: Category[] }>('GET', `/decks/${deck}/categories`)).data;
 
 /** D448: read-only report from the shared `report`; the only call is GET categories. */
+/** Dry-run file checks: reads through the injected `readFile`, uploads nothing. */
+function mediaCheck(opts: ImportNotesOptions, deps: ImportNotesDeps): MediaCheck {
+  const baseDir = dirname(opts.file);
+  const read = (p: string): Uint8Array | null => {
+    try {
+      return deps.readFile(resolve(baseDir, p));
+    } catch {
+      return null;
+    }
+  };
+  return {
+    fileExists: (p) => read(p) !== null,
+    kindOf: (p) => {
+      const bytes = read(p);
+      if (!bytes) return null;
+      const { images, file } = classifyShareFiles(
+        [{ bytes, mime: '', name: basename(p) }],
+        MEDIA_MAX_BYTES_DEFAULTS,
+      );
+      return (images[0] ?? file)?.kind ?? null;
+    },
+  };
+}
+
 async function dryRun(
   parsed: ReturnType<typeof parseNotes>,
   format: ImportFormat,
@@ -116,8 +153,13 @@ async function dryRun(
   request: ApiRequest,
   deck: string,
   log: Log,
+  deps: ImportNotesDeps,
 ): Promise<number> {
-  const r = report(parsed.rows, await deckCategories(request, deck), { strict: opts.strict });
+  const media = mediaCheck(opts, deps);
+  const r = report(parsed.rows, await deckCategories(request, deck), {
+    strict: opts.strict,
+    media,
+  });
   const problems = [
     ...r.problems,
     ...parsed.ignored.map((i) => ({ line: i.line, message: `text ignored: ${i.text}` })),
@@ -141,6 +183,7 @@ export async function runImportNotes(
   opts: ImportNotesOptions,
   request: ApiRequest | null,
   log: Log = console.log,
+  deps: ImportNotesDeps = defaultDeps,
 ): Promise<number> {
   const format = opts.format ?? detectFormat(text, opts.file);
   const parsed = parseNotes(text, format);
@@ -150,16 +193,20 @@ export async function runImportNotes(
   }
   // No deck (dry run only) means no category lookup, whatever the credentials.
   const deck = opts.deck ?? '';
-  if (opts.dryRun && request && opts.deck) return dryRun(parsed, format, opts, request, deck, log);
+  if (opts.dryRun && request && opts.deck)
+    return dryRun(parsed, format, opts, request, deck, log, deps);
   if (!opts.deck) request = null;
-  const valid = parsed.rows.filter((row) => row.error === null);
+  let valid = parsed.rows.filter((row) => row.error === null);
   const invalid = parsed.rows.filter((row) => row.error !== null);
   for (const row of invalid) log(`skipped ${describeRow(row)}`);
 
   // Without a request (no credentials) the deck's categories are unknown: nothing to compare.
   const categories = request ? await deckCategories(request, deck) : [];
-  const drafts = valid.map((row) => toImportDraft(row, categories, { strict: opts.strict }));
+  let drafts: ImportRowDraft[] = valid.map((row) =>
+    toImportDraft(row, categories, { strict: opts.strict }),
+  );
   let unmatched = 0;
+  let skipped = 0;
   if (request) {
     valid.forEach((row, i) => {
       const names = drafts[i]?.unmatched;
@@ -174,12 +221,62 @@ export async function runImportNotes(
     }
   }
 
+  // Upload files before proposing; a row whose upload fails is skipped like an invalid one.
+  // Orphans from skipped or refused rows are left to media-sweep.
+  if (request) {
+    const importer = createMediaImporter({
+      request,
+      deckId: deck,
+      baseDir: dirname(opts.file),
+      readFile: async (abs) => deps.readFile(abs),
+      uploader: deps.uploader,
+    });
+    const keep: boolean[] = [];
+    for (const [i, row] of valid.entries()) {
+      const draft = drafts[i]!;
+      if ((!row.cover && !row.image) || (opts.strict && draft.unmatched?.length)) {
+        keep.push(true);
+        continue;
+      }
+      try {
+        if (row.cover) draft.cover = await importer.cover(row.cover, row.line);
+        if (row.image) {
+          draft.type = 'media';
+          draft.payload = await importer.image(row.image, row.line);
+        }
+        keep.push(true);
+      } catch (err) {
+        log(`skipped ${describeRow(row)} — ${err instanceof Error ? err.message : String(err)}`);
+        keep.push(false);
+        skipped += 1;
+      }
+    }
+    valid = valid.filter((_, i) => keep[i]);
+    drafts = drafts.filter((_, i) => keep[i]);
+  }
+
   if (!request) {
-    for (const row of valid) log(describeRow(row));
+    const media = opts.dryRun ? mediaCheck(opts, deps) : null;
+    let missing = 0;
+    for (const row of valid) {
+      log(describeRow(row));
+      for (const path of [row.cover, row.image]) {
+        if (!media || !path) continue;
+        const problem = !media.fileExists(path)
+          ? `file "${path}" not found`
+          : media.kindOf(path) === null
+            ? `file "${path}" is not an accepted kind`
+            : null;
+        if (problem) {
+          missing += 1;
+          log(`  line ${row.line}: ${problem}`);
+        }
+      }
+    }
     for (const i of parsed.ignored) log(`text ignored line ${i.line}: ${i.text}`);
     log('skipped deck checks: categories not compared (pass --deck and set a token)');
     log(`dry run (${format}): ${valid.length} to import, ${invalid.length} invalid`);
-    return invalid.length > 0 || parsed.ignored.length > 0 ? 1 : 0;
+    return invalid.length > 0 || parsed.ignored.length > 0 || missing > 0 ? 1 : 0;
   }
 
   let result: ImportRunResult;
@@ -216,8 +313,8 @@ export async function runImportNotes(
   log(
     `imported ${result.imported}, duplicates ${result.duplicates}, failed ${result.failed.length}` +
       (result.refused ? `, refused ${result.refused}` : '') +
-      (invalid.length > 0 ? `, invalid ${invalid.length}` : ''),
+      (invalid.length + skipped > 0 ? `, invalid ${invalid.length + skipped}` : ''),
   );
   if (result.imported > 0) log(`review them under "${opts.label}" in /d/${deck}/review`);
-  return result.failed.length > 0 || invalid.length > 0 ? 1 : 0;
+  return result.failed.length > 0 || invalid.length + skipped > 0 ? 1 : 0;
 }
