@@ -32,6 +32,7 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-21 | H6 | deviation | A new feature, not an amendment to `046`: 046 merged first, and merged specs are not edited (`specs/README.md`). Avatar initials no longer come from the address either (they did under D420). | `051` spec, Assumptions |
 | 2026-11-21 | H6 | addition | The H6 note "Spec `046` as drafted has no username…" is stale: 046 shipped usernames and hid addresses for members who have one. Also added in 051: the username comes before "Member" as a shown name, and owners see who sent each pending invite. | `051` spec, Assumptions |
 | 2026-11-21 | H6 | decision | Clarified: nothing goes on top of "Member" in 051. A gamified "finish your profile" call to action (multi-step, with a percentage: names and location, username, first card, shared deck, …) will nudge people to set a name; new item H13, `PLAN.md` Phase 16 item 6. | `051` spec, Clarifications |
+| 2026-11-22 | H6 | plan | Planned: one name chain (profile name, else username, else "Member") changed at its two builders; initials from the same name; a flag on the membership records a typed-address invite, whose address shows only to the current inviter while pending; such a pending row shows no profile to anyone, so typing an address cannot reveal who owns it; owners see "invited by". One migration, no env var, E2E tier full (D459–D465, ADR-084). | [`051` plan](specs/051-member-email-privacy/plan.md), #183 |
 
 ## Goal and definition of done
 
