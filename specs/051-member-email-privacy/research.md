@@ -5,6 +5,7 @@ Decisions D459–D465 (reserved in `specs/README.md`). The durable ones become A
 ## D459 — One name chain, changed at its two builders
 
 - **Decision**: `displayNameSql` (`@gobbit/db`) and `displayNameOf` (`@gobbit/shared` profile) become profile name, else username, else `"Member"`. Today they fall back to `users.display_name`, which registration fills with the address's local part (`displayNameFromEmail`). The `"Member"` literal is exported once (`MEMBER_NAME`) and used by both. No second builder is added.
+- **The floor applies only when the user row exists.** `displayNameSql` takes `users.id` and yields `"Member"` only `WHEN id IS NOT NULL`, so on a left join a deleted or missing user still yields null. Two readers depend on that null: the activity log (`item-events.repo`, "Former member", D188, `events.service` branches on `actorName !== null`) and the admin waitlist inviter (`waitlist.repo`).
 - **Rationale**:
   - Every member-facing name already goes through these two (D419, guarded by `no-direct-display-name.test.ts`): the members list, role change and invite answers (`memberships.repo`), the activity log (`item-events.repo`), the review queue's `sharedBy` and the share `reviewedBy` (`displayNameOf` on `users.findById`, whose `displayName` is already `displayNameSql`), and the invite mail (`inviter.displayName` from the session's `CurrentUser`).
   - Fixing the builders fixes all of these at once.
@@ -62,6 +63,7 @@ Decisions D459–D465 (reserved in `specs/README.md`). The durable ones become A
     - `photo` is null.
   - The invite answer for a typed address carries the same anonymous fields.
   - Pending username invites keep today's summary: the inviter typed the username, and username lookups already preview that summary (D424).
+- **Accepted residual**: the anonymous row and the invite answer still carry `userId`, which removal and cancelling need. The same id appears in lookup answers, card creators and activity actors. An inviter who already has a candidate profile (a deck mate, or a username found through the rate-limited lookup) can confirm a guess that the typed address is theirs by comparing ids. A second invite by the other channel answering `created: false` gives the same confirmation. Profile data is never handed over for an address the inviter could not otherwise connect. Confirming a guess about a deck mate is something D424 already allows (email lookups between deck mates), and confirming one about anyone else costs a rate-limited username lookup. Closing it fully would need an opaque per-row id for pending invites, more than the risk warrants before stage 3.
 - **Rationale**:
   - Otherwise anyone who can invite could type an address and read back its owner's name, username and photo. That links address to profile, bypassing D424, which answers email lookups only between deck mates and under the lookup rate limit.
   - The spec already says it: US3 scenario 5 ("the address they typed and nothing else of the invitee's") and the edge case ("the existing person's profile name or username shows once they accept").
