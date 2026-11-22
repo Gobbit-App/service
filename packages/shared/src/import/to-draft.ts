@@ -1,3 +1,4 @@
+import type { MediaPayload } from '../schemas/payloads';
 import type { ImportRow } from './constants';
 
 export interface ImportCategory {
@@ -8,9 +9,12 @@ export interface ImportCategory {
 
 /** The body of one `POST /decks/{id}/imports` row (`importDraftSchema`). */
 export interface ImportRowDraft {
-  type: 'text' | 'link';
+  type: 'text' | 'link' | 'media';
   title: string;
   body: string;
+  /** CLI only: set after the file is uploaded (D444). */
+  cover?: { publicId: string };
+  payload?: MediaPayload;
   sourceUrl?: string;
   categoryIds?: string[];
   newCategory?: string;

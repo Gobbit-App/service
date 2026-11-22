@@ -2,6 +2,8 @@ import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
 import {
   bulkPublishResultSchema,
   bulkPublishSchema,
+  discardImportRequestSchema,
+  discardImportResultSchema,
   itemSchema,
   publishRequestSchema,
   reviewCountSchema,
@@ -109,6 +111,33 @@ export function registerReviewRoutes(app: OpenAPIHono<AppEnv>, services: Service
     const { id } = c.req.valid('param');
     const { ids } = c.req.valid('json');
     return c.json(await services.review.publishMany(getActor(c), id, ids), 200);
+  });
+
+  const discardImportRoute = createRoute({
+    method: 'post',
+    path: '/decks/{id}/review/discard',
+    tags: ['review'],
+    security: AUTH_SECURITY,
+    request: {
+      params: idParams,
+      body: {
+        content: { 'application/json': { schema: discardImportRequestSchema } },
+        required: true,
+      },
+    },
+    responses: {
+      ...problems('bad-request', 'unauthorized', 'forbidden', 'not-found'),
+      200: {
+        content: { 'application/json': { schema: discardImportResultSchema } },
+        description: 'Pending proposals of one import label discarded (at most one batch per call)',
+      },
+    },
+  });
+
+  app.openapi(discardImportRoute, async (c) => {
+    const { id } = c.req.valid('param');
+    const { source } = c.req.valid('json');
+    return c.json(await services.review.discardImport(getActor(c), id, source), 200);
   });
 
   const discardRoute = createRoute({

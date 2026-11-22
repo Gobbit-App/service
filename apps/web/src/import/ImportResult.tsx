@@ -4,20 +4,31 @@ import type { PreviewRow } from './preview-rows';
 import { Button } from '../ui/buttons/Button';
 import { ButtonLink } from '../ui/buttons/ButtonLink';
 
-const PROBLEM_COPY: Readonly<Record<string, string>> = {
-  '/problems/rate-limited': 'Daily import limit reached; try again tomorrow',
+/** The API's detail may end in an ISO time ("…try again after <ISO>"); show it in local time. */
+function localised(text: string): string {
+  return text.replace(/\d{4}-\d\d-\d\dT[\d:.]+Z/g, (iso) => new Date(iso).toLocaleString());
+}
+
+const PROBLEM_COPY: Readonly<Record<string, (detail?: string) => string>> = {
+  '/problems/rate-limited': (detail) =>
+    localised(
+      detail?.includes('after') ? detail : 'Daily import limit reached; try again tomorrow',
+    ),
 };
 
 /** D190: counts, the rows that failed (by source line) and the way to their review. */
 export function ImportResult({
   result,
   sent,
+  unmatched = [],
   reviewHref,
   onAgain,
 }: {
   result: ImportRunResult;
   /** The rows sent, in order: a failure's `index` points into it. */
   sent: readonly PreviewRow[];
+  /** Category names the deck lacks (D446): suggested as new, or the reason rows were refused. */
+  unmatched?: readonly string[];
   reviewHref: string;
   onAgain: () => void;
 }): ReactElement {
@@ -42,11 +53,26 @@ export function ImportResult({
                     (<span dir="auto">{row.title}</span>)
                   </>
                 )}
-                : {PROBLEM_COPY[failure.problem] ?? failure.detail ?? failure.problem}
+                :{' '}
+                {PROBLEM_COPY[failure.problem]?.(failure.detail) ??
+                  failure.detail ??
+                  failure.problem}
               </li>
             );
           })}
         </ul>
+      )}
+      {unmatched.length > 0 && (
+        <p>
+          Categories not in this deck:{' '}
+          {unmatched.map((name, i) => (
+            <span key={name} dir="auto">
+              {i > 0 && ', '}
+              {name}
+            </span>
+          ))}
+          .
+        </p>
       )}
       <div className="import-preview__actions">
         {result.imported > 0 && <ButtonLink href={reviewHref} icon="inbox" label="Review them" />}

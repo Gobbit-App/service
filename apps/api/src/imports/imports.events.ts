@@ -20,9 +20,10 @@ export type ImportDecisions = {
     duplicates: number;
     refused: number;
   };
+  /** `reason: 'partial'`: a card failed with an unexpected error mid-way; the cards before it stay discarded. */
   'imports.discarded': {
     outcome: 'accepted';
-    reason?: never;
+    reason?: 'partial';
     discarded: number;
     skipped: number;
   };
@@ -31,4 +32,5 @@ export type ImportDecisions = {
 
 export const IMPORT_DECISION_LEVELS: Partial<Record<string, DecisionLevel>> = {
   'imports.rows_refused:refused:daily_cap': 'warn',
+  'imports.discarded:accepted:partial': 'warn',
 };

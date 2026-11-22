@@ -173,14 +173,18 @@ describe('parseSections (D443)', () => {
       expect(r?.body).toBe('source: https://a.test');
     });
 
-    it.each([['cover: a.png'], ['image: a.png'], ['type: media']])(
-      'refuses media for now (T027a): %s',
-      (field) => {
-        const r = one(`# C\n## T\n${field}\n`);
-        expect(r?.error).toContain('media is not supported yet');
-        expect(r?.error).toContain(field.split(':')[0]);
-        expect(r?.error).toMatch(/\b3\b/);
-      },
-    );
+    it('accepts cover, and image with type: media', () => {
+      expect(one('# C\n## T\ncover: a.png\n')).toMatchObject({ cover: 'a.png', error: null });
+      expect(one('# C\n## T\ntype: media\nimage: b.pdf\n')).toMatchObject({
+        type: 'media',
+        image: 'b.pdf',
+        error: null,
+      });
+    });
+
+    it('needs image with type: media and type: media with image', () => {
+      expect(one('# C\n## T\ntype: media\n')?.error).toContain('needs an image');
+      expect(one('# C\n## T\nimage: a.png\n')?.error).toContain('needs type: media');
+    });
   });
 });

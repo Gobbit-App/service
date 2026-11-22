@@ -1,5 +1,6 @@
 import type { Db, ItemRow } from '@gobbit/db';
 import type { AutoPublishOutcome } from '@gobbit/shared';
+import { conflict } from '../errors/http-errors';
 import type { ItemEventInput } from '../events/item-event';
 import { createCategoriesRepo, type CategoriesRepo } from '../repositories/categories.repo';
 import { createIngestJobsRepo, type IngestJobsRepo } from '../repositories/ingest-jobs.repo';
@@ -7,9 +8,11 @@ import { createItemsRepo, type ItemsRepo } from '../repositories/items.repo';
 import type { EventNoticeHook } from '../services/event-cards.service';
 import type { MediaReferenceCheck } from '../services/media-reference';
 
+export const NOT_PROPOSED = 'Only proposed items can be reviewed';
+
 /** Repos bound to one transaction: publish/discard change the item, categories and job together. */
 export interface ReviewTxRepos {
-  items: Pick<ItemsRepo, 'findById' | 'update' | 'softDelete' | 'categoryIdsFor'>;
+  items: Pick<ItemsRepo, 'findById' | 'update' | 'softDelete' | 'categoryIdsFor' | 'lockProposal'>;
   categories: Pick<CategoriesRepo, 'findBySlug' | 'create' | 'maxPosition'>;
   jobs: Pick<IngestJobsRepo, 'update'>;
 }
@@ -68,6 +71,7 @@ export function createPublishProposal(deps: PublishProposalDeps) {
     );
     const at = deps.now();
     await deps.transaction(async (tx) => {
+      if (!(await tx.items.lockProposal(item.id))) throw conflict(NOT_PROPOSED);
       const extra = input.extraCategories ? await input.extraCategories(tx) : [];
       let categoryIds: string[] | undefined;
       if (extra.length > 0) {

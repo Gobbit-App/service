@@ -10,14 +10,19 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-21 — Import v2: images and media from the command line (049, D450)
+
+- `pnpm import:notes` now uploads `cover` / `image` files (paths relative to the notes file) and `type: media` rows. `POST /decks/{id}/imports` drafts accept `type: media` with `payload` and `cover` (additive); they are refused with `/problems/import-unknown-file` unless the asset is recorded for the deck. The web import marks such rows "Import this file from the command line". No environment variable changes, no migration, no action required.
+
 ### 2026-11-20 — Smart share is per person (050)
 
 - **Action required**: new migration `0028_smart_share`. After it runs, smart share (model-written cards from a share) is off for every user except platform admins, who stay on. Right after the migration, switch your curators on with the SQL in the runbook, [`docs/design/ingestion.md`](docs/design/ingestion.md#smart-share-and-best-effort); until then their shares get best-effort cards. No environment variable changes.
 
 ### 2026-11-20 — Import v2: card per section, fields, several categories, strict mode (049, D443–D451)
 
-- **Behaviour change:** in a Markdown import, a `##` heading outside a code fence now starts a card (`#` still groups cards under a category); files without a `##` import as before. Lines directly under a `##` can set `source:`, `categories:` (several, comma-separated) and `type:`; `cover`, `image` and `type: media` are refused as row errors until media import lands.
+- **Behaviour change:** in a Markdown import, a `##` heading outside a code fence now starts a card (`#` still groups cards under a category); files without a `##` import as before. Lines directly under a `##` can set `source:`, `categories:` (several, comma-separated) and `type:`; `cover`, `image` and `type: media` are refused as row errors in the web import (the command line handles them, see the 2026-11-21 entry).
 - `pnpm import:notes` is now strict by default: a card naming a category the deck does not have is refused and reported; pass `--no-strict` for the old behaviour. `POST /decks/{id}/imports` takes an optional `strict` and a draft's `unmatched` names (additive; old clients unchanged).
+- New optional `INGEST_IMPORT_DAILY_CAP` (default `500`): bulk-import rows per user per rolling day, previously a fixed constant. Rows over it are reported refused (`/problems/rate-limited`, with when a slot frees up) and the 429 `Retry-After` is now the real time until the oldest counted job ages out, not a fixed hour. Not a deploy blocker.
 - Category names with no Latin letters (e.g. Hebrew) now get a derived address `c-` + 8 hex characters instead of a 400; a clash asks for an explicit `slug`. No environment variable changes, no migration, no action required.
 
 ### 2026-11-19 — Bulk publish continues past a card that cannot be published

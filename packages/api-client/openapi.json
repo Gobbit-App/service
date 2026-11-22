@@ -30757,6 +30757,394 @@
         }
       }
     },
+    "/decks/{id}/review/discard": {
+      "post": {
+        "tags": [
+          "review"
+        ],
+        "security": [
+          {
+            "SessionCookie": []
+          },
+          {
+            "BearerToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  }
+                },
+                "required": [
+                  "source"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pending proposals of one import label discarded (at most one batch per call)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "discarded": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "discarded",
+                    "skipped"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "message"
+                        ]
+                      }
+                    },
+                    "permission": {
+                      "type": "string",
+                      "enum": [
+                        "deck.read",
+                        "deck.update",
+                        "deck.delete",
+                        "category.read",
+                        "category.read_private",
+                        "category.create",
+                        "category.update",
+                        "item.read",
+                        "item.create",
+                        "item.update",
+                        "item.archive",
+                        "item.delete",
+                        "item.publish",
+                        "item.favorite",
+                        "member.list",
+                        "member.invite",
+                        "member.remove",
+                        "event.list"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "maintainer",
+                        "editor",
+                        "reader"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/items/{id}/discard": {
       "post": {
         "tags": [
@@ -32996,7 +33384,8 @@
                           "type": "string",
                           "enum": [
                             "text",
-                            "link"
+                            "link",
+                            "media"
                           ]
                         },
                         "title": {
@@ -33025,6 +33414,206 @@
                             "null"
                           ],
                           "maxLength": 80
+                        },
+                        "cover": {
+                          "type": "object",
+                          "properties": {
+                            "publicId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 255
+                            }
+                          },
+                          "required": [
+                            "publicId"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "payload": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "image"
+                                  ]
+                                },
+                                "images": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "publicId": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "alt": {
+                                        "type": "string"
+                                      },
+                                      "width": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 20000
+                                      },
+                                      "height": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 20000
+                                      }
+                                    },
+                                    "required": [
+                                      "publicId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "minItems": 1,
+                                  "maxItems": 8
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "images"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "pdf"
+                                  ]
+                                },
+                                "publicId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "alt": {
+                                  "type": "string"
+                                },
+                                "width": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 20000
+                                },
+                                "height": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 20000
+                                },
+                                "durationMs": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0
+                                },
+                                "pages": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0
+                                },
+                                "fileName": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "publicId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "audio"
+                                  ]
+                                },
+                                "publicId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "alt": {
+                                  "type": "string"
+                                },
+                                "width": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 20000
+                                },
+                                "height": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 20000
+                                },
+                                "durationMs": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0
+                                },
+                                "pages": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0
+                                },
+                                "fileName": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "publicId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "video"
+                                  ]
+                                },
+                                "publicId": {
+                                  "type": "string",
+                                  "minLength": 1
+                                },
+                                "alt": {
+                                  "type": "string"
+                                },
+                                "width": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 20000
+                                },
+                                "height": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 20000
+                                },
+                                "durationMs": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0
+                                },
+                                "pages": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0
+                                },
+                                "fileName": {
+                                  "type": "string",
+                                  "maxLength": 200
+                                }
+                              },
+                              "required": [
+                                "kind",
+                                "publicId"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
                         },
                         "unmatched": {
                           "type": "array",

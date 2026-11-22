@@ -113,4 +113,28 @@ describe('ImportScreen (D189/D190)', () => {
     expect(body.strict).toBe(true);
     expect(body.rows).toEqual([expect.objectContaining({ unmatched: ['Soups'] })]);
   });
+
+  it('shows the rate-limit time locally and names categories the deck lacks (049)', async () => {
+    const iso = '2026-11-21T08:30:00.000Z';
+    answer('owner', {
+      imported: 0,
+      duplicates: 0,
+      failed: [
+        {
+          index: 0,
+          problem: '/problems/rate-limited',
+          detail: `Daily import limit reached, try again after ${iso}`,
+        },
+      ],
+    });
+    renderWithClient(<ImportScreen deckSlug="family" />);
+    await screen.findByLabelText('Paste your notes');
+    paste('# Soups\n- Minestrone');
+    fireEvent.click(await screen.findByRole('button', { name: 'Import 1 card' }));
+
+    expect(await screen.findByText(/Line 2/)).toHaveTextContent(
+      `try again after ${new Date(iso).toLocaleString()}`,
+    );
+    expect(screen.getByText(/Categories not in this deck/)).toHaveTextContent('Soups');
+  });
 });

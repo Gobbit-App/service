@@ -6,6 +6,7 @@ import type {
   ItemCreateResolved,
   SourceKind,
 } from '@gobbit/shared';
+import type { CardCover } from '@gobbit/shared/card-cover';
 import type { EmbedQueue } from '../jobs/embed-queue';
 import type { LinkSnapshotQueue } from '../jobs/link-snapshot-queue';
 import type { CategoriesRepo } from '../repositories/categories.repo';
@@ -36,6 +37,8 @@ export interface ProposeInput {
   summary: ExtractionSummary;
   /** A direct proposal that names the card it updates: no similarity search (`explicit`). */
   targetItemId?: string | null;
+  /** D406: a resolved cover (dimensions from the asset), for imports. */
+  cover?: CardCover;
   /** D349: the shared page's image candidates, handed to the snapshot job. */
   imageCandidates?: string[];
   signal?: AbortSignal;
@@ -77,6 +80,7 @@ export async function proposeItem(deps: ProposeDeps, input: ProposeInput): Promi
       title: item.title,
       body: item.body,
       payload: item.payload,
+      cover: input.cover ?? null,
       entities: item.entities ?? {},
       sourceUrl: item.sourceUrl ?? null,
       sourceKind: sourceKindFor(job.channel),

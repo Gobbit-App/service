@@ -170,3 +170,13 @@ describe('ImportPreview (D189)', () => {
     expect(screen.queryByText(/only one new category/)).not.toBeInTheDocument();
   });
 });
+
+describe('ImportPreview media rows (FR-014)', () => {
+  it('shows the command-line message, disables the tick and never counts the row', () => {
+    const { latest } = renderPreview([note(1), note(2, { cover: 'a.jpg' })]);
+    expect(screen.getByText('Import this file from the command line')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Import line 2' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Import 1 card' })).toBeEnabled();
+    expect(importableRows(latest.rows).map((r) => r.line)).toEqual([1]);
+  });
+});

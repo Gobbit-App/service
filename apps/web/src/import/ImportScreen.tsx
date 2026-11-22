@@ -1,7 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { can } from '@gobbit/shared/authz';
-import { parseNotes, type ImportParseResult, type ImportRunResult } from '@gobbit/shared/import';
+import {
+  matchCategory,
+  parseNotes,
+  type ImportParseResult,
+  type ImportRunResult,
+} from '@gobbit/shared/import';
 import { problemMessages } from '../api/problem-messages';
 import { categoriesQuery, deckQuery } from '../api/queries';
 import { accessErrorCopy, isRetryable } from '../lib/access-copy';
@@ -19,7 +24,22 @@ import {
 } from './preview-rows';
 import { useImportNotes } from './use-import-notes';
 
-type Done = { result: ImportRunResult; sent: PreviewRow[]; label: string };
+type Done = {
+  result: ImportRunResult;
+  sent: PreviewRow[];
+  label: string;
+  unmatched: string[];
+};
+
+/** Category names in the sent rows that the deck does not have (each once). */
+function unmatchedNames(
+  sent: readonly PreviewRow[],
+  categories: Parameters<typeof matchCategory>[1],
+) {
+  return [
+    ...new Set(sent.flatMap((r) => r.categories).filter((n) => !matchCategory(n, categories))),
+  ];
+}
 
 /** D189/D190: paste or upload notes → preview → proposals in review; owners and maintainers. */
 export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
@@ -60,7 +80,10 @@ export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
     const strict = source?.strict ?? false;
     importNotes.mutate(
       { label, strict, drafts: rowsToDrafts(sent, categoryList, strict) },
-      { onSuccess: (result) => setDone({ result, sent, label }) },
+      {
+        onSuccess: (result) =>
+          setDone({ result, sent, label, unmatched: unmatchedNames(sent, categoryList) }),
+      },
     );
   };
 
@@ -78,6 +101,7 @@ export function ImportScreen({ deckSlug }: { deckSlug: string }): ReactElement {
         <ImportResult
           result={done.result}
           sent={done.sent}
+          unmatched={done.unmatched}
           reviewHref={`${deckHref(deckSlug, 'review')}?source=${encodeURIComponent(done.label)}`}
           onAgain={startOver}
         />
