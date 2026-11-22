@@ -16,7 +16,7 @@ Two builders change, one flag is added, and the members service decides per view
 - **No oracle** (D462): a pending typed-address row shows no profile (name "Member", no username, no photo) to anyone, so typing an address does not hand over its owner's profile. Residual: the row's `userId` can confirm a guess about someone the inviter already sees elsewhere (D462).
 - **Invited by** (D463): pending rows carry `invitedBy` for viewers who may invite. A placeholder replaces an inviter who has left the deck.
 - **Mail floor** (D464): "A Gobbit member invited you…" when the inviter has no name.
-- **Web**: the member row's secondary line adds "Invited by …". Pickers and other screens already read the changed fields.
+- **Web**: the member row's secondary line shows the inviter's typed address, else `@username` and "Invited by …" joined by ` · `. Pickers and other screens already read the changed fields.
 
 ## Starting point
 
@@ -71,7 +71,7 @@ Full reasoning in [research.md](./research.md).
 
 | ID | Decision | ADR? |
 |----|----------|------|
-| D459 | The shown name is profile name, else username, else `"Member"` (only when the user row exists; null on a left join to a deleted user), built only by `displayNameSql`/`displayNameOf` (changed in place). `users.display_name` is no longer part of any name; D419's "revert to the old value" is superseded; the column stays (follow-up). `/me`'s `user.displayName` and the admin waitlist's inviter name follow too. | yes → ADR-084 |
+| D459 | The shown name is profile name, else username, else `"Member"` (only when the user row exists; null on a left join to a deleted user), built only by `displayNameSql`/`displayNameOf` (the SQL one changed in place; `displayNameOf` reads its output). `users.display_name` is no longer part of any name; D419's "revert to the old value" is superseded; the column stays (follow-up). `/me`'s `user.displayName` and the admin waitlist's inviter name follow too. | yes → ADR-084 |
 | D460 | `initialsFor({ firstName, lastName, fallback })`: summaries pass the username, self views their own email; `"Member"` is never passed (glyph). `summariesByIds` stops selecting `email`. | no |
 | D461 | `memberships.invited_by_email` (boolean). A row carries the address only when it is pending ∧ typed ∧ invited by the viewer. `reinvite` rewrites the flag. Pre-existing pending invites read false. | yes → ADR-084 |
 | D462 | A pending typed-address row, and its invite answer, show no profile to anyone (name "Member", no username, initials, photo). Username invites keep today's summary. Accepted residual: `userId` can confirm a guess about a profile the inviter already sees. | yes → ADR-084 |
@@ -106,7 +106,7 @@ packages/db/
 └── migrations/0029_invited_by_email.sql (+ down/0029_invited_by_email.down.sql)
 
 packages/shared/src/
-├── schemas/profile.ts (+ .test.ts)            # displayNameOf chain, MEMBER_NAME
+├── schemas/profile.ts (+ .test.ts)            # MEMBER_NAME; displayNameOf unchanged (its callers pass a displayNameSql value)
 ├── schemas/membership.ts                      # memberSchema.invitedBy
 └── avatar/index.ts (+ .test.ts)               # initialsFor fallback
 
@@ -119,7 +119,7 @@ apps/api/src/
 └── mail/templates.ts (+ test)                 # floor copy
 apps/api/test/
 ├── member-email-privacy.int.test.ts           # NEW: SC-001 scan per role × deck kind
-└── {memberships,invites,member-role,item-events,shares,profile,auth,sessions,admin-waitlist}.int.test.ts  # updated name expectations
+└── {memberships,invites,member-role,item-events,shares,review,profile,auth,sessions,admin-waitlist,ingest-auto-publish}.int.test.ts  # updated name expectations
 
 apps/web/src/
 ├── deck-admin/MembersSection.tsx (+ test)     # "Invited by …" line
