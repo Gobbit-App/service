@@ -26,8 +26,16 @@ export function bodyExcerpt(body: string, max = 200): string {
 /** More rows than the daily cap: the file has to be split (T047). */
 export const tooManyRows = (count: number): boolean => count > IMPORT_ROWS_PER_PREVIEW;
 
+/** Media files can't be read in the browser: such rows stay unticked (FR-014, D450). */
+const MEDIA_ERROR = 'Import this file from the command line';
+const hasMedia = (row: Pick<ImportRow, 'cover' | 'image'>): boolean =>
+  row.cover !== null || row.image !== null;
+
 export function previewRows(rows: readonly ImportRow[]): PreviewRow[] {
-  return rows.map((row, key) => ({ ...row, key, included: row.error === null }));
+  return rows.map((row, key) => {
+    const error = row.error ?? (hasMedia(row) ? MEDIA_ERROR : null);
+    return { ...row, key, error, included: error === null };
+  });
 }
 
 /** Applies an edit and re-checks the card limits; a row fixed by the edit is ticked again. */
@@ -40,7 +48,7 @@ export function editRow(row: PreviewRow, edit: RowEdit): PreviewRow {
       ...categoriesOf(category?.trim() ? category : null),
       ...row.categories.slice(1),
     ];
-  const error = rowError(next);
+  const error = rowError(next) ?? (hasMedia(next) ? MEDIA_ERROR : null);
   return { ...next, error, included: error === null && (row.error !== null || row.included) };
 }
 

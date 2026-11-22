@@ -96,3 +96,26 @@ describe('preview rows (D189)', () => {
     ]);
   });
 });
+
+describe('media rows are CLI-only (FR-014, D450)', () => {
+  const CLI = 'Import this file from the command line';
+
+  it.each([
+    ['cover', { cover: 'a.jpg' }],
+    ['image', { type: 'media' as const, image: 'b.pdf' }],
+  ])('marks a row with %s, leaves it unticked and out of the request', (_n, extra) => {
+    const rows = previewRows([row(extra), row({ line: 2 })]);
+    expect(rows[0]).toMatchObject({ error: CLI, included: false });
+    expect(toggleRow(rows[0]!).included).toBe(false);
+    expect(importableRows(rows).map((r) => r.line)).toEqual([2]);
+  });
+
+  it('leaves rows without media alone', () => {
+    expect(previewRows([row()])[0]).toMatchObject({ error: null, included: true });
+  });
+
+  it('keeps the mark when the row is edited', () => {
+    const [media] = previewRows([row({ cover: 'a.jpg' })]);
+    expect(editRow(media!, { title: 'New' })).toMatchObject({ error: CLI, included: false });
+  });
+});

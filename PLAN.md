@@ -197,6 +197,8 @@ Card cover image: [`044-card-avatar`](specs/044-card-avatar/spec.md): an optiona
 
 Member profile and creator avatar: [`046-user-profile`](specs/046-user-profile/spec.md): username, first and last name, location and a cropped photo on the member; cards in shared and communal decks show the creator as an avatar (initials on a stable colour, or the photo) with a label; members are found by exact username for invites, and an email is previewed only for deck mates. Decisions D417–D429; ADR-080; [`docs/design/profile.md`](docs/design/profile.md).
 
+Import v2 (seeding a communal deck): [`049-import-v2`](specs/049-import-v2/spec.md): card-per-section Markdown, per-card fields, several categories, Hebrew-safe category addresses, strict mode, dry-run lint, an env-tunable daily cap, bulk discard by import label and media from the CLI. Tracked in [`community-go-list.md`](community-go-list.md) Track A.
+
 ### 025–027 renames
 
 Mechanical renames with no new behaviour, so they skip spec-kit (constitution, Development Workflow). One branch and PR each:

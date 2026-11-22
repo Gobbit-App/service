@@ -28,6 +28,9 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-20 | H11 | plan | Planned for 050: `users.smart_share` column, a gate in the ingest handler, best effort through the existing `validateProposal`; D452–D458; the deploy needs the curators switched on by hand (Action required). | [`specs/050-model-spend-guard/plan.md`](specs/050-model-spend-guard/plan.md) |
 | 2026-11-19 | H11 | deviation | Platform admins count as switched on in code instead of a migration setting it: the admin list is deployment config a migration cannot read. | `050` spec, FR-003 |
 | 2026-11-20 | H11 | deviation | Implementing 050: a share that builds no best-effort card fails `best_effort_empty` (retryable `unknown`); the "saved as you sent it" line shows only when a card exists; Docker was unavailable, so the int and e2e tests are written but unrun and the T022 screenshots are outstanding. | [`specs/050-model-spend-guard/implementation-notes.md`](specs/050-model-spend-guard/implementation-notes.md) |
+| 2026-11-21 | A4 | start | 049 PR 3 of 049, number pending: media from the CLI (`pnpm import:notes` uploads images and sends a media row or a cover). | [`specs/049-import-v2`](specs/049-import-v2/spec.md) |
+| 2026-11-21 | A4 | deviation | A cover is allowed on text cards only: a link card cannot carry a cover. | [`049` implementation notes](specs/049-import-v2/implementation-notes.md) |
+| 2026-11-21 | A4 | deviation | A failed upload skips only that row; the rest of the import continues. | [`049` implementation notes](specs/049-import-v2/implementation-notes.md) |
 
 ## Goal and definition of done
 

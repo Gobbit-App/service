@@ -55,7 +55,7 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 - [X] T012 [P] [US1] [unit] Parser cases in `packages/shared/src/import/parse-sections.test.ts`: `#` = category, `##` = card, body is the raw text up to the next `#`/`##` with blank edge lines trimmed and the interior kept (no whitespace collapse), `###` and deeper are body, `##` inside a code fence is body (D443), text outside any section → `ignored` with its line, section before any `#` → no category (reported), over-limit title/body → row error with the `##` line (FR-001, FR-002); RTL body line after the fields stays body
 - [X] T013 [P] [US1] [unit] A file with no `##` parses exactly as 021 (the legacy fixtures) and a file with `##` switches mode, in `packages/shared/src/import/parse-notes.test.ts`
 - [X] T014 [P] [US1] [unit] CLI and shared parser agree: `apps/api/scripts/lib/import-notes-cli.test.ts` parses the same fixtures as T012 and compares rows (FR-006)
-- [ ] T015 [P] [US1] [int] A card-per-section row reaches `proposeDirect` with body verbatim (paragraphs, list, bold, link survive; stored as proposed; `llm_calls` empty) in `apps/api/test/imports.int.test.ts`
+- [X] T015 [P] [US1] [int] A card-per-section row reaches `proposeDirect` with body verbatim (paragraphs, list, bold, link survive; stored as proposed; `llm_calls` empty) in `apps/api/test/imports.int.test.ts`
 
 ### Implementation for User Story 1
 
@@ -152,7 +152,7 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 ### Tests for User Story 5
 
 - [X] T045 [P] [US5] [unit] `daily_cap` refusal writes one `imports.rows_refused` event with `count` and `cap` (not per row) and rows already proposed stay, in `apps/api/src/services/imports.service.test.ts`
-- [ ] T046 [P] [US5] [int] 400 rows over four requests in one day all proposed with the default cap; then a low `INGEST_IMPORT_DAILY_CAP`: remaining rows listed `/problems/rate-limited`, `refused` counts them, event recorded; nothing imported yet → `429` with `Retry-After`; result counts imported/duplicates/refused/failed; also an invalid-on-server row records `invalid_row`; and a 100-row card-per-section request completes under a generous timing guard (SC-004) — in `apps/api/test/imports.int.test.ts`
+- [X] T046 [P] [US5] [int] 400 rows over four requests in one day all proposed with the default cap; then a low `INGEST_IMPORT_DAILY_CAP`: remaining rows listed `/problems/rate-limited`, `refused` counts them, event recorded; nothing imported yet → `429` with `Retry-After`; result counts imported/duplicates/refused/failed; also an invalid-on-server row records `invalid_row`; and a 100-row card-per-section request completes under a generous timing guard (SC-004) — in `apps/api/test/imports.int.test.ts`
 - [X] T047 [P] [US5] [unit] Preview limit follows the cap (file with 500 rows previews, 501 asks to split) in `apps/web/src/import/preview-rows.test.ts`
 
 ### Implementation for User Story 5
@@ -174,7 +174,7 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 ### Tests for User Story 6
 
 - [X] T051 [P] [US6] [unit] `review.service.discardImport` in `apps/api/src/services/review.service.test.ts`: success writes `imports.discarded` with `discarded` and `skipped`; forbidden for non-publishers writes `imports.discard_refused` (`forbidden`); no pending → `{0,0}` and `no_pending`; caps at `IMPORT_DISCARD_MAX`; a card that left `proposed` meanwhile counts as `skipped`
-- [ ] T052 [P] [US6] [int] 10 import rows, 2 published, discard by label → `{ discarded: 8, skipped: 0 }`, 8 `item_events` `discarded` rows attributed to the actor, uploads released, published cards untouched, second call `{0,0}`; reader/contributor → 403; unseen deck → 404; empty `source` → 400; concurrent publish of one id ends published-or-discarded, never both — in `apps/api/test/review.int.test.ts`
+- [X] T052 [P] [US6] [int] 10 import rows, 2 published, discard by label → `{ discarded: 8, skipped: 0 }`, 8 `item_events` `discarded` rows attributed to the actor, uploads released, published cards untouched, second call `{0,0}`; reader/contributor → 403; unseen deck → 404; empty `source` → 400; concurrent publish of one id ends published-or-discarded, never both — in `apps/api/test/review.int.test.ts`
 - [X] T053 [P] [US6] [unit] Select-bar action visible only with a source filter, confirm sheet, result notice in `apps/web/src/review/ReviewSelectBar.test.tsx`
 
 ### Implementation for User Story 6
@@ -183,7 +183,7 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 - [X] T055 [US6] `discardImport(actor, deckId, source)` in `apps/api/src/services/review.service.ts`: `authorize(…, 'item.publish')`, loop `review.service.discard` one transaction per card (per-card log entry and upload release are the single-discard ones), skip cards handled meanwhile, write `imports.discarded` (or `imports.discard_refused`); returns `{ discarded, skipped }` (D449)
 - [X] T056 [US6] Route `POST /decks/{id}/review/discard` (tag `review`, `discardImportRequestSchema`/`…ResultSchema`) in `apps/api/src/routes/review.ts`, then `pnpm api:openapi`; add an example to `apps/api/api.http`
 - [X] T057 [US6] "Discard all from this import" action in `apps/web/src/review/ReviewSelectBar.tsx` / `ReviewQueue.tsx` shown when a source filter is on: `ui/buttons` + icon from `ui/icons`, confirm in `ui/sheet`, result like `BulkPublishNotice.tsx`, invalidate the review queries on success. UI reference: the bulk "Publish" action in `ReviewSelectBar.tsx`; screenshots: phone 412 px + desktop 1280 px, light + dark, compared with that action
-- [ ] T058 [US6] [e2e:full] Journey `e2e/tests/full/import-sections.spec.ts`: paste a card-per-section file → preview shows cards and categories → import → filter by import → "Discard all from this import" → queue empty; tagged `@full`, own `smoke-`-style deck created and deleted by the test
+- [X] T058 [US6] [e2e:full] Journey `e2e/tests/full/import-sections.spec.ts`: paste a card-per-section file → preview shows cards and categories → import → filter by import → "Discard all from this import" → queue empty; tagged `@full`, own `smoke-`-style deck created and deleted by the test
 
 **Checkpoint (end of PR 1)**: US1–US6 complete; run Close-out for PR 1 (Phase 9) before opening it.
 
@@ -197,18 +197,18 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 
 ### Tests for User Story 7
 
-- [ ] T059 [P] [US7] [unit] `apps/api/scripts/lib/import-media.test.ts` with a fake uploader: paths resolved relative to the file, `media/sign` → upload → `media/assets` order, MIME → kind via `@gobbit/shared/media` rules (`classifyShareFiles`), missing file or unsupported kind → row error naming path and line with nothing uploaded, one upload per distinct path
-- [ ] T060 [P] [US7] [unit] Dry run checks media paths exist and are an accepted kind, and uploads nothing, in `packages/shared/src/import/dry-run.test.ts` / `import-notes-cli.test.ts` (injected file-exists check)
-- [ ] T061 [P] [US7] [int] Cover row and `type: media` row: proposals reference assets recorded for the deck; a `publicId` of another deck's asset is refused (D160); no Cloudinary call — in `apps/api/test/imports.int.test.ts`
-- [ ] T062 [P] [US7] [unit] Rows with `cover`/`image` are marked "import from the command line" and are excluded from the import request in `apps/web/src/import/preview-rows.test.ts` and `ImportPreview.test.tsx` (FR-014)
+- [X] T059 [P] [US7] [unit] `apps/api/scripts/lib/import-media.test.ts` with a fake uploader: paths resolved relative to the file, `media/sign` → upload → `media/assets` order, MIME → kind via `@gobbit/shared/media` rules (`classifyShareFiles`), missing file or unsupported kind → row error naming path and line with nothing uploaded, one upload per distinct path
+- [X] T060 [P] [US7] [unit] Dry run checks media paths exist and are an accepted kind, and uploads nothing, in `packages/shared/src/import/dry-run.test.ts` / `import-notes-cli.test.ts` (injected file-exists check)
+- [X] T061 [P] [US7] [int] Cover row and `type: media` row: proposals reference assets recorded for the deck; a `publicId` of another deck's asset is refused (D160); no Cloudinary call — in `apps/api/test/imports.int.test.ts`
+- [X] T062 [P] [US7] [unit] Rows with `cover`/`image` are marked "import from the command line" and are excluded from the import request in `apps/web/src/import/preview-rows.test.ts` and `ImportPreview.test.tsx` (FR-014)
 
 ### Implementation for User Story 7
 
-- [ ] T063 [US7] Create `apps/api/scripts/lib/import-media.ts`: injectable uploader; sign → multipart POST to Cloudinary with Node `fetch`/`FormData` → record via `POST /decks/{id}/media/assets`; returns `{ cover: { publicId } }` or a media `payload` built from the recorded asset (dimensions from the asset)
-- [ ] T064 [US7] Use it in `apps/api/scripts/lib/import-notes-cli.ts`: upload before proposing, send drafts with `cover` / `payload`, leave orphans to `media-sweep`; extend the dry-run file checks from T044
-- [ ] T065 [US7] Server side: `apps/api/src/ingest/import-rows.ts` and `imports.service.ts` accept `type: media` with `payload` and `cover` through `parseDirectDraft` and the existing asset-for-deck rule; no change to publish
-- [ ] T066 [US7] Web: media rows get the "import from the command line" state in `apps/web/src/import/preview-rows.ts` and `ImportPreviewRow.tsx`, never sent. UI reference: the invalid-row state in `ImportPreviewRow.tsx` (same marker, different copy); screenshots: phone 412 px + desktop 1280 px, light + dark, compared with that state
-- [ ] T067 [US7] `pnpm api:openapi` if the draft schema changed in this PR
+- [X] T063 [US7] Create `apps/api/scripts/lib/import-media.ts`: injectable uploader; sign → multipart POST to Cloudinary with Node `fetch`/`FormData` → record via `POST /decks/{id}/media/assets`; returns `{ cover: { publicId } }` or a media `payload` built from the recorded asset (dimensions from the asset)
+- [X] T064 [US7] Use it in `apps/api/scripts/lib/import-notes-cli.ts`: upload before proposing, send drafts with `cover` / `payload`, leave orphans to `media-sweep`; extend the dry-run file checks from T044
+- [X] T065 [US7] Server side: `apps/api/src/ingest/import-rows.ts` and `imports.service.ts` accept `type: media` with `payload` and `cover` through `parseDirectDraft` and the existing asset-for-deck rule; no change to publish
+- [X] T066 [US7] Web: media rows get the "import from the command line" state in `apps/web/src/import/preview-rows.ts` and `ImportPreviewRow.tsx`, never sent. UI reference: the invalid-row state in `ImportPreviewRow.tsx` (same marker, different copy); screenshots: phone 412 px + desktop 1280 px, light + dark, compared with that state
+- [X] T067 [US7] `pnpm api:openapi` if the draft schema changed in this PR
 
 **Checkpoint (end of PR 2)**: all seven stories complete.
 
@@ -218,16 +218,16 @@ description: "Task list for Import v2 — seed a communal deck from curated Mark
 
 **Purpose**: keep the repository's docs and gates true (run for each PR; PR 1 covers T068–T076 except media, PR 2 the media parts)
 
-- [ ] T068 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` and `pnpm budget` (parser sits in the lazy import chunk; subpath imports only); `pnpm api:openapi` shows no drift
-- [ ] T069 `pnpm test:e2e --grep @full` passes for `import-sections.spec.ts` (plan: E2E tier full; `@smoke` untouched)
-- [ ] T070 [P] `docs/design/ingestion.md`: "Import format" (headings, fields, strict mode, media), "Import limits" runbook (raise `INGEST_IMPORT_DAILY_CAP` for a seeding session, restart, put it back), dry run, bulk discard, and the "Deviations from the plan" list from `implementation-notes.md` (FR-016)
-- [ ] T071 [P] `docs/adr.md`: ADR-082 (D443 parser trigger, D445 derived category address) and one index row in `docs/architecture.md` (keep it < 250 lines)
-- [ ] T072 [P] `README.md`: `INGEST_IMPORT_DAILY_CAP` in the env table, `pnpm import:notes` flags (`--dry-run`, `--no-strict`, `--label`), link to the import format; `infra/docker-compose.yml` `x-api-env` entry
-- [ ] T073 [P] `CHANGELOG.md`: env var (optional, not a deploy blocker), the 021 change (`##` now starts a card), new route, Hebrew category addresses
-- [ ] T074 [P] `CLAUDE.md` ground rules: Ingestion line mentions card-per-section import, strict mode and bulk discard (one line)
-- [ ] T075 `PLAN.md`: link this spec under its phase; `community-go-list.md` Track A tracking (start, tick on merge, deviations in the progress log)
-- [ ] T076 Run `quickstart.md` validation against a local stack (made-up Hebrew file: dry run → strict import → filter → discard)
-- [ ] T077 `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review` before each PR (CLAUDE.md "Before a PR")
+- [X] T068 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` and `pnpm budget` (parser sits in the lazy import chunk; subpath imports only); `pnpm api:openapi` shows no drift
+- [X] T069 `pnpm test:e2e --grep @full` passes for `import-sections.spec.ts` (plan: E2E tier full; `@smoke` untouched)
+- [X] T070 [P] `docs/design/ingestion.md`: "Import format" (headings, fields, strict mode, media), "Import limits" runbook (raise `INGEST_IMPORT_DAILY_CAP` for a seeding session, restart, put it back), dry run, bulk discard, and the "Deviations from the plan" list from `implementation-notes.md` (FR-016)
+- [X] T071 [P] `docs/adr.md`: ADR-082 (D443 parser trigger, D445 derived category address) and one index row in `docs/architecture.md` (keep it < 250 lines)
+- [X] T072 [P] `README.md`: `INGEST_IMPORT_DAILY_CAP` in the env table, `pnpm import:notes` flags (`--dry-run`, `--no-strict`, `--label`), link to the import format; `infra/docker-compose.yml` `x-api-env` entry
+- [X] T073 [P] `CHANGELOG.md`: env var (optional, not a deploy blocker), the 021 change (`##` now starts a card), new route, Hebrew category addresses
+- [X] T074 [P] `CLAUDE.md` ground rules: Ingestion line mentions card-per-section import, strict mode and bulk discard (one line)
+- [X] T075 `PLAN.md`: link this spec under its phase; `community-go-list.md` Track A tracking (start, tick on merge, deviations in the progress log)
+- [X] T076 Run `quickstart.md` validation against a local stack (made-up Hebrew file: dry run → strict import → filter → discard)
+- [X] T077 `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review` before each PR (CLAUDE.md "Before a PR")
 
 ---
 

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { httpUrlSchema, uuidSchema } from './common';
-import { itemBodySchema, itemTitleSchema } from './item';
+import { coverInputSchema, itemBodySchema, itemTitleSchema } from './item';
+import { mediaPayloadSchema } from './payloads';
+import { supportsCover } from '../card-cover';
 import { BULK_PUBLISH_MAX, IMPORT_LABEL_MAX, IMPORT_ROWS_PER_REQUEST } from '../ingest/constants';
 import { NAME_MAX } from '../limits';
 import { importCardTypes, importFormats } from '../import/constants';
@@ -26,7 +28,7 @@ export const importFormatSchema = z.enum(importFormats);
 /** D190: one row of POST /decks/{id}/imports. A link row needs `sourceUrl` (its payload URL). */
 export const importDraftSchema = z
   .object({
-    type: z.enum(['text', 'link']),
+    type: z.enum(['text', 'link', 'media']),
     title: itemTitleSchema,
     body: itemBodySchema.default(''),
     sourceUrl: httpUrlSchema.optional(),
@@ -37,6 +39,10 @@ export const importDraftSchema = z
       })
       .optional(),
     newCategory: z.string().trim().max(NAME_MAX).nullable().optional(),
+    /** D406: an image recorded for the deck; only types with a cover. */
+    cover: coverInputSchema.optional(),
+    /** Media rows only (D444); facts besides `publicId`/`alt` are replaced from the asset. */
+    payload: mediaPayloadSchema.optional(),
     /** D446: category names the parser could not match; refused when strict, else at most one is suggested. */
     unmatched: z.array(z.string().trim().min(1).max(NAME_MAX)).max(20).optional(),
   })
@@ -44,6 +50,14 @@ export const importDraftSchema = z
   .refine((d) => d.type !== 'link' || d.sourceUrl !== undefined, {
     path: ['sourceUrl'],
     message: 'A link row needs a sourceUrl',
+  })
+  .refine((d) => (d.type === 'media') === (d.payload !== undefined), {
+    path: ['payload'],
+    message: 'A media row needs a payload, and only a media row has one',
+  })
+  .refine((d) => d.cover === undefined || supportsCover(d.type), {
+    path: ['cover'],
+    message: 'This card type has no cover image',
   });
 export type ImportDraft = z.infer<typeof importDraftSchema>;
 export type ImportDraftInput = z.input<typeof importDraftSchema>;

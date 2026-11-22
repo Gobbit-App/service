@@ -14,11 +14,14 @@ import { resolveDeck } from '../lib/resolve-deck';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { CurrentUser } from '../types';
 import type { IngestService } from './ingest.service';
+import type { MediaReferenceCheck } from './media-reference';
+import type { CardCover } from '@gobbit/shared/card-cover';
 
 const log = childLogger('imports');
 
 const RATE_LIMITED = '/problems/rate-limited';
 const UNMATCHED = '/problems/import-unmatched-category';
+const UNKNOWN_FILE = '/problems/import-unknown-file';
 const TOO_MANY = '/problems/import-too-many-new-categories';
 
 /**
@@ -31,6 +34,9 @@ export function createImportsService(deps: {
   memberships: MembershipLookup;
   ingest: Pick<IngestService, 'proposeDirect'>;
   decisions: DecisionLogger<ImportDecisions>;
+  /** D406/D444: a row's cover and media files must be recorded for this deck. */
+  coverReference: (deckId: string, cover: { publicId: string }) => Promise<CardCover>;
+  mediaReference: MediaReferenceCheck;
   /** D447: rows per user per rolling day, reported on the `daily_cap` event. */
   dailyCap?: number;
 }) {
@@ -52,6 +58,7 @@ export function createImportsService(deps: {
         invalid_row: 0,
         daily_cap: 0,
       };
+      const covers = new Map<number, CardCover>();
       const sendable: { index: number; row: ImportRequest['rows'][number] }[] = [];
       for (const [index, row] of req.rows.entries()) {
         const names = [
@@ -73,7 +80,27 @@ export function createImportsService(deps: {
             detail: `A card can suggest one new category, this one names ${names.join(', ')}`,
           });
         } else {
-          sendable.push({ index, row: names[0] ? { ...row, newCategory: names[0] } : row });
+          let next = names[0] ? { ...row, newCategory: names[0] } : row;
+          try {
+            // The same "Unknown ..." message whether the file is missing or in another deck.
+            if (row.cover) covers.set(index, await deps.coverReference(deck.id, row.cover));
+            if (row.payload) {
+              next = {
+                ...next,
+                payload: (await deps.mediaReference(
+                  deck.id,
+                  'media',
+                  row.payload,
+                )) as typeof row.payload,
+              };
+            }
+          } catch (err) {
+            if (!(err instanceof HttpError)) throw err;
+            refusals.invalid_row += 1;
+            failed.push({ index, problem: UNKNOWN_FILE, detail: err.detail ?? err.title });
+            continue;
+          }
+          sendable.push({ index, row: next });
         }
       }
       let refused = failed.length;
@@ -134,6 +161,7 @@ export function createImportsService(deps: {
             deck: deck.id,
             draft,
             channel: 'import',
+            ...(covers.has(index) ? { cover: covers.get(index)! } : {}),
             clientLabel: req.label,
           });
           imported += 1;

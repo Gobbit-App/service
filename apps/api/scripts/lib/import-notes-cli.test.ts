@@ -138,6 +138,27 @@ describe('runImportNotes (D190)', () => {
     expect(log).toHaveBeenCalledWith('dry run (lines): 2 to import, 0 invalid');
   });
 
+  it('checks media files on a dry run without credentials and exits 1 for a missing one', async () => {
+    const log = vi.fn();
+    const md = '# Trips\n\n## Beach\ncover: nope.jpg\n\nSand';
+    const deps = {
+      readFile: () => {
+        throw new Error('ENOENT');
+      },
+      uploader: vi.fn(),
+    };
+    const code = await runImportNotes(
+      md,
+      options({ dryRun: true, format: 'markdown' }),
+      null,
+      log,
+      deps,
+    );
+    expect(code).toBe(1);
+    expect(log).toHaveBeenCalledWith('  line 3: file "nope.jpg" not found');
+    expect(deps.uploader).not.toHaveBeenCalled();
+  });
+
   it('exits 1 and lists the failed rows by source line', async () => {
     const { request } = fakeApi((rows) => ({
       imported: rows.length - 1,
