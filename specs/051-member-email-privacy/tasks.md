@@ -29,10 +29,10 @@ description: "Task list for 051 member email privacy"
 
 - [ ] T001 Add `invitedByEmail` to `memberships` in packages/db/src/schema/memberships.ts: column `invited_by_email`, "`boolean NOT NULL DEFAULT false`" (data-model.md). No other schema change.
 - [ ] T002 `pnpm db:generate` → packages/db/migrations/0029_invited_by_email.sql (additive `ADD COLUMN … NOT NULL DEFAULT false`, no backfill) + hand-written packages/db/migrations/down/0029_invited_by_email.down.sql that drops the column. Check the generated name matches `0029_invited_by_email`, or rename it together with the journal entry.
-- [ ] T003 [P] Export `MEMBER_NAME = 'Member'` from packages/shared/src/schemas/profile.ts (the one copy of the literal, D459). Add `invitedBy` to `memberSchema` in packages/shared/src/schemas/membership.ts: "`(MemberSummary & { displayName: string }) | null`, with `id` nullable for the placeholder" (contracts/members.md). Reuse the shape of the existing `sharedBy` schema (D421) instead of writing a new one. Make `email` explicitly `string | null` if it is not already.
+- [ ] T003 [P] Export `MEMBER_NAME = 'Member'` from packages/shared/src/schemas/profile.ts (the one copy of the literal, D459). Add `invitedBy: z.string().nullable()` to `memberSchema` in packages/shared/src/schemas/membership.ts (the inviter's shown name, contracts/members.md). Fill `invitedBy: null` in `memberships.service` so typecheck stays green until US3. Make `email` explicitly `string | null` if it is not already.
 - [ ] T004 [P] [int] packages/db/test/memberships-invariants.int.test.ts: `invited_by_email` defaults to false on an insert that omits it and rejects null. packages/db/test/migrations.int.test.ts already round-trips every migration, including 0029's down file; make sure it passes.
 
-**Checkpoint**: `pnpm db:migrate` applies 0029; `pnpm typecheck` passes (the `invitedBy` field may be temporarily filled with `null` in `memberships.service` so typecheck stays green).
+**Checkpoint**: `pnpm db:migrate` applies 0029; `pnpm typecheck` passes (T003 fills `invitedBy: null` in `memberships.service`).
 
 ---
 
@@ -111,8 +111,8 @@ description: "Task list for 051 member email privacy"
   - A pending invite created before the flag (insert a row with `invited_by_email` false) shows no address.
   - Trace: FR-002, D461.
 - [ ] T026 [US3] [int] (after T025, same file) D462: invite by address an existing user who has a name, a username and a photo. The pending row and the invite answer show `displayName: "Member"`, `username: null`, `initials: ''`, `photo: null` to every viewer, the inviter included. After accept, the profile shows. A `{username}` invite's pending row keeps the summary. Trace: D462.
-- [ ] T027 [US3] [int] (after T026, same file) D463: owner and co-owner get `invitedBy` (the inviter's summary plus `displayName`) on pending rows; maintainer, editor and reader get `null`; accepted rows get `null`. When the inviter is removed from the deck, `invitedBy` is the placeholder (`id: null`, `displayName: "Member"`, no photo). A deleted inviter account (`invited_by` null) gives the same placeholder. Trace: FR-005, D463.
-- [ ] T028 [P] [US3] [unit] apps/api/src/services/memberships.service.test.ts: the per-viewer rules as pure cases (pending × typed × viewer-is-inviter → address; anonymous typed pending row; `invitedBy` by `can(role, 'member.invite')`; "inviter still on the deck" checked against the list in memory). Trace: D461–D463.
+- [ ] T027 [US3] [int] (after T026, same file) D463: owner and co-owner get `invitedBy` (the inviter's shown name) on pending rows; maintainer, editor and reader get `null`; accepted rows get `null`. When the inviter is removed from the deck, `invitedBy` is `"Member"`. A deleted inviter account (`invited_by` null) gives the same. Trace: FR-005, D463.
+- [ ] T028 [P] [US3] [unit] apps/api/src/services/memberships.service.test.ts: the per-viewer rules as pure cases (pending × typed × viewer-is-inviter → address; anonymous typed pending row; `invitedBy` by `can(role, 'member.invite')`; the inviter's name looked up in the list in memory, `"Member"` when absent). Trace: D461–D463.
 - [ ] T029 [P] [US3] [unit] apps/web/src/deck-admin/MembersSection.test.tsx, secondary line:
   - a row with `email` (the inviter's typed invite) shows the address;
   - a pending username row seen by an owner shows `@noa · Invited by A` (both, US3 scenario 3);
@@ -134,11 +134,11 @@ description: "Task list for 051 member email privacy"
   - Address (D461): set the invitee's `users.email` only when the row is pending ∧ `invitedByEmail` ∧ `invitedBy === viewerId`.
   - Anonymous row (D462): a pending typed-address row is anonymous for every viewer, and so is the `{email}` invite answer.
   - Invited by (D463):
-    - `invitedBy` is set on pending rows when `can(role, 'member.invite')`, built like `sharedBy` from the summaries.
-    - The 046 placeholder replaces an inviter who isn't an implicit owner or an accepted member in the same list, and one whose `invitedBy` is null.
+    - `invitedBy` is set on pending rows when `can(role, 'member.invite')`: the shown name of the row's `invitedBy` user, looked up in the implicit owners and accepted rows of the same list (no extra fetch).
+    - `MEMBER_NAME` when that user isn't in the list or `invitedBy` is null.
   - This makes T025–T028 pass.
 - [ ] T033 [US3] `pnpm api:openapi` to regenerate packages/api-client (`Member.invitedBy`). CI checks for drift.
-- [ ] T034 [US3] apps/web/src/deck-admin/MembersSection.tsx: the secondary `span.muted` line in `admin-member__who` shows `member.email` when set. Otherwise it shows `@username` and `Invited by <invitedBy.displayName>`, each when present, joined by ` · ` (the separator `settings/TokenList.tsx` already uses), so a pending username row keeps its username for owners (spec US3 scenario 3). Use the same element and class, with no new class or token. UI reference: the existing secondary line in `admin-member__who` (plan "UI reference"), with docs/design/ui-system.md. Screenshots: phone 412 px + desktop 1280 px, light + dark, of the members list as owner (a pending typed row showing the address, a pending username row showing `@username · Invited by …`) and as reader, compared with today's row.
+- [ ] T034 [US3] apps/web/src/deck-admin/MembersSection.tsx: the secondary `span.muted` line in `admin-member__who` shows `member.email` when set. Otherwise it shows `@username` and `Invited by <invitedBy>`, each when present, joined by ` · ` (the separator `settings/TokenList.tsx` already uses), so a pending username row keeps its username for owners (spec US3 scenario 3). Use the same element and class, with no new class or token. UI reference: the existing secondary line in `admin-member__who` (plan "UI reference"), with docs/design/ui-system.md. Screenshots: phone 412 px + desktop 1280 px, light + dark, of the members list as owner (a pending typed row showing the address, a pending username row showing `@username · Invited by …`) and as reader, compared with today's row.
 
 **Checkpoint**: all int, unit and the `@full` spec pass; quickstart steps 1–7 behave as written.
 

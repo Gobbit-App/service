@@ -9,7 +9,7 @@ Changed DTOs live in `@gobbit/shared` (`schemas/membership.ts`, `schemas/profile
 | `email` | the member's address unless they have a username (then only to themselves) | `string \| null`: the address **only** on a pending row whose current invite the viewer made by typing it (D461); null otherwise, the viewer's own row included |
 | `displayName` | profile name, else email-derived name | profile name, else username, else `"Member"` (D459); `"Member"` for every pending typed-address row (D462) |
 | `username`, `initials`, `photo` | from the profile; initials from the email when no names | initials from names, else username, else `''` (D460); all three empty for a pending typed-address row (D462) |
-| `invitedBy` | — | **new**, `(MemberSummary & { displayName: string }) \| null`, with `id` nullable for the placeholder. Set on pending rows when the viewer may invite (`member.invite`); null otherwise (D463) |
+| `invitedBy` | — | **new**, `string \| null`: the inviter's shown name, or `"Member"` when the inviter is no longer on the deck. Set on pending rows when the viewer may invite (`member.invite`); null otherwise (D463) |
 | `role`, `invitedAt`, `acceptedAt`, `implicit`, `userId` | unchanged | unchanged |
 
 The `PATCH` answer is always an accepted member, so its `email` is always null and its `invitedBy` is null.

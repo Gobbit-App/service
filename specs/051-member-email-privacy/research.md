@@ -76,12 +76,13 @@ Decisions D459–D465 (reserved in `specs/README.md`). The durable ones become A
 ## D463 — "Invited by" for the people who manage members
 
 - **Decision**:
-  - `Member.invitedBy` is the inviter's summary plus `displayName`, built the same way as `sharedBy` (D421). It is filled on pending rows only, and only when the viewer has `member.invite` (owners and co-owners via `can()`, not a role string); otherwise it is null.
-  - When the inviter is no longer on the deck (not an account owner and not an accepted member in the same list) or their account is gone (`invited_by` set null), it is the 046 placeholder: `id: null`, `displayName: "Member"`, no photo.
+  - `Member.invitedBy` is a string: the inviter's shown name. It is filled on pending rows only, and only when the viewer has `member.invite` (owners and co-owners via `can()`, not a role string); otherwise it is null.
+  - The name is looked up in the list `list()` already holds (account owners and accepted rows). When the inviter is not in it (left, removed, or account gone so `invited_by` is null), it is `"Member"` (`MEMBER_NAME`).
   - An inviter demoted after inviting keeps seeing the address (D461 follows who typed it), but no longer sees "invited by" (FR-005 follows the permission).
 - **Rationale**:
   - FR-005 and the "inviter leaves" edge case.
-  - The list already holds every owner and accepted membership, so "still on the deck" is an in-memory check, not a query.
+  - The list already holds every owner and accepted membership with its shown name, so the name and the "still on the deck" rule are one in-memory lookup: no summary fetch, no new schema.
+  - The screen shows only the name, so a full summary (photo, username, initials, nullable id, like `sharedBy`) would be schema and mapping nobody reads.
 - **Alternatives considered**:
   - Showing "invited by" to every role. Not asked for, and the spec limits it to owners.
   - A separate pending-invites endpoint. The members list is already the place, and one answer keeps the web unchanged apart from one line.

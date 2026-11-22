@@ -8,13 +8,13 @@ Project override of the core template. Written for outside readers: the reposito
 
 ## Summary
 
-Two builders change, one flag is added, and the members service decides per viewer.
+One name builder changes, one flag is added, and the members service decides per viewer.
 
-- **Names** (D459): `displayNameSql` and `displayNameOf`, the only two name builders (D419), become profile name, else username, else `"Member"` (the floor only when the user row exists, so deleted actors still read "Former member"). That one change reaches the members list, the role-change and invite answers, the activity log, the review queue, share rows and the invite mail. `users.display_name` (the email-derived name) leaves every shown name.
+- **Names** (D459): `displayNameSql`, the SQL name builder (D419), becomes profile name, else username, else `"Member"` (the floor only when the user row exists, so deleted actors still read "Former member"). That one change reaches the members list, the role-change and invite answers, the activity log, the review queue, share rows and the invite mail. `displayNameOf`, the other builder, is unchanged: its callers pass rows whose `displayName` already comes from `displayNameSql`. `users.display_name` (the email-derived name) leaves every shown name.
 - **Initials** (D460): `initialsFor`'s fallback becomes an explicit string: the username for others, the own email for self views. A floor name gets the glyph.
 - **The address** (D461): `memberships.invited_by_email` records whether the current invite was typed as an address. A member row carries an address only when it is pending, typed, and the viewer is the one who sent the current invite. The viewer's own row carries none.
 - **No oracle** (D462): a pending typed-address row shows no profile (name "Member", no username, no photo) to anyone, so typing an address does not hand over its owner's profile. Residual: the row's `userId` can confirm a guess about someone the inviter already sees elsewhere (D462).
-- **Invited by** (D463): pending rows carry `invitedBy` for viewers who may invite. A placeholder replaces an inviter who has left the deck.
+- **Invited by** (D463): pending rows carry `invitedBy`, the inviter's shown name, for viewers who may invite. It comes from the list already loaded; "Member" replaces an inviter who has left the deck.
 - **Mail floor** (D464): "A Gobbit member invited you…" when the inviter has no name.
 - **Web**: the member row's secondary line shows the inviter's typed address, else `@username` and "Invited by …" joined by ` · `. Pickers and other screens already read the changed fields.
 
@@ -60,7 +60,7 @@ Two builders change, one flag is added, and the members service decides per view
 | VI. Lean, offline-first web | One line of copy in an existing component, no new query or import. The persisted members query is replaced by its next refresh; no cache bump that would drop offline cards (D465). |
 | VII. Simple, optional, deployable | One additive column, no env var, no dependency. |
 | VIII. Accountable by default | No new decision about a person (spec, Accountability); table below says why. Lookup keeps 046's events. |
-| IX. Reuse before writing | Checked: the two existing name builders (changed, not duplicated), `initialsFor` (one parameter), `member-summaries` (unchanged shape), the `sharedBy` summary-plus-name pattern for `invitedBy`, the 046 creator placeholder, `can()`, the existing `invited_by` column, the existing secondary line in the member row. New code: the flag, the per-viewer rule, one template ternary. |
+| IX. Reuse before writing | Checked: the existing name builders (`displayNameSql` changed in place, `displayNameOf` follows it, nothing duplicated), `initialsFor` (one parameter), `member-summaries` (unchanged shape), the members list already loaded for `invitedBy`'s name, `can()`, the existing `invited_by` column, the existing secondary line in the member row. New code: the flag, the per-viewer rule, one template ternary. |
 | X. One UI system | UI reference above; no new class, token or layout. The UI task takes phone 412 px + desktop 1280 px screenshots, light + dark, of the members list as owner (pending typed and username rows) and as reader, compared with today's row. |
 
 Re-check after design: no violation; nothing in Complexity Tracking.
@@ -75,7 +75,7 @@ Full reasoning in [research.md](./research.md).
 | D460 | `initialsFor({ firstName, lastName, fallback })`: summaries pass the username, self views their own email; `"Member"` is never passed (glyph). `summariesByIds` stops selecting `email`. | no |
 | D461 | `memberships.invited_by_email` (boolean). A row carries the address only when it is pending ∧ typed ∧ invited by the viewer. `reinvite` rewrites the flag. Pre-existing pending invites read false. | yes → ADR-084 |
 | D462 | A pending typed-address row, and its invite answer, show no profile to anyone (name "Member", no username, initials, photo). Username invites keep today's summary. Accepted residual: `userId` can confirm a guess about a profile the inviter already sees. | yes → ADR-084 |
-| D463 | `Member.invitedBy` (summary + shown name) on pending rows for viewers with `member.invite`. Placeholder when the inviter is not on the deck or deleted. A demoted inviter still sees the address, not "invited by". | no |
+| D463 | `Member.invitedBy` (the inviter's shown name, a string) on pending rows for viewers with `member.invite`, looked up in the loaded list. "Member" when the inviter is not on the deck or deleted. A demoted inviter still sees the address, not "invited by". | no |
 | D464 | Invite mail: "A Gobbit member invited you…" when the inviter's name is `"Member"`. | no |
 | D465 | No persisted-cache bump: the next refresh replaces offline member data (FR-011). E2E tier full. | no |
 
@@ -141,8 +141,8 @@ docs/design/profile.md, docs/adr.md (ADR-084), docs/architecture.md (one index r
 | FR-003: a username invite never shows the address | `invited_by_email = false`; invite answer | `invites.int.test.ts` (existing case kept) + scan, int |
 | D462: a typed address reveals no profile | `memberships.service` | int: invite an existing user with a name, username and photo by address; the pending row and the invite answer show "Member", no username, no photo, to every viewer; after accept the profile shows, int |
 | FR-004: own row has no address | `memberships.service` | scan includes each viewer's own row, int |
-| FR-005, D463: invited by for owners, placeholder | `memberships.service` with `can()` | int: owner and co-owner get `invitedBy`; maintainer, editor and reader get null; inviter removed → placeholder, int |
-| FR-006, D459: name chain everywhere | `displayNameSql`, `displayNameOf` | `profile.test.ts` (unit); `item-events.int.test.ts`, `shares.int.test.ts`, `memberships.int.test.ts` updated to expect "Member"/username, int; mail via `memberships.service.test.ts`, unit |
+| FR-005, D463: invited by for owners, placeholder | `memberships.service` with `can()` | int: owner and co-owner get `invitedBy`; maintainer, editor and reader get null; inviter removed → "Member", int |
+| FR-006, D459: name chain everywhere | `displayNameSql` (`displayNameOf` reads its output) | `profile.test.ts` (unit); `item-events.int.test.ts`, `shares.int.test.ts`, `memberships.int.test.ts` updated to expect "Member"/username, int; mail via `memberships.service.test.ts`, unit |
 | D459: deleted actor still "Former member"; admin waitlist inviter of a deleted user still null | `displayNameSql` floor gated on `users.id` | `item-events.int.test.ts` (existing deleted-actor case kept, not rewritten), `admin-waitlist.int.test.ts`, int; `users.ts` builder unit or int |
 | FR-007, D460: initials from the shown name | `initialsFor`, `member-summaries` | `avatar/index.test.ts`, `member-summaries.test.ts`, unit; SC-002 case (`dana.levi@example.test`, no names: no "dana"/"levi"/"DL") in the int scan |
 | FR-008: own view unchanged | self callers pass own email | `profile.int.test.ts` (`/me` profile initials unchanged), int |

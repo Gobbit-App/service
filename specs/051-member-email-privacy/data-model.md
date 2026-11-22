@@ -22,12 +22,12 @@ No backfill. Pending invites from before the migration read as false, so their a
 
 | Value | Rule | Built by |
 |-------|------|----------|
-| Shown name | `trim(first_name + ' ' + last_name)`, else `username`, else `"Member"` (`MEMBER_NAME`) | `displayNameSql`, `displayNameOf` (D459) |
+| Shown name | `trim(first_name + ' ' + last_name)`, else `username`, else `"Member"` (`MEMBER_NAME`) | `displayNameSql`; `displayNameOf` reads its output (D459) |
 | Initials (others) | first letters of the first and last name, else of the username's `.`/`-`/`_` parts, else `''` (glyph) | `initialsFor({ firstName, lastName, fallback: username })` (D460) |
 | Initials (self) | as today, with the own email as `fallback` | `profile.service`, `BottomBar`, `ProfileForm` |
 | Row address | invitee `users.email` iff pending ∧ `invited_by_email` ∧ `invited_by = viewer`, else null | `memberships.service` (D461) |
 | Anonymous pending row | pending ∧ `invited_by_email` → `"Member"`, no username, `''`, no photo, for every viewer | `memberships.service` (D462) |
-| Invited by | pending ∧ viewer `can('member.invite')` → inviter summary + shown name; placeholder when the inviter is not on the deck or the account is gone | `memberships.service` (D463) |
+| Invited by | pending ∧ viewer `can('member.invite')` → the inviter's shown name, taken from the same list (account owners + accepted rows); `"Member"` when the inviter is not in it (left, removed or account gone) | `memberships.service` (D463) |
 
 ## State
 
