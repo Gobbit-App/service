@@ -110,7 +110,7 @@ An owner invites `noa@example.test` by typing the address. Until Noa accepts, th
 
 **Names and avatars that do not come from the address**
 
-- **FR-006**: Wherever a member is shown to someone else (members list, activity log, review queue, share rows, member pickers, the invite mail), their name MUST be their profile name, else their username, else "Member" (or the addition settled in User Story 2, scenario 1), and MUST NOT be built from their email address.
+- **FR-006**: Wherever a member is shown to someone else (members list, activity log, review queue, share rows, member pickers, the invite mail), their name MUST be their profile name, else their username, else "Member", and MUST NOT be built from their email address.
 - **FR-007**: Avatar initials shown to others MUST come from the same name; with no usable letters, the neutral person glyph from 046 MUST show on the member's own colour.
 - **FR-008**: A member's own view of themselves (their profile and settings) MUST be unchanged.
 
@@ -128,7 +128,7 @@ This feature makes no new decision about a person, their content or their experi
 
 - **Member row**: a person on a deck as other members see them: name, avatar (initials or photo, colour), username when set, role, joined or invited date, and who invited them while pending. No address.
 - **Pending invite**: a member row not yet accepted; carries the inviter and, for the inviter only, the address they typed.
-- **Shown name**: the one name others see for a member: profile name, else username, else "Member" (plus any addition settled in User Story 2).
+- **Shown name**: the one name others see for a member: profile name, else username, else "Member".
 
 ## Success Criteria *(mandatory)*
 

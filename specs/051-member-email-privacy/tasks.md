@@ -52,10 +52,10 @@ description: "Task list for 051 member email privacy"
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] apps/api/src/services/memberships.service.ts: `profileOf`/`list` set `email: null` on every row (drop the `username && viewerId !== id` rule). `changeRole` answers `email: null`. `invite` keeps the typed address only for `{email}` and `null` for `{username}`, as today. Leave `invitedBy: null` for now (US3 fills it). Make T005–T007 pass, apart from the US3 cases.
+- [ ] T008 [US1] apps/api/src/services/memberships.service.ts: `profileOf`/`list` set `email: null` on every row (drop the `username && viewerId !== id` rule). `changeRole` answers `email: null`. `invite` keeps the typed address only for `{email}` and `null` for `{username}`, as today. Leave `invitedBy: null` for now (US3 fills it). Make T005–T007 pass, apart from the US3 cases. Update the two existing int tests that assert addresses this removes, without changing what else they check: apps/api/test/member-role.int.test.ts (the PATCH answer expects `email: null`, not `reader.email`) and apps/api/test/profile.int.test.ts (the members-list case expects `email: null` on the viewer's own row too, FR-004). T016 and T024 edit profile.int.test.ts later, so they run after T008.
 - [ ] T009 [US1] apps/web/src/deck-admin/MembersSection.tsx: no code change expected; the secondary line already falls back to `@username`. Confirm the members list and pickers (`EventNotifyFields`, `ReminderFields`) still render with `email: null` everywhere by running `MembersSection.test.tsx`. Record "no change" in implementation-notes.md, or fix and screenshot if a change turns out to be needed (UI reference: `span.muted` in `admin-member__who`).
 
-**Checkpoint**: T005 passes except the US3 assertions (mark those `it.todo` until Phase 4); `memberships.int.test.ts` and `member-role.int.test.ts` pass.
+**Checkpoint**: T005 passes except the US3 assertions (mark those `it.todo` until Phase 4); `memberships.int.test.ts`, `member-role.int.test.ts` and `profile.int.test.ts` pass (the last two as updated in T008).
 
 ---
 
@@ -70,7 +70,7 @@ description: "Task list for 051 member email privacy"
 - [ ] T010 [P] [US2] [unit] packages/shared/src/schemas/profile.test.ts: `MEMBER_NAME` is `'Member'`. `displayNameOf` keeps its behaviour (full name, else the given `displayName`); add a case showing that a chain-built `displayName` (a username, or `'Member'`) passes through. Trace: FR-006, D459.
 - [ ] T011 [P] [US2] [unit] packages/shared/src/avatar/index.test.ts: `initialsFor({ firstName, lastName, fallback })`: names first; else the fallback split on `.`/`-`/`_`; `''` with no letters. Update the existing email-based cases to pass `fallback`. Trace: FR-007, D460.
 - [ ] T012 [P] [US2] [unit] apps/api/src/services/member-summaries.test.ts: initials come from the username when there are no names, and are `''` with neither. No email is read. Trace: FR-007.
-- [ ] T013 [P] [US2] [unit] apps/api/src/mail/templates.test.ts: `inviteEmail` with `inviterName === MEMBER_NAME` gives subject and body "A Gobbit member invited you to …"; any other name keeps "<name> invited you to …". In apps/api/src/services/memberships.service.test.ts, `sendInvite` passes the inviter's chain-built name (`inviter.displayName`) to the mail. Trace: D464, FR-006 (mail).
+- [ ] T013 [US2] [unit] apps/api/src/mail/templates.test.ts: `inviteEmail` with `inviterName === MEMBER_NAME` gives subject and body "A Gobbit member invited you to …"; any other name keeps "<name> invited you to …". In apps/api/src/services/memberships.service.test.ts, `sendInvite` passes the inviter's chain-built name (`inviter.displayName`) to the mail. Trace: D464, FR-006 (mail).
 - [ ] T014 [US2] [int] (after T005, same file) Add the SC-002 case to apps/api/test/member-email-privacy.int.test.ts: a `dana.levi@example.test` member with no names and no username makes a card, shares a link and changes something. As another member, the members row, activity actor, review `sharedBy`, share `reviewedBy` and item `creator` show "Member" with `initials: ''`, and no answer contains "dana", "levi" or "DL". Then set a username and see it as the name with its initials. Trace: FR-006, FR-007, SC-002.
 - [ ] T015 [P] [US2] [int] Deleted actor and inviter floor: apps/api/test/item-events.int.test.ts keeps its existing deleted-actor case passing unchanged ("Former member"). apps/api/test/admin-waitlist.int.test.ts asserts that a deleted inviter's `invitedByName` is still null. Trace: D459 floor gated on `users.id`.
 - [ ] T016 [P] [US2] [int] apps/api/test/profile.int.test.ts: `/me` `profile.initials` for a user with no names still comes from their own email (FR-008). `/me` `user.displayName` is the username, else "Member". Trace: FR-008, D459.
@@ -162,7 +162,7 @@ description: "Task list for 051 member email privacy"
 
 - **Rebase** before T001.
 - **Phase 1** (T001–T004) blocks everything. T003 and T004 run in parallel with T001/T002, but T004 needs T002.
-- **US1** (Phase 2) and **US2** (Phase 3) depend only on Phase 1. They meet only in `memberships.service.ts` (US1's address rule, and US2's mail-name case in its `.test.ts`), so run T008 before T013's service case. Otherwise they can run side by side.
+- **US1** (Phase 2) and **US2** (Phase 3) depend only on Phase 1. They meet only in `memberships.service.ts` (US1's address rule, and US2's mail-name case in its `.test.ts`), so run T008 before T013's service case. Two test files are shared across stories and are edited one task at a time: apps/api/src/services/memberships.service.test.ts (T006 → T013 → T028) and apps/api/test/profile.int.test.ts (T008 → T016 → T024). Otherwise US1 and US2 can run side by side.
 - **US3** (Phase 4) depends on US1 (T008, the service it extends) and on T017/T018 (the shown name the anonymous row and `invitedBy` use).
 - **Close-out** comes after all stories.
 
@@ -174,8 +174,8 @@ Tests first and failing → repository → service → `api:openapi` → web.
 
 - Phase 1: T003 ‖ (T001 → T002 → T004)
 - US1 tests: T005 ‖ T006 ‖ T007
-- US2 tests: T010 ‖ T011 ‖ T012 ‖ T013 ‖ T015 ‖ T016, then T014 once T005 exists; implementation: T017 ‖ T018 ‖ T019 ‖ T023, then T020 + T021 together and T022, then T024
-- US3 tests: (T025 → T026 → T027, one file) ‖ T028 ‖ T029 ‖ T030
+- US2 tests: T010 ‖ T011 ‖ T012 ‖ T015 ‖ T016, then T013 (after T006) and T014 once T005 exists; implementation: T017 ‖ T018 ‖ T019 ‖ T023, then T020 + T021 together and T022, then T024
+- US3 tests: (T025 → T026 → T027, one file) ‖ T028 (after T013) ‖ T029 ‖ T030
 - Close-out: T037 ‖ T038 ‖ T039 ‖ T040
 
 ## Implementation Strategy
