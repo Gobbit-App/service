@@ -47,7 +47,7 @@ export function BottomBar({
     onAbout: () => setAboutOpen(true),
     me: me.data && {
       id: me.data.user.id,
-      initials: initialsFor({ ...me.data.profile, email: me.data.user.email }),
+      initials: initialsFor({ ...me.data.profile, fallback: me.data.user.email }),
       name: [me.data.profile.firstName, me.data.profile.lastName].filter(Boolean).join(' ') || null,
       username: me.data.profile.username,
       photo: me.data.profile.avatar,

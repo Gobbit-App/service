@@ -171,4 +171,25 @@ describe('invites (P2.5, D37)', () => {
     expect(del.status).toBe(204);
     expect(failureReason(await click(token))).toBe('invalid');
   });
+
+  it('a username invite answers no address, and its pending row stays address-free for every viewer (FR-003)', async () => {
+    const invitee = await createAccountUser(ctx.t.db, { username: 'pending-nobody' });
+    await ctx.sessionFor(invitee);
+    const res = await ctx.app.request('/decks/family/invites', {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({ username: 'pending-nobody', role: 'reader' }),
+    });
+    expect(res.status).toBe(201);
+    expect((await json(res)).membership.email).toBeNull();
+
+    for (const viewer of [OWNER_EMAIL, reader.email]) {
+      const list = await ctx.app.request('/decks/family/members', { headers: ctx.as(viewer) });
+      expect(list.status).toBe(200);
+      const body = await json(list);
+      const row = body.data.find((m: { userId: string }) => m.userId === invitee.id);
+      expect(row).toMatchObject({ acceptedAt: null, email: null });
+      expect(JSON.stringify(body)).not.toContain(invitee.email);
+    }
+  });
 });

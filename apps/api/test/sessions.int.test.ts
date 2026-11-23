@@ -33,7 +33,7 @@ describe('sessions (P2.1, D27–D32)', () => {
       const res = await me(headers);
       expect(res.status).toBe(200);
       const body = await json(res);
-      expect(body.user).toEqual({ id: user.id, email: user.email, displayName: user.displayName });
+      expect(body.user).toEqual({ id: user.id, email: user.email, displayName: 'Member' });
       expect(body.decks).toEqual([]);
     }
   });

@@ -10,7 +10,6 @@ const row = (o: Partial<UserSummaryRow>): UserSummaryRow => ({
   lastName: null,
   username: null,
   avatar: null,
-  email: 'dana.levi@example.test',
   ...o,
 });
 const make = (rows: UserSummaryRow[]) => {
@@ -42,13 +41,12 @@ describe('member summaries', () => {
     expect(map.get(ID2)!.name).toBe('Cohen');
   });
 
-  it('never leaks the email: name null, initials from email, no email/location key', async () => {
-    const { svc } = make([row({})]);
-    const map = await svc.summaries([ID]);
-    expect(map.get(ID)).toMatchObject({ name: null, initials: 'DL', photo: null });
-    const json = JSON.stringify([...map.values()]);
-    expect(json).not.toContain('example.test');
-    expect(json).not.toMatch(/"(email|location)"/);
+  it('initials come from the username with no names, and are empty with neither; no email is read', async () => {
+    const { svc } = make([row({ username: 'dana' }), row({ id: ID2 })]);
+    const map = await svc.summaries([ID, ID2]);
+    expect(map.get(ID)).toMatchObject({ name: null, initials: 'D', photo: null });
+    expect(map.get(ID2)).toMatchObject({ name: null, username: null, initials: '' });
+    expect(JSON.stringify([...map.values()])).not.toMatch(/"(email|location)"/);
   });
 
   it('cardCreator: personal -> null; null/unknown/deleted creator -> placeholder; else summary', async () => {

@@ -8,7 +8,13 @@ import {
   type WaitlistKind,
   type WaitlistStatus,
 } from '@gobbit/shared';
-import { waitlistEntries, waitlistEvents, type UserRow, type WaitlistEntryRow } from '@gobbit/db';
+import {
+  users,
+  waitlistEntries,
+  waitlistEvents,
+  type UserRow,
+  type WaitlistEntryRow,
+} from '@gobbit/db';
 import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
 import { SESSION_COOKIE } from '../src/lib/cookies';
 import { createLogHash } from '../src/lib/log-hash';
@@ -37,7 +43,7 @@ describe('admin waitlist (032)', () => {
   const members: Record<'reader' | 'editor' | 'coOwner', UserRow> = {} as never;
 
   beforeAll(async () => {
-    admin = await createAccountUser(ctx.t.db, { email: ADMIN_EMAIL, displayName: 'Admin' });
+    admin = await createAccountUser(ctx.t.db, { email: ADMIN_EMAIL, firstName: 'Admin' });
     await ctx.sessionFor(admin);
     const deck = await createDeck(ctx.t.db, ctx.world.owner);
     for (const [key, role] of [
@@ -199,6 +205,15 @@ describe('admin waitlist (032)', () => {
   });
 
   describe('invite', () => {
+    it('a deleted inviter is no name on the list, never a fallback', async () => {
+      const gone = await createAccountUser(ctx.t.db);
+      const e = await seed('invited', { invitedBy: gone.id, invitedAt: ctx.clock.now() });
+      await ctx.t.db.delete(users).where(eq(users.id, gone.id));
+      const body = await json(await list('?status=invited'));
+      const row = body.items.find((x: { id: string }) => x.id === e.id);
+      expect(row.invitedBy).toBeNull();
+    });
+
     it('confirmed → invited with an account and a sign-in link that opens a personal deck', async () => {
       const e = await seed('confirmed', { kind: 'community' as WaitlistKind });
       const res = await invite(e.id);

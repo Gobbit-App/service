@@ -269,7 +269,11 @@ export function ProfileForm({
       <PhotoField
         member={{
           id: userId,
-          initials: initialsFor({ firstName: values.firstName, lastName: values.lastName, email }),
+          initials: initialsFor({
+            firstName: values.firstName,
+            lastName: values.lastName,
+            fallback: email,
+          }),
           name: name || null,
           username: username || null,
         }}

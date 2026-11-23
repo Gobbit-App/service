@@ -20,6 +20,7 @@ const member = (name: string, overrides: Partial<Member> = {}): Member => ({
   photo: null,
   role: 'reader',
   invitedAt: STAMP,
+  invitedBy: null,
   acceptedAt: STAMP,
   implicit: false,
   ...overrides,
@@ -141,5 +142,34 @@ describe('MembersSection (D184, D185)', () => {
     expect(within(await row('Rita')).getByText('Reader')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Remove/ })).toBeNull();
     expect(screen.getByRole('button', { name: 'Send invite' })).toBeDisabled();
+  });
+});
+
+describe('MembersSection secondary line (051 US3)', () => {
+  const line = async (name: string, extra: Partial<Member>) => {
+    members.push(member(name, extra));
+    setup();
+    const el = (await row(name)).querySelector('.admin-member__who .muted');
+    members.pop();
+    return el?.textContent;
+  };
+  const none = { email: null, username: null, invitedBy: null };
+
+  it('shows the typed invite address', async () => {
+    expect(await line('Eve', { ...none, email: 'eve@example.test' })).toBe('eve@example.test');
+  });
+  it('a pending username row shows the handle and who invited', async () => {
+    expect(await line('Noa', { ...none, username: 'noa', invitedBy: 'A', acceptedAt: null })).toBe(
+      '@noa · Invited by A',
+    );
+  });
+  it('shows only Invited by when there is no username', async () => {
+    expect(await line('Ivy', { ...none, invitedBy: 'A' })).toBe('Invited by A');
+  });
+  it('shows only the username as before', async () => {
+    expect(await line('Zed', { ...none, username: 'noa' })).toBe('@noa');
+  });
+  it('shows an empty line when nothing is known', async () => {
+    expect(await line('Nil', none)).toBe('');
   });
 });

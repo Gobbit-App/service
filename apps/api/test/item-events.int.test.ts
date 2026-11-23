@@ -1,4 +1,3 @@
-import { initialsFor } from '@gobbit/shared/avatar';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { itemEvents, items, users, type DeckRow, type UserRow } from '@gobbit/db';
@@ -29,8 +28,8 @@ describe('item events (020)', () => {
       now: ctx.clock.now,
       search: { embedder: null },
     }).ingest;
-    maintainer = await createAccountUser(ctx.t.db, { displayName: 'Maya Maintainer' });
-    editor = await createAccountUser(ctx.t.db, { displayName: 'Eli Editor' });
+    maintainer = await createAccountUser(ctx.t.db, { firstName: 'Maya', lastName: 'Maintainer' });
+    editor = await createAccountUser(ctx.t.db, { firstName: 'Eli', lastName: 'Editor' });
     reader = await createAccountUser(ctx.t.db);
     for (const user of [maintainer, editor, reader]) await ctx.sessionFor(user);
   });
@@ -109,7 +108,7 @@ describe('item events (020)', () => {
         userId: maintainer.id,
         displayName: 'Maya Maintainer',
         username: null,
-        initials: initialsFor({ email: maintainer.email }),
+        initials: 'MM',
         photo: null,
       });
     });
@@ -278,7 +277,7 @@ describe('item events (020)', () => {
     });
 
     it('shows a deleted account as a null actor', async () => {
-      const gone = await createAccountUser(ctx.t.db, { displayName: 'Gone Member' });
+      const gone = await createAccountUser(ctx.t.db, {});
       await addMember(ctx.t.db, deck, gone, 'editor');
       await ctx.sessionFor(gone);
       await createCard('Left behind', {}, gone.email);

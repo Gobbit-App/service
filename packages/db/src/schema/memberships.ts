@@ -1,4 +1,4 @@
-import { pgTable, uuid, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, boolean, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { memberRoleEnum, timestamps, tstz } from './common';
 import { decks } from './decks';
@@ -17,6 +17,7 @@ export const memberships = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     role: memberRoleEnum().notNull(),
     invitedBy: uuid().references(() => users.id, { onDelete: 'set null' }),
+    invitedByEmail: boolean().notNull().default(false),
     invitedAt: tstz().notNull().defaultNow(),
     acceptedAt: tstz(),
     ...timestamps,

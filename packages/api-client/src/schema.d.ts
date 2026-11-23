@@ -2537,6 +2537,7 @@ export interface paths {
                                 /** @enum {string} */
                                 role: "owner" | "maintainer" | "editor" | "reader";
                                 invitedAt: string | null;
+                                invitedBy: string | null;
                                 acceptedAt: string | null;
                                 implicit: boolean;
                             }[];
@@ -2779,6 +2780,7 @@ export interface paths {
                             /** @enum {string} */
                             role: "owner" | "maintainer" | "editor" | "reader";
                             invitedAt: string | null;
+                            invitedBy: string | null;
                             acceptedAt: string | null;
                             implicit: boolean;
                         };

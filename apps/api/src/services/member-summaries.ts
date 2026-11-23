@@ -15,7 +15,7 @@ const PLACEHOLDER: CardCreator = {
   photo: null,
 };
 
-/** D420-D422, D427: profile name only (never the email-derived display name); email feeds initials and is dropped. */
+/** D420-D422, D427: profile name only (never the email-derived display name); no email is read. */
 export function createMemberSummaries({ users }: MemberSummariesDeps) {
   return {
     /** One repo call for the whole page; deleted/unknown users are simply absent from the map. */
@@ -28,7 +28,11 @@ export function createMemberSummaries({ users }: MemberSummariesDeps) {
           id: u.id,
           name: [u.firstName, u.lastName].filter((s) => s?.trim()).join(' ') || null,
           username: u.username,
-          initials: initialsFor(u),
+          initials: initialsFor({
+            firstName: u.firstName,
+            lastName: u.lastName,
+            fallback: u.username,
+          }),
           photo: a ? { publicId: a.publicId, width: a.width, height: a.height } : null,
         });
       }

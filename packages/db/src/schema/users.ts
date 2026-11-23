@@ -10,6 +10,7 @@ import {
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { MEMBER_NAME } from '@gobbit/shared';
 import { accounts } from './accounts';
 import {
   analyticsConsentEnum,
@@ -84,8 +85,8 @@ export const users = pgTable(
   ],
 );
 
-/** D419: name shown for a member: "First Last" when set, else the legacy display name. */
+/** D419/D459: "First Last", else username, else "Member" (MEMBER_NAME); `id` keeps LEFT-JOINed nulls null. `display_name` is not read. */
 export const displayNameSql = (
-  t: Pick<typeof users, 'firstName' | 'lastName' | 'displayName'> = users,
+  t: Pick<typeof users, 'id' | 'firstName' | 'lastName' | 'username'> = users,
 ) =>
-  sql<string>`coalesce(nullif(btrim(concat_ws(' ', ${t.firstName}, ${t.lastName})), ''), ${t.displayName})`;
+  sql<string>`coalesce(nullif(btrim(concat_ws(' ', ${t.firstName}, ${t.lastName})), ''), ${t.username}, CASE WHEN ${t.id} IS NOT NULL THEN ${MEMBER_NAME} END)`;

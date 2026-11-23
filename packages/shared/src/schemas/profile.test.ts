@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   cardCreatorSchema,
   displayNameOf,
+  MEMBER_NAME,
   memberLookupRequest,
   memberSummarySchema,
   profilePatchSchema,
@@ -30,6 +31,12 @@ describe('displayNameOf', () => {
     expect(displayNameOf({ firstName: 'A', lastName: null, displayName })).toBe('A');
     expect(displayNameOf({ firstName: null, lastName: 'B', displayName })).toBe('B');
     expect(displayNameOf({ firstName: ' ', lastName: null, displayName })).toBe('stored');
+  });
+  it('passes a chain-built displayName through', () => {
+    expect(MEMBER_NAME).toBe('Member');
+    const none = { firstName: null, lastName: null };
+    expect(displayNameOf({ ...none, displayName: 'alice' })).toBe('alice');
+    expect(displayNameOf({ ...none, displayName: MEMBER_NAME })).toBe('Member');
   });
 });
 

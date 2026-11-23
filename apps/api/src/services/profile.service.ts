@@ -60,7 +60,11 @@ export function toProfile(row: ProfileRow): Profile {
     lastName: row.lastName,
     location: row.location,
     avatar: row.avatar,
-    initials: initialsFor({ firstName: row.firstName, lastName: row.lastName, email: row.email }),
+    initials: initialsFor({
+      firstName: row.firstName,
+      lastName: row.lastName,
+      fallback: row.email,
+    }),
   };
 }
 

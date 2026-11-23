@@ -37,6 +37,7 @@ export const memberSchema = z.object({
   photo: memberSummarySchema.shape.photo,
   role: z.enum(memberRoles),
   invitedAt: z.string().nullable(),
+  invitedBy: z.string().nullable(),
   acceptedAt: z.string().nullable(),
   implicit: z.boolean(),
 });

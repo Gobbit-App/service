@@ -96,7 +96,14 @@ function MemberRow({
             {isMe && ' (you)'}
           </strong>
           <span className="muted">
-            {member.email ?? (member.username ? `@${member.username}` : null)}
+            {member.email ??
+              ([
+                member.username && `@${member.username}`,
+                member.invitedBy && `Invited by ${member.invitedBy}`,
+              ]
+                .filter(Boolean)
+                .join(' · ') ||
+                null)}
           </span>
         </div>
       </div>

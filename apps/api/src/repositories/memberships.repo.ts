@@ -59,6 +59,7 @@ export function createMembershipsRepo(db: DbExecutor) {
       userId: string;
       role: MemberRole;
       invitedBy: string | null;
+      invitedByEmail?: boolean;
       now: Date;
     }): Promise<MembershipRow> {
       const [row] = await db
@@ -68,6 +69,7 @@ export function createMembershipsRepo(db: DbExecutor) {
           userId: v.userId,
           role: v.role,
           invitedBy: v.invitedBy,
+          invitedByEmail: v.invitedByEmail ?? false,
           invitedAt: v.now,
         })
         .returning();
@@ -77,11 +79,16 @@ export function createMembershipsRepo(db: DbExecutor) {
     /** D37 resend to a pending member: the new invite's role, inviter and time replace the old. */
     async reinvite(
       id: string,
-      v: { role: MemberRole; invitedBy: string; now: Date },
+      v: { role: MemberRole; invitedBy: string; invitedByEmail: boolean; now: Date },
     ): Promise<MembershipRow> {
       const [row] = await db
         .update(memberships)
-        .set({ role: v.role, invitedBy: v.invitedBy, invitedAt: v.now })
+        .set({
+          role: v.role,
+          invitedBy: v.invitedBy,
+          invitedByEmail: v.invitedByEmail,
+          invitedAt: v.now,
+        })
         .where(and(eq(memberships.id, id), isNull(memberships.acceptedAt)))
         .returning();
       return row;

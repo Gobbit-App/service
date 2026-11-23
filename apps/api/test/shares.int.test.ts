@@ -175,7 +175,7 @@ describe('Your shares: GET /decks/{id}/shares, GET /shares/{id}, POST /shares/{i
         state: 'published',
         item: { id: card.id, title: 'Dentist', deleted: false },
         preview: { title: 'Dentist', host: 'dentist.example', photoCount: 0 },
-        reviewedBy: { displayName: ctx.world.owner.displayName },
+        reviewedBy: { displayName: 'Member' },
       });
 
       await ctx.t.db.update(items).set({ deletedAt: new Date() }).where(eq(items.id, card.id));

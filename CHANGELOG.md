@@ -10,6 +10,10 @@ here in the same PR. Mark entries that stop a deploy from starting without actio
 
 ## Unreleased
 
+### 2026-11-23 — Member email privacy (051, D461)
+
+- New migration `0029_invited_by_email` adds `memberships.invited_by_email`. Invites that are pending when it runs default to false, so their inviter no longer sees the typed address until the invite is re-sent. No environment variable changes, no action required.
+
 ### 2026-11-21 — Import v2: images and media from the command line (049, D450)
 
 - `pnpm import:notes` now uploads `cover` / `image` files (paths relative to the notes file) and `type: media` rows. `POST /decks/{id}/imports` drafts accept `type: media` with `payload` and `cover` (additive); they are refused with `/problems/import-unknown-file` unless the asset is recorded for the deck. The web import marks such rows "Import this file from the command line". No environment variable changes, no migration, no action required.
