@@ -154,7 +154,7 @@ description: "Task list for 051 member email privacy"
 - [X] T038 [P] docs/adr.md: ADR-084 (D459 name chain, D461 typed-invite flag, D462 anonymous pending typed row with its `userId` residual). docs/architecture.md: one ADR index row, keeping the file under 250 lines.
 - [X] T039 [P] CLAUDE.md, Profile ground rule: names are profile name, else username, else "Member" (`MEMBER_NAME`; null on a left join to a deleted user). Member answers carry no address except the inviter's own pending typed invite (`invited_by_email`). `initialsFor` takes `fallback` (the username for others, the own email for self).
 - [X] T040 [P] community-go-list.md: tick H6 (and G17) on merge, with a progress-log row for deviations. PLAN.md Phase 16: link spec 051. README.md: no change (no env var or command); confirm.
-- [ ] T041 Run quickstart.md by hand (steps 1–7), then `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review`. The PR states "E2E tier: full — privacy rules are API answers covered by the int scan; one @full screen check", the visible change (nameless members show as username or "Member"), and that pending invites sent before deploy lose their address for the inviter.
+- [X] T041 Run quickstart.md by hand (steps 1–7), then `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review`. The PR states "E2E tier: full — privacy rules are API answers covered by the int scan; one @full screen check", the visible change (nameless members show as username or "Member"), and that pending invites sent before deploy lose their address for the inviter.
 
 ---
 
