@@ -88,6 +88,15 @@ describe('profile (046 part 1)', () => {
       expect(await me(u)).toMatchObject(saved);
     });
 
+    it('/me initials come from the own email when no names; user.displayName is the username, else Member (FR-008)', async () => {
+      const u = await member({ email: 'zed.quux@example.test' });
+      const body = await json(await req('/me', 'GET', u.email));
+      expect(body.profile.initials).toBe('ZQ');
+      expect(body.user.displayName).toBe('Member');
+      expect((await patch(u, { username: 'zed-q' })).status).toBe(200);
+      expect((await json(await req('/me', 'GET', u.email))).user.displayName).toBe('zed-q');
+    });
+
     it('clearing one field keeps the others', async () => {
       const u = await member({ firstName: 'Keep', lastName: 'Me', location: 'Here' });
       for (const body of [{ location: null }, { lastName: '   ' }]) {
@@ -245,7 +254,7 @@ describe('profile (046 part 1)', () => {
       expect(ctx.mailer.sent[0].to).toBe(invitee.email);
     });
 
-    it('/members shows email null for a username holder to others, the real one to themselves', async () => {
+    it('/members shows email null to everyone, the viewer included (FR-004)', async () => {
       const u = await member({ username: 'masked-one' });
       await addMember(ctx.t.db, ctx.world.decks.family, u, 'reader');
       const emailOf = async (viewerEmail: string) =>
@@ -253,7 +262,7 @@ describe('profile (046 part 1)', () => {
           (m: { userId: string }) => m.userId === u.id,
         ).email;
       expect(await emailOf(OWNER_EMAIL)).toBeNull();
-      expect(await emailOf(u.email)).toBe(u.email);
+      expect(await emailOf(u.email)).toBeNull();
     });
 
     it('unknown and released usernames answer the same 404', async () => {
@@ -470,13 +479,13 @@ describe('profile (046 part 2: creator)', () => {
       expectAda((await json(patched)).creator);
     });
 
-    it('a member with no names has name null and email-derived initials, never the email', async () => {
+    it('a member with no names has name null and empty initials, never the email', async () => {
       const body = await getJson(`/items/${cards.quiet.id}`, reader.email);
       expect(body.creator).toEqual({
         id: quiet.id,
         name: null,
         username: null,
-        initials: 'QP',
+        initials: '',
         photo: null,
       });
       expectNoLeak(body, quiet);
@@ -821,7 +830,7 @@ describe('profile (046 part 4: names everywhere)', () => {
       await ctx.sessionFor(u);
       await addMember(ctx.t.db, family, u, 'editor');
     }
-    baseline = ed.displayName;
+    baseline = 'Member';
 
     // A logged card change by `ed`, a proposal shared by `ed`, a share of `peer` reviewed by `ed`.
     const made = await call('/decks/family/items', ed.email, 'POST', {
@@ -864,7 +873,7 @@ describe('profile (046 part 4: names everywhere)', () => {
     shareId = job!.id;
   });
 
-  it('shows the email-derived name until a profile name is set', async () => {
+  it('shows Member until a profile name or username is set', async () => {
     await allAre(baseline);
   });
 
@@ -880,13 +889,13 @@ describe('profile (046 part 4: names everywhere)', () => {
     await allAre('Editor');
   });
 
-  it('clearing the names reverts to the exact previous email-derived value', async () => {
+  it('clearing the names reverts to Member', async () => {
     await setNames({ firstName: 'Eda', lastName: 'Editor' });
     await setNames({ firstName: null, lastName: null });
     await allAre(baseline);
   });
 
-  it('the invite mail names the inviter by profile name, then by the email-derived one', async () => {
+  it('the invite mail names the inviter by profile name, then by a generic one', async () => {
     const invite = async (email: string) => {
       const res = await call('/decks/family/invites', OWNER_EMAIL, 'POST', {
         email,
@@ -899,7 +908,7 @@ describe('profile (046 part 4: names everywhere)', () => {
     expect((await invite('invitee-one@example.test')).subject).toContain('Olive Owner invited');
     await setNames({ firstName: null, lastName: null }, OWNER_EMAIL);
     const mail = await invite('invitee-two@example.test');
-    expect(mail.subject).toContain(`${ctx.world.owner.displayName} invited you to`);
+    expect(mail.subject).toContain('A Gobbit member invited you to');
   });
 
   it('emails show where they do today, never beside a username; actors carry no email', async () => {
@@ -907,13 +916,13 @@ describe('profile (046 part 4: names everywhere)', () => {
       (await json(await call('/decks/family/members', viewer))).data.find(
         (m: { userId: string }) => m.userId === ed.id,
       );
-    expect((await memberRow(OWNER_EMAIL)).email).toBe(ed.email);
-    expect((await memberRow(peer.email)).email).toBe(ed.email);
+    expect((await memberRow(OWNER_EMAIL)).email).toBeNull();
+    expect((await memberRow(peer.email)).email).toBeNull();
 
     await setNames({ username: 'eda-ed' });
     expect(await memberRow(OWNER_EMAIL)).toMatchObject({ email: null, username: 'eda-ed' });
     expect(await memberRow(peer.email)).toMatchObject({ email: null });
-    expect(await memberRow(ed.email)).toMatchObject({ email: ed.email });
+    expect(await memberRow(ed.email)).toMatchObject({ email: null });
 
     const actor = await actorOf();
     expect(Object.keys(actor).sort()).toEqual([

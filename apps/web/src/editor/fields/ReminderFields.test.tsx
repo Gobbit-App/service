@@ -19,6 +19,7 @@ const member = (displayName: string, overrides: Partial<Member> = {}): Member =>
   photo: null,
   role: 'editor',
   invitedAt: '2026-01-01T00:00:00.000Z',
+  invitedBy: null,
   acceptedAt: '2026-01-02T00:00:00.000Z',
   implicit: false,
   ...overrides,

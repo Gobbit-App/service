@@ -16,26 +16,24 @@ describe('initialsFor names', () => {
     ['first only', 'Dana', '', 'D'],
     ['last only', '', 'Levi', 'L'],
   ])('%s', (_n, firstName, lastName, want) => {
-    expect(initialsFor({ firstName, lastName, email: 'x@example.test' })).toBe(want);
+    expect(initialsFor({ firstName, lastName, fallback: 'x' })).toBe(want);
   });
 });
 
-describe('initialsFor email', () => {
+describe('initialsFor fallback', () => {
   it.each([
-    ['dana.levi@example.test', 'DL'],
-    ['dana@example.test', 'D'],
-    ['dana.m.levi@example.test', 'DL'],
-    ['dana_levi-x@example.test', 'DX'],
-    ['1.2@example.test', ''],
-    ['123@example.test', ''],
-    ['12.dana@example.test', 'D'],
-  ])('%s', (email, want) => {
-    expect(initialsFor({ email })).toBe(want);
+    ['dana.levi', 'DL'],
+    ['dana', 'D'],
+    ['dana.m.levi', 'DL'],
+    ['dana_levi-x', 'DX'],
+    ['1.2', ''],
+    ['123', ''],
+    ['12.dana', 'D'],
+  ])('%s', (fallback, want) => {
+    expect(initialsFor({ fallback })).toBe(want);
   });
-  it('emoji-only names fall back to email', () => {
-    expect(initialsFor({ firstName: '🙂', lastName: '🎉', email: 'dana.levi@example.test' })).toBe(
-      'DL',
-    );
+  it('emoji-only names fall back to the fallback', () => {
+    expect(initialsFor({ firstName: '🙂', lastName: '🎉', fallback: 'dana.levi' })).toBe('DL');
   });
   it('nothing', () => expect(initialsFor({})).toBe(''));
 });

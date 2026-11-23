@@ -743,3 +743,12 @@ Revises D167/D168 (015's locked-host rules).
 - **Best effort**: a small builder returns a `ProposeCardInput` plus its `ValidateContext` (link, media or text card; no categories) and the handler runs the same `validateProposal` and `proposeItem` as for an extracted answer, so card limits, style stripping and locked-site rules apply by construction (D454).
 
 **Rationale**: The setting belongs to the person and holds on every deck, and a column is the simplest thing an operator can change by hand. Admins come from an env list a migration cannot read, so code makes them on. The handler is the only place that calls the model for share channels, and checking at processing time rather than at submit keeps retries honest and leaves the model path untouched. Reusing the validator avoids a second payload builder. Details: `specs/050-model-spend-guard/research.md`.
+
+## ADR-084: Member names never come from the address; typed-invite addresses show only to their inviter (D459, D461, D462)
+
+**Decision**: One name chain, profile name, else username, else "Member" (`MEMBER_NAME`), built by `displayNameSql`; the floor applies only when the user row exists, so a deleted user stays null (D459). `users.display_name` is no longer read.
+
+- **Address**: `memberships.invited_by_email` records a typed-address invite. A member answer carries the invitee's address only on a pending row with the flag set, to the viewer who is `invited_by`; every other answer has `email: null` (D461).
+- **Anonymous row**: a pending typed-address row shows no profile (`"Member"`, no username, no photo, empty initials) to everyone, inviter included, so an address cannot be turned into a profile. Residual: `userId` stays on the row, so an inviter holding a candidate profile can confirm a guess by comparing ids; accepted until an opaque per-row id is worth it (D462).
+
+**Rationale**: The email-derived name was most of the address and appeared in every members list. A flag suffices because `users.email` already holds the address; inferring "typed" from a missing username would leak when a username is cleared. Details: `docs/design/profile.md`, `specs/051-member-email-privacy/research.md`.

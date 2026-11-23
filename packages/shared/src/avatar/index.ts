@@ -14,11 +14,11 @@ function firstLetter(s: string | null | undefined): string {
 export function initialsFor(p: {
   firstName?: string | null;
   lastName?: string | null;
-  email?: string | null;
+  fallback?: string | null;
 }): string {
   const names = [firstLetter(p.firstName), firstLetter(p.lastName)].filter(Boolean);
   if (names.length) return names.join('');
-  const parts = (p.email ?? '')
+  const parts = (p.fallback ?? '')
     .split('@')[0]!
     .split(/[.\-_]/)
     .map(firstLetter)

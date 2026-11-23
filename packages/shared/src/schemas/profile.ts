@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const MEMBER_NAME = 'Member';
+
 export const photoSchema = z.object({
   publicId: z.string(),
   width: z.number().int().optional(),

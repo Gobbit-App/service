@@ -100,18 +100,105 @@ describe('createMembershipsService', () => {
       expect(result[1]).toMatchObject({ username: 'newbie', initials: 'N', photo: null });
     });
 
-    it('masks the email of a username holder except to themselves; others unchanged', async () => {
+    it('answers email null on every row: the viewer, the implicit owner and members (FR-001)', async () => {
       users.listByAccount.mockResolvedValue([caller]);
       memberships.listByDeck.mockResolvedValue([
         { membership: membershipRow({ role: 'editor' }), user: invitee },
       ]);
 
       const other = await service.list(caller, UUID);
-      expect(other.map((m) => m.email)).toEqual(['o@x.co', null]);
+      expect(other.map((m) => m.email)).toEqual([null, null]);
 
-      // same id as the listed member (account owner passes authorize): sees their own address
+      // the viewer's own row is null too
       const self = await service.list({ ...caller, id: 'inv' }, UUID);
-      expect(self[1].email).toBe('new@x.co');
+      expect(self.map((m) => m.email)).toEqual([null, null]);
+    });
+
+    describe('per-viewer rules (D461-D463)', () => {
+      const pendingRow = (o: Record<string, unknown> = {}) => ({
+        membership: membershipRow({ invitedBy: 'caller', invitedByEmail: true, ...o }),
+        user: invitee,
+      });
+      const listFor = async (viewer: any, rows: any[], owners: any[] = [caller]) => {
+        users.listByAccount.mockResolvedValue(owners);
+        memberships.listByDeck.mockResolvedValue(rows);
+        return service.list(viewer, UUID);
+      };
+      const pending = (r: any[]) => r.find((m) => m.userId === 'inv');
+
+      it('shows the address only to the inviter of a pending typed invite', async () => {
+        expect(pending(await listFor(caller, [pendingRow()])).email).toBe('new@x.co');
+        // another owner is not the inviter
+        const other = { ...caller, id: 'owner2' };
+        expect(pending(await listFor(other, [pendingRow()], [caller, other])).email).toBeNull();
+        // typed by username, or accepted: no address even for the inviter
+        expect(
+          pending(await listFor(caller, [pendingRow({ invitedByEmail: false })])).email,
+        ).toBeNull();
+        expect(pending(await listFor(caller, [pendingRow({ acceptedAt: NOW })])).email).toBeNull();
+      });
+
+      it('makes a pending typed row anonymous for every viewer, the inviter included', async () => {
+        const other = { ...caller, id: 'owner2' };
+        for (const viewer of [caller, other]) {
+          const row = pending(await listFor(viewer, [pendingRow()], [caller, other]));
+          expect(row).toMatchObject({
+            displayName: 'Member',
+            username: null,
+            initials: '',
+            photo: null,
+          });
+        }
+        // a pending username invite keeps its summary
+        expect(
+          pending(await listFor(caller, [pendingRow({ invitedByEmail: false })])),
+        ).toMatchObject({ username: 'newbie', initials: 'N' });
+      });
+
+      it('sets invitedBy on pending rows for viewers with member.invite, from the list', async () => {
+        const row = pending(await listFor(caller, [pendingRow()]));
+        expect(row.invitedBy).toBe('Olga');
+        // accepted rows and implicit owners: null
+        const rows = await listFor(caller, [pendingRow({ acceptedAt: NOW })]);
+        expect(rows.map((m) => m.invitedBy)).toEqual([null, null]);
+      });
+
+      it('names the inviter "Member" when absent from the list or invitedBy is null', async () => {
+        expect(pending(await listFor(caller, [pendingRow({ invitedBy: 'gone' })])).invitedBy).toBe(
+          'Member',
+        );
+        expect(pending(await listFor(caller, [pendingRow({ invitedBy: null })])).invitedBy).toBe(
+          'Member',
+        );
+      });
+
+      it('leaves invitedBy null for viewers without member.invite', async () => {
+        const reader = { id: 'rdr', accountId: 'acc-r', email: 'r@x.co', displayName: 'Rae' };
+        memberships.findActive.mockResolvedValue(
+          membershipRow({ userId: 'rdr', acceptedAt: NOW, role: 'reader' }),
+        );
+        const rows = [
+          pendingRow(),
+          { membership: membershipRow({ id: 'm2', userId: 'rdr', acceptedAt: NOW }), user: reader },
+        ];
+        const result = await listFor(reader, rows);
+        expect(pending(result).invitedBy).toBeNull();
+      });
+    });
+  });
+
+  describe('changeRole', () => {
+    it('answers email null', async () => {
+      // no username on the target, so only the new rule can null the address
+      users.findById.mockResolvedValue({ ...invitee, id: 'plain' });
+      memberships.findActive.mockResolvedValue(membershipRow({ userId: 'plain', acceptedAt: NOW }));
+      memberships.updateRole = vi
+        .fn()
+        .mockResolvedValue(membershipRow({ acceptedAt: NOW, role: 'editor' }));
+
+      const result = await service.changeRole(caller, UUID, 'plain', 'editor');
+
+      expect(result.email).toBeNull();
     });
   });
 
@@ -169,6 +256,19 @@ describe('createMembershipsService', () => {
       });
       const err = await service.invite(caller, UUID, input, CTX).catch((e) => e);
       expect(err.status).toBe(400);
+    });
+
+    it("passes the inviter's chain-built name to the mail", async () => {
+      memberships.create.mockResolvedValue(membershipRow({ role: 'editor' }));
+      await service.invite({ ...caller, displayName: 'Member' }, UUID, input, CTX);
+      expect(mailer.send.mock.calls[0][0].subject).toBe(
+        'A Gobbit member invited you to Family Deck on Gobbit',
+      );
+      mailer.send.mockClear();
+      await service.invite(caller, UUID, input, CTX);
+      expect(mailer.send.mock.calls[0][0].subject).toBe(
+        'Olga invited you to Family Deck on Gobbit',
+      );
     });
 
     it('invites by username: mail goes to the member, the DTO carries no new email field', async () => {
@@ -275,6 +375,7 @@ describe('createMembershipsService', () => {
       expect(memberships.reinvite).toHaveBeenCalledWith('m1', {
         role: 'editor',
         invitedBy: 'caller',
+        invitedByEmail: true,
         now: NOW,
       });
       expect(magicLinks.expireUnusedForMembership.mock.invocationCallOrder[0]).toBeLessThan(
@@ -301,6 +402,7 @@ describe('createMembershipsService', () => {
         userId: 'inv',
         role: 'editor',
         invitedBy: 'caller',
+        invitedByEmail: true,
         now: NOW,
       });
       expect(magicLinks.create).toHaveBeenCalledWith(

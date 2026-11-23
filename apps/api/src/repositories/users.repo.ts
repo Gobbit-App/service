@@ -59,7 +59,7 @@ export type ProfilePatch = Partial<
 
 export type UserSummaryRow = Pick<
   ProfileRow,
-  'id' | 'firstName' | 'lastName' | 'username' | 'avatar' | 'email'
+  'id' | 'firstName' | 'lastName' | 'username' | 'avatar'
 >;
 
 export function createUsersRepo(db: DbExecutor) {
@@ -115,7 +115,6 @@ export function createUsersRepo(db: DbExecutor) {
           lastName: users.lastName,
           username: users.username,
           avatar: users.avatar,
-          email: users.email,
         })
         .from(users)
         .where(and(inArray(users.id, ids), isNull(users.deletedAt)));

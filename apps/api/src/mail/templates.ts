@@ -1,3 +1,5 @@
+import { MEMBER_NAME } from '@gobbit/shared';
+
 export interface RenderedMail {
   subject: string;
   text: string;
@@ -35,10 +37,11 @@ export function inviteEmail(p: {
   role: string;
   ttlDays: number;
 }): RenderedMail {
+  const who = p.inviterName === MEMBER_NAME ? 'A Gobbit member' : p.inviterName;
   return {
-    subject: `${p.inviterName} invited you to ${p.deckName} on Gobbit`,
-    text: `${p.inviterName} invited you to the deck "${p.deckName}" on Gobbit with the role "${p.role}". Click the link below to accept. This link expires in ${p.ttlDays} days.\n\n${p.link}`,
-    html: `<p><strong>${escapeHtml(p.inviterName)}</strong> invited you to the deck <strong>${escapeHtml(p.deckName)}</strong> on Gobbit with the role <strong>${escapeHtml(p.role)}</strong>.</p>\n<p><a href="${escapeHtml(p.link)}">Accept invitation</a></p>\n<p>This link expires in ${p.ttlDays} days.</p>`,
+    subject: `${who} invited you to ${p.deckName} on Gobbit`,
+    text: `${who} invited you to the deck "${p.deckName}" on Gobbit with the role "${p.role}". Click the link below to accept. This link expires in ${p.ttlDays} days.\n\n${p.link}`,
+    html: `<p><strong>${escapeHtml(who)}</strong> invited you to the deck <strong>${escapeHtml(p.deckName)}</strong> on Gobbit with the role <strong>${escapeHtml(p.role)}</strong>.</p>\n<p><a href="${escapeHtml(p.link)}">Accept invitation</a></p>\n<p>This link expires in ${p.ttlDays} days.</p>`,
   };
 }
 

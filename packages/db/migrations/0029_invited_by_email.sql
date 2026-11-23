@@ -1,0 +1,1 @@
+ALTER TABLE "memberships" ADD COLUMN "invited_by_email" boolean DEFAULT false NOT NULL;

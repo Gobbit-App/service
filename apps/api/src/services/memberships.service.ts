@@ -1,3 +1,4 @@
+import { can, MEMBER_NAME } from '@gobbit/shared';
 import type { InviteCreate, Member, MemberRole, Membership } from '@gobbit/shared';
 import type { DeckRow, MembershipRow } from '@gobbit/db';
 import type { Env } from '../env';
@@ -73,11 +74,10 @@ export function createMembershipsService(deps: {
   /** Profile fields of a member list, from the shared summary builder (no email, initials via initialsFor). */
   async function profileOf(ids: string[]) {
     const map = await deps.summaries.summaries(ids);
-    return (id: string, email: string, viewerId: string) => {
+    return (id: string) => {
       const s = map.get(id);
       return {
-        // Spec 7.6: a member with a username is known by it; their email shows only to themselves.
-        email: s?.username && viewerId !== id ? null : email,
+        email: null, // FR-004: a member list never carries an address, not even your own
         username: s?.username ?? null,
         initials: s?.initials ?? '',
         photo: s?.photo ?? null,
@@ -119,32 +119,53 @@ export function createMembershipsService(deps: {
     /** Implicit owners (the owner account's users) first, then membership rows. */
     async list(user: CurrentUser, idOrSlug: string): Promise<Member[]> {
       const deck = await resolveDeck(decks, idOrSlug, user);
-      await authorize(user, deck, 'member.list', memberships);
+      const viewerRole = await authorize(user, deck, 'member.list', memberships);
 
       const owners = await users.listByAccount(deck.ownerAccountId);
       const rows = await memberships.listByDeck(deck.id);
 
       const profile = await profileOf([...owners.map((o) => o.id), ...rows.map((r) => r.user.id)]);
 
+      const shownNames = new Map<string, string>([
+        ...owners.map((o) => [o.id, o.displayName] as const),
+        ...rows
+          .filter((r) => r.membership.acceptedAt)
+          .map((r) => [r.user.id, r.user.displayName] as const),
+      ]);
+
       return [
         ...owners.map((o) => ({
           userId: o.id,
           displayName: o.displayName,
-          ...profile(o.id, o.email, user.id),
+          ...profile(o.id),
           role: 'owner' as const,
           invitedAt: null,
+          invitedBy: null,
           acceptedAt: null,
           implicit: true,
         })),
-        ...rows.map(({ membership, user: u }) => ({
-          userId: u.id,
-          displayName: u.displayName,
-          ...profile(u.id, u.email, user.id),
-          role: membership.role,
-          invitedAt: membership.invitedAt.toISOString(),
-          acceptedAt: membership.acceptedAt?.toISOString() ?? null,
-          implicit: false,
-        })),
+        ...rows.map(({ membership, user: u }) => {
+          // D462: a pending typed-address row is anonymous to everyone.
+          const anon = !membership.acceptedAt && membership.invitedByEmail;
+          const p = profile(u.id);
+          return {
+            userId: u.id,
+            displayName: anon ? MEMBER_NAME : u.displayName,
+            ...p,
+            ...(anon ? { username: null, initials: '', photo: null } : {}),
+            // D461: only the current inviter sees the address, while pending.
+            email: anon && membership.invitedBy === user.id ? u.email : null,
+            role: membership.role,
+            invitedAt: membership.invitedAt.toISOString(),
+            // D463: the inviter's shown name, for those who manage members.
+            invitedBy:
+              !membership.acceptedAt && can(viewerRole, 'member.invite')
+                ? (shownNames.get(membership.invitedBy ?? '') ?? MEMBER_NAME)
+                : null,
+            acceptedAt: membership.acceptedAt?.toISOString() ?? null,
+            implicit: false,
+          };
+        }),
       ];
     },
 
@@ -199,9 +220,10 @@ export function createMembershipsService(deps: {
       return {
         userId: target.id,
         displayName: target.displayName,
-        ...profile(target.id, target.email, user.id),
+        ...profile(target.id),
         role: updated.role,
         invitedAt: updated.invitedAt.toISOString(),
+        invitedBy: null,
         acceptedAt: updated.acceptedAt?.toISOString() ?? null,
         implicit: false,
       };
@@ -301,6 +323,7 @@ export function createMembershipsService(deps: {
         membership = await memberships.reinvite(existing.id, {
           role: input.role,
           invitedBy: user.id,
+          invitedByEmail: !byUsername,
           now: now(),
         });
       } else {
@@ -309,13 +332,17 @@ export function createMembershipsService(deps: {
           userId: invitee.id,
           role: input.role,
           invitedBy: user.id,
+          invitedByEmail: !byUsername,
           now: now(),
         });
       }
 
       await sendInvite(user, deck, membership, invitee);
-      const dto = toMembershipDto(membership, invitee);
-      // Spec 5.3/7.6: an invite by username never echoes the address.
+      // Spec 5.3/7.6: a username invite never echoes the address; D462: a typed one never the name.
+      const dto = toMembershipDto(
+        membership,
+        byUsername ? invitee : { ...invitee, displayName: MEMBER_NAME },
+      );
       return { membership: byUsername ? { ...dto, email: null } : dto, created: !existing };
     },
   };

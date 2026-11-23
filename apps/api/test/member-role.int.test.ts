@@ -52,7 +52,7 @@ describe('member role change (019)', () => {
     expect(res.status).toBe(200);
     expect(await json(res)).toMatchObject({
       userId: reader.id,
-      email: reader.email,
+      email: null,
       role: 'maintainer',
       implicit: false,
     });

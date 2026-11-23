@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { MEMBER_NAME } from '@gobbit/shared';
 import {
   escapeHtml,
   signInEmail,
@@ -127,6 +128,17 @@ describe('signInEmail content', () => {
 });
 
 describe('inviteEmail', () => {
+  it('uses the floor copy when the inviter name is the member placeholder', () => {
+    const base = { link: 'https://x.test/i', deckName: 'My Deck', role: 'editor', ttlDays: 7 };
+    const floor = inviteEmail({ ...base, inviterName: MEMBER_NAME });
+    expect(floor.subject).toBe('A Gobbit member invited you to My Deck on Gobbit');
+    expect(floor.text).toContain('A Gobbit member invited you to the deck');
+    expect(floor.html).toContain('A Gobbit member</strong> invited you');
+    expect(inviteEmail({ ...base, inviterName: 'Alice' }).subject).toBe(
+      'Alice invited you to My Deck on Gobbit',
+    );
+  });
+
   it('includes link verbatim in text', () => {
     const link = 'https://example.com/invite?token=xyz';
     const result = inviteEmail({

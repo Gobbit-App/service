@@ -76,7 +76,7 @@ describe('magic links without APP_URL (P2.2, D22–D26)', () => {
     expect(me.status).toBe(200);
     const body = await json(me);
     expect(body.user.email).toBe('new.person@example.test');
-    expect(body.user.displayName).toBe('new.person');
+    expect(body.user.displayName).toBe('Member');
     expect(body.decks).toHaveLength(1);
     expect(body.decks[0]).toMatchObject({ slug: 'me', isDefault: true, role: 'owner' });
 

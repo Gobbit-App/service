@@ -36,4 +36,19 @@ describe('memberships invariants (D36, D44)', () => {
     );
     expect((rows[0].updated_at as Date).getTime()).toBeGreaterThan(row.updatedAt.getTime());
   });
+
+  it('defaults invited_by_email to false and rejects null', async () => {
+    const owner = await createAccountUser(t.db);
+    const other = await createAccountUser(t.db);
+    const deck = await createDeck(t.db, owner);
+    const row = await addMember(t.db, deck, other, 'reader');
+
+    const { rows } = await t.pool.query(`SELECT invited_by_email FROM memberships WHERE id = $1`, [
+      row.id,
+    ]);
+    expect(rows[0].invited_by_email).toBe(false);
+    await expect(
+      t.pool.query(`UPDATE memberships SET invited_by_email = NULL WHERE id = $1`, [row.id]),
+    ).rejects.toMatchObject({ code: '23502' });
+  });
 });

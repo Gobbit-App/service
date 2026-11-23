@@ -7207,6 +7207,12 @@
                               "null"
                             ]
                           },
+                          "invitedBy": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "acceptedAt": {
                             "type": [
                               "string",
@@ -7226,6 +7232,7 @@
                           "photo",
                           "role",
                           "invitedAt",
+                          "invitedBy",
                           "acceptedAt",
                           "implicit"
                         ]
@@ -7955,6 +7962,12 @@
                         "null"
                       ]
                     },
+                    "invitedBy": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "acceptedAt": {
                       "type": [
                         "string",
@@ -7974,6 +7987,7 @@
                     "photo",
                     "role",
                     "invitedAt",
+                    "invitedBy",
                     "acceptedAt",
                     "implicit"
                   ]
