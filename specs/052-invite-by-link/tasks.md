@@ -181,5 +181,4 @@ Every row of plan.md § Invariant → test traceability maps to: FR-001 T012 · 
 ## Notes
 
 - Log decisions the plan did not make, and deviations, in specs/052-invite-by-link/implementation-notes.md.
-- The down migration name follows the repo (`down/NNNN_name.down.sql`), not data-model.md's shorter form.
 - Commit per task or logical group (`feat(api): …`, `feat(web): …`).
