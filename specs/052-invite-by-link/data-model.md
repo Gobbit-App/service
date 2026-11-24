@@ -1,6 +1,6 @@
 # Data model: Invite by link
 
-Migration `0030_deck_invite_links` (and a hand-written `down/0030_deck_invite_links.sql`). There is no backfill.
+Migration `0030_deck_invite_links` (and a hand-written `down/0030_deck_invite_links.down.sql`). There is no backfill.
 
 ## New table `deck_invite_links` (D466, D467)
 
