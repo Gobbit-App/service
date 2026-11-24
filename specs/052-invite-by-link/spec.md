@@ -25,6 +25,13 @@ What already exists and stays as is:
 - 051's rules: no answer about a deck's members carries an email address, and people appear by their shown name (profile name, else username, else "Member") and avatar.
 - The personal deck is never shared.
 
+## Clarifications
+
+### Session 2026-11-24
+
+- Q: May a link invite grant the owner role? → A: No. A link never makes someone an owner; owners are still invited by address or username (FR-002).
+- Q: A brand-new person still gets one sign-in mail until L4. Is that enough? → A: Yes, accept it as is. The link saves the invite mail; the sign-in mail goes away with L4 (FR-012).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - An owner sends an invite through a chat (Priority: P1)
@@ -104,7 +111,7 @@ Dana forwards the message to her partner, who taps the link after Dana has joine
 **Creating and sharing**
 
 - **FR-001**: An owner of a shared or communal deck MUST be able to create a link invite by giving a name for their own reference and a role. No email address or username is asked for.
-- **FR-002**: [NEEDS CLARIFICATION: may a link invite grant the owner role? A forwarded owner link hands over member management. Options: any role an owner can invite with today; or every role except owner, with owners still invited by address or username.]
+- **FR-002**: A link invite MUST NOT grant the owner role. It may grant any other role an owner can invite with today; owners are still invited by address or username.
 - **FR-003**: The owner MUST be able to share a waiting link through the device's share sheet, with a prefilled message naming the deck that they can edit in the chat app, or copy it where there is no share sheet. They MUST be able to share the same waiting link again later.
 - **FR-004**: The number of waiting link invites per deck MUST be limited. The limit MUST be changeable by an operator without a code change. Creating a link beyond it MUST be refused with a message saying what to do.
 
@@ -117,7 +124,7 @@ Dana forwards the message to her partner, who taps the link after Dana has joine
 - **FR-009**: A link invite MUST stop working when it is accepted, revoked, expired (after the same invite period as mailed invites) or when its inviter is no longer an owner of the deck or the deck is gone.
 - **FR-010**: A person who is already a member, or who belongs to the owning account, MUST be told so on Join. The link MUST stay waiting.
 - **FR-011**: While registration is waitlist-only, a waiting link invite MUST let one unregistered person register and join, recorded as brought in by a deck invite and by the inviter. A link MUST never register more than one person, and it MUST register no one once it has stopped working.
-- **FR-012**: [NEEDS CLARIFICATION: a brand-new person still gets one sign-in mail to confirm their address until L4 brings sign-in without mail, so the link saves the invite mail but not that one. Is that enough for this feature? Options: accept it as is (the mail saving comes in full with L4); or let the person who joins through a link confirm their address later, which changes how accounts are confirmed and pulls part of L4 forward.]
+- **FR-012**: A person who signs in or registers from the invite page MUST do so through the usual sign-in, including its mail, until L4 brings sign-in without mail. A link saves the invite mail; a brand-new person still gets one sign-in mail, and someone already signed in gets none.
 
 **Owner view**
 
@@ -157,7 +164,7 @@ The plan names which of these warrant an alert, for example a burst of refusals 
 - **SC-004**: Opening a link, before Join, leaves zero new sessions, accounts and memberships.
 - **SC-005**: The invite page and its chat preview show nothing beyond the deck name, the inviter's shown name and the role, checked on a deck with private categories and cards.
 - **SC-006**: Every created, shared, accepted, refused, revoked and expired link leaves a record an operator can count.
-- **SC-007**: A deck's alpha readers can all be invited without sending a single invite mail.
+- **SC-007**: A deck's alpha readers can all be invited without sending a single invite mail; only people new to Gobbit get one sign-in mail each.
 
 ## Assumptions
 

@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Two markers left for `/speckit-clarify`: FR-002 (may a link grant the owner role) and FR-012 (a brand-new person still gets one sign-in mail until L4).
+- FR-002 and FR-012 resolved 2026-11-24 (see spec Clarifications): no owner role by link; the sign-in mail for brand-new people stays until L4.
 - Existing names (`INVITE_TTL_DAYS`, D241, the 051 shown name) are cited as references to current behaviour, as in earlier specs, not as design.
