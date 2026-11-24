@@ -34,9 +34,9 @@ Request: `inviteLinkCreateSchema` `{ name, role }`.
 
 ## Anyone
 
-### `GET /public/invites?t=<token>`
+### `GET /invites/preview?t=<token>`
 
-200 `invitePreviewSchema`. Credentials are ignored (ADR-056), and the per-IP `anonLimit` applies (429 problem). An unknown token answers 200 with `{ state: 'invalid' }`, never 404, so every miss looks alike (D470).
+200 `invitePreviewSchema`. Credentials are ignored (`LENIENT_PATHS` and the credential-free list, as for `/public/*`, ADR-056), and the per-IP `anonLimit` applies (429 problem). It is not under `/public/` because `/public/{slug}` would match it. An unknown token answers 200 with `{ state: 'invalid' }`, never 404, so every miss looks alike (D470).
 
 ### `GET /s/invite?t=<token>` (HTML, D469)
 
@@ -93,7 +93,7 @@ New `CALLBACK_REASONS` value: `invite_gone`.
 
 ## Web
 
-- **`/join?t=<token>`** (SPA). It reads `GET /public/invites` and shows:
+- **`/join?t=<token>`** (SPA). It reads `GET /invites/preview` and shows:
   - a waiting link: deck name, inviter, role and a **Join** button. Signed out, the button reveals the sign-in email form, which posts `invite`. Signed in, the page also shows "Signed in as <shown name>".
   - any other state: why (used, revoked, expired, no longer valid).
   - a signed-in member of the deck: "You're already in" and a link to the deck.

@@ -14,7 +14,7 @@ The plan adds one new table, one new service and one new field on sign-in. An ow
 - **The URL** (D468): `/s/invite?t=<token>`. The token travels only in query strings and bodies, never in a path, because request logs record paths.
 - **Preview and invite page** (D469, D470):
   - The preview is a no-JS Open Graph page built with the existing `renderSharePage()`. It shows the deck name, the inviter's shown name and the role only while the link is waiting; in any other state it is generic.
-  - The SPA `/join` page reads `GET /public/invites?t=`.
+  - The SPA `/join` page reads `GET /invites/preview?t=`.
   - Both are rate-limited per IP.
 - **Join** (D471): `POST /invite-links/accept`. One transaction locks the link, re-checks it, then creates the membership, or accepts the person's pending one with the link's role. Exactly one person wins.
 - **A brand-new person** (D472):
@@ -47,7 +47,12 @@ The plan adds one new table, one new service and one new field on sign-in. An ow
 
 **Testing**: Vitest unit and integration (Testcontainers), and Playwright `@smoke`.
 
-**E2E tier**: smoke. Joining a deck is a critical journey that crosses a deployment boundary: Caddy `/s/*`, the API HTML, the SPA and the sign-in mail. The spec also fixes the tier as smoke. One journey: an owner creates a link, a second user opens it and joins, lands on the deck, and a second use is refused.
+**E2E tier**: smoke. Joining a deck is a critical journey that crosses a deployment boundary: Caddy `/s/*`, the API HTML, the SPA and the sign-in mail. The spec also fixes the tier as smoke. One journey covers the riskier path, the brand-new person:
+- an owner creates a link;
+- a fresh address opens it signed out, taps Join, signs in through the mailbox and lands on the deck;
+- a second signed-in user is refused as already used.
+
+The signed-in Join tap is covered by integration and `JoinScreen` unit tests.
 
 **UI reference**:
 
@@ -80,7 +85,7 @@ The plan adds one new table, one new service and one new field on sign-in. An ow
 | I. Layered API | `routes/invite-links.ts` parses, `services/invite-links.service.ts` decides, and `repositories/invite-links.repo.ts` holds the SQL. Owner routes use `authorize()` + `can('member.invite')`. Join and callback use `resolveRole`. |
 | II. One source of truth for contracts | Every DTO is in `@gobbit/shared/schemas/invite-links.ts`, the limits in `@gobbit/shared` limits, and the `invite-shared` event in `analytics/events.ts`. `pnpm api:openapi` regenerates the client. |
 | III. Invariants live in the database | Migration `0030` has a hand-written down file. CHECKs enforce: the role is never owner, accepted and revoked are mutually exclusive, the acceptor columns are set only with `accepted_at`, the name length, and `invite_link_id` only on `sign_in` links. The token is unique. Single use is enforced by a row lock inside one transaction (D471). |
-| IV. Private by default | The anonymous routes go through one service method that returns only deck name, inviter shown name and role, and only while the link is waiting (D469, D470). Credentials are ignored on `/public/*`, and the anonymous per-IP limit applies on `/public/*` and `/s/invite`. Opening a link writes nothing (FR-005). Tokens stay out of paths (D468). |
+| IV. Private by default | The anonymous routes go through one service method that returns only deck name, inviter shown name and role, and only while the link is waiting (D469, D470). Credentials are ignored on `/invites/preview` (credential-free list, as `/public/*`), and the anonymous per-IP limit applies on it and on `/s/invite`. Opening a link writes nothing (FR-005). Tokens stay out of paths (D468). |
 | V. Tests at the right tier | Unit tests cover the service rules, the schemas and the share helper. Integration tests cover the routes, the concurrent Join, the callback registration and the DB CHECKs. One `@smoke` journey covers the critical path. See the traceability table below. |
 | VI. Lean, offline-first web | No new dependency. `/join` is a lazy route. Invite-link queries are owner-only settings data, cached like members. `/join` reads are not persisted, because their state changes. |
 | VII. Simple, optional, deployable | There is one new optional env var, `INVITE_LINKS_WAITING_MAX`, with a default. It needs no AI and no new service. The deploy is the normal flow. |
@@ -96,9 +101,9 @@ Post-design re-check: still passes. The raw-token departure (D467) is a recorded
 |----|----------|------|
 | D466 | `deck_invite_links` table; state derived from timestamps; `CHECK (role <> 'owner')` | yes → ADR-085 |
 | D467 | Token stored as is (not hashed) so the same link can be shared again; departure from hash-only tokens limited to this table | yes → ADR-085 |
-| D468 | Token only in query strings and bodies (`/s/invite?t=`, `/join?t=`, `/public/invites?t=`, accept body), never in a path | yes → ADR-085 |
+| D468 | Token only in query strings and bodies (`/s/invite?t=`, `/join?t=`, `/invites/preview?t=`, accept body), never in a path | yes → ADR-085 |
 | D469 | Chat preview = `renderSharePage()` at `/s/invite`, `no-store` + `no-referrer`, generic unless waiting, rate-limited | no |
-| D470 | Invite page reads `GET /public/invites?t=`: state + deck name, inviter, role only while waiting; misses look alike | no |
+| D470 | Invite page reads `GET /invites/preview?t=`: state + deck name, inviter, role only while waiting; misses look alike | no |
 | D471 | Join = one transaction with the link row locked; re-checks; accepts a pending membership with the link's role | no |
 | D472 | A brand-new person's sign-in mail carries the invite past the waitlist and joins them at the callback; existing accounts tap Join; new callback reason `invite_gone` | yes → ADR-085 |
 | D473 | A link is `invalid` when its creator no longer resolves to owner or the deck is gone or personal; checked at read time | no |
@@ -134,7 +139,7 @@ packages/shared/src/
 ├── schemas/invite-links.ts                  # DTOs (new)
 ├── schemas/auth.ts                          # magicLinkRequestSchema + invite
 ├── limits.ts                                # INVITE_LINKS_WAITING_MAX_DEFAULT, INVITE_LINK_NAME_MAX
-└── analytics/{events,screens}.ts            # invite-shared; /join and /s/invite patterns
+└── analytics/{events,screens,sanitize,privacy}.ts  # invite-shared (fifth content event); /join and /s/invite patterns
 
 apps/api/src/
 ├── env.ts                                   # INVITE_LINKS_WAITING_MAX
@@ -143,10 +148,11 @@ apps/api/src/
 ├── services/invite-links.events.ts          # new: event names, outcomes, reasons
 ├── services/auth.service.ts                 # requestMagicLink(invite), consume → register + accept
 ├── services/auth.events.ts                  # CALLBACK_REASONS + invite_gone; magic_link via
-├── routes/invite-links.ts                   # new: owner routes, accept, GET /public/invites
+├── routes/invite-links.ts                   # new: owner routes, accept, GET /invites/preview
 ├── routes/share.ts                          # GET /s/invite (before /s/:itemId)
 ├── routes/auth.ts                           # pass invite through
-└── app.ts                                   # mount routes; publicRateLimit on /s/invite
+├── middleware/session-auth.ts              # /invites/preview lenient + credential-free
+└── app.ts                                   # mount routes; publicRateLimit on /s/invite and /invites/preview
 apps/api/test/invite-links.int.test.ts       # new
 
 apps/web/src/
@@ -181,6 +187,8 @@ e2e/tests/smoke/invite-link.spec.ts          # new @smoke
 | FR-005 / SC-004 opening writes nothing | GET routes read only | `invite-links.int.test.ts` (row counts before/after), int |
 | FR-006 / SC-005 only deck name, inviter, role | `invite-links.service.preview`, `/s/invite` | `invite-links.int.test.ts` (deck with private card; scans HTML/JSON for card title, category, name, `@`), int |
 | D468 token never in a path or log | routes, request log | `invite-links.int.test.ts` (captured log lines contain no token), int |
+| D468 token never in analytics | screen patterns `/join`, `/s/invite`; `page.js` excludes search | `sanitize.test.ts` (`/join?t=…` → pattern only), unit |
+| D470 `/invites/preview` not shadowed by `/public/{slug}`, `/s/invite` not by `/s/:itemId` | route paths and order | `invite-links.int.test.ts`, int |
 | FR-007 / FR-012 sign in from page | `/join` + `SignInForm` with `invite` | `JoinScreen.test.tsx`, unit; smoke journey |
 | FR-008 / SC-003 single use, concurrent | accept tx `FOR UPDATE` (D471) | `invite-links.int.test.ts` (two parallel accepts → one 200, one 409 used), int |
 | FR-009 revoked / expired / inviter not owner / deck gone | service checks (D473) | `invite-links.int.test.ts`, int |
@@ -224,7 +232,7 @@ e2e/tests/smoke/invite-link.spec.ts          # new @smoke
   - `docs/design/auth.md` gets an "Invite links" section, with flows, events and Deviations;
   - `docs/adr.md` gets ADR-085;
   - `docs/architecture.md` gets one index row;
-  - `CLAUDE.md`'s Roles rule gets one clause: link invites are owner-only, single use, never owner, and the token is never in a path;
+  - `CLAUDE.md`'s Roles rule gets one clause: link invites are owner-only, single use, never owner, and the token is never in a path. Its Analytics rule changes "four content events" to five (`invite-shared`);
   - `specs/README.md` gets D466–D476 and ADR-085;
   - `community-go-list.md` Tracking gets a plan row now and a tick on merge.
 
@@ -234,7 +242,7 @@ e2e/tests/smoke/invite-link.spec.ts          # new @smoke
 |------|---------------------|------------|
 | The wrong person joins with a forwarded link | M / M | Single use, the role is never owner, the owner sees who accepted, and removal works as today (US3 #6). Spec accepted. |
 | A stored token leaks from a DB dump | L / L | It grants one non-owner membership to someone who must still sign in, and it expires. Anyone holding a dump already has the cards (D467). |
-| The token is logged somewhere unexpected (proxy access log, error report with a URL) | L / M | Query string, not path (D468). The int test checks captured request and error log lines. Caddy has no access log configured. `no-referrer` on the preview. |
+| The token is logged somewhere unexpected (proxy access log, error report with a URL) | L / M | Query string, not path (D468). The int test checks captured request and error log lines. The Caddyfile has no `log` directive. `no-referrer` on the preview. Residual: the Traefik proxy in front logs full URLs if its access log is turned on; the token is single use and expires. |
 | The route `/s/invite` is read as an item id by `/s/:itemId` | M / L | Register it first. The int test covers it. |
 | A sign-in mail and an invite claimed in the wrong order, so one link registers two people | L / H | Registration only inside the callback transaction with the link locked (D472). Concurrent int test. |
 | A stranger floods sign-in mails through a known waiting link | L / M | The existing per-email and per-IP limits on `/auth/magic-link`. Each mail joins at most one person. The owner can revoke. |

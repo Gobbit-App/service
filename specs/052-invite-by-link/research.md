@@ -34,7 +34,7 @@ Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become A
 - **Decision**:
   - The shared URL is `https://<host>/s/invite?t=<token>`.
   - The SPA route is `/join?t=<token>`.
-  - The anonymous read is `GET /public/invites?t=<token>`.
+  - The anonymous read is `GET /invites/preview?t=<token>`.
   - Join is `POST /invite-links/accept` with `{ token }` in the body.
   - No route has the token in its path.
 - **Rationale**:
@@ -51,7 +51,7 @@ Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become A
   - **A waiting link**: the title names the deck ("Join <deck> on Gobbit") and the description the inviter and role ("<shown name> invited you as an editor").
   - **Any other state, or an unknown token**: one generic title and description ("A Gobbit invite"). This avoids telling a guesser which tokens exist, and stops a used link's preview from naming the deck again.
   - The `/s/invite*` routes get `publicRateLimit` with the HTML 429 page, like `/p/*`.
-  - The page opts into analytics like `/s/:itemId` (`analyticsHead`, `page.js` loader), with a new screen pattern `/s/invite`.
+  - The page opts into analytics like `/s/:itemId` (`analyticsHead`, `page.js` loader), with a new screen pattern `/s/invite`. With a pattern set, `page.js` sends the pattern as the URL, excludes the query (`data-exclude-search`) and keeps only the referrer's origin, so the token never reaches Umami.
 - **Rationale**:
   - Chat apps read Open Graph tags from server HTML. The SPA's `index.html` has none, and this is how `/s/:itemId` already solves it (D192–D199).
   - `no-store` (unlike `/s/:itemId`'s `max-age=300`): the page's content changes when the link is used or revoked.
@@ -60,10 +60,12 @@ Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become A
 
 ## D470 — The invite page reads through one anonymous route
 
-- **Decision**: `GET /public/invites?t=` answers `{ state, deckName?, inviterName?, role? }`.
+- **Decision**: `GET /invites/preview?t=` answers `{ state, deckName?, inviterName?, role? }`.
   - The deck fields are present only when `state` is `waiting`.
   - Otherwise `state` is one of `used`, `revoked`, `expired` or `invalid`. `invalid` covers an unknown token, a removed inviter and a gone deck alike.
-  - It sits under `/public/*` so that session auth ignores credentials there (ADR-056) and the existing per-IP `anonLimit` applies.
+  - It is not under `/public/*`, because `/public/{slug}` would read `invites` as a deck slug (slugs reserve no words). Instead it gets the same treatment explicitly:
+    - `publicRateLimit(anonLimit)` on the path;
+    - an entry in session auth's `LENIENT_PATHS` and credential-free list, so a stale cookie never blocks it and no credential is read (as `/public/*`, ADR-056).
   - The SPA works out "already a member" from `/me`'s decks. The route never reads the caller.
 - **Rationale**:
   - FR-006: only the deck name, the inviter's shown name and the role ever leave the server.
@@ -139,8 +141,9 @@ Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become A
   - **List**: `GET /decks/{id}/invite-links` (owners only, through the existing `member.invite` permission). It answers the waiting links plus links that ended in the last `INVITE_TTL_DAYS` days, newest first. Each row has the reference name, the role, the creator's and the acceptor's member summary (`member-summaries.ts`, no address), the state, `expiresAt` and, while waiting, the share URL. A row's state is never `invalid`; a link whose creator stopped being an owner shows as waiting until it expires.
   - **Create**: `POST /decks/{id}/invite-links { name, role }` answers the same row.
   - **Revoke**: `DELETE /decks/{id}/invite-links/{linkId}` sets `revoked_at` and `revoked_by`. It refuses with 409 `not_waiting` if the link is not waiting.
+  - **A creator who stops being an owner**: their waiting links still list as waiting, with Share, and still count toward the cap until they expire, even though opening them reads `invalid` (D473). Owners revoke them if they need the slots. Computing that state in the list would mean a role lookup per creator for a rare case.
   - **Share**: `lib/share`'s `shareItem` gains an optional `text`. The share sheet gets `{ url, title, text }`, and the clipboard fallback copies `text` followed by the URL. The share button on each waiting row (`deck-admin/InviteLinks.tsx`) calls it with the prefilled message ("Join <deck> on Gobbit: …"). It does not reuse `ShareButton`, which is bound to an item id and builds `/s/<itemId>`.
-  - **Counting shares**: each share or copy sends a new content event `invite-shared` (`{ deckId, channel }`) through `trackContent`.
+  - **Counting shares**: each share or copy sends a new content event `invite-shared` (`{ deckId, channel }`) through `trackContent`. It is the fifth content event, so it touches `analytics/events.ts`, `sanitize.ts`, `privacy.ts` and their tests, and the CLAUDE.md Analytics rule ("four content events" becomes five).
 - **Rationale**:
   - FR-013/014 are owner-only, exactly the people `member.invite` already admits (owners and co-owners), so no new permission is needed.
   - The spec says "sent by the app, as other in-app actions are". Analytics are consent-gated (D281), so SC-006's "shared" count covers owners who allowed analytics. This limit is stated in the Accountability table.

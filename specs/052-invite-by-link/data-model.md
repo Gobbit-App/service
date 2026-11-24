@@ -11,7 +11,7 @@ Migration `0030_deck_invite_links` (and a hand-written `down/0030_deck_invite_li
 | `token` | text NOT NULL, UNIQUE | `generateToken()`, stored as is (D467); never logged |
 | `name` | text NOT NULL | the owner's reference name; `CHECK (char_length(name) BETWEEN 1 AND 60)`; owners only |
 | `role` | `member_role` NOT NULL | `CHECK (role <> 'owner')` (FR-002) |
-| `created_by` | uuid NOT NULL → `users.id` | the inviter; validity needs them to still be an owner (D473) |
+| `created_by` | uuid NULL → `users.id` ON DELETE SET NULL | the inviter, as `memberships.invited_by`; a null creator reads as `invalid` (D473) |
 | `expires_at` | timestamptz(3) NOT NULL | `now + INVITE_TTL_DAYS` at creation |
 | `accepted_at` | timestamptz(3) NULL | |
 | `accepted_by` | uuid NULL → `users.id` ON DELETE SET NULL | the person who joined |
@@ -28,7 +28,7 @@ Migration `0030_deck_invite_links` (and a hand-written `down/0030_deck_invite_li
 - unique `token`;
 - `(deck_id, created_at DESC)` for the owners' list and the waiting count.
 
-**`created_by` has no ON DELETE action.** A user is not hard-deleted while they own a deck. If that ever changes, the link goes with the deck.
+**`created_by` follows `memberships.invited_by`** (`SET NULL`). A link whose creator is gone stops working; an accepted one keeps its membership.
 
 ### State (derived, D466)
 
@@ -57,8 +57,8 @@ Both callers use one repository method in one transaction: Join (`POST /invite-l
 
 1. `SELECT … FROM deck_invite_links WHERE token = $1 FOR UPDATE` (Join) or `WHERE id = $1 FOR UPDATE` (callback). Missing → `invalid`.
 2. `accepted_at` set → `used`. `revoked_at` set → `revoked`. `expires_at <= now` → `expired`.
-3. Deck `deleted_at` set, or deck kind `personal`, or `resolveRole(created_by, deck)` ≠ `owner` → `invalid`.
-4. Caller's `resolveRole` on the deck is not null → `already_member`. The link is untouched. This step is skipped on the callback path, where the person was just registered.
+3. Deck `deleted_at` set, or deck kind `personal`, or `created_by` null, or `resolveRole(created_by, deck)` ≠ `owner` → `invalid`.
+4. Caller's `resolveRole` on the deck is not null → `already_member`. `resolveRole` counts only accepted, live memberships and account ownership, so a pending invite does not trip this step. The link is untouched. This step is skipped on the callback path, where the person was just registered.
 5. Caller has a pending membership (`accepted_at IS NULL`, live) → set `role = link.role` and `accepted_at = now`, and call `magicLinks.expireUnusedForMembership(id)`. Otherwise insert an accepted membership (`invited_by = created_by`, `accepted_at = now`).
 6. `UPDATE deck_invite_links SET accepted_at, accepted_by, membership_id`.
 
