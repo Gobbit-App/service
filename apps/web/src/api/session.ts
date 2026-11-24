@@ -4,7 +4,7 @@ import { api, unwrap } from './client';
 import { signInHref } from './session-redirect';
 
 /** Pages reachable without a session; a 401 there must not bounce to sign-in again. */
-const PUBLIC_PATHS = ['/sign-in', '/auth/error'];
+const PUBLIC_PATHS = ['/sign-in', '/auth/error', '/join'];
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

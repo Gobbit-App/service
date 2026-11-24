@@ -98,13 +98,24 @@ export function createUsersService({
         throw new RegistrationClosed();
       }
       try {
-        const user = await users.createWithAccount({
+        const { user, waitlistEntryId } = await users.createWithAccount({
           email,
           displayName: displayNameFromEmail(email),
           via: reason,
           by: ctx.actorId ?? null,
+          // D477: someone who got an account outside the waitlist flow is no longer waiting.
+          releaseWaitlist: reason !== 'waitlist_invite',
         });
         decisions.record('users.register', { outcome: 'created', userId: user.id, ...fields });
+        if (waitlistEntryId) {
+          decisions.record('waitlist.registered', {
+            outcome: 'removed',
+            entryId: waitlistEntryId,
+            userId: user.id,
+            via: reason,
+            requestId: ctx.requestId,
+          });
+        }
         return { user, created: true };
       } catch (err) {
         if (!isUniqueViolation(err)) {

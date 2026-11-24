@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { createAccountUser, createDeck } from '@gobbit/db/test';
 import { generateToken, hashToken } from '../src/lib/tokens';
 import { captureLogger, expectDecision } from './capture-logger';
 import { json, OWNER_EMAIL, setupApiTest, tokenFromMail, type ApiTestContext } from './helpers';
@@ -175,5 +176,121 @@ describe('registration gate in open mode (D222)', () => {
       created: true,
     });
     expect(JSON.stringify(capture.lines)).not.toContain(fresh);
+  });
+});
+
+/** 052 D477 / FR-018: registering outside the waitlist flow takes the address off the list. */
+describe('waitlist tidy on registration (052, D477)', () => {
+  const ADMIN = 'gate-admin@example.test';
+  const ctx = setupApiTest({
+    env: { CLIENT_IP_HEADER: IP_HEADER, PLATFORM_ADMINS: ADMIN },
+  });
+  const h = harness(ctx);
+
+  async function waiting(email: string) {
+    const at = ctx.clock.now();
+    const { rows } = await ctx.t.pool.query(
+      `INSERT INTO waitlist_entries (email, kind, source, status, confirmed_at)
+       VALUES ($1, 'family', 'landing', 'confirmed', $2) RETURNING id`,
+      [email, at],
+    );
+    return rows[0].id as string;
+  }
+  const entry = async (id: string) =>
+    (await ctx.t.pool.query('SELECT status, removed_by FROM waitlist_entries WHERE id = $1', [id]))
+      .rows[0];
+  const events = async (id: string) =>
+    (
+      await ctx.t.pool.query(
+        'SELECT action, actor_id FROM waitlist_events WHERE entry_id = $1 ORDER BY created_at',
+        [id],
+      )
+    ).rows;
+
+  it('a mailed deck invite removes a confirmed entry with a null-actor event', async () => {
+    const email = nextEmail();
+    const id = await waiting(email);
+    const res = await ctx.app.request('/decks/family/invites', {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({ email, role: 'reader' }),
+    });
+    expect(res.status).toBe(201);
+    expect(await entry(id)).toEqual({ status: 'removed', removed_by: null });
+    expect(await events(id)).toEqual([{ action: 'removed', actor_id: null }]);
+  });
+
+  it('registering through an invite link removes a confirmed entry with a null-actor event', async () => {
+    const email = nextEmail();
+    const id = await waiting(email);
+    const deck = await createDeck(ctx.t.db, ctx.world.owner);
+    const made = await json(
+      await ctx.app.request(`/decks/${deck.id}/invite-links`, {
+        method: 'POST',
+        headers: ctx.as(),
+        body: JSON.stringify({ name: 'Cousins', role: 'reader' }),
+      }),
+    );
+    const invite = new URL(made.url).searchParams.get('t');
+    const sent = await ctx.app.request('/auth/magic-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', [IP_HEADER]: nextIp() },
+      body: JSON.stringify({ email, invite }),
+    });
+    expect(sent.status).toBe(200);
+    expect((await h.callback(tokenFromMail(ctx.mailer))).status).toBe(303);
+
+    expect((await h.user(email))?.registered_via).toBe('deck_invite');
+    expect(await entry(id)).toEqual({ status: 'removed', removed_by: null });
+    expect(await events(id)).toEqual([{ action: 'removed', actor_id: null }]);
+  });
+
+  it('a failing removed event rolls back the user and the removal together', async () => {
+    const email = nextEmail();
+    const id = await waiting(email);
+    await ctx.t.pool.query(`
+      CREATE FUNCTION fail_removed_event() RETURNS trigger LANGUAGE plpgsql AS
+      $$ BEGIN RAISE EXCEPTION 'removed event refused'; END $$;
+      CREATE TRIGGER fail_removed_event BEFORE INSERT ON waitlist_events
+      FOR EACH ROW EXECUTE FUNCTION fail_removed_event()`);
+    try {
+      const res = await ctx.app.request('/decks/family/invites', {
+        method: 'POST',
+        headers: ctx.as(),
+        body: JSON.stringify({ email, role: 'reader' }),
+      });
+      expect(res.status).toBeGreaterThanOrEqual(500);
+    } finally {
+      await ctx.t.pool.query(
+        'DROP TRIGGER fail_removed_event ON waitlist_events; DROP FUNCTION fail_removed_event()',
+      );
+    }
+    expect(await h.user(email)).toBeUndefined();
+    expect(await entry(id)).toEqual({ status: 'confirmed', removed_by: null });
+    expect(await events(id)).toEqual([]);
+  });
+
+  it('a waitlist_invite still marks its entry invited', async () => {
+    const admin = await createAccountUser(ctx.t.db, { email: ADMIN });
+    await ctx.sessionFor(admin);
+    const email = nextEmail();
+    const id = await waiting(email);
+    const res = await ctx.app.request(`/admin/waitlist/${id}/invite`, {
+      method: 'POST',
+      headers: ctx.as(ADMIN),
+    });
+    expect(res.status).toBe(201);
+    expect((await entry(id)).status).toBe('invited');
+    expect(await events(id)).toEqual([{ action: 'invited', actor_id: admin.id }]);
+  });
+
+  it('a refused registration leaves the entry', async () => {
+    const email = nextEmail();
+    const id = await waiting(email);
+    const res = await h.callback(await h.plantSignInLink(email));
+    expect(res.status).toBe(401);
+    expect(await h.user(email)).toBeUndefined();
+    expect(await entry(id)).toEqual({ status: 'confirmed', removed_by: null });
+    expect(await events(id)).toEqual([]);
   });
 });

@@ -22,6 +22,10 @@ describe('parseReason', () => {
     expect(parseReason('closed')).toBe('closed');
   });
 
+  it('should return "invite_gone" for "invite_gone"', () => {
+    expect(parseReason('invite_gone')).toBe('invite_gone');
+  });
+
   it('should return "unknown" for undefined', () => {
     expect(parseReason(undefined)).toBe('unknown');
   });
@@ -66,6 +70,12 @@ describe('authErrorCopy', () => {
     const copy = authErrorCopy('unknown');
     expect(copy.title).toBe('Sign-in failed');
     expect(copy.body).toBe('Something went wrong. Request a new link below.');
+  });
+
+  it('should say the invite stopped and offer the waitlist for "invite_gone"', () => {
+    const copy = authErrorCopy('invite_gone');
+    expect(copy.title).toBe('That invite is no longer valid');
+    expect(copy.body).toContain('Join the waitlist');
   });
 
   it('should explain the registration gate for "closed" (D222)', () => {

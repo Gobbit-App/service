@@ -18,7 +18,7 @@ function AuthError() {
       <section className="error-state" role="alert">
         <h1>{copy.title}</h1>
         <p>{copy.body}</p>
-        {reason === 'closed' ? (
+        {reason === 'closed' || reason === 'invite_gone' ? (
           <div className="error-state__actions">
             {/* D226: the landing page is API-rendered, so this is a page load, not an app route. */}
             <ButtonLink href="/welcome" icon="plus" label="Join the waitlist" document />

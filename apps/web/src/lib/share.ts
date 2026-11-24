@@ -6,7 +6,7 @@ export function shareUrl(origin: string, itemId: string): string {
 
 /** Navigator-like interface for sharing functionality. */
 export type ShareNavigator = {
-  share?: (data: { url: string; title?: string }) => Promise<void>;
+  share?: (data: { url: string; title?: string; text?: string }) => Promise<void>;
   clipboard?: { writeText: (text: string) => Promise<void> };
 };
 
@@ -15,7 +15,7 @@ export type ShareOutcome = 'shared' | 'copied' | 'cancelled' | 'failed';
 
 /** Attempts to share an item using Web Share API or clipboard fallback. */
 export async function shareItem(
-  data: { url: string; title?: string },
+  data: { url: string; title?: string; text?: string },
   nav: ShareNavigator,
 ): Promise<ShareOutcome> {
   if (nav.share) {
@@ -32,7 +32,7 @@ export async function shareItem(
 
   if (nav.clipboard) {
     try {
-      await nav.clipboard.writeText(data.url);
+      await nav.clipboard.writeText(data.text ? `${data.text} ${data.url}` : data.url);
       return 'copied';
     } catch {
       return 'failed';

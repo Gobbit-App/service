@@ -59,10 +59,11 @@ export function registerAuthRoutes(
   });
 
   app.openapi(magicLinkRoute, async (c) => {
-    const { email, next } = c.req.valid('json');
+    const { email, next, invite } = c.req.valid('json');
     await services.auth.requestMagicLink({
       email,
       next,
+      invite,
       ip: clientIp(c, env.CLIENT_IP_HEADER),
       requestId: c.get('requestId'),
     });

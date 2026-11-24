@@ -23,6 +23,7 @@ export const SCREENS: Record<RouteId, Screen | null> = {
   '/sign-in': null,
   '/admin/waitlist': { pattern: '/admin/waitlist', name: 'Admin waitlist' },
   '/auth/error': null,
+  '/join': { pattern: '/join', name: 'Join' },
   '/d/$slug': null,
   '/i/$itemId': { pattern: '/i/:item', name: 'Card' },
   '/d/$slug/': { pattern: '/d/:deck', name: 'Deck' },

@@ -6,6 +6,7 @@ export const contentEventNames = [
   'card-edited',
   'card-deleted',
   'card-shared',
+  'invite-shared',
 ] as const;
 export type ContentEventName = (typeof contentEventNames)[number];
 
@@ -48,12 +49,13 @@ export function isContentEventName(value: unknown): value is ContentEventName {
  * D254: keeps only allow-listed keys with valid values (UUIDs, a positive integer count, fixed
  * labels); anything else is dropped. Returns null without a valid channel.
  */
-export function cleanEventData(data: unknown): ContentEventProps | null {
+export function cleanEventData(data: unknown, name?: string): ContentEventProps | null {
   if (typeof data !== 'object' || data === null) return null;
   const d = data as Record<string, unknown>;
   if (!isOneOf(contentChannels, d.channel)) return null;
   const clean: ContentEventProps = { channel: d.channel };
   if (typeof d.deckId === 'string' && UUID.test(d.deckId)) clean.deckId = d.deckId;
+  if (name === 'invite-shared') return clean; // D476: deck and channel only
   if (typeof d.itemId === 'string' && UUID.test(d.itemId)) clean.itemId = d.itemId;
   if (typeof d.count === 'number' && Number.isInteger(d.count) && d.count > 0) {
     clean.count = d.count;

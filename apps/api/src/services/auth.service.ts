@@ -4,7 +4,8 @@ import {
   type SessionKind,
 } from '@gobbit/shared';
 import type { RegistrationMode } from '@gobbit/shared/auth';
-import type { MagicLinkRow, SessionRow } from '@gobbit/db';
+import type { DeckInviteLinkRow, MagicLinkRow, SessionRow } from '@gobbit/db';
+import type { AcceptUser, InviteAcceptResult } from '../repositories/invite-links.repo';
 import type { Env } from '../env';
 import type { Mailer } from '../mail/mailer';
 import { signInEmail } from '../mail/templates';
@@ -69,6 +70,12 @@ export interface CallbackRepos {
   decks: DecksRepo;
   users: UsersRepo;
   usersService: UsersService;
+  /** 052: accept an invite link inside this transaction. */
+  acceptInvite: (v: {
+    by: { id: string };
+    user: (link: DeckInviteLinkRow) => Promise<AcceptUser>;
+    now: Date;
+  }) => Promise<InviteAcceptResult>;
 }
 
 /** Runs `fn` with repos bound to one transaction; a throw from `fn` rolls every write back. */
@@ -85,6 +92,14 @@ export function createAuthService(deps: {
   /** D222: the request-time gate looks users up and lists unknown emails. */
   usersService: Pick<UsersService, 'findExisting'>;
   waitlist: Pick<WaitlistService, 'join'>;
+  /** 052: tells whether an invite token still waits (D472). */
+  invites: {
+    findWaiting(token: string): Promise<{ id: string } | null>;
+    recordJoin(
+      r: { result: string; link: { id: string; deckId: string } | null },
+      ctx: { userId: string; requestId: string; via: 'sign_in' },
+    ): void;
+  };
   mode: RegistrationMode;
   logHash: LogHash;
   decisions?: DecisionLogger<AuthDecisions>;
@@ -152,15 +167,59 @@ export function createAuthService(deps: {
     r: CallbackRepos,
     email: string,
     requestId: string,
+    closedReason: MagicLinkFailureReason = 'closed',
   ): Promise<{ user: CurrentUser; created: boolean }> {
     const existing = await r.usersService.findExisting(email);
     if (existing) return { user: existing, created: false };
     try {
       return await r.usersService.register(email, 'open_sign_in', { requestId });
     } catch (err) {
-      if (err instanceof RegistrationClosed) throw new MagicLinkFailure('closed');
+      if (err instanceof RegistrationClosed) throw new MagicLinkFailure(closedReason);
       throw err;
     }
+  }
+
+  /** 052: a link made for an invite joins the deck; a stopped one signs in only (D472). */
+  async function inviteLinkUser(
+    r: CallbackRepos,
+    row: MagicLinkRow,
+    requestId: string,
+  ): Promise<{
+    user: CurrentUser;
+    created: boolean;
+    next: string | null;
+    join: InviteAcceptResult;
+  }> {
+    let registered: { user: CurrentUser; created: boolean } | undefined;
+    const res = await r.acceptInvite({
+      by: { id: row.inviteLinkId! },
+      now: now(),
+      user: async (link) => {
+        registered =
+          (await r.usersService
+            .findExisting(row.email)
+            .then((u) => u && { user: u, created: false })) ||
+          (await r.usersService.register(row.email, 'deck_invite', {
+            requestId,
+            actorId: link.createdBy ?? undefined,
+          }));
+        return registered.user;
+      },
+    });
+    if (registered) {
+      const slug = 'deck' in res ? res.deck.slug : null;
+      return { ...registered, next: slug && `/d/${slug}`, join: res };
+    }
+    if ('deck' in res) {
+      const user = (await r.usersService.findExisting(row.email))!;
+      return { user, created: false, next: `/d/${res.deck.slug}`, join: res };
+    }
+    const joinNext = res.link ? `/join?t=${encodeURIComponent(res.link.token)}` : row.next;
+    return {
+      ...(await signInUser(r, row.email, requestId, 'invite_gone')),
+      next: joinNext,
+      join: res,
+    };
   }
 
   async function consume(input: {
@@ -169,7 +228,9 @@ export function createAuthService(deps: {
     requestId: string;
   }): Promise<{ token: string; next: string | null; user: CurrentUser; created: boolean }> {
     const tokenHash = hashToken(input.token);
-    return transaction(async (r) => {
+    let join: InviteAcceptResult | undefined;
+    const out = await transaction(async (r) => {
+      join = undefined;
       const row = await r.magicLinks.consume(tokenHash, now());
       if (!row) {
         throw new MagicLinkFailure(
@@ -177,18 +238,35 @@ export function createAuthService(deps: {
         );
       }
 
-      const { user, created } =
-        row.purpose === 'invite'
-          ? { user: await inviteUser(r, row.membershipId), created: false }
-          : await signInUser(r, row.email, input.requestId);
+      let next = row.next;
+      let resolved: { user: CurrentUser | null; created: boolean };
+      if (row.purpose === 'invite') {
+        resolved = { user: await inviteUser(r, row.membershipId), created: false };
+      } else if (row.inviteLinkId) {
+        const res = await inviteLinkUser(r, row, input.requestId);
+        resolved = res;
+        next = res.next;
+        join = res.join;
+      } else {
+        resolved = await signInUser(r, row.email, input.requestId);
+      }
+      const { user, created } = resolved;
       if (!user) {
         throw new MagicLinkFailure('invalid');
       }
 
       await ensureOnboarding(r.usersService, user);
       const { token } = await openSessionWith(r.sessions, user.id, 'cookie', input.userAgent);
-      return { token, next: row.next, user, created };
+      return { token, next, user, created };
     });
+    if (join) {
+      deps.invites.recordJoin(join, {
+        userId: out.user.id,
+        requestId: input.requestId,
+        via: 'sign_in',
+      });
+    }
+    return out;
   }
 
   return {
@@ -255,6 +333,7 @@ export function createAuthService(deps: {
       email: string;
       ip: string;
       next?: string;
+      invite?: string;
       requestId: string;
     }): Promise<void> {
       const email = normalizeEmail(input.email);
@@ -276,7 +355,10 @@ export function createAuthService(deps: {
       }
 
       const existing = await deps.usersService.findExisting(email);
-      if (!existing && mode === 'waitlist') {
+      // D472: an existing account lands on the join page; an unknown one carries the waiting link.
+      const waiting =
+        input.invite && !existing ? await deps.invites.findWaiting(input.invite) : null;
+      if (!existing && !waiting && mode === 'waitlist') {
         // The magic-link limits above already bound this path (D222).
         await deps.waitlist.join({
           email,
@@ -298,7 +380,10 @@ export function createAuthService(deps: {
         expiresAt: new Date(now().getTime() + env.MAGIC_LINK_TTL_MINUTES * MINUTE_MS),
         requestedIp: input.ip,
         // An off-site or malformed next is dropped, never stored (the callback re-checks it).
-        next: safeNextPath(input.next),
+        next: safeNextPath(
+          existing && input.invite ? `/join?t=${encodeURIComponent(input.invite)}` : input.next,
+        ),
+        inviteLinkId: waiting?.id,
       });
 
       const link = `${env.API_URL}/auth/callback?token=${encodeURIComponent(token)}`;
@@ -306,7 +391,12 @@ export function createAuthService(deps: {
         to: email,
         ...signInEmail({ link, email, ttlMinutes: env.MAGIC_LINK_TTL_MINUTES }),
       });
-      decisions.record('auth.magic_link', { outcome: 'sent', userId: existing?.id, ...subject });
+      decisions.record('auth.magic_link', {
+        outcome: 'sent',
+        userId: existing?.id,
+        ...(waiting && { via: 'invite_link', linkId: waiting.id }),
+        ...subject,
+      });
     },
 
     /**

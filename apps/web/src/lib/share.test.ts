@@ -98,4 +98,23 @@ describe('shareItem', () => {
       title: 'My Item',
     });
   });
+
+  it('passes text to nav.share when provided', async () => {
+    const nav: ShareNavigator = { share: vi.fn().mockResolvedValue(undefined) };
+    await shareItem({ url: 'https://example.com/join/x', title: 'T', text: 'Join us' }, nav);
+    expect(nav.share).toHaveBeenCalledWith({
+      url: 'https://example.com/join/x',
+      title: 'T',
+      text: 'Join us',
+    });
+  });
+
+  it('copies "text url" when there is no share sheet and text is given', async () => {
+    const nav: ShareNavigator = {
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    };
+    const outcome = await shareItem({ url: 'https://example.com/join/x', text: 'Join us' }, nav);
+    expect(outcome).toBe('copied');
+    expect(nav.clipboard!.writeText).toHaveBeenCalledWith('Join us https://example.com/join/x');
+  });
 });

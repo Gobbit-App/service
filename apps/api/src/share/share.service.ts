@@ -1,4 +1,5 @@
-import { htmlLang, ogLocale } from '@gobbit/shared';
+import { htmlLang, ogLocale, type InvitePreview } from '@gobbit/shared';
+import { ROLE_LABELS } from '@gobbit/shared/authz';
 import {
   MEDIA_DELIVERY,
   mediaImagesOf,
@@ -134,6 +135,9 @@ export function createShareService(deps: ShareServiceDeps) {
   const sharePageHead = withPage(deps.analytics, PUBLIC_SCREENS.share);
   const shareAnalytics = sharePageHead ? analyticsTag(sharePageHead).toString() : undefined;
 
+  const inviteHead = withPage(deps.analytics, PUBLIC_SCREENS.invite);
+  const inviteAnalytics = inviteHead ? analyticsTag(inviteHead).toString() : undefined;
+
   function frame(itemId: string): Pick<ShareMeta, 'canonicalUrl' | 'redirectPath'> {
     const id = encodeURIComponent(itemId);
     return { canonicalUrl: `${origin}/s/${id}`, redirectPath: `/i/${id}` };
@@ -246,6 +250,27 @@ export function createShareService(deps: ShareServiceDeps) {
       return renderSharePage(
         record ? await publicMeta(record) : privateMeta(itemId),
         shareAnalytics,
+      );
+    },
+
+    /** D469: HTML for `/s/invite`; deck fields only for a waiting link, nothing else ever. */
+    invitePage(preview: InvitePreview, token: string | undefined): string {
+      const waiting = preview.state === 'waiting';
+      return renderSharePage(
+        {
+          title: waiting ? `Join ${preview.deckName} on Gobbit` : 'A Gobbit invite',
+          description: waiting
+            ? `${preview.inviterName} invited you as ${ROLE_LABELS[preview.role!].label}`
+            : PRIVATE_SHARE_DESCRIPTION,
+          imageUrl: `${origin}${PRIVATE_OG_IMAGE_PATH}`,
+          imageWidth: OG_WIDTH,
+          imageHeight: OG_HEIGHT,
+          canonicalUrl: `${origin}/s/invite`,
+          redirectPath: token ? `/join?t=${encodeURIComponent(token)}` : '/join',
+          locale: 'en_US',
+          lang: 'en',
+        },
+        inviteAnalytics,
       );
     },
 

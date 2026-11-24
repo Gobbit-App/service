@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   MAGIC_LINK_TTL_MINUTES_DEFAULT,
   INVITE_TTL_DAYS_DEFAULT,
+  INVITE_LINKS_WAITING_MAX_DEFAULT,
   RATE_MAGIC_LINK_PER_IP_DEFAULT,
   RATE_CALLBACK_PER_IP_DEFAULT,
   PROFILE_LOOKUP_RATE_PER_HOUR_DEFAULT,
@@ -100,6 +101,7 @@ const baseSchema = z.object({
   ALLOW_CONSOLE_MAIL: bool('false'),
   MAGIC_LINK_TTL_MINUTES: positiveInt(MAGIC_LINK_TTL_MINUTES_DEFAULT),
   INVITE_TTL_DAYS: positiveInt(INVITE_TTL_DAYS_DEFAULT),
+  INVITE_LINKS_WAITING_MAX: positiveInt(INVITE_LINKS_WAITING_MAX_DEFAULT),
   /** 046: days a released username stays reserved for its previous owner. */
   USERNAME_HOLD_DAYS: positiveInt(USERNAME_HOLD_DAYS_DEFAULT),
   /** 046: profile lookups per member per hour. */

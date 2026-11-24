@@ -16,6 +16,8 @@ export const magicLinkRequestSchema = z
     email: emailSchema,
     /** Same-origin path to land on after sign-in; off-site values are ignored by the API. */
     next: z.string().max(NEXT_PATH_MAX).optional(),
+    /** 052: invite-link token; the sign-in mail then lands on the invite page. */
+    invite: z.string().min(1).max(256).optional(),
   })
   .strict();
 

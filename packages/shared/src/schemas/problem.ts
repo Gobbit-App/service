@@ -17,6 +17,8 @@ export const problemSchema = z.object({
   permission: z.enum(permissions).optional(),
   /** D35: the caller's role on the deck for a `403 /problems/forbidden`. */
   role: z.enum(memberRoles).optional(),
+  /** 052: the deck a `409 invite_link_already_member` points at. */
+  deck: z.object({ slug: z.string() }).optional(),
 });
 
 export type ProblemFieldError = z.infer<typeof problemFieldErrorSchema>;

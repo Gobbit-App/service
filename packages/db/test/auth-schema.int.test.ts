@@ -41,6 +41,7 @@ const EXPECTED: Record<string, string[]> = {
     `used_at:${TSTZ}:YES`,
     'requested_ip:text:YES',
     `created_at:${TSTZ}:NO`,
+    'invite_link_id:uuid:YES',
   ],
   rate_limit_counters: ['key:text:NO', `window_start:${TSTZ}:NO`, 'count:integer:NO'],
 };

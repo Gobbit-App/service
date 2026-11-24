@@ -4,7 +4,14 @@ import type { DecisionLevel } from '../lib/decision-event';
 export const MAGIC_LINK_OUTCOMES = ['sent', 'waitlisted', 'refused'] as const;
 export const MAGIC_LINK_REASONS = ['per_email', 'per_ip'] as const;
 export const CALLBACK_OUTCOMES = ['signed_in', 'failed'] as const;
-export const CALLBACK_REASONS = ['invalid', 'used', 'expired', 'onboarding', 'closed'] as const;
+export const CALLBACK_REASONS = [
+  'invalid',
+  'used',
+  'expired',
+  'onboarding',
+  'closed',
+  'invite_gone',
+] as const;
 export const REGISTER_OUTCOMES = ['created', 'existing', 'refused'] as const;
 
 export type CallbackFailureReason = (typeof CALLBACK_REASONS)[number];
@@ -13,9 +20,12 @@ export type AuthDecisions = {
   'auth.magic_link': {
     outcome: (typeof MAGIC_LINK_OUTCOMES)[number];
     reason: (typeof MAGIC_LINK_REASONS)[number];
+    via: 'invite_link';
+    linkId: string;
   };
   'auth.callback': { outcome: (typeof CALLBACK_OUTCOMES)[number]; reason: CallbackFailureReason };
   'users.register': { outcome: (typeof REGISTER_OUTCOMES)[number]; reason: 'registration_closed' };
+  'waitlist.registered': { outcome: 'removed'; entryId: string; userId: string; via: string };
   'registration.mode': { outcome: 'configured' };
 };
 
