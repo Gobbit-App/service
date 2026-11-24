@@ -31,6 +31,7 @@ What already exists and stays as is:
 
 - Q: May a link invite grant the owner role? → A: No. A link never makes someone an owner; owners are still invited by address or username (FR-002).
 - Q: A brand-new person still gets one sign-in mail until L4. Is that enough? → A: Yes, accept it as is. The link saves the invite mail; the sign-in mail goes away with L4 (FR-012).
+- Planning refinement (D472): a person with no account who taps Join and signs in from the invite page joins when they open the sign-in mail; the Join tap before entering their address is their explicit choice, and doing it at sign-in is what keeps one link from registering two people (FR-011). People who already have an account come back to the invite page and tap Join.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -66,7 +67,7 @@ Dana taps the link in WhatsApp. The chat shows a preview first: the deck's name 
 1. **Given** a waiting link invite, **When** anyone opens the link, signed in or not, **Then** they see an invite page naming the deck, the inviter (by shown name) and the role, and nothing else from the deck: no cards, categories, members or counts.
 2. **Given** the link pasted into a chat, **When** the chat shows a preview, **Then** the preview names the deck and the inviter and shows nothing private.
 3. **Given** a signed-in person who is not a member, **When** they tap Join on the invite page, **Then** they become a member with the link's role and land on the deck.
-4. **Given** a signed-out person, **When** they choose to join, **Then** they sign in or register through the usual sign-in and come back to the same invite page, where Join completes as above.
+4. **Given** a signed-out person, **When** they choose to join, **Then** they sign in or register through the usual sign-in. Someone who already has an account comes back to the same invite page, where Join completes as above; someone new joins when they open the sign-in mail and lands on the deck.
 5. **Given** a person with no Gobbit account while registration is waitlist-only, **When** they come through a waiting link invite, **Then** they can register and join instead of being put on the waitlist, and their registration records that a deck invite brought them in and who sent it.
 6. **Given** a person who joined through a link, **When** the owner opens the members settings, **Then** the invite shows as accepted by that person's shown name, and the person is listed as a member like any other.
 7. **Given** opening the link, at any point, **When** nobody has tapped Join, **Then** no one has been signed in and no membership exists; opening the link never signs anyone in.
@@ -95,7 +96,7 @@ Dana forwards the message to her partner, who taps the link after Dana has joine
 ### Edge Cases
 
 - **Two people open a waiting link at the same moment**: exactly one becomes a member; the other is told the link was already used.
-- **The person signs in through the invite page, but the link is used, revoked or expires before they come back**: they are told on return, and no membership is created. If they were new, they are not registered through the link either (FR-011): with registration waitlist-only, they reach the waitlist as any unknown address would.
+- **The person signs in through the invite page, but the link is used, revoked or expires before they come back**: they are told on return, and no membership is created. If they were new, they are not registered through the link either (FR-011): with registration waitlist-only, they are told the invite is no longer valid and offered the waitlist.
 - **Someone signed in on a shared phone as another person opens the link**: the invite page says who they are signed in as, so they can sign out first and join as themselves.
 - **An inviter who leaves the deck or is removed**: their waiting link invites stop working; anyone opening them is told the link is no longer valid. Accepted ones are untouched.
 - **A deck that is deleted or archived while a link waits**: the link stops working the same way.
@@ -117,9 +118,9 @@ Dana forwards the message to her partner, who taps the link after Dana has joine
 
 **Opening and accepting**
 
-- **FR-005**: Opening a link MUST NOT sign anyone in, create an account or create a membership. Only an explicit Join by a signed-in person does.
+- **FR-005**: Opening a link MUST NOT sign anyone in, create an account or create a membership. Only an explicit Join does: a tap by a signed-in person, or, for someone new, the Join they chose before signing in, completed when they open the sign-in mail.
 - **FR-006**: The invite page and the preview a chat shows for the link MUST show only the deck's name, the inviter's shown name (051) and the role. They MUST NOT show cards, categories, members, counts, the reference name or any address.
-- **FR-007**: A signed-out person MUST be able to sign in or register from the invite page and come back to it to join.
+- **FR-007**: A signed-out person MUST be able to sign in or register from the invite page and join: someone with an account comes back to the page and taps Join, someone new joins on opening the sign-in mail.
 - **FR-008**: A link invite MUST be single use. The first person to join claims it; every later attempt is refused.
 - **FR-009**: A link invite MUST stop working when it is accepted, revoked, expired (after the same invite period as mailed invites) or when its inviter is no longer an owner of the deck or the deck is gone.
 - **FR-010**: A person who is already a member, or who belongs to the owning account, MUST be told so on Join. The link MUST stay waiting.
