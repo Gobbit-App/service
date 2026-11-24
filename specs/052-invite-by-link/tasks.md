@@ -13,7 +13,7 @@ description: "Tasks for 052 invite by link"
 
 **Organization**: Tasks are grouped by user story so each story can be built and tested on its own.
 
-**Assumption**: D472 (a brand-new person joins when they open the sign-in mail; existing accounts tap Join) is taken as confirmed by running `/speckit-tasks`. If it is reverted, drop T031, T033 and T049 and the unknown-address branch of T030 and T023, and send everyone back to `/join`.
+**Confirmed**: D472 (a brand-new person joins when they open the sign-in mail; existing accounts tap Join) is confirmed in plan.md § Settle before starting. If it is reverted, drop T031, T033 and T049 and the unknown-address branch of T030 and T023, and send everyone back to `/join`.
 
 ## Format: `[ID] [P?] [Story] [Tier?] Description`
 

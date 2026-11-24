@@ -261,7 +261,7 @@ e2e/tests/smoke/invite-link.spec.ts          # new @smoke
 
 ## Settle before starting
 
-- [ ] Confirm the D472 spec refinement: a brand-new person joins when they open the sign-in mail, without a second Join tap.
+- [x] Confirm the D472 spec refinement: a brand-new person joins when they open the sign-in mail, without a second Join tap.
 
 ## Complexity Tracking
 
