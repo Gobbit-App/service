@@ -1,6 +1,6 @@
 # Research: Invite by link
 
-Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become ADR-085.
+Decisions D466–D477 (reserved in `specs/README.md`). The durable ones become ADR-085.
 
 ## D466 — One table, state derived, owner role refused by the database
 
@@ -79,9 +79,9 @@ Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become A
   2. Re-check that it is waiting, that its creator still resolves to `owner` on the deck (`resolveRole`), and that the deck is live and not personal.
   3. Check that the caller has no role on the deck (`resolveRole` returns null), which also covers account owners.
   4. If the caller has a **pending** membership (an earlier mailed or username invite), accept that row with the **link's** role and expire its mailed links (`magicLinks.expireUnusedForMembership`). Otherwise create an accepted membership with `invited_by` = the link's creator.
-  5. Set `accepted_at`, `accepted_by` and `membership_id` on the link.
+  5. Set `accepted_at` and `accepted_by` on the link.
 
-  The answer is the deck (slug, for navigation), or a 409 problem carrying the reason (`used`, `revoked`, `expired`, `invalid`, `already_member`). An `already_member` refusal leaves the link waiting (FR-010).
+  The answer is the deck (slug, for navigation), or a 409 problem carrying the reason (`used`, `revoked`, `expired`, `invalid`, `already_member`). An `already_member` refusal leaves the link waiting (FR-010) and carries `deck: { slug }`, so the invite page can link to the deck. Step 3 runs on every path, the sign-in callback included (D472).
 - **Rationale**:
   - The row lock makes the second of two concurrent Joins see `accepted_at` and refuse (SC-003).
   - The link's role wins because it is the one the person just chose to accept, and both invites came from owners.
@@ -98,11 +98,11 @@ Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become A
     - The HTTP answer is the same in every case (no enumeration).
   - At `consume`, inside the existing transaction, a link carrying `invite_link_id` whose address still has no user does the following:
     - It locks the invite.
-    - **If the invite is still waiting** (D471 checks), it registers the person with `users.register(email, 'deck_invite', { actorId: creator })`, creates their accepted membership and marks the invite accepted. Then `next` is the deck.
+    - **If the invite is still waiting** (D471 checks), it registers the person with `users.register(email, 'deck_invite', { actorId: creator })`, which returns the existing user if the address got an account since the mail, then runs the rest of D471: already a member → signed in, `next` is the deck and the link stays waiting; otherwise the membership is created or accepted and the invite marked accepted, and `next` is the deck.
     - **If the invite has stopped**:
       - in `waitlist` mode the callback fails with a new reason `invite_gone`, and no user is created. The SPA's auth error screen says the invite is no longer valid and offers the waitlist form;
       - in `open` mode the person registers as `open_sign_in`, as anyone would, and lands on `/join?t=` which shows why.
-  - If the address has become a user since the link was mailed, the callback is a plain sign-in, and `next` is `/join?t=`.
+  - If the invite has stopped and the address has become a user since the link was mailed, the callback is a plain sign-in, and `next` is `/join?t=`.
 - **Rationale**:
   - FR-011 needs registration and claim to be one atomic step. If registration came first and the claim came later on a Join tap, two strangers could both register through one link.
   - For people who already have an account there is no such force. The explicit tap stays, as US2 #4 and the "Join is an explicit tap" assumption say, and the callback keeps no invite logic for them.
@@ -138,10 +138,10 @@ Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become A
 ## D476 — Owners list, revoke and share; sharing is counted in analytics
 
 - **Decision**:
-  - **List**: `GET /decks/{id}/invite-links` (owners only, through the existing `member.invite` permission). It answers the waiting links plus links that ended in the last `INVITE_TTL_DAYS` days, newest first. Each row has the reference name, the role, the creator's and the acceptor's member summary (`member-summaries.ts`, no address), the state, `expiresAt` and, while waiting, the share URL. A row's state is never `invalid`; a link whose creator stopped being an owner shows as waiting until it expires.
+  - **List**: `GET /decks/{id}/invite-links` (owners only, through the existing `member.invite` permission). It answers the waiting links plus links that ended in the last `INVITE_TTL_DAYS` days, newest first. Each row has the reference name, the role, the creator's and the acceptor's member summary (`member-summaries.ts`, no address), the state, `expiresAt` and, while waiting, the share URL.
   - **Create**: `POST /decks/{id}/invite-links { name, role }` answers the same row.
   - **Revoke**: `DELETE /decks/{id}/invite-links/{linkId}` sets `revoked_at` and `revoked_by`. It refuses with 409 `not_waiting` if the link is not waiting.
-  - **A creator who stops being an owner**: their waiting links still list as waiting, with Share, and still count toward the cap until they expire, even though opening them reads `invalid` (D473). Owners revoke them if they need the slots. Computing that state in the list would mean a role lookup per creator for a rare case.
+  - **A creator who stops being an owner**: their unended links list as `invalid` ("no longer valid") with no url, so an owner is never offered a Share that leads to a refusal. The list query derives it with one join against the deck's owners (account owner or an accepted, live owner membership), the same rule as D473. Revoke is the only action, and they count toward the cap until revoked or expired.
   - **Share**: `lib/share`'s `shareItem` gains an optional `text`. The share sheet gets `{ url, title, text }`, and the clipboard fallback copies `text` followed by the URL. The share button on each waiting row (`deck-admin/InviteLinks.tsx`) calls it with the prefilled message ("Join <deck> on Gobbit: …"). It does not reuse `ShareButton`, which is bound to an item id and builds `/s/<itemId>`.
   - **Counting shares**: each share or copy sends a new content event `invite-shared` (`{ deckId, channel }`) through `trackContent`. It is the fifth content event, so it touches `analytics/events.ts`, `sanitize.ts`, `privacy.ts` and their tests, and the CLAUDE.md Analytics rule ("four content events" becomes five).
 - **Rationale**:
@@ -151,3 +151,16 @@ Decisions D466–D476 (reserved in `specs/README.md`). The durable ones become A
 - **Alternatives considered**:
   - A server endpoint that logs shares. That is a new route only to observe a client action, and it counts every owner while ignoring their analytics choice.
   - Listing every link ever made. That grows without bound on a communal deck.
+
+## D477 — Registering outside the waitlist flow takes the address off the waitlist
+
+- **Decision**: `users.register` gains one step. When it **creates** a user for any reason except `waitlist_invite` (so `deck_invite`, by mail, username or link, and `open_sign_in`), it locks that address's live `pending` or `confirmed` waitlist entry and removes it in the same transaction: `status = 'removed'`, `removed_at = now`, `removed_by = NULL`, plus a `waitlist_events` row `removed` with a null actor (D240). It records a decision event `waitlist.registered`, outcome `removed`, with `entryId`, `userId`, `via` (the registration reason) and `requestId`. Migration `0030` applies the same rule once to existing data.
+- **Rationale**:
+  - The waitlist is a queue of people waiting for an account. Someone who got one through a deck invite is no longer waiting, and an admin inviting them from the waitlist later would fail (`waitlist.join` already refuses addresses that have a user).
+  - `removed` already exists and the prune clears removed entries (D220), so no new status or enum value is needed. Admin removals always carry the admin's id, so a null actor tells the two apart in the history.
+  - `waitlist_invite` is skipped because that flow already marks its entry `invited`, with the user, in the same transaction.
+  - `invited` entries are left alone: they already point at their user.
+- **Alternatives considered**:
+  - Marking the entry `invited` with the new user. That status means "an admin let them in", which did not happen, and `invited_by` would be wrong.
+  - A new waitlist event action `registered`. It needs an enum migration only to say what a null actor already says.
+  - Doing it in the invite-link code only. Mailed and username invites have the same gap.

@@ -32,6 +32,7 @@ What already exists and stays as is:
 - Q: May a link invite grant the owner role? → A: No. A link never makes someone an owner; owners are still invited by address or username (FR-002).
 - Q: A brand-new person still gets one sign-in mail until L4. Is that enough? → A: Yes, accept it as is. The link saves the invite mail; the sign-in mail goes away with L4 (FR-012).
 - Planning refinement (D472): a person with no account who taps Join and signs in from the invite page joins when they open the sign-in mail; the Join tap before entering their address is their explicit choice, and doing it at sign-in is what keeps one link from registering two people (FR-011). People who already have an account come back to the invite page and tap Join.
+- Analysis refinement (D477): someone who gets an account outside the waitlist flow (a deck invite by mail, username or link, or open sign-in) while their address is still waiting on the waitlist is taken off the waitlist when the account is created (FR-018).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -56,11 +57,11 @@ An owner of the communal deck wants Dana in the alpha. In the deck's members set
 
 ### User Story 2 - The invited person opens the link and joins (Priority: P1)
 
-Dana taps the link in WhatsApp. The chat shows a preview first: the deck's name and that the owner invited her, with nothing from inside the deck. The link opens an invite page saying who invited her, to which deck and as what. If Dana is already signed in to Gobbit, she taps Join and lands on the deck. If she is not, she signs in or registers there, through the usual sign-in, and comes back to the same invite page to tap Join. From then on she is a member with the link's role, and the owner's invites list shows "accepted by <Dana's shown name>".
+Dana taps the link in WhatsApp. The chat shows a preview first: the deck's name and that the owner invited her, with nothing from inside the deck. The link opens an invite page saying who invited her, to which deck and as what. If Dana is already signed in to Gobbit, she taps Join and lands on the deck. If she is not, she taps Join and enters her address in the usual sign-in form. If she already has an account, the sign-in mail brings her back to the same invite page, where she taps Join. If she is new to Gobbit, she joins as soon as she opens the sign-in mail and lands on the deck. From then on she is a member with the link's role, and the owner's invites list shows "accepted by <Dana's shown name>".
 
 **Why this priority**: the other half of the feature. A link that cannot be accepted is useless.
 
-**Independent Test**: a second user, signed out, opens the link, signs in, accepts and lands on the deck as a member with the link's role. The owner's list shows the invite as accepted by that user's shown name.
+**Independent Test**: a person new to Gobbit, signed out, opens the link, taps Join, enters their address and opens the sign-in mail, and lands on the deck as a member with the link's role. A person who already has an account signs in the same way, comes back to the invite page and taps Join. The owner's list shows the invite as accepted by that person's shown name.
 
 **Acceptance Scenarios**:
 
@@ -129,9 +130,13 @@ Dana forwards the message to her partner, who taps the link after Dana has joine
 
 **Owner view**
 
-- **FR-013**: The deck's owners MUST see each link invite with its reference name, role, who created it, its state (waiting, accepted, revoked, expired) and, once accepted, the shown name of the person who joined. Other members MUST NOT see link invites.
+- **FR-013**: The deck's owners MUST see each link invite with its reference name, role, who created it, its state (waiting, accepted, revoked, expired, or no longer valid when its inviter is no longer an owner) and, once accepted, the shown name of the person who joined. Other members MUST NOT see link invites.
 - **FR-014**: Any owner of the deck MUST be able to revoke a waiting link invite.
 - **FR-015**: No answer about link invites MUST carry an email address. The person who joined is shown by their shown name and avatar (051).
+
+**Waitlist**
+
+- **FR-018**: When a person gets an account any way other than being invited from the waitlist (a deck invite by mail, username or link, or open sign-in) and their address is still waiting on the waitlist, that waitlist entry MUST be removed at the same moment, so the waitlist never lists someone who already has an account.
 
 **Unchanged**
 
@@ -143,10 +148,11 @@ Dana forwards the message to her partner, who taps the link after Dana has joine
 Each of these is a decision about a person's access and leaves a record (constitution VIII), identifying people and invites by id only:
 
 - **Link created** (owner, deck, role) and **refused at creation** (limit reached).
-- **Link shared**: the owner used Share or Copy (sent by the app, as other in-app actions are).
+- **Link shared**: the owner used Share or Copy. The app sends it as an analytics event, as other in-app actions are, so it is counted only for owners who allowed analytics.
 - **Link accepted** (who joined, which invite) and **registration through a link** (alongside the existing registration record).
 - **Link refused on Join**, with the reason: already used, revoked, expired, no longer valid, already a member.
 - **Link revoked** (by which owner) and **link expired**.
+- **Taken off the waitlist by registering** (which entry, which new account, how they registered).
 
 The plan names which of these warrant an alert, for example a burst of refusals on one link (a forwarded link) or one deck creating links at its limit.
 
@@ -164,7 +170,7 @@ The plan names which of these warrant an alert, for example a burst of refusals 
 - **SC-003**: Of any number of people who try the same link, exactly one becomes a member.
 - **SC-004**: Opening a link, before Join, leaves zero new sessions, accounts and memberships.
 - **SC-005**: The invite page and its chat preview show nothing beyond the deck name, the inviter's shown name and the role, checked on a deck with private categories and cards.
-- **SC-006**: Every created, shared, accepted, refused, revoked and expired link leaves a record an operator can count.
+- **SC-006**: Every created, accepted, refused, revoked and expired link leaves a record an operator can count. Shares are counted for owners who allowed analytics.
 - **SC-007**: A deck's alpha readers can all be invited without sending a single invite mail; only people new to Gobbit get one sign-in mail each.
 
 ## Assumptions

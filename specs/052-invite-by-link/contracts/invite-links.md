@@ -21,13 +21,13 @@ Request: `inviteLinkCreateSchema` `{ name, role }`.
 
 ### `GET /decks/{id}/invite-links`
 
-200 `inviteLinkListSchema`. Lists the waiting links plus links that ended in the last `INVITE_TTL_DAYS` days, newest first (D476). 403 for non-owners. No addresses are returned.
+200 `inviteLinkListSchema`. Lists the waiting and `invalid` links plus links that ended in the last `INVITE_TTL_DAYS` days, newest first (D476). An `invalid` row (its creator is no longer an owner) has no `url` and can only be revoked. 403 for non-owners. No addresses are returned.
 
 ### `DELETE /decks/{id}/invite-links/{linkId}`
 
 | Status | When |
 |--------|------|
-| 204 | revoked (`revoked_at`, `revoked_by` = caller) |
+| 204 | revoked (`revoked_at`, `revoked_by` = caller); a waiting or `invalid` link |
 | 403 | not an owner |
 | 404 | no such link on this deck |
 | 409 `not_waiting` | already accepted, revoked or expired |
@@ -66,7 +66,7 @@ Request: `inviteAcceptSchema` `{ token }`. The transaction is in `data-model.md`
 | 200 `{ deck: { id, slug, name } }` | joined with the link's role |
 | 401 | not signed in |
 | 409 `invite_link_used` / `invite_link_revoked` / `invite_link_expired` / `invite_link_invalid` | link not waiting or no longer valid |
-| 409 `invite_link_already_member` | caller already has a role on the deck; the link stays waiting (FR-010) |
+| 409 `invite_link_already_member` | caller already has a role on the deck; the link stays waiting (FR-010). The problem carries `deck: { slug }` |
 
 ## Sign-in (changed)
 
@@ -82,12 +82,15 @@ The body gains an optional `invite` (`magicLinkRequestSchema`). The answer is un
 
 ### `GET /auth/callback?token=`
 
-For a link carrying `invite_link_id` whose address still has no account:
+For a link carrying `invite_link_id` (sent to an address that had no account):
 
-| Invite at callback | `waitlist` mode | `open` mode |
-|--------------------|-----------------|-------------|
-| waiting | register `deck_invite` (by the creator) and join → 303 to `/d/<slug>` | same |
-| stopped | 303 to the auth error screen, reason `invite_gone`; no user created | register `open_sign_in` → 303 to `/join?t=<token>` (shows why) |
+| Address at callback | Invite at callback | `waitlist` mode | `open` mode |
+|---------------------|--------------------|-----------------|-------------|
+| still no account | waiting | register `deck_invite` (by the creator) and join → 303 to `/d/<slug>` | same |
+| still no account | stopped | 303 to the auth error screen, reason `invite_gone`; no user created | register `open_sign_in` → 303 to `/join?t=<token>` (shows why) |
+| has an account, not a member | waiting | sign in and join → 303 to `/d/<slug>` | same |
+| has an account, already a member | waiting | sign in → 303 to `/d/<slug>`; the link stays waiting | same |
+| has an account | stopped | sign in → 303 to `/join?t=<token>` (shows why) | same |
 
 New `CALLBACK_REASONS` value: `invite_gone`.
 
@@ -98,6 +101,6 @@ New `CALLBACK_REASONS` value: `invite_gone`.
   - any other state: why (used, revoked, expired, no longer valid).
   - a signed-in member of the deck: "You're already in" and a link to the deck.
 
-  Analytics screen pattern: `/join`.
-- **Members settings** (`/d/$slug/settings`, owners): a "Invite by link" form (name and role), the list of link invites with state, and Share/Revoke on waiting rows.
-- **Auth error screen**: a new `invite_gone` message, with the waitlist form.
+  `/join` is added to `PUBLIC_PATHS` (`api/session.ts`), so a signed-out visit reads the preview instead of bouncing to sign-in. Analytics screen pattern: `/join`.
+- **Members settings** (`/d/$slug/settings`, owners): a "Invite by link" form (name and role), the list of link invites with state and who created each, Share and Revoke on waiting rows, Revoke only on "no longer valid" rows.
+- **Auth error screen** (`routes/auth.error.tsx`): a new `invite_gone` message, and the waitlist form shown for `invite_gone` as it is for `closed`.

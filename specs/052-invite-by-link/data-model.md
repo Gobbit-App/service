@@ -1,6 +1,6 @@
 # Data model: Invite by link
 
-Migration `0030_deck_invite_links` (and a hand-written `down/0030_deck_invite_links.down.sql`). There is no backfill.
+Migration `0030_deck_invite_links` (and a hand-written `down/0030_deck_invite_links.down.sql`). Its only backfill is the one-off waitlist tidy in § Waitlist entries (D477).
 
 ## New table `deck_invite_links` (D466, D467)
 
@@ -15,14 +15,13 @@ Migration `0030_deck_invite_links` (and a hand-written `down/0030_deck_invite_li
 | `expires_at` | timestamptz(3) NOT NULL | `now + INVITE_TTL_DAYS` at creation |
 | `accepted_at` | timestamptz(3) NULL | |
 | `accepted_by` | uuid NULL → `users.id` ON DELETE SET NULL | the person who joined |
-| `membership_id` | uuid NULL → `memberships.id` ON DELETE SET NULL | the membership the join created or accepted |
 | `revoked_at` | timestamptz(3) NULL | |
 | `revoked_by` | uuid NULL → `users.id` ON DELETE SET NULL | |
 | `created_at`, `updated_at` | timestamptz(3) NOT NULL | auto timestamps, as on every table |
 
 **Constraints**:
 - `CHECK (num_nonnulls(accepted_at, revoked_at) <= 1)`
-- `CHECK (accepted_at IS NOT NULL OR (accepted_by IS NULL AND membership_id IS NULL))`. The acceptor columns are set only together with `accepted_at`. They may later turn null when the user or membership is deleted.
+- `CHECK (accepted_at IS NOT NULL OR accepted_by IS NULL)`. `accepted_by` is set only together with `accepted_at`. It may later turn null when the user is deleted.
 
 **Indexes**:
 - unique `token`;
@@ -39,7 +38,7 @@ waiting ──accept──▶ accepted
 waiting + (creator not owner | deck deleted/personal) ⇒ reads as invalid (D473, nothing written)
 ```
 
-Only `waiting` links can be accepted or revoked. The waiting count for the cap (D475) is `accepted_at IS NULL AND revoked_at IS NULL AND expires_at > now()`.
+The owners' list shows `invalid` as "no longer valid", with no url; it can only be revoked. Only `waiting` and `invalid` links can be revoked, and only `waiting` ones accepted. An `invalid` link still counts toward the cap until it is revoked or expires. The waiting count for the cap (D475) is `accepted_at IS NULL AND revoked_at IS NULL AND expires_at > now()`.
 
 ## Changed table `magic_links` (D472)
 
@@ -58,11 +57,11 @@ Both callers use one repository method in one transaction: Join (`POST /invite-l
 1. `SELECT … FROM deck_invite_links WHERE token = $1 FOR UPDATE` (Join) or `WHERE id = $1 FOR UPDATE` (callback). Missing → `invalid`.
 2. `accepted_at` set → `used`. `revoked_at` set → `revoked`. `expires_at <= now` → `expired`.
 3. Deck `deleted_at` set, or deck kind `personal`, or `created_by` null, or `resolveRole(created_by, deck)` ≠ `owner` → `invalid`.
-4. Caller's `resolveRole` on the deck is not null → `already_member`. `resolveRole` counts only accepted, live memberships and account ownership, so a pending invite does not trip this step. The link is untouched. This step is skipped on the callback path, where the person was just registered.
+4. Caller's `resolveRole` on the deck is not null → `already_member`. `resolveRole` counts only accepted, live memberships and account ownership, so a pending invite does not trip this step. The link is untouched. This step runs on both paths: on the callback the address may have got an account, and even a membership, since the mail was sent.
 5. Caller has a pending membership (`accepted_at IS NULL`, live) → set `role = link.role` and `accepted_at = now`, and call `magicLinks.expireUnusedForMembership(id)`. Otherwise insert an accepted membership (`invited_by = created_by`, `accepted_at = now`).
-6. `UPDATE deck_invite_links SET accepted_at, accepted_by, membership_id`.
+6. `UPDATE deck_invite_links SET accepted_at, accepted_by`.
 
-On the callback path, `users.register(email, 'deck_invite', { actorId: created_by })` runs between steps 3 and 5, in the same transaction. If any step refuses, nothing is registered (FR-011).
+On the callback path, `users.register(email, 'deck_invite', { actorId: created_by })` runs between steps 3 and 4, in the same transaction. It returns the existing user if the address has one by then. If step 1–3 refuses, nothing is registered (FR-011). If step 4 refuses, the person is signed in as themselves and sent to `/d/<slug>`, and the link stays waiting.
 
 ## DTOs (`@gobbit/shared/schemas/invite-links.ts`)
 
@@ -70,12 +69,12 @@ On the callback path, `users.register(email, 'deck_invite', { actorId: created_b
 - `inviteLinkSchema` (owners' list row):
 
   ```
-  { id, name, role, state: 'waiting'|'accepted'|'revoked'|'expired',
+  { id, name, role, state: 'waiting'|'accepted'|'revoked'|'expired'|'invalid',
     createdBy: MemberSummary|null, acceptedBy: MemberSummary|null,
     createdAt, expiresAt, url: string|null }
   ```
 
-  `url` is present only while waiting. A `MemberSummary` has no email or location (051).
+  `url` is present only while waiting. `invalid` is derived as in § State (D473, D476). A `MemberSummary` has no email or location (051).
 - `inviteLinkListSchema`: `{ links: InviteLink[] }`
 - `invitePreviewSchema` (anonymous):
 
@@ -87,6 +86,13 @@ On the callback path, `users.register(email, 'deck_invite', { actorId: created_b
   The three optional fields are present only when the state is `waiting`.
 - `inviteAcceptSchema`: `{ token: string 1–256 }`. Its answer is `{ deck: { id, slug, name } }`.
 - `magicLinkRequestSchema` gains `invite?: string 1–256`.
+- The 409 `invite_link_already_member` problem carries `deck: { slug }` so the invite page can link to the deck.
+
+## Waitlist entries (D477)
+
+No schema change. `users.register` gains one step: when it **creates** a user for any reason except `waitlist_invite`, it removes that address's live `pending` or `confirmed` waitlist entry in the same transaction (`status = 'removed'`, `removed_at = now`, `removed_by = NULL`) and inserts a `waitlist_events` row (`action = 'removed'`, `actor_id = NULL`). A null actor marks it as removed by registering; admin removals always carry the admin. `invited` entries are untouched, and `waitlist_invite` is skipped because that flow marks its entry `invited` itself.
+
+Migration `0030` tidies existing data once, the same way: live `pending`/`confirmed` entries whose address already has a user become `removed` with a `removed` event (one `WITH … UPDATE … RETURNING` feeding an `INSERT` into `waitlist_events`). The down file does not restore them.
 
 ## Limits (`@gobbit/shared` limits, env-tunable)
 

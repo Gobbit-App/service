@@ -24,6 +24,7 @@ The plan adds one new table, one new service and one new field on sign-in. An ow
   - People who already have an account get a plain sign-in mail and tap Join on return.
 - **Stops working** (D473, D474): the link stops when it is accepted, revoked or expired, when its inviter is no longer an owner, or when the deck is gone. Checks run at read time, with no sweep and no triggers.
 - **Owners** (D475, D476): create, list, share and revoke in the deck's members settings, behind the existing `member.invite` permission. The cap is `INVITE_LINKS_WAITING_MAX` (default 10). Share uses the share sheet, with a prefilled message, or the clipboard.
+- **Waitlist tidy** (D477): when an account is created outside the waitlist flow, any live waitlist entry for that address is removed in the same transaction, with its audit row. Migration `0030` applies the rule once to existing data.
 - **Accountability**: a new decision-event family, `invite_link.create`, `.open`, `.join` and `.revoke`. Registration is still recorded by `users.register`. A new callback reason, `invite_gone`, covers a link that stopped while the person was signing in. Shares are a consent-gated analytics event.
 
 ## Starting point
@@ -109,7 +110,8 @@ Post-design re-check: still passes. The raw-token departure (D467) is a recorded
 | D473 | A link is `invalid` when its creator no longer resolves to owner or the deck is gone or personal; checked at read time | no |
 | D474 | Expiry recorded as `refused · expired` when met; no sweep | no |
 | D475 | `INVITE_LINKS_WAITING_MAX` (default 10), counted under a deck row lock | no |
-| D476 | Owner list (waiting + ended within `INVITE_TTL_DAYS`), revoke, share with prefilled text via `lib/share`; `invite-shared` content event | no |
+| D476 | Owner list (waiting, `invalid` and ended within `INVITE_TTL_DAYS`), revoke, share with prefilled text via `lib/share`; `invite-shared` content event | no |
+| D477 | Registering outside the waitlist flow removes the address's live waitlist entry in the same transaction; one-off backfill in `0030` | no |
 
 ## Project Structure
 
@@ -119,7 +121,7 @@ Post-design re-check: still passes. The raw-token departure (D467) is a recorded
 specs/052-invite-by-link/
 ├── spec.md               # /speckit-specify + /speckit-clarify (+ D472 refinement)
 ├── plan.md               # this file
-├── research.md           # D466–D476
+├── research.md           # D466–D477
 ├── data-model.md         # table, column, accept transaction, DTOs, limits
 ├── contracts/invite-links.md
 ├── quickstart.md
@@ -148,6 +150,8 @@ apps/api/src/
 ├── services/invite-links.events.ts          # new: event names, outcomes, reasons
 ├── services/auth.service.ts                 # requestMagicLink(invite), consume → register + accept
 ├── services/auth.events.ts                  # CALLBACK_REASONS + invite_gone; magic_link via
+├── services/users.service.ts                # register removes a live waitlist entry (D477)
+├── repositories/waitlist.repo.ts            # removeLiveForRegistration (D477)
 ├── routes/invite-links.ts                   # new: owner routes, accept, GET /invites/preview
 ├── routes/share.ts                          # GET /s/invite (before /s/:itemId)
 ├── routes/auth.ts                           # pass invite through
@@ -158,6 +162,8 @@ apps/api/test/invite-links.int.test.ts       # new
 apps/web/src/
 ├── lib/share.ts                             # shareItem({ url, title, text? })
 ├── lib/auth-error-copy.ts                   # invite_gone
+├── routes/auth.error.tsx                    # waitlist form for invite_gone too
+├── api/session.ts                           # /join in PUBLIC_PATHS
 ├── deck-admin/InviteLinkForm.tsx            # new (sibling InviteForm)
 ├── deck-admin/InviteLinks.tsx               # new: list rows + Share/Revoke
 ├── deck-admin/MembersSection.tsx            # mount both for owners
@@ -192,14 +198,16 @@ e2e/tests/smoke/invite-link.spec.ts          # new @smoke
 | FR-007 / FR-012 sign in from page | `/join` + `SignInForm` with `invite` | `JoinScreen.test.tsx`, unit; smoke journey |
 | FR-008 / SC-003 single use, concurrent | accept tx `FOR UPDATE` (D471) | `invite-links.int.test.ts` (two parallel accepts → one 200, one 409 used), int |
 | FR-009 revoked / expired / inviter not owner / deck gone | service checks (D473) | `invite-links.int.test.ts`, int |
-| FR-010 already member → link stays waiting | accept tx step 4 | `invite-links.int.test.ts`, int |
+| FR-010 already member → link stays waiting | accept tx step 4, on Join and callback | `invite-links.int.test.ts` and `auth.int.test.ts`, int |
 | FR-011 registers ≤ 1, none once stopped | callback tx (D472) | `auth.int.test.ts` (two new addresses through one link; stopped link → `invite_gone`, no user), int |
 | FR-011 registered via deck_invite by inviter | `users.register` | `auth.int.test.ts`, int |
-| FR-013 owners see links; others don't | `member.invite`; DTO | `invite-links.int.test.ts` (editor → 403), int |
+| FR-013 owners see links; others don't; creator shown; `invalid` derived | `member.invite`; DTO; list query (D476) | `invite-links.int.test.ts` (editor → 403; demoted creator → `invalid`, no url), int; `InviteLinks.test.tsx`, unit |
 | FR-014 revoke | service | `invite-links.int.test.ts`, int |
 | FR-015 no addresses | `inviteLinkSchema` uses `MemberSummary` | `invite-links.int.test.ts` (answer scan for `@`), int |
 | FR-016 / FR-017 everything else unchanged | — | existing `members` and auth suites stay green |
 | Pending invite closed by a link join | accept tx step 5 | `invite-links.int.test.ts`, int |
+| FR-018 registering outside the waitlist flow removes the entry | `users.register` (D477) | `users.service.test.ts`, unit; `registration-gate.int.test.ts` (mailed deck invite and link registration remove a confirmed entry with a null-actor event; `waitlist_invite` untouched), int |
+| `/join` reachable signed out | `PUBLIC_PATHS` | `session.test.ts`, unit; smoke journey |
 | Critical journey | — | `e2e/tests/smoke/invite-link.spec.ts`, smoke |
 
 ## Accountability
@@ -215,6 +223,7 @@ e2e/tests/smoke/invite-link.spec.ts          # new @smoke
 | Revoke a link | `invite_link.revoke` + `revoked_at/by` | revoked; refused · not_waiting | requestId, actorId, deckId, linkId | info | aggregate | — | `invite-links.service.test.ts`, unit |
 | Link expired | the row (`expires_at`, no end state) + `refused · expired` above (D474) | — | — | — | count by SQL (`quickstart.md`) | — | `invite-links.int.test.ts`, int |
 | Link shared | analytics `invite-shared` (`deckId`, `channel`) | share-sheet, copy-link | deckId | — | Umami event count; **consenting owners only** (D476) | — | `share.test.ts` / `InviteLinks.test.tsx`, unit |
+| Taken off the waitlist by registering | `waitlist.registered` + `waitlist_entries` status and `waitlist_events` row (same transaction) | removed | requestId, entryId, userId, via | info | aggregate by `via` | — | `users.service.test.ts`, unit; `registration-gate.int.test.ts`, int |
 | Anonymous rate limit hit | existing `rate_limit` refused (`rate-limit-refused.ts`) | refused | path, ipHash | as today | as today | as today | existing |
 
 **Operator controls**:
@@ -223,7 +232,7 @@ e2e/tests/smoke/invite-link.spec.ts          # new @smoke
 
 ## Rollout
 
-- **Migrations**: `0030_deck_invite_links` is additive. It creates the table and adds a nullable `magic_links.invite_link_id` with its CHECK. It is reversible: the down file drops the column, then the table. No backfill.
+- **Migrations**: `0030_deck_invite_links` is additive. It creates the table and adds a nullable `magic_links.invite_link_id` with its CHECK. It also removes, once, live waitlist entries whose address already has an account, with their audit rows (D477). The down file drops the column, then the table; it does not restore those waitlist entries.
 - **Env / config**: `INVITE_LINKS_WAITING_MAX` is optional. It goes in the README env table, `infra/docker-compose.yml` `x-api-env` and a `CHANGELOG.md` entry, which is not marked Action required.
 - **API client**: run `pnpm api:openapi`. The new routes and the `magicLinkRequestSchema.invite` field change it.
 - **Caddy**: no change. `/s/*` already reaches the API unchanged.
@@ -233,7 +242,8 @@ e2e/tests/smoke/invite-link.spec.ts          # new @smoke
   - `docs/adr.md` gets ADR-085;
   - `docs/architecture.md` gets one index row;
   - `CLAUDE.md`'s Roles rule gets one clause: link invites are owner-only, single use, never owner, and the token is never in a path. Its Analytics rule changes "four content events" to five (`invite-shared`);
-  - `specs/README.md` gets D466–D476 and ADR-085;
+  - `specs/README.md` gets D466–D477 and ADR-085;
+  - `docs/design/auth.md` (or the waitlist design doc) notes D477;
   - `community-go-list.md` Tracking gets a plan row now and a tick on merge.
 
 ## Risks
@@ -270,5 +280,6 @@ No violations.
 | A separate HMAC key for rebuildable tokens | Needs a new required secret for no real gain (D467). |
 | Claiming at the callback for existing accounts | No FR forces it; the spec's explicit Join tap stays (D472). |
 | A `status` column | Derived from timestamps (D466). |
+| A waitlist event action `registered` | A null actor on `removed` already marks it (D477). |
 | Generalising `ShareButton` | It is bound to items; the share button in `InviteLinks.tsx` calls the shared `shareItem` (D476). |
 | A Caddy change | `/s/*` already proxies to the API (D468). |
