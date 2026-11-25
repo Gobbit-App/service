@@ -4,12 +4,116 @@ Everything needed to launch the first communal deck: a public, Hebrew-first know
 
 Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`; Track I target decided Nov 16; monitoring (Track K) and early wins (Track L) added Nov 16; launch order by importance, alpha first, decided Nov 16 (see Order). This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
 
+## Build order
+
+Every work item in this file, in the order it is built (from the Order section below; stage rows separate the stages). "Done" mirrors the tick in its track. Items split across stages (E2b, L4) have one row per part.
+
+| Track | Item | Description | Done |
+|---|---|---|---|
+| **Now, alongside everything** | | | |
+| B | B2 | Agree the taxonomy: 10–15 categories, Hebrew names, Latin slugs, visibility | no |
+| B | B3 | Decide how location is expressed (second category on a card) | no |
+| C | C1 | Authoring template for cards | no |
+| C | C2 | Remove personal data from the content | no |
+| C | C3 | Rights: link and summarise, own or cleared media only | no |
+| C | C4 | Convert raw chat exports to the template, by hand | no |
+| C | C5 | File layout: one Markdown file per category, media folders | no |
+| C | C6 | Decide which categories stay members-only | no |
+| H | H1 | Settle the open decisions (incl. whether deck invites skip the waitlist) | no |
+| A | A7 | Bulk publish keeps going past a card it cannot publish | yes |
+| L | L1 | Cache public HTML at Cloudflare | no |
+| L | L2 | Embedding sweep every 10 minutes | no |
+| L | L3 | Job polling per queue type | no |
+| **Stage 3 — Alpha** | | | |
+| A | A1 | Card-per-section Markdown import | yes |
+| A | A2 | Per-card fields in the import file | yes |
+| A | A3 | Several categories per card | yes |
+| A | A5 | Hebrew-safe category slugs | yes |
+| A | A6 | Strict category mode | yes |
+| A | A8 | Import cap | yes |
+| A | A9 | Bulk discard by import label | yes |
+| A | A10 | Dry-run lint output | yes |
+| A | A4 | Media from the CLI | yes |
+| A | A11 | Import docs | yes |
+| B | B1 | Create the communal deck | no |
+| B | B4 | Roles: co-owner and curators as maintainers | no |
+| B | B5 | Embeddings key set in production | no |
+| H | H2 | Choose the owning user | no |
+| H | H3 | Curators as maintainers | no |
+| D | D1 | Rehearsal import on a throwaway deck | no |
+| D | D2 | Lint every file with `--dry-run` | no |
+| D | D3 | Import one file at a time | no |
+| D | D4 | Review and publish per label | no |
+| D | D5 | Spot-check search with 20 real questions | no |
+| D | D7 | Alpha walkthrough on iPhone and Android | no |
+| E | E2a | Right to left reads right (small fixes found in D7) | no |
+| E | E4 | Show "last verified" on cards and public pages | no |
+| I | I1 | Record the infrastructure target as an ADR | no |
+| I | I2 | Register the product domain | no |
+| I | I3 | Size the VM from production numbers | no |
+| I | I4 | VM and Dokploy remote server, staging host | no |
+| I | I5 | Nightly backups with a rehearsed restore | no |
+| I | I6 | Move analytics to Umami Cloud | no |
+| I | I7 | Host-bound settings for the new host | no |
+| I | I8 | Check launch estimates against free tiers | no |
+| I | I9 | Cut-over to the VM | no |
+| I | I10 | Fallback deploy by hand | no |
+| K | K2 | Collector (Alloy) and Postgres monitoring | no |
+| K | K3 | Dashboard and alerts | no |
+| K | K4 | Weekly monitoring checklist | no |
+| E | E8 | Monitoring thresholds on decision events (via Track K) | no |
+| K | K5 | Monitoring docs and ADR | no |
+| H | H11 | Model spend guard (050) | yes |
+| H | H6 | No email addresses in member data (051) | yes |
+| H | H12 | Invite by link (052) | yes |
+| H | H8a | First run for invited users (053) | no |
+| E | E5 | Backups that restore (via I5) | no |
+| E | E7a | Privacy notice and requests by contact | no |
+| E | E9 | Take-down path | no |
+| E | E3a | Feedback link on cards and in the menu | no |
+| H | H4 | Invite the testers; later the cohort by hand | no |
+| **Stage 4 — Waitlist cohort** | | | |
+| I | I11 | Decommission the home-lab deployment | no |
+| I | I12 | Infrastructure docs | no |
+| E | E2b | Hebrew chrome, part 1: the surfaces new people meet first | no |
+| H | H7 | One registration flow, invites ride along | no |
+| H | H8 | Onboarding: invited people learn they are full users | no |
+| L | L4 | Sign-in without magic links, part 1: Google | no |
+| K | K1 | App metrics endpoint and usage poll (spec) | no |
+| **Stage 5 — Public** | | | |
+| E | E1 | Phase 8 demos 1–6 against production | no |
+| E | E6 | Abuse controls on public routes | no |
+| D | D6 | Check the public pages on a phone | no |
+| E | E7b | Self-serve export and delete | no |
+| E | E2b | Hebrew chrome, part 2: the rest of the reader | no |
+| J | J1 | Custom domain: spec and plan | no |
+| J | J2 | Choose and register the community domain | no |
+| J | J3 | Assign a domain to the deck | no |
+| J | J4 | Strangers on the custom domain | no |
+| H | H10 | Custom host and members: reaching the personal deck | no |
+| J | J5 | Members on the custom domain | no |
+| J | J6 | Links follow the deck | no |
+| J | J7 | Install and offline on the custom domain | no |
+| J | J8 | Removal and dangling DNS | no |
+| J | J9 | White-label finish | no |
+| J | J10 | Launch order: share custom-domain links only | no |
+| **After launch — improve and expand** | | | |
+| H | H5 | Suggesting on communal decks | no |
+| E | E3b | Report a problem, stored and routed | no |
+| L | L4 | Sign-in without magic links, part 2: passwords | no |
+| F | — | Suggest a card without an invite (G12) | no |
+| F | — | Staleness watcher and gap detection | no |
+| F | — | Like and useful | no |
+| H | H13 | Finish your profile | no |
+| H | H14 | Back office for platform admin tools | no |
+| H | H9 | Crawler policy (deferred) | no |
+
 ## Tracking
 
 This file is the launch tracker. Keep it current as work lands:
 
 - **Starts**: when an item is specified or picked up, add `→ <spec or PR>` to the track's intro line or the item.
-- **Done**: tick `[x]` an item only when its PR is merged and its Verify step has passed, and add the PR, e.g. `- [x] **A1. …** (049, #170)`.
+- **Done**: tick `[x]` an item only when its PR is merged and its Verify step has passed, and add the PR, e.g. `- [x] **A1. …** (049, #170)`, and set its row in the Build order table to `yes`.
 - **Deviations**: when the built thing differs from the item (a different choice, a dropped part, a moved item), add a row to the log below and link the spec's `implementation-notes.md`. Edit the item text only to point at the row; keep the original wording.
 - **Additions**: work the list did not foresee (a new gap, a new item, a finding that makes an item stale) gets a log row and, if it is work, a new item in the matching track with the next free number.
 
