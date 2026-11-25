@@ -352,10 +352,10 @@ Open decisions (TBD):
 - [ ] **1. Suggest a card** — TBD with the feature spec.
 - [ ] **2. Member list without email addresses** — no member answer carries an address, apart from a typed invite address shown to its inviter while pending; members with no name or username show as "Member". Spec: [`specs/051-member-email-privacy`](specs/051-member-email-privacy/spec.md) (plan, tasks and ADR-084 alongside).
 - [ ] **3. Invites through registration** — TBD with the feature spec.
-- [ ] **4. Onboarding for invited users** — TBD with the feature spec.
+- [ ] **4. Onboarding for invited users** — first slice (H8a): accepting an invite opens the deck with a one-time welcome naming the deck and the inviter, pointing at categories and search. Spec: [`specs/053-invited-first-run`](specs/053-invited-first-run/spec.md). The rest (personal deck, own decks) TBD with its own spec.
 - [ ] **5. Model spend guard** — a user without the extraction switch causes no model call when sharing: the share is saved best effort with a notice that smart share is coming soon, and the skip shows as a decision event; with the switch on, the share is extracted under today's caps. Plan: [`specs/050-model-spend-guard/plan.md`](specs/050-model-spend-guard/plan.md).
 - [ ] **6. Finish your profile** — stub. A gamified, multi-step call to action with a completion percentage that encourages a member to finish setting up: names and location, username, photo, first card, first shared deck, and so on. Each step done raises the percentage; completing all of them gives a clear finished state. It also gives people a reason to replace the "Member" name (spec `051`). TBD with the feature spec.
-- [ ] **7. Invite by link** — an owner shares a personal, single-use deck invite through any chat; the link only invites and never signs in; opening it shows only the deck name, the inviter and the role. Spec: [`specs/052-invite-by-link`](specs/052-invite-by-link/spec.md) (plan, tasks and ADR-085 alongside; implementing).
+- [ ] **7. Invite by link** — an owner shares a personal, single-use deck invite through any chat; the link only invites and never signs in; opening it shows only the deck name, the inviter and the role. Spec: [`specs/052-invite-by-link`](specs/052-invite-by-link/spec.md) (plan, tasks and ADR-085 alongside; merged, #190).
 
 ## Phase 17 — Members-only categories on public decks
 
