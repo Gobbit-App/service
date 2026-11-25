@@ -2,7 +2,7 @@ import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persi
 import { defaultShouldDehydrateQuery, type Query, type QueryClient } from '@tanstack/react-query';
 import type { Persister } from '@tanstack/react-query-persist-client';
 import { del, get, set } from 'idb-keyval';
-import { ADMIN_KEY, EVENTS_KEY, REVIEW_KEY, SEARCH_KEY } from './query-keys';
+import { ADMIN_KEY, EVENTS_KEY, INVITE_PREVIEW_KEY, REVIEW_KEY, SEARCH_KEY } from './query-keys';
 
 /** IndexedDB key holding the dehydrated query cache (D56). */
 export const PERSIST_KEY = 'gobbit:query-cache';
@@ -28,6 +28,7 @@ const NOT_PERSISTED: ReadonlySet<unknown> = new Set([
   REVIEW_KEY,
   EVENTS_KEY,
   ADMIN_KEY,
+  INVITE_PREVIEW_KEY,
 ]);
 
 /** Everything else follows the default rule. */

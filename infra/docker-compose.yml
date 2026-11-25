@@ -97,6 +97,8 @@ x-api-env: &api-env
   # D234/D236: platform admins (comma-separated emails) and the waitlist invite link lifetime.
   PLATFORM_ADMINS: ${PLATFORM_ADMINS:-}
   WAITLIST_INVITE_TTL_DAYS: ${WAITLIST_INVITE_TTL_DAYS:-7}
+  # 052: waiting invite links allowed per deck.
+  INVITE_LINKS_WAITING_MAX: ${INVITE_LINKS_WAITING_MAX:-10}
   # 046: username hold after release, profile lookups per member per hour.
   USERNAME_HOLD_DAYS: ${USERNAME_HOLD_DAYS:-30}
   PROFILE_LOOKUP_RATE_PER_HOUR: ${PROFILE_LOOKUP_RATE_PER_HOUR:-30}

@@ -163,7 +163,7 @@ tokens or notes. Read it with `SELECT * FROM waitlist_summary ORDER BY week DESC
 - Caddy uses a named `@welcome` matcher (two paths in one `handle` are not valid Caddyfile) and
   the `X-Gobbit-Via` header carries the `root` rewrite to the API.
 - `ButtonLink` gained a `document` prop for links that leave the SPA.
-- `/auth/error?reason=closed` shows "Join the waitlist" and "Get a new link" (029 T032).
+- `/auth/error?reason=closed` shows "Join the waitlist" and "Try again" (029 T032).
 
 ## Admin (032, D234–D238, ADR-064)
 

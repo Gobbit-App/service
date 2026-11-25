@@ -14,6 +14,7 @@ function setup(deck: Partial<Deck> = {}) {
     if (request === 'GET /decks/{id}/categories') return { data: [makeCategory()] };
     if (request === 'GET /me') return { user: { id: 'user-me' }, decks: [] };
     if (request === 'GET /decks/{id}/members') return { data: [] };
+    if (request === 'GET /decks/{id}/invite-links') return { links: [] };
     throw new Error(`unexpected ${request}`);
   });
   return renderWithClient(<DeckAdminScreen deckSlug="family" />);
@@ -66,6 +67,6 @@ describe('DeckAdminScreen (D184)', () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     setup();
     expect(await screen.findByText(/You’re offline/)).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toBeDisabled();
+    for (const name of screen.getAllByLabelText('Name')) expect(name).toBeDisabled();
   });
 });

@@ -11,8 +11,11 @@ type State =
 /** Sign-in form for email authentication. */
 export function SignInForm({
   onSubmit,
+  invite,
 }: {
-  onSubmit: (email: string) => Promise<void>;
+  onSubmit: (email: string, invite?: string) => Promise<void>;
+  /** 052: invite-link token, sent with the address so the mail lands on the invite. */
+  invite?: string;
 }): ReactElement {
   const [state, setState] = useState<State>({ step: 'idle' });
   const [emailInput, setEmailInput] = useState('');
@@ -23,7 +26,7 @@ export function SignInForm({
 
     setState({ step: 'sending' });
     try {
-      await onSubmit(trimmedEmail);
+      await (invite ? onSubmit(trimmedEmail, invite) : onSubmit(trimmedEmail));
       setState({ step: 'sent', email: trimmedEmail });
     } catch (error) {
       let message = "Couldn't send the link. Check your connection and try again.";

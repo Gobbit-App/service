@@ -18,14 +18,14 @@ function AuthError() {
       <section className="error-state" role="alert">
         <h1>{copy.title}</h1>
         <p>{copy.body}</p>
-        {reason === 'closed' ? (
+        {reason === 'closed' || reason === 'invite_gone' ? (
           <div className="error-state__actions">
             {/* D226: the landing page is API-rendered, so this is a page load, not an app route. */}
             <ButtonLink href="/welcome" icon="plus" label="Join the waitlist" document />
-            <ButtonLink href="/sign-in" icon="send" label="Get a new link" variant="ghost" />
+            <ButtonLink href="/sign-in" icon="send" label="Try again" variant="ghost" />
           </div>
         ) : (
-          <ButtonLink href="/sign-in" icon="send" label="Get a new link" />
+          <ButtonLink href="/sign-in" icon="send" label="Try again" />
         )}
       </section>
     </main>

@@ -1,9 +1,17 @@
-import { queryOptions, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import type {
   CategoryPatch,
   Deck,
   DeckPatch,
   InviteCreateInput,
+  InviteLink,
+  InviteLinkCreate,
   Member,
   MemberRole,
 } from '@gobbit/shared';
@@ -20,6 +28,20 @@ export const membersQuery = (idOrSlug: string) =>
       (await unwrap(api.GET('/decks/{id}/members', { params: { path: { id: idOrSlug } }, signal })))
         .data,
   });
+
+/** `GET /decks/{id}/invite-links` (owners; D476). */
+export const inviteLinksQuery = (idOrSlug: string) =>
+  queryOptions({
+    queryKey: queryKeys.inviteLinks(idOrSlug),
+    queryFn: async ({ signal }): Promise<InviteLink[]> =>
+      (
+        await unwrap(
+          api.GET('/decks/{id}/invite-links', { params: { path: { id: idOrSlug } }, signal }),
+        )
+      ).links,
+  });
+
+export const useInviteLinks = (idOrSlug: string) => useQuery(inviteLinksQuery(idOrSlug));
 
 /** The screen reads by slug, other screens by id: refresh both keys. */
 function invalidateBoth(
@@ -69,6 +91,32 @@ export function useInviteMember(deck: DeckRef) {
     mutationFn: (invite: InviteCreateInput) =>
       unwrap(api.POST('/decks/{id}/invites', { params: { path: { id: deck.id } }, body: invite })),
     onSettled: () => invalidateBoth(qc, deck, queryKeys.members),
+  });
+}
+
+/** `POST /decks/{id}/invite-links`; the response carries the one-time `url`. */
+export function useCreateInviteLink(deck: DeckRef) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: InviteLinkCreate): Promise<InviteLink> =>
+      unwrap(
+        api.POST('/decks/{id}/invite-links', { params: { path: { id: deck.id } }, body: input }),
+      ),
+    onSettled: () => invalidateBoth(qc, deck, queryKeys.inviteLinks),
+  });
+}
+
+/** `DELETE /decks/{id}/invite-links/{linkId}` (owners; waiting or invalid links). */
+export function useRevokeInviteLink(deck: DeckRef) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (linkId: string) =>
+      unwrap(
+        api.DELETE('/decks/{id}/invite-links/{linkId}', {
+          params: { path: { id: deck.id, linkId } },
+        }),
+      ),
+    onSettled: () => invalidateBoth(qc, deck, queryKeys.inviteLinks),
   });
 }
 

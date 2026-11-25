@@ -14,6 +14,10 @@ const ALL = [
 ].join('\n');
 
 describe('analytics copy (FR-012, D266)', () => {
+  it('still covers sharing, which now includes invite links (D476)', () => {
+    expect(ALL).toMatch(/add, edit, share or delete/);
+  });
+
   it('never presents Do Not Track as an off switch', () => {
     expect(ALL).not.toMatch(/do not track/i);
   });

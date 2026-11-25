@@ -211,6 +211,13 @@
       "when": 1795438349514,
       "tag": "0029_invited_by_email",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795528617516,
+      "tag": "0030_deck_invite_links",
+      "breakpoints": true
     }
   ]
 }

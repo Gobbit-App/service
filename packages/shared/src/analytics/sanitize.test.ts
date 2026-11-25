@@ -50,6 +50,21 @@ describe('sanitizePayload (D254)', () => {
     }
   });
 
+  it('reduces /join and /s/invite?t=… to their patterns with no query string (D476)', () => {
+    for (const [pattern, url] of [
+      ['/join', '/join?t=SECRETTOKEN'],
+      ['/s/invite', '/s/invite?t=SECRETTOKEN'],
+    ]) {
+      const out = sanitizePayload(
+        'event',
+        { ...pageView, url },
+        ctx({ screen: { pattern, name: 'Invite' } }),
+      );
+      expect(out).toMatchObject({ url: pattern });
+      expect(JSON.stringify(out)).not.toContain('SECRETTOKEN');
+    }
+  });
+
   it('cancels everything while offline or on an untracked screen (FR-002, FR-009)', () => {
     expect(sanitizePayload('event', pageView, ctx({ online: false }))).toBeNull();
     expect(sanitizePayload('event', pageView, ctx({ screen: null }))).toBeNull();
@@ -97,6 +112,21 @@ describe('sanitizePayload (D254)', () => {
       data: { deckId: DECK, itemId: ITEM, type: 'text', channel: 'editor' },
     });
     expect(JSON.stringify(out)).not.toContain('Allergy');
+  });
+
+  it('keeps invite-shared with deckId and channel only, and drops it without consent (D476)', () => {
+    const payload = {
+      ...pageView,
+      name: 'invite-shared',
+      data: { deckId: DECK, channel: 'copy-link', itemId: ITEM, count: 3, name: 'Grandma' },
+    };
+    const out = sanitizePayload('event', payload, ctx());
+    expect(out).toMatchObject({
+      name: 'invite-shared',
+      data: { deckId: DECK, channel: 'copy-link' },
+    });
+    expect((out as { data: object }).data).toEqual({ deckId: DECK, channel: 'copy-link' });
+    expect(sanitizePayload('event', payload, ctx({ consented: false }))).toBeNull();
   });
 
   it('cancels an event without a valid channel', () => {

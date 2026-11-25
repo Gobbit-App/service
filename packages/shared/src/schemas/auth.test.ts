@@ -22,6 +22,16 @@ describe('magicLinkRequestSchema', () => {
   it('rejects unknown keys', () => {
     expect(magicLinkRequestSchema.safeParse({ email: 'a@example.com', x: 1 }).success).toBe(false);
   });
+
+  it('accepts an optional bounded invite token', () => {
+    expect(magicLinkRequestSchema.parse({ email: 'a@example.com', invite: 'tok' }).invite).toBe(
+      'tok',
+    );
+    for (const invite of ['', 'a'.repeat(257)])
+      expect(magicLinkRequestSchema.safeParse({ email: 'a@example.com', invite }).success).toBe(
+        false,
+      );
+  });
 });
 
 describe('appConfigSchema', () => {

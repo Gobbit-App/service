@@ -1,5 +1,12 @@
 import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { accounts, analyticsConsentEvents, displayNameSql, users } from '@gobbit/db';
+import {
+  accounts,
+  analyticsConsentEvents,
+  displayNameSql,
+  users,
+  waitlistEntries,
+  waitlistEvents,
+} from '@gobbit/db';
 import type { DbExecutor } from '@gobbit/db';
 import type { RegistrationReason } from '@gobbit/shared/auth';
 import type { AnalyticsConsentChoice, AnalyticsConsentSource } from '@gobbit/shared/analytics';
@@ -241,7 +248,9 @@ export function createUsersRepo(db: DbExecutor) {
       displayName: string;
       via: RegistrationReason;
       by: string | null;
-    }): Promise<CurrentUser> {
+      /** D477: also takes a live waitlist entry for this address off the list, in the same transaction. */
+      releaseWaitlist?: boolean;
+    }): Promise<{ user: CurrentUser; waitlistEntryId: string | null }> {
       return db.transaction(async (tx) => {
         const [account] = await tx
           .insert(accounts)
@@ -257,7 +266,26 @@ export function createUsersRepo(db: DbExecutor) {
             registeredBy: v.by,
           })
           .returning(currentUserColumns);
-        return user;
+        let waitlistEntryId: string | null = null;
+        if (v.releaseWaitlist) {
+          const [entry] = await tx
+            .update(waitlistEntries)
+            .set({ status: 'removed', removedAt: new Date(), removedBy: null })
+            .where(
+              and(
+                eq(waitlistEntries.email, v.email),
+                inArray(waitlistEntries.status, ['pending', 'confirmed']),
+              ),
+            )
+            .returning({ id: waitlistEntries.id });
+          if (entry) {
+            await tx
+              .insert(waitlistEvents)
+              .values({ entryId: entry.id, action: 'removed', actorId: null });
+            waitlistEntryId = entry.id;
+          }
+        }
+        return { user, waitlistEntryId };
       });
     },
   };

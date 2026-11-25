@@ -79,6 +79,12 @@ export const MAGIC_LINK_TTL_MINUTES_DEFAULT = 15;
 /** Invite link lifetime in days (override: INVITE_TTL_DAYS). */
 export const INVITE_TTL_DAYS_DEFAULT = 7;
 
+/** Waiting invite links per deck (override: INVITE_LINKS_WAITING_MAX). */
+export const INVITE_LINKS_WAITING_MAX_DEFAULT = 10;
+
+/** Longest invite-link name, in Unicode points (DB CHECK). */
+export const INVITE_LINK_NAME_MAX = 60;
+
 /** Sliding session lifetime in days (override: SESSION_TTL_DAYS). */
 export const SESSION_TTL_DAYS_DEFAULT = 90;
 

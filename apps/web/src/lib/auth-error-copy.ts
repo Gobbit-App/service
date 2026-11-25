@@ -1,5 +1,6 @@
 /** Possible auth error reasons. */
-export type AuthErrorReason = 'invalid' | 'used' | 'expired' | 'onboarding' | 'closed' | 'unknown';
+export type AuthErrorReason =
+  'invalid' | 'used' | 'expired' | 'onboarding' | 'closed' | 'invite_gone' | 'unknown';
 
 const KNOWN_REASONS: readonly AuthErrorReason[] = [
   'invalid',
@@ -7,6 +8,7 @@ const KNOWN_REASONS: readonly AuthErrorReason[] = [
   'expired',
   'onboarding',
   'closed',
+  'invite_gone',
 ];
 
 /** Validates and parses an auth error reason. */
@@ -44,6 +46,11 @@ export function authErrorCopy(reason: AuthErrorReason): { title: string; body: s
       return {
         title: 'Gobbit is invite-only for now',
         body: "This email doesn't have an account yet. Join the waitlist and we'll let you know when there's room.",
+      };
+    case 'invite_gone':
+      return {
+        title: 'That invite is no longer valid',
+        body: "The invite link stopped working before you finished signing in. Join the waitlist and we'll let you know when there's room.",
       };
     case 'unknown':
       return {

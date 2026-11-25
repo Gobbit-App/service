@@ -25,6 +25,32 @@ _Overview: [architecture.md](../architecture.md). Decisions: [adr.md](../adr.md)
 - `registration.mode` is recorded in `server.ts` after the listener starts, correlated by a per-process `bootId` (the decision logger accepts `bootId` besides `requestId`/`jobId`), not in `app.ts`, which every test builds.
 - The "Join the waitlist" links on `/sign-in` and `/auth/error?reason=closed` ship with 030 (they target `/welcome`).
 
+### Invite links (D466–D477, ADR-085)
+
+A deck owner makes a link (`POST /decks/{id}/invite-links { name, role }`, never `owner`), shares it, and the first signed-in person who joins gets the link's role. Routes and schemas: `specs/052-invite-by-link/contracts/invite-links.md`.
+
+- **Storage** (D466, D467): `deck_invite_links`, state derived from `accepted_at`/`revoked_at`/`expires_at` (waiting, accepted, revoked, expired); `CHECK (role <> 'owner')`. The token is stored as is (not hashed) so "Share again" returns the same link; it signs no one in. `magic_links.invite_link_id` ties a sign-in mail to a link.
+- **URLs** (D468, D469): shared `/s/invite?t=` (API-rendered Open Graph page, `no-store`, `noindex`, generic text unless waiting), SPA `/join?t=`, anonymous `GET /invites/preview?t=`, join `POST /invite-links/accept { token }`. The token is never in a path, so request logs and analytics never carry it. The preview is outside `/public/*` but treated alike: `anonLimit`, credentials ignored (`LENIENT_PATHS`).
+- **Joining** (D471): one transaction locks the link row, re-checks it is waiting (D473), the caller has no role, then creates the membership (or accepts a pending one with the link's role) and marks the link accepted. An already-member refusal leaves the link waiting and carries `deck.slug`.
+- **Sign-in flow** (D472): `POST /auth/magic-link` takes an optional `invite`. Existing account: plain sign-in with `next = /join?t=`, the person taps Join. Unknown address and waiting link: a mail carrying `invite_link_id` in any registration mode (bypasses the waitlist, `via = invite_link`); at the callback `users.register(email, 'deck_invite', { actorId: creator })` and the join happen in one transaction, `next` is the deck. Stopped link: waitlist mode fails with `invite_gone` (no user), open mode registers `open_sign_in` and lands on `/join`.
+- **Stops working** (D473, D474): when the creator is no longer an owner, the deck is deleted or personal; checked on every read, nothing written. Expiry is recorded when met (`refused · expired`), no sweep; count expired-unused links with SQL (`quickstart.md`).
+- **Owners** (D475, D476): `INVITE_LINKS_WAITING_MAX` (default 10) is checked under a deck row lock. List shows waiting, `invalid` (creator no longer owner, no url, revoke only) and links ended within `INVITE_TTL_DAYS`. Permission is `member.invite`. Sharing sends the content event `invite-shared` (consenting owners only).
+- **Alert thresholds** (per hour, defaults): `invite_link.create` refused · limit > 20; `invite_link.open` refused · invalid > 100 (guessing, watch by `ipHash`); `invite_link.join` refused · used > 20; `auth.callback` refused · `invite_gone` > 20. `invite_link.revoke` and `auth.magic_link` `via = invite_link` are aggregated only. The sign-in callback records its `invite_link.join` (`via = sign_in`) after the callback transaction commits, so a rolled-back callback logs nothing.
+- **Decision events**: `invite_link.create` (created; refused · limit, personal), `invite_link.open` (shown; refused · used, revoked, expired, invalid; `surface` page/preview), `invite_link.join` (accepted; refused · used, revoked, expired, invalid, already_member; `via` join/sign_in), `invite_link.revoke` (revoked; refused · not_waiting), `auth.magic_link` with `via = invite_link`, `auth.callback` refused · `invite_gone`. Ids and hashes only.
+
+#### Waitlist rule (D477)
+
+`users.register` creating a user for any reason except `waitlist_invite` (so `deck_invite` by mail, username or link, and `open_sign_in`) removes that address's live `pending`/`confirmed` waitlist entry in the same transaction: `status = 'removed'`, `removed_by = NULL`, a `waitlist_events` `removed` row with a null actor (admin removals always carry an id), and a `waitlist.registered` decision event (`entryId`, `userId`, `via`). Migration `0030` applies it once to existing data. `invited` entries are untouched.
+
+#### Deviations
+
+- `inviteLinks.accept` takes `user` as a value or a function `(link) => user`, so the sign-in callback can register inside the locked transaction (after the D473 checks).
+- `problemSchema` and `HttpError` gained an optional `deck: { slug }` for the already-member problem.
+- The `/join` analytics pattern lives in `apps/web/src/analytics/catalogue.ts` (the route catalogue), not `packages/shared/.../screens.ts` (API-rendered pages only).
+- `invite-preview` is in the not-persisted query set (`api/persist.ts`): a stranger's deck name must not reach IndexedDB.
+- The invite-link forms and rows reuse the invite/member-row classes, so there is no new CSS; Revoke asks first, like removing a member.
+- The invite name field uses the literal 60 (`INVITE_LINK_NAME_MAX`) because `@gobbit/shared` has no limits subpath export.
+
 ### Platform admins (D234)
 
 - **Who**: `PLATFORM_ADMINS`, a comma-separated email list (trimmed, lower-cased, empty by default). No column, no UI to grant it; a compromised session can't widen it. `admin.config` records the count (never the emails) at start-up, at `warn` when production has none.

@@ -22,6 +22,15 @@ describe('SignInForm', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('ada@example.com');
   });
 
+  it('passes the invite token with the address when given', async () => {
+    const onSubmit = vi.fn(async () => {});
+    render(<SignInForm onSubmit={onSubmit} invite="tok" />);
+
+    await submit('ada@example.com');
+
+    expect(onSubmit).toHaveBeenCalledWith('ada@example.com', 'tok');
+  });
+
   it('shows one message that covers both a sign-in link and the waitlist (D222)', async () => {
     render(<SignInForm onSubmit={async () => {}} />);
 

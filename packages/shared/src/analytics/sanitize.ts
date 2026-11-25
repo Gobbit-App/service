@@ -72,7 +72,7 @@ export function sanitizePayload(
   if (type !== 'event') return null;
   if (payload.name === undefined) return clean; // page view
   if (!isContentEventName(payload.name)) return null;
-  const data = cleanEventData(payload.data);
+  const data = cleanEventData(payload.data, payload.name);
   if (!data) return null;
   return { ...clean, name: payload.name, data };
 }

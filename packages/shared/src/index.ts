@@ -39,3 +39,4 @@ export * from './schemas/analytics-consent';
 export * from './reminders';
 export * from './card-cover';
 export * from './schemas/profile';
+export * from './schemas/invite-links';

@@ -142,6 +142,7 @@ export interface paths {
                         /** Format: email */
                         email: string;
                         next?: string;
+                        invite?: string;
                     };
                 };
             };
@@ -177,6 +178,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -199,6 +203,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -254,6 +261,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -276,6 +286,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -298,6 +311,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -355,6 +371,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -377,6 +396,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -432,6 +454,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -454,6 +479,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -514,6 +542,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -536,6 +567,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -632,6 +666,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -705,6 +742,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -727,6 +767,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -749,6 +792,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -834,6 +880,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -856,6 +905,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -878,6 +930,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -900,6 +955,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -963,6 +1021,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -985,6 +1046,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1007,6 +1071,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1079,6 +1146,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1101,6 +1171,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1123,6 +1196,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1248,6 +1324,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1270,6 +1349,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1292,6 +1374,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1314,6 +1399,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1336,6 +1424,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1436,6 +1527,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1505,6 +1599,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1527,6 +1624,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1549,6 +1649,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1571,6 +1674,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1617,6 +1723,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1639,6 +1748,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1661,6 +1773,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1683,6 +1798,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1741,6 +1859,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1763,6 +1884,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1785,6 +1909,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1807,6 +1934,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1864,6 +1994,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1914,6 +2047,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1936,6 +2072,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -1958,6 +2097,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2030,6 +2172,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2109,6 +2254,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2131,6 +2279,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2153,6 +2304,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2224,6 +2378,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2246,6 +2403,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2290,6 +2450,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2312,6 +2475,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2334,6 +2500,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2403,6 +2572,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2425,6 +2597,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2447,6 +2622,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2469,6 +2647,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2491,6 +2672,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2563,6 +2747,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2585,6 +2772,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2607,6 +2797,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2668,6 +2861,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2690,6 +2886,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2712,6 +2911,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2734,6 +2936,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2805,6 +3010,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2827,6 +3035,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2849,6 +3060,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2871,6 +3085,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2893,6 +3110,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3000,6 +3220,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3022,6 +3245,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3044,6 +3270,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3066,6 +3295,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3088,6 +3320,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3164,6 +3399,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3186,6 +3424,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3208,6 +3449,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3278,6 +3522,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3300,6 +3547,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3322,6 +3572,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3388,6 +3641,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3410,6 +3666,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3432,6 +3691,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3454,6 +3716,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3476,6 +3741,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3498,6 +3766,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3582,6 +3853,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3604,6 +3878,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3626,6 +3903,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3648,6 +3928,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3797,6 +4080,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3819,6 +4105,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3841,6 +4130,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -3863,6 +4155,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4388,6 +4683,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4410,6 +4708,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4432,6 +4733,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4454,6 +4758,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4476,6 +4783,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4498,6 +4808,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4640,6 +4953,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4662,6 +4978,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4684,6 +5003,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4728,6 +5050,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4750,6 +5075,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4772,6 +5100,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4933,6 +5264,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4955,6 +5289,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4977,6 +5314,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -4999,6 +5339,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5021,6 +5364,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5043,6 +5389,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5183,6 +5532,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5205,6 +5557,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5227,6 +5582,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5249,6 +5607,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5393,6 +5754,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5415,6 +5779,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5437,6 +5804,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5459,6 +5829,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5610,6 +5983,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5632,6 +6008,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5654,6 +6033,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5676,6 +6058,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5698,6 +6083,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5720,6 +6108,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5864,6 +6255,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5886,6 +6280,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5908,6 +6305,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5930,6 +6330,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -5952,6 +6355,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6096,6 +6502,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6118,6 +6527,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6140,6 +6552,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6162,6 +6577,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6184,6 +6602,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6242,6 +6663,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6264,6 +6688,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6286,6 +6713,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6341,6 +6771,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6363,6 +6796,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6385,6 +6821,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6428,6 +6867,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6450,6 +6892,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6472,6 +6917,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6528,6 +6976,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6550,6 +7001,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6592,6 +7046,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6614,6 +7071,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6767,6 +7227,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6789,6 +7252,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6811,6 +7277,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6833,6 +7302,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6909,6 +7381,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6931,6 +7406,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6953,6 +7431,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6975,6 +7456,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -6997,6 +7481,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7019,6 +7506,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7041,6 +7531,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7118,6 +7611,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7140,6 +7636,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7162,6 +7661,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7184,6 +7686,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7206,6 +7711,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7228,6 +7736,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7355,6 +7866,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7377,6 +7891,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7399,6 +7916,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7421,6 +7941,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7443,6 +7966,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7465,6 +7991,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7487,6 +8016,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7554,6 +8086,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7576,6 +8111,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7598,6 +8136,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7620,6 +8161,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7642,6 +8186,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7716,6 +8263,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7738,6 +8288,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7760,6 +8313,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7782,6 +8338,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7804,6 +8363,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7881,6 +8443,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7903,6 +8468,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7925,6 +8493,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7947,6 +8518,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7969,6 +8543,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -7991,6 +8568,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8171,6 +8751,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8193,6 +8776,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8261,6 +8847,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8322,6 +8911,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8344,6 +8936,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8366,6 +8961,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8388,6 +8986,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8410,6 +9011,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8468,6 +9072,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8490,6 +9097,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8761,6 +9371,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8783,6 +9396,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8805,6 +9421,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8827,6 +9446,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8888,6 +9510,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8910,6 +9535,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -8932,6 +9560,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9089,6 +9720,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9111,6 +9745,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9133,6 +9770,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9155,6 +9795,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9177,6 +9820,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9199,6 +9845,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9272,6 +9921,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9294,6 +9946,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9316,6 +9971,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9338,6 +9996,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9406,6 +10067,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9428,6 +10092,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9450,6 +10117,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9472,6 +10142,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9529,6 +10202,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9551,6 +10227,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9573,6 +10252,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9595,6 +10277,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9704,6 +10389,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9726,6 +10414,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9748,6 +10439,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9857,6 +10551,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9879,6 +10576,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -9990,6 +10690,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10012,6 +10715,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10034,6 +10740,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10056,6 +10765,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10078,6 +10790,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10100,6 +10815,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10122,6 +10840,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10255,6 +10976,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10277,6 +11001,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10299,6 +11026,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10321,6 +11051,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10343,6 +11076,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10428,6 +11164,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10450,6 +11189,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10472,6 +11214,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10494,6 +11239,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10502,6 +11250,698 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invites/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What an invite link offers (anonymous; unknown and stopped links answer alike) */
+        get: {
+            parameters: {
+                query: {
+                    t: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The link state; deck fields only while waiting */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            state: "waiting" | "used" | "revoked" | "expired" | "invalid";
+                            deckName?: string;
+                            inviterName?: string;
+                            /** @enum {string} */
+                            role?: "maintainer" | "editor" | "reader";
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invite-links/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        token: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Joined the deck with the link role */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            deck: {
+                                /** Format: uuid */
+                                id: string;
+                                slug: string;
+                                name: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decks/{id}/invite-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Waiting, no-longer-valid and recently ended links, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            links: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                /** @enum {string} */
+                                role: "maintainer" | "editor" | "reader";
+                                /** @enum {string} */
+                                state: "waiting" | "accepted" | "revoked" | "expired" | "invalid";
+                                createdBy: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string | null;
+                                    username: string | null;
+                                    initials: string;
+                                    photo: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
+                                    } | null;
+                                } | null;
+                                acceptedBy: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string | null;
+                                    username: string | null;
+                                    initials: string;
+                                    photo: {
+                                        publicId: string;
+                                        width?: number;
+                                        height?: number;
+                                    } | null;
+                                } | null;
+                                createdAt: string;
+                                expiresAt: string;
+                                url: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        /** @enum {string} */
+                        role: "maintainer" | "editor" | "reader";
+                    };
+                };
+            };
+            responses: {
+                /** @description A waiting invite link; `url` is the shareable address */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            /** @enum {string} */
+                            role: "maintainer" | "editor" | "reader";
+                            /** @enum {string} */
+                            state: "waiting" | "accepted" | "revoked" | "expired" | "invalid";
+                            createdBy: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
+                            acceptedBy: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string | null;
+                                username: string | null;
+                                initials: string;
+                                photo: {
+                                    publicId: string;
+                                    width?: number;
+                                    height?: number;
+                                } | null;
+                            } | null;
+                            createdAt: string;
+                            expiresAt: string;
+                            url: string | null;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/decks/{id}/invite-links/{linkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    linkId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The link is revoked */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            detail?: string;
+                            errors?: {
+                                path: string;
+                                message: string;
+                            }[];
+                            /** @enum {string} */
+                            permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
+                            /** @enum {string} */
+                            role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -10564,6 +12004,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10586,6 +12029,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10608,6 +12054,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10702,6 +12151,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10724,6 +12176,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10746,6 +12201,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10834,6 +12292,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10856,6 +12317,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10878,6 +12342,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -10979,6 +12446,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11001,6 +12471,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11023,6 +12496,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11096,6 +12572,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11118,6 +12597,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11205,6 +12687,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11227,6 +12712,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11249,6 +12737,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11361,6 +12852,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11383,6 +12877,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11405,6 +12902,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11463,6 +12963,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11485,6 +12988,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -11507,6 +13013,9 @@ export interface paths {
                             permission?: "deck.read" | "deck.update" | "deck.delete" | "category.read" | "category.read_private" | "category.create" | "category.update" | "item.read" | "item.create" | "item.update" | "item.archive" | "item.delete" | "item.publish" | "item.favorite" | "member.list" | "member.invite" | "member.remove" | "event.list";
                             /** @enum {string} */
                             role?: "owner" | "maintainer" | "editor" | "reader";
+                            deck?: {
+                                slug: string;
+                            };
                         };
                     };
                 };

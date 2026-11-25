@@ -11,6 +11,8 @@ export const EVENTS_KEY = 'events';
 
 /** First segment of every platform-admin key (032: never persisted, the data holds emails). */
 export const ADMIN_KEY = 'admin';
+/** 052: the invite preview holds a deck name for a stranger, so it is never persisted. */
+export const INVITE_PREVIEW_KEY = 'invite-preview';
 
 /** Which slice of a deck's items a list shows (D65 routes). */
 export type ItemFilter =
@@ -41,6 +43,9 @@ export const queryKeys = {
   categories: (idOrSlug: string) => ['decks', idOrSlug, 'categories'] as const,
   /** D184: the deck settings member list. */
   members: (idOrSlug: string) => ['decks', idOrSlug, 'members'] as const,
+  /** 052: a stranger's view of an invite; never persisted. */
+  invitePreview: (token: string) => [INVITE_PREVIEW_KEY, token] as const,
+  inviteLinks: (idOrSlug: string) => ['decks', idOrSlug, 'invite-links'] as const,
   /** Prefix of every item list; favorite toggles update all of them. */
   itemLists: ['items'] as const,
   items: (deckSlug: string, filter: ItemFilter) => ['items', deckSlug, filter] as const,

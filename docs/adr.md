@@ -752,3 +752,15 @@ Revises D167/D168 (015's locked-host rules).
 - **Anonymous row**: a pending typed-address row shows no profile (`"Member"`, no username, no photo, empty initials) to everyone, inviter included, so an address cannot be turned into a profile. Residual: `userId` stays on the row, so an inviter holding a candidate profile can confirm a guess by comparing ids; accepted until an opaque per-row id is worth it (D462).
 
 **Rationale**: The email-derived name was most of the address and appeared in every members list. A flag suffices because `users.email` already holds the address; inferring "typed" from a missing username would leak when a username is cleared. Details: `docs/design/profile.md`, `specs/051-member-email-privacy/research.md`.
+
+
+## ADR-085: Invite by link: one table, a stored single-use token, joined at sign-in or by tap (D466–D468, D472)
+
+**Decision**: An owner shares a single-use link that adds one person to a deck at a role below owner, with no address typed.
+
+- **Table**: `deck_invite_links`, one row per link; state (waiting, accepted, revoked, expired) is derived from `accepted_at`, `revoked_at` and `expires_at`, never stored. `CHECK (role <> 'owner')` and `CHECK (num_nonnulls(accepted_at, revoked_at) <= 1)` are enforced by the database (D466).
+- **Token**: 32 random bytes, base64url, stored as is with a unique index. This is a recorded departure from hash-only tokens (D23), limited to this table: an owner must be able to share the same waiting link again, and the token is single use, never grants owner and signs no one in (D467).
+- **Transport**: the token travels only in a query string or a body (`/s/invite?t=`, `/join?t=`, `GET /invites/preview?t=`, `POST /invite-links/accept`), never in a path, because request logs keep the path and drop the query (D468).
+- **Joining**: `POST /auth/magic-link` takes an optional `invite`. An address with an account gets a plain sign-in link to `/join` and taps Join on return. A brand-new address with a waiting link gets a link carrying `magic_links.invite_link_id`, in any registration mode, and is registered (`deck_invite`) and joined inside the `consume` transaction; the answer is the same in every case (D472).
+
+**Rationale**: A link has no person behind it, and `memberships.user_id` is NOT NULL, so a separate table keeps the one-membership-per-person index intact. Derived state cannot drift from the timestamps. A third `magic_links` purpose would mix an address-bound sign-in with an unbound invite. Details: `specs/052-invite-by-link/research.md`.

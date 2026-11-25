@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { hashToken } from '../src/lib/tokens';
 import { SESSION_COOKIE } from '../src/lib/cookies';
 import { personalDeckSlug } from '../src/repositories/decks.repo';
-import { createAccountUser, createDeck } from '@gobbit/db/test';
+import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
 import {
   json,
   OWNER_EMAIL,
@@ -295,5 +295,200 @@ describe('sign-in onboarding (Phase 3B)', () => {
     expect(personal).toBeDefined();
     const peek = await ctx.app.request(`/decks/${personal.id}`, { headers: ctx.as() });
     expect(peek.status).toBe(404);
+  });
+});
+
+/** 052 FR-010/FR-011: sign-in through an invite link (waitlist mode unless stated). */
+describe.each([
+  ['waitlist', {}],
+  ['open', OPEN],
+] as const)('sign-in through an invite link, %s mode (052)', (mode, modeEnv) => {
+  const waitlist = mode === 'waitlist';
+  const ctx = setupApiTest({ env: { CLIENT_IP_HEADER: 'x-test-ip', APP_URL, ...modeEnv } });
+  let client: ReturnType<typeof authClient>;
+  let seq = 0;
+
+  beforeEach(() => {
+    client = authClient(ctx);
+    ctx.mailer.clear();
+  });
+
+  const makeLink = async (role = 'editor') => {
+    const deck = await createDeck(ctx.t.db, ctx.world.owner);
+    const res = await ctx.app.request(`/decks/${deck.id}/invite-links`, {
+      method: 'POST',
+      headers: ctx.as(),
+      body: JSON.stringify({ name: 'Cousins', role }),
+    });
+    expect(res.status).toBe(201);
+    const made = await json(res);
+    return { deck, id: made.id as string, t: new URL(made.url).searchParams.get('t')! };
+  };
+  const revoke = async (_deckId: string, linkId: string) => {
+    await ctx.t.pool.query('UPDATE deck_invite_links SET revoked_at = now() WHERE id = $1', [
+      linkId,
+    ]);
+  };
+  const request = (email: string, invite: string) => {
+    client.rotateIp();
+    return ctx.app.request('/auth/magic-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-test-ip': `10.9.9.${++seq}` },
+      body: JSON.stringify({ email, invite }),
+    });
+  };
+  const userRow = async (email: string) =>
+    (
+      await ctx.t.pool.query(
+        'SELECT id, registered_via, registered_by FROM users WHERE email = $1',
+        [email],
+      )
+    ).rows[0];
+  const roleOf = async (deckId: string, email: string) =>
+    (
+      await ctx.t.pool.query(
+        `SELECT m.role, (m.accepted_at IS NOT NULL) AS accepted FROM memberships m JOIN users u ON u.id = m.user_id
+         WHERE m.deck_id = $1 AND u.email = $2`,
+        [deckId, email],
+      )
+    ).rows[0];
+  const linkState = async (id: string) =>
+    (
+      await ctx.t.pool.query(
+        'SELECT accepted_at, accepted_by FROM deck_invite_links WHERE id = $1',
+        [id],
+      )
+    ).rows[0];
+  const inviteLinkIdOfMail = async (email: string) =>
+    (
+      await ctx.t.pool.query(
+        'SELECT invite_link_id FROM magic_links WHERE email = $1 ORDER BY created_at DESC',
+        [email],
+      )
+    ).rows[0]?.invite_link_id ?? null;
+
+  it('an existing account gets a plain sign-in mail that returns to /join', async () => {
+    const { t, id } = await makeLink();
+    const user = await createAccountUser(ctx.t.db, { email: `exists-${mode}@example.test` });
+    expect((await request(user.email, t)).status).toBe(200);
+    expect(await inviteLinkIdOfMail(user.email)).toBeNull();
+    const cb = await client.callback(tokenFromMail(ctx.mailer));
+    expect(cb.status).toBe(303);
+    expect(cb.headers.get('Location')).toBe(`${APP_URL}/join?t=${t}`);
+    expect((await linkState(id)).accepted_at).toBeNull();
+  });
+
+  it('an unknown address registers through the link and joins with its role (FR-011)', async () => {
+    const { deck, id, t } = await makeLink('reader');
+    const email = `fresh-${mode}@example.test`;
+    expect((await request(email, t)).status).toBe(200);
+    expect(ctx.mailer.sent).toHaveLength(1);
+    expect(await inviteLinkIdOfMail(email)).toBe(id);
+    const { rows: wl } = await ctx.t.pool.query('SELECT 1 FROM waitlist_entries WHERE email = $1', [
+      email,
+    ]);
+    expect(wl).toHaveLength(0);
+
+    const cb = await client.callback(tokenFromMail(ctx.mailer));
+    expect(cb.status).toBe(303);
+    expect(cb.headers.get('Location')).toBe(`${APP_URL}/d/${deck.slug}`);
+    const user = await userRow(email);
+    expect(user).toMatchObject({
+      registered_via: 'deck_invite',
+      registered_by: ctx.world.owner.id,
+    });
+    expect(await roleOf(deck.id, email)).toMatchObject({ role: 'reader', accepted: true });
+    expect((await linkState(id)).accepted_by).toBe(user.id);
+  });
+
+  it('two unknown addresses through one link: only the first registers (FR-011)', async () => {
+    const { deck, t } = await makeLink();
+    const first = `one-${mode}@example.test`;
+    const second = `two-${mode}@example.test`;
+    await request(first, t);
+    const firstToken = tokenFromMail(ctx.mailer);
+    ctx.mailer.clear();
+    await request(second, t);
+    const secondToken = tokenFromMail(ctx.mailer);
+
+    expect((await client.callback(firstToken)).headers.get('Location')).toBe(
+      `${APP_URL}/d/${deck.slug}`,
+    );
+    const cb = await client.callback(secondToken);
+    expect(cb.status).toBe(303);
+    if (waitlist) expect(await userRow(second)).toBeUndefined();
+    else expect(await userRow(second)).toMatchObject({ registered_via: 'open_sign_in' });
+    const loc = cb.headers.get('Location')!;
+    if (waitlist) expect(loc).toContain('invite_gone');
+    else expect(loc).toBe(`${APP_URL}/join?t=${t}`);
+  });
+
+  it('a link revoked between mail and callback registers no one in waitlist mode', async () => {
+    const { deck, id, t } = await makeLink();
+    const email = `late-${mode}@example.test`;
+    await request(email, t);
+    await revoke(deck.id, id);
+
+    const cb = await client.callback(tokenFromMail(ctx.mailer));
+    expect(cb.status).toBe(303);
+    const loc = cb.headers.get('Location')!;
+    if (waitlist) {
+      expect(loc).toContain('invite_gone');
+      expect(await userRow(email)).toBeUndefined();
+    } else {
+      expect(loc).toBe(`${APP_URL}/join?t=${t}`);
+      expect((await userRow(email)).registered_via).toBe('open_sign_in');
+    }
+    expect(await roleOf(deck.id, email)).toBeUndefined();
+  });
+
+  it("an unknown address with a stopped link gets today's behaviour", async () => {
+    const { deck, id, t } = await makeLink();
+    await revoke(deck.id, id);
+    const email = `stopped-${mode}@example.test`;
+    expect((await request(email, t)).status).toBe(200);
+    expect(await inviteLinkIdOfMail(email)).toBeNull();
+    const { rows } = await ctx.t.pool.query('SELECT 1 FROM waitlist_entries WHERE email = $1', [
+      email,
+    ]);
+    expect(rows).toHaveLength(waitlist ? 1 : 0);
+  });
+
+  it('an address that got an account after the mail joins, and stays out if already a member', async () => {
+    const { deck, id, t } = await makeLink('editor');
+    const joiner = `became-${mode}@example.test`;
+    await request(joiner, t);
+    const joinerToken = tokenFromMail(ctx.mailer);
+    ctx.mailer.clear();
+    const member = `member-${mode}@example.test`;
+    await request(member, t);
+    const memberToken = tokenFromMail(ctx.mailer);
+
+    const memberUser = await createAccountUser(ctx.t.db, { email: member });
+    await addMember(ctx.t.db, deck, memberUser, 'reader');
+    await createAccountUser(ctx.t.db, { email: joiner });
+
+    const cbMember = await client.callback(memberToken);
+    expect(cbMember.headers.get('Location')).toBe(`${APP_URL}/d/${deck.slug}`);
+    expect(await roleOf(deck.id, member)).toMatchObject({ role: 'reader' });
+    expect((await linkState(id)).accepted_at).toBeNull();
+
+    const cbJoin = await client.callback(joinerToken);
+    expect(cbJoin.headers.get('Location')).toBe(`${APP_URL}/d/${deck.slug}`);
+    expect(await roleOf(deck.id, joiner)).toMatchObject({ role: 'editor', accepted: true });
+  });
+
+  it('an account created after the mail, with the link stopped, is sent to /join', async () => {
+    const { deck, id, t } = await makeLink();
+    const email = `stop-after-${mode}@example.test`;
+    await request(email, t);
+    const token = tokenFromMail(ctx.mailer);
+    await createAccountUser(ctx.t.db, { email });
+    await revoke(deck.id, id);
+
+    const cb = await client.callback(token);
+    expect(cb.status).toBe(303);
+    expect(cb.headers.get('Location')).toBe(`${APP_URL}/join?t=${t}`);
+    expect(await roleOf(deck.id, email)).toBeUndefined();
   });
 });
