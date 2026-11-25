@@ -368,3 +368,16 @@ Open decisions (TBD):
 - **Purpose:** what belongs there (recommendations naming people, contact details, discussions) and whether it changes what suggesting members may post.
 
 - [ ] **1. Members-only categories** — TBD with the feature spec.
+
+## Phase 18 — Back office
+
+Nov 25: stub, not planned. Decisions are TBD and get D numbers when the feature goes through `/speckit-specify`. Platform admin work lives inside the member app today: Settings shows a "Platform → Waitlist" section to anyone in `PLATFORM_ADMINS` (032), and Phase 12 plans `/admin/domains` the same way. Operator tools should move to a dedicated back office, separate from the main app, so the member PWA carries no admin screens or admin code.
+
+Open decisions (TBD):
+- **Shape:** a separate app (its own Vite entry or package, own host or path such as `admin.<domain>`) or a separate lazy area of the current one; whether it ships in the member bundle at all (the 150 KB budget says no).
+- **Access:** still `PLATFORM_ADMINS`, or a role in the database with its own audit; whether it needs a stronger sign-in than a magic link (second factor, shorter sessions, main domain only).
+- **Scope:** waitlist (032) first, then custom domains (Phase 12), the smart share switch (H11, by hand in the database today), feature flags (Phase 15), usage and monitoring views (go-list Track K).
+- **Member app:** the Settings "Platform" section is removed once the back office has the waitlist; `/admin/*` API routes stay 404 to everyone else.
+- **Accountability:** every operator action is a decision event or audit row with the operator id (constitution VIII).
+
+- [ ] **1. Waitlist in the back office** — TBD with the feature spec: a platform admin works the waitlist in the back office, and the member app's Settings no longer shows a Platform section to anyone.
