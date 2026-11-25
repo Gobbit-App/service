@@ -43,6 +43,7 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-23 | H12 | start | Specified as `052-invite-by-link`, its own feature (not folded into H7, which is stage 4). Added in the spec: a link registers at most one person, and none once it has stopped working; a waiting link stops working when its inviter is no longer an owner; joining through a link closes any earlier pending invite for that person. Open for `/speckit-clarify`: may a link grant the owner role (FR-002); a brand-new person still gets one sign-in mail until L4 (FR-012). | [`specs/052-invite-by-link`](specs/052-invite-by-link/spec.md) |
 | 2026-11-24 | H12 | decision | Clarified: a link never grants the owner role (owners are invited by address or username); a brand-new person still gets one sign-in mail until L4, so the link saves the invite mail only. | [`052` spec](specs/052-invite-by-link/spec.md), Clarifications |
 | 2026-11-24 | H12 | plan | Planned: one `deck_invite_links` table (token stored as is so a link can be shared again, never in a path), a no-JS preview at `/s/invite`, Join in one locked transaction; a brand-new person joins when they open the sign-in mail (spec refined), existing accounts tap Join. D466–D476, ADR-085. | [`052` plan](specs/052-invite-by-link/plan.md) |
+| 2026-11-25 | H14 | addition | Platform admin tools (the Settings "Platform → Waitlist" section, later `/admin/domains`) live inside the member app; move them to a dedicated back office. New item H14, `PLAN.md` Phase 18 stub. | `PLAN.md` Phase 18 |
 
 ## Goal and definition of done
 
@@ -245,6 +246,7 @@ How people get into the communal deck at each stage, what the code does today an
   - Wanted for stage 3 (soft launch invites go out by WhatsApp), needed for stage 4.
 
 - [ ] **H13. Finish your profile** (stub, `PLAN.md` Phase 16 item 6; spec-kit later). A gamified multi-step call to action with a completion percentage: add names and location, pick a username, create a first card, start a shared deck, and more. It gives members with no name (shown as "Member" since H6) a reason to set one. After launch, alongside H8.
+- [ ] **H14. Back office** (stub, `PLAN.md` Phase 18; spec-kit later). Platform admin tools move out of the member app into a dedicated back office, separate from the main app: today Settings shows "Platform → Waitlist" to anyone in `PLATFORM_ADMINS`, and `/admin/domains` (J3) is planned the same way. The waitlist moves first; the smart share switch (H11, by hand in the database today) and monitoring views (Track K) are candidates. Not needed for launch: the current screen serves stage 4 by hand (H4).
 
 Order within the track: H1 → H2, H3 (with Track B) → H6, H11, H12, H8a → stage 3 → H7, H8 → stage 4 → stage 5 → H5.
 
