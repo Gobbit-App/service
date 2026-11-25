@@ -5,12 +5,12 @@ export interface HttpErrorExtras {
   /** Extra response headers, e.g. `Retry-After` or a cookie-clearing `Set-Cookie`. */
   headers?: Record<string, string>;
   /** RFC 7807 extension members (D35: `permission`, `role`). */
-  extensions?: Pick<Problem, 'permission' | 'role'>;
+  extensions?: Pick<Problem, 'permission' | 'role' | 'deck'>;
 }
 
 export class HttpError extends Error {
   readonly headers: Record<string, string>;
-  readonly extensions: Pick<Problem, 'permission' | 'role'>;
+  readonly extensions: Pick<Problem, 'permission' | 'role' | 'deck'>;
 
   constructor(
     readonly status: number,

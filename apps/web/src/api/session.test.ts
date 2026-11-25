@@ -9,6 +9,8 @@ describe('isPublicPath / unauthorizedRedirect', () => {
   it('treats sign-in and auth error pages as public', () => {
     expect(isPublicPath('/sign-in')).toBe(true);
     expect(isPublicPath('/auth/error')).toBe(true);
+    expect(isPublicPath('/join')).toBe(true);
+    expect(unauthorizedRedirect({ pathname: '/join', search: '?t=abc' })).toBeNull();
     expect(isPublicPath('/d/family')).toBe(false);
     expect(unauthorizedRedirect({ pathname: '/sign-in', search: '' })).toBeNull();
   });

@@ -57,6 +57,7 @@ describe('createAuthService', () => {
   let users: any;
   let transaction: any;
   let waitlist: any;
+  let invites: any;
   let capture: ReturnType<typeof captureLogger>;
   let service: ReturnType<typeof createAuthService>;
 
@@ -81,6 +82,7 @@ describe('createAuthService', () => {
       rateLimits,
       usersService,
       waitlist,
+      invites,
       mode,
       logHash: createLogHash('k'.repeat(32)),
       decisions: decisionLogger<AuthDecisions>('auth', {
@@ -118,10 +120,19 @@ describe('createAuthService', () => {
     decks = { findById: vi.fn().mockResolvedValue({ id: 'd1' }) };
     users = { findById: vi.fn().mockResolvedValue(user) };
     // Fake transaction: runs the callback against the same fakes (rollback is covered by the int test).
-    const repos = { sessions, magicLinks, memberships, decks, users, usersService };
+    const repos = {
+      sessions,
+      magicLinks,
+      memberships,
+      decks,
+      users,
+      usersService,
+      acceptInvite: vi.fn(),
+    };
     transaction = vi.fn((fn) => fn(repos));
 
     waitlist = { join: vi.fn().mockResolvedValue('created') };
+    invites = { findWaiting: vi.fn().mockResolvedValue({ id: 'link-1' }), recordJoin: vi.fn() };
     capture = captureLogger();
     log = vi.fn();
     service = build('waitlist');
@@ -404,6 +415,118 @@ describe('createAuthService', () => {
       expect(usersService.ensurePersonalDeck).not.toHaveBeenCalled();
     });
   });
+  describe('requestMagicLink with an invite (052, D472)', () => {
+    const request = {
+      email: 'New@Example.test',
+      ip: '1.2.3.4',
+      requestId: 'req-1',
+      invite: 'tok-secret',
+    };
+
+    it('sends an existing account a plain link whose next is the join page', async () => {
+      await service.requestMagicLink(request);
+
+      expect(invites.findWaiting).not.toHaveBeenCalled();
+      const created = magicLinks.create.mock.calls[0][0];
+      expect(created.next).toBe('/join?t=tok-secret');
+      expect(created.inviteLinkId).toBeUndefined();
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'auth.magic_link', { outcome: 'sent' }).via,
+      ).toBeUndefined();
+    });
+
+    it.each(['waitlist', 'open'] as const)(
+      'mails an unknown address a link carrying the waiting invite in %s mode',
+      async (mode) => {
+        service = build(mode);
+        usersService.findExisting.mockResolvedValue(null);
+
+        await service.requestMagicLink(request);
+
+        expect(invites.findWaiting).toHaveBeenCalledWith('tok-secret');
+        expect(waitlist.join).not.toHaveBeenCalled();
+        expect(magicLinks.create.mock.calls[0][0]).toMatchObject({
+          email: 'new@example.test',
+          purpose: 'sign_in',
+          inviteLinkId: 'link-1',
+        });
+        expect(mailer.send).toHaveBeenCalledTimes(1);
+        await capture.flush();
+        expectDecision(capture.lines, 'auth.magic_link', {
+          outcome: 'sent',
+          via: 'invite_link',
+          linkId: 'link-1',
+        });
+        const logged = JSON.stringify(capture.lines);
+        expect(logged).not.toContain('tok-secret');
+        expect(logged).not.toContain('example.test');
+      },
+    );
+
+    it('falls back to the waitlist for an unknown address when the invite has stopped', async () => {
+      usersService.findExisting.mockResolvedValue(null);
+      invites.findWaiting.mockResolvedValue(null);
+
+      await service.requestMagicLink(request);
+
+      expect(waitlist.join).toHaveBeenCalledTimes(1);
+      expect(magicLinks.create).not.toHaveBeenCalled();
+      await capture.flush();
+      expectDecision(capture.lines, 'auth.magic_link', { outcome: 'waitlisted' });
+    });
+
+    it('sends a plain link in open mode when the invite has stopped', async () => {
+      service = build('open');
+      usersService.findExisting.mockResolvedValue(null);
+      invites.findWaiting.mockResolvedValue(null);
+
+      await service.requestMagicLink(request);
+
+      expect(magicLinks.create.mock.calls[0][0].inviteLinkId).toBeUndefined();
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'auth.magic_link', { outcome: 'sent' }).via,
+      ).toBeUndefined();
+    });
+  });
+
+  describe('consumeMagicLink through an invite link (052)', () => {
+    it('records the join after commit with via sign_in', async () => {
+      const link = { id: 'link-1', deckId: 'd1', token: 'tok', createdBy: 'u9' };
+      const res = { result: 'accepted', link, deck: { id: 'd1', slug: 'fam', name: 'Fam' } };
+      const repos = {
+        sessions,
+        magicLinks,
+        memberships,
+        decks,
+        users,
+        usersService,
+        acceptInvite: vi.fn().mockResolvedValue(res),
+      };
+      transaction.mockImplementationOnce((fn: (r: unknown) => unknown) => fn(repos));
+      magicLinks.consume.mockResolvedValue({
+        purpose: 'sign_in',
+        email: 'a@b.co',
+        inviteLinkId: 'link-1',
+      });
+
+      const out = await service.consumeMagicLink({
+        token: 't',
+        ip: 'ip',
+        userAgent: null,
+        requestId: 'r1',
+      });
+
+      expect(out.next).toBe('/d/fam');
+      expect(invites.recordJoin).toHaveBeenCalledWith(res, {
+        userId: user.id,
+        requestId: 'r1',
+        via: 'sign_in',
+      });
+    });
+  });
+
   describe('registration gate (D222, D241)', () => {
     const request = { email: 'New@Example.test', ip: '1.2.3.4', requestId: 'req-1' };
 

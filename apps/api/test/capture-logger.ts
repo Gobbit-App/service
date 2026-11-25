@@ -27,13 +27,15 @@ export function captureLogger(): {
 export function expectDecision(
   lines: Record<string, unknown>[],
   event: string,
-  expected: { outcome: string; reason?: string },
+  expected: { outcome: string; reason?: string; via?: string; linkId?: string },
 ): Record<string, unknown> {
   const matches = lines.filter(
     (l) =>
       l.event === event &&
       l.outcome === expected.outcome &&
-      (expected.reason === undefined || l.reason === expected.reason),
+      (expected.reason === undefined || l.reason === expected.reason) &&
+      (expected.via === undefined || l.via === expected.via) &&
+      (expected.linkId === undefined || l.linkId === expected.linkId),
   );
   if (matches.length === 0) {
     const seen = lines

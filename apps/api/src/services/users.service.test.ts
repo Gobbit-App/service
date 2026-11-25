@@ -83,6 +83,40 @@ describe('createUsersService', () => {
     expect(repo.createWithAccount).not.toHaveBeenCalled();
   });
 
+  describe('register takes the address off the waitlist (FR-018)', () => {
+    const ctx = { requestId: 'req-1' };
+
+    it.each([
+      ['deck_invite', 'waitlist', 'inviter-1', true],
+      ['open_sign_in', 'open', undefined, true],
+      ['waitlist_invite', 'waitlist', 'admin-1', false],
+    ] as const)('%s asks the repo to release: %s', async (reason, mode, actorId, release) => {
+      const svc = build(mode);
+      repo.findByEmail.mockResolvedValue(null);
+      repo.createWithAccount.mockResolvedValue({ user, waitlistEntryId: 'w1' });
+
+      await svc.register(' Jane@Example.com ', reason, { ...ctx, actorId });
+
+      expect(repo.createWithAccount).toHaveBeenCalledWith(
+        expect.objectContaining({ releaseWaitlist: release }),
+      );
+      await capture.flush();
+      expect(
+        expectDecision(capture.lines, 'waitlist.registered', { outcome: 'removed' }),
+      ).toMatchObject({ entryId: 'w1', userId: 'u1', via: reason, requestId: 'req-1' });
+    });
+
+    it('logs nothing when no entry was removed', async () => {
+      repo.findByEmail.mockResolvedValue(null);
+      repo.createWithAccount.mockResolvedValue({ user, waitlistEntryId: null });
+
+      await service.register('jane@example.com', 'deck_invite', ctx);
+
+      await capture.flush();
+      expect(capture.lines.some((l: any) => l.event === 'waitlist.registered')).toBe(false);
+    });
+  });
+
   describe('register (D222, D241)', () => {
     const ctx = { requestId: 'req-1' };
 
@@ -108,7 +142,7 @@ describe('createUsersService', () => {
     ] as const)('creates for %s in %s mode', async (reason, mode, actorId) => {
       const svc = build(mode);
       repo.findByEmail.mockResolvedValue(null);
-      repo.createWithAccount.mockResolvedValue(user);
+      repo.createWithAccount.mockResolvedValue({ user, waitlistEntryId: null });
 
       await expect(
         svc.register(' Jane@Example.com ', reason, { ...ctx, actorId }),
@@ -118,6 +152,7 @@ describe('createUsersService', () => {
         displayName: 'jane',
         via: reason,
         by: actorId ?? null,
+        releaseWaitlist: reason !== 'waitlist_invite',
       });
       await capture.flush();
       const line = expectDecision(capture.lines, 'users.register', { outcome: 'created' });

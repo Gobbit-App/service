@@ -14,6 +14,7 @@ export const PUBLIC_SCREENS = {
   item: { pattern: '/p/:deck/i/:item', name: 'Public card' },
   search: { pattern: '/p/:deck/search', name: 'Public search' },
   share: { pattern: '/s/:item', name: 'Share preview' },
+  invite: { pattern: '/s/invite', name: 'Invite preview' },
 } as const satisfies Record<string, Screen>;
 
 export type PublicScreenKey = keyof typeof PUBLIC_SCREENS;

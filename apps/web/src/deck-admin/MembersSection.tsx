@@ -8,6 +8,8 @@ import { ErrorState, LoadingState } from '../ui/StatusViews';
 import { AdminError } from './AdminError';
 import { membersQuery, useChangeRole, useRemoveMember } from './deck-admin-queries';
 import { InviteForm } from './InviteForm';
+import { InviteLinkForm } from './InviteLinkForm';
+import { InviteLinks } from './InviteLinks';
 import { Button } from '../ui/buttons/Button';
 import { Avatar } from '../ui/Avatar';
 
@@ -47,6 +49,12 @@ export function MembersSection({
         </ul>
       )}
       {manage && <InviteForm deck={deck} disabled={!online} />}
+      {manage && (
+        <>
+          <InviteLinks deck={deck} disabled={!online} />
+          <InviteLinkForm deck={deck} disabled={!online} />
+        </>
+      )}
     </SettingsSection>
   );
 }

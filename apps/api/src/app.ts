@@ -40,6 +40,7 @@ import { registerReviewRoutes } from './routes/review';
 import { registerMySharesRoutes } from './routes/my-shares';
 import { registerImportsRoutes } from './routes/imports';
 import { registerEventsRoutes } from './routes/events';
+import { registerInviteLinksRoutes } from './routes/invite-links';
 import { registerWebhookRoutes } from './routes/webhooks';
 import { registerPublicRoutes } from './routes/public';
 import { rateLimitedHtml, registerPublicPagesRoutes } from './routes/public-pages';
@@ -122,6 +123,8 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   };
   app.use('/public/*', publicRateLimit(anonLimit));
   app.use('/p/*', publicRateLimit({ ...anonLimit, onLimited: rateLimitedHtml }));
+  app.use('/s/invite', publicRateLimit({ ...anonLimit, onLimited: rateLimitedHtml }));
+  app.use('/invites/preview', publicRateLimit(anonLimit));
   // D182: searches also count in their own, lower bucket (each may cost an embedding).
   const searchLimit = {
     ...anonLimit,
@@ -183,6 +186,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerMySharesRoutes(app, services);
   registerImportsRoutes(app, services);
   registerEventsRoutes(app, services);
+  registerInviteLinksRoutes(app, services);
   registerPublicRoutes(app, services, env);
   registerPublicPagesRoutes(app, services, env);
   registerWebhookRoutes(app, { env, services, inbound: deps.ingest?.emailInbound });

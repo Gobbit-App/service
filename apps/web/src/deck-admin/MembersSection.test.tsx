@@ -36,6 +36,7 @@ const members = [
 function setup(deck: Partial<Deck> = {}, online = true) {
   respond.mockImplementation(async (request) => {
     if (request === 'GET /decks/{id}/members') return { data: members };
+    if (request === 'GET /decks/{id}/invite-links') return { links: [] };
     if (request === 'PATCH /decks/{id}/members/{userId}') return member('Rita', { role: 'editor' });
     if (request === 'DELETE /decks/{id}/members/{userId}') return undefined;
     throw new Error(`unexpected ${request}`);

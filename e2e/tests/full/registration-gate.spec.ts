@@ -37,7 +37,7 @@ test.describe('registration gate @full', () => {
       await expect(page.locator('form.join')).toBeVisible();
 
       await page.goto(webUrl('/auth/error?reason=closed'));
-      await page.getByRole('link', { name: 'Get a new link' }).click();
+      await page.getByRole('link', { name: 'Try again' }).click();
       await expect(page).toHaveURL(/\/sign-in$/);
     });
   });

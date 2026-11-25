@@ -21,6 +21,7 @@ export const LENIENT_PATHS = [
   // 030: an expired cookie on the landing page shows the anonymous page, not a 401.
   '/welcome',
   '/welcome/joined',
+  '/invites/preview',
 ];
 
 /**
@@ -30,7 +31,7 @@ export const LENIENT_PATHS = [
 export const LENIENT_PREFIXES = ['/s/', '/public/', '/p/'];
 
 /** D174: the anonymous JSON surface never looks at credentials, so any cookie or bearer is ignored. */
-export const CREDENTIAL_FREE_PREFIXES = ['/public/'];
+export const CREDENTIAL_FREE_PREFIXES = ['/public/', '/invites/preview'];
 
 /** True when a stale cookie must not block this path. */
 export function isLenientPath(path: string): boolean {

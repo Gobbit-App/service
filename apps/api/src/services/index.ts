@@ -70,6 +70,9 @@ import { createImportsService } from './imports.service';
 import { IMPORT_DECISION_LEVELS, type ImportDecisions } from '../imports/imports.events';
 import { createWaitlistService } from './waitlist.service';
 import { createMemberSummaries } from './member-summaries';
+import { createInviteLinksService } from './invite-links.service';
+import { createInviteLinksRepo } from '../repositories/invite-links.repo';
+import { INVITE_LINK_DECISION_LEVELS, type InviteLinkDecisions } from './invite-links.events';
 import { createProfileService } from './profile.service';
 import { createProfileDecisions } from './profile.events';
 import { createProfileRepo } from '../repositories/profile.repo';
@@ -110,7 +113,12 @@ export function buildCallbackRepos(tx: DbTx, registration: RegistrationDeps): Ca
     memberships: createMembershipsRepo(tx),
     decks,
     users,
-    usersService: createUsersService({ users, decks, ...registration }),
+    usersService: createUsersService({
+      users,
+      decks,
+      ...registration,
+    }),
+    acceptInvite: (v) => createInviteLinksRepo(tx).accept(tx, v),
   };
 }
 
@@ -154,7 +162,11 @@ export function buildServices({
       levels: AUTH_DECISION_LEVELS,
     }),
   };
-  const usersService = createUsersService({ users, decks, ...registration });
+  const usersService = createUsersService({
+    users,
+    decks,
+    ...registration,
+  });
   const rateLimits = createRateLimitService({ repo: createRateLimitsRepo(db), now });
   // 037 (D291–D299): reminder rules and the `reminder` DTO field on every item response.
   const remindersRepo = createRemindersRepo(db);
@@ -239,6 +251,22 @@ export function buildServices({
   });
   const transaction: CallbackTransaction = (fn) =>
     db.transaction((tx) => fn(buildCallbackRepos(tx, registration)));
+  const inviteLinks = createInviteLinksService({
+    env,
+    now,
+    origin: env.APP_URL ?? env.API_URL,
+    decks,
+    users,
+    memberships,
+    links: createInviteLinksRepo(db),
+    transaction: (fn) => db.transaction(fn),
+    summaries: memberSummaries,
+    decisions: decisionLogger<InviteLinkDecisions>('invite-links', {
+      parent: logger,
+      levels: INVITE_LINK_DECISION_LEVELS,
+    }),
+  });
+
   const waitlist = createWaitlistService({
     env,
     now,
@@ -323,6 +351,7 @@ export function buildServices({
       rateLimits,
       usersService,
       waitlist,
+      invites: inviteLinks,
       mode: env.REGISTRATION_MODE,
       logHash,
       decisions: decisionLogger<AuthDecisions>('auth', {
@@ -407,6 +436,7 @@ export function buildServices({
       events: createItemEventsRepo(db),
       summaries: memberSummaries,
     }),
+    inviteLinks,
     share,
     search: searchServices.search,
     ask: searchServices.ask,

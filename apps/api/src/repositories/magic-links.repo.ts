@@ -7,6 +7,7 @@ export interface NewMagicLink {
   tokenHash: string;
   purpose: MagicLinkPurpose;
   membershipId?: string | null;
+  inviteLinkId?: string | null;
   next?: string | null;
   expiresAt: Date;
   requestedIp?: string | null;
@@ -22,6 +23,7 @@ export function createMagicLinksRepo(db: DbExecutor) {
           tokenHash: v.tokenHash,
           purpose: v.purpose,
           membershipId: v.membershipId ?? null,
+          inviteLinkId: v.inviteLinkId ?? null,
           next: v.next ?? null,
           expiresAt: v.expiresAt,
           requestedIp: v.requestedIp ?? null,
