@@ -39,9 +39,9 @@ export interface StackCurrent {
   loaded: number;
   atEnd: boolean;
   /** Null when there is no previous card. */
-  prevCard: (() => void) | null;
+  prevCard: ((toEdge?: boolean) => void) | null;
   /** Null when there is nothing after this card. */
-  nextCard: (() => void) | null;
+  nextCard: ((toEdge?: boolean) => void) | null;
 }
 
 export interface BrowseStackProps {
@@ -185,8 +185,16 @@ export function BrowseStack({
   );
   const prevId = atEnd ? current?.id : items[index - 1]?.id;
   const nextId = atEnd ? undefined : (items[index + 1]?.id ?? (showEnd ? END_PAGE_ID : undefined));
-  const prevCard = useMemo(() => (prevId ? () => goTo(prevId) : null), [goTo, prevId]);
-  const nextCard = useMemo(() => (nextId ? () => goTo(nextId) : null), [goTo, nextId]);
+  const firstId = items[0]?.id;
+  const lastId = showEnd ? END_PAGE_ID : items[items.length - 1]?.id;
+  const prevCard = useMemo(
+    () => (prevId ? (toEdge?: boolean) => goTo(toEdge && firstId ? firstId : prevId) : null),
+    [goTo, prevId, firstId],
+  );
+  const nextCard = useMemo(
+    () => (nextId ? (toEdge?: boolean) => goTo(toEdge && lastId ? lastId : nextId) : null),
+    [goTo, nextId, lastId],
+  );
 
   useEffect(() => {
     if (!active || !current) return;

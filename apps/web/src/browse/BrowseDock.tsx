@@ -11,7 +11,8 @@ const LAST_CARD = 'this is the last card';
 
 /**
  * D249/D329: the floating dock: Previous card · the current card's actions (D213, as in the
- * list) · Full view · Next card. Every move has a button, so no gesture is ever required.
+ * list) · Full view · Next card. Every move has a button, so no gesture is ever required;
+ * a double tap on Previous/Next jumps to the first/last card.
  */
 export function BrowseDock({
   item,
@@ -23,9 +24,9 @@ export function BrowseDock({
   item: Item;
   deckSlug: string;
   /** Null when there is no previous card. */
-  onPrevCard: (() => void) | null;
+  onPrevCard: ((toEdge?: boolean) => void) | null;
   /** Null when there is nothing after this card. */
-  onNextCard: (() => void) | null;
+  onNextCard: ((toEdge?: boolean) => void) | null;
   onOpenFull: () => void;
 }): ReactElement {
   const role = useQuery(deckQuery(deckSlug)).data?.role;
@@ -36,7 +37,7 @@ export function BrowseDock({
         label="Previous card"
         className="browse-dock__step"
         disabledReason={onPrevCard ? null : FIRST_CARD}
-        onClick={() => onPrevCard?.()}
+        onClick={(e) => onPrevCard?.(e.detail > 1)}
       />
       <div className="browse-dock__actions">
         {role ? (
@@ -58,7 +59,7 @@ export function BrowseDock({
         label="Next card"
         className="browse-dock__step"
         disabledReason={onNextCard ? null : LAST_CARD}
-        onClick={() => onNextCard?.()}
+        onClick={(e) => onNextCard?.(e.detail > 1)}
       />
     </div>
   );

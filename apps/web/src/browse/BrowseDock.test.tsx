@@ -36,6 +36,25 @@ describe('BrowseDock', () => {
     expect(bar).toContainElement(screen.getByRole('button', { name: /share/i }));
   });
 
+  it('jumps to the first or last card on a double tap', () => {
+    respond.mockReturnValue(new Promise(() => undefined));
+    const prev = vi.fn();
+    const next = vi.fn();
+    renderWithClient(
+      <BrowseDock
+        item={item}
+        deckSlug="family"
+        onPrevCard={prev}
+        onNextCard={next}
+        onOpenFull={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Previous card' }), { detail: 2 });
+    fireEvent.click(screen.getByRole('button', { name: 'Next card' }), { detail: 2 });
+    expect(prev).toHaveBeenCalledWith(true);
+    expect(next).toHaveBeenCalledWith(true);
+  });
+
   it('keeps a move visible but inert at either end', () => {
     respond.mockReturnValue(new Promise(() => undefined));
     renderWithClient(
