@@ -15,7 +15,7 @@ The plan adds one column, one route and one sheet. Someone who accepted an invit
 - **Dismissed** (D480, D481): `DELETE /decks/{id}/welcome` (idempotent, 204). The web hides the welcome at once and keeps the membership id in a local pending set, retrying until the server confirms. An offline close therefore holds and reaches the other devices later.
 - **Named inviter** (D482): `memberships.invited_by`. Accepting a link over a pending typed invite now records the link's creator.
 - **The sheet** (D483, D484):
-  - `DeckWelcome` uses the app's one `Sheet`, mounted by `DeckHeader` on list views. It shows only when the consent wall is not open.
+  - `DeckWelcome` uses the app's one `Sheet`, mounted by `DeckHeader` on list views. It waits while the consent question is unanswered (online or not), so the two never stack.
   - It has three entry points: Categories opens Browse with its category list as its own history entry, Search opens the header's search sheet, and Start reading closes it.
 - **"How to browse"** (D485): it waits until no Browse layer is open.
 - **Accountability**: one decision event, `deck.welcome_dismiss`.
@@ -47,6 +47,7 @@ The plan adds one column, one route and one sheet. Someone who accepted an invit
 **E2E tier**: smoke. Accepting an invite and landing on the deck is a stage-3 critical journey. The existing `invite-link.spec.ts` smoke journey ends where the welcome appears, and its fresh joiner meets the consent wall, so extending it covers the overlay order for real. The variants (mailed invite, entry points, second device) run nightly at `@full` (D486).
 
 **UI reference**:
+
 - **Welcome sheet** → `browse/CategoryList` (the same `ui/sheet/Sheet`: `sheet__title` heading, body text, an action row of `ui/buttons` `Button`s). Copy and tone follow `browse/FirstRunHint`.
 - **No new screen.** Categories reuses Browse plus `CategoryList`, and search reuses `deck-header/SearchSheet`.
 
@@ -62,22 +63,23 @@ The plan adds one column, one route and one sheet. Someone who accepted an invit
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-| Principle | How this plan complies (or "N/A") |
-|-----------|-----------------------------------|
-| I. Layered API | Route `DELETE /decks/{id}/welcome` parses only. `decks.service` resolves the deck, runs `authorize(deck.read)`, decides welcome visibility and logs. `memberships.repo` gains `dismissWelcome(id, now)` returning whether a row changed. A deck the caller can't see answers 404. |
-| II. One source of truth for contracts | `deckWelcomeSchema`/`deckDetailSchema` in `@gobbit/shared` `schemas/deck.ts`; `pnpm api:openapi` |
-| III. Invariants live in the database | Migration `0031` plus a hand-written down file; round-trip in the migrations integration test. The backfill is in the migration. The rule "set only on accepted rows" is a service invariant with an integration test (data-model). |
-| IV. Private by default | Visibility rides on the existing `deck.read` authorization. The inviter goes through `member-summaries` (no email, FR-005). No new token or outbound call. |
-| V. Tests at the right tier | Unit, integration, `@smoke` (extended join journey) and `@full` (one welcome spec); traceability table below |
-| VI. Lean, offline-first web | The welcome comes from the persisted `deckQuery`. The offline dismissal is a localStorage key (D481). No new query, no service-worker change, no root `@gobbit/shared` import (uses `/authz` for `ROLE_LABELS`). |
-| VII. Simple, optional, deployable | No new dependency or env var; works with analytics off (the consent gate is then simply closed) |
-| VIII. Accountable by default | `deck.welcome_dismiss` decision event (Accountability below). Showing the welcome is derived from recorded state (`accepted_at`, `welcome_dismissed_at`), not a new decision. The backfill is a one-off migration step. |
-| IX. Reuse before writing | Reuses `Sheet`, `Button`, `ROLE_LABELS`, `member-summaries`, `memberships.findActive`, `defaultStore()`, `fromListState`/`onLayer`, `SearchSheet` and the consent predicate (moved into a hook, not copied). New code: the column, one repo method, one route, one sheet, the pending-dismissal store. Pruned items are below. |
-| X. One UI system | UI reference filled; tokens and `ui/` primitives only; screenshots of the welcome and of Browse with the list open (phone 412 px and desktop 1280 px, light and dark) per UI task |
+| Principle                             | How this plan complies (or "N/A")                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I. Layered API                        | Route `DELETE /decks/{id}/welcome` parses only. `decks.service` resolves the deck, runs `authorize(deck.read)`, decides welcome visibility and logs. `memberships.repo` gains `dismissWelcome(id, now)` returning whether a row changed. A deck the caller can't see answers 404.                                                                                             |
+| II. One source of truth for contracts | `deckWelcomeSchema`/`deckDetailSchema` in `@gobbit/shared` `schemas/deck.ts`; `pnpm api:openapi`                                                                                                                                                                                                                                                                              |
+| III. Invariants live in the database  | Migration `0031` plus a hand-written down file; round-trip in the migrations integration test. The backfill is in the migration. The rule "set only on accepted rows" is a service invariant with an integration test (data-model).                                                                                                                                           |
+| IV. Private by default                | Visibility rides on the existing `deck.read` authorization. The inviter goes through `member-summaries` (no email, FR-005). No new token or outbound call.                                                                                                                                                                                                                    |
+| V. Tests at the right tier            | Unit, integration, `@smoke` (extended join journey) and `@full` (one welcome spec); traceability table below                                                                                                                                                                                                                                                                  |
+| VI. Lean, offline-first web           | The welcome comes from the persisted `deckQuery`. The offline dismissal is a localStorage key (D481). No new query, no service-worker change, no root `@gobbit/shared` import (uses `/authz` for `ROLE_LABELS`).                                                                                                                                                              |
+| VII. Simple, optional, deployable     | No new dependency or env var; works with analytics off (the consent gate is then simply closed)                                                                                                                                                                                                                                                                               |
+| VIII. Accountable by default          | `deck.welcome_dismiss` decision event (Accountability below). Showing the welcome is derived from recorded state (`accepted_at`, `welcome_dismissed_at`), not a new decision. The backfill is a one-off migration step.                                                                                                                                                       |
+| IX. Reuse before writing              | Reuses `Sheet`, `Button`, `ROLE_LABELS`, `member-summaries`, `memberships.findActive`, `defaultStore()`, `fromListState`/`onLayer`, and `SearchSheet`. Browse's own `fromListState`/`withLayer` drive the categories entry, so Browse's route is untouched. New code: the column, one repo method, one route, one sheet, the pending-dismissal store. Pruned items are below. |
+| X. One UI system                      | UI reference filled; tokens and `ui/` primitives only; screenshots of the welcome and of Browse with the list open (phone 412 px and desktop 1280 px, light and dark) per UI task                                                                                                                                                                                             |
 
 **Pruned (IX)**:
+
 - A root-level overlay queue: the consent hook covers the one pair that can collide.
 - A generic "UI flags" store on `users`.
 - A separate `GET …/welcome`.
@@ -88,17 +90,17 @@ The plan adds one column, one route and one sheet. Someone who accepted an invit
 
 ## Decisions this plan pins down
 
-| ID | Decision | ADR? |
-|----|----------|------|
-| D478 | `memberships.welcome_dismissed_at`; backfilled for accepted rows; a new membership starts null | yes → ADR-086 |
-| D479 | `GET /decks/{id}` answers `deckDetailSchema` with `welcome: { membershipId, inviter } \| null`; list, create and update unchanged | yes → ADR-086 |
-| D480 | `DELETE /decks/{id}/welcome`, `deck.read`, idempotent 204 | no |
-| D481 | Web: hide at once, local pending set by membership id, retry on mount and `online` until 204/404 | yes → ADR-086 |
-| D482 | Inviter = `invited_by`; link accept over a pending invite sets it to the link creator | no |
-| D483 | `DeckWelcome` on `Sheet`, mounted by `DeckHeader` on list views; gated by `useConsentPromptOpen()` and loaded `me`/`config` | no |
-| D484 | Categories → Browse (`fromListState`) then push the `categories` layer via a one-shot state flag; Search → header `SearchSheet`; FR-008 = the categories query is empty | no |
-| D485 | `FirstRunHint` renders only when no Browse layer is open | no |
-| D486 | E2E: extend the `@smoke` link-join journey; one `@full` welcome spec | no |
+| ID   | Decision                                                                                                                                                                             | ADR?          |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| D478 | `memberships.welcome_dismissed_at`; backfilled for accepted rows; a new membership starts null                                                                                       | yes → ADR-086 |
+| D479 | `GET /decks/{id}` answers `deckDetailSchema` with `welcome: { membershipId, inviter } \| null`; list, create and update unchanged                                                    | yes → ADR-086 |
+| D480 | `DELETE /decks/{id}/welcome`, `deck.read`, idempotent 204                                                                                                                            | no            |
+| D481 | Web: hide at once, local pending set by membership id, retry on mount and `online` until 204/404                                                                                     | yes → ADR-086 |
+| D482 | Inviter = `invited_by`; link accept over a pending invite sets it to the link creator                                                                                                | no            |
+| D483 | `DeckWelcome` on `Sheet`, mounted by `DeckHeader` on list views; waits for loaded `me`/`config` and an answered consent question (online or not)                                     | no            |
+| D484 | Categories → two pushes from the welcome: Browse (`fromListState`), then the `categories` layer (`withLayer`); Search → header `SearchSheet`; FR-008 = the categories query is empty | no            |
+| D485 | `FirstRunHint` renders only when no Browse layer is open                                                                                                                             | no            |
+| D486 | E2E: extend the `@smoke` link-join journey; one `@full` welcome spec                                                                                                                 | no            |
 
 ## Project Structure
 
@@ -130,49 +132,49 @@ apps/api/src/
 └── routes/decks.ts                               # GET schema; DELETE /decks/{id}/welcome
 packages/api-client/                              # pnpm api:openapi
 apps/web/src/
-├── analytics/ConsentPrompt.tsx                   # export useConsentPromptOpen()
 ├── deck-header/DeckWelcome.tsx (+ .css, .test)   # the sheet
 ├── deck-header/welcome-store.ts (+ .test)        # pending dismissals (D481)
 ├── deck-header/DeckHeader.tsx                    # mount; search entry → setSearchOpen
+├── deck-header/DeckWelcome.tsx                   # categories entry: two pushes (D484)
 ├── api/queries.ts, api/*                         # deckQuery type; dismiss mutation
-├── routes/d.$slug.browse.tsx                     # one-shot openCategories flag → onLayer
 └── browse/BrowseScreen.tsx                       # hint only when layer === null
 e2e/tests/smoke/invite-link.spec.ts               # + consent → welcome → close → reload
 e2e/tests/full/welcome.spec.ts                    # mailed invite, entry points, second device
-docs/design/profile.md or browse-mode.md          # Deviations / short section (see Rollout)
+e2e/fixtures/identity.ts                          # createMember also dismisses the welcome (API)
+docs/design/profile.md                            # "Welcome" section + Deviations (see Rollout)
 ```
 
 **Structure Decision**: the API changes are confined to the decks and memberships layers. The web changes sit in `deck-header/`, where the welcome's search target already lives, plus two one-line touches in Browse.
 
 ## Invariant → test traceability
 
-| Invariant / rule (spec FR or D-number) | Enforced in (DB / service / route / UI) | Test (file, tier) |
-|----------------------------------------|------------------------------------------|-------------------|
-| FR-001 welcome after any acceptance path (address, username, link) | service `get` | `decks.service.int.test.ts` (accepted via `accept` and via link), int; `invite-link.spec.ts` @smoke; `welcome.spec.ts` @full (mailed) |
-| FR-002 once per membership, all devices | DB column + service | `decks.service.int.test.ts` (dismiss → `welcome: null`), int; `welcome.spec.ts` second context, @full |
-| FR-003 not for pre-release members | migration backfill | `migrations.int.test.ts` (accepted row → set, pending → null), int |
-| FR-003 not for the owning account / personal deck | service `get` | `decks.service.int.test.ts` (account owner with and without a row; personal deck), int |
-| FR-004 consent first, then welcome | UI `useConsentPromptOpen` | `DeckWelcome.test.tsx`, unit; `invite-link.spec.ts` @smoke |
-| FR-004 "How to browse" after the list closes | UI `BrowseScreen` (D485) | `BrowseScreen.test.tsx`, unit; `welcome.spec.ts` @full |
-| FR-005 no email; deck + inviter shown name | service (`member-summaries`), UI | `decks.service.int.test.ts` (no `email` key), int; `DeckWelcome.test.tsx`, unit |
-| FR-005 deleted inviter → line left out; nameless → "a member" | service + UI | `decks.service.int.test.ts`, int; `DeckWelcome.test.tsx`, unit |
-| FR-006 role line from `ROLE_LABELS` | UI | `DeckWelcome.test.tsx`, unit |
-| FR-007 Categories → Browse with list (own entry); Search → focused box | UI (D484) | `DeckWelcome.test.tsx`, `d.$slug.browse` route test, unit; `welcome.spec.ts` @full |
-| FR-008 categories entry left out when no category | UI | `DeckWelcome.test.tsx`, unit |
-| FR-009 RTL names isolated | UI `<bdi>` | `DeckWelcome.test.tsx`, unit |
-| FR-010 keyboard / screen reader | `Sheet` (native modal) | `DeckWelcome.test.tsx` (Escape dismisses, labelled), unit |
-| FR-011 offline close kept and sent later | `welcome-store` + retry | `welcome-store.test.ts`, `DeckWelcome.test.tsx` (offline → pending → online → DELETE), unit |
-| FR-012 everything else unchanged | — | existing invite/accept int tests and `invite-link.spec.ts` stay green |
-| D480 idempotent dismiss; 404 when unreadable; pending row untouched | service + repo | `decks.routes.int.test.ts`, int |
-| D482 link accept over a pending invite names the link creator | repo | `invite-links.int.test.ts`, int |
+| Invariant / rule (spec FR or D-number)                                 | Enforced in (DB / service / route / UI)                                                                  | Test (file, tier)                                                                                                                                        |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001 welcome after any acceptance path (address, username, link)     | service `get`                                                                                            | `decks.service.int.test.ts` (accepted via `accept` and via link), int; `invite-link.spec.ts` @smoke; `welcome.spec.ts` @full (mailed)                    |
+| FR-002 once per membership, all devices                                | DB column + service                                                                                      | `decks.service.int.test.ts` (dismiss → `welcome: null`), int; `welcome.spec.ts` second context, @full                                                    |
+| FR-003 not for pre-release members                                     | migration backfill                                                                                       | `migrations.int.test.ts` (accepted row → set, pending → null), int                                                                                       |
+| FR-003 not for the owning account / personal deck                      | service `get`                                                                                            | `decks.service.int.test.ts` (account owner with and without a row; personal deck), int                                                                   |
+| FR-004 consent first, then welcome (also after an offline reopen)      | UI `DeckWelcome` consent gate                                                                            | `DeckWelcome.test.tsx`, unit; `invite-link.spec.ts` @smoke                                                                                               |
+| FR-004 "How to browse" after the list closes                           | UI `BrowseScreen` (D485)                                                                                 | `BrowseScreen.test.tsx`, unit; `welcome.spec.ts` @full                                                                                                   |
+| FR-005 no email; deck + inviter shown name                             | service (`member-summaries`), UI                                                                         | `decks.service.int.test.ts` (no `email` key), int; `DeckWelcome.test.tsx`, unit                                                                          |
+| FR-005 deleted inviter → line left out; nameless → "a member"          | service + UI                                                                                             | `decks.service.int.test.ts`, int; `DeckWelcome.test.tsx`, unit                                                                                           |
+| FR-006 role line from `ROLE_LABELS`                                    | UI                                                                                                       | `DeckWelcome.test.tsx`, unit                                                                                                                             |
+| FR-007 Categories → Browse with list (own entry); Search → focused box | UI (D484)                                                                                                | `DeckWelcome.test.tsx` (two pushes, layer on top), unit; `welcome.spec.ts` @full                                                                         |
+| FR-008 categories entry left out when no category                      | UI                                                                                                       | `DeckWelcome.test.tsx`, unit                                                                                                                             |
+| FR-009 RTL names isolated                                              | UI `<bdi>`                                                                                               | `DeckWelcome.test.tsx`, unit                                                                                                                             |
+| FR-010 keyboard / screen reader                                        | `Sheet` (native modal)                                                                                   | `DeckWelcome.test.tsx` (Escape dismisses, labelled), unit                                                                                                |
+| FR-011 offline close kept and sent later                               | `welcome-store` + retry                                                                                  | `welcome-store.test.ts`, `DeckWelcome.test.tsx` (offline → pending → online → DELETE), unit                                                              |
+| FR-012 everything else unchanged                                       | — and e2e fixture `createMember` dismisses the welcome through the API, as it already declines analytics | existing invite/accept int tests, `invite-link.spec.ts` and the `@full` specs using `member()` (`member-privacy`, `profile`, `members-roles`) stay green |
+| D480 idempotent dismiss; 404 when unreadable; pending row untouched    | service + repo                                                                                           | `decks.routes.int.test.ts`, int                                                                                                                          |
+| D482 link accept over a pending invite names the link creator          | repo                                                                                                     | `invite-links.int.test.ts`, int                                                                                                                          |
 
 ## Accountability
 
-| Decision | Event / audit row | Outcomes · reasons | Fields (ids/hashes only) | Level | Watched (instance / aggregate / rate) | Alert threshold (default) | Test |
-|----------|-------------------|--------------------|--------------------------|-------|---------------------------------------|---------------------------|------|
-| A person dismisses a deck's welcome | `deck.welcome_dismiss` log, plus the `welcome_dismissed_at` timestamp on the row (the durable record) | `dismissed`, `already_dismissed`, `no_membership` | requestId, userId, deckId, membershipId (when there is one) | info | aggregate per day; the rate of `already_dismissed` (retries) against `dismissed` | none: no person is refused. Investigate if `already_dismissed` exceeds 3× `dismissed` per day (a retry loop) | `decks.service.test.ts`, unit; asserted in `decks.routes.int.test.ts`, int |
-| Whether the welcome shows on a deck read | none new: derived from `accepted_at` (recorded by the existing invite/accept events) and `welcome_dismissed_at` (above) | — | — | — | — | — | covered by FR-001–003 tests |
-| Pre-release members marked as dismissed | migration `0031` backfill (one-off, in the deploy log) | — | — | — | — | — | `migrations.int.test.ts`, int |
+| Decision                                 | Event / audit row                                                                                                       | Outcomes · reasons                                | Fields (ids/hashes only)                                    | Level | Watched (instance / aggregate / rate)                                            | Alert threshold (default)                                                                                    | Test                                                                       |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------- | ----- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| A person dismisses a deck's welcome      | `deck.welcome_dismiss` log, plus the `welcome_dismissed_at` timestamp on the row (the durable record)                   | `dismissed`, `already_dismissed`, `no_membership` | requestId, userId, deckId, membershipId (when there is one) | info  | aggregate per day; the rate of `already_dismissed` (retries) against `dismissed` | none: no person is refused. Investigate if `already_dismissed` exceeds 3× `dismissed` per day (a retry loop) | `decks.service.test.ts`, unit; asserted in `decks.routes.int.test.ts`, int |
+| Whether the welcome shows on a deck read | none new: derived from `accepted_at` (recorded by the existing invite/accept events) and `welcome_dismissed_at` (above) | —                                                 | —                                                           | —     | —                                                                                | —                                                                                                            | covered by FR-001–003 tests                                                |
+| Pre-release members marked as dismissed  | migration `0031` backfill (one-off, in the deploy log)                                                                  | —                                                 | —                                                           | —     | —                                                                                | —                                                                                                            | `migrations.int.test.ts`, int                                              |
 
 **Operator controls**: none. No limit or threshold shapes anyone's experience here.
 
@@ -191,13 +193,13 @@ docs/design/profile.md or browse-mode.md          # Deviations / short section (
 
 ## Risks
 
-| Risk | Likelihood / impact | Mitigation |
-|------|---------------------|------------|
-| The welcome and consent wall stack, because `me` loads after the welcome opens | M / M | Wait for `me` and `config` to load before showing; share one predicate (D483); the @smoke journey exercises the order with a fresh account |
-| The categories layer opens in the same history entry as Browse, so the first pick leaves Browse | M / M | Push the layer as its own entry (D484); route test plus @full |
-| The pending store suppresses someone else's welcome on a shared device | L / L | Keyed by membership id, not deck (D481) |
-| FR-008 almost never triggers, because the default category always exists | H / L | Recorded in D484; an unseeded deck still offers Categories and lands on an empty "All". Revisit if alpha decks start empty. |
-| A deck `setQueryData` from an update drops the cached `welcome` | L / L | Merge the update into the cached detail rather than replacing it (data-model § DTOs) |
+| Risk                                                                                                    | Likelihood / impact | Mitigation                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The welcome and consent wall stack, because `me` loads after the welcome opens                          | M / M               | Wait for `me` and `config` to load, and for an answered consent question even offline (D483); the @smoke journey exercises the order with a fresh account |
+| The categories layer opens in the same history entry as Browse, so the first pick leaves Browse         | M / M               | Push the layer as its own entry (D484); unit test plus @full                                                                                              |
+| Invited members created by the e2e fixture land on a deck with the welcome open, blocking nightly specs | H / M               | `createMember` dismisses it via `DELETE /decks/{id}/welcome` (FR-012 row)                                                                                 |
+| The pending store suppresses someone else's welcome on a shared device                                  | L / L               | Keyed by membership id, not deck (D481)                                                                                                                   |
+| FR-008 almost never triggers, because the default category always exists                                | H / L               | Recorded in D484; an unseeded deck still offers Categories and lands on an empty "All". Revisit if alpha decks start empty.                               |
 
 ## Settle before starting
 
