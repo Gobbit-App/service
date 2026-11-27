@@ -57,7 +57,6 @@ export function CategoryList({
       labelledBy={titleId}
       onClose={onClose}
       initialFocus={currentRow}
-      className="browse-list"
       closeLabel="Close categories"
     >
       <h2 className="sheet__title" id={titleId}>

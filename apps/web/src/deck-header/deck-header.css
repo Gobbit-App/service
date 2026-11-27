@@ -111,10 +111,3 @@
 .search-sheet .recent-searches {
   margin-top: var(--space-4);
 }
-
-/* Three actions: widen the centred dialog so they sit on one row (a phone stacks them). */
-@media (min-width: 600px) {
-  .sheet.deck-welcome {
-    width: min(36rem, calc(100vw - 2 * var(--gutter)));
-  }
-}

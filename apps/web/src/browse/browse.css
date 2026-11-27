@@ -489,10 +489,6 @@ body:has(.browse) .offline-banner {
 
 /* ---------- Category list (D331): a sheet of rows with counts ---------- */
 
-.browse-list .sheet__title {
-  margin-bottom: var(--space-5);
-}
-
 .browse-list__rows {
   display: grid;
   gap: var(--space-1);

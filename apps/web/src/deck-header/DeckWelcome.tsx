@@ -83,7 +83,7 @@ export function DeckWelcome({
   };
 
   return (
-    <Sheet className="deck-welcome" labelledBy={titleId} onClose={close} initialFocus={start}>
+    <Sheet labelledBy={titleId} onClose={close} initialFocus={start}>
       <h2 className="sheet__title" id={titleId}>
         Welcome to <bdi>{deck.name}</bdi>
       </h2>

@@ -151,6 +151,7 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-25 | H14 | addition | Platform admin tools (the Settings "Platform → Waitlist" section, later `/admin/domains`) live inside the member app; move them to a dedicated back office. New item H14, `PLAN.md` Phase 18 stub. | `PLAN.md` Phase 18 |
 | 2026-11-25 | H12 | done | 052 merged; Verify (the `@smoke` journey: an owner creates a link, a second user joins and lands on the deck, a second use is refused) passes in PR CI. | #190, [`052` implementation notes](specs/052-invite-by-link/implementation-notes.md) |
 | 2026-11-25 | H8a | start | Specified as `053-invited-first-run`. Every invite path already lands on the deck; the gap is the welcome. Added in the spec: shown per accepted invite (existing users joining a new deck too), never to members from before release, deck creators or the personal deck; one overlay at a time (consent question, then welcome, then "How to browse"); categories entry point left out when none is visible. Open for `/speckit-clarify`: "once" across devices (assumed) or per device. | [`specs/053-invited-first-run`](specs/053-invited-first-run/spec.md) |
+| 2026-11-27 | H8a | progress | 053 implemented in #196 (tick on merge). Deviations: Sheet closes by swipe on phones and a corner button on dialogs (D487), dialogs are 32rem (D489), friendlier role copy (D488). | [`specs/053-invited-first-run`](specs/053-invited-first-run/spec.md) |
 
 ## Goal and definition of done
 

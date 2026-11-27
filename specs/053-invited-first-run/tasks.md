@@ -101,7 +101,7 @@ right tier, and every row of the plan's traceability table maps to a test task.
 
 - [X] T023 [P] [US2] [int] In apps/api/test/decks.int.test.ts: `welcome` is null for the deck creator, for an owning-account user with and without a stray membership row, and on the personal deck (apps/api/test/personal-deck.int.test.ts if that is where personal-deck reads are tested) (FR-003)
 - [X] T024 [P] [US2] [unit] In apps/web/src/deck-header/DeckWelcome.test.tsx (or DeckHeader.test.tsx, wherever the gate lives): no welcome while `me` or `config` is loading; no welcome while `config.analytics` is on and consent is `unanswered`, both online and offline; it shows once consent is answered or analytics is off (FR-004, D483)
-- [ ] T025 [P] [US2] [unit] In apps/web/src/browse/BrowseScreen.test.tsx: `FirstRunHint` does not render while a layer (`categories` or `full`) is open and renders once `layer` is null (FR-004, US2 scenario 5, D485)
+- [X] T025 [P] [US2] [unit] In apps/web/src/browse/BrowseScreen.test.tsx: `FirstRunHint` does not render while a layer (`categories` or `full`) is open and renders once `layer` is null (FR-004, US2 scenario 5, D485)
 
 ### Implementation for User Story 2
 
@@ -118,12 +118,12 @@ right tier, and every row of the plan's traceability table maps to a test task.
 
 **Purpose**: keep the repository's docs and gates true
 
-- [ ] T030 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` and `pnpm budget` (the sheet sits in the deck header chunk)
-- [ ] T031 e2e at the plan's tier: `@smoke` passes in CI's `e2e` job; `pnpm test:e2e --grep "welcome|member"` passes locally for the `@full` specs touched (T013, T028, T029)
-- [ ] T032 [P] docs/design/profile.md: a short "Welcome" section (D478–D485) and its "Deviations from the plan" list from implementation-notes.md
-- [ ] T033 [P] docs/adr.md: ADR-086 (welcome dismissal on the membership, welcome on the single-deck read, offline pending set: D478, D479, D481); docs/architecture.md: one ADR index row
-- [ ] T034 [P] CLAUDE.md "Roles" ground rule: one short clause on the welcome (`memberships.welcome_dismissed_at`, `DELETE /decks/{id}/welcome`, gated behind consent)
-- [ ] T035 PLAN.md Phase 16 item 4: mark the first slice built; community-go-list.md: tick H8a on merge and add a progress-log line with deviations
+- [X] T030 `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm test:int` and `pnpm budget` (the sheet sits in the deck header chunk)
+- [X] T031 e2e at the plan's tier: `@smoke` passes in CI's `e2e` job; `pnpm test:e2e --grep "welcome|member"` passes locally for the `@full` specs touched (T013, T028, T029)
+- [X] T032 [P] docs/design/profile.md: a short "Welcome" section (D478–D485) and its "Deviations from the plan" list from implementation-notes.md
+- [X] T033 [P] docs/adr.md: ADR-086 (welcome dismissal on the membership, welcome on the single-deck read, offline pending set: D478, D479, D481); docs/architecture.md: one ADR index row
+- [X] T034 [P] CLAUDE.md "Roles" ground rule: one short clause on the welcome (`memberships.welcome_dismissed_at`, `DELETE /decks/{id}/welcome`, gated behind consent)
+- [X] T035 PLAN.md Phase 16 item 4: mark the first slice built; community-go-list.md: tick H8a on merge and add a progress-log line with deviations
 - [ ] T036 Run quickstart.md validation (steps 1–9)
 - [ ] T037 `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review` before the PR
 

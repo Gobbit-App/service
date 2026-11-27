@@ -764,3 +764,15 @@ Revises D167/D168 (015's locked-host rules).
 - **Joining**: `POST /auth/magic-link` takes an optional `invite`. An address with an account gets a plain sign-in link to `/join` and taps Join on return. A brand-new address with a waiting link gets a link carrying `magic_links.invite_link_id`, in any registration mode, and is registered (`deck_invite`) and joined inside the `consume` transaction; the answer is the same in every case (D472).
 
 **Rationale**: A link has no person behind it, and `memberships.user_id` is NOT NULL, so a separate table keeps the one-membership-per-person index intact. Derived state cannot drift from the timestamps. A third `magic_links` purpose would mix an address-bound sign-in with an unbound invite. Details: `specs/052-invite-by-link/research.md`.
+
+## ADR-086: First-run welcome: dismissal on the membership, the welcome on the deck read, an offline pending set, one Sheet close rule (D478, D479, D481, D487)
+
+**Decision**: A member who joins a deck by any invite path sees a one-time welcome there.
+
+- **State**: `memberships.welcome_dismissed_at` (null = not yet dismissed), backfilled from `accepted_at` so no existing member sees it. Dismissal belongs to the membership, so it holds on every device and a removed-then-reinvited person is welcomed again (D478).
+- **Read**: `GET /decks/{id}` returns `welcome: { membershipId, inviter }` or null (null for the owning account, deck creator, personal deck and pending rows); no extra request, no email in the inviter summary (D479).
+- **Write**: `DELETE /decks/{id}/welcome` is idempotent (204) and logs `deck.welcome_dismiss` (D480).
+- **Offline**: the sheet closes at once and the membership id waits in `gobbit:welcome-dismissed:v1` until the DELETE succeeds or answers 404 (D481).
+- **Sheet**: `Sheet` closes by swipe on phones and a corner button from 600 px where `closeLabel` is set (D487).
+
+**Rationale**: a column on the membership is the smallest durable "once"; riding on the deck read avoids a new query on every deck open. Details: `specs/053-invited-first-run/research.md`.

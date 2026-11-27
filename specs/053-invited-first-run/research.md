@@ -130,3 +130,20 @@ Decisions D478–D486 (reserved in `specs/README.md`). The durable ones become A
   - **Component tests** cover the overlay order and the entry points.
   - **Fixture**: `createMember` (`e2e/fixtures/identity.ts`) gives invited members to `@full` specs such as `member-privacy` and `profile`. It already declines analytics through the API, and now also sends `DELETE /decks/{id}/welcome`, so those specs never meet the sheet.
 - **Rationale**: accepting an invite and landing on the deck is a stage-3 critical journey (constitution V). The existing smoke journey already ends where the welcome appears, and a fresh joiner meets the consent wall, so the smoke test covers FR-004's order for real at almost no extra cost. The variants go nightly.
+
+## D487 — One close rule for every Sheet: handle and swipe on phones, a corner button on dialogs
+
+- **Decision**: `Sheet` owns closing. Below 600 px it draws a grab handle and closes when the handle is dragged down 96 px or more (pointer events, no gesture library, ADR-065); from 600 px a sheet that sets `closeLabel` shows one corner close button (44 px, top right), and phones never show it. Confirm dialogs close through their own Cancel and leave `closeLabel` unset.
+- **Rationale**: review of the welcome's category list found the old header "X" misaligned and different on phone and desktop. One rule in the shared component keeps every sheet the same and gives phones the gesture they expect.
+- **Consequence**: every sheet gains the handle and swipe; the swipe starts only on the top strip, so scrolling a long list is untouched. Applied to the category list and search sheet; About, Avatar cropper, type picker and discard dialogs keep their footer buttons.
+- **Alternative rejected**: an "X" in each sheet's own header (what existed): five different placements and no swipe.
+
+## D488 — Welcome copy: one friendly sentence per role (`ROLE_WELCOME`)
+
+- **Decision**: the welcome shows `ROLE_WELCOME[role]` ("You can read this deck.", "You can read this deck and add and edit cards.", "You can read, add and edit cards, publish them and manage categories.", "You can do everything here except delete the deck.") instead of `ROLE_LABELS` label plus description. An inviter with no name or username reads "A member invited you."
+- **Rationale**: "You're a Reader: Read only." says the same thing twice and tells a newcomer little. `ROLE_LABELS` stays for the members and invite screens, where the role name matters.
+
+## D489 — One dialog width, and borderless list rows
+
+- **Decision**: the shared `.sheet` dialog is 32rem wide from 600 px (was 28rem; the root font is 15 px, so 30rem was too narrow for the three actions) so the welcome's three actions fit one row; no sheet sets its own width. The category list's rows are borderless with a 4 px gap, a tinted current row and the count inside the row.
+- **Rationale**: a per-sheet width would make dialogs different sizes; a small shared bump keeps them one size. The bordered, touching rows with the count outside read as unfinished next to the rest of the app.

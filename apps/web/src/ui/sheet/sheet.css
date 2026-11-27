@@ -37,6 +37,11 @@
   display: none;
 }
 
+/* A list or picker sheet gives its first control room under the title. */
+.sheet__close ~ .sheet__body .sheet__title {
+  margin-bottom: var(--space-5);
+}
+
 .sheet__body {
   padding: var(--space-5) calc(var(--gutter) + var(--safe-right))
     calc(var(--space-4) + var(--safe-bottom)) calc(var(--gutter) + var(--safe-left));
@@ -79,7 +84,7 @@
 
 @media (min-width: 600px) {
   .sheet {
-    width: min(28rem, calc(100vw - 2 * var(--gutter)));
+    width: min(32rem, calc(100vw - 2 * var(--gutter)));
     margin: auto;
     border-radius: var(--radius-lg);
   }
