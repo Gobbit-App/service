@@ -124,8 +124,8 @@ right tier, and every row of the plan's traceability table maps to a test task.
 - [X] T033 [P] docs/adr.md: ADR-086 (welcome dismissal on the membership, welcome on the single-deck read, offline pending set: D478, D479, D481); docs/architecture.md: one ADR index row
 - [X] T034 [P] CLAUDE.md "Roles" ground rule: one short clause on the welcome (`memberships.welcome_dismissed_at`, `DELETE /decks/{id}/welcome`, gated behind consent)
 - [X] T035 PLAN.md Phase 16 item 4: mark the first slice built; community-go-list.md: tick H8a on merge and add a progress-log line with deviations
-- [ ] T036 Run quickstart.md validation (steps 1–9)
-- [ ] T037 `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review` before the PR
+- [X] T036 Run quickstart.md validation (steps 1–9)
+- [X] T037 `/speckit-converge` until it reports Converged, then `/ponytail:ponytail-review` before the PR
 
 ---
 
@@ -180,3 +180,11 @@ right tier, and every row of the plan's traceability table maps to a test task.
   - D480: T007
   - D482: T008
   - Accountability: T009
+
+## Phase 5: Convergence
+
+- [X] T038 Amend the artifacts to the shipped role line: spec.md FR-006 and User Story 1 scenario 1 ("same wording as deck settings"), plan.md (Constitution IX reuse list and the FR-006 traceability row) and contracts/welcome.md (Web table) now say the welcome shows `ROLE_WELCOME[role]` ("You can read this deck."), per D488, instead of `ROLE_LABELS` label plus description per FR-006 (contradicts)
+- [X] T039 Record the review-round changes in plan.md so it matches the code: add D487–D489 to "Decisions this plan pins down" (one `Sheet` close rule, `ROLE_WELCOME`, one 32rem dialog and borderless list rows), add `ui/sheet/Sheet`, `browse/CategoryList` and `deck-header/SearchSheet` to the UI reference and Source Code lists, and note in Complexity Tracking that the `Sheet` change reaches every sheet (About, Avatar cropper, type picker, discard dialogs) per plan: Constitution X (unrequested)
+- [X] T040 Add the plan's alert threshold to docs/design/profile.md "Runbook thresholds": investigate when `deck.welcome_dismiss` `already_dismissed` exceeds 3× `dismissed` per day (a retry loop) per plan: Accountability table (partial)
+- [X] T041 [int] Close the traceability gap for the decision event: assert `deck.welcome_dismiss` (`dismissed`, `already_dismissed`) from the `DELETE /decks/{id}/welcome` integration test in apps/api/test/decks.int.test.ts, or amend the plan's traceability row and Accountability table to say the unit test in decks.service.test.ts is the only assertion, per plan: Accountability test column / Constitution VIII (partial)
+- [X] T042 Settle the plan's open "Settle before starting" items: in implementation-notes.md record that the owner confirmed the welcome copy on 2026-11-27 (final text: "Welcome to {deck}" / "{Inviter} invited you." / the `ROLE_WELCOME` sentence / Categories · Search · Start reading; inviter fallback "A member"), and tick both items in plan.md per plan: Settle before starting (partial)

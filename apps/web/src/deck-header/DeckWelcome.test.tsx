@@ -163,6 +163,36 @@ describe('DeckWelcome (053)', () => {
     await waitFor(() => expect(deleteCalls()).toHaveLength(1));
     expect(pending()).toEqual(['m1']);
   });
+
+  it('re-sends the DELETE when the connection returns, without the sheet or the hook mounted', async () => {
+    respond.mockRejectedValue(new TypeError('Failed to fetch'));
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Start reading' }));
+    await waitFor(() => expect(deleteCalls()).toHaveLength(1));
+
+    await act(async () => {}); // the failed send registers its online retry
+    respond.mockResolvedValue(undefined);
+    act(() => void window.dispatchEvent(new Event('online')));
+    // earlier tests leave their own once-listeners on window, so count "again", not exactly one more
+    await waitFor(() => expect(deleteCalls().length).toBeGreaterThan(1));
+    await waitFor(() => expect(pending()).toEqual([]));
+  });
+});
+
+describe('a stale online retry (D481)', () => {
+  it('sends nothing once the id is no longer pending', async () => {
+    respond.mockRejectedValue(new TypeError('Failed to fetch'));
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Start reading' }));
+    await waitFor(() => expect(deleteCalls()).toHaveLength(1));
+
+    await act(async () => {});
+    localStorage.removeItem(PENDING_KEY);
+    respond.mockResolvedValue(undefined);
+    act(() => void window.dispatchEvent(new Event('online')));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(deleteCalls()).toHaveLength(1);
+  });
 });
 
 describe('useWelcomeRetry (D481, FR-011)', () => {

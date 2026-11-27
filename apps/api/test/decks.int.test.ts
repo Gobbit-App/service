@@ -9,8 +9,10 @@ import {
   problemSchema,
 } from '@gobbit/shared';
 import { setupApiTest, fixtureId } from './helpers';
+import { captureLogger, expectDecision } from './capture-logger';
 
-const ctx = setupApiTest();
+const capture = captureLogger();
+const ctx = setupApiTest({ logger: capture.logger });
 
 describe('decks', () => {
   describe('POST /decks', () => {
@@ -230,9 +232,19 @@ describe('decks', () => {
         const deck = await createDeck(ctx.t.db, ctx.world.owner);
         await addMember(ctx.t.db, deck, joiner, 'reader');
         expect(await welcomeOf(deck.id)).not.toBeNull();
+        capture.lines.length = 0;
         expect((await del(deck.id)).status).toBe(204);
         expect(await welcomeOf(deck.id)).toBeNull();
+        await capture.flush();
+        expect(
+          expectDecision(capture.lines, 'deck.welcome_dismiss', { outcome: 'dismissed' }),
+        ).toMatchObject({
+          deckId: deck.id,
+          userId: joiner.id,
+        });
         expect((await del(deck.id)).status).toBe(204);
+        await capture.flush();
+        expectDecision(capture.lines, 'deck.welcome_dismiss', { outcome: 'already_dismissed' });
       });
 
       it('401 without a session', async () => {

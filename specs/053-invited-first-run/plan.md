@@ -49,6 +49,7 @@ The plan adds one column, one route and one sheet. Someone who accepted an invit
 **UI reference**:
 
 - **Welcome sheet** → `browse/CategoryList` (the same `ui/sheet/Sheet`: `sheet__title` heading, body text, an action row of `ui/buttons` `Button`s). Copy and tone follow `browse/FirstRunHint`.
+- **Review round (D487–D489)**: `ui/sheet/Sheet` (handle, swipe, corner close, dialog width), `browse/CategoryList` (borderless rows) and `deck-header/SearchSheet` (corner close) were changed after review of the welcome screenshots.
 - **No new screen.** Categories reuses Browse plus `CategoryList`, and search reuses `deck-header/SearchSheet`.
 
 **Target Platform**: Docker Compose on Dokploy; PWA on Android Chrome (iOS where stated)
@@ -72,10 +73,10 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 | III. Invariants live in the database  | Migration `0031` plus a hand-written down file; round-trip in the migrations integration test. The backfill is in the migration. The rule "set only on accepted rows" is a service invariant with an integration test (data-model).                                                                                                                                           |
 | IV. Private by default                | Visibility rides on the existing `deck.read` authorization. The inviter goes through `member-summaries` (no email, FR-005). No new token or outbound call.                                                                                                                                                                                                                    |
 | V. Tests at the right tier            | Unit, integration, `@smoke` (extended join journey) and `@full` (one welcome spec); traceability table below                                                                                                                                                                                                                                                                  |
-| VI. Lean, offline-first web           | The welcome comes from the persisted `deckQuery`. The offline dismissal is a localStorage key (D481). No new query, no service-worker change, no root `@gobbit/shared` import (uses `/authz` for `ROLE_LABELS`).                                                                                                                                                              |
+| VI. Lean, offline-first web           | The welcome comes from the persisted `deckQuery`. The offline dismissal is a localStorage key (D481). No new query, no service-worker change, no root `@gobbit/shared` import (uses `/authz` for `ROLE_WELCOME`).                                                                                                                                                              |
 | VII. Simple, optional, deployable     | No new dependency or env var; works with analytics off (the consent gate is then simply closed)                                                                                                                                                                                                                                                                               |
 | VIII. Accountable by default          | `deck.welcome_dismiss` decision event (Accountability below). Showing the welcome is derived from recorded state (`accepted_at`, `welcome_dismissed_at`), not a new decision. The backfill is a one-off migration step.                                                                                                                                                       |
-| IX. Reuse before writing              | Reuses `Sheet`, `Button`, `ROLE_LABELS`, `member-summaries`, `memberships.findActive`, `defaultStore()`, `fromListState`/`onLayer`, and `SearchSheet`. Browse's own `fromListState`/`withLayer` drive the categories entry, so Browse's route is untouched. New code: the column, one repo method, one route, one sheet, the pending-dismissal store. Pruned items are below. |
+| IX. Reuse before writing              | Reuses `Sheet`, `Button`, `ROLE_WELCOME`, `member-summaries`, `memberships.findActive`, `defaultStore()`, `fromListState`/`onLayer`, and `SearchSheet`. Browse's own `fromListState`/`withLayer` drive the categories entry, so Browse's route is untouched. New code: the column, one repo method, one route, one sheet, the pending-dismissal store. Pruned items are below. |
 | X. One UI system                      | UI reference filled; tokens and `ui/` primitives only; screenshots of the welcome and of Browse with the list open (phone 412 px and desktop 1280 px, light and dark) per UI task                                                                                                                                                                                             |
 
 **Pruned (IX)**:
@@ -101,6 +102,9 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 | D484 | Categories → two pushes from the welcome: Browse (`fromListState`), then the `categories` layer (`withLayer`); Search → header `SearchSheet`; FR-008 = the categories query is empty | no            |
 | D485 | `FirstRunHint` renders only when no Browse layer is open                                                                                                                             | no            |
 | D486 | E2E: extend the `@smoke` link-join journey; one `@full` welcome spec                                                                                                                 | no            |
+| D487 | Review round: `Sheet` owns closing: grab handle and swipe down on phones, a corner close button from 600 px when `closeLabel` is set (category list, search). Applies to every sheet | yes → ADR-086 |
+| D488 | The welcome shows `ROLE_WELCOME[role]` (one friendly sentence per role) instead of the role label and description | no |
+| D489 | One shared 32rem dialog width (no per-sheet sizes); list and picker sheets get room under the title; category rows borderless with the count inside | no |
 
 ## Project Structure
 
@@ -137,7 +141,10 @@ apps/web/src/
 ├── deck-header/DeckHeader.tsx                    # mount; search entry → setSearchOpen
 ├── deck-header/DeckWelcome.tsx                   # categories entry: two pushes (D484)
 ├── api/queries.ts, api/*                         # deckQuery type; dismiss mutation
-└── browse/BrowseScreen.tsx                       # hint only when layer === null
+├── browse/BrowseScreen.tsx                       # hint only when layer === null
+├── browse/CategoryList.tsx, browse/browse.css    # borderless rows, count inside (D489)
+├── deck-header/SearchSheet.tsx                   # closeLabel (D487)
+└── ui/sheet/Sheet.tsx, sheet.css                 # handle, swipe, corner close, width (D487, D489)
 e2e/tests/smoke/invite-link.spec.ts               # + consent → welcome → close → reload
 e2e/tests/full/welcome.spec.ts                    # mailed invite, entry points, second device
 e2e/fixtures/identity.ts                          # createMember also dismisses the welcome (API)
@@ -158,7 +165,7 @@ docs/design/profile.md                            # "Welcome" section + Deviatio
 | FR-004 "How to browse" after the list closes                           | UI `BrowseScreen` (D485)                                                                                 | `BrowseScreen.test.tsx`, unit; `welcome.spec.ts` @full                                                                                                   |
 | FR-005 no email; deck + inviter shown name                             | service (`member-summaries`), UI                                                                         | `decks.service.int.test.ts` (no `email` key), int; `DeckWelcome.test.tsx`, unit                                                                          |
 | FR-005 deleted inviter → line left out; nameless → "a member"          | service + UI                                                                                             | `decks.service.int.test.ts`, int; `DeckWelcome.test.tsx`, unit                                                                                           |
-| FR-006 role line from `ROLE_LABELS`                                    | UI                                                                                                       | `DeckWelcome.test.tsx`, unit                                                                                                                             |
+| FR-006 role sentence from `ROLE_WELCOME`                                  | UI                                                                                                       | `DeckWelcome.test.tsx`, unit                                                                                                                             |
 | FR-007 Categories → Browse with list (own entry); Search → focused box | UI (D484)                                                                                                | `DeckWelcome.test.tsx` (two pushes, layer on top), unit; `welcome.spec.ts` @full                                                                         |
 | FR-008 categories entry left out when no category                      | UI                                                                                                       | `DeckWelcome.test.tsx`, unit                                                                                                                             |
 | FR-009 RTL names isolated                                              | UI `<bdi>`                                                                                               | `DeckWelcome.test.tsx`, unit                                                                                                                             |
@@ -203,9 +210,9 @@ docs/design/profile.md                            # "Welcome" section + Deviatio
 
 ## Settle before starting
 
-- [ ] Rebase `053-invited-first-run` on `origin/main` (one commit behind, #193).
-- [ ] Copy for the welcome line and buttons. The plan assumes: "You're in **{deck}**" / "{inviter} invited you" / "You're a {Role}: {description}" / Categories · Search · Start reading. Confirm or adjust in tasks.
+- [x] Rebase `053-invited-first-run` on `origin/main` (one commit behind, #193). Done; the implementation branch later merged `main` again.
+- [x] Copy for the welcome line and buttons. Confirmed by the owner on 2026-11-27 with one change (D488): "Welcome to **{deck}**" / "{Inviter} invited you." (fallback "A member") / one `ROLE_WELCOME` sentence / Categories · Search · Start reading.
 
 ## Complexity Tracking
 
-None. No principle is broken.
+No principle is broken. One scope note: the `Sheet` change (D487, D489) is shared UI and reaches every sheet (About, Avatar cropper, type picker, discard dialogs). It was reviewed on phone and desktop, and is kept in this PR on purpose (decided with the owner, 2026-11-27).

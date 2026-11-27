@@ -114,7 +114,8 @@ Investigate when, per hour:
 - `profile.username_check` `refused:rate_limited` is above 20;
 - `profile.lookup` `refused:rate_limited` is above 20, or `found` is above 200 for one member (enumeration);
 - `profile.update` `refused:rate_limited` is above 20 for one member (`PROFILE_UPDATE_RATE_PER_HOUR`);
-- `profile.avatar` `refused:foreign` is above 5 (probing another member's photo).
+- `profile.avatar` `refused:foreign` is above 5 (probing another member's photo);
+- `deck.welcome_dismiss` `already_dismissed` exceeds 3× `dismissed` per day (a retry loop in the web's pending set).
 
 ## Deviations
 

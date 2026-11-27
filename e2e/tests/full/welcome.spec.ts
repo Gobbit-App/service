@@ -140,3 +140,45 @@ test('How to browse waits until the welcome list has closed @full', async ({
   await expect(hint(page)).toBeVisible();
   await page.context().close();
 });
+
+test('closing the welcome offline holds, and reaches the server when the connection returns @full', async ({
+  playwright,
+  browser,
+  api,
+  smokeDeck,
+}) => {
+  const { page, email } = await invitedMember(playwright, browser, api, smokeDeck);
+  await page.goto(`/d/${smokeDeck.slug}`);
+  await expect(welcome(page)).toBeVisible();
+
+  await page.context().setOffline(true);
+  await welcome(page).getByRole('button', { name: 'Start reading' }).click();
+  await expect(welcome(page)).toHaveCount(0);
+
+  const sent = page.waitForResponse(
+    (r) => r.request().method() === 'DELETE' && r.url().endsWith(`/decks/${smokeDeck.id}/welcome`),
+  );
+  await page.context().setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  expect((await sent).status()).toBe(204);
+
+  const second = await signInByMagicLink(playwright, email);
+  try {
+    await answerAnalytics(second.api);
+    const context = await browser.newContext({
+      baseURL: stack.webUrl,
+      storageState: await second.api.storageState(),
+    });
+    try {
+      const other = await context.newPage();
+      await other.goto(`/d/${smokeDeck.slug}`);
+      await expect(other.getByRole('banner')).toBeVisible();
+      await expect(welcome(other)).toHaveCount(0);
+    } finally {
+      await context.close();
+    }
+  } finally {
+    await second.api.dispose();
+  }
+  await page.context().close();
+});

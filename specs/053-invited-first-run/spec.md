@@ -42,7 +42,7 @@ Dana accepts an invite to the community deck: she taps Join on the link a curato
 
 **Acceptance Scenarios**:
 
-1. **Given** a person who has just accepted a deck invite, by address, by username or by link, **When** the deck opens, **Then** a welcome shows the deck's name, the inviter's shown name and what the person's role lets them do, in one short line.
+1. **Given** a person who has just accepted a deck invite, by address, by username or by link, **When** the deck opens, **Then** a welcome shows the deck's name, the inviter's shown name and what the person's role lets them do, in one short friendly sentence.
 2. **Given** the welcome, **When** the person chooses categories, **Then** the welcome closes and Browse opens with its category list showing the deck's categories their role can see; picking one shows that category's cards.
 3. **Given** the welcome, **When** the person chooses search, **Then** the welcome closes and the deck's search opens, ready to type.
 4. **Given** the welcome, **When** the person closes it, **Then** the deck shows as it does today, and nothing else asks for a decision.
@@ -96,7 +96,7 @@ Members who were on a deck before this feature ships, deck creators and people o
 **What it shows**
 
 - **FR-005**: The welcome MUST name the deck and the inviter by shown name (051), and MUST NOT show an email address, cards, members or counts.
-- **FR-006**: The welcome MUST say in one short line what the person's role lets them do, using the same wording for roles that the deck settings use.
+- **FR-006**: The welcome MUST say in one short, friendly sentence what the person's role lets them do (for example "You can read this deck."), with one sentence per role kept in `@gobbit/shared` (`ROLE_WELCOME`, D488) rather than the role label and description the deck settings use.
 - **FR-007**: The welcome MUST offer an entry point to the deck's categories the person can see (opening Browse with its category list) and one to the deck's search, plus a way to close it and read. It MUST NOT ask the person to choose, set or answer anything.
 - **FR-008**: When the person can see no category, the categories entry point MUST be left out.
 - **FR-009**: Names in right-to-left scripts MUST display in their own direction inside the welcome text without reordering it.

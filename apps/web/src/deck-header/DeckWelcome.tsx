@@ -19,26 +19,28 @@ import {
 
 /** D481: one DELETE; the id stays pending on any failure that a retry could fix. */
 async function sendDismissal(deckId: string, membershipId: string): Promise<void> {
+  // The route takes no membership id, so a stale retry must not act for whoever is signed in now.
+  if (!readPendingDismissals().includes(membershipId)) return;
   try {
     await dismissWelcome(deckId);
     removePendingDismissal(membershipId);
   } catch (error) {
     if (isApiError(error) && error.status === 404) removePendingDismissal(membershipId);
+    else
+      window.addEventListener('online', () => void sendDismissal(deckId, membershipId), {
+        once: true,
+      });
   }
 }
 
-/** D481/FR-011: re-sends a dismissal this device holds, on mount and whenever the browser comes online. */
+/** D481/FR-011: re-sends a dismissal this device holds when the deck opens (a failed send retries itself when the browser comes online). */
 export function useWelcomeRetry(deck: DeckDetail): void {
   const membershipId = deck.welcome?.membershipId;
   const deckId = deck.id;
   useEffect(() => {
-    if (!membershipId) return;
-    const retry = () => {
-      if (readPendingDismissals().includes(membershipId)) void sendDismissal(deckId, membershipId);
-    };
-    retry();
-    window.addEventListener('online', retry);
-    return () => window.removeEventListener('online', retry);
+    if (membershipId && readPendingDismissals().includes(membershipId)) {
+      void sendDismissal(deckId, membershipId);
+    }
   }, [deckId, membershipId]);
 }
 
