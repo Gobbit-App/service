@@ -218,6 +218,13 @@
       "when": 1795528617516,
       "tag": "0030_deck_invite_links",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795719111352,
+      "tag": "0031_membership_welcome",
+      "breakpoints": true
     }
   ]
 }

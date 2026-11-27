@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { nameSchema, slugSchema } from './common';
 import { categorySchema } from './category';
+import { memberSummarySchema } from './profile';
 import { deckKinds, memberRoles } from '../enums';
 import { RESERVED_DECK_SLUG } from '../decks';
 
@@ -30,6 +31,14 @@ export const deckWithCategoriesSchema = deckSchema.extend({
   categories: z.array(categorySchema),
 });
 
+/** D479: first-run welcome state for an invited member; null once dismissed or for non-invitees. */
+export const deckWelcomeSchema = z.object({
+  membershipId: z.string(),
+  inviter: memberSummarySchema.nullable(),
+});
+
+export const deckDetailSchema = deckSchema.extend({ welcome: deckWelcomeSchema.nullable() });
+
 export const deckCreateSchema = z
   .object({
     name: nameSchema,
@@ -56,5 +65,7 @@ export const deckListSchema = z.object({
 
 export type Deck = z.infer<typeof deckSchema>;
 export type DeckWithCategories = z.infer<typeof deckWithCategoriesSchema>;
+export type DeckWelcome = z.infer<typeof deckWelcomeSchema>;
+export type DeckDetail = z.infer<typeof deckDetailSchema>;
 export type DeckCreate = z.infer<typeof deckCreateSchema>;
 export type DeckPatch = z.infer<typeof deckPatchSchema>;

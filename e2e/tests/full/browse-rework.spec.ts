@@ -146,7 +146,17 @@ test.describe('browse rework', () => {
 
     await categoryButton(page).click();
     await expect(list).toBeVisible();
-    await list.getByRole('button', { name: 'Close categories' }).click();
+    const { width: screenWidth } = viewport(page);
+    if (screenWidth < 600) {
+      // phones close by swiping the sheet down by its handle
+      const grip = (await list.locator('.sheet__grip').boundingBox())!;
+      await page.mouse.move(grip.x + grip.width / 2, grip.y + 10);
+      await page.mouse.down();
+      await page.mouse.move(grip.x + grip.width / 2, grip.y + 220, { steps: 6 });
+      await page.mouse.up();
+    } else {
+      await list.getByRole('button', { name: 'Close categories' }).click();
+    }
     await expect(list).toHaveCount(0);
 
     // the sheet sits at the bottom: the top of the screen is backdrop

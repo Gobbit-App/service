@@ -1,4 +1,8 @@
+import type { MembershipRow } from '@gobbit/db';
 import type { CurrentUser } from '../types';
+import type { DecisionLogger } from '../lib/decision-event';
+import type { MemberSummaries } from './member-summaries';
+import type { DeckDecisions } from './decks.events';
 import type { DecksRepo } from '../repositories/decks.repo';
 import type { CategoriesRepo } from '../repositories/categories.repo';
 import {
@@ -7,11 +11,12 @@ import {
   type DeckWithCategories,
   type DeckCreate,
   type DeckPatch,
+  type DeckDetail,
 } from '@gobbit/shared';
 import { toDeckDto, toCategoryDto } from '../lib/mappers';
 import { toSlug } from '../lib/slug';
 import { resolveDeck } from '../lib/resolve-deck';
-import { authorize, type MembershipLookup } from '../access/authorize';
+import { authorize } from '../access/authorize';
 import {
   accountOwnerRequired,
   badRequest,
@@ -20,16 +25,27 @@ import {
   PERSONAL_DECK_PROBLEM,
 } from '../errors/http-errors';
 
+type WelcomeMemberships = {
+  findActive(deckId: string, userId: string): Promise<MembershipRow | null>;
+  dismissWelcome(id: string, now: Date): Promise<boolean>;
+};
+
 export function createDecksService({
   decks,
   categories,
   memberships,
+  decisions,
+  summaries,
+  now = () => new Date(),
   deleteMedia = async () => undefined,
   purgeDeck = () => {},
 }: {
   decks: DecksRepo;
   categories: CategoriesRepo;
-  memberships: MembershipLookup;
+  memberships: WelcomeMemberships;
+  decisions: DecisionLogger<DeckDecisions>;
+  summaries?: Pick<MemberSummaries, 'summaries'>;
+  now?: () => Date;
   /** D158: drops the deck's stored images once the delete has committed; never throws. */
   deleteMedia?: (deckId: string) => Promise<void>;
   /** D180: drop the deck's cached public pages after each committed write. */
@@ -75,10 +91,43 @@ export function createDecksService({
       };
     },
 
-    async get(user: CurrentUser, idOrSlug: string): Promise<Deck> {
+    /** D479: `welcome` is set only for an accepted, undismissed member outside the owning account. */
+    async get(user: CurrentUser, idOrSlug: string): Promise<DeckDetail> {
       const deck = await resolveDeck(decks, idOrSlug, user);
       const role = await authorize(user, deck, 'deck.read', memberships);
-      return toDeckDto(deck, role);
+      const dto = toDeckDto(deck, role);
+      if (deck.ownerAccountId === user.accountId) return { ...dto, welcome: null };
+      const m = await memberships.findActive(deck.id, user.id);
+      if (!m?.acceptedAt || m.welcomeDismissedAt) return { ...dto, welcome: null };
+      const inviter = m.invitedBy
+        ? ((await summaries?.summaries([m.invitedBy]))?.get(m.invitedBy) ?? null)
+        : null;
+      return { ...dto, welcome: { membershipId: m.id, inviter } };
+    },
+
+    /** D480, D481: idempotent; the real outcome is logged, the client sees the same answer. */
+    async dismissWelcome(
+      user: CurrentUser,
+      idOrSlug: string,
+      ctx: { requestId: string },
+    ): Promise<void> {
+      const deck = await resolveDeck(decks, idOrSlug, user);
+      await authorize(user, deck, 'deck.read', memberships);
+      const base = { userId: user.id, deckId: deck.id, requestId: ctx.requestId };
+      const m =
+        deck.ownerAccountId === user.accountId
+          ? null
+          : await memberships.findActive(deck.id, user.id);
+      if (!m) {
+        decisions.record('deck.welcome_dismiss', { outcome: 'no_membership', ...base });
+        return;
+      }
+      const changed = await memberships.dismissWelcome(m.id, now());
+      decisions.record('deck.welcome_dismiss', {
+        outcome: changed ? 'dismissed' : 'already_dismissed',
+        membershipId: m.id,
+        ...base,
+      });
     },
 
     async update(user: CurrentUser, idOrSlug: string, patch: DeckPatch): Promise<Deck> {

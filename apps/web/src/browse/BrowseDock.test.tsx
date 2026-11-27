@@ -78,10 +78,10 @@ describe('BrowseDock', () => {
   it('adds Edit for roles that may change the card (D213)', () => {
     respond.mockReturnValue(new Promise(() => undefined));
     const queryClient = testQueryClient();
-    queryClient.setQueryData(
-      deckQuery('family').queryKey,
-      makeDeck({ slug: 'family', role: 'editor' }),
-    );
+    queryClient.setQueryData(deckQuery('family').queryKey, {
+      ...makeDeck({ slug: 'family', role: 'editor' }),
+      welcome: null,
+    });
     renderWithClient(
       <BrowseDock
         item={item}

@@ -1,8 +1,8 @@
-import type { Category, Deck } from '@gobbit/shared';
+import type { Category, DeckDetail } from '@gobbit/shared';
 import { can } from '@gobbit/shared/authz';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useState, type ReactElement } from 'react';
-import { decksQuery } from '../api/queries';
+import { configQuery, decksQuery, meQuery } from '../api/queries';
 import { IconButton } from '../ui/buttons/IconButton';
 import { IconLink } from '../ui/buttons/IconLink';
 import { deckHref, type ChipView } from '../ui/chip-order';
@@ -10,9 +10,11 @@ import { viewLabel } from '../ui/deck-views';
 import { Icon } from '../ui/icons/Icon';
 import { MoreMenu } from '../ui/MoreMenu';
 import { NavLink } from '../ui/NavLink';
+import { DeckWelcome, useWelcomeRetry } from './DeckWelcome';
 import { SearchSheet } from './SearchSheet';
 import { categorySwitchActions, deckSwitchActions } from './switcher-actions';
 import { useSearchShortcut } from './use-search-shortcut';
+import { readPendingDismissals } from './welcome-store';
 import './deck-header.css';
 
 /** What a card list (a view or search results) adds to the header. */
@@ -36,7 +38,7 @@ export function DeckHeader({
   back,
   list,
 }: {
-  deck: Deck;
+  deck: DeckDetail;
   /** D200: one level up (`backTarget(screen)`). */
   back: string;
   list?: DeckHeaderList | null;
@@ -45,6 +47,18 @@ export function DeckHeader({
   const [searchOpen, setSearchOpen] = useState(false);
   const openSearch = useCallback(() => setSearchOpen(true), []);
   useSearchShortcut(Boolean(list) && !searchOpen, openSearch);
+  useWelcomeRetry(deck);
+  const me = useQuery(meQuery());
+  const config = useQuery(configQuery());
+  const welcomeId = deck.welcome?.membershipId;
+  // D483: wait for the consent wall to be answered, online or not
+  const consentPending =
+    !me.data ||
+    !config.data ||
+    (Boolean(config.data.analytics) && me.data.analyticsConsent?.value === 'unanswered');
+  const showWelcome = Boolean(
+    list && welcomeId && !consentPending && !readPendingDismissals().includes(welcomeId),
+  );
 
   const runSearch = (q: string) => {
     setSearchOpen(false);
@@ -78,6 +92,7 @@ export function DeckHeader({
         </ol>
       </nav>
       {list && <IconButton icon="search" label="Search" onClick={openSearch} />}
+      {showWelcome && <DeckWelcome deck={deck} setSearchOpen={setSearchOpen} />}
       {list && searchOpen && (
         <SearchSheet
           deckSlug={deck.slug}
@@ -91,7 +106,7 @@ export function DeckHeader({
 }
 
 /** The view crumb: its name and caret are one menu button listing the deck's views. */
-function ViewSwitcher({ deck, list }: { deck: Deck; list: DeckHeaderList }): ReactElement {
+function ViewSwitcher({ deck, list }: { deck: DeckDetail; list: DeckHeaderList }): ReactElement {
   const name = list.view ? viewLabel(list.view, list.categories) : 'Search';
   const actions = categorySwitchActions(deck.slug, list.categories, list.view, {
     showArchived: can(deck.role, 'item.archive'),

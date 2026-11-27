@@ -10,6 +10,14 @@ export const ROLE_LABELS: Readonly<Record<MemberRole, Label>> = {
   reader: { label: 'Reader', description: 'Read only' },
 };
 
+/** 053: one friendly sentence per role for someone who has just joined a deck. */
+export const ROLE_WELCOME: Readonly<Record<MemberRole, string>> = {
+  owner: 'You can do everything here except delete the deck.',
+  maintainer: 'You can read, add and edit cards, publish them and manage categories.',
+  editor: 'You can read this deck and add and edit cards.',
+  reader: 'You can read this deck.',
+};
+
 /** D184: the three-way category visibility select. */
 export const VISIBILITY_LABELS: Readonly<Record<CategoryVisibility, Label>> = {
   private: { label: 'Admins only', description: 'Owners and maintainers' },

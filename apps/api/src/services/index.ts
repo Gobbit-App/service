@@ -42,6 +42,7 @@ import { createAnalyticsConsentService } from './analytics-consent.service';
 import { createPageCache } from '../public/page-cache';
 import { extractPage } from '../fetch/extract-page';
 import { createDecksService } from './decks.service';
+import { DECK_DECISION_LEVELS, type DeckDecisions } from './decks.events';
 import { createCategoriesService } from './categories.service';
 import type { CategoryDecisions } from './categories.events';
 import { createPublicDeckService } from './public-deck.service';
@@ -378,6 +379,12 @@ export function buildServices({
       decks,
       categories,
       memberships,
+      summaries: memberSummaries,
+      now,
+      decisions: decisionLogger<DeckDecisions>('deck', {
+        parent: logger,
+        levels: DECK_DECISION_LEVELS,
+      }),
       deleteMedia: mediaServices.media.deleteForDeck,
       purgeDeck,
     }),

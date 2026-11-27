@@ -305,6 +305,24 @@ describe('invite links, preview and join (052)', () => {
     expect(ml.rows[0].gone).toBe(true);
   });
 
+  it('a link over a pending typed invite names the link creator as inviter (D482)', async () => {
+    const { deck, token } = await makeLink('reader');
+    const other = await createAccountUser(ctx.t.db);
+    const pending = await addMember(ctx.t.db, deck, joiner2, 'reader', {
+      acceptedAt: null,
+      invitedBy: other.id,
+    });
+    expect((await accept(token, joiner2.email)).status).toBe(200);
+    const m = await ctx.t.pool.query('SELECT invited_by FROM memberships WHERE id = $1', [
+      pending.id,
+    ]);
+    expect(m.rows[0].invited_by).toBe(ctx.world.owner.id);
+    const res = await ctx.app.request(`/decks/${deck.id}`, { headers: ctx.as(joiner2.email) });
+    const welcome = (await json(res)).welcome;
+    expect(welcome.membershipId).toBe(pending.id);
+    expect(welcome.inviter.id).toBe(ctx.world.owner.id);
+  });
+
   it('no request or error log line contains the token (D468)', async () => {
     const { token } = await makeLink();
     await preview(token);

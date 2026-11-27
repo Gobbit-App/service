@@ -18,7 +18,8 @@ Every new screen, field or control names an **existing sibling** it copies: a sc
 | Upload progress / failure | `.image-fields__progress`, `.image-fields__failed` with `useImageUpload` |
 | A list of repeating items | the deck list rows / `.gallery-fields__list` (grid, `--gap`, no borders, D383) |
 | A settings block | `.settings-section` with an `h2` |
-| A panel or chooser over the page | `ui/sheet/Sheet` (ADR-071) |
+| A panel or chooser over the page | `ui/sheet/Sheet` (ADR-071). Closing is one rule: phones get a grab handle and swipe down (no X); the centred dialog from 600 px gets the corner close button when `closeLabel` is set (lists and pickers); confirm dialogs close through their own Cancel |
+| A list of choices in a sheet | `.browse-list__row` (`browse/CategoryList.tsx`): borderless rows, a tinted current row, the count inside the row |
 | Empty, loading, error | `ui/StatusViews` |
 | A transient message with Undo | `ui/UndoToast` |
 

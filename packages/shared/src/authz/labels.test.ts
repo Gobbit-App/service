@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { categoryVisibilities, memberRoles } from '../enums';
-import { ROLE_LABELS, VISIBILITY_LABELS } from './labels';
+import { ROLE_LABELS, ROLE_WELCOME, VISIBILITY_LABELS } from './labels';
+
+describe('ROLE_WELCOME (053)', () => {
+  it('has a sentence for every role', () => {
+    for (const role of memberRoles) expect(ROLE_WELCOME[role]).toMatch(/^You can .+\.$/);
+  });
+});
 
 describe('ROLE_LABELS / VISIBILITY_LABELS (D184, D185)', () => {
   it('labels every role; owner reads Co-owner', () => {

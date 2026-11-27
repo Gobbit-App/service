@@ -33,7 +33,13 @@ export function SearchSheet({
   };
 
   return (
-    <Sheet labelledBy={titleId} onClose={onClose} initialFocus={input} className="search-sheet">
+    <Sheet
+      labelledBy={titleId}
+      onClose={onClose}
+      initialFocus={input}
+      className="search-sheet"
+      closeLabel="Close search"
+    >
       <h2 id={titleId} className="sheet__title">
         Search
       </h2>

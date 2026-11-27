@@ -20,6 +20,7 @@ export const memberships = pgTable(
     invitedByEmail: boolean().notNull().default(false),
     invitedAt: tstz().notNull().defaultNow(),
     acceptedAt: tstz(),
+    welcomeDismissedAt: tstz(),
     ...timestamps,
   },
   (t) => [

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deckCreateSchema, deckPatchSchema, deckSchema } from './deck';
+import { deckCreateSchema, deckDetailSchema, deckPatchSchema, deckSchema } from './deck';
 
 const validDeckDto = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -106,5 +106,36 @@ describe('deckPatchSchema', () => {
   it('accepts {autoPublishShares:false} and rejects a non-boolean (D192)', () => {
     expect(deckPatchSchema.safeParse({ autoPublishShares: false }).success).toBe(true);
     expect(deckPatchSchema.safeParse({ autoPublishShares: 'yes' }).success).toBe(false);
+  });
+});
+
+describe('deckDetailSchema (D479)', () => {
+  const inviter = {
+    id: '33333333-3333-4333-8333-333333333333',
+    name: 'Ann',
+    username: 'ann',
+    initials: 'A',
+    photo: null,
+  };
+
+  it('accepts welcome: null', () => {
+    expect(deckDetailSchema.safeParse({ ...validDeckDto, welcome: null }).success).toBe(true);
+  });
+
+  it('accepts a welcome with inviter: null', () => {
+    const r = deckDetailSchema.safeParse({
+      ...validDeckDto,
+      welcome: { membershipId: 'm1', inviter: null },
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('strips an email key from the inviter (summary is not strict)', () => {
+    const r = deckDetailSchema.safeParse({
+      ...validDeckDto,
+      welcome: { membershipId: 'm1', inviter: { ...inviter, email: 'ann@example.com' } },
+    });
+    expect(r.success).toBe(true);
+    expect(r.data?.welcome?.inviter).toEqual(inviter);
   });
 });

@@ -13,6 +13,30 @@
   box-shadow: var(--elevation-3);
 }
 
+/* Phones: a visible handle that the sheet is dragged down by (D304); the dialog has a corner button instead. */
+.sheet__grip {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: var(--space-6);
+  touch-action: none;
+  cursor: grab;
+}
+
+.sheet__grip::after {
+  content: '';
+  position: absolute;
+  inset: var(--space-2) auto auto 50%;
+  width: var(--space-6);
+  height: var(--space-1);
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--color-text) 30%, transparent);
+}
+
+.sheet__close {
+  display: none;
+}
+
 .sheet__body {
   padding: var(--space-5) calc(var(--gutter) + var(--safe-right))
     calc(var(--space-4) + var(--safe-bottom)) calc(var(--gutter) + var(--safe-left));
@@ -62,6 +86,21 @@
 
   .sheet__body {
     padding: var(--space-5);
+  }
+
+  .sheet__grip {
+    display: none;
+  }
+
+  .sheet__close {
+    position: absolute;
+    inset: var(--space-3) var(--space-3) auto auto;
+    z-index: 1;
+    display: inline-flex;
+  }
+
+  .sheet__close ~ .sheet__body .sheet__title {
+    padding-inline-end: var(--tap);
   }
 
   .sheet__actions {

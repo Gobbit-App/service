@@ -1081,7 +1081,23 @@ h2 {
 }
 
 .card__clip--more {
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 4rem), transparent);
+  position: relative;
+}
+
+.card__clip--more::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 4rem;
+  background: linear-gradient(to bottom, transparent, var(--color-surface));
+  pointer-events: none;
+}
+
+/* The main action stays pinned inside the clipped box, above the fade, never cut off. */
+.card__clip--more .link-card__open {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
 }
 
 .card__clip .cloud-image__img,

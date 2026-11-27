@@ -489,21 +489,13 @@ body:has(.browse) .offline-banner {
 
 /* ---------- Category list (D331): a sheet of rows with counts ---------- */
 
-.browse-list__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--gap);
-  margin-bottom: var(--space-2);
-}
-
-.browse-list__title {
-  margin: 0;
-  font-size: var(--text-lg);
+.browse-list .sheet__title {
+  margin-bottom: var(--space-5);
 }
 
 .browse-list__rows {
   display: grid;
+  gap: var(--space-1);
   max-height: calc(100dvh - var(--safe-top) - 180px);
   margin: 0;
   padding: 0;
@@ -513,14 +505,9 @@ body:has(.browse) .offline-banner {
 }
 
 .browse-list__row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--gap);
-  border-top: 1px solid var(--color-border);
-}
-
-.browse-list__row:first-child {
-  border-top: 0;
 }
 
 .browse-list__pick.button {
@@ -528,17 +515,21 @@ body:has(.browse) .offline-banner {
   justify-content: flex-start;
   min-width: 0;
   min-height: var(--tap);
+  padding-inline-end: var(--space-7);
+  border-color: transparent;
 }
 
 .browse-list__pick[aria-current='true'] {
+  background: var(--color-accent-soft);
   font-weight: 700;
 }
 
 .browse-list__count {
-  flex: 0 0 auto;
-  padding-inline-end: 8px;
+  position: absolute;
+  inset-inline-end: var(--space-4);
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 
 /* ---------- Full view (D334/D335): the whole card over Browse ---------- */
