@@ -199,6 +199,8 @@ Member profile and creator avatar: [`046-user-profile`](specs/046-user-profile/s
 
 Import v2 (seeding a communal deck): [`049-import-v2`](specs/049-import-v2/spec.md): card-per-section Markdown, per-card fields, several categories, Hebrew-safe category addresses, strict mode, dry-run lint, an env-tunable daily cap, bulk discard by import label and media from the CLI. Tracked in [`community-go-list.md`](community-go-list.md) Track A.
 
+Hebrew chrome, part 1 (the way in): [`054-hebrew-chrome`](specs/054-hebrew-chrome/spec.md): a deck language (English or Hebrew) chosen by its owners; the invite page, Join, sign-in and its mails, the consent question, the 053 welcome and public pages read in Hebrew, right to left, for a Hebrew deck; pages with no deck follow the browser. The rest of the reader is part 2. Tracked in [`community-go-list.md`](community-go-list.md) E2b.
+
 ### 025–027 renames
 
 Mechanical renames with no new behaviour, so they skip spec-kit (constitution, Development Workflow). One branch and PR each:
