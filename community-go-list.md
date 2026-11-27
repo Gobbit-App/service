@@ -4,12 +4,116 @@ Everything needed to launch the first communal deck: a public, Hebrew-first know
 
 Status: draft, Nov 15. Read against `origin/main` at `dd8fe4f`; roles and registration re-read Nov 16 at `0fbc4a5`; Track I target decided Nov 16; monitoring (Track K) and early wins (Track L) added Nov 16; launch order by importance, alpha first, decided Nov 16 (see Order). This is a checklist that feeds `PLAN.md` and `/speckit-specify`; it takes no D numbers and decides nothing durable. Items marked **(verify)** were not confirmed in code.
 
+## Build order
+
+Every work item in this file, in the order it is built (from the Order section below; stage rows separate the stages). "Done" mirrors the tick in its track. Items split across stages (E2b, L4) have one row per part. Type: `spec` a spec-kit feature, `small fix` code without a spec, `setup` configuration or data in the running app, `infra` hosting, backups and monitoring work, `decision` a choice to settle, `content` writing or preparing cards and notices, `process` an operational step, `check` a verification or demo run, `docs` documentation only.
+
+| Track | Item | Type | Description | Done |
+|---|---|---|---|---|
+| **Now, alongside everything** | | | | |
+| B | B2 | decision | Agree the taxonomy: 10–15 categories, Hebrew names, Latin slugs, visibility | no |
+| B | B3 | decision | Decide how location is expressed (second category on a card) | no |
+| C | C1 | content | Authoring template for cards | no |
+| C | C2 | content | Remove personal data from the content | no |
+| C | C3 | content | Rights: link and summarise, own or cleared media only | no |
+| C | C4 | content | Convert raw chat exports to the template, by hand | no |
+| C | C5 | content | File layout: one Markdown file per category, media folders | no |
+| C | C6 | decision | Decide which categories stay members-only | no |
+| H | H1 | decision | Settle the open decisions (incl. whether deck invites skip the waitlist) | no |
+| A | A7 | small fix | Bulk publish keeps going past a card it cannot publish | yes |
+| L | L1 | setup | Cache public HTML at Cloudflare | no |
+| L | L2 | small fix | Embedding sweep every 10 minutes | no |
+| L | L3 | small fix | Job polling per queue type | no |
+| **Stage 3 — Alpha** | | | | |
+| A | A1 | spec | Card-per-section Markdown import | yes |
+| A | A2 | spec | Per-card fields in the import file | yes |
+| A | A3 | spec | Several categories per card | yes |
+| A | A5 | spec | Hebrew-safe category slugs | yes |
+| A | A6 | spec | Strict category mode | yes |
+| A | A8 | spec | Import cap | yes |
+| A | A9 | spec | Bulk discard by import label | yes |
+| A | A10 | spec | Dry-run lint output | yes |
+| A | A4 | spec | Media from the CLI | yes |
+| A | A11 | spec | Import docs | yes |
+| B | B1 | setup | Create the communal deck | no |
+| B | B4 | setup | Roles: co-owner and curators as maintainers | no |
+| B | B5 | setup | Embeddings key set in production | no |
+| H | H2 | decision | Choose the owning user | no |
+| H | H3 | setup | Curators as maintainers | no |
+| D | D1 | process | Rehearsal import on a throwaway deck | no |
+| D | D2 | process | Lint every file with `--dry-run` | no |
+| D | D3 | process | Import one file at a time | no |
+| D | D4 | process | Review and publish per label | no |
+| D | D5 | check | Spot-check search with 20 real questions | no |
+| D | D7 | check | Alpha walkthrough on iPhone and Android | no |
+| E | E2a | small fix | Right to left reads right (small fixes found in D7) | no |
+| E | E4 | small fix | Show "last verified" on cards and public pages | no |
+| I | I1 | decision | Record the infrastructure target as an ADR | no |
+| I | I2 | setup | Register the product domain | no |
+| I | I3 | check | Size the VM from production numbers | no |
+| I | I4 | infra | VM and Dokploy remote server, staging host | no |
+| I | I5 | infra | Nightly backups with a rehearsed restore | no |
+| I | I6 | setup | Move analytics to Umami Cloud | no |
+| I | I7 | setup | Host-bound settings for the new host | no |
+| I | I8 | check | Check launch estimates against free tiers | no |
+| I | I9 | infra | Cut-over to the VM | no |
+| I | I10 | infra | Fallback deploy by hand | no |
+| K | K2 | infra | Collector (Alloy) and Postgres monitoring | no |
+| K | K3 | infra | Dashboard and alerts | no |
+| K | K4 | process | Weekly monitoring checklist | no |
+| E | E8 | infra | Monitoring thresholds on decision events (via Track K) | no |
+| K | K5 | docs | Monitoring docs and ADR | no |
+| H | H11 | spec | Model spend guard (050) | yes |
+| H | H6 | spec | No email addresses in member data (051) | yes |
+| H | H12 | spec | Invite by link (052) | yes |
+| H | H8a | spec | First run for invited users (053) | no |
+| E | E5 | infra | Backups that restore (via I5) | no |
+| E | E7a | content | Privacy notice and requests by contact | no |
+| E | E9 | process | Take-down path | no |
+| E | E3a | small fix | Feedback link on cards and in the menu | no |
+| H | H4 | process | Invite the testers; later the cohort by hand | no |
+| **Stage 4 — Waitlist cohort** | | | | |
+| I | I11 | infra | Decommission the home-lab deployment | no |
+| I | I12 | docs | Infrastructure docs | no |
+| E | E2b | spec | Hebrew chrome, part 1: the surfaces new people meet first | no |
+| H | H7 | spec | One registration flow, invites ride along | no |
+| H | H8 | spec | Onboarding: invited people learn they are full users | no |
+| L | L4 | spec | Sign-in without magic links, part 1: Google | no |
+| K | K1 | spec | App metrics endpoint and usage poll (spec) | no |
+| **Stage 5 — Public** | | | | |
+| E | E1 | check | Phase 8 demos 1–6 against production | no |
+| E | E6 | check | Abuse controls on public routes | no |
+| D | D6 | check | Check the public pages on a phone | no |
+| E | E7b | spec | Self-serve export and delete | no |
+| E | E2b | spec | Hebrew chrome, part 2: the rest of the reader | no |
+| J | J1 | spec | Custom domain: spec and plan | no |
+| J | J2 | decision | Choose and register the community domain | no |
+| J | J3 | spec | Assign a domain to the deck | no |
+| J | J4 | spec | Strangers on the custom domain | no |
+| H | H10 | spec | Custom host and members: reaching the personal deck | no |
+| J | J5 | spec | Members on the custom domain | no |
+| J | J6 | spec | Links follow the deck | no |
+| J | J7 | spec | Install and offline on the custom domain | no |
+| J | J8 | spec | Removal and dangling DNS | no |
+| J | J9 | spec | White-label finish | no |
+| J | J10 | process | Launch order: share custom-domain links only | no |
+| **After launch — improve and expand** | | | | |
+| H | H5 | spec | Suggesting on communal decks | no |
+| E | E3b | spec | Report a problem, stored and routed | no |
+| L | L4 | spec | Sign-in without magic links, part 2: passwords | no |
+| F | — | spec | Suggest a card without an invite (G12) | no |
+| F | — | spec | Staleness watcher and gap detection | no |
+| F | — | spec | Like and useful | no |
+| H | H13 | spec | Finish your profile | no |
+| H | H14 | spec | Back office for platform admin tools | no |
+| H | H9 | decision | Crawler policy (deferred) | no |
+
 ## Tracking
 
 This file is the launch tracker. Keep it current as work lands:
 
 - **Starts**: when an item is specified or picked up, add `→ <spec or PR>` to the track's intro line or the item.
-- **Done**: tick `[x]` an item only when its PR is merged and its Verify step has passed, and add the PR, e.g. `- [x] **A1. …** (049, #170)`.
+- **Done**: tick `[x]` an item only when its PR is merged and its Verify step has passed, and add the PR, e.g. `- [x] **A1. …** (049, #170)`, and set its row in the Build order table to `yes`.
 - **Deviations**: when the built thing differs from the item (a different choice, a dropped part, a moved item), add a row to the log below and link the spec's `implementation-notes.md`. Edit the item text only to point at the row; keep the original wording.
 - **Additions**: work the list did not foresee (a new gap, a new item, a finding that makes an item stale) gets a log row and, if it is work, a new item in the matching track with the next free number.
 
@@ -45,6 +149,8 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-24 | H12 | plan | Planned: one `deck_invite_links` table (token stored as is so a link can be shared again, never in a path), a no-JS preview at `/s/invite`, Join in one locked transaction; a brand-new person joins when they open the sign-in mail (spec refined), existing accounts tap Join. D466–D476, ADR-085. | [`052` plan](specs/052-invite-by-link/plan.md) |
 | 2026-11-24 | H12 | start | Implementing 052 on branch `feat/052-invite-by-link`; in progress, not merged, Verify not run. Deviations so far are in the notes (e.g. `/join` catalogue entry; `problemSchema` gains optional `deck.slug`). Tick H12 when the PR merges and Verify passes. | [`052` implementation notes](specs/052-invite-by-link/implementation-notes.md) |
 | 2026-11-25 | H14 | addition | Platform admin tools (the Settings "Platform → Waitlist" section, later `/admin/domains`) live inside the member app; move them to a dedicated back office. New item H14, `PLAN.md` Phase 18 stub. | `PLAN.md` Phase 18 |
+| 2026-11-25 | H12 | done | 052 merged; Verify (the `@smoke` journey: an owner creates a link, a second user joins and lands on the deck, a second use is refused) passes in PR CI. | #190, [`052` implementation notes](specs/052-invite-by-link/implementation-notes.md) |
+| 2026-11-25 | H8a | start | Specified as `053-invited-first-run`. Every invite path already lands on the deck; the gap is the welcome. Added in the spec: shown per accepted invite (existing users joining a new deck too), never to members from before release, deck creators or the personal deck; one overlay at a time (consent question, then welcome, then "How to browse"); categories entry point left out when none is visible. Open for `/speckit-clarify`: "once" across devices (assumed) or per device. | [`specs/053-invited-first-run`](specs/053-invited-first-run/spec.md) |
 
 ## Goal and definition of done
 
@@ -221,7 +327,7 @@ How people get into the communal deck at each stage, what the code does today an
   - To settle in the spec: whether the typed address in the invites list shows to the inviter only (assumed here) or to every owner; a display name derived from the email address gives away its first part, so the fallback name needs another source; limits and decision events on username lookups so they cannot be used to list users; how an owner tells two people with the same name apart.
   - Spec `046` as drafted has no username and says emails stay visible where they are today; both need changing there.
 - [ ] **H7. One registration flow, invites ride along** (closes G18; to implement, spec-kit). Anyone can be invited to a deck by email. A registered user gets the membership as today. An unregistered one goes through the same registration as someone arriving from the welcome page, and the invite travels with it: on completion the membership is created and the app opens on that deck. A waitlist invite can carry a deck and role the same way, in batches with a cohort size. No account exists until the person completes registration. Every invite, acceptance, expiry and refusal is a decision event. To settle in the spec: whether a deck invite skips waitlist approval (today it does, and the plan assumes it still does). Needed before stage 4 at any real size.
-- [ ] **H8a. First run for invited users** (spec, small; first slice of H8). Accepting an invite lands on that deck with a short welcome naming the deck and the inviter and pointing at categories and search; nothing else to decide on day one. Needed for stage 3.
+- [ ] **H8a. First run for invited users** → [`053-invited-first-run`](specs/053-invited-first-run/spec.md) (spec, small; first slice of H8). Accepting an invite lands on that deck with a short welcome naming the deck and the inviter and pointing at categories and search; nothing else to decide on day one. Needed for stage 3.
 - [ ] **H8. Onboarding** (stub in `PLAN.md` Phase 16). Someone who first met Gobbit through a communal or shared deck learns that they are a full user: they have a personal deck, can save their own cards and can start decks of their own. Lands them on the inviting deck first. Needed for stage 4.
 - [ ] **H9. Crawler policy** (G20). Deferred: all crawlers allowed for now; revisit with real traffic.
 - [ ] **H10. Custom host and members.** On the deck's own domain (Track J) a session acts on that deck only, so community members never see `/d/me` there. That works against H8 (every user is a full user): the onboarding spec and the Track J spec must say how someone on the custom host reaches their personal deck on the main domain.
@@ -235,7 +341,7 @@ How people get into the communal deck at each stage, what the code does today an
   - With the switch on, today's daily caps stay (50 per channel, 200 combined). The migration switches it on for the platform admins only; everyone else is switched on by hand.
   - To settle in the spec: what best effort contains for each kind of share without the model (link, text, image, email).
   - Verify: an integration test shares as a user without the switch and sees a proposal, no `llm_calls` row, the notice and the decision event; the same share with the switch on is extracted. Needed before stage 3.
-- [ ] **H12. Invite by link** → [`052-invite-by-link`](specs/052-invite-by-link/spec.md) (implementing, spec-kit; own feature, not folded into H7; see the progress log). An owner can send a deck invite through WhatsApp or any chat instead of by mail. That is more personal, and it saves an invite mail per person (see Track K, mail headroom).
+- [x] **H12. Invite by link** → [`052-invite-by-link`](specs/052-invite-by-link/spec.md) (052, #190; spec-kit; own feature, not folded into H7; see the progress log). An owner can send a deck invite through WhatsApp or any chat instead of by mail. That is more personal, and it saves an invite mail per person (see Track K, mail headroom).
   - **Today's invite link must not be copied.** The mailed link is a single-use magic link bound to the invitee's address (`/auth/callback?token=…`, D37, `memberships.service.ts` `sendInvite`). Whoever opens it first is signed in *as that person*, and chats get forwarded and seen by groups. So "copy invite" needs a new kind of link, not a copy button on the old one.
   - **The new link only invites; it never signs in.** The owner creates an invite with a name for their own reference ("Dana") and a role, with no address needed. They get a link to an invite page in the app. Whoever opens it signs in or registers through the normal door (H7; with L4, Google or password, so no mail at all), then accepts, and the membership is created.
   - **Personal, so single use:** the first person to accept claims it. It expires (`INVITE_TTL_DAYS`) and the owner can revoke it. In the invites list it shows as "link for Dana: waiting / accepted by <profile name>", so the owner sees who actually came in and can remove them if the wrong person did.
