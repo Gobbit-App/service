@@ -75,7 +75,7 @@ Every work item in this file, in the order it is built (from the Order section b
 | **Stage 4 — Waitlist cohort** | | | | |
 | I | I11 | infra | Decommission the home-lab deployment | no |
 | I | I12 | docs | Infrastructure docs | no |
-| E | E2b | spec | Hebrew chrome, part 1: the surfaces new people meet first | no |
+| E | E2b | spec | Hebrew chrome, part 1: the surfaces new people meet first (054) | no |
 | H | H7 | spec | One registration flow, invites ride along | no |
 | H | H8 | spec | Onboarding: invited people learn they are full users | no |
 | L | L4 | spec | Sign-in without magic links, part 1: Google | no |
@@ -151,6 +151,7 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-25 | H14 | addition | Platform admin tools (the Settings "Platform → Waitlist" section, later `/admin/domains`) live inside the member app; move them to a dedicated back office. New item H14, `PLAN.md` Phase 18 stub. | `PLAN.md` Phase 18 |
 | 2026-11-25 | H12 | done | 052 merged; Verify (the `@smoke` journey: an owner creates a link, a second user joins and lands on the deck, a second use is refused) passes in PR CI. | #190, [`052` implementation notes](specs/052-invite-by-link/implementation-notes.md) |
 | 2026-11-25 | H8a | start | Specified as `053-invited-first-run`. Every invite path already lands on the deck; the gap is the welcome. Added in the spec: shown per accepted invite (existing users joining a new deck too), never to members from before release, deck creators or the personal deck; one overlay at a time (consent question, then welcome, then "How to browse"); categories entry point left out when none is visible. Open for `/speckit-clarify`: "once" across devices (assumed) or per device. | [`specs/053-invited-first-run`](specs/053-invited-first-run/spec.md) |
+| 2026-11-27 | E2b | start | Part 1 specified as `054-hebrew-chrome`. Added in the spec: the consent question and the invite and sign-in mails (a Hebrew way in with an English step fails); Hebrew dates on those surfaces; English decks unchanged. Open for `/speckit-clarify`: deck language as an owner setting (assumed) or inferred from the deck name; whether the landing page and waitlist mails join part 1 (assumed not, depends on how H7 lets the cohort in). | [`specs/054-hebrew-chrome`](specs/054-hebrew-chrome/spec.md) |
 
 ## Goal and definition of done
 
@@ -261,7 +262,7 @@ Left out on purpose: table, calc, reminder and event cards on import (events hav
 
 - [ ] **E1. Phase 8 demos 1–6 against production** (`PLAN.md` Phase 8). The public pages are the product for strangers.
 - [ ] **E2a. Right to left reads right** (G9; small fixes, no spec). Hebrew titles, bodies (lists, quotes, tables, links), category names, the search box and results align right to left in the reader, the editor and the public pages, and mixed Hebrew, English and Greek lines keep their order. Found and checked in D7.
-- [ ] **E2b. Hebrew chrome** (G9; spec: a small translation layer). Hebrew labels and a `lang="he" dir="rtl"` frame, first on the surfaces new people meet (public pages, invite page, sign-in, H8a first run), then the rest of the reader. Takes in Track F's "member app in Hebrew".
+- [ ] **E2b. Hebrew chrome** (G9; spec: a small translation layer; part 1 → [`054-hebrew-chrome`](specs/054-hebrew-chrome/spec.md)). Hebrew labels and a `lang="he" dir="rtl"` frame, first on the surfaces new people meet (public pages, invite page, sign-in, H8a first run), then the rest of the reader. Takes in Track F's "member app in Hebrew".
 - [ ] **E3a. Feedback link** (G10; small fix). A "report a problem" link on every card and in the app menu that opens a prefilled mail or chat to the curators with the card link. Enough for alpha and the cohort.
 - [ ] **E3b. Report a problem** (G10, Phase 14.2; spec). Reports stored and routed to curators, never public; anonymous reports behind the rate limiter.
 - [ ] **E4. "Last verified"** (G11; small fix). `verifiedAt` shown on cards and public pages, so readers can judge how fresh a phone number or price is.
