@@ -72,6 +72,16 @@ Owner-only by construction: `location` exists only in the `profile` schema of `G
 
 The creator summary is part of the persisted item cache, so seen avatars render offline and unseen ones show initials. The profile comes from `GET /me`; lookups are not persisted. There is no account-deletion flow; the FKs (`items.created_by`, `assets.owner_user_id` set null) make one safe: cards show the placeholder avatar and the photo becomes an orphan the sweep deletes.
 
+## Welcome (053, D478–D489)
+
+A member who accepts an invite (address, username or link) sees a one-time welcome on the deck: its name, who invited them (`memberships.invited_by`; a link accepted over a pending invite names the link's creator, D482) and what they can do (`ROLE_WELCOME`, D488), with Categories, Search and Start reading.
+
+- **State**: `memberships.welcome_dismissed_at`, backfilled from `accepted_at` (migration 0031). `GET /decks/{id}` carries `welcome` (membership id and an email-free inviter) only for an accepted, active, non-creator member off the owning account and personal deck; `DELETE /decks/{id}/welcome` is idempotent and logs `deck.welcome_dismiss` with outcome `dismissed`, `already_dismissed` or `no_membership`.
+- **Order**: the consent wall first (offline too), then the welcome, then "How to browse", which waits for any Browse layer to close (D483, D485).
+- **Offline**: dismissal hides the sheet at once and keeps the membership id in `gobbit:welcome-dismissed:v1` until the DELETE lands (D481).
+- **Entry points**: Categories makes two history pushes (Browse, then its category layer) so Back closes only the list; Search opens the header's search sheet (D484).
+- **Sheet rule**: phones swipe the handle down to close, dialogs get the corner button when `closeLabel` is set; one dialog width, borderless list rows (D487, D489; `ui-system.md`).
+
 ## Environment
 
 | Variable | Default | Meaning |
@@ -104,7 +114,8 @@ Investigate when, per hour:
 - `profile.username_check` `refused:rate_limited` is above 20;
 - `profile.lookup` `refused:rate_limited` is above 20, or `found` is above 200 for one member (enumeration);
 - `profile.update` `refused:rate_limited` is above 20 for one member (`PROFILE_UPDATE_RATE_PER_HOUR`);
-- `profile.avatar` `refused:foreign` is above 5 (probing another member's photo).
+- `profile.avatar` `refused:foreign` is above 5 (probing another member's photo);
+- `deck.welcome_dismiss` `already_dismissed` exceeds 3× `dismissed` per day (a retry loop in the web's pending set).
 
 ## Deviations
 
@@ -117,3 +128,4 @@ Investigate when, per hour:
 - **`.card__meta` no longer wraps** (`flex-wrap: nowrap`): chips shrink first and the age label and avatar stay fixed, on every card, not only shared decks.
 - **E2E**: cross-member and photo cases run in e2e through per-test users (047); the removed-creator placeholder is covered only by the integration test. See [testing.md](testing.md#deviations).
 - **051 member email privacy**: `displayNameOf` has no code change (T018, D459 said two builders; only the SQL one changes). The item `creator` name stays `null` for a nameless, usernameless member (the avatar label shows "Member"). `displayNameSql` interpolates `MEMBER_NAME` as a bound parameter (`@gobbit/db` already depends on `@gobbit/shared`). `MembersSection.tsx` needed no change (`member.email ?? @username`). Open follow-up: drop `users.display_name`.
+- **053 welcome**: the two category-list history pushes must be awaited one after the other (found by e2e: unawaited, they collapse into one entry and Back leaves Browse). `decks.service` types its membership read locally (`WelcomeMemberships`) instead of widening `MembershipLookup`. The `Sheet` change (D487, D489) also gives every existing sheet the handle and swipe, and the shared dialog is 32rem instead of 28rem.

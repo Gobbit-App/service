@@ -64,3 +64,46 @@ describe('Sheet', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('Sheet swipe and close (053)', () => {
+  function swipe(distance: number, finish: 'pointerUp' | 'pointerCancel' = 'pointerUp') {
+    HTMLElement.prototype.setPointerCapture = vi.fn();
+    const onClose = vi.fn();
+    const { container } = render(
+      <Sheet labelledBy="t" onClose={onClose} closeLabel="Close things">
+        <h2 id="t">Title</h2>
+      </Sheet>,
+    );
+    const grip = container.querySelector('.sheet__grip') as HTMLElement;
+    fireEvent.pointerDown(grip, { clientY: 100, pointerId: 1 });
+    fireEvent.pointerMove(grip, { clientY: 100 + distance, pointerId: 1 });
+    fireEvent[finish](grip, { clientY: 100 + distance, pointerId: 1 });
+    return onClose;
+  }
+
+  it('closes when the handle is dragged down far enough', () => {
+    expect(swipe(150)).toHaveBeenCalledTimes(1);
+  });
+
+  it('springs back on a short drag or a cancelled one', () => {
+    expect(swipe(20)).not.toHaveBeenCalled();
+    expect(swipe(150, 'pointerCancel')).not.toHaveBeenCalled();
+  });
+
+  it('shows a corner close button only when asked for one', () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Sheet labelledBy="t" onClose={onClose}>
+        <h2 id="t">Title</h2>
+      </Sheet>,
+    );
+    expect(screen.queryByRole('button', { name: 'Close things' })).toBeNull();
+    rerender(
+      <Sheet labelledBy="t" onClose={onClose} closeLabel="Close things">
+        <h2 id="t">Title</h2>
+      </Sheet>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Close things' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});

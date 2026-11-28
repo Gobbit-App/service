@@ -1,6 +1,5 @@
 import { useId, useRef, type KeyboardEvent, type ReactElement } from 'react';
 import { Button } from '../ui/buttons/Button';
-import { IconButton } from '../ui/buttons/IconButton';
 import { Sheet } from '../ui/sheet/Sheet';
 import type { CycleEntry } from './category-cycle';
 import { cardCountLabel } from './category-counts';
@@ -54,13 +53,15 @@ export function CategoryList({
   };
 
   return (
-    <Sheet labelledBy={titleId} onClose={onClose} initialFocus={currentRow} className="browse-list">
-      <div className="browse-list__head">
-        <h2 className="browse-list__title" id={titleId}>
-          Categories
-        </h2>
-        <IconButton icon="close" label="Close categories" onClick={onClose} />
-      </div>
+    <Sheet
+      labelledBy={titleId}
+      onClose={onClose}
+      initialFocus={currentRow}
+      closeLabel="Close categories"
+    >
+      <h2 className="sheet__title" id={titleId}>
+        Categories
+      </h2>
       <ul className="browse-list__rows" ref={list} onKeyDown={onKeyDown}>
         {entries.map((entry) => {
           const isCurrent = entry.slug === current;

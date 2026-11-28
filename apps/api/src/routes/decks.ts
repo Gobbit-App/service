@@ -1,6 +1,7 @@
 import { createRoute, z, type OpenAPIHono } from '@hono/zod-openapi';
 import {
   deckCreateSchema,
+  deckDetailSchema,
   deckListSchema,
   deckPatchSchema,
   deckSchema,
@@ -72,7 +73,7 @@ export function registerDecksRoutes(app: OpenAPIHono<AppEnv>, services: Services
     },
     responses: {
       200: {
-        content: { 'application/json': { schema: deckSchema } },
+        content: { 'application/json': { schema: deckDetailSchema } },
         description: 'Deck details',
       },
       ...problems('unauthorized', 'not-found'),
@@ -121,6 +122,27 @@ export function registerDecksRoutes(app: OpenAPIHono<AppEnv>, services: Services
     const patch = c.req.valid('json');
     const deck = await services.decks.update(user, id, patch);
     return c.json(deck, 200);
+  });
+
+  const dismissWelcomeRoute = createRoute({
+    method: 'delete',
+    path: '/decks/{id}/welcome',
+    tags: ['decks'],
+    security,
+    request: {
+      params: z.object({ id: z.string().min(1) }),
+    },
+    responses: {
+      204: { description: 'Welcome dismissed (or already dismissed)' },
+      ...problems('unauthorized', 'not-found'),
+    },
+  });
+
+  app.openapi(dismissWelcomeRoute, async (c) => {
+    const user = getUser(c);
+    const { id } = c.req.valid('param');
+    await services.decks.dismissWelcome(user, id, { requestId: c.get('requestId') });
+    return c.body(null, 204);
   });
 
   const deleteRoute = createRoute({

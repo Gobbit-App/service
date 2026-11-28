@@ -1,16 +1,24 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Deck } from '@gobbit/shared';
+import type { AnalyticsConsent, AppConfig, DeckDetail, Me } from '@gobbit/shared';
+import { queryKeys } from '../api/query-keys';
 import { makeCategory, makeDeck } from '../test/fixtures';
-import { renderWithClient } from '../test/render';
+import { renderWithClient, testQueryClient } from '../test/render';
 import type { DeckHeaderList } from './DeckHeader';
 
 vi.mock('../api/client', () => import('../test/api-mock').then((m) => m.clientModule));
 const { respond } = await import('../test/api-mock');
 const { DeckHeader } = await import('./DeckHeader');
 
-const deck = makeDeck({ id: 'd1', slug: 'family', name: 'Family' });
+const deck: DeckDetail = {
+  ...makeDeck({ id: 'd1', slug: 'family', name: 'Family' }),
+  welcome: null,
+};
+const welcome = {
+  membershipId: 'm1',
+  inviter: { name: 'Dana', username: null },
+} as DeckDetail['welcome'];
 const decks = [deck, makeDeck({ id: 'd2', slug: 'me', name: 'Niran', kind: 'personal' })];
 const categories = [
   makeCategory({ name: 'General', slug: 'general', position: 0, isDefault: true }),
@@ -21,7 +29,7 @@ function list(overrides: Partial<DeckHeaderList> = {}): DeckHeaderList {
   return { categories, view: { kind: 'all' }, query: '', onSearch: vi.fn(), ...overrides };
 }
 
-function renderHeader(props: { deck?: Deck; list?: DeckHeaderList | null } = {}) {
+function renderHeader(props: { deck?: DeckDetail; list?: DeckHeaderList | null } = {}) {
   return renderWithClient(
     <DeckHeader deck={props.deck ?? deck} back="/?all=true" list={props.list} />,
   );
@@ -84,7 +92,7 @@ describe('DeckHeader (D380)', () => {
   });
 
   it('switches view from the category menu, gated by role (D381)', async () => {
-    const reader = makeDeck({ ...deck, role: 'reader' });
+    const reader: DeckDetail = { ...deck, role: 'reader' };
     const { navigate } = renderHeader({ deck: reader, list: list() });
     await userEvent.click(screen.getByRole('button', { name: 'Category: All' }));
     const options = screen.getAllByRole('menuitemradio').map((el) => el.textContent);
@@ -125,5 +133,94 @@ describe('DeckHeader (D380)', () => {
     renderHeader({ list: null });
     fireEvent.keyDown(document.body, { key: '/' });
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  describe('welcome (D483)', () => {
+    const invited = { ...deck, welcome };
+
+    const consent = (value: AnalyticsConsent['value']): AnalyticsConsent => ({
+      value,
+      at: null,
+      source: null,
+    });
+    const site = { siteId: 'site-1', host: 'gobbit.example' };
+
+    function renderGated(opts: {
+      me?: AnalyticsConsent | null;
+      analytics?: AppConfig['analytics'] | null;
+    }) {
+      const queryClient = testQueryClient();
+      if (opts.analytics !== null) {
+        queryClient.setQueryData(queryKeys.config, {
+          analytics: opts.analytics ?? null,
+        } as AppConfig);
+      }
+      if (opts.me) {
+        queryClient.setQueryData(queryKeys.me, { analyticsConsent: opts.me } as Me);
+      }
+      const base = respond.getMockImplementation()!;
+      respond.mockImplementation((request) =>
+        request === 'GET /me' || request === 'GET /config' ? new Promise(() => {}) : base(request),
+      );
+      return renderWithClient(<DeckHeader deck={invited} back="/" list={list()} />, {
+        queryClient,
+      });
+    }
+
+    it('mounts on list views only', () => {
+      renderGated({ me: consent('declined'), analytics: site });
+      expect(screen.getByRole('dialog', { name: /Welcome to/ })).toBeInTheDocument();
+    });
+
+    it('waits while me or config is loading', () => {
+      renderGated({ analytics: null });
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('waits while only config is loading', () => {
+      renderGated({ me: consent('declined'), analytics: null });
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('waits while only me is loading', () => {
+      renderGated({ analytics: site });
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it.each([true, false])(
+      'waits for the consent answer with analytics on (online: %s)',
+      (online) => {
+        vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(online);
+        renderGated({ me: consent('unanswered'), analytics: site });
+        expect(screen.queryByRole('dialog')).toBeNull();
+        vi.restoreAllMocks();
+      },
+    );
+
+    it.each([true, false])('shows once consent is answered (online: %s)', (online) => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(online);
+      renderGated({ me: consent('allowed'), analytics: site });
+      expect(screen.getByRole('dialog', { name: /Welcome to/ })).toBeInTheDocument();
+      vi.restoreAllMocks();
+    });
+
+    it('shows with analytics off even when consent is unanswered', () => {
+      renderGated({ me: consent('unanswered'), analytics: undefined });
+      expect(screen.getByRole('dialog', { name: /Welcome to/ })).toBeInTheDocument();
+    });
+
+    it('is absent off the lists and when not set', () => {
+      renderHeader({ deck: invited, list: null });
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('is absent while its dismissal is pending, and re-sends the DELETE', async () => {
+      const { addPendingDismissal } = await import('./welcome-store');
+      addPendingDismissal('m1');
+      respond.mockResolvedValue({});
+      renderHeader({ deck: invited, list: list() });
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(respond).toHaveBeenCalledWith('DELETE /decks/{id}/welcome');
+    });
   });
 });

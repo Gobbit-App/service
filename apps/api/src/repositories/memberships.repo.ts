@@ -33,6 +33,23 @@ export function createMembershipsRepo(db: DbExecutor) {
       return row ?? null;
     },
 
+    /** True only for the first dismissal of an accepted, live membership; later calls change nothing. */
+    async dismissWelcome(id: string, now: Date): Promise<boolean> {
+      const rows = await db
+        .update(memberships)
+        .set({ welcomeDismissedAt: now })
+        .where(
+          and(
+            eq(memberships.id, id),
+            isNotNull(memberships.acceptedAt),
+            isNull(memberships.deletedAt),
+            isNull(memberships.welcomeDismissedAt),
+          ),
+        )
+        .returning({ id: memberships.id });
+      return rows.length > 0;
+    },
+
     /** Includes soft-deleted rows; callers decide what a deleted membership means. */
     async findById(id: string): Promise<MembershipRow | null> {
       const [row] = await db.select().from(memberships).where(eq(memberships.id, id)).limit(1);

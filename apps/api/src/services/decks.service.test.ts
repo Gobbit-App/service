@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { CurrentUser } from '../types';
+import { captureLogger, expectDecision } from '../../test/capture-logger';
+import { decisionLogger } from '../lib/decision-event';
+import type { DeckDecisions } from './decks.events';
 import { createDecksService } from './decks.service';
 
 vi.mock('../lib/slug', async () => {
@@ -23,6 +26,7 @@ describe('createDecksService', () => {
   let categoriesRepo: any;
   let membershipsRepo: any;
   let user: CurrentUser;
+  let capture: ReturnType<typeof captureLogger>;
 
   beforeEach(() => {
     decksRepo = {
@@ -44,12 +48,17 @@ describe('createDecksService', () => {
       create: vi.fn(),
     };
 
-    membershipsRepo = { findActive: vi.fn().mockResolvedValue(null) };
+    membershipsRepo = {
+      findActive: vi.fn().mockResolvedValue(null),
+      dismissWelcome: vi.fn().mockResolvedValue(true),
+    };
+    capture = captureLogger();
 
     service = createDecksService({
       decks: decksRepo,
       categories: categoriesRepo,
       memberships: membershipsRepo,
+      decisions: decisionLogger<DeckDecisions>('deck', { parent: capture.logger }),
     });
 
     user = {
@@ -131,6 +140,84 @@ describe('createDecksService', () => {
       });
 
       expect(decksRepo.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('get (welcome)', () => {
+    it('skips the membership read for the owning account', async () => {
+      decksRepo.findBySlug.mockResolvedValue({
+        id: 'pb-1',
+        kind: 'shared' as const,
+        slug: 'mine',
+        ownerAccountId: 'account-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.get(user, 'mine');
+
+      expect(result.welcome).toBeNull();
+      expect(membershipsRepo.findActive).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('dismissWelcome (deck.welcome_dismiss)', () => {
+    const sharedDeck = { id: 'pb-3', kind: 'shared', slug: 'fam', ownerAccountId: 'other' };
+    const ctx = { requestId: 'req-1' };
+
+    beforeEach(() => {
+      decksRepo.findBySlug.mockResolvedValue(sharedDeck);
+      membershipsRepo.findActive.mockResolvedValue({
+        id: 'm-1',
+        role: 'reader',
+        acceptedAt: new Date(),
+      });
+    });
+
+    it('logs dismissed on the first dismissal', async () => {
+      await service.dismissWelcome(user, 'fam', ctx);
+
+      expect(membershipsRepo.dismissWelcome).toHaveBeenCalledWith('m-1', expect.any(Date));
+      await capture.flush();
+      const line = expectDecision(capture.lines, 'deck.welcome_dismiss', { outcome: 'dismissed' });
+      expect(line).toMatchObject({
+        requestId: 'req-1',
+        userId: 'user-1',
+        deckId: 'pb-3',
+        membershipId: 'm-1',
+      });
+      expect(JSON.stringify(line)).not.toContain('test@example.com');
+    });
+
+    it('logs already_dismissed when nothing changed', async () => {
+      membershipsRepo.dismissWelcome.mockResolvedValue(false);
+
+      await service.dismissWelcome(user, 'fam', ctx);
+
+      await capture.flush();
+      expectDecision(capture.lines, 'deck.welcome_dismiss', { outcome: 'already_dismissed' });
+    });
+
+    it('logs no_membership for the owning account, without touching the repo', async () => {
+      decksRepo.findBySlug.mockResolvedValue({ ...sharedDeck, ownerAccountId: 'account-1' });
+
+      await service.dismissWelcome(user, 'fam', ctx);
+
+      expect(membershipsRepo.dismissWelcome).not.toHaveBeenCalled();
+      await capture.flush();
+      const line = expectDecision(capture.lines, 'deck.welcome_dismiss', {
+        outcome: 'no_membership',
+      });
+      expect(line).toMatchObject({ requestId: 'req-1', userId: 'user-1', deckId: 'pb-3' });
+      expect(line).not.toHaveProperty('membershipId');
+    });
+
+    it('answers 404 and logs nothing when the deck is unreadable', async () => {
+      membershipsRepo.findActive.mockResolvedValue(null);
+
+      await expect(service.dismissWelcome(user, 'fam', ctx)).rejects.toMatchObject({ status: 404 });
+      await capture.flush();
+      expect(capture.lines.filter((l) => l.event === 'deck.welcome_dismiss')).toEqual([]);
     });
   });
 

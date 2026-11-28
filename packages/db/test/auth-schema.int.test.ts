@@ -18,6 +18,7 @@ const EXPECTED: Record<string, string[]> = {
     `updated_at:${TSTZ}:NO`,
     `deleted_at:${TSTZ}:YES`,
     'invited_by_email:boolean:NO',
+    `welcome_dismissed_at:${TSTZ}:YES`,
   ],
   sessions: [
     'id:uuid:NO',

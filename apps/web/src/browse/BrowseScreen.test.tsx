@@ -47,11 +47,14 @@ interface Harness {
   layers: BrowseLayer[];
 }
 
-function renderScreen(search: Partial<BrowseSearch> = {}): Harness {
+function renderScreen(
+  search: Partial<BrowseSearch> = {},
+  initialLayer: BrowseLayer | null = null,
+): Harness {
   const harness: Harness = { onChange: vi.fn(), onClose: vi.fn(), layers: [] };
   function Route() {
     const [address, setAddress] = useState<BrowseSearch>({ c: 'all', ...search });
-    const [layer, setLayer] = useState<BrowseLayer | null>(null);
+    const [layer, setLayer] = useState<BrowseLayer | null>(initialLayer);
     return (
       <BrowseScreen
         deckSlug="family"
@@ -383,6 +386,14 @@ describe('BrowseScreen: first-run hint', () => {
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(localStorage.getItem(BROWSE_HINT_KEY)).toBe('dismissed');
+  });
+
+  it('waits for an open layer to close, then shows (FR-004, D485)', async () => {
+    renderScreen({}, 'categories');
+    const list = await screen.findByRole('dialog', { name: 'Categories' });
+    expect(screen.queryByRole('dialog', { name: 'How to browse' })).not.toBeInTheDocument();
+    fireEvent(list, new Event('cancel', { cancelable: true }));
+    expect(await screen.findByRole('dialog', { name: 'How to browse' })).toBeInTheDocument();
   });
 
   it('lists the four moves and keeps focus on its only button (D338)', async () => {

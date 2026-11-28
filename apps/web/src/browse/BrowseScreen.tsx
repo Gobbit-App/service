@@ -259,7 +259,7 @@ export function BrowseScreen({
             }}
           />
         )}
-        {hint && <FirstRunHint onDismiss={dismiss} />}
+        {hint && layer === null && <FirstRunHint onDismiss={dismiss} />}
       </div>
     </DetectionProvider>
   );

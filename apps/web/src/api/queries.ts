@@ -4,6 +4,7 @@ import type {
   AskResponse,
   Category,
   Deck,
+  DeckDetail,
   Item,
   ItemPage,
   Me,
@@ -37,7 +38,7 @@ export const decksQuery = () =>
 export const deckQuery = (idOrSlug: string) =>
   queryOptions({
     queryKey: queryKeys.deck(idOrSlug),
-    queryFn: ({ signal }): Promise<Deck> =>
+    queryFn: ({ signal }): Promise<DeckDetail> =>
       unwrap(api.GET('/decks/{id}', { params: { path: { id: idOrSlug } }, signal })),
   });
 

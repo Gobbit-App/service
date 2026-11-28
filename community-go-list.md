@@ -66,7 +66,7 @@ Every work item in this file, in the order it is built (from the Order section b
 | H | H11 | spec | Model spend guard (050) | yes |
 | H | H6 | spec | No email addresses in member data (051) | yes |
 | H | H12 | spec | Invite by link (052) | yes |
-| H | H8a | spec | First run for invited users (053) | no |
+| H | H8a | spec | First run for invited users (053) | yes |
 | E | E5 | infra | Backups that restore (via I5) | no |
 | E | E7a | content | Privacy notice and requests by contact | no |
 | E | E9 | process | Take-down path | no |
@@ -151,6 +151,8 @@ This file is the launch tracker. Keep it current as work lands:
 | 2026-11-25 | H14 | addition | Platform admin tools (the Settings "Platform → Waitlist" section, later `/admin/domains`) live inside the member app; move them to a dedicated back office. New item H14, `PLAN.md` Phase 18 stub. | `PLAN.md` Phase 18 |
 | 2026-11-25 | H12 | done | 052 merged; Verify (the `@smoke` journey: an owner creates a link, a second user joins and lands on the deck, a second use is refused) passes in PR CI. | #190, [`052` implementation notes](specs/052-invite-by-link/implementation-notes.md) |
 | 2026-11-25 | H8a | start | Specified as `053-invited-first-run`. Every invite path already lands on the deck; the gap is the welcome. Added in the spec: shown per accepted invite (existing users joining a new deck too), never to members from before release, deck creators or the personal deck; one overlay at a time (consent question, then welcome, then "How to browse"); categories entry point left out when none is visible. Open for `/speckit-clarify`: "once" across devices (assumed) or per device. | [`specs/053-invited-first-run`](specs/053-invited-first-run/spec.md) |
+| 2026-11-27 | H8a | progress | 053 implemented in #196 (tick on merge). Deviations: Sheet closes by swipe on phones and a corner button on dialogs (D487), dialogs are 32rem (D489), friendlier role copy (D488). | [`specs/053-invited-first-run`](specs/053-invited-first-run/spec.md) |
+| 2026-11-28 | H8a | done | 053 merged; the welcome, its offline close and the second-device check pass in the `@smoke` invite journey and the `@full` welcome specs. | #196, [`053` implementation notes](specs/053-invited-first-run/implementation-notes.md) |
 
 ## Goal and definition of done
 
@@ -327,7 +329,7 @@ How people get into the communal deck at each stage, what the code does today an
   - To settle in the spec: whether the typed address in the invites list shows to the inviter only (assumed here) or to every owner; a display name derived from the email address gives away its first part, so the fallback name needs another source; limits and decision events on username lookups so they cannot be used to list users; how an owner tells two people with the same name apart.
   - Spec `046` as drafted has no username and says emails stay visible where they are today; both need changing there.
 - [ ] **H7. One registration flow, invites ride along** (closes G18; to implement, spec-kit). Anyone can be invited to a deck by email. A registered user gets the membership as today. An unregistered one goes through the same registration as someone arriving from the welcome page, and the invite travels with it: on completion the membership is created and the app opens on that deck. A waitlist invite can carry a deck and role the same way, in batches with a cohort size. No account exists until the person completes registration. Every invite, acceptance, expiry and refusal is a decision event. To settle in the spec: whether a deck invite skips waitlist approval (today it does, and the plan assumes it still does). Needed before stage 4 at any real size.
-- [ ] **H8a. First run for invited users** → [`053-invited-first-run`](specs/053-invited-first-run/spec.md) (spec, small; first slice of H8). Accepting an invite lands on that deck with a short welcome naming the deck and the inviter and pointing at categories and search; nothing else to decide on day one. Needed for stage 3.
+- [x] **H8a. First run for invited users** → [`053-invited-first-run`](specs/053-invited-first-run/spec.md) (053, #196; spec-kit; first slice of H8). Accepting an invite lands on that deck with a short welcome naming the deck and the inviter and pointing at categories and search; nothing else to decide on day one. Needed for stage 3.
 - [ ] **H8. Onboarding** (stub in `PLAN.md` Phase 16). Someone who first met Gobbit through a communal or shared deck learns that they are a full user: they have a personal deck, can save their own cards and can start decks of their own. Lands them on the inviting deck first. Needed for stage 4.
 - [ ] **H9. Crawler policy** (G20). Deferred: all crawlers allowed for now; revisit with real traffic.
 - [ ] **H10. Custom host and members.** On the deck's own domain (Track J) a session acts on that deck only, so community members never see `/d/me` there. That works against H8 (every user is a full user): the onboarding spec and the Track J spec must say how someone on the custom host reaches their personal deck on the main domain.

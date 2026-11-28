@@ -1,13 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { addMember, createAccountUser, createDeck } from '@gobbit/db/test';
+import type { UserRow } from '@gobbit/db';
 import {
+  deckDetailSchema,
   deckListSchema,
   deckWithCategoriesSchema,
   deckSchema,
   problemSchema,
 } from '@gobbit/shared';
 import { setupApiTest, fixtureId } from './helpers';
+import { captureLogger, expectDecision } from './capture-logger';
 
-const ctx = setupApiTest();
+const capture = captureLogger();
+const ctx = setupApiTest({ logger: capture.logger });
 
 describe('decks', () => {
   describe('POST /decks', () => {
@@ -109,6 +114,172 @@ describe('decks', () => {
 
       expect(bySlugPb.id).toBe(byIdPb.id);
       expect(bySlugPb).toEqual(byIdPb);
+    });
+
+    describe('welcome (053, FR-001, FR-005)', () => {
+      let joiner: UserRow;
+      beforeAll(async () => {
+        joiner = await createAccountUser(ctx.t.db);
+        await ctx.sessionFor(joiner);
+      });
+      const get = async (deckId: string) => {
+        const res = await ctx.app.request(`/decks/${deckId}`, { headers: ctx.as(joiner.email) });
+        expect(res.status).toBe(200);
+        return deckDetailSchema.parse(await res.json());
+      };
+      const membershipOf = async (deckId: string) =>
+        (
+          await ctx.t.pool.query('SELECT id FROM memberships WHERE deck_id = $1 AND user_id = $2', [
+            deckId,
+            joiner.id,
+          ])
+        ).rows[0].id as string;
+
+      it('an address invite accepted through memberships.accept carries the inviter', async () => {
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        const inv = await ctx.app.request(`/decks/${deck.id}/invites`, {
+          method: 'POST',
+          headers: ctx.as(),
+          body: JSON.stringify({ email: joiner.email, role: 'reader' }),
+        });
+        expect(inv.status).toBe(201);
+        await ctx.t.pool.query(
+          'UPDATE memberships SET accepted_at = now() WHERE deck_id = $1 AND user_id = $2',
+          [deck.id, joiner.id],
+        );
+        const body = await get(deck.id);
+        expect(body.welcome).toMatchObject({
+          membershipId: await membershipOf(deck.id),
+          inviter: { id: ctx.world.owner.id },
+        });
+        expect(JSON.stringify(body.welcome)).not.toContain('@');
+        expect(body.welcome).not.toHaveProperty('inviter.email');
+      });
+
+      it('a link join carries the link creator as inviter', async () => {
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        const made = await ctx.app.request(`/decks/${deck.id}/invite-links`, {
+          method: 'POST',
+          headers: ctx.as(),
+          body: JSON.stringify({ name: 'Cousins', role: 'reader' }),
+        });
+        const token = new URL((await made.json()).url).searchParams.get('t');
+        const join = await ctx.app.request('/invite-links/accept', {
+          method: 'POST',
+          headers: ctx.as(joiner.email),
+          body: JSON.stringify({ token }),
+        });
+        expect(join.status).toBe(200);
+        const body = await get(deck.id);
+        expect(body.welcome).toMatchObject({
+          membershipId: await membershipOf(deck.id),
+          inviter: { id: ctx.world.owner.id },
+        });
+        expect(JSON.stringify(body.welcome)).not.toContain('@');
+      });
+
+      it('is null for the creator, an owning-account user with or without a stray membership, and the personal deck (FR-003)', async () => {
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        const getAs = async (email: string, id: string) => {
+          const res = await ctx.app.request(`/decks/${id}`, { headers: ctx.as(email) });
+          expect(res.status).toBe(200);
+          return deckDetailSchema.parse(await res.json()).welcome;
+        };
+        expect(await getAs(ctx.world.owner.email, deck.id)).toBeNull();
+
+        // a trigger (reject_owner_account_membership) forbids a stray membership row for the owning account
+        await expect(addMember(ctx.t.db, deck, ctx.world.owner, 'owner')).rejects.toThrow();
+
+        const me = await createAccountUser(ctx.t.db);
+        await ctx.sessionFor(me);
+        await createDeck(ctx.t.db, me, { isDefault: true });
+        expect(await getAs(me.email, 'me')).toBeNull();
+      });
+
+      it('inviter is null when invited_by is null or the inviter is deleted', async () => {
+        const none = await createDeck(ctx.t.db, ctx.world.owner);
+        await addMember(ctx.t.db, none, joiner, 'reader');
+        const a = await get(none.id);
+        expect(a.welcome).toMatchObject({
+          membershipId: await membershipOf(none.id),
+          inviter: null,
+        });
+
+        const gone = await createAccountUser(ctx.t.db);
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        await addMember(ctx.t.db, deck, joiner, 'reader', { invitedBy: gone.id });
+        await ctx.t.pool.query('DELETE FROM users WHERE id = $1', [gone.id]);
+        expect((await get(deck.id)).welcome).toMatchObject({ inviter: null });
+      });
+    });
+
+    describe('DELETE /decks/{id}/welcome (053, FR-002, D480)', () => {
+      let joiner: UserRow;
+      beforeAll(async () => {
+        joiner = await createAccountUser(ctx.t.db);
+        await ctx.sessionFor(joiner);
+      });
+      const del = (deckId: string, headers: Record<string, string> = ctx.as(joiner.email)) =>
+        ctx.app.request(`/decks/${deckId}/welcome`, { method: 'DELETE', headers });
+      const welcomeOf = async (deckId: string) =>
+        deckDetailSchema.parse(
+          await (
+            await ctx.app.request(`/decks/${deckId}`, { headers: ctx.as(joiner.email) })
+          ).json(),
+        ).welcome;
+
+      it('dismisses (204), is idempotent, and the next GET has welcome null', async () => {
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        await addMember(ctx.t.db, deck, joiner, 'reader');
+        expect(await welcomeOf(deck.id)).not.toBeNull();
+        capture.lines.length = 0;
+        expect((await del(deck.id)).status).toBe(204);
+        expect(await welcomeOf(deck.id)).toBeNull();
+        await capture.flush();
+        expect(
+          expectDecision(capture.lines, 'deck.welcome_dismiss', { outcome: 'dismissed' }),
+        ).toMatchObject({
+          deckId: deck.id,
+          userId: joiner.id,
+        });
+        expect((await del(deck.id)).status).toBe(204);
+        await capture.flush();
+        expectDecision(capture.lines, 'deck.welcome_dismiss', { outcome: 'already_dismissed' });
+      });
+
+      it('401 without a session', async () => {
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        expect((await del(deck.id, ctx.anon())).status).toBe(401);
+      });
+
+      it('404 for a deck the caller cannot read', async () => {
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        expect((await del(deck.id)).status).toBe(404);
+        expect((await del('does-not-exist')).status).toBe(404);
+      });
+
+      it('leaves a pending (not accepted) row untouched', async () => {
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        await addMember(ctx.t.db, deck, joiner, 'reader', { acceptedAt: null });
+        await del(deck.id);
+        const r = await ctx.t.pool.query(
+          'SELECT welcome_dismissed_at FROM memberships WHERE deck_id = $1 AND user_id = $2',
+          [deck.id, joiner.id],
+        );
+        expect(r.rows[0].welcome_dismissed_at).toBeNull();
+      });
+
+      it('a new membership after removal and re-invite starts with a welcome', async () => {
+        const deck = await createDeck(ctx.t.db, ctx.world.owner);
+        await addMember(ctx.t.db, deck, joiner, 'reader');
+        expect((await del(deck.id)).status).toBe(204);
+        await ctx.t.pool.query('DELETE FROM memberships WHERE deck_id = $1 AND user_id = $2', [
+          deck.id,
+          joiner.id,
+        ]);
+        await addMember(ctx.t.db, deck, joiner, 'reader');
+        expect(await welcomeOf(deck.id)).not.toBeNull();
+      });
     });
 
     it('returns 404 for nonexistent deck', async () => {

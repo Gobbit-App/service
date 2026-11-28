@@ -124,6 +124,7 @@ describe('0030 waitlist tidy (D477)', () => {
 
   it('removes live entries whose address has a user, with a null-actor event, and leaves others', async () => {
     await runMigrations(t.pool);
+    expect(await rollbackLatest(t.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(t.pool)).toBe('0030_deck_invite_links');
     expect(await getLatestMigrationTag(t.pool)).toBe('0029_invited_by_email');
 

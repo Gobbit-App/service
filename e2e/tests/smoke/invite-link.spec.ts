@@ -12,6 +12,8 @@ test('an invite link joins a new address once and then reads as used @smoke', as
   newUser,
   browser,
 }) => {
+  const inviterName = `ruth${randomUUID().slice(0, 6)}`;
+  expect((await api.patch('me/profile', { data: { username: inviterName } })).status()).toBe(200);
   const name = `Smoke link ${randomUUID().slice(0, 6)}`;
   await page.goto(webUrl(`/d/${smokeDeck.slug}/settings`));
   const form = page.getByRole('form', { name: 'Invite by link' });
@@ -43,6 +45,22 @@ test('an invite link joins a new address once and then reads as used @smoke', as
 
     await guest.goto(await waitForCallbackLink(stack.mailboxUrl, address));
     await expect(guest).toHaveURL(new RegExp(`/d/${smokeDeck.slug}$`));
+
+    // 053: the consent wall shows alone; the welcome follows the answer, once.
+    const welcome = guest.getByRole('dialog', { name: /^Welcome to/ });
+    const wall = guest.getByRole('dialog', { name: 'Help improve Gobbit?' });
+    await expect(wall).toBeVisible();
+    await expect(welcome).toHaveCount(0);
+    await wall.getByRole('button', { name: 'No thanks' }).click();
+    await expect(welcome).toContainText(`Smoke ${smokeDeck.slug}`);
+    await expect(welcome).toContainText(`${inviterName} invited you`);
+    await welcome.getByRole('button', { name: 'Start reading' }).click();
+    await expect(welcome).toHaveCount(0);
+    await guest.reload();
+    await expect(
+      guest.getByRole('heading', { name: `Smoke ${smokeDeck.slug}` }).first(),
+    ).toBeVisible();
+    await expect(welcome).toHaveCount(0);
   } finally {
     await context.close();
   }

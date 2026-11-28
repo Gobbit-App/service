@@ -162,6 +162,8 @@ export async function createMember(
     const me = await api.get('me');
     expect(me.status(), 'GET /me after accepting the invite').toBe(200);
     await declineAnalytics(api);
+    const welcome = await api.delete(`decks/${deck.id}/welcome`);
+    expect(welcome.status(), 'dismiss the deck welcome').toBe(204);
     const { user } = (await me.json()) as { user: { id: string } };
     const context = await browser.newContext({
       baseURL: stack.webUrl,

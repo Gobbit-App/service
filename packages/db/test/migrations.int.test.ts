@@ -148,6 +148,7 @@ describe('migrations: 0022_events down (042, T008)', () => {
     await runMigrations(ctx.pool);
     // 0026 (card cover) and 0025 (media cards) have nothing to refuse on an empty database; 0024 (body limit, D384) and
     // 0023 (events ingestion, T093) only change CHECKs.
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
     expect(await rollbackLatest(ctx.pool)).toBe('0028_smart_share');
@@ -202,6 +203,7 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
     await insertBody('a'.repeat(2000));
     await expect(insertBody('a'.repeat(2001))).rejects.toThrow(/items_body_len_chk/);
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
 
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
@@ -215,7 +217,7 @@ describe('migrations: 0024_card_body_2000 down (D384)', () => {
     await expect(insertBody('a'.repeat(601))).rejects.toThrow(/items_body_len_chk/);
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0030_deck_invite_links');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0031_membership_welcome');
   });
 });
 
@@ -234,6 +236,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
 
   it('reshapes photo cards into one-photo galleries without moving updated_at, and back', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
     expect(await rollbackLatest(ctx.pool)).toBe('0028_smart_share');
@@ -254,7 +257,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
     const id = inserted.rows[0].id as string;
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0030_deck_invite_links');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0031_membership_welcome');
     const up = await ctx.pool.query(
       `SELECT type::text, payload, updated_at, search_text FROM items WHERE id = $1`,
       [id],
@@ -271,6 +274,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
     const bare = await ctx.pool.query(`SELECT payload FROM items WHERE title = 'Bare'`);
     expect(bare.rows[0].payload).toEqual({ kind: 'image', images: [{ publicId: 'p2' }] });
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
 
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
@@ -290,6 +294,7 @@ describe('migrations: 0025_media_cards (045, D386, D398)', () => {
 
   it('refuses to roll back while a PDF card, a gallery or a video asset exists', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
     expect(await rollbackLatest(ctx.pool)).toBe('0028_smart_share');
@@ -327,6 +332,7 @@ describe('migrations: 0026_card_cover (044, D406)', () => {
 
   it('drops the cover column and check on rollback and restores them', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
     expect(await rollbackLatest(ctx.pool)).toBe('0028_smart_share');
@@ -360,6 +366,7 @@ describe('migrations: 0027_member_profile (046, D417)', () => {
       [user.rows[0].id],
     );
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
 
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
@@ -371,7 +378,7 @@ describe('migrations: 0027_member_profile (046, D417)', () => {
     expect(gone.rowCount).toBe(0);
 
     await runMigrations(ctx.pool);
-    expect(await getLatestMigrationTag(ctx.pool)).toBe('0030_deck_invite_links');
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0031_membership_welcome');
     const back = await ctx.pool.query(
       `SELECT 1 FROM pg_constraint WHERE conname = 'assets_scope_chk'`,
     );
@@ -384,6 +391,7 @@ describe('migrations: 0028_smart_share (050)', () => {
 
   it('adds smart_share = false for existing users, drops on down, and re-applies', async () => {
     await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
     expect(await rollbackLatest(ctx.pool)).toBe('0028_smart_share');
@@ -396,6 +404,7 @@ describe('migrations: 0028_smart_share (050)', () => {
     const up = await ctx.pool.query(`SELECT smart_share FROM users`);
     expect(up.rows).toEqual([{ smart_share: false }]);
 
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
     expect(await rollbackLatest(ctx.pool)).toBe('0030_deck_invite_links');
 
     expect(await rollbackLatest(ctx.pool)).toBe('0029_invited_by_email');
@@ -408,5 +417,57 @@ describe('migrations: 0028_smart_share (050)', () => {
     await runMigrations(ctx.pool);
     const back = await ctx.pool.query(`SELECT smart_share FROM users`);
     expect(back.rows).toEqual([{ smart_share: false }]);
+  });
+});
+
+describe('migrations: 0031_membership_welcome (053, D478)', () => {
+  const ctx = withTestDb({ template: false });
+
+  it('backfills accepted rows, leaves pending null, and round-trips', async () => {
+    await runMigrations(ctx.pool);
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
+    const gone = await ctx.pool.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'memberships' AND column_name = 'welcome_dismissed_at'`,
+    );
+    expect(gone.rowCount).toBe(0);
+
+    const account = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T') RETURNING id`);
+    const accountId = account.rows[0].id;
+    const account2 = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T2') RETURNING id`);
+    const u2 = await ctx.pool.query(
+      `INSERT INTO users (account_id, email, display_name) VALUES ($1, 'b@example.test', 'B') RETURNING id`,
+      [account2.rows[0].id],
+    );
+    const account3 = await ctx.pool.query(`INSERT INTO accounts (name) VALUES ('T3') RETURNING id`);
+    const u3 = await ctx.pool.query(
+      `INSERT INTO users (account_id, email, display_name) VALUES ($1, 'c@example.test', 'C') RETURNING id`,
+      [account3.rows[0].id],
+    );
+    const deck = await ctx.pool.query(
+      `INSERT INTO decks (owner_account_id, kind, name, slug) VALUES ($1, 'shared', 'D', 'd-053') RETURNING id`,
+      [accountId],
+    );
+    await ctx.pool.query(
+      `INSERT INTO memberships (deck_id, user_id, role, accepted_at) VALUES ($1, $2, 'owner', '2026-01-02T03:04:05.678Z')`,
+      [deck.rows[0].id, u2.rows[0].id],
+    );
+    await ctx.pool.query(
+      `INSERT INTO memberships (deck_id, user_id, role) VALUES ($1, $2, 'reader')`,
+      [deck.rows[0].id, u3.rows[0].id],
+    );
+
+    await runMigrations(ctx.pool);
+    const rows = await ctx.pool.query(
+      `SELECT user_id, accepted_at, welcome_dismissed_at FROM memberships`,
+    );
+    const byUser = new Map(rows.rows.map((r) => [r.user_id, r]));
+    const accepted = byUser.get(u2.rows[0].id);
+    expect(accepted.accepted_at).not.toBeNull();
+    expect(accepted.welcome_dismissed_at).toEqual(accepted.accepted_at);
+    expect(byUser.get(u3.rows[0].id).welcome_dismissed_at).toBeNull();
+
+    expect(await rollbackLatest(ctx.pool)).toBe('0031_membership_welcome');
+    await runMigrations(ctx.pool);
+    expect(await getLatestMigrationTag(ctx.pool)).toBe('0031_membership_welcome');
   });
 });

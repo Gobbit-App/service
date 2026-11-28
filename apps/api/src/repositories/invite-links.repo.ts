@@ -216,7 +216,7 @@ export function createInviteLinksRepo(db: DbExecutor) {
       if (existing) {
         await tx
           .update(memberships)
-          .set({ role: link.role, acceptedAt: v.now })
+          .set({ role: link.role, acceptedAt: v.now, invitedBy: link.createdBy })
           .where(eq(memberships.id, existing.id));
         await createMagicLinksRepo(tx).expireUnusedForMembership(existing.id, v.now);
       } else {
