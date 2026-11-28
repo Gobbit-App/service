@@ -22,6 +22,14 @@ What already exists and stays as is:
 - **Rich text, search and content direction** are content, not chrome. E2a fixes how content reads right to left; this feature does not touch content.
 - **The product name is Gobbit** in every language.
 
+## Clarifications
+
+### Session 2026-11-28
+
+- Q: How should a shared or communal deck get its language (English or Hebrew)? → A: An owner setting in deck settings, English by default; never guessed from the deck name.
+- Q: Should the landing page, the waitlist form and the waitlist mails also be in Hebrew in part 1? → A: No. They stay English until users actually push for a change.
+- Q: Should pages that belong to no deck (plain sign-in and its mail, generic "not found" and "too many requests") follow the browser's language or stay English? → A: Stay English; only deck-bound surfaces follow the deck's language.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - An invited Hebrew speaker gets in without meeting English (Priority: P1)
@@ -76,31 +84,16 @@ The deck's owner opens the deck settings and sets the deck's language to Hebrew.
 
 ---
 
-### User Story 4 - Pages with no deck follow the visitor's language (Priority: P3)
-
-Some pages on the way in belong to no deck: the plain sign-in screen opened from the app, the sign-in mail asked for there, and the generic "not found" and "too many requests" pages. A visitor whose browser prefers Hebrew over English sees them in Hebrew; everyone else sees English as today.
-
-**Why this priority**: invited people mostly reach sign-in through a deck, which Story 1 covers. A Hebrew speaker who later signs in again from a new phone should still not meet an English door.
-
-**Independent Test**: open the sign-in screen with a browser that prefers Hebrew, ask for a link, and receive a Hebrew mail; repeat with a browser that prefers English and see today's English screen and mail.
-
-**Acceptance Scenarios**:
-
-1. **Given** a visitor whose browser prefers Hebrew over English, **When** they open the sign-in screen with no deck in view, **Then** it and the mail it sends are in Hebrew.
-2. **Given** a visitor whose browser prefers any other language, or states none, **Then** those pages and mails are in English as today.
-
----
-
 ### Edge Cases
 
 - **A string has no Hebrew yet**: it shows in English rather than as a blank or an internal key, and the check that guards the copy (see FR-012) reports it.
 - **Latin names inside Hebrew text** (an inviter called "Alex", a deck called "Athens Help", the word "Gobbit"): each keeps its own direction without reordering the Hebrew sentence around it. Hebrew names inside English text are already covered by 053 FR-009.
 - **Mixed frame after the welcome**: once the Hebrew welcome closes, the reader around it keeps its English labels and today's layout until part 2. This is expected, not a defect. The right-to-left frame applies only to the surfaces in this feature.
 - **The deck's language changes after an invite was sent**: what opens next follows the current language; a mail already sent stays as it was.
-- **A person invited to a Hebrew deck whose browser prefers English**: the deck's language wins on every deck-bound surface (the curator chose the deck's audience). Pages with no deck follow the browser.
+- **A person invited to a Hebrew deck whose browser prefers English**: the deck's language wins on every deck-bound surface (the curator chose the deck's audience).
 - **Role names**: Hebrew role names come from the same one source as the English ones. Deck settings keep English labels until part 2, but both read from that source, so the two never disagree in meaning.
-- **Waitlist and landing**: the landing page, waitlist form and waitlist mails stay English in this feature (see Assumptions).
-- **The consent question for a member arriving with no deck** (signing in from the plain sign-in screen): it follows the same rule as the sign-in screen (browser preference).
+- **Waitlist and landing**: the landing page, waitlist form and waitlist mails stay English (see Assumptions).
+- **A Hebrew speaker signing in again with no deck in view** (the plain sign-in screen, for example on a new phone): the screen, its mail and the consent question are English, as today. The browser's language is never used.
 - **Offline**: the Hebrew labels of the in-app surfaces in this feature are available offline like the rest of the app; no surface waits on the network for its words.
 - **Personal deck**: never invited to and never public, so it has no language and nothing in this feature applies to it.
 
@@ -118,7 +111,7 @@ Some pages on the way in belong to no deck: the plain sign-in screen opened from
 
 - **FR-004**: A shared or communal deck MUST have a language, English or Hebrew, English when not chosen. Only its owners (co-owners included) MUST be able to change it, in deck settings. Personal decks MUST NOT have one.
 - **FR-005**: Surfaces that belong to one deck MUST use that deck's language: its public pages (deck, category, card, and "not found" under its address), its invite page and Join screen, its invite mails, the sign-in screen and sign-in mail reached from its invite, the consent question shown on arrival at it, and 053's welcome on it.
-- **FR-006**: Surfaces that belong to no deck (the plain sign-in screen, the sign-in mail asked for there, the consent question when no deck is in view, and the generic "not found" and "too many requests" pages) MUST use Hebrew when the visitor's browser prefers Hebrew over English, and English otherwise.
+- **FR-006**: Surfaces that belong to no deck (the plain sign-in screen, the sign-in mail asked for there, the consent question when no deck is in view, and the generic "not found" and "too many requests" pages) MUST stay English as today. The visitor's browser language MUST NOT choose the language of any surface.
 - **FR-007**: A mail MUST be written in the language of the surface that caused it, decided when it is sent.
 
 **Surfaces in this feature**
@@ -127,7 +120,7 @@ Some pages on the way in belong to no deck: the plain sign-in screen opened from
 
 **No regression**
 
-- **FR-009**: For English decks and English-preferring visitors, every surface in this feature MUST look and read exactly as today.
+- **FR-009**: For English decks, and on every surface with no deck, everything MUST look and read exactly as today.
 - **FR-010**: Changing a deck's language MUST NOT change any card, category or other content, its search, its public page addresses or what anyone can see.
 - **FR-011**: Public pages MUST keep their content-based language hints for search engines consistent with the chosen frame; a Hebrew deck's pages MUST NOT be tagged English.
 
@@ -138,7 +131,7 @@ Some pages on the way in belong to no deck: the plain sign-in screen opened from
 
 ### Accountability
 
-The service makes no new decision about a person, their content or their experience: the language follows the deck's setting or the visitor's browser, and nothing is accepted, refused or limited by it.
+The service makes no new decision about a person, their content or their experience: the language follows the deck's setting, and nothing is accepted, refused or limited by it.
 
 - Changing a deck's language is an owner's change to the deck and is recorded as the plan's Accountability table says (constitution VIII), by ids only.
 - No new analytics events; screen views stay as they are, under the consent rules.
@@ -154,16 +147,16 @@ The service makes no new decision about a person, their content or their experie
 
 - **SC-001**: A brand-new person invited to a Hebrew deck by link reaches the deck's welcome, through every screen and the mail on the way, without meeting an English label other than the product name and names people chose.
 - **SC-002**: 100% of the strings on the surfaces in this feature have Hebrew copy at release, checked automatically.
-- **SC-003**: Zero visible changes for English decks and English-preferring visitors on the surfaces in this feature.
+- **SC-003**: Zero visible changes for English decks and for surfaces with no deck in this feature.
 - **SC-004**: In the stage 4 walkthrough, a Hebrew-speaking tester describes the way in as reading naturally, with no line in the wrong direction or order.
 - **SC-005**: An owner changes a deck's language in one setting, and the change shows on its invite page and public pages on the next load.
 
 ## Assumptions
 
-- **Language rule** (default, open for `/speckit-clarify`): a deck-bound surface follows a deck language the owner chooses; a surface with no deck follows the browser. Alternatives considered: inferring the deck's language from its name (no setting, but a Latin-named Hebrew deck would read English, and a Hebrew-named family deck would flip without anyone choosing), and a per-person language choice (needed once the whole reader is translated; part 2).
+- **Language rule** (clarified 2026-11-28): a deck-bound surface follows a deck language its owners choose in deck settings, English by default; a surface with no deck stays English. Rejected: inferring the deck's language from its name (a Latin-named Hebrew deck would read English, and a Hebrew-named family deck would flip without anyone choosing), following the browser's language on surfaces with no deck (it would serve only returning members, who meet an English reader anyway until part 2), and a per-person language choice (needed once the whole reader is translated; part 2).
 - **Two languages only**: English and Hebrew. Greek, the community's third script, is content, not chrome, and is not requested. The copy shape lets a third language be added later without changing the surfaces.
 - **The consent question and the mails are additions to the go-list's four surfaces**: a Hebrew journey with an English step in the middle fails the goal.
-- **Landing page and waitlist stay English** (open for `/speckit-clarify`): the go list names neither, and how the stage 4 cohort gets in is decided by H7 (a deck carried on the invite, whose invite mail is covered here). If the cohort is told to join the waitlist through the landing page, its copy (already shaped for this, D230) and the waitlist mails join this feature.
+- **Landing page and waitlist stay English** (clarified 2026-11-28): the landing page, waitlist form and confirm page and the waitlist mails are not translated, in part 1 or part 2, until real demand from users calls for it. The landing copy is already shaped for a second language (D230), so that later change is small.
 - **No per-person language and no switch** in this feature; part 2 decides how a member chooses the language of the whole reader.
 - **The reader stays English and left to right** around the welcome until part 2, including deck settings, where the new language setting itself is labelled in English.
 - **Hebrew copy is reviewed by a Hebrew speaker** (a curator) before release; the spec does not fix the wording.
